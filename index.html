@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>RP Studio</title>
+    <head>
+      <meta charset="UTF-8" />
+      <title>RP Studio</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="style.css" />
+      <!-- keep for custom stuff -->
+    </head>
+  </head>
+  <body
+    class="flex h-screen bg-gray-950 text-gray-100 font-sans overflow-hidden"
+  >
+    <!-- Sidebar -->
+    <aside class="w-60 bg-gray-900 p-5 flex flex-col gap-4 shrink-0">
+      <h2 class="text-violet-400 text-lg font-bold">⚔️ RP Studio</h2>
+
+      <label class="flex flex-col gap-1 text-xs text-gray-400">
+        Character
+        <select
+          id="character-select"
+          class="bg-gray-800 border border-gray-700 rounded-md px-2 py-1.5 text-sm text-gray-100"
+        ></select>
+      </label>
+
+      <label class="flex flex-col gap-1 text-xs text-gray-400">
+        Model
+        <select id="model-select">
+          <option value="openrouter/free">Auto (best available free)</option>
+          <option value="meta-llama/llama-4-maverick:free">
+            Llama 4 Maverick (free)
+          </option>
+          <option value="meta-llama/llama-4-scout:free">
+            Llama 4 Scout (free)
+          </option>
+          <option value="meta-llama/llama-3.1-8b-instruct:free">
+            Llama 3.1 8B (free)
+          </option>
+          <option value="mistralai/mistral-small-3.1-24b-instruct:free">
+            Mistral Small 24B (free)
+          </option>
+          <option value="google/gemma-3-12b-it:free">Gemma 3 12B (free)</option>
+          <option value="deepseek/deepseek-chat-v3-0324:free">
+            DeepSeek V3 (free)
+          </option>
+        </select>
+      </label>
+
+      <button
+        onclick="openCharacterEditor()"
+        class="bg-violet-700 hover:bg-violet-600 rounded-md py-2 text-sm transition"
+      >
+        + New Character
+      </button>
+      <button
+        onclick="openLoreEditor()"
+        class="bg-gray-700 hover:bg-gray-600 rounded-md py-2 text-sm transition"
+      >
+        📖 Lore Book
+      </button>
+      <button
+        onclick="clearMemory()"
+        class="bg-gray-700 hover:bg-gray-600 rounded-md py-2 text-sm transition"
+      >
+        🧹 Clear Memory
+      </button>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="flex flex-col flex-1 p-5 gap-3 overflow-hidden">
+      <div
+        id="chat-log"
+        class="flex-1 overflow-y-auto flex flex-col gap-3 pr-1"
+      ></div>
+
+      <div class="flex gap-3 items-end">
+        <textarea
+          id="user-input"
+          rows="2"
+          placeholder="What do you say or do? (Enter to send, Shift+Enter for newline)"
+          class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-100 resize-none focus:outline-none focus:border-violet-500 transition"
+        >
+        </textarea>
+        <button
+          id="send-btn"
+          onclick="sendMessage()"
+          class="bg-violet-700 hover:bg-violet-600 rounded-xl px-5 py-2.5 text-sm font-medium transition"
+        >
+          Send
+        </button>
+      </div>
+    </main>
+
+    <!-- Character Editor Modal -->
+    <div
+      id="modal"
+      class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-900 rounded-2xl p-6 w-[440px] flex flex-col gap-4 shadow-2xl"
+      >
+        <h3 class="text-violet-400 font-semibold text-base">New Character</h3>
+
+        <label class="flex flex-col gap-1 text-xs text-gray-400"
+          >Name
+          <input
+            id="char-name"
+            type="text"
+            class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-violet-500"
+          />
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-gray-400"
+          >Persona
+          <textarea
+            id="char-persona"
+            rows="3"
+            placeholder="Who are they?"
+            class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 resize-none focus:outline-none focus:border-violet-500"
+          ></textarea>
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-gray-400"
+          >Personality
+          <input
+            id="char-personality"
+            type="text"
+            placeholder="e.g. witty, cold, curious"
+            class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-violet-500"
+          />
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-gray-400"
+          >Speaking Style
+          <input
+            id="char-style"
+            type="text"
+            placeholder="e.g. formal, uses old english"
+            class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-violet-500"
+          />
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-gray-400"
+          >First Message
+          <textarea
+            id="char-first-msg"
+            rows="2"
+            placeholder="How do they greet the user?"
+            class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 resize-none focus:outline-none focus:border-violet-500"
+          ></textarea>
+        </label>
+
+        <div class="flex gap-3 justify-end pt-1">
+          <button
+            onclick="closeModal()"
+            class="bg-gray-700 hover:bg-gray-600 rounded-lg px-4 py-2 text-sm transition"
+          >
+            Cancel
+          </button>
+          <button
+            onclick="saveCharacter()"
+            class="bg-violet-700 hover:bg-violet-600 rounded-lg px-4 py-2 text-sm transition"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="config.js"></script>
+    <script src="db.js"></script>
+    <script src="characters.js"></script>
+    <script src="lore.js"></script>
+    <script src="memory.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
