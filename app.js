@@ -29,6 +29,10 @@ const MODEL_OPTIONS = [
   },
   { value: "stepfun/step-3.5-flash:free", label: "StepFun Flash (free)" },
   {
+    value: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+    label: "Dolphin Mistral 24B Venice Edition (free)",
+  },
+  {
     value: "arcee-ai/trinity-large-preview:free",
     label: "Trinity Large Preview (free)",
   },
