@@ -23,7 +23,7 @@
               + Character
             </button>
             <button id="import-character-btn" class="secondary-btn pane-create-char-btn">
-              Import Character
+              ↥ Import Character
             </button>
             <input id="import-character-input" type="file" accept=".json,application/json" class="hidden" />
           </div>
@@ -260,6 +260,21 @@
               placeholder="System prompt for memory summarization."
             ></textarea>
           </label>
+          <label>
+            Persona Injection Template
+            <textarea
+              id="persona-injection-template"
+              rows="5"
+              placeholder="Template for active persona injection."
+            ></textarea>
+          </label>
+          <label>
+            Persona Injection Timing
+            <select id="persona-injection-when">
+              <option value="always">Always</option>
+              <option value="on_change">On Persona Change (first message always injects)</option>
+            </select>
+          </label>
         </div>
       </div>
     </div>
@@ -272,8 +287,11 @@
         </div>
         <div class="modal-body">
           <label>
-            Name
-            <input id="persona-name" type="text" />
+            <div class="label-inline">
+              <span>Name</span>
+              <span id="persona-name-count" class="muted">0/128</span>
+            </div>
+            <input id="persona-name" type="text" maxlength="128" />
           </label>
           <label>
             Avatar URL
@@ -333,8 +351,11 @@
         </div>
         <div class="modal-body two-col">
           <label>
-            Name
-            <input id="char-name" type="text" />
+            <div class="label-inline">
+              <span>Name</span>
+              <span id="char-name-count" class="muted">0/128</span>
+            </div>
+            <input id="char-name" type="text" maxlength="128" />
           </label>
           <label>
             Avatar URL
@@ -350,6 +371,12 @@
           <label class="full">
             Character Prompt
             <textarea id="char-system-prompt" rows="8"></textarea>
+          </label>
+          <label class="full">
+            Persona Injection Placement
+            <select id="char-persona-injection-placement">
+              <option value="end_system_prompt">At End of Character Prompt</option>
+            </select>
           </label>
           <label>
             <span class="checkbox-line">

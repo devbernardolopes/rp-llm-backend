@@ -50,6 +50,7 @@ const ICONS = {
   speaker:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-4h4l5-4v12l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M18.5 7a7 7 0 0 1 0 10"></path></svg>',
   stop: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>',
+  info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6"></path><circle cx="12" cy="7.5" r="1"></circle></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
   starFilled:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
@@ -79,6 +80,9 @@ const DEFAULT_SETTINGS = {
   newCharacterShortcut: "Alt+N",
   globalPromptTemplate: "Stay in character and respond naturally.",
   summarySystemPrompt: "You are a helpful summarization assistant.",
+  personaInjectionTemplate:
+    "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
+  personaInjectionWhen: "always",
   markdownCustomCss:
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
   postprocessRulesJson: "[]",
@@ -280,6 +284,7 @@ const state = {
     voiceSupportReady: false,
   },
   editingMessageIndex: null,
+  pendingPersonaInjectionPersonaId: null,
   selectedThreadIds: new Set(),
   modalDirty: {
     "character-modal": false,
@@ -376,7 +381,14 @@ function applyInterfaceLanguage() {
     createBtn.textContent = t("createCharacter");
   }
   const importBtn = document.getElementById("import-character-btn");
-  if (importBtn) importBtn.textContent = t("importCharacter");
+  if (importBtn) {
+    const paneCollapsed = document
+      .getElementById("left-pane")
+      ?.classList.contains("collapsed");
+    importBtn.textContent = paneCollapsed
+      ? "↥"
+      : `↥ ${t("importCharacter")}`;
+  }
 
   const bottomButtons = document.querySelectorAll(".pane-bottom .option-btn");
   if (bottomButtons[0]) {
@@ -494,6 +506,12 @@ function setupEvents() {
   document
     .getElementById("persona-select")
     .addEventListener("change", onPersonaSelectChange);
+  document.getElementById("char-name").addEventListener("input", () => {
+    updateNameLengthCounter("char-name", "char-name-count", 128);
+  });
+  document.getElementById("persona-name").addEventListener("input", () => {
+    updateNameLengthCounter("persona-name", "persona-name-count", 128);
+  });
   document
     .getElementById("save-shortcuts-btn")
     .addEventListener("click", saveShortcutsFromModal);
@@ -564,6 +582,7 @@ function setupEvents() {
     "#char-name",
     "#char-avatar",
     "#char-system-prompt",
+    "#char-persona-injection-placement",
     "#char-use-memory",
     "#char-use-postprocess",
     "#char-avatar-scale",
@@ -579,6 +598,20 @@ function setupEvents() {
     "#persona-is-default",
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
+  updateNameLengthCounter("char-name", "char-name-count", 128);
+  updateNameLengthCounter("persona-name", "persona-name-count", 128);
+}
+
+function updateNameLengthCounter(inputId, counterId, maxLen = 128) {
+  const input = document.getElementById(inputId);
+  const counter = document.getElementById(counterId);
+  if (!input || !counter) return;
+  let value = String(input.value || "");
+  if (value.length > maxLen) {
+    value = value.slice(0, maxLen);
+    input.value = value;
+  }
+  counter.textContent = `${value.length}/${maxLen}`;
 }
 
 function onInputKeyDown(e) {
@@ -589,7 +622,7 @@ function onInputKeyDown(e) {
         "[": "]",
         "{": "}",
         '"': '"',
-        "'": "'",
+        _: "_",
         "`": "`",
         "*": "*",
       };
@@ -743,6 +776,10 @@ function setupSettingsControls() {
     "global-prompt-template",
   );
   const summarySystemPrompt = document.getElementById("summary-system-prompt");
+  const personaInjectionTemplate = document.getElementById(
+    "persona-injection-template",
+  );
+  const personaInjectionWhen = document.getElementById("persona-injection-when");
   const shortcutsRaw = document.getElementById("shortcuts-raw");
   markdownCheck.checked = !!state.settings.markdownEnabled;
   allowMessageHtml.checked = state.settings.allowMessageHtml !== false;
@@ -775,6 +812,13 @@ function setupSettingsControls() {
   preferFreeVariant.checked = state.settings.preferFreeVariant !== false;
   globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
+  personaInjectionTemplate.value =
+    state.settings.personaInjectionTemplate ||
+    DEFAULT_SETTINGS.personaInjectionTemplate;
+  personaInjectionWhen.value =
+    state.settings.personaInjectionWhen === "on_change"
+      ? "on_change"
+      : "always";
   shortcutsRaw.value = state.settings.shortcutsRaw || "";
   cancelShortcut.value =
     state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
@@ -906,6 +950,17 @@ function setupSettingsControls() {
 
   summarySystemPrompt.addEventListener("input", () => {
     state.settings.summarySystemPrompt = summarySystemPrompt.value;
+    saveSettings();
+  });
+
+  personaInjectionTemplate.addEventListener("input", () => {
+    state.settings.personaInjectionTemplate = personaInjectionTemplate.value;
+    saveSettings();
+  });
+
+  personaInjectionWhen.addEventListener("change", () => {
+    state.settings.personaInjectionWhen =
+      personaInjectionWhen.value === "on_change" ? "on_change" : "always";
     saveSettings();
   });
 
@@ -1315,6 +1370,13 @@ async function renderCharacters() {
     const actions = document.createElement("div");
     actions.className = "card-actions";
 
+    const deleteCharBtn = iconButton("delete", "Delete character", async (e) => {
+      e.stopPropagation();
+      await deleteCharacter(char.id);
+    });
+    deleteCharBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteCharBtn);
+
     actions.appendChild(
       iconButton("duplicate", "Duplicate character", async (e) => {
         e.stopPropagation();
@@ -1333,13 +1395,6 @@ async function renderCharacters() {
       iconButton("export", "Export character", async (e) => {
         e.stopPropagation();
         await exportCharacter(char.id);
-      }),
-    );
-
-    actions.appendChild(
-      iconButton("delete", "Delete character", async (e) => {
-        e.stopPropagation();
-        await deleteCharacter(char.id);
       }),
     );
 
@@ -1377,40 +1432,27 @@ async function renderThreads() {
   const bulkBar = document.createElement("div");
   bulkBar.className = "thread-bulk-bar";
   const selectedCount = state.selectedThreadIds.size;
-  bulkBar.innerHTML = `<span class="muted">${selectedCount} selected</span>`;
-  const bulkActions = document.createElement("div");
-  bulkActions.className = "thread-bulk-actions";
-
-  const selectAllBtn = document.createElement("button");
-  selectAllBtn.className = "secondary-btn";
-  selectAllBtn.type = "button";
-  selectAllBtn.textContent = "Select All";
-  selectAllBtn.addEventListener("click", () => {
-    threads.forEach((t) => state.selectedThreadIds.add(Number(t.id)));
+  const selectAll = document.createElement("input");
+  selectAll.type = "checkbox";
+  selectAll.className = "thread-select thread-select-all";
+  selectAll.title = "Select all threads";
+  selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
+  selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
+  selectAll.addEventListener("change", () => {
+    if (selectAll.checked) {
+      threads.forEach((t) => state.selectedThreadIds.add(Number(t.id)));
+    } else {
+      state.selectedThreadIds.clear();
+    }
     renderThreads();
   });
-
-  const clearBtn = document.createElement("button");
-  clearBtn.className = "secondary-btn";
-  clearBtn.type = "button";
-  clearBtn.textContent = "Clear";
-  clearBtn.disabled = selectedCount === 0;
-  clearBtn.addEventListener("click", () => {
-    state.selectedThreadIds.clear();
-    renderThreads();
-  });
-
-  const deleteSelectedBtn = document.createElement("button");
-  deleteSelectedBtn.className = "secondary-btn danger-btn";
-  deleteSelectedBtn.type = "button";
-  deleteSelectedBtn.textContent = "Delete Selected";
-  deleteSelectedBtn.disabled = selectedCount === 0;
-  deleteSelectedBtn.addEventListener("click", async () => {
+  const deleteSelectedBtn = iconButton("delete", "Delete selected threads", async () => {
     await deleteSelectedThreads();
   });
+  deleteSelectedBtn.classList.add("danger-icon-btn");
+  deleteSelectedBtn.disabled = selectedCount === 0;
 
-  bulkActions.append(selectAllBtn, clearBtn, deleteSelectedBtn);
-  bulkBar.appendChild(bulkActions);
+  bulkBar.append(selectAll, deleteSelectedBtn);
   list.appendChild(bulkBar);
 
   const charIds = [
@@ -1424,7 +1466,10 @@ async function renderThreads() {
 
     const row = document.createElement("div");
     row.className = "thread-row";
-    row.addEventListener("click", () => openThread(thread.id));
+    row.addEventListener("click", (e) => {
+      if (e.target?.closest(".actions")) return;
+      openThread(thread.id);
+    });
     if (currentThread?.id === thread.id) {
       row.classList.add("active-thread");
     }
@@ -1463,10 +1508,17 @@ async function renderThreads() {
       openThread(thread.id);
     });
 
-    info.append(meta, titleBtn);
+    info.append(titleBtn, meta);
 
     const actions = document.createElement("div");
     actions.className = "actions";
+
+    const deleteThreadBtn = iconButton("delete", "Delete thread", async (e) => {
+      e.stopPropagation();
+      await deleteThread(thread.id);
+    });
+    deleteThreadBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteThreadBtn);
 
     if (char) {
       actions.appendChild(
@@ -1482,13 +1534,6 @@ async function renderThreads() {
       iconButton("duplicate", "Duplicate thread", async (e) => {
         e.stopPropagation();
         await duplicateThread(thread.id);
-      }),
-    );
-
-    actions.appendChild(
-      iconButton("delete", "Delete thread", async (e) => {
-        e.stopPropagation();
-        await deleteThread(thread.id);
       }),
     );
     const favBtn = iconButton(
@@ -1558,6 +1603,7 @@ function togglePane() {
   const pane = document.getElementById("left-pane");
   const shell = document.getElementById("app-shell");
   const createBtn = document.getElementById("create-character-btn");
+  const importBtn = document.getElementById("import-character-btn");
   pane.classList.toggle("collapsed");
   shell.classList.toggle(
     "pane-collapsed",
@@ -1571,9 +1617,17 @@ function togglePane() {
   if (pane.classList.contains("collapsed")) {
     createBtn.textContent = "+";
     createBtn.title = t("createCharacter");
+    if (importBtn) {
+      importBtn.textContent = "↥";
+      importBtn.title = t("importCharacter");
+    }
   } else {
     createBtn.textContent = t("createCharacter");
     createBtn.title = "";
+    if (importBtn) {
+      importBtn.textContent = `↥ ${t("importCharacter")}`;
+      importBtn.title = "";
+    }
   }
 }
 
@@ -1618,10 +1672,13 @@ function openCharacterModal(character = null) {
     state.editingCharacterId ? "Edit Character" : "Create Character";
 
   document.getElementById("char-name").value = character?.name || "";
+  updateNameLengthCounter("char-name", "char-name-count", 128);
   document.getElementById("char-avatar").value = character?.avatar || "";
   document.getElementById("char-avatar-file").value = "";
   document.getElementById("char-system-prompt").value =
     character?.systemPrompt || "";
+  document.getElementById("char-persona-injection-placement").value =
+    character?.personaInjectionPlacement || "end_system_prompt";
   document.getElementById("char-use-memory").checked =
     character?.useMemory !== false;
   document.getElementById("char-use-postprocess").checked =
@@ -1663,6 +1720,9 @@ async function saveCharacterFromModal() {
     systemPrompt: document.getElementById("char-system-prompt").value.trim(),
     useMemory: document.getElementById("char-use-memory").checked,
     usePostProcessing: document.getElementById("char-use-postprocess").checked,
+    personaInjectionPlacement:
+      document.getElementById("char-persona-injection-placement").value ||
+      "end_system_prompt",
     avatarScale:
       Number(document.getElementById("char-avatar-scale").value) || 1,
     ttsVoice: selectedTts.voice,
@@ -1913,6 +1973,7 @@ async function savePersonaFromModal() {
   }
 
   document.getElementById("persona-name").value = "";
+  updateNameLengthCounter("persona-name", "persona-name-count", 128);
   document.getElementById("persona-avatar").value = "";
   document.getElementById("persona-avatar-file").value = "";
   document.getElementById("persona-description").value = "";
@@ -2039,6 +2100,7 @@ async function deletePersona(personaId) {
 function loadPersonaForEditing(persona) {
   state.editingPersonaId = persona.id;
   document.getElementById("persona-name").value = persona.name || "";
+  updateNameLengthCounter("persona-name", "persona-name-count", 128);
   document.getElementById("persona-avatar").value = persona.avatar || "";
   document.getElementById("persona-avatar-file").value = "";
   document.getElementById("persona-description").value =
@@ -2363,8 +2425,10 @@ async function startNewThread(characterId) {
   const newThread = {
     characterId,
     title: `Thread ${new Date().toLocaleString()}`,
+    titleGenerated: false,
     messages: [],
     selectedPersonaId: currentPersona?.id || null,
+    lastPersonaInjectionPersonaId: null,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -2387,8 +2451,10 @@ async function duplicateThread(threadId) {
   const copy = {
     characterId: source.characterId,
     title: `${source.title || `Thread ${source.id}`} Copy`,
+    titleGenerated: false,
     messages: [...(source.messages || [])],
     selectedPersonaId: source.selectedPersonaId || null,
+    lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
     favorite: !!source.favorite,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -2464,8 +2530,7 @@ async function openThread(threadId) {
     console.warn("Persona selector render failed:", e);
   }
 
-  const displayTitle = `${character?.name || "Unknown"} - ${thread.title || `Thread ${thread.id}`}`;
-  document.getElementById("chat-title").textContent = displayTitle;
+  updateChatTitle();
   updateModelPill();
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
@@ -2477,6 +2542,81 @@ async function openThread(threadId) {
   await renderShortcutsBar();
   await renderThreads();
   showChatView();
+}
+
+function updateChatTitle() {
+  const titleEl = document.getElementById("chat-title");
+  if (!titleEl) return;
+  if (!currentThread) {
+    titleEl.textContent = "Thread";
+    return;
+  }
+  const displayTitle = `${currentCharacter?.name || "Unknown"} - ${
+    currentThread.title || `Thread ${currentThread.id}`
+  }`;
+  titleEl.textContent = displayTitle;
+}
+
+async function maybeGenerateThreadTitle() {
+  if (!currentThread || !currentCharacter) return;
+  if (currentThread.titleGenerated === true) return;
+  if (conversationHistory.length < 5) return;
+
+  const firstFive = conversationHistory.slice(0, 5);
+  const transcript = firstFive
+    .map((m, i) => {
+      const role = m.role === "assistant" ? "Assistant" : "User";
+      const content = String(m.content || "").replace(/\s+/g, " ").trim();
+      return `${i + 1}. ${role}: ${content.slice(0, 600)}`;
+    })
+    .join("\n");
+
+  const titlePrompt = [
+    "Generate a concise roleplay thread title.",
+    "Requirements:",
+    "- Maximum 128 characters.",
+    "- Plain text only.",
+    "- No surrounding quotes.",
+    "- Reflect main topic or scene from these messages.",
+    "",
+    transcript,
+  ].join("\n");
+
+  try {
+    const result = await callOpenRouter(
+      "You create concise, descriptive chat thread titles.",
+      [{ role: "user", content: titlePrompt }],
+      state.settings.model,
+    );
+    const raw = String(result?.content || "").trim();
+    if (!raw) return;
+    const cleaned = raw
+      .replace(/^["'`]+|["'`]+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 128);
+    if (!cleaned) return;
+
+    const updatedAt = Date.now();
+    await db.threads.update(currentThread.id, {
+      title: cleaned,
+      titleGenerated: true,
+      updatedAt,
+    });
+    currentThread.title = cleaned;
+    currentThread.titleGenerated = true;
+    currentThread.updatedAt = updatedAt;
+    state.lastSyncSeenUpdatedAt = updatedAt;
+    updateChatTitle();
+    await renderThreads();
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: currentThread.id,
+      updatedAt,
+    });
+  } catch {
+    // keep existing fallback title
+  }
 }
 
 function renderChat() {
@@ -2497,6 +2637,7 @@ function buildMessageRow(message, index, streaming) {
   const row = document.createElement("div");
   row.className = "chat-row";
   row.dataset.streaming = streaming ? "1" : "0";
+  row.dataset.messageIndex = String(index);
 
   const avatar = document.createElement("img");
   avatar.className = "chat-avatar";
@@ -2539,26 +2680,42 @@ function buildMessageRow(message, index, streaming) {
   const messageIndex = document.createElement("span");
   messageIndex.className = "message-index";
   messageIndex.textContent = `#${index + 1}`;
+  const isTruncated = message.truncatedByFilter === true;
+  const disableControlsForRow = streaming;
 
   if (message.role === "assistant") {
     controls.appendChild(messageIndex);
-    controls.appendChild(
-      iconButton("delete", "Delete message", async () => {
+    const delBtn = iconButton("delete", "Delete message", async () => {
         await deleteMessageAt(index);
-      }),
-    );
+      });
+    delBtn.classList.add("msg-delete-btn");
+    delBtn.classList.add("danger-icon-btn");
+    delBtn.disabled = disableControlsForRow;
+    controls.appendChild(delBtn);
 
-    controls.appendChild(
-      iconButton("regenerate", "Regenerate message", async () => {
-        await regenerateMessage(index);
-      }),
-    );
+    const regenBtn = iconButton("regenerate", "Regenerate message", async () => {
+      await regenerateMessage(index);
+    });
+    regenBtn.classList.add("msg-regen-btn");
+    regenBtn.disabled = state.sending || disableControlsForRow;
+    controls.appendChild(regenBtn);
+    const editBtn = iconButton("edit", "Edit message", async () => {
+      beginInlineMessageEdit(index, content);
+    });
+    editBtn.classList.add("msg-edit-btn");
+    editBtn.disabled = disableControlsForRow || isTruncated;
+    controls.appendChild(editBtn);
 
-    controls.appendChild(
-      iconButton("copy", "Copy message", async () => {
-        await copyMessage(message.content || "");
-      }),
-    );
+    const copyBtn = iconButton("copy", "Copy message", async () => {
+      await copyMessage(message.content || "");
+    });
+    copyBtn.classList.add("msg-copy-btn");
+    copyBtn.disabled = disableControlsForRow;
+    controls.appendChild(copyBtn);
+    const infoBtn = iconButton("info", "Message metadata", () => {});
+    infoBtn.classList.add("msg-info-btn");
+    infoBtn.disabled = true;
+    controls.appendChild(infoBtn);
 
     const speakerBtn = iconButton("speaker", "Speak message", async (e) => {
       const clickedBtn = e?.currentTarget;
@@ -2572,9 +2729,20 @@ function buildMessageRow(message, index, streaming) {
     });
     speakerBtn.classList.add("msg-tts-btn");
     speakerBtn.dataset.messageIndex = String(index);
+    if (disableControlsForRow) speakerBtn.disabled = true;
     controls.appendChild(speakerBtn);
   } else {
     controls.appendChild(messageIndex);
+    const editBtn = iconButton("edit", "Edit message", async () => {
+      beginInlineMessageEdit(index, content);
+    });
+    editBtn.classList.add("msg-edit-btn");
+    editBtn.disabled = disableControlsForRow || isTruncated;
+    controls.appendChild(editBtn);
+    const infoBtn = iconButton("info", "Message metadata", () => {});
+    infoBtn.classList.add("msg-info-btn");
+    infoBtn.disabled = true;
+    controls.appendChild(infoBtn);
   }
 
   header.appendChild(controls);
@@ -2582,12 +2750,14 @@ function buildMessageRow(message, index, streaming) {
   const content = document.createElement("div");
   content.className = "message-content";
   content.addEventListener("dblclick", () => {
+    const rowEl = content.closest(".chat-row");
+    if (rowEl?.dataset?.streaming === "1") return;
     beginInlineMessageEdit(index, content);
   });
   if (streaming) {
     content.textContent = message.content;
   } else {
-    content.innerHTML = renderMessageHtml(message.content || "", message.role);
+    renderMessageContent(content, message);
   }
 
   block.append(header, content);
@@ -2602,10 +2772,34 @@ function speakerBtnForRow(row) {
   return row?.querySelector(".msg-tts-btn") || null;
 }
 
+function renderMessageContent(contentEl, message) {
+  if (!contentEl || !message) return;
+  contentEl.innerHTML = renderMessageHtml(message.content || "", message.role);
+  if (message.truncatedByFilter === true) {
+    contentEl.appendChild(buildTruncationNotice());
+  }
+}
+
+function buildTruncationNotice() {
+  const box = document.createElement("div");
+  box.className = "message-truncated-note";
+  const p1 = document.createElement("p");
+  p1.textContent =
+    "This message has been truncated by the currently active model.";
+  const p2 = document.createElement("p");
+  p2.textContent =
+    "You can delete or regenerate this message. You can also trigger another model response, or send a new message.";
+  box.append(p1, p2);
+  return box;
+}
+
 function beginInlineMessageEdit(index, contentEl) {
   if (!contentEl || !currentThread) return;
+  const rowEl = contentEl.closest(".chat-row");
+  if (rowEl?.dataset?.streaming === "1") return;
   const message = conversationHistory[index];
   if (!message) return;
+  if (message.truncatedByFilter === true) return;
   stopTtsPlayback();
 
   if (
@@ -2624,11 +2818,17 @@ function beginInlineMessageEdit(index, contentEl) {
     90,
     Math.ceil(contentEl.getBoundingClientRect().height),
   );
+  const contentWidth = Math.max(
+    180,
+    Math.ceil(contentEl.getBoundingClientRect().width),
+  );
   const editor = document.createElement("textarea");
   editor.className = "message-editor";
   editor.value = String(message.content || "");
   editor.style.minHeight = `${contentHeight}px`;
   editor.style.height = `${contentHeight}px`;
+  editor.style.width = `${contentWidth}px`;
+  editor.style.maxWidth = "100%";
   contentEl.innerHTML = "";
   contentEl.appendChild(editor);
   editor.focus();
@@ -2656,16 +2856,16 @@ function beginInlineMessageEdit(index, contentEl) {
     if (state.editingMessageIndex !== index) return;
     state.editingMessageIndex = null;
     if (cancelled) {
-      contentEl.innerHTML = renderMessageHtml(original, message.role);
+      renderMessageContent(contentEl, { ...message, content: original });
       return;
     }
     const next = editor.value;
     if (next === original) {
-      contentEl.innerHTML = renderMessageHtml(original, message.role);
+      renderMessageContent(contentEl, { ...message, content: original });
       return;
     }
     message.content = next;
-    contentEl.innerHTML = renderMessageHtml(message.content, message.role);
+    renderMessageContent(contentEl, message);
     await persistCurrentThread();
     await renderThreads();
     showToast("Message updated.", "success");
@@ -2676,7 +2876,7 @@ function beginInlineMessageEdit(index, contentEl) {
     () => {
       finalize().catch((e) => {
         console.warn("Message edit save failed:", e);
-        contentEl.innerHTML = renderMessageHtml(message.content || "", message.role);
+        renderMessageContent(contentEl, message);
       });
     },
     { once: true },
@@ -2792,7 +2992,8 @@ function updateMessageSpeakerButton(button, index) {
   const isLoading = isTtsIndexMatch(state.tts.loadingMessageIndex, index);
   const isSpeaking = isTtsIndexMatch(state.tts.speakingMessageIndex, index);
   const ttsReady = state.tts.voiceSupportReady === true;
-  button.disabled = !isAssistant || streaming || !hasContent || !ttsReady;
+  button.disabled =
+    !isAssistant || streaming || !hasContent || !ttsReady;
   button.classList.toggle("tts-loading", isLoading);
   if (!ttsReady) {
     button.innerHTML = ICONS.speaker;
@@ -2867,6 +3068,7 @@ async function sendMessage(options = {}) {
   };
   conversationHistory.push(userMsg);
   await persistCurrentThread();
+  await maybeGenerateThreadTitle();
 
   const log = document.getElementById("chat-log");
   log.appendChild(
@@ -2886,7 +3088,14 @@ async function generateBotReply() {
   if (!currentThread || !currentCharacter || state.sending) return;
 
   const log = document.getElementById("chat-log");
-  const pending = { role: "assistant", content: "", createdAt: Date.now() };
+  const pending = {
+    role: "assistant",
+    content: "",
+    createdAt: Date.now(),
+    finishReason: "",
+    nativeFinishReason: "",
+    truncatedByFilter: false,
+  };
   conversationHistory.push(pending);
   await persistCurrentThread();
   const pendingRow = buildMessageRow(
@@ -2928,13 +3137,15 @@ async function generateBotReply() {
     updateModelPill();
 
     pending.content = assistantText || "(No content returned)";
-    pendingRow.querySelector(".message-content").innerHTML = renderMessageHtml(
-      pending.content,
-      pending.role,
-    );
+    pending.finishReason = String(result.finishReason || "");
+    pending.nativeFinishReason = String(result.nativeFinishReason || "");
+    pending.truncatedByFilter = result.truncatedByFilter === true;
+    renderMessageContent(pendingRow.querySelector(".message-content"), pending);
     pendingRow.dataset.streaming = "0";
     refreshAllSpeakerButtons();
+    commitPendingPersonaInjectionMarker();
     await persistCurrentThread();
+    await maybeGenerateThreadTitle();
     scrollChatToBottom();
 
     if (
@@ -2947,14 +3158,14 @@ async function generateBotReply() {
 
     await renderThreads();
   } catch (e) {
+    state.pendingPersonaInjectionPersonaId = null;
     if (isAbortError(e)) {
       if (!pending.content.trim()) {
         const idx = conversationHistory.lastIndexOf(pending);
         if (idx >= 0) conversationHistory.splice(idx, 1);
         pendingRow.remove();
       } else {
-        pendingRow.querySelector(".message-content").innerHTML =
-          renderMessageHtml(pending.content, pending.role);
+        renderMessageContent(pendingRow.querySelector(".message-content"), pending);
         pendingRow.dataset.streaming = "0";
         refreshAllSpeakerButtons();
       }
@@ -2966,6 +3177,7 @@ async function generateBotReply() {
         `Error: ${e.message}`;
     }
   } finally {
+    state.pendingPersonaInjectionPersonaId = null;
     state.abortController = null;
     state.sending = false;
     setSendingState(false);
@@ -2990,8 +3202,6 @@ async function regenerateMessage(index) {
   if (!target || target.role !== "assistant") return;
 
   const prior = conversationHistory.slice(0, index);
-  const hasUser = prior.some((m) => m.role === "user");
-  if (!hasUser) return;
   const originalContent = String(target.content || "");
 
   stopTtsPlayback();
@@ -3006,6 +3216,8 @@ async function regenerateMessage(index) {
     renderChat();
     const row = document.getElementById("chat-log").children[index];
     const contentEl = row?.querySelector(".message-content");
+    if (row) row.dataset.streaming = "1";
+    refreshMessageControlStates();
     if (contentEl)
       contentEl.innerHTML =
         '<span class="spinner" aria-hidden="true"></span> Regenerating...';
@@ -3028,10 +3240,15 @@ async function regenerateMessage(index) {
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
     target.content = reply || "(No content returned)";
+    target.finishReason = String(result.finishReason || "");
+    target.nativeFinishReason = String(result.nativeFinishReason || "");
+    target.truncatedByFilter = result.truncatedByFilter === true;
+    commitPendingPersonaInjectionMarker();
     await persistCurrentThread();
     renderChat();
     await renderThreads();
   } catch (e) {
+    state.pendingPersonaInjectionPersonaId = null;
     if (isAbortError(e)) {
       await persistCurrentThread();
       renderChat();
@@ -3045,10 +3262,18 @@ async function regenerateMessage(index) {
       await openInfoDialog("Regenerate Failed", String(e.message || "Unknown error"));
     }
   } finally {
+    state.pendingPersonaInjectionPersonaId = null;
     state.abortController = null;
     state.sending = false;
     setSendingState(false);
   }
+}
+
+function commitPendingPersonaInjectionMarker() {
+  if (!currentThread) return;
+  if (!state.pendingPersonaInjectionPersonaId) return;
+  currentThread.lastPersonaInjectionPersonaId =
+    state.pendingPersonaInjectionPersonaId;
 }
 
 async function copyMessage(text) {
@@ -3455,9 +3680,37 @@ function setSendingState(sending) {
   const personaSelect = document.getElementById("persona-select");
   sendBtn.disabled = false;
   sendBtn.classList.toggle("is-generating", sending);
+  sendBtn.classList.toggle("danger-btn", sending);
   sendBtn.textContent = sending ? t("cancel") : t("send");
   personaSelect.disabled = sending;
+  refreshMessageControlStates();
+  refreshAllSpeakerButtons();
   if (sending) closePromptHistory();
+}
+
+function refreshMessageControlStates() {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const rows = Array.from(log.querySelectorAll(".chat-row"));
+  rows.forEach((row) => {
+    const index = Number(row.dataset.messageIndex);
+    const message = conversationHistory[index];
+    const isStreaming = row.dataset.streaming === "1";
+    const isTruncated = message?.truncatedByFilter === true;
+
+    row.querySelectorAll(".msg-delete-btn,.msg-copy-btn").forEach((btn) => {
+      btn.disabled = isStreaming;
+    });
+    row.querySelectorAll(".msg-regen-btn").forEach((btn) => {
+      btn.disabled = state.sending || isStreaming;
+    });
+    row.querySelectorAll(".msg-edit-btn").forEach((btn) => {
+      btn.disabled = isStreaming || isTruncated;
+    });
+    row.querySelectorAll(".msg-info-btn").forEach((btn) => {
+      btn.disabled = true;
+    });
+  });
 }
 
 function openImagePreview(src) {
@@ -3479,6 +3732,8 @@ async function persistCurrentThread() {
   const updated = {
     messages: conversationHistory,
     selectedPersonaId: currentThread.selectedPersonaId || null,
+    lastPersonaInjectionPersonaId:
+      currentThread.lastPersonaInjectionPersonaId || null,
     updatedAt: Date.now(),
   };
 
@@ -3581,7 +3836,9 @@ async function migrateLegacySessions() {
     await db.threads.add({
       characterId: session.characterId,
       title: `Imported Thread ${session.id}`,
+      titleGenerated: false,
       messages: session.messages || [],
+      lastPersonaInjectionPersonaId: null,
       createdAt: session.updatedAt || Date.now(),
       updatedAt: session.updatedAt || Date.now(),
     });
@@ -3604,15 +3861,16 @@ async function buildSystemPrompt(character) {
   const memory =
     character.useMemory === false ? null : await getMemorySummary(character.id);
   const contextSections = [];
-
-  if (personaForContext) {
-    contextSections.push(
-      [
-        "## Active User Persona",
-        `Name: ${personaForContext.name || "You"}`,
-        `Description: ${personaForContext.description || "(none)"}`,
-      ].join("\n"),
+  state.pendingPersonaInjectionPersonaId = null;
+  let systemPromptWithPersona = basePrompt;
+  if (personaForContext && shouldInjectPersonaContext(personaForContext)) {
+    const personaInjected = renderPersonaInjectionContent(personaForContext);
+    systemPromptWithPersona = applyPersonaInjectionPlacement(
+      basePrompt,
+      personaInjected,
+      character?.personaInjectionPlacement || "end_system_prompt",
     );
+    state.pendingPersonaInjectionPersonaId = personaForContext.id || null;
   }
 
   if (loreEntries.length > 0) {
@@ -3624,7 +3882,46 @@ async function buildSystemPrompt(character) {
     contextSections.push(`## Memory Context\n${memory}`);
   }
 
-  return [basePrompt, ...contextSections].filter(Boolean).join("\n\n").trim();
+  return [systemPromptWithPersona, ...contextSections]
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+}
+
+function shouldInjectPersonaContext(persona) {
+  if (!persona) return false;
+  const mode =
+    state.settings.personaInjectionWhen === "on_change"
+      ? "on_change"
+      : "always";
+  if (mode === "always") return true;
+  const currentPersonaId = Number(persona.id);
+  const lastInjected = Number(currentThread?.lastPersonaInjectionPersonaId);
+  if (!Number.isInteger(lastInjected)) return true;
+  return lastInjected !== currentPersonaId;
+}
+
+function renderPersonaInjectionContent(persona) {
+  const template =
+    state.settings.personaInjectionTemplate ||
+    DEFAULT_SETTINGS.personaInjectionTemplate;
+  return String(template || "")
+    .replace(/\{\{\s*name\s*\}\}/gi, persona?.name || "You")
+    .replace(
+      /\{\{\s*description\s*\}\}/gi,
+      persona?.description || "(none)",
+    );
+}
+
+function applyPersonaInjectionPlacement(basePrompt, injection, placement) {
+  const normalizedBase = String(basePrompt || "");
+  const normalizedInjection = String(injection || "");
+  if (!normalizedInjection.trim()) return normalizedBase;
+  if ((placement || "end_system_prompt") === "end_system_prompt") {
+    if (!normalizedBase.trim()) return normalizedInjection.trim();
+    return `${normalizedBase}${normalizedInjection}`;
+  }
+  return `${normalizedBase}${normalizedInjection}`;
 }
 
 function replaceUserPlaceholders(text, replacement) {
@@ -3766,11 +4063,15 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
 
       const data = await res.json();
       const content = extractAssistantText(data);
+      const finishMeta = extractFinishMeta(data);
       if (content && content.trim()) {
         return {
           content,
           model: data?.model || body.model,
           provider: data?.provider || "",
+          finishReason: finishMeta.finishReason,
+          nativeFinishReason: finishMeta.nativeFinishReason,
+          truncatedByFilter: finishMeta.truncatedByFilter,
         };
       }
 
@@ -3860,6 +4161,9 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
   let content = "";
   let model = fallbackModel;
   let provider = "";
+  let finishReason = "";
+  let nativeFinishReason = "";
+  let truncatedByFilter = false;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -3877,6 +4181,19 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
         const json = JSON.parse(data);
         model = json?.model || model;
         provider = json?.provider || provider;
+        const choice = json?.choices?.[0] || {};
+        const chunkFinish = String(choice?.finish_reason || "");
+        const chunkNativeFinish = String(choice?.native_finish_reason || "");
+        if (chunkFinish) finishReason = chunkFinish;
+        if (chunkNativeFinish) nativeFinishReason = chunkNativeFinish;
+        if (
+          chunkFinish.toLowerCase() === "content_filter" ||
+          chunkNativeFinish.toLowerCase() === "content_filter"
+        ) {
+          truncatedByFilter = true;
+          finishReason = "content_filter";
+          nativeFinishReason = chunkNativeFinish || chunkFinish;
+        }
         const piece = normalizeContentParts(json?.choices?.[0]?.delta?.content);
         if (piece) {
           content += piece;
@@ -3888,7 +4205,14 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
     }
   }
 
-  return { content, model, provider };
+  return {
+    content,
+    model,
+    provider,
+    finishReason,
+    nativeFinishReason,
+    truncatedByFilter,
+  };
 }
 
 function shouldRetryError(error, attempt, attempts) {
@@ -3982,6 +4306,16 @@ function extractAssistantText(payload) {
   }
 
   return "";
+}
+
+function extractFinishMeta(payload) {
+  const choice = payload?.choices?.[0] || {};
+  const finishReason = String(choice?.finish_reason || "");
+  const nativeFinishReason = String(choice?.native_finish_reason || "");
+  const truncatedByFilter =
+    finishReason.toLowerCase() === "content_filter" ||
+    nativeFinishReason.toLowerCase() === "content_filter";
+  return { finishReason, nativeFinishReason, truncatedByFilter };
 }
 
 function normalizeContentParts(value) {
