@@ -134,6 +134,26 @@
               spellcheck="false"
             />
           </label>
+          <div class="settings-inline-row">
+            <button id="puter-signin-btn" class="secondary-btn" type="button">
+              Sign In to Puter
+            </button>
+            <span id="puter-auth-status" class="muted">Puter: unknown</span>
+          </div>
+          <label>
+            TTS Test Text
+            <textarea
+              id="tts-test-text"
+              rows="2"
+              placeholder="This is a test voice playback."
+            ></textarea>
+          </label>
+          <div class="settings-inline-row">
+            <button id="tts-test-play-btn" class="secondary-btn" type="button">
+              Play TTS Test
+            </button>
+            <span id="tts-test-status" class="muted">TTS: idle</span>
+          </div>
           <label>
             Model
             <select id="model-select"></select>
@@ -332,6 +352,29 @@
               <option value="4">4x</option>
             </select>
           </label>
+          <label>
+            TTS Language
+            <select id="char-tts-language"></select>
+          </label>
+          <label>
+            TTS Voice
+            <select id="char-tts-voice"></select>
+          </label>
+          <label>
+            TTS Rate
+            <input id="char-tts-rate" type="range" min="0.5" max="2" step="0.1" />
+            <span id="char-tts-rate-value" class="muted"></span>
+          </label>
+          <label>
+            TTS Pitch
+            <input id="char-tts-pitch" type="range" min="0" max="2" step="0.1" />
+            <span id="char-tts-pitch-value" class="muted"></span>
+          </label>
+          <label class="full">
+            <button id="char-tts-test-btn" class="secondary-btn" type="button">
+              Test Character Voice
+            </button>
+          </label>
           <label class="full">
             Lore Books for this character
             <div id="char-lorebooks-list" class="check-list"></div>
@@ -345,6 +388,7 @@
     </div>
 
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <script src="https://js.puter.com/v2/"></script>
     <script src="config.js"></script>
     <script src="db.js"></script>
     <script src="app.js"></script>

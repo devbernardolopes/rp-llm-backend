@@ -43,6 +43,8 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect></svg>',
   speaker:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-4h4l5-4v12l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M18.5 7a7 7 0 0 1 0 10"></path></svg>',
+  stop:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>',
   star:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
   starFilled:
@@ -61,7 +63,7 @@ const DEFAULT_SETTINGS = {
   streamEnabled: true,
   autoReplyEnabled: true,
   enterToSendEnabled: true,
-  maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 1024,
+  maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 8192,
   temperature:
     Number.isFinite(Number(CONFIG.temperature)) ? Number(CONFIG.temperature) : 0.8,
   preferFreeVariant: true,
@@ -74,6 +76,9 @@ const DEFAULT_SETTINGS = {
   postprocessRulesJson: "[]",
   shortcutsRaw: "",
 };
+
+const DEFAULT_TTS_VOICE = "Joanna";
+const DEFAULT_TTS_LANGUAGE = "en-US";
 
 const state = {
   settings: { ...DEFAULT_SETTINGS },
@@ -93,6 +98,15 @@ const state = {
   confirmResolver: null,
   activeShortcut: null,
   abortController: null,
+  tts: {
+    audio: null,
+    speakingMessageIndex: null,
+    loadingMessageIndex: null,
+    requestSeq: 0,
+    activeRequestId: 0,
+    voiceSupportReady: false,
+  },
+  selectedThreadIds: new Set(),
   modalDirty: {
     "character-modal": false,
     "personas-modal": false,
@@ -100,12 +114,30 @@ const state = {
   },
 };
 
+const TTS_DEBUG = true;
+
+function ttsDebug(...args) {
+  if (!TTS_DEBUG) return;
+  console.debug("[TTS]", ...args);
+}
+
+function makeTtsCancelledError(message = "TTS cancelled.") {
+  const err = new Error(message);
+  err.name = "TtsCancelledError";
+  return err;
+}
+
+function isTtsCancelledError(error) {
+  return error?.name === "TtsCancelledError";
+}
+
 window.addEventListener("DOMContentLoaded", init);
 
 async function init() {
   loadSettings();
   setupSettingsControls();
   setupEvents();
+  initBrowserTtsSupport();
   updateModelPill();
   await migrateLegacySessions();
   await ensurePersonasInitialized();
@@ -129,6 +161,9 @@ function setupEvents() {
   document
     .getElementById("save-character-btn")
     .addEventListener("click", saveCharacterFromModal);
+  document
+    .getElementById("char-tts-test-btn")
+    .addEventListener("click", playCharacterTtsTestFromModal);
   document.getElementById("send-btn").addEventListener("click", sendMessage);
   document
     .getElementById("cancel-generation-btn")
@@ -153,6 +188,15 @@ function setupEvents() {
   document
     .getElementById("char-avatar")
     .addEventListener("input", onAvatarUrlInput);
+  document
+    .getElementById("char-tts-language")
+    .addEventListener("change", () => populateCharTtsVoiceSelect());
+  document
+    .getElementById("char-tts-rate")
+    .addEventListener("input", updateCharTtsRatePitchLabels);
+  document
+    .getElementById("char-tts-pitch")
+    .addEventListener("input", updateCharTtsRatePitchLabels);
   document
     .getElementById("save-persona-btn")
     .addEventListener("click", savePersonaFromModal);
@@ -226,6 +270,10 @@ function setupEvents() {
       "#char-use-memory",
       "#char-use-postprocess",
       "#char-avatar-scale",
+      "#char-tts-voice",
+      "#char-tts-language",
+      "#char-tts-rate",
+      "#char-tts-pitch",
     ],
   );
   markModalDirtyOnInput(
@@ -301,6 +349,11 @@ function onGlobalKeyDown(e) {
 
 function setupSettingsControls() {
   const openRouterApiKey = document.getElementById("openrouter-api-key");
+  const puterSignInBtn = document.getElementById("puter-signin-btn");
+  const ttsTestText = document.getElementById("tts-test-text");
+  const ttsTestPlayBtn = document.getElementById("tts-test-play-btn");
+  const ttsTestStatus = document.getElementById("tts-test-status");
+  const puterRow = puterSignInBtn?.closest(".settings-inline-row");
   const modelSelect = document.getElementById("model-select");
   const maxTokensSlider = document.getElementById("max-tokens-slider");
   const maxTokensValue = document.getElementById("max-tokens-value");
@@ -358,6 +411,33 @@ function setupSettingsControls() {
   newCharacterShortcut.value =
     state.settings.newCharacterShortcut || DEFAULT_SETTINGS.newCharacterShortcut;
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
+  if (ttsTestText) {
+    ttsTestText.value = "This is a test voice playback.";
+  }
+  if (puterRow) puterRow.classList.add("hidden");
+
+  if (ttsTestPlayBtn) {
+    ttsTestPlayBtn.addEventListener("click", async () => {
+      const text = String(ttsTestText?.value || "").trim() || "This is a test voice playback.";
+      if (ttsTestStatus) ttsTestStatus.textContent = "TTS: generating...";
+      ttsTestPlayBtn.disabled = true;
+      try {
+        const options = getCurrentCharacterTtsOptions();
+        if (ttsTestStatus) ttsTestStatus.textContent = "TTS: playing";
+        await playTtsAudio(text, options);
+        if (ttsTestStatus) ttsTestStatus.textContent = "TTS: idle";
+      } catch (err) {
+        if (isTtsCancelledError(err)) {
+          if (ttsTestStatus) ttsTestStatus.textContent = "TTS: idle";
+        } else if (ttsTestStatus) {
+          ttsTestStatus.textContent = `TTS: ${err.message || "failed"}`;
+        }
+      } finally {
+        ttsTestPlayBtn.disabled = false;
+      }
+    });
+  }
+  updateTtsSupportUi();
 
   openRouterApiKey.addEventListener("input", () => {
     state.settings.openRouterApiKey = openRouterApiKey.value.trim();
@@ -792,6 +872,11 @@ async function renderThreads() {
     return Number(b.updatedAt || 0) - Number(a.updatedAt || 0);
   });
 
+  const existingIds = new Set(threads.map((t) => Number(t.id)));
+  state.selectedThreadIds = new Set(
+    Array.from(state.selectedThreadIds).filter((id) => existingIds.has(Number(id))),
+  );
+
   list.innerHTML = "";
   if (threads.length === 0) {
     const empty = document.createElement("p");
@@ -800,6 +885,45 @@ async function renderThreads() {
     list.appendChild(empty);
     return;
   }
+
+  const bulkBar = document.createElement("div");
+  bulkBar.className = "thread-bulk-bar";
+  const selectedCount = state.selectedThreadIds.size;
+  bulkBar.innerHTML = `<span class="muted">${selectedCount} selected</span>`;
+  const bulkActions = document.createElement("div");
+  bulkActions.className = "thread-bulk-actions";
+
+  const selectAllBtn = document.createElement("button");
+  selectAllBtn.className = "secondary-btn";
+  selectAllBtn.type = "button";
+  selectAllBtn.textContent = "Select All";
+  selectAllBtn.addEventListener("click", () => {
+    threads.forEach((t) => state.selectedThreadIds.add(Number(t.id)));
+    renderThreads();
+  });
+
+  const clearBtn = document.createElement("button");
+  clearBtn.className = "secondary-btn";
+  clearBtn.type = "button";
+  clearBtn.textContent = "Clear";
+  clearBtn.disabled = selectedCount === 0;
+  clearBtn.addEventListener("click", () => {
+    state.selectedThreadIds.clear();
+    renderThreads();
+  });
+
+  const deleteSelectedBtn = document.createElement("button");
+  deleteSelectedBtn.className = "secondary-btn danger-btn";
+  deleteSelectedBtn.type = "button";
+  deleteSelectedBtn.textContent = "Delete Selected";
+  deleteSelectedBtn.disabled = selectedCount === 0;
+  deleteSelectedBtn.addEventListener("click", async () => {
+    await deleteSelectedThreads();
+  });
+
+  bulkActions.append(selectAllBtn, clearBtn, deleteSelectedBtn);
+  bulkBar.appendChild(bulkActions);
+  list.appendChild(bulkBar);
 
   const charIds = [
     ...new Set(threads.map((t) => t.characterId).filter(Boolean)),
@@ -815,6 +939,18 @@ async function renderThreads() {
     if (currentThread?.id === thread.id) {
       row.classList.add("active-thread");
     }
+
+    const selectBox = document.createElement("input");
+    selectBox.type = "checkbox";
+    selectBox.className = "thread-select";
+    selectBox.checked = state.selectedThreadIds.has(Number(thread.id));
+    selectBox.title = "Select thread";
+    selectBox.addEventListener("click", (e) => e.stopPropagation());
+    selectBox.addEventListener("change", () => {
+      if (selectBox.checked) state.selectedThreadIds.add(Number(thread.id));
+      else state.selectedThreadIds.delete(Number(thread.id));
+      renderThreads();
+    });
 
     const avatar = document.createElement("img");
     avatar.className = "thread-avatar";
@@ -871,9 +1007,38 @@ async function renderThreads() {
     if (thread.favorite) favBtn.classList.add("is-favorite");
     actions.appendChild(favBtn);
 
-    row.append(avatar, info, actions);
+    row.append(selectBox, avatar, info, actions);
     list.appendChild(row);
   });
+}
+
+async function deleteSelectedThreads() {
+  const ids = Array.from(state.selectedThreadIds).map(Number).filter(Number.isInteger);
+  if (ids.length === 0) return;
+  const ok = await openConfirmDialog(
+    "Delete Threads",
+    `Delete ${ids.length} selected thread${ids.length === 1 ? "" : "s"}?`,
+  );
+  if (!ok) return;
+
+  for (const id of ids) {
+    await db.threads.delete(id);
+    broadcastSyncEvent({ type: "thread-updated", threadId: id, updatedAt: Date.now() });
+  }
+
+  if (currentThread && ids.includes(Number(currentThread.id))) {
+    currentThread = null;
+    currentCharacter = null;
+    conversationHistory = [];
+    showMainView();
+  }
+
+  state.selectedThreadIds.clear();
+  await renderThreads();
+  showToast(
+    `${ids.length} thread${ids.length === 1 ? "" : "s"} deleted.`,
+    "success",
+  );
 }
 
 function iconButton(iconKey, ariaLabel, handler) {
@@ -908,6 +1073,7 @@ function togglePane() {
 }
 
 function showMainView() {
+  stopTtsPlayback();
   document.getElementById("main-view").classList.add("active");
   document.getElementById("chat-view").classList.remove("active");
 }
@@ -958,6 +1124,24 @@ function openCharacterModal(character = null) {
   document.getElementById("char-avatar-scale").value = String(
     Number(character?.avatarScale) || 1,
   );
+  const lang = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
+  const voice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
+  const rate = Number.isFinite(Number(character?.ttsRate))
+    ? Number(character.ttsRate)
+    : 1;
+  const pitch = Number.isFinite(Number(character?.ttsPitch))
+    ? Number(character.ttsPitch)
+    : 1;
+  document.getElementById("char-tts-language").value = lang;
+  populateCharTtsLanguageSelect(lang);
+  populateCharTtsVoiceSelect(voice);
+  document.getElementById("char-tts-rate").value = String(
+    Math.max(0.5, Math.min(2, rate)),
+  );
+  document.getElementById("char-tts-pitch").value = String(
+    Math.max(0, Math.min(2, pitch)),
+  );
+  updateCharTtsRatePitchLabels();
   renderAvatarPreview(character?.avatar || "");
   renderCharacterLorebookList(character?.lorebookIds || []);
   updateCharacterPromptPlaceholder();
@@ -968,12 +1152,17 @@ function openCharacterModal(character = null) {
 
 async function saveCharacterFromModal() {
   const selectedLorebookIds = getSelectedLorebookIds();
+  const selectedTts = getResolvedCharTtsSelection();
   const payload = {
     name: document.getElementById("char-name").value.trim(),
     systemPrompt: document.getElementById("char-system-prompt").value.trim(),
     useMemory: document.getElementById("char-use-memory").checked,
     usePostProcessing: document.getElementById("char-use-postprocess").checked,
     avatarScale: Number(document.getElementById("char-avatar-scale").value) || 1,
+    ttsVoice: selectedTts.voice,
+    ttsLanguage: selectedTts.language,
+    ttsRate: selectedTts.rate,
+    ttsPitch: selectedTts.pitch,
     lorebookIds: selectedLorebookIds,
     avatar: document.getElementById("char-avatar").value.trim(),
     updatedAt: Date.now(),
@@ -986,6 +1175,9 @@ async function saveCharacterFromModal() {
 
   if (state.editingCharacterId) {
     await db.characters.update(state.editingCharacterId, payload);
+    if (currentCharacter && Number(currentCharacter.id) === Number(state.editingCharacterId)) {
+      currentCharacter = { ...currentCharacter, ...payload };
+    }
     showToast("Character updated.", "success");
   } else {
     payload.createdAt = Date.now();
@@ -996,6 +1188,89 @@ async function saveCharacterFromModal() {
   closeActiveModal();
   state.modalDirty["character-modal"] = false;
   await renderAll();
+}
+
+function populateCharTtsLanguageSelect(preferredLanguage = DEFAULT_TTS_LANGUAGE) {
+  const languageSelect = document.getElementById("char-tts-language");
+  if (!languageSelect) return;
+  const voices = hasBrowserTtsSupport()
+    ? window.speechSynthesis.getVoices?.() || []
+    : [];
+  const langs = Array.from(
+    new Set(voices.map((v) => String(v.lang || "").trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b));
+  if (langs.length === 0) {
+    langs.push(DEFAULT_TTS_LANGUAGE);
+  }
+  languageSelect.innerHTML = "";
+  langs.forEach((code) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = code;
+    languageSelect.appendChild(opt);
+  });
+  const hasPreferred = langs.includes(preferredLanguage);
+  languageSelect.value = hasPreferred ? preferredLanguage : langs[0];
+}
+
+function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
+  const languageSelect = document.getElementById("char-tts-language");
+  const voiceSelect = document.getElementById("char-tts-voice");
+  if (!languageSelect || !voiceSelect) return;
+  const selectedLang = String(languageSelect.value || DEFAULT_TTS_LANGUAGE);
+  const voices = hasBrowserTtsSupport()
+    ? window.speechSynthesis.getVoices?.() || []
+    : [];
+  const filtered = voices.filter(
+    (v) => String(v.lang || "").toLowerCase() === selectedLang.toLowerCase(),
+  );
+  const candidates = filtered.length ? filtered : voices;
+  const names = Array.from(
+    new Set(candidates.map((v) => String(v.name || "").trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b));
+  if (names.length === 0) {
+    names.push(DEFAULT_TTS_VOICE);
+  }
+  voiceSelect.innerHTML = "";
+  names.forEach((voice) => {
+    const opt = document.createElement("option");
+    opt.value = voice;
+    opt.textContent = voice;
+    voiceSelect.appendChild(opt);
+  });
+  const hasPreferred = names.includes(preferredVoice);
+  voiceSelect.value = hasPreferred ? preferredVoice : names[0];
+}
+
+function updateCharTtsRatePitchLabels() {
+  const rate = document.getElementById("char-tts-rate");
+  const pitch = document.getElementById("char-tts-pitch");
+  const rateValue = document.getElementById("char-tts-rate-value");
+  const pitchValue = document.getElementById("char-tts-pitch-value");
+  if (rate && rateValue) rateValue.textContent = Number(rate.value || 1).toFixed(1);
+  if (pitch && pitchValue) pitchValue.textContent = Number(pitch.value || 1).toFixed(1);
+}
+
+function getResolvedTtsSelection(languageInput, voiceInput, rateInput, pitchInput) {
+  const language = String(languageInput || DEFAULT_TTS_LANGUAGE).trim() || DEFAULT_TTS_LANGUAGE;
+  const voice = String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
+  const rate = Math.max(0.5, Math.min(2, Number(rateInput) || 1));
+  const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1));
+  return {
+    language,
+    voice,
+    rate,
+    pitch,
+  };
+}
+
+function getResolvedCharTtsSelection() {
+  return getResolvedTtsSelection(
+    document.getElementById("char-tts-language")?.value,
+    document.getElementById("char-tts-voice")?.value,
+    document.getElementById("char-tts-rate")?.value,
+    document.getElementById("char-tts-pitch")?.value,
+  );
 }
 
 async function renderPersonaSelector() {
@@ -1601,6 +1876,7 @@ async function deleteThread(threadId) {
   if (!ok) return;
 
   await db.threads.delete(threadId);
+  state.selectedThreadIds.delete(Number(threadId));
   broadcastSyncEvent({ type: "thread-updated", threadId, updatedAt: Date.now() });
   if (currentThread?.id === threadId) {
     currentThread = null;
@@ -1613,9 +1889,11 @@ async function deleteThread(threadId) {
 }
 
 async function openThread(threadId) {
+  state.selectedThreadIds.delete(Number(threadId));
   const thread = await db.threads.get(threadId);
   if (!thread) return;
 
+  stopTtsPlayback();
   const character = await db.characters.get(thread.characterId);
   currentThread = thread;
   currentCharacter = character || null;
@@ -1663,6 +1941,7 @@ function renderChat() {
 function buildMessageRow(message, index, streaming) {
   const row = document.createElement("div");
   row.className = "chat-row";
+  row.dataset.streaming = streaming ? "1" : "0";
 
   const avatar = document.createElement("img");
   avatar.className = "chat-avatar";
@@ -1716,11 +1995,19 @@ function buildMessageRow(message, index, streaming) {
       }),
     );
 
-    controls.appendChild(
-      iconButton("speaker", "Text to speech", () => {
-        alert("TTS will be implemented later.");
-      }),
-    );
+    const speakerBtn = iconButton("speaker", "Speak message", async (e) => {
+      const clickedBtn = e?.currentTarget;
+      const resolvedIndex = resolveMessageIndexFromButton(clickedBtn, index);
+      ttsDebug("bubble-click", {
+        capturedIndex: index,
+        resolvedIndex,
+        datasetIndex: clickedBtn?.dataset?.messageIndex,
+      });
+      await toggleMessageSpeech(resolvedIndex);
+    });
+    speakerBtn.classList.add("msg-tts-btn");
+    speakerBtn.dataset.messageIndex = String(index);
+    controls.appendChild(speakerBtn);
   }
 
   header.appendChild(controls);
@@ -1735,7 +2022,125 @@ function buildMessageRow(message, index, streaming) {
 
   block.append(header, content);
   row.append(avatar, block);
+  if (message.role === "assistant") {
+    updateMessageSpeakerButton(speakerBtnForRow(row), index);
+  }
   return row;
+}
+
+function speakerBtnForRow(row) {
+  return row?.querySelector(".msg-tts-btn") || null;
+}
+
+function resolveMessageIndexFromButton(buttonEl, fallbackIndex) {
+  const dataIndex = Number(buttonEl?.dataset?.messageIndex);
+  if (Number.isInteger(dataIndex) && dataIndex >= 0) {
+    ttsDebug("resolve-index:dataset", { dataIndex, fallbackIndex });
+    return dataIndex;
+  }
+  const row = buttonEl?.closest?.(".chat-row");
+  const log = document.getElementById("chat-log");
+  if (!row || !log) return fallbackIndex;
+  const rowIndex = Array.from(log.children).indexOf(row);
+  if (rowIndex >= 0) {
+    ttsDebug("resolve-index:row", { rowIndex, fallbackIndex });
+    return rowIndex;
+  }
+  ttsDebug("resolve-index:fallback", { fallbackIndex });
+  return fallbackIndex;
+}
+
+function isTtsIndexMatch(ttsIndex, messageIndex) {
+  return Number.isInteger(ttsIndex) && ttsIndex === Number(messageIndex);
+}
+
+function hasBrowserTtsSupport() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.SpeechSynthesisUtterance === "function" &&
+    typeof window.speechSynthesis !== "undefined"
+  );
+}
+
+function updateTtsSupportUi() {
+  const supported = state.tts.voiceSupportReady === true;
+  const statusEl = document.getElementById("tts-test-status");
+  const playBtn = document.getElementById("tts-test-play-btn");
+  if (statusEl && (!statusEl.textContent || statusEl.textContent.startsWith("TTS: unsupported"))) {
+    statusEl.textContent = supported ? "TTS: idle" : "TTS: unsupported in this browser";
+  }
+  if (playBtn) {
+    playBtn.disabled = !supported;
+  }
+  refreshAllSpeakerButtons();
+}
+
+function initBrowserTtsSupport() {
+  if (!hasBrowserTtsSupport()) {
+    state.tts.voiceSupportReady = false;
+    updateTtsSupportUi();
+    return;
+  }
+  const synth = window.speechSynthesis;
+  const refresh = () => {
+    const voices = synth.getVoices?.() || [];
+    state.tts.voiceSupportReady = voices.length > 0;
+    if (state.activeModalId === "character-modal") {
+      const currentLang =
+        String(document.getElementById("char-tts-language")?.value || DEFAULT_TTS_LANGUAGE);
+      const currentVoice =
+        String(document.getElementById("char-tts-voice")?.value || DEFAULT_TTS_VOICE);
+      populateCharTtsLanguageSelect(currentLang);
+      populateCharTtsVoiceSelect(currentVoice);
+    }
+    updateTtsSupportUi();
+  };
+  refresh();
+  if (typeof synth.addEventListener === "function") {
+    synth.addEventListener("voiceschanged", refresh);
+  }
+  window.setTimeout(refresh, 250);
+  window.setTimeout(refresh, 1000);
+}
+
+function updateMessageSpeakerButton(button, index) {
+  if (!button) return;
+  const msg = conversationHistory[index];
+  const isAssistant = msg?.role === "assistant";
+  const row = button.closest(".chat-row");
+  const streaming = row?.dataset?.streaming === "1";
+  const hasContent = !!String(msg?.content || "").trim();
+  const isLoading = isTtsIndexMatch(state.tts.loadingMessageIndex, index);
+  const isSpeaking = isTtsIndexMatch(state.tts.speakingMessageIndex, index);
+  const ttsReady = state.tts.voiceSupportReady === true;
+  button.disabled = !isAssistant || streaming || !hasContent || !ttsReady;
+  button.classList.toggle("tts-loading", isLoading);
+  if (!ttsReady) {
+    button.innerHTML = ICONS.speaker;
+    button.setAttribute("title", "Voice support is not configured in this browser.");
+    button.setAttribute("aria-label", "Voice support unavailable");
+    return;
+  }
+  if (isLoading) {
+    button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>';
+    button.setAttribute("title", "Loading speech... Click again to cancel.");
+    button.setAttribute("aria-label", "Loading speech");
+  } else if (isSpeaking) {
+    button.innerHTML = ICONS.stop;
+    button.setAttribute("title", "Cancel speech");
+    button.setAttribute("aria-label", "Cancel speech");
+  } else {
+    button.innerHTML = ICONS.speaker;
+    button.setAttribute("title", "Speak message");
+    button.setAttribute("aria-label", "Speak message");
+  }
+}
+
+function refreshAllSpeakerButtons() {
+  document.querySelectorAll(".msg-tts-btn").forEach((btn) => {
+    const index = Number(btn.dataset.messageIndex);
+    updateMessageSpeakerButton(btn, index);
+  });
 }
 
 async function sendMessage(options = {}) {
@@ -1829,6 +2234,8 @@ async function generateBotReply() {
       pending.content,
       pending.role,
     );
+    pendingRow.dataset.streaming = "0";
+    refreshAllSpeakerButtons();
     await persistCurrentThread();
     scrollChatToBottom();
 
@@ -1852,6 +2259,8 @@ async function generateBotReply() {
           pending.content,
           pending.role,
         );
+        pendingRow.dataset.streaming = "0";
+        refreshAllSpeakerButtons();
       }
       await persistCurrentThread();
       await renderThreads();
@@ -1871,6 +2280,7 @@ async function deleteMessageAt(index) {
   if (!currentThread) return;
   if (index < 0 || index >= conversationHistory.length) return;
 
+  stopTtsPlayback();
   conversationHistory.splice(index, 1);
   await persistCurrentThread();
   renderChat();
@@ -1887,6 +2297,7 @@ async function regenerateMessage(index) {
   const hasUser = prior.some((m) => m.role === "user");
   if (!hasUser) return;
 
+  stopTtsPlayback();
   state.sending = true;
   state.abortController = new AbortController();
   setSendingState(true);
@@ -1943,6 +2354,318 @@ async function copyMessage(text) {
     await navigator.clipboard.writeText(text);
   } catch {
     alert("Copy failed.");
+  }
+}
+
+async function refreshPuterAuthStatus() {
+  const statusEl = document.getElementById("puter-auth-status");
+  if (!statusEl) return false;
+  if (!window.puter?.auth) {
+    statusEl.textContent = "Puter: SDK unavailable";
+    return false;
+  }
+  try {
+    if (typeof window.puter.auth.isSignedIn === "function") {
+      const signed = await window.puter.auth.isSignedIn();
+      statusEl.textContent = signed ? "Puter: signed in" : "Puter: signed out";
+      return !!signed;
+    }
+    if (typeof window.puter.auth.getUser === "function") {
+      await window.puter.auth.getUser();
+      statusEl.textContent = "Puter: signed in";
+      return true;
+    }
+    statusEl.textContent = "Puter: status unknown";
+    return false;
+  } catch {
+    statusEl.textContent = "Puter: signed out";
+    return false;
+  }
+}
+
+async function ensurePuterSignedIn({ interactive = false } = {}) {
+  if (!window.puter?.auth) {
+    throw new Error("Puter auth is unavailable.");
+  }
+  if (typeof window.puter.auth.isSignedIn === "function") {
+    try {
+      const signed = await window.puter.auth.isSignedIn();
+      if (signed) return true;
+    } catch {
+      // ignore and continue to interactive sign-in if allowed
+    }
+  } else if (typeof window.puter.auth.getUser === "function") {
+    try {
+      await window.puter.auth.getUser();
+      return true;
+    } catch {
+      // ignore and continue
+    }
+  }
+
+  if (!interactive || typeof window.puter.auth.signIn !== "function") {
+    return false;
+  }
+  await window.puter.auth.signIn();
+  return await refreshPuterAuthStatus();
+}
+
+function getCurrentCharacterTtsOptions() {
+  const resolved = getResolvedTtsSelection(
+    currentCharacter?.ttsLanguage,
+    currentCharacter?.ttsVoice,
+    currentCharacter?.ttsRate,
+    currentCharacter?.ttsPitch,
+  );
+  const options = {
+    voice: resolved.voice || DEFAULT_TTS_VOICE,
+    language: resolved.language || DEFAULT_TTS_LANGUAGE,
+    rate: resolved.rate,
+    pitch: resolved.pitch,
+  };
+  return options;
+}
+
+function getTtsOptionsFromCharacterModal() {
+  const resolved = getResolvedCharTtsSelection();
+  const options = {
+    voice: resolved.voice || DEFAULT_TTS_VOICE,
+    language: resolved.language || DEFAULT_TTS_LANGUAGE,
+    rate: resolved.rate,
+    pitch: resolved.pitch,
+  };
+  return options;
+}
+
+async function playCharacterTtsTestFromModal() {
+  const textInput = document.getElementById("tts-test-text");
+  const text =
+    String(textInput?.value || "").trim() || "This is a test voice playback.";
+  try {
+    await playTtsAudio(text, getTtsOptionsFromCharacterModal());
+    showToast("Character TTS test started.", "success");
+  } catch (err) {
+    if (isTtsCancelledError(err)) return;
+    showToast(`TTS test failed: ${err.message || "unknown error"}`, "error");
+  }
+}
+
+async function playTtsAudio(text, options, playback = {}) {
+  if (!hasBrowserTtsSupport()) {
+    throw new Error("Browser TTS is unavailable.");
+  }
+  const normalizedText = String(text || "").trim();
+  if (!normalizedText) {
+    ttsDebug("playTtsAudio:empty-text");
+    throw new Error("Text is empty.");
+  }
+  const synth = window.speechSynthesis;
+  const voices = synth.getVoices?.() || [];
+  if (!voices.length) {
+    throw new Error("No browser voices are available yet.");
+  }
+  const messageIndex =
+    Number.isInteger(playback?.messageIndex) ? playback.messageIndex : null;
+  const requestId = state.tts.requestSeq + 1;
+  state.tts.requestSeq = requestId;
+  state.tts.activeRequestId = requestId;
+  ttsDebug("playTtsAudio:start", {
+    requestId,
+    messageIndex,
+    textLength: normalizedText.length,
+    options,
+  });
+  stopTtsPlayback();
+  state.tts.activeRequestId = requestId;
+  if (messageIndex !== null) {
+    state.tts.loadingMessageIndex = messageIndex;
+    refreshAllSpeakerButtons();
+  }
+  let utterance = null;
+  let finalized = false;
+  const finalizeLoadingState = () => {
+    if (finalized) return;
+    finalized = true;
+    if (
+      messageIndex !== null &&
+      state.tts.activeRequestId === requestId &&
+      isTtsIndexMatch(state.tts.loadingMessageIndex, messageIndex)
+    ) {
+      state.tts.loadingMessageIndex = null;
+      refreshAllSpeakerButtons();
+    }
+  };
+
+  try {
+    if (requestId !== state.tts.activeRequestId) {
+      ttsDebug("playTtsAudio:stale-request", { requestId, active: state.tts.activeRequestId });
+      throw makeTtsCancelledError();
+    }
+
+    utterance = new SpeechSynthesisUtterance(normalizedText);
+    const desiredVoice = String(options?.voice || DEFAULT_TTS_VOICE).trim();
+    const desiredLang = String(options?.language || DEFAULT_TTS_LANGUAGE).trim();
+    const desiredRate = Math.max(0.5, Math.min(2, Number(options?.rate) || 1));
+    const desiredPitch = Math.max(0, Math.min(2, Number(options?.pitch) || 1));
+    utterance.lang = desiredLang || DEFAULT_TTS_LANGUAGE;
+    utterance.rate = desiredRate;
+    utterance.pitch = desiredPitch;
+    const byExactName = voices.find((v) => String(v.name || "").toLowerCase() === desiredVoice.toLowerCase());
+    const byLangExact = voices.find((v) => String(v.lang || "").toLowerCase() === utterance.lang.toLowerCase());
+    const byLangPrefix = voices.find((v) =>
+      String(v.lang || "").toLowerCase().startsWith(utterance.lang.split("-")[0]?.toLowerCase() || ""),
+    );
+    utterance.voice = byExactName || byLangExact || byLangPrefix || voices[0] || null;
+
+    if (requestId !== state.tts.activeRequestId) {
+      ttsDebug("playTtsAudio:stale-request-before-speak", { requestId, active: state.tts.activeRequestId });
+      throw makeTtsCancelledError();
+    }
+    state.tts.loadingMessageIndex = null;
+    finalized = true;
+    if (messageIndex !== null) {
+      state.tts.speakingMessageIndex = messageIndex;
+    }
+    state.tts.audio = utterance;
+    refreshAllSpeakerButtons();
+    await new Promise((resolve, reject) => {
+      utterance.onend = () => {
+        ttsDebug("playTtsAudio:ended");
+        if (state.tts.audio === utterance) {
+          state.tts.audio = null;
+          state.tts.speakingMessageIndex = null;
+          state.tts.loadingMessageIndex = null;
+          refreshAllSpeakerButtons();
+        }
+        resolve();
+      };
+      utterance.onerror = (event) => {
+        ttsDebug("playTtsAudio:error", { event });
+        if (state.tts.audio === utterance) {
+          state.tts.audio = null;
+          state.tts.speakingMessageIndex = null;
+          state.tts.loadingMessageIndex = null;
+          refreshAllSpeakerButtons();
+        }
+        const interrupted =
+          requestId !== state.tts.activeRequestId ||
+          String(event?.error || "").toLowerCase() === "interrupted" ||
+          String(event?.error || "").toLowerCase() === "canceled";
+        if (interrupted) {
+          reject(makeTtsCancelledError());
+          return;
+        }
+        reject(new Error("Browser TTS playback failed."));
+      };
+      ttsDebug("playTtsAudio:speak", {
+        voice: utterance.voice?.name || "",
+        lang: utterance.lang,
+      });
+      synth.speak(utterance);
+    });
+    return utterance;
+  } finally {
+    finalizeLoadingState();
+  }
+}
+
+function stopTtsPlayback() {
+  state.tts.activeRequestId = state.tts.activeRequestId + 1;
+  if (hasBrowserTtsSupport()) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch {
+      // ignore
+    }
+  }
+  state.tts.audio = null;
+  state.tts.speakingMessageIndex = null;
+  state.tts.loadingMessageIndex = null;
+  refreshAllSpeakerButtons();
+}
+
+async function toggleMessageSpeech(index) {
+  ttsDebug("toggleMessageSpeech:enter", { index, historyLen: conversationHistory.length });
+  if (!currentThread || !currentCharacter) {
+    ttsDebug("toggleMessageSpeech:blocked-no-thread-or-character", {
+      hasThread: !!currentThread,
+      hasCharacter: !!currentCharacter,
+    });
+    showToast("Open a thread first.", "error");
+    return;
+  }
+  const message = conversationHistory[index];
+  if (!message || message.role !== "assistant") {
+    ttsDebug("toggleMessageSpeech:blocked-not-assistant", {
+      index,
+      role: message?.role,
+      hasMessage: !!message,
+    });
+    showToast("TTS is only available for assistant messages.", "error");
+    return;
+  }
+  if (!String(message.content || "").trim()) {
+    ttsDebug("toggleMessageSpeech:blocked-empty-message", { index });
+    showToast("Message is empty.", "error");
+    return;
+  }
+
+  const hasAudioObject = !!state.tts.audio;
+  const audioIsPlaying = hasBrowserTtsSupport()
+    ? !!(window.speechSynthesis.speaking || window.speechSynthesis.pending)
+    : false;
+  if (!hasAudioObject && state.tts.speakingMessageIndex !== null) {
+    ttsDebug("toggleMessageSpeech:clear-stale-speaking", {
+      staleSpeakingIndex: state.tts.speakingMessageIndex,
+    });
+    state.tts.speakingMessageIndex = null;
+  }
+  const isActive =
+    isTtsIndexMatch(state.tts.speakingMessageIndex, index) ||
+    isTtsIndexMatch(state.tts.loadingMessageIndex, index);
+  const isActuallyActive =
+    isTtsIndexMatch(state.tts.loadingMessageIndex, index) ||
+    (isTtsIndexMatch(state.tts.speakingMessageIndex, index) &&
+      hasAudioObject &&
+      audioIsPlaying);
+  ttsDebug("toggleMessageSpeech:active-check", {
+    index,
+    isActive,
+    isActuallyActive,
+    loadingIndex: state.tts.loadingMessageIndex,
+    speakingIndex: state.tts.speakingMessageIndex,
+    hasAudioObject,
+    audioIsPlaying,
+  });
+  if (isActuallyActive) {
+    ttsDebug("toggleMessageSpeech:stop-active", { index });
+    stopTtsPlayback();
+    return;
+  }
+
+  stopTtsPlayback();
+
+  try {
+    ttsDebug("toggleMessageSpeech:play", { index, contentLength: String(message.content || "").length });
+    await playTtsAudio(message.content, getCurrentCharacterTtsOptions(), {
+      messageIndex: index,
+    });
+    ttsDebug("toggleMessageSpeech:success", { index });
+  } catch (err) {
+    if (isTtsCancelledError(err)) {
+      ttsDebug("toggleMessageSpeech:cancelled", { index });
+      return;
+    }
+    ttsDebug("toggleMessageSpeech:error", { index, error: String(err?.message || err || "") });
+    if (isTtsIndexMatch(state.tts.loadingMessageIndex, index)) {
+      state.tts.loadingMessageIndex = null;
+    }
+    if (isTtsIndexMatch(state.tts.speakingMessageIndex, index)) {
+      state.tts.speakingMessageIndex = null;
+      state.tts.audio = null;
+    }
+    refreshAllSpeakerButtons();
+    showToast(`TTS failed: ${err.message || "unknown error"}`, "error");
   }
 }
 

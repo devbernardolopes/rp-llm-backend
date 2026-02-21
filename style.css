@@ -27,6 +27,7 @@ body {
   display: grid;
   grid-template-columns: 320px 1fr;
   height: 100vh;
+  min-height: 0;
   transition: grid-template-columns 0.2s ease;
 }
 
@@ -42,6 +43,8 @@ body {
   padding: 12px;
   gap: 12px;
   min-width: 74px;
+  min-height: 0;
+  overflow: hidden;
   transition: width 0.2s ease;
 }
 
@@ -69,6 +72,11 @@ body {
   justify-content: center;
 }
 
+#left-pane.collapsed .thread-bulk-bar,
+#left-pane.collapsed .thread-select {
+  display: none;
+}
+
 #pane-toggle {
   align-self: flex-end;
 }
@@ -79,6 +87,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow: hidden;
 }
 
 .pane-top-header {
@@ -106,6 +115,27 @@ body {
   gap: 8px;
 }
 
+.thread-bulk-bar {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  background: #172133;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.thread-bulk-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.thread-bulk-actions .secondary-btn {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
 .thread-row {
   background: var(--panel-2);
   border: 1px solid var(--line);
@@ -114,6 +144,12 @@ body {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.thread-select {
+  width: 16px;
+  height: 16px;
+  margin: 0 2px 0 0;
 }
 
 .thread-row.active-thread {
@@ -176,6 +212,11 @@ body {
   background: #2a3850;
 }
 
+.icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .icon-btn svg {
   width: 15px;
   height: 15px;
@@ -193,6 +234,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 0 0 auto;
 }
 
 .option-btn,
@@ -228,6 +270,15 @@ textarea {
   background: #1e2736;
 }
 
+.danger-btn {
+  border-color: #7a3434;
+  color: #ffb8b8;
+}
+
+.danger-btn:hover {
+  background: #3a2020;
+}
+
 .view {
   display: none;
   min-height: 0;
@@ -236,11 +287,14 @@ textarea {
 .view.active {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #main-view {
   padding: 24px;
   gap: 20px;
+  min-height: 0;
 }
 
 .main-header {
@@ -256,6 +310,8 @@ textarea {
 }
 
 .character-grid {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -304,6 +360,8 @@ textarea {
 #chat-view {
   padding: 18px 22px;
   position: relative;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chat-header {
@@ -391,6 +449,29 @@ textarea {
   height: 12px;
 }
 
+.message-controls .msg-tts-btn:not(:disabled) {
+  color: #cbe3ff;
+}
+
+.message-controls .msg-tts-btn svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.message-controls .msg-tts-btn.tts-loading {
+  color: #f4d78a;
+}
+
+.btn-spinner {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 .message-content {
   line-height: 1.62;
   white-space: pre-wrap;
@@ -443,6 +524,7 @@ textarea {
   display: flex;
   gap: 10px;
   margin-top: 12px;
+  flex: 0 0 auto;
 }
 
 .prompt-controls {
@@ -450,6 +532,7 @@ textarea {
   align-items: end;
   gap: 10px;
   margin-top: 8px;
+  flex: 0 0 auto;
 }
 
 .persona-picker {
@@ -505,6 +588,7 @@ textarea {
   padding: 10px;
   resize: vertical;
   min-height: 84px;
+  max-height: 34vh;
 }
 
 .popover {
@@ -630,6 +714,12 @@ textarea {
   flex-direction: column;
   gap: 6px;
   font-size: 13px;
+}
+
+.settings-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .modal-body input,
