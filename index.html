@@ -17,6 +17,10 @@
             <button id="create-character-btn" class="primary-btn pane-create-char-btn">
               + Character
             </button>
+            <button id="import-character-btn" class="secondary-btn pane-create-char-btn">
+              Import Character
+            </button>
+            <input id="import-character-input" type="file" accept=".json,application/json" class="hidden" />
           </div>
           <div id="thread-list" class="thread-list"></div>
         </div>
@@ -77,9 +81,16 @@
           ></textarea>
           <div class="send-col">
             <button id="send-btn" class="primary-btn">Send</button>
+            <button id="cancel-generation-btn" class="secondary-btn" disabled>
+              Cancel
+            </button>
             <label class="checkbox-line auto-reply-line">
               <input type="checkbox" id="auto-reply-enabled" checked />
               Auto-reply
+            </label>
+            <label class="checkbox-line auto-reply-line">
+              <input type="checkbox" id="enter-to-send-enabled" checked />
+              ENTER to send
             </label>
           </div>
         </div>
@@ -113,6 +124,16 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
+          <label>
+            OpenRouter API Key
+            <input
+              id="openrouter-api-key"
+              type="password"
+              placeholder="sk-or-v1-..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </label>
           <label>
             Model
             <select id="model-select"></select>
@@ -170,6 +191,18 @@
           <label class="checkbox-line">
             <input type="checkbox" id="prefer-free-variant" />
             Prefer `:free` model variant when available
+          </label>
+          <label>
+            Cancel Generation Shortcut
+            <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
+          </label>
+          <label>
+            Go Home Shortcut
+            <input id="home-shortcut" type="text" placeholder="Alt+H" />
+          </label>
+          <label>
+            New Character Shortcut
+            <input id="new-character-shortcut" type="text" placeholder="Alt+N" />
           </label>
           <label>
             Default Character Prompt

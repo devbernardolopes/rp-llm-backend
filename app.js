@@ -49,18 +49,25 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
   badge:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 5-3.1 8.6-7 9-3.9-.4-7-4-7-9V6z"></path><path d="M9.2 12.2l1.9 1.9 3.7-3.7"></path></svg>',
+  export:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M8 7l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>',
 };
 
 const DEFAULT_SETTINGS = {
+  openRouterApiKey: "",
   model: "openrouter/auto",
   markdownEnabled: true,
   allowMessageHtml: true,
   streamEnabled: true,
   autoReplyEnabled: true,
+  enterToSendEnabled: true,
   maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 1024,
   temperature:
     Number.isFinite(Number(CONFIG.temperature)) ? Number(CONFIG.temperature) : 0.8,
   preferFreeVariant: true,
+  cancelShortcut: "Ctrl+.",
+  homeShortcut: "Alt+H",
+  newCharacterShortcut: "Alt+N",
   globalPromptTemplate: "Stay in character and respond naturally.",
   summarySystemPrompt: "You are a helpful summarization assistant.",
   markdownCustomCss: ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
@@ -85,6 +92,12 @@ const state = {
   lastSyncSeenUpdatedAt: 0,
   confirmResolver: null,
   activeShortcut: null,
+  abortController: null,
+  modalDirty: {
+    "character-modal": false,
+    "personas-modal": false,
+    "shortcuts-modal": false,
+  },
 };
 
 window.addEventListener("DOMContentLoaded", init);
@@ -106,9 +119,20 @@ function setupEvents() {
     .getElementById("create-character-btn")
     .addEventListener("click", () => openCharacterModal());
   document
+    .getElementById("import-character-btn")
+    .addEventListener("click", () =>
+      document.getElementById("import-character-input").click(),
+    );
+  document
+    .getElementById("import-character-input")
+    .addEventListener("change", importCharacterFromFile);
+  document
     .getElementById("save-character-btn")
     .addEventListener("click", saveCharacterFromModal);
   document.getElementById("send-btn").addEventListener("click", sendMessage);
+  document
+    .getElementById("cancel-generation-btn")
+    .addEventListener("click", cancelOngoingGeneration);
   document
     .getElementById("bot-reply-btn")
     .addEventListener("click", generateBotReply);
@@ -192,10 +216,41 @@ function setupEvents() {
       }
     });
   });
+
+  markModalDirtyOnInput(
+    "character-modal",
+    [
+      "#char-name",
+      "#char-avatar",
+      "#char-system-prompt",
+      "#char-use-memory",
+      "#char-use-postprocess",
+      "#char-avatar-scale",
+    ],
+  );
+  markModalDirtyOnInput(
+    "personas-modal",
+    [
+      "#persona-name",
+      "#persona-avatar",
+      "#persona-description",
+      "#persona-is-default",
+    ],
+  );
+  markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
 }
 
 function onInputKeyDown(e) {
-  if (e.key === "Enter" && !e.shiftKey) {
+  if (e.key !== "Enter") return;
+  const enterToSend = state.settings.enterToSendEnabled !== false;
+  if (enterToSend) {
+    if (!e.shiftKey && !e.ctrlKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+    return;
+  }
+  if (e.ctrlKey) {
     e.preventDefault();
     sendMessage();
   }
@@ -222,6 +277,21 @@ function onGlobalClick(e) {
 }
 
 function onGlobalKeyDown(e) {
+  if (matchShortcutEvent(e, state.settings.cancelShortcut)) {
+    e.preventDefault();
+    cancelOngoingGeneration();
+    return;
+  }
+  if (matchShortcutEvent(e, state.settings.homeShortcut)) {
+    e.preventDefault();
+    triggerGoHomeShortcut();
+    return;
+  }
+  if (matchShortcutEvent(e, state.settings.newCharacterShortcut)) {
+    e.preventDefault();
+    triggerNewCharacterShortcut();
+    return;
+  }
   if (e.key === "Escape") {
     closePromptHistory();
     closeActiveModal();
@@ -230,6 +300,7 @@ function onGlobalKeyDown(e) {
 }
 
 function setupSettingsControls() {
+  const openRouterApiKey = document.getElementById("openrouter-api-key");
   const modelSelect = document.getElementById("model-select");
   const maxTokensSlider = document.getElementById("max-tokens-slider");
   const maxTokensValue = document.getElementById("max-tokens-value");
@@ -254,6 +325,10 @@ function setupSettingsControls() {
   const allowMessageHtml = document.getElementById("allow-message-html");
   const streamEnabled = document.getElementById("stream-enabled");
   const autoReplyEnabled = document.getElementById("auto-reply-enabled");
+  const enterToSendEnabled = document.getElementById("enter-to-send-enabled");
+  const cancelShortcut = document.getElementById("cancel-shortcut");
+  const homeShortcut = document.getElementById("home-shortcut");
+  const newCharacterShortcut = document.getElementById("new-character-shortcut");
   const markdownCustomCss = document.getElementById("markdown-custom-css");
   const postprocessRulesJson = document.getElementById("postprocess-rules-json");
   const globalPromptTemplate = document.getElementById(
@@ -265,6 +340,7 @@ function setupSettingsControls() {
   allowMessageHtml.checked = state.settings.allowMessageHtml !== false;
   streamEnabled.checked = state.settings.streamEnabled !== false;
   autoReplyEnabled.checked = state.settings.autoReplyEnabled !== false;
+  enterToSendEnabled.checked = state.settings.enterToSendEnabled !== false;
   markdownCustomCss.value = state.settings.markdownCustomCss || "";
   postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
   maxTokensSlider.value = String(clampMaxTokens(state.settings.maxTokens));
@@ -277,6 +353,16 @@ function setupSettingsControls() {
   globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
   shortcutsRaw.value = state.settings.shortcutsRaw || "";
+  cancelShortcut.value = state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
+  homeShortcut.value = state.settings.homeShortcut || DEFAULT_SETTINGS.homeShortcut;
+  newCharacterShortcut.value =
+    state.settings.newCharacterShortcut || DEFAULT_SETTINGS.newCharacterShortcut;
+  openRouterApiKey.value = state.settings.openRouterApiKey || "";
+
+  openRouterApiKey.addEventListener("input", () => {
+    state.settings.openRouterApiKey = openRouterApiKey.value.trim();
+    saveSettings();
+  });
 
   modelSelect.addEventListener("change", () => {
     state.settings.model = modelSelect.value;
@@ -303,6 +389,11 @@ function setupSettingsControls() {
 
   autoReplyEnabled.addEventListener("change", () => {
     state.settings.autoReplyEnabled = autoReplyEnabled.checked;
+    saveSettings();
+  });
+
+  enterToSendEnabled.addEventListener("change", () => {
+    state.settings.enterToSendEnabled = enterToSendEnabled.checked;
     saveSettings();
   });
 
@@ -349,6 +440,24 @@ function setupSettingsControls() {
     state.settings.summarySystemPrompt = summarySystemPrompt.value;
     saveSettings();
   });
+
+  cancelShortcut.addEventListener("change", () => {
+    state.settings.cancelShortcut = normalizeShortcutString(cancelShortcut.value);
+    cancelShortcut.value = state.settings.cancelShortcut;
+    saveSettings();
+  });
+  homeShortcut.addEventListener("change", () => {
+    state.settings.homeShortcut = normalizeShortcutString(homeShortcut.value);
+    homeShortcut.value = state.settings.homeShortcut;
+    saveSettings();
+  });
+  newCharacterShortcut.addEventListener("change", () => {
+    state.settings.newCharacterShortcut = normalizeShortcutString(
+      newCharacterShortcut.value,
+    );
+    newCharacterShortcut.value = state.settings.newCharacterShortcut;
+    saveSettings();
+  });
 }
 
 function loadSettings() {
@@ -365,6 +474,82 @@ function loadSettings() {
 
 function saveSettings() {
   localStorage.setItem("rp-settings", JSON.stringify(state.settings));
+}
+
+function markModalDirtyOnInput(modalId, selectors) {
+  selectors.forEach((selector) => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.addEventListener("input", () => {
+      state.modalDirty[modalId] = true;
+    });
+    el.addEventListener("change", () => {
+      state.modalDirty[modalId] = true;
+    });
+  });
+}
+
+function normalizeShortcutString(value) {
+  const parts = String(value || "")
+    .split("+")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return "";
+  const key = parts.pop();
+  const mods = parts
+    .map((m) => m.toLowerCase())
+    .filter((m, i, arr) => arr.indexOf(m) === i)
+    .sort((a, b) => ["ctrl", "alt", "shift", "meta"].indexOf(a) - ["ctrl", "alt", "shift", "meta"].indexOf(b))
+    .map((m) => {
+      if (m === "ctrl") return "Ctrl";
+      if (m === "alt") return "Alt";
+      if (m === "shift") return "Shift";
+      if (m === "meta") return "Meta";
+      return m;
+    });
+  const normalizedKey =
+    key.length === 1 ? key.toUpperCase() : key[0].toUpperCase() + key.slice(1);
+  return [...mods, normalizedKey].join("+");
+}
+
+function matchShortcutEvent(e, shortcut) {
+  const normalized = normalizeShortcutString(shortcut);
+  if (!normalized) return false;
+  const parts = normalized.split("+");
+  const key = parts.pop();
+  const wantCtrl = parts.includes("Ctrl");
+  const wantAlt = parts.includes("Alt");
+  const wantShift = parts.includes("Shift");
+  const wantMeta = parts.includes("Meta");
+  if (e.ctrlKey !== wantCtrl) return false;
+  if (e.altKey !== wantAlt) return false;
+  if (e.shiftKey !== wantShift) return false;
+  if (e.metaKey !== wantMeta) return false;
+  const eventKey = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+  if (key === "Period" && e.key === ".") return true;
+  return eventKey === key;
+}
+
+function hasBlockingUnsavedModal() {
+  const active = state.activeModalId;
+  if (!active) return false;
+  if (active === "settings-modal") return false;
+  return !!state.modalDirty[active];
+}
+
+function triggerGoHomeShortcut() {
+  if (hasBlockingUnsavedModal()) return;
+  if (state.activeModalId === "settings-modal") closeActiveModal();
+  if (state.activeModalId && state.activeModalId !== "settings-modal") return;
+  showMainView();
+}
+
+function triggerNewCharacterShortcut() {
+  if (state.activeModalId === "character-modal") return;
+  if (hasBlockingUnsavedModal()) return;
+  if (state.activeModalId === "settings-modal") closeActiveModal();
+  if (state.activeModalId && state.activeModalId !== "settings-modal") return;
+  openCharacterModal();
 }
 
 function showToast(message, type = "success") {
@@ -467,6 +652,7 @@ async function saveShortcutsFromModal() {
   const entries = parseShortcutEntries(raw);
   state.settings.shortcutsRaw = serializeShortcutEntries(entries);
   saveSettings();
+  state.modalDirty["shortcuts-modal"] = false;
   document.getElementById("shortcuts-raw").value = state.settings.shortcutsRaw;
   await renderShortcutsBar();
   closeActiveModal();
@@ -574,6 +760,13 @@ async function renderCharacters() {
       iconButton("edit", "Edit character", (e) => {
         e.stopPropagation();
         openCharacterModal(char);
+      }),
+    );
+
+    actions.appendChild(
+      iconButton("export", "Export character", async (e) => {
+        e.stopPropagation();
+        await exportCharacter(char.id);
       }),
     );
 
@@ -730,6 +923,7 @@ function openModal(modalId) {
   if (!modal) return;
   state.activeModalId = modalId;
   modal.classList.remove("hidden");
+  state.modalDirty[modalId] = false;
   if (modalId === "personas-modal") {
     renderPersonaModalList();
   } else if (modalId === "shortcuts-modal") {
@@ -740,9 +934,11 @@ function openModal(modalId) {
 
 function closeActiveModal() {
   if (!state.activeModalId) return;
+  const closingId = state.activeModalId;
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
   state.activeModalId = null;
+  state.modalDirty[closingId] = false;
 }
 
 function openCharacterModal(character = null) {
@@ -765,6 +961,7 @@ function openCharacterModal(character = null) {
   renderAvatarPreview(character?.avatar || "");
   renderCharacterLorebookList(character?.lorebookIds || []);
   updateCharacterPromptPlaceholder();
+  state.modalDirty["character-modal"] = false;
 
   openModal("character-modal");
 }
@@ -797,6 +994,7 @@ async function saveCharacterFromModal() {
   }
 
   closeActiveModal();
+  state.modalDirty["character-modal"] = false;
   await renderAll();
 }
 
@@ -911,6 +1109,7 @@ async function savePersonaFromModal() {
   document.getElementById("persona-is-default").checked = false;
   state.editingPersonaId = null;
   document.getElementById("save-persona-btn").textContent = "Save Persona";
+  state.modalDirty["personas-modal"] = false;
 
   await ensurePersonasInitialized();
   await renderPersonaModalList();
@@ -1258,6 +1457,60 @@ async function duplicateCharacter(characterId) {
   showToast("Character duplicated.", "success");
 }
 
+async function exportCharacter(characterId) {
+  const character = await db.characters.get(characterId);
+  if (!character) {
+    showToast("Character not found.", "error");
+    return;
+  }
+  const payload = {
+    schema: "rp-character-export-v1",
+    exportedAt: new Date().toISOString(),
+    character: { ...character },
+  };
+  delete payload.character.id;
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const safeName = (character.name || "character").replace(/[^\w-]+/g, "_");
+  a.href = url;
+  a.download = `${safeName}.rpchar.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast("Character exported.", "success");
+}
+
+async function importCharacterFromFile(e) {
+  const file = e.target.files?.[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const imported = parsed?.character || parsed;
+    if (!imported || typeof imported !== "object") {
+      throw new Error("Invalid character file");
+    }
+    const character = {
+      ...imported,
+      name: String(imported.name || "").trim(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    delete character.id;
+    if (!character.name) throw new Error("Character name is required in file");
+    await db.characters.add(character);
+    await renderCharacters();
+    showToast("Character imported.", "success");
+  } catch (err) {
+    showToast(`Import failed: ${err.message}`, "error");
+  }
+}
+
 async function deleteCharacter(characterId) {
   const ok = await openConfirmDialog(
     "Delete Character",
@@ -1544,6 +1797,7 @@ async function generateBotReply() {
   scrollChatToBottom();
 
   state.sending = true;
+  state.abortController = new AbortController();
   setSendingState(true);
 
   try {
@@ -1563,6 +1817,7 @@ async function generateBotReply() {
         }
         scrollChatToBottom();
       },
+      state.abortController.signal,
     );
     const assistantText = result.content || pending.content || "";
     state.lastUsedModel = result.model || "";
@@ -1587,9 +1842,26 @@ async function generateBotReply() {
 
     await renderThreads();
   } catch (e) {
-    pendingRow.querySelector(".message-content").textContent =
-      `Error: ${e.message}`;
+    if (isAbortError(e)) {
+      if (!pending.content.trim()) {
+        const idx = conversationHistory.lastIndexOf(pending);
+        if (idx >= 0) conversationHistory.splice(idx, 1);
+        pendingRow.remove();
+      } else {
+        pendingRow.querySelector(".message-content").innerHTML = renderMessageHtml(
+          pending.content,
+          pending.role,
+        );
+      }
+      await persistCurrentThread();
+      await renderThreads();
+      showToast("Generation cancelled.", "success");
+    } else {
+      pendingRow.querySelector(".message-content").textContent =
+        `Error: ${e.message}`;
+    }
   } finally {
+    state.abortController = null;
     state.sending = false;
     setSendingState(false);
   }
@@ -1616,6 +1888,7 @@ async function regenerateMessage(index) {
   if (!hasUser) return;
 
   state.sending = true;
+  state.abortController = new AbortController();
   setSendingState(true);
 
   try {
@@ -1639,6 +1912,7 @@ async function regenerateMessage(index) {
           contentEl.innerHTML = renderMessageHtml(target.content, target.role);
         scrollChatToBottom();
       },
+      state.abortController.signal,
     );
     const reply = result.content || target.content;
     state.lastUsedModel = result.model || "";
@@ -1649,8 +1923,16 @@ async function regenerateMessage(index) {
     renderChat();
     await renderThreads();
   } catch (e) {
-    alert(`Regenerate failed: ${e.message}`);
+    if (isAbortError(e)) {
+      await persistCurrentThread();
+      renderChat();
+      await renderThreads();
+      showToast("Regeneration cancelled.", "success");
+    } else {
+      alert(`Regenerate failed: ${e.message}`);
+    }
   } finally {
+    state.abortController = null;
     state.sending = false;
     setSendingState(false);
   }
@@ -1713,16 +1995,23 @@ function positionPromptHistoryPopover() {
 
 function setSendingState(sending) {
   const sendBtn = document.getElementById("send-btn");
+  const cancelBtn = document.getElementById("cancel-generation-btn");
   const botReplyBtn = document.getElementById("bot-reply-btn");
   const input = document.getElementById("user-input");
   const personaSelect = document.getElementById("persona-select");
   sendBtn.disabled = sending;
   sendBtn.classList.toggle("is-generating", sending);
   sendBtn.textContent = sending ? "Generating..." : "Send";
+  cancelBtn.disabled = !sending;
   botReplyBtn.disabled = sending;
   input.disabled = sending;
   personaSelect.disabled = sending;
   if (sending) closePromptHistory();
+}
+
+function cancelOngoingGeneration() {
+  if (!state.sending || !state.abortController) return;
+  state.abortController.abort();
 }
 
 async function persistCurrentThread() {
@@ -1924,7 +2213,13 @@ async function summarizeMemory(character) {
   }
 }
 
-async function callOpenRouter(systemPrompt, history, model, onChunk = null) {
+async function callOpenRouter(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+) {
   const resolvedModel = resolveModelForRequest(model);
   const fallbackModel = getFallbackModel(resolvedModel, model);
   const body = {
@@ -1943,12 +2238,17 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null) {
 
   try {
     const attempts = body.stream ? 1 : 3;
-    return await requestCompletionWithRetry(body, attempts, onChunk);
+    return await requestCompletionWithRetry(body, attempts, onChunk, signal);
   } catch (primaryErr) {
     if (!fallbackModel) throw primaryErr;
     const fallbackBody = { ...body, model: fallbackModel };
     const fallbackAttempts = fallbackBody.stream ? 1 : 2;
-    return requestCompletionWithRetry(fallbackBody, fallbackAttempts, onChunk);
+    return requestCompletionWithRetry(
+      fallbackBody,
+      fallbackAttempts,
+      onChunk,
+      signal,
+    );
   }
 }
 
@@ -1969,12 +2269,12 @@ function getFallbackModel(resolvedModel, originalModel) {
   return originalModel;
 }
 
-async function requestCompletionWithRetry(body, attempts, onChunk) {
+async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const res = await fetchCompletionResponse(body);
+      const res = await fetchCompletionResponse(body, signal);
 
       if (!res.ok) {
         let msg = res.statusText;
@@ -2021,7 +2321,21 @@ async function requestCompletionWithRetry(body, attempts, onChunk) {
   throw lastError || new Error("Request failed.");
 }
 
-async function fetchCompletionResponse(body) {
+async function fetchCompletionResponse(body, signal) {
+  const localKey = String(state.settings.openRouterApiKey || "").trim();
+  if (localKey) {
+    return fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": getAppReferer(),
+        "X-Title": "RP LLM BACKEND",
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
   const proxyUrl = "/api/chat-completions";
   try {
     const proxyRes = await fetch(proxyUrl, {
@@ -2030,6 +2344,7 @@ async function fetchCompletionResponse(body) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+      signal,
     });
     if (proxyRes.status !== 404 && proxyRes.status !== 405) {
       return proxyRes;
@@ -2040,7 +2355,7 @@ async function fetchCompletionResponse(body) {
 
   if (!CONFIG.apiKey) {
     throw new Error(
-      "Missing OPENROUTER_API_KEY. Use Vercel server env or set local key for direct mode.",
+      "Missing OpenRouter API key. Set it in Settings or provide server env OPENROUTER_API_KEY.",
     );
   }
 
@@ -2053,6 +2368,7 @@ async function fetchCompletionResponse(body) {
       "X-Title": "RP LLM BACKEND",
     },
     body: JSON.stringify(body),
+    signal,
   });
 }
 
@@ -2109,6 +2425,7 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
 
 function shouldRetryError(error, attempt, attempts) {
   if (attempt >= attempts) return false;
+  if (isAbortError(error)) return false;
   const msg = String(error?.message || "").toLowerCase();
   const status = Number(error?.httpStatus || 0);
   if (
@@ -2121,6 +2438,13 @@ function shouldRetryError(error, attempt, attempts) {
   if (status === 408 || status === 409 || status === 429) return true;
   if (status >= 500) return true;
   return false;
+}
+
+function isAbortError(error) {
+  return (
+    error?.name === "AbortError" ||
+    String(error?.message || "").toLowerCase().includes("aborted")
+  );
 }
 
 function getRetryDelayMs(attempt) {
