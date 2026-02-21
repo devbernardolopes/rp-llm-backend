@@ -28,25 +28,25 @@ const MODEL_OPTIONS = [
     label: "Hermes 3 Llama 3.1 405B (free)",
   },
   { value: "stepfun/step-3.5-flash:free", label: "StepFun Flash (free)" },
+  {
+    value: "arcee-ai/trinity-large-preview:free",
+    label: "Trinity Large Preview (free)",
+  },
 ];
 
 const ICONS = {
   duplicate:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect></svg>',
-  edit:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10-10a2 2 0 0 0-2.8-2.8l-10 10L4 20z"></path><path d="M13.5 6.5l4 4"></path></svg>',
+  edit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10-10a2 2 0 0 0-2.8-2.8l-10 10L4 20z"></path><path d="M13.5 6.5l4 4"></path></svg>',
   delete:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V5h6v2"></path><path d="M7 7l1 13h8l1-13"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>',
   regenerate:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7"></path><path d="M20 4v6h-6"></path></svg>',
-  copy:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect></svg>',
+  copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect></svg>',
   speaker:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-4h4l5-4v12l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M18.5 7a7 7 0 0 1 0 10"></path></svg>',
-  stop:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>',
-  star:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
+  stop: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>',
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
   starFilled:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
   badge:
@@ -64,15 +64,17 @@ const DEFAULT_SETTINGS = {
   autoReplyEnabled: true,
   enterToSendEnabled: true,
   maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 8192,
-  temperature:
-    Number.isFinite(Number(CONFIG.temperature)) ? Number(CONFIG.temperature) : 0.8,
+  temperature: Number.isFinite(Number(CONFIG.temperature))
+    ? Number(CONFIG.temperature)
+    : 0.8,
   preferFreeVariant: true,
   cancelShortcut: "Ctrl+.",
   homeShortcut: "Alt+H",
   newCharacterShortcut: "Alt+N",
   globalPromptTemplate: "Stay in character and respond naturally.",
   summarySystemPrompt: "You are a helpful summarization assistant.",
-  markdownCustomCss: ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
+  markdownCustomCss:
+    ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
   postprocessRulesJson: "[]",
   shortcutsRaw: "",
 };
@@ -223,7 +225,10 @@ function setupEvents() {
   input.addEventListener("keydown", onInputKeyDown);
   input.addEventListener("input", () => {
     if (state.promptHistoryOpen) closePromptHistory();
-    if (state.activeShortcut && input.value !== state.activeShortcut.initialValue) {
+    if (
+      state.activeShortcut &&
+      input.value !== state.activeShortcut.initialValue
+    ) {
       state.activeShortcut = null;
     }
   });
@@ -261,30 +266,24 @@ function setupEvents() {
     });
   });
 
-  markModalDirtyOnInput(
-    "character-modal",
-    [
-      "#char-name",
-      "#char-avatar",
-      "#char-system-prompt",
-      "#char-use-memory",
-      "#char-use-postprocess",
-      "#char-avatar-scale",
-      "#char-tts-voice",
-      "#char-tts-language",
-      "#char-tts-rate",
-      "#char-tts-pitch",
-    ],
-  );
-  markModalDirtyOnInput(
-    "personas-modal",
-    [
-      "#persona-name",
-      "#persona-avatar",
-      "#persona-description",
-      "#persona-is-default",
-    ],
-  );
+  markModalDirtyOnInput("character-modal", [
+    "#char-name",
+    "#char-avatar",
+    "#char-system-prompt",
+    "#char-use-memory",
+    "#char-use-postprocess",
+    "#char-avatar-scale",
+    "#char-tts-voice",
+    "#char-tts-language",
+    "#char-tts-rate",
+    "#char-tts-pitch",
+  ]);
+  markModalDirtyOnInput("personas-modal", [
+    "#persona-name",
+    "#persona-avatar",
+    "#persona-description",
+    "#persona-is-default",
+  ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
 }
 
@@ -381,9 +380,13 @@ function setupSettingsControls() {
   const enterToSendEnabled = document.getElementById("enter-to-send-enabled");
   const cancelShortcut = document.getElementById("cancel-shortcut");
   const homeShortcut = document.getElementById("home-shortcut");
-  const newCharacterShortcut = document.getElementById("new-character-shortcut");
+  const newCharacterShortcut = document.getElementById(
+    "new-character-shortcut",
+  );
   const markdownCustomCss = document.getElementById("markdown-custom-css");
-  const postprocessRulesJson = document.getElementById("postprocess-rules-json");
+  const postprocessRulesJson = document.getElementById(
+    "postprocess-rules-json",
+  );
   const globalPromptTemplate = document.getElementById(
     "global-prompt-template",
   );
@@ -398,7 +401,9 @@ function setupSettingsControls() {
   postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
   maxTokensSlider.value = String(clampMaxTokens(state.settings.maxTokens));
   maxTokensValue.textContent = maxTokensSlider.value;
-  temperatureSlider.value = String(clampTemperature(state.settings.temperature));
+  temperatureSlider.value = String(
+    clampTemperature(state.settings.temperature),
+  );
   temperatureValue.textContent = clampTemperature(
     state.settings.temperature,
   ).toFixed(2);
@@ -406,10 +411,13 @@ function setupSettingsControls() {
   globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
   shortcutsRaw.value = state.settings.shortcutsRaw || "";
-  cancelShortcut.value = state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
-  homeShortcut.value = state.settings.homeShortcut || DEFAULT_SETTINGS.homeShortcut;
+  cancelShortcut.value =
+    state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
+  homeShortcut.value =
+    state.settings.homeShortcut || DEFAULT_SETTINGS.homeShortcut;
   newCharacterShortcut.value =
-    state.settings.newCharacterShortcut || DEFAULT_SETTINGS.newCharacterShortcut;
+    state.settings.newCharacterShortcut ||
+    DEFAULT_SETTINGS.newCharacterShortcut;
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   if (ttsTestText) {
     ttsTestText.value = "This is a test voice playback.";
@@ -418,7 +426,9 @@ function setupSettingsControls() {
 
   if (ttsTestPlayBtn) {
     ttsTestPlayBtn.addEventListener("click", async () => {
-      const text = String(ttsTestText?.value || "").trim() || "This is a test voice playback.";
+      const text =
+        String(ttsTestText?.value || "").trim() ||
+        "This is a test voice playback.";
       if (ttsTestStatus) ttsTestStatus.textContent = "TTS: generating...";
       ttsTestPlayBtn.disabled = true;
       try {
@@ -522,7 +532,9 @@ function setupSettingsControls() {
   });
 
   cancelShortcut.addEventListener("change", () => {
-    state.settings.cancelShortcut = normalizeShortcutString(cancelShortcut.value);
+    state.settings.cancelShortcut = normalizeShortcutString(
+      cancelShortcut.value,
+    );
     cancelShortcut.value = state.settings.cancelShortcut;
     saveSettings();
   });
@@ -579,7 +591,11 @@ function normalizeShortcutString(value) {
   const mods = parts
     .map((m) => m.toLowerCase())
     .filter((m, i, arr) => arr.indexOf(m) === i)
-    .sort((a, b) => ["ctrl", "alt", "shift", "meta"].indexOf(a) - ["ctrl", "alt", "shift", "meta"].indexOf(b))
+    .sort(
+      (a, b) =>
+        ["ctrl", "alt", "shift", "meta"].indexOf(a) -
+        ["ctrl", "alt", "shift", "meta"].indexOf(b),
+    )
     .map((m) => {
       if (m === "ctrl") return "Ctrl";
       if (m === "alt") return "Alt";
@@ -675,7 +691,9 @@ function applyMarkdownCustomCss() {
 }
 
 function parseShortcutEntries(raw) {
-  const lines = String(raw || "").replace(/\r\n/g, "\n").split("\n");
+  const lines = String(raw || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n");
   const entries = [];
   let current = null;
 
@@ -685,8 +703,7 @@ function parseShortcutEntries(raw) {
     entries.push({
       name: current.name,
       message: current.message,
-      insertionType:
-        current.insertionType === "append" ? "append" : "replace",
+      insertionType: current.insertionType === "append" ? "append" : "replace",
       autoSend: current.autoSend === "yes",
       clearAfterSend: current.clearAfterSend === "yes",
     });
@@ -710,9 +727,11 @@ function parseShortcutEntries(raw) {
     }
     if (!current) continue;
     if (key === "message") current.message = value;
-    if (key === "insertiontype") current.insertionType = value.trim().toLowerCase();
+    if (key === "insertiontype")
+      current.insertionType = value.trim().toLowerCase();
     if (key === "autosend") current.autoSend = value.trim().toLowerCase();
-    if (key === "clearaftersend") current.clearAfterSend = value.trim().toLowerCase();
+    if (key === "clearaftersend")
+      current.clearAfterSend = value.trim().toLowerCase();
   }
   pushCurrent();
   return entries;
@@ -874,7 +893,9 @@ async function renderThreads() {
 
   const existingIds = new Set(threads.map((t) => Number(t.id)));
   state.selectedThreadIds = new Set(
-    Array.from(state.selectedThreadIds).filter((id) => existingIds.has(Number(id))),
+    Array.from(state.selectedThreadIds).filter((id) =>
+      existingIds.has(Number(id)),
+    ),
   );
 
   list.innerHTML = "";
@@ -1013,7 +1034,9 @@ async function renderThreads() {
 }
 
 async function deleteSelectedThreads() {
-  const ids = Array.from(state.selectedThreadIds).map(Number).filter(Number.isInteger);
+  const ids = Array.from(state.selectedThreadIds)
+    .map(Number)
+    .filter(Number.isInteger);
   if (ids.length === 0) return;
   const ok = await openConfirmDialog(
     "Delete Threads",
@@ -1023,7 +1046,11 @@ async function deleteSelectedThreads() {
 
   for (const id of ids) {
     await db.threads.delete(id);
-    broadcastSyncEvent({ type: "thread-updated", threadId: id, updatedAt: Date.now() });
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: id,
+      updatedAt: Date.now(),
+    });
   }
 
   if (currentThread && ids.includes(Number(currentThread.id))) {
@@ -1057,7 +1084,10 @@ function togglePane() {
   const shell = document.getElementById("app-shell");
   const createBtn = document.getElementById("create-character-btn");
   pane.classList.toggle("collapsed");
-  shell.classList.toggle("pane-collapsed", pane.classList.contains("collapsed"));
+  shell.classList.toggle(
+    "pane-collapsed",
+    pane.classList.contains("collapsed"),
+  );
   document.getElementById("pane-toggle").textContent = pane.classList.contains(
     "collapsed",
   )
@@ -1158,7 +1188,8 @@ async function saveCharacterFromModal() {
     systemPrompt: document.getElementById("char-system-prompt").value.trim(),
     useMemory: document.getElementById("char-use-memory").checked,
     usePostProcessing: document.getElementById("char-use-postprocess").checked,
-    avatarScale: Number(document.getElementById("char-avatar-scale").value) || 1,
+    avatarScale:
+      Number(document.getElementById("char-avatar-scale").value) || 1,
     ttsVoice: selectedTts.voice,
     ttsLanguage: selectedTts.language,
     ttsRate: selectedTts.rate,
@@ -1175,7 +1206,10 @@ async function saveCharacterFromModal() {
 
   if (state.editingCharacterId) {
     await db.characters.update(state.editingCharacterId, payload);
-    if (currentCharacter && Number(currentCharacter.id) === Number(state.editingCharacterId)) {
+    if (
+      currentCharacter &&
+      Number(currentCharacter.id) === Number(state.editingCharacterId)
+    ) {
       currentCharacter = { ...currentCharacter, ...payload };
     }
     showToast("Character updated.", "success");
@@ -1190,7 +1224,9 @@ async function saveCharacterFromModal() {
   await renderAll();
 }
 
-function populateCharTtsLanguageSelect(preferredLanguage = DEFAULT_TTS_LANGUAGE) {
+function populateCharTtsLanguageSelect(
+  preferredLanguage = DEFAULT_TTS_LANGUAGE,
+) {
   const languageSelect = document.getElementById("char-tts-language");
   if (!languageSelect) return;
   const voices = hasBrowserTtsSupport()
@@ -1247,13 +1283,23 @@ function updateCharTtsRatePitchLabels() {
   const pitch = document.getElementById("char-tts-pitch");
   const rateValue = document.getElementById("char-tts-rate-value");
   const pitchValue = document.getElementById("char-tts-pitch-value");
-  if (rate && rateValue) rateValue.textContent = Number(rate.value || 1).toFixed(1);
-  if (pitch && pitchValue) pitchValue.textContent = Number(pitch.value || 1).toFixed(1);
+  if (rate && rateValue)
+    rateValue.textContent = Number(rate.value || 1).toFixed(1);
+  if (pitch && pitchValue)
+    pitchValue.textContent = Number(pitch.value || 1).toFixed(1);
 }
 
-function getResolvedTtsSelection(languageInput, voiceInput, rateInput, pitchInput) {
-  const language = String(languageInput || DEFAULT_TTS_LANGUAGE).trim() || DEFAULT_TTS_LANGUAGE;
-  const voice = String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
+function getResolvedTtsSelection(
+  languageInput,
+  voiceInput,
+  rateInput,
+  pitchInput,
+) {
+  const language =
+    String(languageInput || DEFAULT_TTS_LANGUAGE).trim() ||
+    DEFAULT_TTS_LANGUAGE;
+  const voice =
+    String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
   const rate = Math.max(0.5, Math.min(2, Number(rateInput) || 1));
   const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1));
   return {
@@ -1288,14 +1334,20 @@ async function renderPersonaSelector() {
 
   const defaultPersona = await getDefaultPersona();
   const requestedId = Number(currentThread?.selectedPersonaId);
-  const existing = requestedId ? personas.find((p) => p.id === requestedId) : null;
+  const existing = requestedId
+    ? personas.find((p) => p.id === requestedId)
+    : null;
   const effective = existing || defaultPersona || personas[0] || null;
 
   currentPersona = effective || null;
   select.value = effective ? String(effective.id) : "";
   updatePersonaPickerDisplay();
 
-  if (currentThread && effective && Number(currentThread.selectedPersonaId) !== Number(effective.id)) {
+  if (
+    currentThread &&
+    effective &&
+    Number(currentThread.selectedPersonaId) !== Number(effective.id)
+  ) {
     currentThread.selectedPersonaId = effective.id;
     await db.threads.update(currentThread.id, {
       selectedPersonaId: effective.id,
@@ -1307,7 +1359,9 @@ async function renderPersonaSelector() {
 async function onPersonaSelectChange() {
   const select = document.getElementById("persona-select");
   const personaId = Number(select.value);
-  currentPersona = personaId ? await db.personas.get(personaId) : await getDefaultPersona();
+  currentPersona = personaId
+    ? await db.personas.get(personaId)
+    : await getDefaultPersona();
   updatePersonaPickerDisplay();
   if (!currentThread) return;
   const updatedAt = Date.now();
@@ -1337,7 +1391,9 @@ async function savePersonaFromModal() {
   const personas = await getOrderedPersonas();
   const name = document.getElementById("persona-name").value.trim();
   const avatar = document.getElementById("persona-avatar").value.trim();
-  const description = document.getElementById("persona-description").value.trim();
+  const description = document
+    .getElementById("persona-description")
+    .value.trim();
   const wantsDefault = document.getElementById("persona-is-default").checked;
 
   if (!name) {
@@ -1427,7 +1483,8 @@ async function renderPersonaModalList() {
 
     const avatar = document.createElement("img");
     avatar.className = "thread-avatar";
-    avatar.src = persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
+    avatar.src =
+      persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
     avatar.alt = "persona avatar";
 
     const info = document.createElement("div");
@@ -1466,10 +1523,7 @@ async function renderPersonaModalList() {
 }
 
 async function deletePersona(personaId) {
-  const ok = await openConfirmDialog(
-    "Delete Persona",
-    "Delete this persona?",
-  );
+  const ok = await openConfirmDialog("Delete Persona", "Delete this persona?");
   if (!ok) return;
   const persona = await db.personas.get(personaId);
   await db.personas.delete(personaId);
@@ -1479,7 +1533,10 @@ async function deletePersona(personaId) {
     .toArray();
   await Promise.all(
     threads.map((t) =>
-      db.threads.update(t.id, { selectedPersonaId: null, updatedAt: Date.now() }),
+      db.threads.update(t.id, {
+        selectedPersonaId: null,
+        updatedAt: Date.now(),
+      }),
     ),
   );
 
@@ -1505,7 +1562,8 @@ function loadPersonaForEditing(persona) {
   document.getElementById("persona-name").value = persona.name || "";
   document.getElementById("persona-avatar").value = persona.avatar || "";
   document.getElementById("persona-avatar-file").value = "";
-  document.getElementById("persona-description").value = persona.description || "";
+  document.getElementById("persona-description").value =
+    persona.description || "";
   document.getElementById("persona-is-default").checked = !!persona.isDefault;
   document.getElementById("save-persona-btn").textContent = "Update Persona";
 }
@@ -1554,7 +1612,10 @@ async function ensurePersonasInitialized() {
 async function setDefaultPersona(personaId) {
   await db.transaction("rw", db.personas, async () => {
     await db.personas.toCollection().modify({ isDefault: false });
-    await db.personas.update(personaId, { isDefault: true, updatedAt: Date.now() });
+    await db.personas.update(personaId, {
+      isDefault: true,
+      updatedAt: Date.now(),
+    });
   });
   if (!currentPersona || Number(currentPersona.id) === Number(personaId)) {
     currentPersona = await db.personas.get(personaId);
@@ -1568,9 +1629,7 @@ async function setDefaultPersona(personaId) {
 async function normalizePersonaOrder() {
   const personas = await getOrderedPersonas();
   await Promise.all(
-    personas.map((p, index) =>
-      db.personas.update(p.id, { order: index }),
-    ),
+    personas.map((p, index) => db.personas.update(p.id, { order: index })),
   );
 }
 
@@ -1832,7 +1891,11 @@ async function startNewThread(characterId) {
   };
 
   const threadId = await db.threads.add(newThread);
-  broadcastSyncEvent({ type: "thread-updated", threadId, updatedAt: newThread.updatedAt });
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId,
+    updatedAt: newThread.updatedAt,
+  });
   await renderThreads();
   await openThread(threadId);
   showToast("Thread created.", "success");
@@ -1853,7 +1916,11 @@ async function duplicateThread(threadId) {
   };
 
   const newThreadId = await db.threads.add(copy);
-  broadcastSyncEvent({ type: "thread-updated", threadId: newThreadId, updatedAt: Date.now() });
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: newThreadId,
+    updatedAt: Date.now(),
+  });
   await renderThreads();
   showToast("Thread duplicated.", "success");
 }
@@ -1867,7 +1934,11 @@ async function toggleThreadFavorite(threadId) {
     currentThread.favorite = next;
   }
   await renderThreads();
-  broadcastSyncEvent({ type: "thread-updated", threadId, updatedAt: Date.now() });
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId,
+    updatedAt: Date.now(),
+  });
   showToast(next ? "Thread favorited." : "Thread unfavorited.", "success");
 }
 
@@ -1877,7 +1948,11 @@ async function deleteThread(threadId) {
 
   await db.threads.delete(threadId);
   state.selectedThreadIds.delete(Number(threadId));
-  broadcastSyncEvent({ type: "thread-updated", threadId, updatedAt: Date.now() });
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId,
+    updatedAt: Date.now(),
+  });
   if (currentThread?.id === threadId) {
     currentThread = null;
     currentCharacter = null;
@@ -1953,10 +2028,14 @@ function buildMessageRow(message, index, streaming) {
   const userAvatar = message.senderAvatar || fallbackAvatar(userName, 512, 512);
   const botName = currentCharacter?.name || "Character";
   const botAvatar =
-    currentCharacter?.avatar || fallbackAvatar(currentCharacter?.name || "Character", 512, 512);
+    currentCharacter?.avatar ||
+    fallbackAvatar(currentCharacter?.name || "Character", 512, 512);
   avatar.src = message.role === "assistant" ? botAvatar : userAvatar;
   if (message.role === "assistant") {
-    const mult = Math.max(1, Math.min(4, Number(currentCharacter?.avatarScale) || 1));
+    const mult = Math.max(
+      1,
+      Math.min(4, Number(currentCharacter?.avatarScale) || 1),
+    );
     const size = 44 * mult;
     avatar.style.width = `${size}px`;
     avatar.style.height = `${size}px`;
@@ -2066,8 +2145,14 @@ function updateTtsSupportUi() {
   const supported = state.tts.voiceSupportReady === true;
   const statusEl = document.getElementById("tts-test-status");
   const playBtn = document.getElementById("tts-test-play-btn");
-  if (statusEl && (!statusEl.textContent || statusEl.textContent.startsWith("TTS: unsupported"))) {
-    statusEl.textContent = supported ? "TTS: idle" : "TTS: unsupported in this browser";
+  if (
+    statusEl &&
+    (!statusEl.textContent ||
+      statusEl.textContent.startsWith("TTS: unsupported"))
+  ) {
+    statusEl.textContent = supported
+      ? "TTS: idle"
+      : "TTS: unsupported in this browser";
   }
   if (playBtn) {
     playBtn.disabled = !supported;
@@ -2086,10 +2171,13 @@ function initBrowserTtsSupport() {
     const voices = synth.getVoices?.() || [];
     state.tts.voiceSupportReady = voices.length > 0;
     if (state.activeModalId === "character-modal") {
-      const currentLang =
-        String(document.getElementById("char-tts-language")?.value || DEFAULT_TTS_LANGUAGE);
-      const currentVoice =
-        String(document.getElementById("char-tts-voice")?.value || DEFAULT_TTS_VOICE);
+      const currentLang = String(
+        document.getElementById("char-tts-language")?.value ||
+          DEFAULT_TTS_LANGUAGE,
+      );
+      const currentVoice = String(
+        document.getElementById("char-tts-voice")?.value || DEFAULT_TTS_VOICE,
+      );
       populateCharTtsLanguageSelect(currentLang);
       populateCharTtsVoiceSelect(currentVoice);
     }
@@ -2117,7 +2205,10 @@ function updateMessageSpeakerButton(button, index) {
   button.classList.toggle("tts-loading", isLoading);
   if (!ttsReady) {
     button.innerHTML = ICONS.speaker;
-    button.setAttribute("title", "Voice support is not configured in this browser.");
+    button.setAttribute(
+      "title",
+      "Voice support is not configured in this browser.",
+    );
     button.setAttribute("aria-label", "Voice support unavailable");
     return;
   }
@@ -2194,7 +2285,11 @@ async function generateBotReply() {
   const pending = { role: "assistant", content: "", createdAt: Date.now() };
   conversationHistory.push(pending);
   await persistCurrentThread();
-  const pendingRow = buildMessageRow(pending, conversationHistory.length - 1, true);
+  const pendingRow = buildMessageRow(
+    pending,
+    conversationHistory.length - 1,
+    true,
+  );
   const pendingContent = pendingRow.querySelector(".message-content");
   pendingContent.innerHTML =
     '<span class="spinner" aria-hidden="true"></span> Generating...';
@@ -2213,10 +2308,8 @@ async function generateBotReply() {
       state.settings.model,
       (chunk) => {
         pending.content += chunk;
-        pendingRow.querySelector(".message-content").innerHTML = renderMessageHtml(
-          pending.content,
-          pending.role,
-        );
+        pendingRow.querySelector(".message-content").innerHTML =
+          renderMessageHtml(pending.content, pending.role);
         if (state.settings.streamEnabled) {
           persistCurrentThread().catch(() => {});
         }
@@ -2255,10 +2348,8 @@ async function generateBotReply() {
         if (idx >= 0) conversationHistory.splice(idx, 1);
         pendingRow.remove();
       } else {
-        pendingRow.querySelector(".message-content").innerHTML = renderMessageHtml(
-          pending.content,
-          pending.role,
-        );
+        pendingRow.querySelector(".message-content").innerHTML =
+          renderMessageHtml(pending.content, pending.role);
         pendingRow.dataset.streaming = "0";
         refreshAllSpeakerButtons();
       }
@@ -2464,8 +2555,9 @@ async function playTtsAudio(text, options, playback = {}) {
   if (!voices.length) {
     throw new Error("No browser voices are available yet.");
   }
-  const messageIndex =
-    Number.isInteger(playback?.messageIndex) ? playback.messageIndex : null;
+  const messageIndex = Number.isInteger(playback?.messageIndex)
+    ? playback.messageIndex
+    : null;
   const requestId = state.tts.requestSeq + 1;
   state.tts.requestSeq = requestId;
   state.tts.activeRequestId = requestId;
@@ -2498,27 +2590,43 @@ async function playTtsAudio(text, options, playback = {}) {
 
   try {
     if (requestId !== state.tts.activeRequestId) {
-      ttsDebug("playTtsAudio:stale-request", { requestId, active: state.tts.activeRequestId });
+      ttsDebug("playTtsAudio:stale-request", {
+        requestId,
+        active: state.tts.activeRequestId,
+      });
       throw makeTtsCancelledError();
     }
 
     utterance = new SpeechSynthesisUtterance(normalizedText);
     const desiredVoice = String(options?.voice || DEFAULT_TTS_VOICE).trim();
-    const desiredLang = String(options?.language || DEFAULT_TTS_LANGUAGE).trim();
+    const desiredLang = String(
+      options?.language || DEFAULT_TTS_LANGUAGE,
+    ).trim();
     const desiredRate = Math.max(0.5, Math.min(2, Number(options?.rate) || 1));
     const desiredPitch = Math.max(0, Math.min(2, Number(options?.pitch) || 1));
     utterance.lang = desiredLang || DEFAULT_TTS_LANGUAGE;
     utterance.rate = desiredRate;
     utterance.pitch = desiredPitch;
-    const byExactName = voices.find((v) => String(v.name || "").toLowerCase() === desiredVoice.toLowerCase());
-    const byLangExact = voices.find((v) => String(v.lang || "").toLowerCase() === utterance.lang.toLowerCase());
-    const byLangPrefix = voices.find((v) =>
-      String(v.lang || "").toLowerCase().startsWith(utterance.lang.split("-")[0]?.toLowerCase() || ""),
+    const byExactName = voices.find(
+      (v) => String(v.name || "").toLowerCase() === desiredVoice.toLowerCase(),
     );
-    utterance.voice = byExactName || byLangExact || byLangPrefix || voices[0] || null;
+    const byLangExact = voices.find(
+      (v) =>
+        String(v.lang || "").toLowerCase() === utterance.lang.toLowerCase(),
+    );
+    const byLangPrefix = voices.find((v) =>
+      String(v.lang || "")
+        .toLowerCase()
+        .startsWith(utterance.lang.split("-")[0]?.toLowerCase() || ""),
+    );
+    utterance.voice =
+      byExactName || byLangExact || byLangPrefix || voices[0] || null;
 
     if (requestId !== state.tts.activeRequestId) {
-      ttsDebug("playTtsAudio:stale-request-before-speak", { requestId, active: state.tts.activeRequestId });
+      ttsDebug("playTtsAudio:stale-request-before-speak", {
+        requestId,
+        active: state.tts.activeRequestId,
+      });
       throw makeTtsCancelledError();
     }
     state.tts.loadingMessageIndex = null;
@@ -2585,7 +2693,10 @@ function stopTtsPlayback() {
 }
 
 async function toggleMessageSpeech(index) {
-  ttsDebug("toggleMessageSpeech:enter", { index, historyLen: conversationHistory.length });
+  ttsDebug("toggleMessageSpeech:enter", {
+    index,
+    historyLen: conversationHistory.length,
+  });
   if (!currentThread || !currentCharacter) {
     ttsDebug("toggleMessageSpeech:blocked-no-thread-or-character", {
       hasThread: !!currentThread,
@@ -2646,7 +2757,10 @@ async function toggleMessageSpeech(index) {
   stopTtsPlayback();
 
   try {
-    ttsDebug("toggleMessageSpeech:play", { index, contentLength: String(message.content || "").length });
+    ttsDebug("toggleMessageSpeech:play", {
+      index,
+      contentLength: String(message.content || "").length,
+    });
     await playTtsAudio(message.content, getCurrentCharacterTtsOptions(), {
       messageIndex: index,
     });
@@ -2656,7 +2770,10 @@ async function toggleMessageSpeech(index) {
       ttsDebug("toggleMessageSpeech:cancelled", { index });
       return;
     }
-    ttsDebug("toggleMessageSpeech:error", { index, error: String(err?.message || err || "") });
+    ttsDebug("toggleMessageSpeech:error", {
+      index,
+      error: String(err?.message || err || ""),
+    });
     if (isTtsIndexMatch(state.tts.loadingMessageIndex, index)) {
       state.tts.loadingMessageIndex = null;
     }
@@ -2709,7 +2826,13 @@ function positionPromptHistoryPopover() {
   const popover = document.getElementById("prompt-history-popover");
   const chatView = document.getElementById("chat-view");
   const inputRow = document.querySelector(".input-row");
-  if (!popover || !chatView || !inputRow || popover.classList.contains("hidden")) return;
+  if (
+    !popover ||
+    !chatView ||
+    !inputRow ||
+    popover.classList.contains("hidden")
+  )
+    return;
   popover.style.bottom = "";
   popover.style.top = "0px";
   const desiredTop = Math.max(0, inputRow.offsetTop - popover.offsetHeight - 8);
@@ -3166,7 +3289,9 @@ function shouldRetryError(error, attempt, attempts) {
 function isAbortError(error) {
   return (
     error?.name === "AbortError" ||
-    String(error?.message || "").toLowerCase().includes("aborted")
+    String(error?.message || "")
+      .toLowerCase()
+      .includes("aborted")
   );
 }
 
@@ -3263,10 +3388,7 @@ function normalizeContentParts(value) {
 
 function renderMessageHtml(content, role = "assistant") {
   let raw = String(content || "");
-  if (
-    role === "assistant" &&
-    currentCharacter?.usePostProcessing !== false
-  ) {
+  if (role === "assistant" && currentCharacter?.usePostProcessing !== false) {
     raw = applyPostProcessingRules(raw);
   }
   if (!state.settings.markdownEnabled) {
@@ -3278,14 +3400,19 @@ function renderMessageHtml(content, role = "assistant") {
 }
 
 function markdownToHtml(input) {
-  let html = state.settings.allowMessageHtml ? String(input) : escapeHtml(input);
+  let html = state.settings.allowMessageHtml
+    ? String(input)
+    : escapeHtml(input);
 
   html = html.replace(
     /```([\s\S]*?)```/g,
     (_m, code) => `<pre><code>${code}</code></pre>`,
   );
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="md-strong">$1</strong>');
+  html = html.replace(
+    /\*\*([^*]+)\*\*/g,
+    '<strong class="md-strong">$1</strong>',
+  );
   html = html.replace(/\*([^*]+)\*/g, '<em class="md-em">$1</em>');
   html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.*)$/gm, "<h2>$1</h2>");
@@ -3341,7 +3468,8 @@ function parsePostProcessingRules(rawJson) {
     const parsed = JSON.parse(rawJson || "[]");
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
-      (r) => r && typeof r.pattern === "string" && typeof r.replacement === "string",
+      (r) =>
+        r && typeof r.pattern === "string" && typeof r.replacement === "string",
     );
   } catch {
     return [];
