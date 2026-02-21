@@ -55,10 +55,22 @@
             aria-label="Edit current character"
           ></button>
           <div id="chat-title">Thread</div>
+          <button
+            id="rename-thread-btn"
+            class="icon-btn"
+            title="Rename thread"
+            aria-label="Rename thread"
+          ></button>
           <div id="chat-model-pill" class="model-pill">Model: -</div>
         </header>
 
         <div id="chat-log" class="chat-log"></div>
+        <button
+          id="scroll-bottom-btn"
+          class="icon-btn hidden"
+          title="Scroll to bottom"
+          aria-label="Scroll to bottom"
+        >↓</button>
 
         <div id="prompt-history-popover" class="popover hidden" role="dialog" aria-label="Prompt history">
           <div class="popover-title">Previous prompts</div>
@@ -113,6 +125,25 @@
         <div class="modal-footer">
           <button id="confirm-no-btn" class="secondary-btn">Cancel</button>
           <button id="confirm-yes-btn" class="primary-btn">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="text-input-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="text-input-title">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="text-input-title">Rename</h3>
+          <button class="icon-btn modal-close" id="text-input-cancel-x" aria-label="Close input modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label>
+            <span id="text-input-label">Value</span>
+            <input id="text-input-value" type="text" maxlength="128" />
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button id="text-input-cancel" class="secondary-btn">Cancel</button>
+          <button id="text-input-save" class="primary-btn">Save</button>
         </div>
       </div>
     </div>

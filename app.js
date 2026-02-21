@@ -272,6 +272,7 @@ const state = {
   syncTimerId: null,
   lastSyncSeenUpdatedAt: 0,
   confirmResolver: null,
+  textInputResolver: null,
   confirmMode: "confirm",
   activeShortcut: null,
   abortController: null,
@@ -325,6 +326,8 @@ async function init() {
   await renderAll();
   setupCrossWindowSync();
   applyMarkdownCustomCss();
+  updateThreadRenameButtonState();
+  updateScrollBottomButtonVisibility();
 }
 
 function t(key) {
@@ -474,6 +477,12 @@ function setupEvents() {
   document
     .getElementById("back-to-main")
     .addEventListener("click", showMainView);
+  document
+    .getElementById("rename-thread-btn")
+    .addEventListener("click", renameCurrentThread);
+  document
+    .getElementById("scroll-bottom-btn")
+    .addEventListener("click", () => scrollChatToBottom(true));
   document.getElementById("pane-toggle").addEventListener("click", togglePane);
   document.getElementById("edit-current-character-btn").innerHTML = ICONS.edit;
   document
@@ -524,6 +533,15 @@ function setupEvents() {
   document
     .getElementById("confirm-cancel-btn")
     .addEventListener("click", () => resolveConfirmDialog(false));
+  document
+    .getElementById("text-input-save")
+    .addEventListener("click", () => resolveTextInputDialog(true));
+  document
+    .getElementById("text-input-cancel")
+    .addEventListener("click", () => resolveTextInputDialog(false));
+  document
+    .getElementById("text-input-cancel-x")
+    .addEventListener("click", () => resolveTextInputDialog(false));
 
   const input = document.getElementById("user-input");
   const chatLog = document.getElementById("chat-log");
@@ -543,8 +561,10 @@ function setupEvents() {
   input.addEventListener("dblclick", openPromptHistory);
   input.addEventListener("pointerup", onInputPointerUp);
   chatLog.addEventListener("scroll", () => {
-    if (!state.sending) return;
-    state.chatAutoScroll = isChatNearBottom();
+    if (state.sending) {
+      state.chatAutoScroll = isChatNearBottom();
+    }
+    updateScrollBottomButtonVisibility();
   });
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
@@ -703,6 +723,7 @@ function onGlobalKeyDown(e) {
 }
 
 function closeAnyOpenModal() {
+  resolveTextInputDialog(false);
   resolveConfirmDialog(false);
   closeActiveModal();
   document.querySelectorAll(".modal:not(.hidden)").forEach((modal) => {
@@ -1187,6 +1208,56 @@ function resolveConfirmDialog(value) {
   if (typeof resolver === "function") resolver(!!value);
 }
 
+function openTextInputDialog({
+  title = "Input",
+  label = "Value",
+  value = "",
+  saveLabel = "Save",
+  cancelLabel = "Cancel",
+  maxLength = 128,
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("text-input-modal");
+    const titleEl = document.getElementById("text-input-title");
+    const labelEl = document.getElementById("text-input-label");
+    const inputEl = document.getElementById("text-input-value");
+    const saveBtn = document.getElementById("text-input-save");
+    const cancelBtn = document.getElementById("text-input-cancel");
+    if (!modal || !titleEl || !labelEl || !inputEl || !saveBtn || !cancelBtn) {
+      resolve(null);
+      return;
+    }
+    titleEl.textContent = title;
+    labelEl.textContent = label;
+    inputEl.value = String(value || "");
+    inputEl.maxLength = Math.max(1, Number(maxLength) || 128);
+    saveBtn.textContent = saveLabel;
+    cancelBtn.textContent = cancelLabel;
+    state.textInputResolver = resolve;
+    modal.classList.remove("hidden");
+    state.activeModalId = "text-input-modal";
+    window.setTimeout(() => {
+      inputEl.focus();
+      inputEl.select();
+    }, 0);
+  });
+}
+
+function resolveTextInputDialog(save) {
+  const modal = document.getElementById("text-input-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  const resolver = state.textInputResolver;
+  state.textInputResolver = null;
+  const inputEl = document.getElementById("text-input-value");
+  modal.classList.add("hidden");
+  if (state.activeModalId === "text-input-modal") {
+    state.activeModalId = null;
+  }
+  if (typeof resolver === "function") {
+    resolver(save ? String(inputEl?.value || "") : null);
+  }
+}
+
 function applyMarkdownCustomCss() {
   const id = "dynamic-markdown-style";
   let styleTag = document.getElementById(id);
@@ -1507,8 +1578,16 @@ async function renderThreads() {
       e.stopPropagation();
       openThread(thread.id);
     });
+    const titleRow = document.createElement("div");
+    titleRow.className = "thread-title-row";
+    const renameMiniBtn = iconButton("edit", "Rename thread", async (e) => {
+      e.stopPropagation();
+      await renameThread(thread.id);
+    });
+    renameMiniBtn.classList.add("thread-rename-mini");
+    titleRow.append(titleBtn, renameMiniBtn);
 
-    info.append(titleBtn, meta);
+    info.append(titleRow, meta);
 
     const actions = document.createElement("div");
     actions.className = "actions";
@@ -1548,7 +1627,8 @@ async function renderThreads() {
     if (thread.favorite) favBtn.classList.add("is-favorite");
     actions.appendChild(favBtn);
 
-    row.append(selectBox, avatar, info, actions);
+    actions.prepend(selectBox);
+    row.append(avatar, info, actions);
     list.appendChild(row);
   });
 }
@@ -1635,11 +1715,15 @@ function showMainView() {
   stopTtsPlayback();
   document.getElementById("main-view").classList.add("active");
   document.getElementById("chat-view").classList.remove("active");
+  updateThreadRenameButtonState();
+  updateScrollBottomButtonVisibility();
 }
 
 function showChatView() {
   document.getElementById("chat-view").classList.add("active");
   document.getElementById("main-view").classList.remove("active");
+  updateThreadRenameButtonState();
+  updateScrollBottomButtonVisibility();
 }
 
 function openModal(modalId) {
@@ -1660,6 +1744,10 @@ function openModal(modalId) {
 function closeActiveModal() {
   if (!state.activeModalId) return;
   const closingId = state.activeModalId;
+  if (closingId === "text-input-modal") {
+    resolveTextInputDialog(false);
+    return;
+  }
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
   state.activeModalId = null;
@@ -2426,6 +2514,7 @@ async function startNewThread(characterId) {
     characterId,
     title: `Thread ${new Date().toLocaleString()}`,
     titleGenerated: false,
+    titleManual: false,
     messages: [],
     selectedPersonaId: currentPersona?.id || null,
     lastPersonaInjectionPersonaId: null,
@@ -2452,6 +2541,7 @@ async function duplicateThread(threadId) {
     characterId: source.characterId,
     title: `${source.title || `Thread ${source.id}`} Copy`,
     titleGenerated: false,
+    titleManual: false,
     messages: [...(source.messages || [])],
     selectedPersonaId: source.selectedPersonaId || null,
     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
@@ -2531,6 +2621,7 @@ async function openThread(threadId) {
   }
 
   updateChatTitle();
+  updateThreadRenameButtonState();
   updateModelPill();
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
@@ -2541,7 +2632,60 @@ async function openThread(threadId) {
   closePromptHistory();
   await renderShortcutsBar();
   await renderThreads();
+  updateScrollBottomButtonVisibility();
   showChatView();
+}
+
+function updateThreadRenameButtonState() {
+  const btn = document.getElementById("rename-thread-btn");
+  if (!btn) return;
+  btn.innerHTML = ICONS.edit;
+  btn.disabled = !currentThread;
+}
+
+async function renameCurrentThread() {
+  if (!currentThread) return;
+  await renameThread(currentThread.id);
+}
+
+async function renameThread(threadId) {
+  const thread = await db.threads.get(threadId);
+  if (!thread) return;
+  const next = await openTextInputDialog({
+    title: "Rename Thread",
+    label: "Thread Title",
+    value: thread.title || `Thread ${thread.id}`,
+    saveLabel: "Save",
+    cancelLabel: "Cancel",
+    maxLength: 128,
+  });
+  if (next === null) return;
+  const title = String(next || "").trim().slice(0, 128);
+  if (!title) {
+    await openInfoDialog("Missing Field", "Thread title is required.");
+    return;
+  }
+  const updatedAt = Date.now();
+  await db.threads.update(thread.id, {
+    title,
+    titleManual: true,
+    titleGenerated: true,
+    updatedAt,
+  });
+  if (currentThread?.id === thread.id) {
+    currentThread.title = title;
+    currentThread.titleManual = true;
+    currentThread.titleGenerated = true;
+    currentThread.updatedAt = updatedAt;
+    updateChatTitle();
+  }
+  await renderThreads();
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: thread.id,
+    updatedAt,
+  });
+  showToast("Thread renamed.", "success");
 }
 
 function updateChatTitle() {
@@ -2560,6 +2704,7 @@ function updateChatTitle() {
 async function maybeGenerateThreadTitle() {
   if (!currentThread || !currentCharacter) return;
   if (currentThread.titleGenerated === true) return;
+  if (currentThread.titleManual === true) return;
   if (conversationHistory.length < 5) return;
 
   const firstFive = conversationHistory.slice(0, 5);
@@ -2601,10 +2746,12 @@ async function maybeGenerateThreadTitle() {
     await db.threads.update(currentThread.id, {
       title: cleaned,
       titleGenerated: true,
+      titleManual: false,
       updatedAt,
     });
     currentThread.title = cleaned;
     currentThread.titleGenerated = true;
+    currentThread.titleManual = false;
     currentThread.updatedAt = updatedAt;
     state.lastSyncSeenUpdatedAt = updatedAt;
     updateChatTitle();
@@ -2631,6 +2778,7 @@ function renderChat() {
   });
 
   scrollChatToBottom();
+  updateScrollBottomButtonVisibility();
 }
 
 function buildMessageRow(message, index, streaming) {
@@ -3759,6 +3907,19 @@ function scrollChatToBottom(force = false) {
   if (!force && state.sending && state.chatAutoScroll === false) return;
   const log = document.getElementById("chat-log");
   log.scrollTop = log.scrollHeight;
+  updateScrollBottomButtonVisibility();
+}
+
+function updateScrollBottomButtonVisibility() {
+  const btn = document.getElementById("scroll-bottom-btn");
+  const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
+  if (!btn) return;
+  if (!chatViewActive || !currentThread) {
+    btn.classList.add("hidden");
+    return;
+  }
+  if (isChatNearBottom()) btn.classList.add("hidden");
+  else btn.classList.remove("hidden");
 }
 
 function setupCrossWindowSync() {
@@ -3837,6 +3998,7 @@ async function migrateLegacySessions() {
       characterId: session.characterId,
       title: `Imported Thread ${session.id}`,
       titleGenerated: false,
+      titleManual: false,
       messages: session.messages || [],
       lastPersonaInjectionPersonaId: null,
       createdAt: session.updatedAt || Date.now(),
