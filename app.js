@@ -58,6 +58,8 @@ const DEFAULT_SETTINGS = {
   streamEnabled: true,
   autoReplyEnabled: true,
   maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 1024,
+  temperature:
+    Number.isFinite(Number(CONFIG.temperature)) ? Number(CONFIG.temperature) : 0.8,
   preferFreeVariant: true,
   globalPromptTemplate: "Stay in character and respond naturally.",
   summarySystemPrompt: "You are a helpful summarization assistant.",
@@ -231,6 +233,8 @@ function setupSettingsControls() {
   const modelSelect = document.getElementById("model-select");
   const maxTokensSlider = document.getElementById("max-tokens-slider");
   const maxTokensValue = document.getElementById("max-tokens-value");
+  const temperatureSlider = document.getElementById("temperature-slider");
+  const temperatureValue = document.getElementById("temperature-value");
   const preferFreeVariant = document.getElementById("prefer-free-variant");
   modelSelect.innerHTML = "";
   MODEL_OPTIONS.forEach((m) => {
@@ -265,6 +269,10 @@ function setupSettingsControls() {
   postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
   maxTokensSlider.value = String(clampMaxTokens(state.settings.maxTokens));
   maxTokensValue.textContent = maxTokensSlider.value;
+  temperatureSlider.value = String(clampTemperature(state.settings.temperature));
+  temperatureValue.textContent = clampTemperature(
+    state.settings.temperature,
+  ).toFixed(2);
   preferFreeVariant.checked = state.settings.preferFreeVariant !== false;
   globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
@@ -315,6 +323,13 @@ function setupSettingsControls() {
     const value = clampMaxTokens(Number(maxTokensSlider.value));
     state.settings.maxTokens = value;
     maxTokensValue.textContent = String(value);
+    saveSettings();
+  });
+
+  temperatureSlider.addEventListener("input", () => {
+    const value = clampTemperature(Number(temperatureSlider.value));
+    state.settings.temperature = value;
+    temperatureValue.textContent = value.toFixed(2);
     saveSettings();
   });
 
@@ -1922,7 +1937,7 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null) {
       })),
     ],
     max_tokens: clampMaxTokens(state.settings.maxTokens),
-    temperature: CONFIG.temperature,
+    temperature: clampTemperature(state.settings.temperature),
     stream: !!state.settings.streamEnabled,
   };
 
@@ -1956,6 +1971,11 @@ function getFallbackModel(resolvedModel, originalModel) {
 
 async function requestCompletionWithRetry(body, attempts, onChunk) {
   let lastError = null;
+  if (!CONFIG.apiKey) {
+    throw new Error(
+      "Missing OPENROUTER_API_KEY. Set it in your runtime environment.",
+    );
+  }
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
@@ -2096,6 +2116,12 @@ function clampMaxTokens(value) {
   if (!Number.isFinite(n)) return DEFAULT_SETTINGS.maxTokens;
   const rounded = Math.round(n / 64) * 64;
   return Math.max(64, Math.min(8192, rounded));
+}
+
+function clampTemperature(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_SETTINGS.temperature;
+  return Math.max(0, Math.min(2, Number(n.toFixed(2))));
 }
 
 function normalizeApiRole(role) {
