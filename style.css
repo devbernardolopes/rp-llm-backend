@@ -458,6 +458,14 @@ textarea {
 .message-controls {
   display: flex;
   gap: 4px;
+  align-items: center;
+}
+
+.message-index {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 30px;
+  text-align: right;
 }
 
 .message-controls .icon-btn {
@@ -500,6 +508,19 @@ textarea {
   line-height: 1.62;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.message-editor {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #131c2a;
+  color: var(--text);
+  padding: 8px;
+  font: inherit;
+  line-height: 1.5;
 }
 
 .md-em {

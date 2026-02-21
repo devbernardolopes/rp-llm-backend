@@ -77,10 +77,9 @@
           </div>
           <div class="send-col">
             <label class="persona-picker in-send-col">
-              Persona
               <div class="persona-inline">
                 <img id="persona-selected-avatar" class="persona-selected-avatar" alt="Persona avatar" />
-                <select id="persona-select"></select>
+                <select id="persona-select" aria-label="Select persona"></select>
               </div>
             </label>
             <button id="send-btn" class="primary-btn">Send</button>
@@ -125,6 +124,18 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
+          <label>
+            Interface Language
+            <select id="ui-language-select">
+              <option value="auto">Auto (browser)</option>
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="it">Italiano</option>
+              <option value="de">Deutsch</option>
+              <option value="es">Español</option>
+              <option value="pt-BR">Português (Brasil)</option>
+            </select>
+          </label>
           <label>
             OpenRouter API Key
             <input

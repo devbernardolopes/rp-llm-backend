@@ -60,6 +60,7 @@ const ICONS = {
 };
 
 const DEFAULT_SETTINGS = {
+  uiLanguage: "auto",
   openRouterApiKey: "",
   model: "openrouter/auto",
   markdownEnabled: true,
@@ -84,11 +85,173 @@ const DEFAULT_SETTINGS = {
   shortcutsRaw: "",
 };
 
+const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
+
+const I18N = {
+  en: {
+    threads: "Threads",
+    createCharacter: "+ Character",
+    importCharacter: "Import Character",
+    settings: "Settings",
+    personas: "Personas",
+    loreBooks: "Lore Books",
+    shortcuts: "Shortcuts",
+    back: "Back",
+    previousPrompts: "Previous prompts",
+    send: "Send",
+    cancel: "Cancel",
+    hideShortcuts: "Hide Shortcuts",
+    showShortcuts: "Show Shortcuts",
+    autoReply: "Auto-reply",
+    enterToSend: "ENTER to send",
+    settingsTitle: "Settings",
+    languageLabel: "Interface Language",
+    languageAuto: "Auto (browser)",
+    languageEnglish: "English",
+    languageFrench: "Français",
+    languageItalian: "Italiano",
+    languageGerman: "Deutsch",
+    languageSpanish: "Español",
+    languagePortugueseBr: "Português (Brasil)",
+  },
+  fr: {
+    threads: "Fils",
+    createCharacter: "+ Personnage",
+    importCharacter: "Importer personnage",
+    settings: "Paramètres",
+    personas: "Personas",
+    loreBooks: "Livres de lore",
+    shortcuts: "Raccourcis",
+    back: "Retour",
+    previousPrompts: "Prompts précédents",
+    send: "Envoyer",
+    cancel: "Annuler",
+    hideShortcuts: "Masquer raccourcis",
+    showShortcuts: "Afficher raccourcis",
+    autoReply: "Réponse auto",
+    enterToSend: "ENTRÉE pour envoyer",
+    settingsTitle: "Paramètres",
+    languageLabel: "Langue de l'interface",
+    languageAuto: "Auto (navigateur)",
+    languageEnglish: "English",
+    languageFrench: "Français",
+    languageItalian: "Italiano",
+    languageGerman: "Deutsch",
+    languageSpanish: "Español",
+    languagePortugueseBr: "Português (Brasil)",
+  },
+  it: {
+    threads: "Thread",
+    createCharacter: "+ Personaggio",
+    importCharacter: "Importa personaggio",
+    settings: "Impostazioni",
+    personas: "Persona",
+    loreBooks: "Libri lore",
+    shortcuts: "Scorciatoie",
+    back: "Indietro",
+    previousPrompts: "Prompt precedenti",
+    send: "Invia",
+    cancel: "Annulla",
+    hideShortcuts: "Nascondi scorciatoie",
+    showShortcuts: "Mostra scorciatoie",
+    autoReply: "Risposta automatica",
+    enterToSend: "INVIO per inviare",
+    settingsTitle: "Impostazioni",
+    languageLabel: "Lingua interfaccia",
+    languageAuto: "Auto (browser)",
+    languageEnglish: "English",
+    languageFrench: "Français",
+    languageItalian: "Italiano",
+    languageGerman: "Deutsch",
+    languageSpanish: "Español",
+    languagePortugueseBr: "Português (Brasil)",
+  },
+  de: {
+    threads: "Threads",
+    createCharacter: "+ Charakter",
+    importCharacter: "Charakter importieren",
+    settings: "Einstellungen",
+    personas: "Personas",
+    loreBooks: "Lore-Bücher",
+    shortcuts: "Shortcuts",
+    back: "Zurück",
+    previousPrompts: "Vorherige Prompts",
+    send: "Senden",
+    cancel: "Abbrechen",
+    hideShortcuts: "Shortcuts ausblenden",
+    showShortcuts: "Shortcuts anzeigen",
+    autoReply: "Auto-Antwort",
+    enterToSend: "ENTER zum Senden",
+    settingsTitle: "Einstellungen",
+    languageLabel: "Sprache",
+    languageAuto: "Auto (Browser)",
+    languageEnglish: "English",
+    languageFrench: "Français",
+    languageItalian: "Italiano",
+    languageGerman: "Deutsch",
+    languageSpanish: "Español",
+    languagePortugueseBr: "Português (Brasil)",
+  },
+  es: {
+    threads: "Hilos",
+    createCharacter: "+ Personaje",
+    importCharacter: "Importar personaje",
+    settings: "Configuración",
+    personas: "Personas",
+    loreBooks: "Libros de lore",
+    shortcuts: "Atajos",
+    back: "Volver",
+    previousPrompts: "Prompts anteriores",
+    send: "Enviar",
+    cancel: "Cancelar",
+    hideShortcuts: "Ocultar atajos",
+    showShortcuts: "Mostrar atajos",
+    autoReply: "Respuesta automática",
+    enterToSend: "ENTER para enviar",
+    settingsTitle: "Configuración",
+    languageLabel: "Idioma de interfaz",
+    languageAuto: "Auto (navegador)",
+    languageEnglish: "English",
+    languageFrench: "Français",
+    languageItalian: "Italiano",
+    languageGerman: "Deutsch",
+    languageSpanish: "Español",
+    languagePortugueseBr: "Português (Brasil)",
+  },
+  "pt-BR": {
+    threads: "Conversas",
+    createCharacter: "+ Personagem",
+    importCharacter: "Importar personagem",
+    settings: "Configurações",
+    personas: "Personas",
+    loreBooks: "Livros de lore",
+    shortcuts: "Atalhos",
+    back: "Voltar",
+    previousPrompts: "Prompts anteriores",
+    send: "Enviar",
+    cancel: "Cancelar",
+    hideShortcuts: "Ocultar atalhos",
+    showShortcuts: "Mostrar atalhos",
+    autoReply: "Resposta automática",
+    enterToSend: "ENTER para enviar",
+    settingsTitle: "Configurações",
+    languageLabel: "Idioma da interface",
+    languageAuto: "Automático (navegador)",
+    languageEnglish: "English",
+    languageFrench: "Français",
+    languageItalian: "Italiano",
+    languageGerman: "Deutsch",
+    languageSpanish: "Español",
+    languagePortugueseBr: "Português (Brasil)",
+  },
+};
+
 const DEFAULT_TTS_VOICE = "Joanna";
 const DEFAULT_TTS_LANGUAGE = "en-US";
 
 const state = {
   settings: { ...DEFAULT_SETTINGS },
+  i18nLang: "en",
   shortcutsVisible: true,
   editingCharacterId: null,
   editingPersonaId: null,
@@ -116,6 +279,7 @@ const state = {
     activeRequestId: 0,
     voiceSupportReady: false,
   },
+  editingMessageIndex: null,
   selectedThreadIds: new Set(),
   modalDirty: {
     "character-modal": false,
@@ -145,6 +309,7 @@ window.addEventListener("DOMContentLoaded", init);
 
 async function init() {
   loadSettings();
+  applyInterfaceLanguage();
   loadUiState();
   setupSettingsControls();
   setupEvents();
@@ -155,6 +320,121 @@ async function init() {
   await renderAll();
   setupCrossWindowSync();
   applyMarkdownCustomCss();
+}
+
+function t(key) {
+  const lang = state.i18nLang in I18N ? state.i18nLang : "en";
+  return I18N[lang]?.[key] || I18N.en[key] || key;
+}
+
+function normalizeUiLanguageCode(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "en";
+  if (raw.toLowerCase().startsWith("pt-br")) return "pt-BR";
+  const base = raw.split("-")[0].toLowerCase();
+  if (base === "en") return "en";
+  if (base === "fr") return "fr";
+  if (base === "it") return "it";
+  if (base === "de") return "de";
+  if (base === "es") return "es";
+  if (base === "pt") return "pt-BR";
+  return "en";
+}
+
+function resolveInterfaceLanguage() {
+  const chosen = String(state.settings.uiLanguage || "auto");
+  if (chosen !== "auto" && UI_LANG_OPTIONS.includes(chosen)) return chosen;
+  const browserLang =
+    typeof navigator !== "undefined"
+      ? navigator.language || navigator.userLanguage || "en"
+      : "en";
+  return normalizeUiLanguageCode(browserLang);
+}
+
+function updateCheckboxLabelText(inputId, text) {
+  const input = document.getElementById(inputId);
+  const label = input?.closest("label");
+  if (!input || !label) return;
+  const nodes = Array.from(label.childNodes).filter(
+    (n) => n.nodeType === Node.TEXT_NODE,
+  );
+  if (nodes.length === 0) {
+    label.appendChild(document.createTextNode(` ${text}`));
+    return;
+  }
+  nodes[nodes.length - 1].nodeValue = ` ${text}`;
+}
+
+function applyInterfaceLanguage() {
+  state.i18nLang = resolveInterfaceLanguage();
+
+  const paneTitle = document.querySelector(".pane-title");
+  if (paneTitle) paneTitle.textContent = t("threads");
+
+  const createBtn = document.getElementById("create-character-btn");
+  if (createBtn && !document.getElementById("left-pane")?.classList.contains("collapsed")) {
+    createBtn.textContent = t("createCharacter");
+  }
+  const importBtn = document.getElementById("import-character-btn");
+  if (importBtn) importBtn.textContent = t("importCharacter");
+
+  const bottomButtons = document.querySelectorAll(".pane-bottom .option-btn");
+  if (bottomButtons[0]) {
+    bottomButtons[0].title = t("settings");
+    bottomButtons[0].setAttribute("aria-label", t("settings"));
+  }
+  if (bottomButtons[1]) {
+    bottomButtons[1].title = t("personas");
+    bottomButtons[1].setAttribute("aria-label", t("personas"));
+  }
+  if (bottomButtons[2]) {
+    bottomButtons[2].title = t("loreBooks");
+    bottomButtons[2].setAttribute("aria-label", t("loreBooks"));
+  }
+  if (bottomButtons[3]) {
+    bottomButtons[3].title = t("shortcuts");
+    bottomButtons[3].setAttribute("aria-label", t("shortcuts"));
+  }
+
+  const backBtn = document.getElementById("back-to-main");
+  if (backBtn) backBtn.textContent = t("back");
+  const popTitle = document.querySelector(".popover-title");
+  if (popTitle) popTitle.textContent = t("previousPrompts");
+  const sendBtn = document.getElementById("send-btn");
+  if (sendBtn && !state.sending) sendBtn.textContent = t("send");
+  const shortcutsToggle = document.getElementById("shortcuts-toggle-btn");
+  if (shortcutsToggle) {
+    shortcutsToggle.textContent = state.shortcutsVisible
+      ? t("hideShortcuts")
+      : t("showShortcuts");
+  }
+  updateCheckboxLabelText("auto-reply-enabled", t("autoReply"));
+  updateCheckboxLabelText("enter-to-send-enabled", t("enterToSend"));
+
+  const settingsTitle = document.getElementById("settings-title");
+  if (settingsTitle) settingsTitle.textContent = t("settingsTitle");
+  const uiLangSelect = document.getElementById("ui-language-select");
+  const uiLangLabel = uiLangSelect?.closest("label");
+  const labelNodes = uiLangLabel
+    ? Array.from(uiLangLabel.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE)
+    : [];
+  if (labelNodes.length > 0) labelNodes[0].nodeValue = `${t("languageLabel")}\n            `;
+  if (uiLangSelect) {
+    const oAuto = uiLangSelect.querySelector('option[value="auto"]');
+    const oEn = uiLangSelect.querySelector('option[value="en"]');
+    const oFr = uiLangSelect.querySelector('option[value="fr"]');
+    const oIt = uiLangSelect.querySelector('option[value="it"]');
+    const oDe = uiLangSelect.querySelector('option[value="de"]');
+    const oEs = uiLangSelect.querySelector('option[value="es"]');
+    const oPt = uiLangSelect.querySelector('option[value="pt-BR"]');
+    if (oAuto) oAuto.textContent = t("languageAuto");
+    if (oEn) oEn.textContent = t("languageEnglish");
+    if (oFr) oFr.textContent = t("languageFrench");
+    if (oIt) oIt.textContent = t("languageItalian");
+    if (oDe) oDe.textContent = t("languageGerman");
+    if (oEs) oEs.textContent = t("languageSpanish");
+    if (oPt) oPt.textContent = t("languagePortugueseBr");
+  }
 }
 
 function setupEvents() {
@@ -383,13 +663,23 @@ function onGlobalKeyDown(e) {
     return;
   }
   if (e.key === "Escape") {
+    if (cancelActiveMessageEdit()) return;
     closePromptHistory();
-    closeActiveModal();
-    resolveConfirmDialog(false);
+    closeAnyOpenModal();
   }
 }
 
+function closeAnyOpenModal() {
+  resolveConfirmDialog(false);
+  closeActiveModal();
+  document.querySelectorAll(".modal:not(.hidden)").forEach((modal) => {
+    modal.classList.add("hidden");
+  });
+  state.activeModalId = null;
+}
+
 function setupSettingsControls() {
+  const uiLanguageSelect = document.getElementById("ui-language-select");
   const openRouterApiKey = document.getElementById("openrouter-api-key");
   const puterSignInBtn = document.getElementById("puter-signin-btn");
   const ttsTestText = document.getElementById("tts-test-text");
@@ -402,6 +692,24 @@ function setupSettingsControls() {
   const temperatureSlider = document.getElementById("temperature-slider");
   const temperatureValue = document.getElementById("temperature-value");
   const preferFreeVariant = document.getElementById("prefer-free-variant");
+  if (uiLanguageSelect) {
+    uiLanguageSelect.querySelector('option[value="auto"]').textContent =
+      t("languageAuto");
+    uiLanguageSelect.querySelector('option[value="en"]').textContent =
+      t("languageEnglish");
+    uiLanguageSelect.querySelector('option[value="fr"]').textContent =
+      t("languageFrench");
+    uiLanguageSelect.querySelector('option[value="it"]').textContent =
+      t("languageItalian");
+    uiLanguageSelect.querySelector('option[value="de"]').textContent =
+      t("languageGerman");
+    uiLanguageSelect.querySelector('option[value="es"]').textContent =
+      t("languageSpanish");
+    uiLanguageSelect.querySelector('option[value="pt-BR"]').textContent =
+      t("languagePortugueseBr");
+    uiLanguageSelect.value = state.settings.uiLanguage || "auto";
+    if (!uiLanguageSelect.value) uiLanguageSelect.value = "auto";
+  }
   modelSelect.innerHTML = "";
   MODEL_OPTIONS.forEach((m) => {
     const opt = document.createElement("option");
@@ -620,6 +928,15 @@ function setupSettingsControls() {
     newCharacterShortcut.value = state.settings.newCharacterShortcut;
     saveSettings();
   });
+  if (uiLanguageSelect) {
+    uiLanguageSelect.addEventListener("change", async () => {
+      state.settings.uiLanguage = uiLanguageSelect.value || "auto";
+      saveSettings();
+      applyInterfaceLanguage();
+      await renderShortcutsBar();
+      setSendingState(state.sending);
+    });
+  }
 }
 
 function loadSettings() {
@@ -903,8 +1220,8 @@ async function renderShortcutsBar() {
   bar.classList.toggle("hidden", !state.shortcutsVisible);
   if (toggleBtn) {
     toggleBtn.textContent = state.shortcutsVisible
-      ? "Hide Shortcuts"
-      : "Show Shortcuts";
+      ? t("hideShortcuts")
+      : t("showShortcuts");
     toggleBtn.disabled = entries.length === 0;
   }
   if (!state.shortcutsVisible || entries.length === 0) return;
@@ -1253,9 +1570,9 @@ function togglePane() {
     : "<";
   if (pane.classList.contains("collapsed")) {
     createBtn.textContent = "+";
-    createBtn.title = "Create character";
+    createBtn.title = t("createCharacter");
   } else {
-    createBtn.textContent = "+ Character";
+    createBtn.textContent = t("createCharacter");
     createBtn.title = "";
   }
 }
@@ -2165,6 +2482,7 @@ async function openThread(threadId) {
 function renderChat() {
   const log = document.getElementById("chat-log");
   log.innerHTML = "";
+  state.editingMessageIndex = null;
 
   if (!currentThread) return;
 
@@ -2218,8 +2536,12 @@ function buildMessageRow(message, index, streaming) {
 
   const controls = document.createElement("div");
   controls.className = "message-controls";
+  const messageIndex = document.createElement("span");
+  messageIndex.className = "message-index";
+  messageIndex.textContent = `#${index + 1}`;
 
   if (message.role === "assistant") {
+    controls.appendChild(messageIndex);
     controls.appendChild(
       iconButton("delete", "Delete message", async () => {
         await deleteMessageAt(index);
@@ -2251,12 +2573,17 @@ function buildMessageRow(message, index, streaming) {
     speakerBtn.classList.add("msg-tts-btn");
     speakerBtn.dataset.messageIndex = String(index);
     controls.appendChild(speakerBtn);
+  } else {
+    controls.appendChild(messageIndex);
   }
 
   header.appendChild(controls);
 
   const content = document.createElement("div");
   content.className = "message-content";
+  content.addEventListener("dblclick", () => {
+    beginInlineMessageEdit(index, content);
+  });
   if (streaming) {
     content.textContent = message.content;
   } else {
@@ -2273,6 +2600,106 @@ function buildMessageRow(message, index, streaming) {
 
 function speakerBtnForRow(row) {
   return row?.querySelector(".msg-tts-btn") || null;
+}
+
+function beginInlineMessageEdit(index, contentEl) {
+  if (!contentEl || !currentThread) return;
+  const message = conversationHistory[index];
+  if (!message) return;
+  stopTtsPlayback();
+
+  if (
+    state.editingMessageIndex !== null &&
+    state.editingMessageIndex !== index &&
+    document.querySelector(".message-editor")
+  ) {
+    const prev = document.querySelector(".message-editor");
+    prev?.blur();
+  }
+
+  if (contentEl.querySelector(".message-editor")) return;
+  state.editingMessageIndex = index;
+
+  const contentHeight = Math.max(
+    90,
+    Math.ceil(contentEl.getBoundingClientRect().height),
+  );
+  const editor = document.createElement("textarea");
+  editor.className = "message-editor";
+  editor.value = String(message.content || "");
+  editor.style.minHeight = `${contentHeight}px`;
+  editor.style.height = `${contentHeight}px`;
+  contentEl.innerHTML = "";
+  contentEl.appendChild(editor);
+  editor.focus();
+  editor.setSelectionRange(editor.value.length, editor.value.length);
+  autoSizeMessageEditor(editor, contentHeight);
+
+  const original = String(message.content || "");
+  let cancelled = false;
+  editor.addEventListener("input", () => autoSizeMessageEditor(editor, contentHeight));
+  editor.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      cancelled = true;
+      editor.blur();
+      return;
+    }
+    if (e.key === "Enter" && e.ctrlKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      editor.blur();
+    }
+  });
+  const finalize = async () => {
+    if (state.editingMessageIndex !== index) return;
+    state.editingMessageIndex = null;
+    if (cancelled) {
+      contentEl.innerHTML = renderMessageHtml(original, message.role);
+      return;
+    }
+    const next = editor.value;
+    if (next === original) {
+      contentEl.innerHTML = renderMessageHtml(original, message.role);
+      return;
+    }
+    message.content = next;
+    contentEl.innerHTML = renderMessageHtml(message.content, message.role);
+    await persistCurrentThread();
+    await renderThreads();
+    showToast("Message updated.", "success");
+  };
+
+  editor.addEventListener(
+    "blur",
+    () => {
+      finalize().catch((e) => {
+        console.warn("Message edit save failed:", e);
+        contentEl.innerHTML = renderMessageHtml(message.content || "", message.role);
+      });
+    },
+    { once: true },
+  );
+}
+
+function autoSizeMessageEditor(editor, minHeight = 90) {
+  if (!editor) return;
+  editor.style.height = "auto";
+  editor.style.height = `${Math.max(minHeight, editor.scrollHeight)}px`;
+}
+
+function cancelActiveMessageEdit() {
+  const editor = document.querySelector(".message-editor");
+  if (!editor) return false;
+  const event = new KeyboardEvent("keydown", {
+    key: "Escape",
+    bubbles: true,
+    cancelable: true,
+  });
+  editor.dispatchEvent(event);
+  if (document.activeElement === editor) editor.blur();
+  return true;
 }
 
 function resolveMessageIndexFromButton(buttonEl, fallbackIndex) {
@@ -3028,7 +3455,7 @@ function setSendingState(sending) {
   const personaSelect = document.getElementById("persona-select");
   sendBtn.disabled = false;
   sendBtn.classList.toggle("is-generating", sending);
-  sendBtn.textContent = sending ? "Cancel" : "Send";
+  sendBtn.textContent = sending ? t("cancel") : t("send");
   personaSelect.disabled = sending;
   if (sending) closePromptHistory();
 }
