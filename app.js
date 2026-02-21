@@ -1971,24 +1971,10 @@ function getFallbackModel(resolvedModel, originalModel) {
 
 async function requestCompletionWithRetry(body, attempts, onChunk) {
   let lastError = null;
-  if (!CONFIG.apiKey) {
-    throw new Error(
-      "Missing OPENROUTER_API_KEY. Set it in your runtime environment.",
-    );
-  }
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${CONFIG.apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": getAppReferer(),
-          "X-Title": "RP LLM BACKEND",
-        },
-        body: JSON.stringify(body),
-      });
+      const res = await fetchCompletionResponse(body);
 
       if (!res.ok) {
         let msg = res.statusText;
@@ -2033,6 +2019,41 @@ async function requestCompletionWithRetry(body, attempts, onChunk) {
   }
 
   throw lastError || new Error("Request failed.");
+}
+
+async function fetchCompletionResponse(body) {
+  const proxyUrl = "/api/chat-completions";
+  try {
+    const proxyRes = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (proxyRes.status !== 404 && proxyRes.status !== 405) {
+      return proxyRes;
+    }
+  } catch {
+    // proxy unavailable locally; fallback below if api key exists client-side
+  }
+
+  if (!CONFIG.apiKey) {
+    throw new Error(
+      "Missing OPENROUTER_API_KEY. Use Vercel server env or set local key for direct mode.",
+    );
+  }
+
+  return fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${CONFIG.apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": getAppReferer(),
+      "X-Title": "RP LLM BACKEND",
+    },
+    body: JSON.stringify(body),
+  });
 }
 
 function getAppReferer() {
