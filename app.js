@@ -681,12 +681,22 @@ function iconButton(iconKey, ariaLabel, handler) {
 
 function togglePane() {
   const pane = document.getElementById("left-pane");
+  const shell = document.getElementById("app-shell");
+  const createBtn = document.getElementById("create-character-btn");
   pane.classList.toggle("collapsed");
+  shell.classList.toggle("pane-collapsed", pane.classList.contains("collapsed"));
   document.getElementById("pane-toggle").textContent = pane.classList.contains(
     "collapsed",
   )
     ? ">"
     : "<";
+  if (pane.classList.contains("collapsed")) {
+    createBtn.textContent = "+";
+    createBtn.title = "Create character";
+  } else {
+    createBtn.textContent = "+ Character";
+    createBtn.title = "";
+  }
 }
 
 function showMainView() {
@@ -1360,6 +1370,10 @@ async function openThread(threadId) {
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
   renderChat();
+  const input = document.getElementById("user-input");
+  input.value = "";
+  state.activeShortcut = null;
+  closePromptHistory();
   await renderShortcutsBar();
   await renderThreads();
   showChatView();
@@ -1950,7 +1964,7 @@ async function requestCompletionWithRetry(body, attempts, onChunk) {
         headers: {
           Authorization: `Bearer ${CONFIG.apiKey}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost",
+          "HTTP-Referer": getAppReferer(),
           "X-Title": "RP LLM BACKEND",
         },
         body: JSON.stringify(body),
@@ -1999,6 +2013,16 @@ async function requestCompletionWithRetry(body, attempts, onChunk) {
   }
 
   throw lastError || new Error("Request failed.");
+}
+
+function getAppReferer() {
+  if (typeof CONFIG?.httpReferer === "string" && CONFIG.httpReferer.trim()) {
+    return CONFIG.httpReferer.trim();
+  }
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+  return "http://localhost";
 }
 
 async function readStreamedCompletion(res, fallbackModel, onChunk) {

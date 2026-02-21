@@ -27,6 +27,11 @@ body {
   display: grid;
   grid-template-columns: 320px 1fr;
   height: 100vh;
+  transition: grid-template-columns 0.2s ease;
+}
+
+#app-shell.pane-collapsed {
+  grid-template-columns: 84px 1fr;
 }
 
 #left-pane {
@@ -48,6 +53,16 @@ body {
 #left-pane.collapsed .thread-info,
 #left-pane.collapsed .option-btn {
   display: none;
+}
+
+#left-pane.collapsed .pane-top-header {
+  align-items: center;
+}
+
+#left-pane.collapsed .pane-create-char-btn {
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
 }
 
 #left-pane.collapsed .thread-row {
