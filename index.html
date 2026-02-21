@@ -31,10 +31,10 @@
         </div>
 
         <div class="pane-bottom">
-          <button class="option-btn" data-open-modal="settings-modal" data-short="S">Settings</button>
-          <button class="option-btn" data-open-modal="personas-modal" data-short="P">Personas</button>
-          <button class="option-btn" data-open-modal="lore-modal" data-short="L">Lore Books</button>
-          <button class="option-btn" data-open-modal="shortcuts-modal" data-short="K">Shortcuts</button>
+          <button class="option-btn" data-open-modal="settings-modal" title="Settings" aria-label="Settings">⚙️</button>
+          <button class="option-btn" data-open-modal="personas-modal" title="Personas" aria-label="Personas">👤</button>
+          <button class="option-btn" data-open-modal="lore-modal" title="Lore Books" aria-label="Lore Books">📚</button>
+          <button class="option-btn" data-open-modal="shortcuts-modal" title="Shortcuts" aria-label="Shortcuts">⌨️</button>
         </div>
       </aside>
 
@@ -67,28 +67,24 @@
 
         <div id="shortcuts-bar" class="shortcuts-bar"></div>
 
-        <div class="prompt-controls">
-          <div class="persona-display">
-            <img id="persona-selected-avatar" class="persona-selected-avatar" alt="Persona avatar" />
-          </div>
-          <label class="persona-picker">
-            Persona
-            <select id="persona-select"></select>
-          </label>
-          <button id="bot-reply-btn" class="secondary-btn">BOT REPLY</button>
-        </div>
-
         <div class="input-row">
-          <textarea
-            id="user-input"
-            rows="3"
-            placeholder="What do you say or do? Enter to send, Shift+Enter for newline"
-          ></textarea>
+          <div class="prompt-col">
+            <textarea
+              id="user-input"
+              rows="3"
+              placeholder="What do you say or do? Enter to send, Shift+Enter for newline"
+            ></textarea>
+          </div>
           <div class="send-col">
+            <label class="persona-picker in-send-col">
+              Persona
+              <div class="persona-inline">
+                <img id="persona-selected-avatar" class="persona-selected-avatar" alt="Persona avatar" />
+                <select id="persona-select"></select>
+              </div>
+            </label>
             <button id="send-btn" class="primary-btn">Send</button>
-            <button id="cancel-generation-btn" class="secondary-btn" disabled>
-              Cancel
-            </button>
+            <button id="shortcuts-toggle-btn" class="secondary-btn" type="button">Hide Shortcuts</button>
             <label class="checkbox-line auto-reply-line">
               <input type="checkbox" id="auto-reply-enabled" checked />
               Auto-reply
@@ -139,6 +135,36 @@
               spellcheck="false"
             />
           </label>
+          <label>
+            Model
+            <select id="model-select"></select>
+          </label>
+          <label>
+            <div class="label-inline">
+              <span>Max Tokens</span>
+              <span id="max-tokens-value" class="muted"></span>
+            </div>
+            <input
+              id="max-tokens-slider"
+              type="range"
+              min="512"
+              max="16384"
+              step="64"
+            />
+          </label>
+          <label>
+            <div class="label-inline">
+              <span>Temperature</span>
+              <span id="temperature-value" class="muted"></span>
+            </div>
+            <input
+              id="temperature-slider"
+              type="range"
+              min="0"
+              max="2"
+              step="0.05"
+            />
+          </label>
           <div class="settings-inline-row">
             <button id="puter-signin-btn" class="secondary-btn" type="button">
               Sign In to Puter
@@ -159,10 +185,6 @@
             </button>
             <span id="tts-test-status" class="muted">TTS: idle</span>
           </div>
-          <label>
-            Model
-            <select id="model-select"></select>
-          </label>
           <label class="checkbox-line">
             <input type="checkbox" id="markdown-enabled" />
             Render Markdown in messages
@@ -174,6 +196,10 @@
           <label class="checkbox-line">
             <input type="checkbox" id="stream-enabled" checked />
             Stream Messages
+          </label>
+          <label class="checkbox-line">
+            <input type="checkbox" id="autopair-enabled" checked />
+            Auto-pair editor symbols
           </label>
           <label>
             Markdown Custom CSS
@@ -190,28 +216,6 @@
               rows="8"
               placeholder='[{"pattern":"^«([\\s\\S]*)»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">«$1»</span>"}]'
             ></textarea>
-          </label>
-          <label>
-            Max Tokens
-            <input
-              id="max-tokens-slider"
-              type="range"
-              min="64"
-              max="8192"
-              step="64"
-            />
-            <span id="max-tokens-value" class="muted"></span>
-          </label>
-          <label>
-            Temperature
-            <input
-              id="temperature-slider"
-              type="range"
-              min="0"
-              max="2"
-              step="0.05"
-            />
-            <span id="temperature-value" class="muted"></span>
           </label>
           <label class="checkbox-line">
             <input type="checkbox" id="prefer-free-variant" />
@@ -389,6 +393,12 @@
           <button class="secondary-btn" data-close-modal>Cancel</button>
           <button id="save-character-btn" class="primary-btn">Save</button>
         </div>
+      </div>
+    </div>
+
+    <div id="image-preview-modal" class="modal hidden image-preview-modal" role="dialog" aria-modal="true" aria-label="Image preview">
+      <div class="modal-card image-preview-card">
+        <img id="image-preview-img" alt="Preview" />
       </div>
     </div>
 

@@ -83,22 +83,7 @@ body {
 }
 
 #left-pane.collapsed .pane-bottom {
-  align-items: center;
-}
-
-#left-pane.collapsed .option-btn {
-  display: block;
-  width: 40px;
-  min-width: 40px;
-  padding: 0;
-  font-size: 0;
-  position: relative;
-}
-
-#left-pane.collapsed .option-btn::after {
-  content: attr(data-short);
-  font-size: 12px;
-  font-weight: 700;
+  justify-content: center;
 }
 
 #pane-toggle {
@@ -256,7 +241,8 @@ body {
   border-top: 1px solid var(--line);
   padding-top: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
   flex: 0 0 auto;
 }
@@ -279,6 +265,16 @@ textarea {
   height: 38px;
   padding: 0 14px;
   cursor: pointer;
+}
+
+.option-btn {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .primary-btn {
@@ -437,6 +433,10 @@ textarea {
   background: #253147;
 }
 
+.chat-avatar.clickable-avatar {
+  cursor: zoom-in;
+}
+
 .message-block {
   max-width: min(850px, 100%);
   background: var(--panel-2);
@@ -549,14 +549,14 @@ textarea {
   gap: 10px;
   margin-top: 12px;
   flex: 0 0 auto;
+  align-items: stretch;
 }
 
-.prompt-controls {
+.prompt-col {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: end;
-  gap: 10px;
-  margin-top: 8px;
-  flex: 0 0 auto;
+  flex-direction: column;
 }
 
 .persona-picker {
@@ -568,9 +568,21 @@ textarea {
   min-width: 280px;
 }
 
+.persona-picker.in-send-col {
+  min-width: 0;
+  width: 100%;
+}
+
+.persona-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 #persona-select {
   min-height: 42px;
   font-size: 14px;
+  width: 100%;
 }
 
 .persona-display {
@@ -608,11 +620,13 @@ textarea {
 }
 
 #user-input {
-  flex: 1;
+  flex: 1 1 auto;
   padding: 10px;
   resize: vertical;
   min-height: 84px;
   max-height: 34vh;
+  width: 100%;
+  height: 100%;
 }
 
 .popover {
@@ -705,6 +719,29 @@ textarea {
   flex-direction: column;
 }
 
+.image-preview-card {
+  width: auto;
+  max-width: none;
+  max-height: none;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  display: block;
+}
+
+#image-preview-img {
+  display: block;
+  max-width: none;
+  max-height: none;
+  width: auto;
+  height: auto;
+}
+
+.image-preview-modal {
+  padding: 0;
+  overflow: auto;
+}
+
 .modal-card.wide {
   width: min(760px, 100%);
 }
@@ -751,6 +788,30 @@ textarea {
 .modal-body textarea {
   width: 100%;
   padding: 8px;
+}
+
+.label-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modal-body input[type="range"] {
+  --range-accent: var(--primary);
+  accent-color: var(--range-accent);
+}
+
+.modal-body input[type="range"].tone-warn {
+  --range-accent: #d2b548;
+}
+
+.modal-body input[type="range"].tone-danger {
+  --range-accent: #c95252;
+}
+
+.modal-body textarea {
+  resize: vertical;
 }
 
 .modal-body input[type="checkbox"],
@@ -907,8 +968,7 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .input-row,
-  .prompt-controls {
+  .input-row {
     flex-direction: column;
     align-items: stretch;
   }

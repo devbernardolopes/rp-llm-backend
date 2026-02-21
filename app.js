@@ -67,6 +67,7 @@ const DEFAULT_SETTINGS = {
   streamEnabled: true,
   autoReplyEnabled: true,
   enterToSendEnabled: true,
+  autoPairEnabled: true,
   maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 8192,
   temperature: Number.isFinite(Number(CONFIG.temperature))
     ? Number(CONFIG.temperature)
@@ -88,10 +89,12 @@ const DEFAULT_TTS_LANGUAGE = "en-US";
 
 const state = {
   settings: { ...DEFAULT_SETTINGS },
+  shortcutsVisible: true,
   editingCharacterId: null,
   editingPersonaId: null,
   activeModalId: null,
   promptHistoryOpen: false,
+  chatAutoScroll: true,
   lastTapAt: 0,
   sending: false,
   lastUsedModel: "",
@@ -142,6 +145,7 @@ window.addEventListener("DOMContentLoaded", init);
 
 async function init() {
   loadSettings();
+  loadUiState();
   setupSettingsControls();
   setupEvents();
   initBrowserTtsSupport();
@@ -173,11 +177,8 @@ function setupEvents() {
     .addEventListener("click", playCharacterTtsTestFromModal);
   document.getElementById("send-btn").addEventListener("click", sendMessage);
   document
-    .getElementById("cancel-generation-btn")
-    .addEventListener("click", cancelOngoingGeneration);
-  document
-    .getElementById("bot-reply-btn")
-    .addEventListener("click", generateBotReply);
+    .getElementById("shortcuts-toggle-btn")
+    .addEventListener("click", toggleShortcutsVisibility);
   document
     .getElementById("back-to-main")
     .addEventListener("click", showMainView);
@@ -227,6 +228,7 @@ function setupEvents() {
     .addEventListener("click", () => resolveConfirmDialog(false));
 
   const input = document.getElementById("user-input");
+  const chatLog = document.getElementById("chat-log");
   input.addEventListener("keydown", onInputKeyDown);
   input.addEventListener("input", () => {
     if (state.promptHistoryOpen) closePromptHistory();
@@ -237,8 +239,15 @@ function setupEvents() {
       state.activeShortcut = null;
     }
   });
+  input.addEventListener("click", () => {
+    if (state.promptHistoryOpen) closePromptHistory();
+  });
   input.addEventListener("dblclick", openPromptHistory);
   input.addEventListener("pointerup", onInputPointerUp);
+  chatLog.addEventListener("scroll", () => {
+    if (!state.sending) return;
+    state.chatAutoScroll = isChatNearBottom();
+  });
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
   });
@@ -293,6 +302,35 @@ function setupEvents() {
 }
 
 function onInputKeyDown(e) {
+  if (state.settings.autoPairEnabled !== false) {
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      const pairs = {
+        "(": ")",
+        "[": "]",
+        "{": "}",
+        '"': '"',
+        "'": "'",
+        "`": "`",
+        "*": "*",
+      };
+      const closeChar = pairs[e.key];
+      if (closeChar) {
+        const input = e.currentTarget;
+        const start = input.selectionStart ?? 0;
+        const end = input.selectionEnd ?? 0;
+        const selected = input.value.slice(start, end);
+        e.preventDefault();
+        if (selected) {
+          input.setRangeText(`${e.key}${selected}${closeChar}`, start, end, "end");
+          input.setSelectionRange(start + 1, end + 1);
+        } else {
+          input.setRangeText(`${e.key}${closeChar}`, start, end, "end");
+          input.setSelectionRange(start + 1, start + 1);
+        }
+        return;
+      }
+    }
+  }
   if (e.key !== "Enter") return;
   const enterToSend = state.settings.enterToSendEnabled !== false;
   if (enterToSend) {
@@ -381,6 +419,7 @@ function setupSettingsControls() {
   const markdownCheck = document.getElementById("markdown-enabled");
   const allowMessageHtml = document.getElementById("allow-message-html");
   const streamEnabled = document.getElementById("stream-enabled");
+  const autopairEnabled = document.getElementById("autopair-enabled");
   const autoReplyEnabled = document.getElementById("auto-reply-enabled");
   const enterToSendEnabled = document.getElementById("enter-to-send-enabled");
   const cancelShortcut = document.getElementById("cancel-shortcut");
@@ -400,6 +439,7 @@ function setupSettingsControls() {
   markdownCheck.checked = !!state.settings.markdownEnabled;
   allowMessageHtml.checked = state.settings.allowMessageHtml !== false;
   streamEnabled.checked = state.settings.streamEnabled !== false;
+  autopairEnabled.checked = state.settings.autoPairEnabled !== false;
   autoReplyEnabled.checked = state.settings.autoReplyEnabled !== false;
   enterToSendEnabled.checked = state.settings.enterToSendEnabled !== false;
   markdownCustomCss.value = state.settings.markdownCustomCss || "";
@@ -412,6 +452,18 @@ function setupSettingsControls() {
   temperatureValue.textContent = clampTemperature(
     state.settings.temperature,
   ).toFixed(2);
+  updateSettingsRangeTone(maxTokensSlider, Number(maxTokensSlider.value), {
+    warnBelow: 1024,
+    dangerAbove: 4096,
+  });
+  updateSettingsRangeTone(
+    temperatureSlider,
+    Number(temperatureSlider.value),
+    {
+      warnBelow: 0.7,
+      dangerAbove: 1.0,
+    },
+  );
   preferFreeVariant.checked = state.settings.preferFreeVariant !== false;
   globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
@@ -482,6 +534,11 @@ function setupSettingsControls() {
     saveSettings();
   });
 
+  autopairEnabled.addEventListener("change", () => {
+    state.settings.autoPairEnabled = autopairEnabled.checked;
+    saveSettings();
+  });
+
   autoReplyEnabled.addEventListener("change", () => {
     state.settings.autoReplyEnabled = autoReplyEnabled.checked;
     saveSettings();
@@ -509,6 +566,10 @@ function setupSettingsControls() {
     const value = clampMaxTokens(Number(maxTokensSlider.value));
     state.settings.maxTokens = value;
     maxTokensValue.textContent = String(value);
+    updateSettingsRangeTone(maxTokensSlider, value, {
+      warnBelow: 1024,
+      dangerAbove: 4096,
+    });
     saveSettings();
   });
 
@@ -516,6 +577,10 @@ function setupSettingsControls() {
     const value = clampTemperature(Number(temperatureSlider.value));
     state.settings.temperature = value;
     temperatureValue.textContent = value.toFixed(2);
+    updateSettingsRangeTone(temperatureSlider, value, {
+      warnBelow: 0.7,
+      dangerAbove: 1.0,
+    });
     saveSettings();
   });
 
@@ -569,8 +634,43 @@ function loadSettings() {
   }
 }
 
+function loadUiState() {
+  try {
+    const raw = localStorage.getItem("rp-ui-state");
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.shortcutsVisible === "boolean") {
+      state.shortcutsVisible = parsed.shortcutsVisible;
+    }
+  } catch {
+    state.shortcutsVisible = true;
+  }
+}
+
+function saveUiState() {
+  localStorage.setItem(
+    "rp-ui-state",
+    JSON.stringify({
+      shortcutsVisible: !!state.shortcutsVisible,
+    }),
+  );
+}
+
 function saveSettings() {
   localStorage.setItem("rp-settings", JSON.stringify(state.settings));
+}
+
+function updateSettingsRangeTone(slider, value, limits) {
+  if (!slider) return;
+  const { warnBelow, dangerAbove } = limits || {};
+  slider.classList.remove("tone-warn", "tone-danger");
+  if (typeof warnBelow === "number" && value < warnBelow) {
+    slider.classList.add("tone-warn");
+    return;
+  }
+  if (typeof dangerAbove === "number" && value > dangerAbove) {
+    slider.classList.add("tone-danger");
+  }
 }
 
 function markModalDirtyOnInput(modalId, selectors) {
@@ -796,10 +896,18 @@ async function saveShortcutsFromModal() {
 
 async function renderShortcutsBar() {
   const bar = document.getElementById("shortcuts-bar");
+  const toggleBtn = document.getElementById("shortcuts-toggle-btn");
   if (!bar) return;
   const entries = parseShortcutEntries(state.settings.shortcutsRaw);
   bar.innerHTML = "";
-  if (entries.length === 0) return;
+  bar.classList.toggle("hidden", !state.shortcutsVisible);
+  if (toggleBtn) {
+    toggleBtn.textContent = state.shortcutsVisible
+      ? "Hide Shortcuts"
+      : "Show Shortcuts";
+    toggleBtn.disabled = entries.length === 0;
+  }
+  if (!state.shortcutsVisible || entries.length === 0) return;
 
   entries.forEach((entry, index) => {
     const btn = document.createElement("button");
@@ -811,6 +919,12 @@ async function renderShortcutsBar() {
     });
     bar.appendChild(btn);
   });
+}
+
+function toggleShortcutsVisibility() {
+  state.shortcutsVisible = !state.shortcutsVisible;
+  saveUiState();
+  renderShortcutsBar();
 }
 
 async function applyShortcutEntry(entry) {
@@ -2079,6 +2193,8 @@ function buildMessageRow(message, index, streaming) {
     currentCharacter?.avatar ||
     fallbackAvatar(currentCharacter?.name || "Character", 512, 512);
   avatar.src = message.role === "assistant" ? botAvatar : userAvatar;
+  avatar.classList.add("clickable-avatar");
+  avatar.addEventListener("click", () => openImagePreview(avatar.src));
   if (message.role === "assistant") {
     const mult = Math.max(
       1,
@@ -2283,7 +2399,11 @@ function refreshAllSpeakerButtons() {
 }
 
 async function sendMessage(options = {}) {
-  if (!currentThread || !currentCharacter || state.sending) return;
+  if (!currentThread || !currentCharacter) return;
+  if (state.sending) {
+    cancelOngoingGeneration();
+    return;
+  }
 
   const input = document.getElementById("user-input");
   const shortcutPreserve =
@@ -2294,8 +2414,17 @@ async function sendMessage(options = {}) {
     typeof options.preserveInput === "boolean"
       ? options.preserveInput
       : !!shortcutPreserve;
-  const text = input.value.trim();
-  if (!text) return;
+  const rawInput = input.value;
+  const text = rawInput.trim();
+  const shouldTriggerAiOnly = !text || /^\/ai\s*$/i.test(text);
+  if (shouldTriggerAiOnly) {
+    if (!preserveInput) {
+      input.value = "";
+      state.activeShortcut = null;
+    }
+    await generateBotReply();
+    return;
+  }
   if (!preserveInput) {
     input.value = "";
     state.activeShortcut = null;
@@ -2345,6 +2474,7 @@ async function generateBotReply() {
   scrollChatToBottom();
 
   state.sending = true;
+  state.chatAutoScroll = true;
   state.abortController = new AbortController();
   setSendingState(true);
 
@@ -2439,6 +2569,7 @@ async function regenerateMessage(index) {
 
   stopTtsPlayback();
   state.sending = true;
+  state.chatAutoScroll = true;
   state.abortController = new AbortController();
   setSendingState(true);
 
@@ -2894,17 +3025,20 @@ function positionPromptHistoryPopover() {
 
 function setSendingState(sending) {
   const sendBtn = document.getElementById("send-btn");
-  const cancelBtn = document.getElementById("cancel-generation-btn");
-  const botReplyBtn = document.getElementById("bot-reply-btn");
-  const input = document.getElementById("user-input");
   const personaSelect = document.getElementById("persona-select");
-  sendBtn.disabled = sending;
+  sendBtn.disabled = false;
   sendBtn.classList.toggle("is-generating", sending);
-  sendBtn.textContent = sending ? "Generating..." : "Send";
-  cancelBtn.disabled = !sending;
-  botReplyBtn.disabled = sending;
+  sendBtn.textContent = sending ? "Cancel" : "Send";
   personaSelect.disabled = sending;
   if (sending) closePromptHistory();
+}
+
+function openImagePreview(src) {
+  if (!src) return;
+  const img = document.getElementById("image-preview-img");
+  if (!img) return;
+  img.src = src;
+  openModal("image-preview-modal");
 }
 
 function cancelOngoingGeneration() {
@@ -2931,7 +3065,16 @@ async function persistCurrentThread() {
   });
 }
 
-function scrollChatToBottom() {
+function isChatNearBottom() {
+  const log = document.getElementById("chat-log");
+  if (!log) return true;
+  const threshold = 36;
+  const remaining = log.scrollHeight - log.scrollTop - log.clientHeight;
+  return remaining <= threshold;
+}
+
+function scrollChatToBottom(force = false) {
+  if (!force && state.sending && state.chatAutoScroll === false) return;
   const log = document.getElementById("chat-log");
   log.scrollTop = log.scrollHeight;
 }
@@ -3360,7 +3503,7 @@ function clampMaxTokens(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return DEFAULT_SETTINGS.maxTokens;
   const rounded = Math.round(n / 64) * 64;
-  return Math.max(64, Math.min(8192, rounded));
+  return Math.max(512, Math.min(16384, rounded));
 }
 
 function clampTemperature(value) {
