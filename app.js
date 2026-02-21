@@ -87,6 +87,8 @@ const DEFAULT_SETTINGS = {
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
   postprocessRulesJson: "[]",
   shortcutsRaw: "",
+  tagsInitialized: false,
+  customTags: [],
 };
 
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
@@ -252,6 +254,49 @@ const I18N = {
 
 const DEFAULT_TTS_VOICE = "Joanna";
 const DEFAULT_TTS_LANGUAGE = "en-US";
+const PREDEFINED_CHARACTER_TAGS = [
+  "Female",
+  "Male",
+  "Human",
+  "Roleplay",
+  "Hero",
+  "Villain",
+  "Politics",
+  "Princess",
+  "Prince",
+  "Mermaid",
+  "NSFW",
+  "NSFL",
+  "Disney",
+  "Cartoon",
+  "Movies & TV",
+  "Games",
+  "Multiple Characters",
+  "Slice of Life",
+  "Experimental",
+  "Psychological",
+  "College",
+  "High School",
+  "Fantasy",
+  "Sci-Fi",
+  "Romance",
+  "Horror",
+  "Adventure",
+  "Comedy",
+  "Drama",
+  "Historical",
+  "Mystery",
+  "Action",
+  "Cyberpunk",
+  "Medieval",
+  "Modern",
+  "Anime",
+  "Supernatural",
+  "Crime",
+  "Detective",
+  "Military",
+  "Space",
+];
 
 const state = {
   settings: { ...DEFAULT_SETTINGS },
@@ -287,11 +332,16 @@ const state = {
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
   selectedThreadIds: new Set(),
+  characterTagFilters: [],
+  characterSortMode: "updated_desc",
+  expandedCharacterTagIds: new Set(),
   modalDirty: {
     "character-modal": false,
     "personas-modal": false,
     "shortcuts-modal": false,
+    "tags-modal": false,
   },
+  charModalTtsTestPlaying: false,
 };
 
 const TTS_DEBUG = true;
@@ -315,8 +365,10 @@ window.addEventListener("DOMContentLoaded", init);
 
 async function init() {
   loadSettings();
+  ensureTagCatalogInitialized();
   applyInterfaceLanguage();
   loadUiState();
+  renderTagPresetsDataList();
   setupSettingsControls();
   setupEvents();
   initBrowserTtsSupport();
@@ -326,8 +378,16 @@ async function init() {
   await renderAll();
   setupCrossWindowSync();
   applyMarkdownCustomCss();
+  renderCharacterTagFilterChips();
   updateThreadRenameButtonState();
   updateScrollBottomButtonVisibility();
+}
+
+function ensureTagCatalogInitialized() {
+  if (state.settings.tagsInitialized === true) return;
+  state.settings.customTags = [...PREDEFINED_CHARACTER_TAGS];
+  state.settings.tagsInitialized = true;
+  saveSettings();
 }
 
 function t(key) {
@@ -376,9 +436,6 @@ function updateCheckboxLabelText(inputId, text) {
 function applyInterfaceLanguage() {
   state.i18nLang = resolveInterfaceLanguage();
 
-  const paneTitle = document.querySelector(".pane-title");
-  if (paneTitle) paneTitle.textContent = t("threads");
-
   const createBtn = document.getElementById("create-character-btn");
   if (createBtn && !document.getElementById("left-pane")?.classList.contains("collapsed")) {
     createBtn.textContent = t("createCharacter");
@@ -409,6 +466,10 @@ function applyInterfaceLanguage() {
   if (bottomButtons[3]) {
     bottomButtons[3].title = t("shortcuts");
     bottomButtons[3].setAttribute("aria-label", t("shortcuts"));
+  }
+  if (bottomButtons[4]) {
+    bottomButtons[4].title = "Tags";
+    bottomButtons[4].setAttribute("aria-label", "Tags");
   }
 
   const backBtn = document.getElementById("back-to-main");
@@ -470,6 +531,7 @@ function setupEvents() {
   document
     .getElementById("char-tts-test-btn")
     .addEventListener("click", playCharacterTtsTestFromModal);
+  updateCharTtsTestButtonState();
   document.getElementById("send-btn").addEventListener("click", sendMessage);
   document
     .getElementById("shortcuts-toggle-btn")
@@ -498,6 +560,15 @@ function setupEvents() {
     .getElementById("char-avatar")
     .addEventListener("input", onAvatarUrlInput);
   document
+    .getElementById("char-tags-input")
+    .addEventListener("input", renderCharacterTagPresetButtons);
+  document
+    .getElementById("char-avatar-preview")
+    .addEventListener("click", () => {
+      const src = document.getElementById("char-avatar-preview")?.src || "";
+      if (src) openImagePreview(src);
+    });
+  document
     .getElementById("char-tts-language")
     .addEventListener("change", () => populateCharTtsVoiceSelect());
   document
@@ -521,9 +592,41 @@ function setupEvents() {
   document.getElementById("persona-name").addEventListener("input", () => {
     updateNameLengthCounter("persona-name", "persona-name-count", 128);
   });
+  const addTagBtn = document.getElementById("character-tag-filter-add");
+  if (addTagBtn) {
+    addTagBtn.addEventListener("click", addCharacterTagFilterFromInput);
+  }
+  document
+    .getElementById("character-tag-filter-input")
+    .addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addCharacterTagFilterFromInput();
+      }
+    });
+  document
+    .getElementById("character-tag-filter-input")
+    .addEventListener("change", addCharacterTagFilterFromInput);
+  document
+    .getElementById("character-tag-filter-clear")
+    .addEventListener("click", async () => {
+      state.characterTagFilters = [];
+      state.expandedCharacterTagIds.clear();
+      saveUiState();
+      renderCharacterTagFilterChips();
+      await renderCharacters();
+    });
+  document
+    .getElementById("character-sort-select")
+    .addEventListener("change", async (e) => {
+      state.characterSortMode = String(e.target.value || "updated_desc");
+      saveUiState();
+      await renderCharacters();
+    });
   document
     .getElementById("save-shortcuts-btn")
     .addEventListener("click", saveShortcutsFromModal);
+  document.getElementById("save-tags-btn").addEventListener("click", saveTagsFromModal);
   document
     .getElementById("confirm-yes-btn")
     .addEventListener("click", () => resolveConfirmDialog(true));
@@ -606,6 +709,7 @@ function setupEvents() {
     "#char-use-memory",
     "#char-use-postprocess",
     "#char-avatar-scale",
+    "#char-tags-input",
     "#char-tts-voice",
     "#char-tts-language",
     "#char-tts-rate",
@@ -618,6 +722,7 @@ function setupEvents() {
     "#persona-is-default",
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
+  markModalDirtyOnInput("tags-modal", ["#tags-custom-raw"]);
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 128);
 }
@@ -632,6 +737,148 @@ function updateNameLengthCounter(inputId, counterId, maxLen = 128) {
     input.value = value;
   }
   counter.textContent = `${value.length}/${maxLen}`;
+}
+
+function normalizeTagValue(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseTagList(value) {
+  return String(value || "")
+    .split(",")
+    .map((v) => normalizeTagValue(v))
+    .filter(Boolean)
+    .filter((v, i, arr) => arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i);
+}
+
+function formatTagList(tags) {
+  return (Array.isArray(tags) ? tags : []).map((t) => normalizeTagValue(t)).filter(Boolean).join(", ");
+}
+
+function getAllAvailableTags() {
+  const tags = (Array.isArray(state.settings.customTags)
+    ? state.settings.customTags
+    : []
+  )
+    .map((t) => normalizeTagValue(t))
+    .filter(Boolean);
+  return tags.filter(
+    (t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i,
+  );
+}
+
+function mergeTagsIntoCatalog(tags) {
+  const incoming = (Array.isArray(tags) ? tags : [])
+    .map((t) => normalizeTagValue(t))
+    .filter(Boolean);
+  if (incoming.length === 0) return false;
+  const existing = Array.isArray(state.settings.customTags)
+    ? state.settings.customTags.map((t) => normalizeTagValue(t)).filter(Boolean)
+    : [];
+  const lowerSet = new Set(existing.map((t) => t.toLowerCase()));
+  let changed = false;
+  incoming.forEach((tag) => {
+    const lower = tag.toLowerCase();
+    if (lowerSet.has(lower)) return;
+    existing.push(tag);
+    lowerSet.add(lower);
+    changed = true;
+  });
+  if (!changed) return false;
+  state.settings.customTags = existing;
+  state.settings.tagsInitialized = true;
+  saveSettings();
+  return true;
+}
+
+function setCharacterTagsInputValue(tags) {
+  const input = document.getElementById("char-tags-input");
+  if (!input) return;
+  input.value = formatTagList(tags);
+}
+
+function getCharacterTagsFromModal() {
+  return parseTagList(document.getElementById("char-tags-input")?.value || "");
+}
+
+function renderTagPresetsDataList() {
+  const dl = document.getElementById("tag-presets");
+  if (!dl) return;
+  dl.innerHTML = "";
+  getAllAvailableTags().forEach((tag) => {
+    const opt = document.createElement("option");
+    opt.value = tag;
+    dl.appendChild(opt);
+  });
+}
+
+function toggleModalTag(tag) {
+  const tags = getCharacterTagsFromModal();
+  const lower = tag.toLowerCase();
+  const exists = tags.some((t) => t.toLowerCase() === lower);
+  const next = exists ? tags.filter((t) => t.toLowerCase() !== lower) : [...tags, tag];
+  setCharacterTagsInputValue(next);
+  renderCharacterTagPresetButtons();
+}
+
+function renderCharacterTagPresetButtons() {
+  const container = document.getElementById("char-tags-presets");
+  if (!container) return;
+  const active = new Set(getCharacterTagsFromModal().map((t) => t.toLowerCase()));
+  container.innerHTML = "";
+  getAllAvailableTags().forEach((tag) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tag-chip-btn";
+    if (active.has(tag.toLowerCase())) btn.classList.add("active");
+    btn.textContent = tag;
+    btn.addEventListener("click", () => toggleModalTag(tag));
+    container.appendChild(btn);
+  });
+}
+
+function addCharacterTagFilterFromInput() {
+  const input = document.getElementById("character-tag-filter-input");
+  if (!input) return;
+  const tag = normalizeTagValue(input.value);
+  if (!tag) return;
+  const exists = state.characterTagFilters.some((t) => t.toLowerCase() === tag.toLowerCase());
+  if (!exists) state.characterTagFilters.push(tag);
+  input.value = "";
+  saveUiState();
+  renderCharacterTagFilterChips();
+  renderCharacters();
+}
+
+function removeCharacterTagFilter(tag) {
+  const lower = String(tag || "").toLowerCase();
+  state.characterTagFilters = state.characterTagFilters.filter((t) => t.toLowerCase() !== lower);
+  saveUiState();
+  renderCharacterTagFilterChips();
+  renderCharacters();
+}
+
+function renderCharacterTagFilterChips() {
+  const chips = document.getElementById("character-tag-filter-chips");
+  const cue = document.getElementById("character-filter-active-cue");
+  const sortSelect = document.getElementById("character-sort-select");
+  if (sortSelect) sortSelect.value = state.characterSortMode || "updated_desc";
+  if (!chips || !cue) return;
+  chips.innerHTML = "";
+  const filters = Array.isArray(state.characterTagFilters)
+    ? state.characterTagFilters
+    : [];
+  filters.forEach((tag) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "filter-chip";
+    chip.textContent = `#${tag} ×`;
+    chip.addEventListener("click", () => removeCharacterTagFilter(tag));
+    chips.appendChild(chip);
+  });
+  cue.classList.toggle("hidden", filters.length === 0);
 }
 
 function onInputKeyDown(e) {
@@ -723,13 +970,30 @@ function onGlobalKeyDown(e) {
 }
 
 function closeAnyOpenModal() {
-  resolveTextInputDialog(false);
-  resolveConfirmDialog(false);
-  closeActiveModal();
-  document.querySelectorAll(".modal:not(.hidden)").forEach((modal) => {
-    modal.classList.add("hidden");
-  });
-  state.activeModalId = null;
+  const confirmModal = document.getElementById("confirm-modal");
+  if (confirmModal && !confirmModal.classList.contains("hidden")) {
+    resolveConfirmDialog(false);
+    return;
+  }
+
+  const textInputModal = document.getElementById("text-input-modal");
+  if (textInputModal && !textInputModal.classList.contains("hidden")) {
+    resolveTextInputDialog(false);
+    return;
+  }
+
+  if (state.activeModalId) {
+    closeActiveModal();
+    return;
+  }
+
+  const visibleModals = Array.from(
+    document.querySelectorAll(".modal:not(.hidden)"),
+  );
+  if (visibleModals.length > 0) {
+    const topMost = visibleModals[visibleModals.length - 1];
+    topMost.classList.add("hidden");
+  }
 }
 
 function setupSettingsControls() {
@@ -1035,8 +1299,18 @@ function loadUiState() {
     if (typeof parsed.shortcutsVisible === "boolean") {
       state.shortcutsVisible = parsed.shortcutsVisible;
     }
+    if (Array.isArray(parsed.characterTagFilters)) {
+      state.characterTagFilters = parsed.characterTagFilters
+        .map((t) => normalizeTagValue(t))
+        .filter(Boolean);
+    }
+    if (typeof parsed.characterSortMode === "string" && parsed.characterSortMode) {
+      state.characterSortMode = parsed.characterSortMode;
+    }
   } catch {
     state.shortcutsVisible = true;
+    state.characterTagFilters = [];
+    state.characterSortMode = "updated_desc";
   }
 }
 
@@ -1045,6 +1319,10 @@ function saveUiState() {
     "rp-ui-state",
     JSON.stringify({
       shortcutsVisible: !!state.shortcutsVisible,
+      characterTagFilters: Array.isArray(state.characterTagFilters)
+        ? state.characterTagFilters
+        : [],
+      characterSortMode: state.characterSortMode || "updated_desc",
     }),
   );
 }
@@ -1337,6 +1615,81 @@ async function saveShortcutsFromModal() {
   showToast("Shortcuts saved.", "success");
 }
 
+async function saveTagsFromModal() {
+  const raw = String(document.getElementById("tags-custom-raw")?.value || "");
+  const previousTags = getAllAvailableTags();
+  const tags = raw
+    .split(/\r?\n/)
+    .map((line) => normalizeTagValue(line))
+    .filter(Boolean)
+    .filter(
+      (tag, i, arr) =>
+        arr.findIndex((x) => x.toLowerCase() === tag.toLowerCase()) === i,
+    );
+  const nextTagLowers = new Set(tags.map((t) => t.toLowerCase()));
+  const removedTags = previousTags.filter((t) => !nextTagLowers.has(t.toLowerCase()));
+  const removedTagLowers = new Set(removedTags.map((t) => t.toLowerCase()));
+
+  let affectedCharacters = [];
+  if (removedTags.length > 0) {
+    const allCharacters = await db.characters.toArray();
+    affectedCharacters = allCharacters.filter((char) =>
+      (Array.isArray(char.tags) ? char.tags : []).some((tag) =>
+        removedTagLowers.has(String(tag || "").toLowerCase()),
+      ),
+    );
+    if (affectedCharacters.length > 0) {
+      const affectedList = affectedCharacters
+        .slice(0, 12)
+        .map((c) => `- ${c.name || `Character #${c.id}`} (#${c.id})`)
+        .join("\n");
+      const extra =
+        affectedCharacters.length > 12
+          ? `\n...and ${affectedCharacters.length - 12} more.`
+          : "";
+      const ok = await openConfirmDialog(
+        "Remove Tags",
+        `Removing tags will update these characters:\n\n${affectedList}${extra}\n\nContinue?`,
+      );
+      if (!ok) return;
+    }
+  }
+
+  state.settings.customTags = tags;
+  state.settings.tagsInitialized = true;
+  saveSettings();
+
+  if (removedTags.length > 0 && affectedCharacters.length > 0) {
+    await db.transaction("rw", db.characters, async () => {
+      for (const char of affectedCharacters) {
+        const nextCharTags = (Array.isArray(char.tags) ? char.tags : []).filter(
+          (tag) => !removedTagLowers.has(String(tag || "").toLowerCase()),
+        );
+        await db.characters.update(char.id, {
+          tags: nextCharTags,
+          updatedAt: Date.now(),
+        });
+      }
+    });
+    if (currentCharacter) {
+      const refreshed = await db.characters.get(currentCharacter.id);
+      if (refreshed) currentCharacter = refreshed;
+    }
+    state.characterTagFilters = state.characterTagFilters.filter(
+      (tag) => !removedTagLowers.has(String(tag || "").toLowerCase()),
+    );
+    saveUiState();
+  }
+
+  renderTagPresetsDataList();
+  renderCharacterTagPresetButtons();
+  renderCharacterTagFilterChips();
+  await renderCharacters();
+  state.modalDirty["tags-modal"] = false;
+  closeActiveModal();
+  showToast("Tags updated.", "success");
+}
+
 async function renderShortcutsBar() {
   const bar = document.getElementById("shortcuts-bar");
   const toggleBtn = document.getElementById("shortcuts-toggle-btn");
@@ -1403,22 +1756,66 @@ async function renderAll() {
     renderPersonaModalList(),
     renderShortcutsBar(),
   ]);
+  renderCharacterTagFilterChips();
 }
 
 async function renderCharacters() {
   const grid = document.getElementById("character-grid");
-  const characters = await db.characters.orderBy("id").reverse().toArray();
+  const characters = await db.characters.toArray();
+  const threads = await db.threads.toArray();
+  const threadCountByCharId = new Map();
+  threads.forEach((thread) => {
+    const id = Number(thread.characterId);
+    if (!Number.isInteger(id)) return;
+    threadCountByCharId.set(id, (threadCountByCharId.get(id) || 0) + 1);
+  });
+
+  const activeFilters = Array.isArray(state.characterTagFilters)
+    ? state.characterTagFilters.map((t) => t.toLowerCase())
+    : [];
+  const filteredCharacters = characters.filter((char) => {
+    if (activeFilters.length === 0) return true;
+    const tags = Array.isArray(char.tags)
+      ? char.tags.map((t) => String(t || "").toLowerCase())
+      : [];
+    return activeFilters.every((f) => tags.includes(f));
+  });
+
+  const sortedCharacters = [...filteredCharacters];
+  sortedCharacters.sort((a, b) => {
+    const mode = state.characterSortMode || "updated_desc";
+    const nameA = String(a.name || "").toLowerCase();
+    const nameB = String(b.name || "").toLowerCase();
+    const createdA = Number(a.createdAt || 0);
+    const createdB = Number(b.createdAt || 0);
+    const updatedA = Number(a.updatedAt || 0);
+    const updatedB = Number(b.updatedAt || 0);
+    const threadsA = Number(threadCountByCharId.get(Number(a.id)) || 0);
+    const threadsB = Number(threadCountByCharId.get(Number(b.id)) || 0);
+
+    if (mode === "name_asc") return nameA.localeCompare(nameB);
+    if (mode === "name_desc") return nameB.localeCompare(nameA);
+    if (mode === "created_asc") return createdA - createdB;
+    if (mode === "created_desc") return createdB - createdA;
+    if (mode === "updated_asc") return updatedA - updatedB;
+    if (mode === "threads_asc") return threadsA - threadsB || updatedB - updatedA;
+    if (mode === "threads_desc") return threadsB - threadsA || updatedB - updatedA;
+    return updatedB - updatedA;
+  });
 
   grid.innerHTML = "";
-  if (characters.length === 0) {
+  if (sortedCharacters.length === 0) {
     const empty = document.createElement("p");
     empty.className = "muted";
-    empty.textContent = "No characters yet. Create one to begin.";
+    empty.textContent =
+      activeFilters.length > 0
+        ? "No characters match the active tag filters."
+        : "No characters yet. Create one to begin.";
     grid.appendChild(empty);
     return;
   }
 
-  characters.forEach((char) => {
+  sortedCharacters.forEach((char) => {
     const card = document.createElement("article");
     card.className = "character-card";
 
@@ -1436,7 +1833,59 @@ async function renderCharacters() {
 
     const id = document.createElement("p");
     id.className = "character-id";
-    id.textContent = `char #${char.id}`;
+    id.textContent = `char #${char.id} - ${threadCountByCharId.get(Number(char.id)) || 0} threads`;
+
+    const dates = document.createElement("p");
+    dates.className = "character-dates";
+    dates.textContent = `Created: ${formatDateTime(char.createdAt)}\nUpdated: ${formatDateTime(char.updatedAt)}`;
+
+    const tags = Array.isArray(char.tags)
+      ? char.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
+      : [];
+    const tagsWrap = document.createElement("div");
+    tagsWrap.className = "character-tags";
+    const expanded = state.expandedCharacterTagIds.has(Number(char.id));
+    const visibleCount = expanded ? tags.length : Math.min(tags.length, 3);
+    tags.slice(0, visibleCount).forEach((tag) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "tag-chip";
+      if (activeFilters.includes(tag.toLowerCase())) {
+        chip.classList.add("active-filter");
+      }
+      chip.textContent = tag;
+      chip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const lower = tag.toLowerCase();
+        const exists = state.characterTagFilters.some(
+          (t) => t.toLowerCase() === lower,
+        );
+        if (exists) {
+          state.characterTagFilters = state.characterTagFilters.filter(
+            (t) => t.toLowerCase() !== lower,
+          );
+        } else {
+          state.characterTagFilters.push(tag);
+        }
+        saveUiState();
+        renderCharacterTagFilterChips();
+        renderCharacters();
+      });
+      tagsWrap.appendChild(chip);
+    });
+    if (tags.length > 3) {
+      const more = document.createElement("button");
+      more.type = "button";
+      more.className = "tag-more-btn";
+      more.textContent = expanded ? "less" : "more...";
+      more.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (expanded) state.expandedCharacterTagIds.delete(Number(char.id));
+        else state.expandedCharacterTagIds.add(Number(char.id));
+        renderCharacters();
+      });
+      tagsWrap.appendChild(more);
+    }
 
     const actions = document.createElement("div");
     actions.className = "card-actions";
@@ -1469,7 +1918,9 @@ async function renderCharacters() {
       }),
     );
 
-    card.append(avatar, name, id, actions);
+    card.append(avatar, name, id, dates);
+    if (tags.length > 0) card.appendChild(tagsWrap);
+    card.append(actions);
     grid.appendChild(card);
   });
 }
@@ -1505,7 +1956,7 @@ async function renderThreads() {
   const selectedCount = state.selectedThreadIds.size;
   const selectAll = document.createElement("input");
   selectAll.type = "checkbox";
-  selectAll.className = "thread-select thread-select-all";
+  selectAll.className = "thread-select thread-select-all thread-bulk-select";
   selectAll.title = "Select all threads";
   selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
   selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
@@ -1520,7 +1971,7 @@ async function renderThreads() {
   const deleteSelectedBtn = iconButton("delete", "Delete selected threads", async () => {
     await deleteSelectedThreads();
   });
-  deleteSelectedBtn.classList.add("danger-icon-btn");
+  deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
   deleteSelectedBtn.disabled = selectedCount === 0;
 
   bulkBar.append(selectAll, deleteSelectedBtn);
@@ -1662,6 +2113,7 @@ async function deleteSelectedThreads() {
 
   state.selectedThreadIds.clear();
   await renderThreads();
+  await renderCharacters();
   showToast(
     `${ids.length} thread${ids.length === 1 ? "" : "s"} deleted.`,
     "success",
@@ -1738,6 +2190,10 @@ function openModal(modalId) {
   } else if (modalId === "shortcuts-modal") {
     document.getElementById("shortcuts-raw").value =
       state.settings.shortcutsRaw || "";
+  } else if (modalId === "tags-modal") {
+    document.getElementById("tags-custom-raw").value = (
+      Array.isArray(state.settings.customTags) ? state.settings.customTags : []
+    ).join("\n");
   }
 }
 
@@ -1755,6 +2211,7 @@ function closeActiveModal() {
 }
 
 function openCharacterModal(character = null) {
+  state.charModalTtsTestPlaying = false;
   state.editingCharacterId = character?.id || null;
   document.getElementById("character-title").textContent =
     state.editingCharacterId ? "Edit Character" : "Create Character";
@@ -1765,6 +2222,8 @@ function openCharacterModal(character = null) {
   document.getElementById("char-avatar-file").value = "";
   document.getElementById("char-system-prompt").value =
     character?.systemPrompt || "";
+  setCharacterTagsInputValue(character?.tags || []);
+  renderCharacterTagPresetButtons();
   document.getElementById("char-persona-injection-placement").value =
     character?.personaInjectionPlacement || "end_system_prompt";
   document.getElementById("char-use-memory").checked =
@@ -1792,6 +2251,7 @@ function openCharacterModal(character = null) {
     Math.max(0, Math.min(2, pitch)),
   );
   updateCharTtsRatePitchLabels();
+  updateCharTtsTestButtonState();
   renderAvatarPreview(character?.avatar || "");
   renderCharacterLorebookList(character?.lorebookIds || []);
   updateCharacterPromptPlaceholder();
@@ -1813,6 +2273,7 @@ async function saveCharacterFromModal() {
       "end_system_prompt",
     avatarScale:
       Number(document.getElementById("char-avatar-scale").value) || 1,
+    tags: getCharacterTagsFromModal(),
     ttsVoice: selectedTts.voice,
     ttsLanguage: selectedTts.language,
     ttsRate: selectedTts.rate,
@@ -1825,6 +2286,13 @@ async function saveCharacterFromModal() {
   if (!payload.name) {
     await openInfoDialog("Missing Field", "Character name is required.");
     return;
+  }
+
+  const tagsUpdated = mergeTagsIntoCatalog(payload.tags);
+  if (tagsUpdated) {
+    renderTagPresetsDataList();
+    renderCharacterTagPresetButtons();
+    renderCharacterTagFilterChips();
   }
 
   if (state.editingCharacterId) {
@@ -2328,6 +2796,16 @@ function countWords(text) {
     .filter(Boolean).length;
 }
 
+function formatDateTime(value) {
+  const ts = Number(value || 0);
+  if (!Number.isFinite(ts) || ts <= 0) return "-";
+  try {
+    return new Date(ts).toLocaleString();
+  } catch {
+    return "-";
+  }
+}
+
 function updateCharacterPromptPlaceholder() {
   const promptInput = document.getElementById("char-system-prompt");
   promptInput.placeholder = state.settings.globalPromptTemplate || "";
@@ -2410,6 +2888,7 @@ async function duplicateCharacter(characterId) {
     lorebookIds: Array.isArray(source.lorebookIds)
       ? [...source.lorebookIds]
       : [],
+    tags: Array.isArray(source.tags) ? [...source.tags] : [],
     name: `${source.name} Copy`,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -2461,6 +2940,9 @@ async function importCharacterFromFile(e) {
     const character = {
       ...imported,
       name: String(imported.name || "").trim(),
+      tags: Array.isArray(imported.tags)
+        ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
+        : parseTagList(imported.tags || ""),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -2529,6 +3011,7 @@ async function startNewThread(characterId) {
     updatedAt: newThread.updatedAt,
   });
   await renderThreads();
+  await renderCharacters();
   await openThread(threadId);
   showToast("Thread created.", "success");
 }
@@ -2557,6 +3040,7 @@ async function duplicateThread(threadId) {
     updatedAt: Date.now(),
   });
   await renderThreads();
+  await renderCharacters();
   showToast("Thread duplicated.", "success");
 }
 
@@ -2595,11 +3079,11 @@ async function deleteThread(threadId) {
     showMainView();
   }
   await renderThreads();
+  await renderCharacters();
   showToast("Thread deleted.", "success");
 }
 
 async function openThread(threadId) {
-  state.selectedThreadIds.delete(Number(threadId));
   const thread = await db.threads.get(threadId);
   if (!thread) return;
 
@@ -2860,9 +3344,10 @@ function buildMessageRow(message, index, streaming) {
     copyBtn.classList.add("msg-copy-btn");
     copyBtn.disabled = disableControlsForRow;
     controls.appendChild(copyBtn);
-    const infoBtn = iconButton("info", "Message metadata", () => {});
+    const infoBtn = iconButton("info", "Message metadata", async () => {
+      await openMessageMetadataModal(index);
+    });
     infoBtn.classList.add("msg-info-btn");
-    infoBtn.disabled = true;
     controls.appendChild(infoBtn);
 
     const speakerBtn = iconButton("speaker", "Speak message", async (e) => {
@@ -2887,9 +3372,10 @@ function buildMessageRow(message, index, streaming) {
     editBtn.classList.add("msg-edit-btn");
     editBtn.disabled = disableControlsForRow || isTruncated;
     controls.appendChild(editBtn);
-    const infoBtn = iconButton("info", "Message metadata", () => {});
+    const infoBtn = iconButton("info", "Message metadata", async () => {
+      await openMessageMetadataModal(index);
+    });
     infoBtn.classList.add("msg-info-btn");
-    infoBtn.disabled = true;
     controls.appendChild(infoBtn);
   }
 
@@ -3143,6 +3629,7 @@ function updateMessageSpeakerButton(button, index) {
   button.disabled =
     !isAssistant || streaming || !hasContent || !ttsReady;
   button.classList.toggle("tts-loading", isLoading);
+  button.classList.toggle("tts-speaking", isSpeaking);
   if (!ttsReady) {
     button.innerHTML = ICONS.speaker;
     button.setAttribute(
@@ -3243,6 +3730,9 @@ async function generateBotReply() {
     finishReason: "",
     nativeFinishReason: "",
     truncatedByFilter: false,
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
   };
   conversationHistory.push(pending);
   await persistCurrentThread();
@@ -3288,6 +3778,10 @@ async function generateBotReply() {
     pending.finishReason = String(result.finishReason || "");
     pending.nativeFinishReason = String(result.nativeFinishReason || "");
     pending.truncatedByFilter = result.truncatedByFilter === true;
+    pending.generationId = String(result.generationId || "");
+    pending.completionMeta = result.completionMeta || null;
+    pending.generationInfo = result.generationInfo || null;
+    pending.generationFetchDebug = result.generationFetchDebug || [];
     renderMessageContent(pendingRow.querySelector(".message-content"), pending);
     pendingRow.dataset.streaming = "0";
     refreshAllSpeakerButtons();
@@ -3391,6 +3885,10 @@ async function regenerateMessage(index) {
     target.finishReason = String(result.finishReason || "");
     target.nativeFinishReason = String(result.nativeFinishReason || "");
     target.truncatedByFilter = result.truncatedByFilter === true;
+    target.generationId = String(result.generationId || "");
+    target.completionMeta = result.completionMeta || null;
+    target.generationInfo = result.generationInfo || null;
+    target.generationFetchDebug = result.generationFetchDebug || [];
     commitPendingPersonaInjectionMarker();
     await persistCurrentThread();
     renderChat();
@@ -3427,6 +3925,7 @@ function commitPendingPersonaInjectionMarker() {
 async function copyMessage(text) {
   try {
     await navigator.clipboard.writeText(text);
+    showToast("Message copied.", "success");
   } catch {
     await openInfoDialog("Copy Failed", "Unable to copy message.");
   }
@@ -3512,16 +4011,41 @@ function getTtsOptionsFromCharacterModal() {
   return options;
 }
 
+function updateCharTtsTestButtonState() {
+  const btn = document.getElementById("char-tts-test-btn");
+  if (!btn) return;
+  const active = state.charModalTtsTestPlaying === true;
+  if (active) {
+    btn.innerHTML = `${ICONS.stop} Stop Test`;
+    btn.setAttribute("aria-label", "Stop character voice test");
+    btn.setAttribute("title", "Stop character voice test");
+  } else {
+    btn.textContent = "Test Character Voice";
+    btn.setAttribute("aria-label", "Test character voice");
+    btn.setAttribute("title", "Test character voice");
+  }
+}
+
 async function playCharacterTtsTestFromModal() {
+  if (state.charModalTtsTestPlaying) {
+    stopTtsPlayback({ silent: true });
+    state.charModalTtsTestPlaying = false;
+    updateCharTtsTestButtonState();
+    return;
+  }
   const textInput = document.getElementById("tts-test-text");
   const text =
     String(textInput?.value || "").trim() || "This is a test voice playback.";
+  state.charModalTtsTestPlaying = true;
+  updateCharTtsTestButtonState();
   try {
     await playTtsAudio(text, getTtsOptionsFromCharacterModal());
-    showToast("Character TTS test started.", "success");
   } catch (err) {
     if (isTtsCancelledError(err)) return;
     showToast(`TTS test failed: ${err.message || "unknown error"}`, "error");
+  } finally {
+    state.charModalTtsTestPlaying = false;
+    updateCharTtsTestButtonState();
   }
 }
 
@@ -3661,7 +4185,7 @@ async function playTtsAudio(text, options, playback = {}) {
   }
 }
 
-function stopTtsPlayback() {
+function stopTtsPlayback(options = {}) {
   state.tts.activeRequestId = state.tts.activeRequestId + 1;
   if (hasBrowserTtsSupport()) {
     try {
@@ -3673,6 +4197,8 @@ function stopTtsPlayback() {
   state.tts.audio = null;
   state.tts.speakingMessageIndex = null;
   state.tts.loadingMessageIndex = null;
+  state.charModalTtsTestPlaying = false;
+  if (!options?.silent) updateCharTtsTestButtonState();
   refreshAllSpeakerButtons();
 }
 
@@ -3856,7 +4382,7 @@ function refreshMessageControlStates() {
       btn.disabled = isStreaming || isTruncated;
     });
     row.querySelectorAll(".msg-info-btn").forEach((btn) => {
-      btn.disabled = true;
+      btn.disabled = isStreaming;
     });
   });
 }
@@ -3867,6 +4393,49 @@ function openImagePreview(src) {
   if (!img) return;
   img.src = src;
   openModal("image-preview-modal");
+}
+
+async function openMessageMetadataModal(index) {
+  const message = conversationHistory[index];
+  if (!message) return;
+  openModal("message-metadata-modal");
+  const pre = document.getElementById("message-metadata-json");
+  if (!pre) return;
+
+  const renderMetadata = () => {
+    const view = {
+      index: index + 1,
+      role: message.role || "",
+      createdAt: message.createdAt
+        ? new Date(Number(message.createdAt)).toISOString()
+        : null,
+      senderName: message.senderName || null,
+      senderPersonaId: message.senderPersonaId || null,
+      finishReason: message.finishReason || null,
+      nativeFinishReason: message.nativeFinishReason || null,
+      truncatedByFilter: message.truncatedByFilter === true,
+      generationId: message.generationId || null,
+      completionMeta: message.completionMeta || null,
+      generationInfo: message.generationInfo || null,
+      generationFetchDebug: message.generationFetchDebug || null,
+    };
+    pre.textContent = JSON.stringify(view, null, 2);
+  };
+
+  renderMetadata();
+
+  if (
+    message.role === "assistant" &&
+    message.generationId &&
+    !message.generationInfo
+  ) {
+    pre.textContent += "\n\nFetching generation info...";
+    const fetched = await fetchGenerationDetails(message.generationId);
+    message.generationInfo = fetched?.data || null;
+    message.generationFetchDebug = fetched?.debug || [];
+    await persistCurrentThread();
+    renderMetadata();
+  }
 }
 
 function cancelOngoingGeneration() {
@@ -3914,12 +4483,24 @@ function updateScrollBottomButtonVisibility() {
   const btn = document.getElementById("scroll-bottom-btn");
   const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
   if (!btn) return;
+  positionScrollBottomButton();
   if (!chatViewActive || !currentThread) {
     btn.classList.add("hidden");
     return;
   }
   if (isChatNearBottom()) btn.classList.add("hidden");
   else btn.classList.remove("hidden");
+}
+
+function positionScrollBottomButton() {
+  const btn = document.getElementById("scroll-bottom-btn");
+  const chatView = document.getElementById("chat-view");
+  const inputRow = document.querySelector("#chat-view .input-row");
+  if (!btn || !chatView || !inputRow) return;
+  const chatRect = chatView.getBoundingClientRect();
+  const inputRect = inputRow.getBoundingClientRect();
+  const bottom = Math.max(18, Math.round(chatRect.bottom - inputRect.top + 10));
+  btn.style.bottom = `${bottom}px`;
 }
 
 function setupCrossWindowSync() {
@@ -4219,7 +4800,13 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
 
       if (body.stream) {
         const streamed = await readStreamedCompletion(res, body.model, onChunk);
-        if (streamed.content) return streamed;
+        if (streamed.content) {
+          return {
+            ...streamed,
+            generationInfo: null,
+            generationFetchDebug: [],
+          };
+        }
         throw new Error("Empty assistant content from stream.");
       }
 
@@ -4227,6 +4814,7 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
       const content = extractAssistantText(data);
       const finishMeta = extractFinishMeta(data);
       if (content && content.trim()) {
+        const generationId = String(data?.id || "");
         return {
           content,
           model: data?.model || body.model,
@@ -4234,6 +4822,15 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
           finishReason: finishMeta.finishReason,
           nativeFinishReason: finishMeta.nativeFinishReason,
           truncatedByFilter: finishMeta.truncatedByFilter,
+          generationId,
+          completionMeta: {
+            id: generationId,
+            created: data?.created || null,
+            object: data?.object || null,
+            usage: data?.usage || null,
+          },
+          generationInfo: null,
+          generationFetchDebug: [],
         };
       }
 
@@ -4323,6 +4920,10 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
   let content = "";
   let model = fallbackModel;
   let provider = "";
+  let generationId = "";
+  let created = null;
+  let object = null;
+  let usage = null;
   let finishReason = "";
   let nativeFinishReason = "";
   let truncatedByFilter = false;
@@ -4341,8 +4942,12 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
       if (!data || data === "[DONE]") continue;
       try {
         const json = JSON.parse(data);
+        generationId = json?.id || generationId;
         model = json?.model || model;
         provider = json?.provider || provider;
+        created = json?.created ?? created;
+        object = json?.object ?? object;
+        usage = json?.usage ?? usage;
         const choice = json?.choices?.[0] || {};
         const chunkFinish = String(choice?.finish_reason || "");
         const chunkNativeFinish = String(choice?.native_finish_reason || "");
@@ -4371,10 +4976,67 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
     content,
     model,
     provider,
+    generationId,
+    completionMeta: {
+      id: generationId,
+      created,
+      object,
+      usage,
+    },
     finishReason,
     nativeFinishReason,
     truncatedByFilter,
   };
+}
+
+async function fetchGenerationDetails(generationId, signal) {
+  const id = String(generationId || "").trim();
+  if (!id) {
+    return { data: null, debug: [{ source: "none", error: "missing-id" }] };
+  }
+  const debug = [];
+  const endpoint = `https://openrouter.ai/api/v1/generation?id=${encodeURIComponent(id)}`;
+  const localKey = String(state.settings.openRouterApiKey || "").trim();
+  const fallbackKey = String(CONFIG.apiKey || "").trim();
+  const authKey = localKey || fallbackKey;
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    try {
+      const headers = {};
+      if (authKey) {
+        headers.Authorization = `Bearer ${authKey}`;
+        headers["HTTP-Referer"] = getAppReferer();
+        headers["X-Title"] = "RP LLM BACKEND";
+      }
+      const res = await fetch(endpoint, {
+        method: "GET",
+        headers,
+        credentials: "omit",
+        signal,
+      });
+      if (res.ok) return { data: await res.json(), debug };
+      debug.push({ source: "direct", endpoint, attempt, status: res.status });
+      const shouldRetry =
+        res.status === 404 || res.status === 408 || res.status === 409;
+      if (shouldRetry && attempt < 4) {
+        await sleep(getRetryDelayMs(attempt));
+        continue;
+      }
+    } catch (err) {
+      if (isAbortError(err)) return { data: null, debug };
+      debug.push({
+        source: "direct",
+        endpoint,
+        attempt,
+        error: String(err?.message || err),
+      });
+      if (attempt < 4) {
+        await sleep(getRetryDelayMs(attempt));
+        continue;
+      }
+    }
+    break;
+  }
+  return { data: null, debug };
 }
 
 function shouldRetryError(error, attempt, attempts) {

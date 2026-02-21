@@ -18,7 +18,6 @@
 
         <div class="pane-top">
           <div class="pane-top-header">
-            <h2 class="pane-title">Threads</h2>
             <button id="create-character-btn" class="primary-btn pane-create-char-btn">
               + Character
             </button>
@@ -35,6 +34,7 @@
           <button class="option-btn" data-open-modal="personas-modal" title="Personas" aria-label="Personas">👤</button>
           <button class="option-btn" data-open-modal="lore-modal" title="Lore Books" aria-label="Lore Books">📚</button>
           <button class="option-btn" data-open-modal="shortcuts-modal" title="Shortcuts" aria-label="Shortcuts">⌨️</button>
+          <button class="option-btn" data-open-modal="tags-modal" title="Tags" aria-label="Tags">🏷️</button>
         </div>
       </aside>
 
@@ -42,6 +42,33 @@
         <header class="main-header">
           <h1>RP LLM BACKEND</h1>
         </header>
+        <section id="character-filters" class="character-filters">
+          <div class="character-filters-row">
+            <input
+              id="character-tag-filter-input"
+              list="tag-presets"
+              type="text"
+              placeholder="Filter by tag"
+            />
+            <button id="character-tag-filter-clear" class="secondary-btn" type="button">
+              Clear
+            </button>
+            <select id="character-sort-select" aria-label="Character ordering">
+              <option value="updated_desc">Last Modified: Newest</option>
+              <option value="updated_asc">Last Modified: Oldest</option>
+              <option value="created_desc">Created: Newest</option>
+              <option value="created_asc">Created: Oldest</option>
+              <option value="threads_desc">Threads: Most</option>
+              <option value="threads_asc">Threads: Least</option>
+              <option value="name_asc">Name: A-Z</option>
+              <option value="name_desc">Name: Z-A</option>
+            </select>
+          </div>
+          <div id="character-tag-filter-chips" class="filter-chips"></div>
+          <div id="character-filter-active-cue" class="filter-active-cue hidden">
+            Tag filters active.
+          </div>
+        </section>
         <section id="character-grid" class="character-grid"></section>
       </main>
 
@@ -374,6 +401,26 @@
       </div>
     </div>
 
+    <div id="tags-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tags-title">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="tags-title">Tag Manager</h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <label>
+            Custom tags (one per line)
+            <textarea id="tags-custom-raw" rows="12"></textarea>
+          </label>
+          <p class="muted">Predefined tags are always available. Add your own tags here.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-btn" data-close-modal>Cancel</button>
+          <button id="save-tags-btn" class="primary-btn">Save Tags</button>
+        </div>
+      </div>
+    </div>
+
     <div id="character-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="character-title">
       <div class="modal-card wide">
         <div class="modal-header">
@@ -402,6 +449,16 @@
           <label class="full">
             Character Prompt
             <textarea id="char-system-prompt" rows="8"></textarea>
+          </label>
+          <label class="full">
+            Tags (comma-separated)
+            <input
+              id="char-tags-input"
+              list="tag-presets"
+              type="text"
+              placeholder="Roleplay, Female, Hero"
+            />
+            <div id="char-tags-presets" class="tag-presets-list"></div>
           </label>
           <label class="full">
             Persona Injection Placement
@@ -439,14 +496,18 @@
             <select id="char-tts-voice"></select>
           </label>
           <label>
-            TTS Rate
+            <div class="label-inline">
+              <span>TTS Rate</span>
+              <span id="char-tts-rate-value" class="muted"></span>
+            </div>
             <input id="char-tts-rate" type="range" min="0.5" max="2" step="0.1" />
-            <span id="char-tts-rate-value" class="muted"></span>
           </label>
           <label>
-            TTS Pitch
+            <div class="label-inline">
+              <span>TTS Pitch</span>
+              <span id="char-tts-pitch-value" class="muted"></span>
+            </div>
             <input id="char-tts-pitch" type="range" min="0" max="2" step="0.1" />
-            <span id="char-tts-pitch-value" class="muted"></span>
           </label>
           <label class="full">
             <button id="char-tts-test-btn" class="secondary-btn" type="button">
@@ -465,9 +526,23 @@
       </div>
     </div>
 
+    <datalist id="tag-presets"></datalist>
+
     <div id="image-preview-modal" class="modal hidden image-preview-modal" role="dialog" aria-modal="true" aria-label="Image preview">
       <div class="modal-card image-preview-card">
         <img id="image-preview-img" alt="Preview" />
+      </div>
+    </div>
+
+    <div id="message-metadata-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="message-metadata-title">
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="message-metadata-title">Message Metadata</h3>
+          <button class="icon-btn modal-close" data-close-modal aria-label="Close metadata">&times;</button>
+        </div>
+        <div class="modal-body">
+          <pre id="message-metadata-json" class="metadata-json"></pre>
+        </div>
       </div>
     </div>
 
