@@ -54,7 +54,7 @@ body {
 
 #left-pane.collapsed .pane-title,
 #left-pane.collapsed .thread-info,
-#left-pane.collapsed .option-btn {
+#left-pane.collapsed .thread-row .actions {
   display: none;
 }
 
@@ -70,11 +70,35 @@ body {
 
 #left-pane.collapsed .thread-row {
   justify-content: center;
+  padding: 6px 4px;
 }
 
 #left-pane.collapsed .thread-bulk-bar,
 #left-pane.collapsed .thread-select {
   display: none;
+}
+
+#left-pane.collapsed .thread-list {
+  overflow-x: hidden;
+}
+
+#left-pane.collapsed .pane-bottom {
+  align-items: center;
+}
+
+#left-pane.collapsed .option-btn {
+  display: block;
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+  font-size: 0;
+  position: relative;
+}
+
+#left-pane.collapsed .option-btn::after {
+  content: attr(data-short);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 #pane-toggle {
@@ -819,7 +843,7 @@ textarea {
 .toast-container {
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  top: 16px;
   z-index: 300;
   display: flex;
   flex-direction: column;

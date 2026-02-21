@@ -102,6 +102,7 @@ const state = {
   syncTimerId: null,
   lastSyncSeenUpdatedAt: 0,
   confirmResolver: null,
+  confirmMode: "confirm",
   activeShortcut: null,
   abortController: null,
   tts: {
@@ -667,9 +668,33 @@ function showToast(message, type = "success") {
 function openConfirmDialog(title, message) {
   return new Promise((resolve) => {
     const modal = document.getElementById("confirm-modal");
+    const yesBtn = document.getElementById("confirm-yes-btn");
+    const noBtn = document.getElementById("confirm-no-btn");
+    const cancelBtn = document.getElementById("confirm-cancel-btn");
+    yesBtn.textContent = "Confirm";
+    noBtn.classList.remove("hidden");
+    cancelBtn.classList.remove("hidden");
+    state.confirmMode = "confirm";
     document.getElementById("confirm-title").textContent = title || "Confirm";
     document.getElementById("confirm-message").textContent = message || "";
     state.confirmResolver = resolve;
+    modal.classList.remove("hidden");
+  });
+}
+
+function openInfoDialog(title, message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("confirm-modal");
+    const yesBtn = document.getElementById("confirm-yes-btn");
+    const noBtn = document.getElementById("confirm-no-btn");
+    const cancelBtn = document.getElementById("confirm-cancel-btn");
+    yesBtn.textContent = "OK";
+    noBtn.classList.add("hidden");
+    cancelBtn.classList.add("hidden");
+    state.confirmMode = "info";
+    document.getElementById("confirm-title").textContent = title || "Message";
+    document.getElementById("confirm-message").textContent = message || "";
+    state.confirmResolver = () => resolve(true);
     modal.classList.remove("hidden");
   });
 }
@@ -678,6 +703,13 @@ function resolveConfirmDialog(value) {
   const modal = document.getElementById("confirm-modal");
   if (!modal || modal.classList.contains("hidden")) return;
   modal.classList.add("hidden");
+  const yesBtn = document.getElementById("confirm-yes-btn");
+  const noBtn = document.getElementById("confirm-no-btn");
+  const cancelBtn = document.getElementById("confirm-cancel-btn");
+  yesBtn.textContent = "Confirm";
+  noBtn.classList.remove("hidden");
+  cancelBtn.classList.remove("hidden");
+  state.confirmMode = "confirm";
   const resolver = state.confirmResolver;
   state.confirmResolver = null;
   if (typeof resolver === "function") resolver(!!value);
@@ -961,6 +993,7 @@ async function renderThreads() {
 
     const row = document.createElement("div");
     row.className = "thread-row";
+    row.addEventListener("click", () => openThread(thread.id));
     if (currentThread?.id === thread.id) {
       row.classList.add("active-thread");
     }
@@ -994,7 +1027,10 @@ async function renderThreads() {
     titleBtn.className = "thread-title";
     titleBtn.textContent = thread.title || `Thread ${thread.id}`;
     titleBtn.title = "Open thread";
-    titleBtn.addEventListener("click", () => openThread(thread.id));
+    titleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openThread(thread.id);
+    });
 
     info.append(meta, titleBtn);
 
@@ -1003,7 +1039,8 @@ async function renderThreads() {
 
     if (char) {
       actions.appendChild(
-        iconButton("edit", "Edit thread character", async () => {
+        iconButton("edit", "Edit thread character", async (e) => {
+          e.stopPropagation();
           const latestCharacter = await db.characters.get(char.id);
           if (latestCharacter) openCharacterModal(latestCharacter);
         }),
@@ -1011,20 +1048,23 @@ async function renderThreads() {
     }
 
     actions.appendChild(
-      iconButton("duplicate", "Duplicate thread", async () => {
+      iconButton("duplicate", "Duplicate thread", async (e) => {
+        e.stopPropagation();
         await duplicateThread(thread.id);
       }),
     );
 
     actions.appendChild(
-      iconButton("delete", "Delete thread", async () => {
+      iconButton("delete", "Delete thread", async (e) => {
+        e.stopPropagation();
         await deleteThread(thread.id);
       }),
     );
     const favBtn = iconButton(
       thread.favorite ? "starFilled" : "star",
       thread.favorite ? "Unfavorite thread" : "Favorite thread",
-      async () => {
+      async (e) => {
+        e.stopPropagation();
         await toggleThreadFavorite(thread.id);
       },
     );
@@ -1162,10 +1202,10 @@ function openCharacterModal(character = null) {
   const voice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
   const rate = Number.isFinite(Number(character?.ttsRate))
     ? Number(character.ttsRate)
-    : 1;
+    : 1.4;
   const pitch = Number.isFinite(Number(character?.ttsPitch))
     ? Number(character.ttsPitch)
-    : 1;
+    : 1.1;
   document.getElementById("char-tts-language").value = lang;
   populateCharTtsLanguageSelect(lang);
   populateCharTtsVoiceSelect(voice);
@@ -1204,7 +1244,7 @@ async function saveCharacterFromModal() {
   };
 
   if (!payload.name) {
-    alert("Character name is required.");
+    await openInfoDialog("Missing Field", "Character name is required.");
     return;
   }
 
@@ -1215,6 +1255,7 @@ async function saveCharacterFromModal() {
       Number(currentCharacter.id) === Number(state.editingCharacterId)
     ) {
       currentCharacter = { ...currentCharacter, ...payload };
+      renderChat();
     }
     showToast("Character updated.", "success");
   } else {
@@ -1304,8 +1345,8 @@ function getResolvedTtsSelection(
     DEFAULT_TTS_LANGUAGE;
   const voice =
     String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
-  const rate = Math.max(0.5, Math.min(2, Number(rateInput) || 1));
-  const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1));
+  const rate = Math.max(0.5, Math.min(2, Number(rateInput) || 1.4));
+  const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1.1));
   return {
     language,
     voice,
@@ -1401,11 +1442,14 @@ async function savePersonaFromModal() {
   const wantsDefault = document.getElementById("persona-is-default").checked;
 
   if (!name) {
-    alert("Persona name is required.");
+    await openInfoDialog("Missing Field", "Persona name is required.");
     return;
   }
   if (countWords(description) > 100) {
-    alert("Persona description must be 100 words or less.");
+    await openInfoDialog(
+      "Persona Description",
+      "Persona description must be 100 words or less.",
+    );
     return;
   }
 
@@ -1683,7 +1727,7 @@ function onPersonaAvatarFileChange(e) {
   const file = e.target.files?.[0];
   if (!file) return;
   if (!file.type.startsWith("image/")) {
-    alert("Please choose an image file.");
+    openInfoDialog("Invalid File", "Please choose an image file.");
     e.target.value = "";
     return;
   }
@@ -1757,7 +1801,7 @@ function onAvatarFileChange(e) {
   const file = e.target.files?.[0];
   if (!file) return;
   if (!file.type.startsWith("image/")) {
-    alert("Please choose an image file.");
+    openInfoDialog("Invalid File", "Please choose an image file.");
     e.target.value = "";
     return;
   }
@@ -2391,6 +2435,7 @@ async function regenerateMessage(index) {
   const prior = conversationHistory.slice(0, index);
   const hasUser = prior.some((m) => m.role === "user");
   if (!hasUser) return;
+  const originalContent = String(target.content || "");
 
   stopTtsPlayback();
   state.sending = true;
@@ -2435,7 +2480,11 @@ async function regenerateMessage(index) {
       await renderThreads();
       showToast("Regeneration cancelled.", "success");
     } else {
-      alert(`Regenerate failed: ${e.message}`);
+      target.content = originalContent;
+      await persistCurrentThread();
+      renderChat();
+      await renderThreads();
+      await openInfoDialog("Regenerate Failed", String(e.message || "Unknown error"));
     }
   } finally {
     state.abortController = null;
@@ -2448,7 +2497,7 @@ async function copyMessage(text) {
   try {
     await navigator.clipboard.writeText(text);
   } catch {
-    alert("Copy failed.");
+    await openInfoDialog("Copy Failed", "Unable to copy message.");
   }
 }
 
@@ -2854,7 +2903,6 @@ function setSendingState(sending) {
   sendBtn.textContent = sending ? "Generating..." : "Send";
   cancelBtn.disabled = !sending;
   botReplyBtn.disabled = sending;
-  input.disabled = sending;
   personaSelect.disabled = sending;
   if (sending) closePromptHistory();
 }
