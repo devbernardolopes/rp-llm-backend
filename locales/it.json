@@ -1,4 +1,4 @@
-﻿{
+{
   "threads": "Chat",
   "createCharacter": "+ Personaggio",
   "importCharacter": "Importa personaggio",
@@ -291,10 +291,10 @@
   "everyThird": "Every Third",
   "everyFourth": "Every Fourth",
   "personaInternalDescription": "Internal Description (optional)",
-  "removeTagTitle": "removeTagTitle",
-  "removeTagConfirmSimple": "removeTagConfirmSimple",
-  "removeTagAffectsChars": "removeTagAffectsChars",
-  "tagInputPlaceholder": "tagInputPlaceholder",
+  "removeTagTitle": "Remove Tag",
+  "removeTagConfirmSimple": "Remove this tag?",
+  "removeTagAffectsChars": "Removing this tag will update these characters:\n\n{list}{extra}\n\nContinue?",
+  "tagInputPlaceholder": "New tag",
   "botConfiguration": "Bot Configuration",
   "preferLanguageMatchingUserPersona": "Prefer Language Matching User Persona",
   "addLanguage": "Add Language",

@@ -1,4 +1,4 @@
-let currentCharacter = null;
+﻿let currentCharacter = null;
 let currentThread = null;
 let conversationHistory = [];
 let currentPersona = null;
@@ -95,6 +95,8 @@ const DEFAULT_SETTINGS = {
   modelModalityFilter: "text-only",
   modelSortOrder: "created_desc",
   toastDurationMs: 2600,
+  threadAutoTitleEnabled: true,
+  threadAutoTitleMinMessages: 7,
 };
 
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
@@ -132,35 +134,67 @@ const BOT_LANGUAGE_OPTIONS = [
 ];
 
 const BOT_LANGUAGE_FLAGS = {
-  en: "🇺🇸",
-  fr: "🇫🇷",
-  it: "🇮🇹",
-  de: "🇩🇪",
-  es: "🇪🇸",
-  "pt-BR": "🇧🇷",
-  "pt-PT": "🇵🇹",
-  ja: "🇯🇵",
-  ko: "🇰🇷",
-  "zh-CN": "🇨🇳",
-  "zh-TW": "🇹🇼",
-  ru: "🇷🇺",
-  ar: "🇸🇦",
-  nl: "🇳🇱",
-  tr: "🇹🇷",
-  pl: "🇵🇱",
-  sv: "🇸🇪",
-  da: "🇩🇰",
-  fi: "🇫🇮",
-  no: "🇳🇴",
-  cs: "🇨🇿",
-  ro: "🇷🇴",
-  hu: "🇭🇺",
-  el: "🇬🇷",
-  he: "🇮🇱",
-  hi: "🇮🇳",
-  id: "🇮🇩",
-  th: "🇹🇭",
-  vi: "🇻🇳",
+  en: "ðŸ‡ºðŸ‡¸",
+  fr: "ðŸ‡«ðŸ‡·",
+  it: "ðŸ‡®ðŸ‡¹",
+  de: "ðŸ‡©ðŸ‡ª",
+  es: "ðŸ‡ªðŸ‡¸",
+  "pt-BR": "ðŸ‡§ðŸ‡·",
+  "pt-PT": "ðŸ‡µðŸ‡¹",
+  ja: "ðŸ‡¯ðŸ‡µ",
+  ko: "ðŸ‡°ðŸ‡·",
+  "zh-CN": "ðŸ‡¨ðŸ‡³",
+  "zh-TW": "ðŸ‡¹ðŸ‡¼",
+  ru: "ðŸ‡·ðŸ‡º",
+  ar: "ðŸ‡¸ðŸ‡¦",
+  nl: "ðŸ‡³ðŸ‡±",
+  tr: "ðŸ‡¹ðŸ‡·",
+  pl: "ðŸ‡µðŸ‡±",
+  sv: "ðŸ‡¸ðŸ‡ª",
+  da: "ðŸ‡©ðŸ‡°",
+  fi: "ðŸ‡«ðŸ‡®",
+  no: "ðŸ‡³ðŸ‡´",
+  cs: "ðŸ‡¨ðŸ‡¿",
+  ro: "ðŸ‡·ðŸ‡´",
+  hu: "ðŸ‡­ðŸ‡º",
+  el: "ðŸ‡¬ðŸ‡·",
+  he: "ðŸ‡®ðŸ‡±",
+  hi: "ðŸ‡®ðŸ‡³",
+  id: "ðŸ‡®ðŸ‡©",
+  th: "ðŸ‡¹ðŸ‡­",
+  vi: "ðŸ‡»ðŸ‡³",
+};
+
+const BOT_LANGUAGE_FLAG_ICON_CODES = {
+  en: "us",
+  fr: "fr",
+  it: "it",
+  de: "de",
+  es: "es",
+  "pt-BR": "br",
+  "pt-PT": "pt",
+  ja: "jp",
+  ko: "kr",
+  "zh-CN": "cn",
+  "zh-TW": "tw",
+  ru: "ru",
+  ar: "sa",
+  nl: "nl",
+  tr: "tr",
+  pl: "pl",
+  sv: "se",
+  da: "dk",
+  fi: "fi",
+  no: "no",
+  cs: "cz",
+  ro: "ro",
+  hu: "hu",
+  el: "gr",
+  he: "il",
+  hi: "in",
+  id: "id",
+  th: "th",
+  vi: "vn",
 };
 
 const I18N = {
@@ -314,6 +348,8 @@ const I18N = {
     invalidInitialMessagesTitle: "Invalid Initial Messages",
     invalidInitialMessagesMessage: "Could not parse initial messages.",
     characterNameRequired: "Character name is required.",
+    characterNameRequiredAllLanguages:
+      "Character name is required in all language tabs. Missing: {langs}.",
     personaNameRequired: "Persona name is required.",
     threadTitleRequired: "Thread title is required.",
     renameThreadTitle: "Rename Thread",
@@ -373,6 +409,10 @@ const I18N = {
     generationErrorLine3:
       "You can regenerate this message, switch model, or continue the chat.",
     threadQueueBadgeTitle: "Queued for generation (position {position})",
+    threadAutoTitleEnabled: "Enable Auto-titling for Threads",
+    threadAutoTitleMinMessages: "Min. Messages",
+    resetAppData: "Reset App Data",
+    resetAppDataSoon: "Reset app data will be added soon.",
     openRouterApiKey: "OpenRouter API Key",
     modelLabel: "Model",
     pricingLabel: "Pricing",
@@ -422,8 +462,8 @@ const I18N = {
     savePersona: "Save Persona",
     loreBookManagement: "Lore Book Management",
     createLoreBook: "+ Create Lore Book",
-    importLoreBook: "↥ Import Lore Book",
-    backToList: "← Back to List",
+    importLoreBook: "^ Import Lore Book",
+    backToList: "< Back to List",
     avatarUrlOptional: "Avatar URL (optional)",
     descriptionOptional: "Description (optional)",
     scanDepth: "Scan Depth",
@@ -479,37 +519,37 @@ const I18N = {
     languageLabel: "Interface Language",
     languageAuto: "Auto (browser)",
     languageEnglish: "English",
-    languageFrench: "Français",
+    languageFrench: "Francais",
     languageItalian: "Italiano",
     languageGerman: "Deutsch",
-    languageSpanish: "Español",
-    languagePortugueseBr: "Português (Brasil)",
+    languageSpanish: "Espanol",
+    languagePortugueseBr: "Portugues (Brasil)",
   },
   fr: {
     threads: "Fils",
     createCharacter: "+ Personnage",
     importCharacter: "Importer personnage",
-    settings: "Paramètres",
+    settings: "ParamÃ¨tres",
     personas: "Personas",
     loreBooks: "Livres de lore",
     shortcuts: "Raccourcis",
     back: "Retour",
-    previousPrompts: "Prompts précédents",
+    previousPrompts: "Prompts prÃ©cÃ©dents",
     send: "Envoyer",
     cancel: "Annuler",
     hideShortcuts: "Masquer raccourcis",
     showShortcuts: "Afficher raccourcis",
-    autoReply: "Réponse auto",
-    enterToSend: "ENTRÉE pour envoyer",
-    settingsTitle: "Paramètres",
+    autoReply: "RÃ©ponse auto",
+    enterToSend: "ENTRÃ‰E pour envoyer",
+    settingsTitle: "ParamÃ¨tres",
     languageLabel: "Langue de l'interface",
     languageAuto: "Auto (navigateur)",
     languageEnglish: "English",
-    languageFrench: "Français",
+    languageFrench: "FranÃ§ais",
     languageItalian: "Italiano",
     languageGerman: "Deutsch",
-    languageSpanish: "Español",
-    languagePortugueseBr: "Português (Brasil)",
+    languageSpanish: "EspaÃ±ol",
+    languagePortugueseBr: "PortuguÃªs (Brasil)",
   },
   it: {
     threads: "Thread",
@@ -531,11 +571,11 @@ const I18N = {
     languageLabel: "Lingua interfaccia",
     languageAuto: "Auto (browser)",
     languageEnglish: "English",
-    languageFrench: "Français",
+    languageFrench: "FranÃ§ais",
     languageItalian: "Italiano",
     languageGerman: "Deutsch",
-    languageSpanish: "Español",
-    languagePortugueseBr: "Português (Brasil)",
+    languageSpanish: "EspaÃ±ol",
+    languagePortugueseBr: "PortuguÃªs (Brasil)",
   },
   de: {
     threads: "Threads",
@@ -543,9 +583,9 @@ const I18N = {
     importCharacter: "Charakter importieren",
     settings: "Einstellungen",
     personas: "Personas",
-    loreBooks: "Lore-Bücher",
+    loreBooks: "Lore-BÃ¼cher",
     shortcuts: "Shortcuts",
-    back: "Zurück",
+    back: "ZurÃ¼ck",
     previousPrompts: "Vorherige Prompts",
     send: "Senden",
     cancel: "Abbrechen",
@@ -557,17 +597,17 @@ const I18N = {
     languageLabel: "Sprache",
     languageAuto: "Auto (Browser)",
     languageEnglish: "English",
-    languageFrench: "Français",
+    languageFrench: "FranÃ§ais",
     languageItalian: "Italiano",
     languageGerman: "Deutsch",
-    languageSpanish: "Español",
-    languagePortugueseBr: "Português (Brasil)",
+    languageSpanish: "EspaÃ±ol",
+    languagePortugueseBr: "PortuguÃªs (Brasil)",
   },
   es: {
     threads: "Hilos",
     createCharacter: "+ Personaje",
     importCharacter: "Importar personaje",
-    settings: "Configuración",
+    settings: "ConfiguraciÃ³n",
     personas: "Personas",
     loreBooks: "Libros de lore",
     shortcuts: "Atajos",
@@ -577,23 +617,23 @@ const I18N = {
     cancel: "Cancelar",
     hideShortcuts: "Ocultar atajos",
     showShortcuts: "Mostrar atajos",
-    autoReply: "Respuesta automática",
+    autoReply: "Respuesta automÃ¡tica",
     enterToSend: "ENTER para enviar",
-    settingsTitle: "Configuración",
+    settingsTitle: "ConfiguraciÃ³n",
     languageLabel: "Idioma de interfaz",
     languageAuto: "Auto (navegador)",
     languageEnglish: "English",
-    languageFrench: "Français",
+    languageFrench: "FranÃ§ais",
     languageItalian: "Italiano",
     languageGerman: "Deutsch",
-    languageSpanish: "Español",
-    languagePortugueseBr: "Português (Brasil)",
+    languageSpanish: "EspaÃ±ol",
+    languagePortugueseBr: "PortuguÃªs (Brasil)",
   },
   "pt-BR": {
     threads: "Conversas",
     createCharacter: "+ Personagem",
     importCharacter: "Importar personagem",
-    settings: "Configurações",
+    settings: "ConfiguraÃ§Ãµes",
     personas: "Personas",
     loreBooks: "Livros de lore",
     shortcuts: "Atalhos",
@@ -603,17 +643,17 @@ const I18N = {
     cancel: "Cancelar",
     hideShortcuts: "Ocultar atalhos",
     showShortcuts: "Mostrar atalhos",
-    autoReply: "Resposta automática",
+    autoReply: "Resposta automÃ¡tica",
     enterToSend: "ENTER para enviar",
-    settingsTitle: "Configurações",
+    settingsTitle: "ConfiguraÃ§Ãµes",
     languageLabel: "Idioma da interface",
-    languageAuto: "Automático (navegador)",
+    languageAuto: "AutomÃ¡tico (navegador)",
     languageEnglish: "English",
-    languageFrench: "Français",
+    languageFrench: "FranÃ§ais",
     languageItalian: "Italiano",
     languageGerman: "Deutsch",
-    languageSpanish: "Español",
-    languagePortugueseBr: "Português (Brasil)",
+    languageSpanish: "EspaÃ±ol",
+    languagePortugueseBr: "PortuguÃªs (Brasil)",
   },
 };
 
@@ -738,6 +778,7 @@ const state = {
     timerId: null,
     seq: 0,
   },
+  characterCardSlide: null,
   renderThreadsSeq: 0,
   charModalDefinitions: [],
   charModalActiveLanguage: "",
@@ -877,7 +918,7 @@ function updateCheckboxLabelText(inputId, text) {
 }
 
 function getHomeButtonText() {
-  return `⌂ ${t("home")}`;
+  return `H ${t("home")}`;
 }
 
 async function applyInterfaceLanguage() {
@@ -894,14 +935,14 @@ async function applyInterfaceLanguage() {
   }
   const homeBtn = document.getElementById("home-btn");
   if (homeBtn) {
-    homeBtn.textContent = paneCollapsed ? "⌂" : getHomeButtonText();
+    homeBtn.textContent = paneCollapsed ? "H" : getHomeButtonText();
     homeBtn.title = paneCollapsed ? t("home") : "";
   }
   const importBtn = document.getElementById("import-character-btn");
   if (importBtn) {
     importBtn.textContent = paneCollapsed
-      ? "↥"
-      : `↥ ${t("importCharacter")}`;
+      ? "^"
+      : `^ ${t("importCharacter")}`;
   }
 
   const bottomButtons = document.querySelectorAll(".pane-bottom .option-btn");
@@ -991,6 +1032,9 @@ function setupEvents() {
   document
     .getElementById("import-db-input")
     .addEventListener("change", importDatabaseBackupFromFile);
+  document
+    .getElementById("reset-db-btn")
+    ?.addEventListener("click", () => showToast(t("resetAppDataSoon"), "success"));
   document
     .getElementById("guide-btn")
     ?.addEventListener("click", () => showToast(t("guideComingSoon"), "success"));
@@ -1701,7 +1745,7 @@ function renderCharacterTagFilterChips() {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "filter-chip";
-    chip.textContent = `#${tag} ×`;
+    chip.textContent = `#${tag} x`;
     chip.addEventListener("click", () => removeCharacterTagFilter(tag));
     chips.appendChild(chip);
   });
@@ -1853,6 +1897,12 @@ async function setupSettingsControls() {
   const temperatureValue = document.getElementById("temperature-value");
   const toastDelaySlider = document.getElementById("toast-delay-slider");
   const toastDelayValue = document.getElementById("toast-delay-value");
+  const threadAutoTitleEnabled = document.getElementById(
+    "thread-autotitle-enabled",
+  );
+  const threadAutoTitleMinMessages = document.getElementById(
+    "thread-autotitle-min-messages",
+  );
   if (uiLanguageSelect) {
     uiLanguageSelect.querySelector('option[value="auto"]').textContent =
       t("languageAuto");
@@ -1941,6 +1991,14 @@ async function setupSettingsControls() {
   allowMessageHtml.checked = state.settings.allowMessageHtml !== false;
   streamEnabled.checked = state.settings.streamEnabled !== false;
   autopairEnabled.checked = state.settings.autoPairEnabled !== false;
+  threadAutoTitleEnabled.checked = state.settings.threadAutoTitleEnabled !== false;
+  const minMessages = Math.max(
+    5,
+    Math.min(15, Number(state.settings.threadAutoTitleMinMessages) || 7),
+  );
+  state.settings.threadAutoTitleMinMessages = minMessages;
+  threadAutoTitleMinMessages.value = String(minMessages);
+  threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
   autoReplyEnabled.checked = state.settings.autoReplyEnabled !== false;
   enterToSendEnabled.checked = state.settings.enterToSendEnabled !== false;
   markdownCustomCss.value = state.settings.markdownCustomCss || "";
@@ -2100,6 +2158,22 @@ async function setupSettingsControls() {
 
   autopairEnabled.addEventListener("change", () => {
     state.settings.autoPairEnabled = autopairEnabled.checked;
+    saveSettings();
+  });
+  threadAutoTitleEnabled?.addEventListener("change", () => {
+    state.settings.threadAutoTitleEnabled = threadAutoTitleEnabled.checked;
+    if (threadAutoTitleMinMessages) {
+      threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
+    }
+    saveSettings();
+  });
+  threadAutoTitleMinMessages?.addEventListener("change", () => {
+    const value = Math.max(
+      5,
+      Math.min(15, Number(threadAutoTitleMinMessages.value) || 7),
+    );
+    state.settings.threadAutoTitleMinMessages = value;
+    threadAutoTitleMinMessages.value = String(value);
     saveSettings();
   });
 
@@ -2262,6 +2336,8 @@ function getSettingsGroupForNode(node) {
     has("#allow-message-html") ||
     has("#stream-enabled") ||
     has("#autopair-enabled") ||
+    has("#thread-autotitle-enabled") ||
+    has("#thread-autotitle-min-messages") ||
     has("#markdown-custom-css") ||
     has("#postprocess-rules-json")
   ) return "threads";
@@ -2303,6 +2379,8 @@ function getSettingsGroupForNode(node) {
     id === "allow-message-html" ||
     id === "stream-enabled" ||
     id === "autopair-enabled" ||
+    id === "thread-autotitle-enabled" ||
+    id === "thread-autotitle-min-messages" ||
     id === "markdown-custom-css" ||
     id === "postprocess-rules-json"
   ) {
@@ -2914,6 +2992,8 @@ async function renderAll() {
 
 async function renderCharacters() {
   const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const previousScrollTop = Number(grid.scrollTop || 0);
   const characters = await db.characters.toArray();
   const threads = await db.threads.toArray();
   const threadCountByCharId = new Map();
@@ -2973,14 +3053,22 @@ async function renderCharacters() {
     const threadCount = threadCountByCharId.get(Number(char.id)) || 0;
     const card = document.createElement("article");
     card.className = "character-card";
+    if (state.characterCardSlide && Number(state.characterCardSlide.charId) === Number(char.id)) {
+      card.classList.add(
+        state.characterCardSlide.direction === "prev"
+          ? "card-slide-prev"
+          : "card-slide-next",
+      );
+    }
 
     const avatarWrap = document.createElement("div");
     avatarWrap.className = "character-avatar-wrap";
 
-    const langFlag = document.createElement("span");
-    langFlag.className = "character-avatar-flag";
-    langFlag.textContent = getBotLanguageFlag(resolved.activeLanguage);
-    avatarWrap.appendChild(langFlag);
+    const langRibbonWrap = document.createElement("span");
+    langRibbonWrap.className = "character-avatar-ribbon-wrap";
+    const langFlag = createLanguageFlagRibbonElement(resolved.activeLanguage);
+    langRibbonWrap.appendChild(langFlag);
+    avatarWrap.appendChild(langRibbonWrap);
 
     const idOverlay = document.createElement("span");
     idOverlay.className = "character-avatar-id";
@@ -3007,13 +3095,15 @@ async function renderCharacters() {
       const leftBtn = document.createElement("button");
       leftBtn.type = "button";
       leftBtn.className = "character-lang-nav left";
-      leftBtn.textContent = "‹";
+      leftBtn.textContent = "<";
       leftBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const defs = resolved.definitions || [];
         if (defs.length <= 1) return;
         const idx = defs.findIndex((d) => d.language === resolved.activeLanguage);
         const nextIdx = idx <= 0 ? defs.length - 1 : idx - 1;
+        state.characterCardSlide = { charId: Number(char.id), direction: "prev" };
         await db.characters.update(char.id, {
           selectedCardLanguage: defs[nextIdx].language,
         });
@@ -3023,19 +3113,21 @@ async function renderCharacters() {
       const rightBtn = document.createElement("button");
       rightBtn.type = "button";
       rightBtn.className = "character-lang-nav right";
-      rightBtn.textContent = "›";
+      rightBtn.textContent = ">";
       rightBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const defs = resolved.definitions || [];
         if (defs.length <= 1) return;
         const idx = defs.findIndex((d) => d.language === resolved.activeLanguage);
         const nextIdx = idx >= defs.length - 1 || idx < 0 ? 0 : idx + 1;
+        state.characterCardSlide = { charId: Number(char.id), direction: "next" };
         await db.characters.update(char.id, {
           selectedCardLanguage: defs[nextIdx].language,
         });
         await renderCharacters();
       });
-      card.append(leftBtn, rightBtn);
+      avatarWrap.append(leftBtn, rightBtn);
     }
 
     const name = document.createElement("h3");
@@ -3131,6 +3223,9 @@ async function renderCharacters() {
     card.append(actions);
     grid.appendChild(card);
   });
+  const maxScroll = Math.max(0, grid.scrollHeight - grid.clientHeight);
+  grid.scrollTop = Math.min(previousScrollTop, maxScroll);
+  state.characterCardSlide = null;
 }
 
 async function renderThreads() {
@@ -3246,7 +3341,15 @@ async function renderThreads() {
 
     const meta = document.createElement("div");
     meta.className = "thread-meta";
-    meta.innerHTML = `<span>${escapeHtml(resolvedChar?.name || char?.name || "Unknown")}</span><span>#${thread.id}</span>`;
+    const metaName = document.createElement("span");
+    metaName.textContent = resolvedChar?.name || char?.name || "Unknown";
+    const metaId = document.createElement("span");
+    metaId.textContent = `#${thread.id}`;
+    const metaLang = createLanguageFlagIconElement(
+      resolvedChar?.activeLanguage || thread.characterLanguage || "",
+      "thread-language-flag",
+    );
+    meta.append(metaName, metaId, metaLang);
     const queuePos = queuePosByThreadId.get(Number(thread.id)) || 0;
     if (queuePos > 0) {
       const queueBadge = document.createElement("span");
@@ -3382,16 +3485,16 @@ function togglePane() {
     "pane-collapsed",
     pane.classList.contains("collapsed"),
   );
-  document.getElementById("pane-toggle").textContent = "☰";
+  document.getElementById("pane-toggle").textContent = "=";
   if (pane.classList.contains("collapsed")) {
     if (homeBtn) {
-      homeBtn.textContent = "⌂";
+      homeBtn.textContent = "H";
       homeBtn.title = t("home");
     }
     createBtn.textContent = "+";
     createBtn.title = t("createCharacter");
     if (importBtn) {
-      importBtn.textContent = "↥";
+      importBtn.textContent = "^";
       importBtn.title = t("importCharacter");
     }
   } else {
@@ -3402,7 +3505,7 @@ function togglePane() {
     createBtn.textContent = t("createCharacter");
     createBtn.title = "";
     if (importBtn) {
-      importBtn.textContent = `↥ ${t("importCharacter")}`;
+      importBtn.textContent = `^ ${t("importCharacter")}`;
       importBtn.title = "";
     }
   }
@@ -3482,7 +3585,40 @@ function normalizeBotLanguageCode(value) {
 }
 
 function getBotLanguageFlag(code) {
-  return BOT_LANGUAGE_FLAGS[code] || "🏳";
+  return `[${normalizeBotLanguageCode(code)}]`;
+}
+
+function getBotLanguageFlagIconCode(code) {
+  return BOT_LANGUAGE_FLAG_ICON_CODES[normalizeBotLanguageCode(code)] || "";
+}
+
+function createLanguageFlagIconElement(code, className = "") {
+  const span = document.createElement("span");
+  if (className) span.className = className;
+  const iconCode = getBotLanguageFlagIconCode(code);
+  if (iconCode) {
+    span.classList.add("fi", `fi-${iconCode}`, "flag-icon-inline");
+    span.style.backgroundImage = `url("assets/flag-icons/flags/4x3/${iconCode}.svg")`;
+    span.setAttribute("aria-label", normalizeBotLanguageCode(code));
+    span.setAttribute("title", normalizeBotLanguageCode(code));
+  } else {
+    span.textContent = getBotLanguageFlag(code);
+  }
+  return span;
+}
+
+function createLanguageFlagRibbonElement(code) {
+  const span = document.createElement("span");
+  span.className = "character-avatar-flag-ribbon flag-icon-inline";
+  const iconCode = getBotLanguageFlagIconCode(code);
+  if (iconCode) {
+    span.style.backgroundImage = `url("assets/flag-icons/flags/4x3/${iconCode}.svg")`;
+    span.setAttribute("aria-label", normalizeBotLanguageCode(code));
+    span.setAttribute("title", normalizeBotLanguageCode(code));
+  } else {
+    span.textContent = getBotLanguageFlag(code);
+  }
+  return span;
 }
 
 function createEmptyCharacterDefinition(language = "en") {
@@ -3613,7 +3749,13 @@ function renderCharacterDefinitionTabs() {
     if (def.language === state.charModalActiveLanguage && state.charModalActiveTab === "lang") {
       btn.classList.add("active");
     }
-    btn.innerHTML = `<span>${getBotLanguageFlag(def.language)} ${escapeHtml(def.language)}</span>`;
+    const label = document.createElement("span");
+    label.className = "char-def-tab-label";
+    const flag = createLanguageFlagIconElement(def.language, "char-def-tab-flag");
+    const text = document.createElement("span");
+    text.textContent = def.language;
+    label.append(flag, text);
+    btn.appendChild(label);
     btn.addEventListener("click", () => {
       saveActiveCharacterDefinitionFromForm();
       state.charModalActiveLanguage = def.language;
@@ -3624,7 +3766,7 @@ function renderCharacterDefinitionTabs() {
     const del = document.createElement("button");
     del.type = "button";
     del.className = "char-def-tab-delete";
-    del.textContent = "×";
+    del.textContent = "x";
     del.disabled = state.charModalDefinitions.length <= 1;
     del.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -3747,7 +3889,7 @@ function populateCharacterLanguageSelectOptions() {
   BOT_LANGUAGE_OPTIONS.filter((code) => !used.has(code)).forEach((code) => {
     const opt = document.createElement("option");
     opt.value = code;
-    opt.textContent = `${getBotLanguageFlag(code)} ${code}`;
+    opt.textContent = code;
     select.appendChild(opt);
   });
 }
@@ -3802,7 +3944,7 @@ async function saveCharacterFromModal() {
     return;
   }
 
-  let hasAtLeastOneName = false;
+  const missingNameLanguages = [];
   for (let i = 0; i < defs.length; i += 1) {
     const def = defs[i];
     def.language = normalizeBotLanguageCode(def.language || "en");
@@ -3823,7 +3965,7 @@ async function saveCharacterFromModal() {
     def.lorebookIds = Array.isArray(def.lorebookIds)
       ? def.lorebookIds.map(Number).filter(Number.isInteger)
       : [];
-    if (def.name) hasAtLeastOneName = true;
+    if (!def.name) missingNameLanguages.push(def.language);
     try {
       const parsedInitialMessages = parseInitialMessagesInput(
         def.initialMessagesRaw || "",
@@ -3839,8 +3981,13 @@ async function saveCharacterFromModal() {
     }
   }
 
-  if (!hasAtLeastOneName) {
-    await openInfoDialog(t("missingFieldTitle"), t("characterNameRequired"));
+  if (missingNameLanguages.length > 0) {
+    await openInfoDialog(
+      t("missingFieldTitle"),
+      tf("characterNameRequiredAllLanguages", {
+        langs: missingNameLanguages.join(", "),
+      }),
+    );
     return;
   }
 
@@ -5598,21 +5745,31 @@ function updateChatTitle() {
 
 async function maybeGenerateThreadTitle() {
   if (!currentThread || !currentCharacter) return;
+  if (state.settings.threadAutoTitleEnabled === false) return;
   if (currentThread.titleGenerated === true) return;
   if (currentThread.titleManual === true) return;
-  if (conversationHistory.length < 5) return;
+  const minMessages = Math.max(
+    5,
+    Math.min(15, Number(state.settings.threadAutoTitleMinMessages) || 7),
+  );
+  if (conversationHistory.length < minMessages) return;
 
-  const firstFive = conversationHistory.slice(0, 5);
-  const transcript = firstFive
+  const titleSlice = conversationHistory.slice(0, minMessages);
+  const transcript = titleSlice
     .map((m, i) => {
       const role = m.role === "assistant" ? "Assistant" : "User";
       const content = String(m.content || "").replace(/\s+/g, " ").trim();
       return `${i + 1}. ${role}: ${content.slice(0, 600)}`;
     })
     .join("\n");
+  const languageCode =
+    normalizeBotLanguageCode(
+      currentThread.characterLanguage || currentCharacter.activeLanguage || "en",
+    ) || "en";
 
   const titlePrompt = [
     "Generate a concise roleplay thread title.",
+    `Generate the title in language code: ${languageCode}.`,
     "Requirements:",
     "- Maximum 128 characters.",
     "- Plain text only.",
@@ -7122,7 +7279,7 @@ function renderSettingsModelOptions() {
   filtered.forEach((m) => {
     const opt = document.createElement("option");
     opt.value = m.id;
-    const lowContextMark = isLowContextRoleplayModel(m) ? " | ⚠ <=16k" : "";
+    const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
     const moderationMark = m.isModerated === true ? " | Moderated" : "";
     opt.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
     modelSelect.appendChild(opt);
@@ -8798,3 +8955,4 @@ function fallbackAvatar(seed, width, height) {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'><rect width='100%' height='100%' fill='#253147'/><text x='50%' y='53%' text-anchor='middle' font-size='${Math.floor(width * 0.48)}' fill='#c2cee4' font-family='Segoe UI'>${initial}</text></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
+

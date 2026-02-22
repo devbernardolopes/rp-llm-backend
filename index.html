@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -9,6 +9,7 @@
       src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5021422329745536"
       crossorigin="anonymous"
     ></script>
+    <link rel="stylesheet" href="assets/flag-icons/css/flag-icons.min.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -21,7 +22,7 @@
               + Character
             </button>
             <button id="import-character-btn" class="secondary-btn pane-create-char-btn pane-import-btn">
-              ↥ Import Character
+              ^ Import Character
             </button>
             <input id="import-character-input" type="file" accept=".json,application/json" class="hidden" />
           </div>
@@ -29,19 +30,19 @@
         </div>
 
         <div class="pane-bottom">
-          <button class="option-btn" data-open-modal="settings-modal" data-i18n-title="settings" title="Settings" aria-label="Settings">⚙️</button>
-          <button class="option-btn" data-open-modal="personas-modal" data-i18n-title="personas" title="Personas" aria-label="Personas">👤</button>
-          <button class="option-btn" data-open-modal="lore-modal" data-i18n-title="loreBooks" title="Lore Books" aria-label="Lore Books">📚</button>
-          <button class="option-btn" data-open-modal="shortcuts-modal" data-i18n-title="shortcuts" title="Shortcuts" aria-label="Shortcuts">⌨️</button>
-          <button class="option-btn" data-open-modal="tags-modal" data-i18n-title="tags" title="Tags" aria-label="Tags">🏷️</button>
-          <button class="option-btn" data-open-modal="database-modal" data-i18n-title="database" title="Database" aria-label="Database">🗄️</button>
-          <button id="guide-btn" class="option-btn" data-i18n-title="guide" title="Guide" aria-label="Guide">❓</button>
+          <button class="option-btn" data-open-modal="settings-modal" data-i18n-title="settings" title="Settings" aria-label="Settings">&#9881;</button>
+          <button class="option-btn" data-open-modal="personas-modal" data-i18n-title="personas" title="Personas" aria-label="Personas">&#128100;</button>
+          <button class="option-btn" data-open-modal="lore-modal" data-i18n-title="loreBooks" title="Lore Books" aria-label="Lore Books">&#128218;</button>
+          <button class="option-btn" data-open-modal="shortcuts-modal" data-i18n-title="shortcuts" title="Shortcuts" aria-label="Shortcuts">&#9000;</button>
+          <button class="option-btn" data-open-modal="tags-modal" data-i18n-title="tags" title="Tags" aria-label="Tags">&#127991;</button>
+          <button class="option-btn" data-open-modal="database-modal" data-i18n-title="database" title="Database" aria-label="Database">&#128451;</button>
+          <button id="guide-btn" class="option-btn" data-i18n-title="guide" title="Guide" aria-label="Guide">?</button>
         </div>
       </aside>
 
       <main id="main-view" class="view active">
         <header class="main-header">
-          <button id="pane-toggle" class="icon-btn" data-i18n-title="togglePane" title="Toggle pane" aria-label="Toggle pane">☰</button>
+          <button id="pane-toggle" class="icon-btn" data-i18n-title="togglePane" title="Toggle pane" aria-label="Toggle pane">=</button>
           <h1>RP LLM BACKEND</h1>
         </header>
         <section id="character-filters" class="character-filters">
@@ -110,7 +111,7 @@
           data-i18n-title="scrollToBottom"
           title="Scroll to bottom"
           aria-label="Scroll to bottom"
-        >↓</button>
+        >v</button>
 
         <div id="prompt-history-popover" class="popover hidden" role="dialog" data-i18n-title="promptHistory" aria-label="Prompt history">
           <div class="popover-title" data-i18n="previousPrompts">Previous prompts</div>
@@ -216,11 +217,11 @@
             <select id="ui-language-select">
               <option value="auto">Auto (browser)</option>
               <option value="en">English</option>
-              <option value="fr">Français</option>
+              <option value="fr">Francais</option>
               <option value="it">Italiano</option>
               <option value="de">Deutsch</option>
-              <option value="es">Español</option>
-              <option value="pt-BR">Português (Brasil)</option>
+              <option value="es">Espanol</option>
+              <option value="pt-BR">Portugues (Brasil)</option>
             </select>
           </label>
           <label>
@@ -326,6 +327,21 @@
             <input type="checkbox" id="autopair-enabled" checked />
             <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
           </label>
+          <label class="checkbox-line">
+            <input type="checkbox" id="thread-autotitle-enabled" checked />
+            <span data-i18n="threadAutoTitleEnabled">Enable Auto-titling for Threads</span>
+          </label>
+          <label>
+            <span data-i18n="threadAutoTitleMinMessages">Min. Messages</span>
+            <input
+              id="thread-autotitle-min-messages"
+              type="number"
+              min="5"
+              max="15"
+              step="1"
+              value="7"
+            />
+          </label>
           <label>
             <span data-i18n="markdownCustomCss">Markdown Custom CSS</span>
             <textarea
@@ -339,7 +355,7 @@
             <textarea
               id="postprocess-rules-json"
               rows="8"
-              placeholder='[{"pattern":"^«([\\s\\S]*)»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">«$1»</span>"}]'
+              placeholder='[{"pattern":"^Â«([\\s\\S]*)Â»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">Â«$1Â»</span>"}]'
             ></textarea>
           </label>
           <label>
@@ -452,14 +468,14 @@
           <div id="lore-list-view">
             <div class="lore-toolbar">
               <button id="create-lorebook-btn" class="primary-btn" type="button" data-i18n="createLoreBook">+ Create Lore Book</button>
-              <button id="import-lorebook-btn" class="secondary-btn" type="button" data-i18n="importLoreBook">↥ Import Lore Book</button>
+              <button id="import-lorebook-btn" class="secondary-btn" type="button" data-i18n="importLoreBook">^ Import Lore Book</button>
             </div>
             <div id="lorebook-list" class="lorebook-list"></div>
           </div>
 
           <div id="lore-editor-view" class="hidden">
             <div class="lore-toolbar">
-              <button id="lore-editor-back-btn" class="secondary-btn" type="button" data-i18n="backToList">← Back to List</button>
+              <button id="lore-editor-back-btn" class="secondary-btn" type="button" data-i18n="backToList">< Back to List</button>
             </div>
             <div class="two-col lore-editor-grid">
               <label>
@@ -526,6 +542,9 @@
         <div class="modal-body">
           <button id="export-db-btn" class="primary-btn" type="button">Export Database</button>
           <button id="import-db-btn" class="secondary-btn" type="button">Import Database</button>
+          <button id="reset-db-btn" class="secondary-btn danger-btn" type="button" data-i18n="resetAppData">
+            Reset App Data
+          </button>
           <input id="import-db-input" type="file" accept=".json,application/json" class="hidden" />
           <p id="database-hint" class="muted">
             Import will overwrite the current local data (characters, threads, settings, UI state, and more).
@@ -747,7 +766,7 @@
           type="button"
           title="Download image"
           aria-label="Download image"
-        >↓</button>
+        >v</button>
         <img id="image-preview-img" alt="Preview" />
       </div>
     </div>
@@ -782,3 +801,4 @@
     <script src="app.js"></script>
   </body>
 </html>
+
