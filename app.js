@@ -288,6 +288,16 @@ const I18N = {
       "Generation queued. Waiting for active generation.",
     generationQueuedNoticeWithPos:
       "Generation queued. Waiting for active generation (queue position {position}).",
+    generatingLabel: "Generating...",
+    regeneratingLabel: "Regenerating...",
+    truncatedMessageLine1:
+      "This message has been truncated by the currently active model.",
+    truncatedMessageLine2:
+      "You can delete or regenerate this message. You can also trigger another model response, or send a new message.",
+    generationErrorLine1: "Generation failed for this message.",
+    generationErrorLine3:
+      "You can regenerate this message, switch model, or continue the chat.",
+    threadQueueBadgeTitle: "Queued for generation (position {position})",
     openRouterApiKey: "OpenRouter API Key",
     modelLabel: "Model",
     pricingLabel: "Pricing",
@@ -2652,6 +2662,7 @@ async function renderCharacters() {
 
 async function renderThreads() {
   const list = document.getElementById("thread-list");
+  const previousScrollTop = Number(list?.scrollTop || 0);
   const threads = await db.threads.toArray();
   threads.sort((a, b) => {
     const af = a.favorite ? 1 : 0;
@@ -2673,6 +2684,7 @@ async function renderThreads() {
     empty.className = "muted";
     empty.textContent = t("noThreadsYet");
     list.appendChild(empty);
+    list.scrollTop = 0;
     return;
   }
 
@@ -2705,6 +2717,16 @@ async function renderThreads() {
   const charIds = [
     ...new Set(threads.map((t) => t.characterId).filter(Boolean)),
   ];
+  const queuedSorted = threads
+    .filter((t) => String(t.pendingGenerationReason || "").trim())
+    .sort(
+      (a, b) =>
+        Number(a.pendingGenerationQueuedAt || 0) -
+        Number(b.pendingGenerationQueuedAt || 0),
+    );
+  const queuePosByThreadId = new Map(
+    queuedSorted.map((t, i) => [Number(t.id), i + 1]),
+  );
   const characters = await db.characters.where("id").anyOf(charIds).toArray();
   const charMap = new Map(characters.map((c) => [c.id, c]));
 
@@ -2748,6 +2770,16 @@ async function renderThreads() {
     const meta = document.createElement("div");
     meta.className = "thread-meta";
     meta.innerHTML = `<span>${escapeHtml(char?.name || "Unknown")}</span><span>#${thread.id}</span>`;
+    const queuePos = queuePosByThreadId.get(Number(thread.id)) || 0;
+    if (queuePos > 0) {
+      const queueBadge = document.createElement("span");
+      queueBadge.className = "thread-queue-badge";
+      queueBadge.textContent = `Q${queuePos}`;
+      const queueTitle = tf("threadQueueBadgeTitle", { position: queuePos });
+      queueBadge.setAttribute("title", queueTitle);
+      queueBadge.setAttribute("aria-label", queueTitle);
+      meta.appendChild(queueBadge);
+    }
 
     const titleBtn = document.createElement("button");
     titleBtn.className = "thread-title";
@@ -2810,6 +2842,8 @@ async function renderThreads() {
     row.append(avatar, info, actions);
     list.appendChild(row);
   });
+  const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
+  list.scrollTop = Math.min(previousScrollTop, maxScroll);
 }
 
 async function deleteSelectedThreads() {
@@ -2905,6 +2939,7 @@ function showChatView() {
   document.getElementById("main-view").classList.remove("active");
   updateThreadRenameButtonState();
   updateAutoTtsToggleButton();
+  setSendingState(state.sending);
   renderThreads().catch(() => {});
   updateScrollBottomButtonVisibility();
 }
@@ -4408,11 +4443,7 @@ async function startNewThread(characterId) {
   const shouldTriggerWithoutInitial =
     shouldAutoTriggerFirstAi && initialMessages.length === 0;
   if (shouldTriggerFromInitial || shouldTriggerWithoutInitial) {
-    if (state.sending) {
-      await enqueueThreadGeneration(threadId, "waiting_for_active_generation");
-    } else {
-      await generateBotReply();
-    }
+    await requestBotReplyForCurrentThread("new_thread_auto_first_reply");
   }
   showToast(t("threadCreated"), "success");
 }
@@ -4731,8 +4762,19 @@ function renderChat() {
     log.appendChild(note);
   }
 
+  const activeThreadId = Number(state.activeGenerationThreadId);
+  const currentId = Number(currentThread.id);
+  const isActiveGenerationThread =
+    state.sending &&
+    Number.isInteger(activeThreadId) &&
+    Number.isInteger(currentId) &&
+    activeThreadId === currentId;
   conversationHistory.forEach((message, idx) => {
-    log.appendChild(buildMessageRow(message, idx, false));
+    const rowStreaming =
+      isActiveGenerationThread &&
+      message?.role === "assistant" &&
+      String(message?.generationStatus || "").trim() !== "";
+    log.appendChild(buildMessageRow(message, idx, rowStreaming));
   });
 
   scrollChatToBottom();
@@ -4874,7 +4916,15 @@ function buildMessageRow(message, index, streaming) {
     beginInlineMessageEdit(index, content);
   });
   if (streaming) {
-    content.textContent = message.content;
+    const statusLabel =
+      message?.generationStatus === "regenerating"
+        ? t("regeneratingLabel")
+        : t("generatingLabel");
+    if (String(message?.content || "").trim()) {
+      content.innerHTML = renderMessageHtml(message.content, message.role);
+    } else {
+      content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(statusLabel)}`;
+    }
   } else {
     renderMessageContent(content, message);
   }
@@ -4939,11 +4989,9 @@ function buildTruncationNotice() {
   const box = document.createElement("div");
   box.className = "message-truncated-note";
   const p1 = document.createElement("p");
-  p1.textContent =
-    "This message has been truncated by the currently active model.";
+  p1.textContent = t("truncatedMessageLine1");
   const p2 = document.createElement("p");
-  p2.textContent =
-    "You can delete or regenerate this message. You can also trigger another model response, or send a new message.";
+  p2.textContent = t("truncatedMessageLine2");
   box.append(p1, p2);
   return box;
 }
@@ -4952,12 +5000,11 @@ function buildGenerationErrorNotice(errorText) {
   const box = document.createElement("div");
   box.className = "message-truncated-note";
   const p1 = document.createElement("p");
-  p1.textContent = "Generation failed for this message.";
+  p1.textContent = t("generationErrorLine1");
   const p2 = document.createElement("p");
   p2.textContent = String(errorText || "Unknown error");
   const p3 = document.createElement("p");
-  p3.textContent =
-    "You can regenerate this message, switch model, or continue the chat.";
+  p3.textContent = t("generationErrorLine3");
   box.append(p1, p2, p3);
   return box;
 }
@@ -5207,8 +5254,12 @@ function refreshAllSpeakerButtons() {
 async function sendMessage(options = {}) {
   if (!currentThread || !currentCharacter) return;
   if (state.sending) {
-    cancelOngoingGeneration();
-    return;
+    const activeId = Number(state.activeGenerationThreadId);
+    const currentId = Number(currentThread.id);
+    if (Number.isInteger(activeId) && activeId === currentId) {
+      cancelOngoingGeneration();
+      return;
+    }
   }
 
   const input = document.getElementById("user-input");
@@ -5228,7 +5279,7 @@ async function sendMessage(options = {}) {
       input.value = "";
       state.activeShortcut = null;
     }
-    await generateBotReply();
+    await requestBotReplyForCurrentThread("manual_send_ai_only");
     return;
   }
   if (!preserveInput) {
@@ -5259,7 +5310,7 @@ async function sendMessage(options = {}) {
     return;
   }
 
-  await generateBotReply();
+  await requestBotReplyForCurrentThread("manual_send_auto_reply");
 }
 
 async function generateBotReply() {
@@ -5276,6 +5327,7 @@ async function generateBotReply() {
   const pending = {
     role: "assistant",
     content: "",
+    generationStatus: "generating",
     createdAt: Date.now(),
     finishReason: "",
     nativeFinishReason: "",
@@ -5298,7 +5350,7 @@ async function generateBotReply() {
     );
     const pendingContent = pendingRow.querySelector(".message-content");
     pendingContent.innerHTML =
-      '<span class="spinner" aria-hidden="true"></span> Generating...';
+      `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
     log.appendChild(pendingRow);
     scrollChatToBottom();
   }
@@ -5353,6 +5405,7 @@ async function generateBotReply() {
       : [];
     pending.usedMemorySummary = String(promptContext.memory || "");
     pending.generationError = "";
+    pending.generationStatus = "";
     if (pendingRow && isViewingThread(threadId)) {
       renderMessageContent(pendingRow.querySelector(".message-content"), pending);
       pendingRow.dataset.streaming = "0";
@@ -5390,6 +5443,7 @@ async function generateBotReply() {
         if (idx >= 0) generationHistory.splice(idx, 1);
         if (pendingRow) pendingRow.remove();
       } else {
+        pending.generationStatus = "";
         if (pendingRow && isViewingThread(threadId)) {
           renderMessageContent(pendingRow.querySelector(".message-content"), pending);
           pendingRow.dataset.streaming = "0";
@@ -5401,6 +5455,7 @@ async function generateBotReply() {
       showToast(t("generationCancelled"), "success");
     } else {
       pending.generationError = String(e?.message || "Unknown error");
+      pending.generationStatus = "";
       if (!String(pending.content || "").trim()) {
         pending.content = "";
       }
@@ -5461,6 +5516,7 @@ async function regenerateMessage(index) {
     });
     const systemPrompt = promptContext.prompt;
     target.content = "";
+    target.generationStatus = "regenerating";
     renderChat();
     const row = document.getElementById("chat-log").children[index];
     const contentEl = row?.querySelector(".message-content");
@@ -5468,7 +5524,7 @@ async function regenerateMessage(index) {
     refreshMessageControlStates();
     if (contentEl)
       contentEl.innerHTML =
-        '<span class="spinner" aria-hidden="true"></span> Regenerating...';
+        `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
     scrollChatToBottom();
 
     const result = await callOpenRouter(
@@ -5498,6 +5554,7 @@ async function regenerateMessage(index) {
     target.generationInfo = result.generationInfo || null;
     target.generationFetchDebug = result.generationFetchDebug || [];
     target.generationError = "";
+    target.generationStatus = "";
     target.usedLoreEntries = Array.isArray(promptContext.loreEntries)
       ? promptContext.loreEntries
       : [];
@@ -5510,12 +5567,14 @@ async function regenerateMessage(index) {
   } catch (e) {
     state.pendingPersonaInjectionPersonaId = null;
     if (isAbortError(e)) {
+      target.generationStatus = "";
       await persistCurrentThread();
       renderChat();
       await renderThreads();
       showToast(t("regenerationCancelled"), "success");
     } else {
       target.content = originalContent;
+      target.generationStatus = "";
       await persistCurrentThread();
       renderChat();
       await renderThreads();
@@ -5966,14 +6025,21 @@ function positionPromptHistoryPopover() {
 function setSendingState(sending) {
   const sendBtn = document.getElementById("send-btn");
   const personaSelect = document.getElementById("persona-select");
+  const currentId = Number(currentThread?.id);
+  const activeId = Number(state.activeGenerationThreadId);
+  const currentThreadGenerating =
+    sending &&
+    Number.isInteger(currentId) &&
+    Number.isInteger(activeId) &&
+    currentId === activeId;
   sendBtn.disabled = false;
-  sendBtn.classList.toggle("is-generating", sending);
-  sendBtn.classList.toggle("danger-btn", sending);
-  sendBtn.textContent = sending ? t("cancel") : t("send");
-  personaSelect.disabled = sending;
+  sendBtn.classList.toggle("is-generating", currentThreadGenerating);
+  sendBtn.classList.toggle("danger-btn", currentThreadGenerating);
+  sendBtn.textContent = currentThreadGenerating ? t("cancel") : t("send");
+  personaSelect.disabled = currentThreadGenerating;
   refreshMessageControlStates();
   refreshAllSpeakerButtons();
-  if (sending) closePromptHistory();
+  if (currentThreadGenerating) closePromptHistory();
 }
 
 function refreshMessageControlStates() {
@@ -6548,7 +6614,9 @@ async function enqueueThreadGeneration(threadId, reason = "busy") {
     currentThread.pendingGenerationReason = reason;
     currentThread.pendingGenerationQueuedAt = queuedAt;
     currentThread.updatedAt = queuedAt;
-    renderChat();
+    if (!state.sending && conversationHistory.length === 0) {
+      renderChat();
+    }
   }
   broadcastSyncEvent({
     type: "thread-updated",
@@ -6576,7 +6644,6 @@ async function clearThreadGenerationQueueFlag(threadId) {
     currentThread.pendingGenerationReason = "";
     currentThread.pendingGenerationQueuedAt = 0;
     currentThread.updatedAt = updatedAt;
-    renderChat();
   }
   broadcastSyncEvent({
     type: "thread-updated",
@@ -6592,6 +6659,17 @@ async function tryStartQueuedGenerationForCurrentThread() {
   const head = Number(state.generationQueue[0]);
   if (head !== threadId) return;
   await clearThreadGenerationQueueFlag(threadId);
+  await generateBotReply();
+}
+
+async function requestBotReplyForCurrentThread(trigger = "manual_send") {
+  if (!currentThread || !currentCharacter) return;
+  const currentId = Number(currentThread.id);
+  const activeId = Number(state.activeGenerationThreadId);
+  if (state.sending && Number.isInteger(activeId) && activeId !== currentId) {
+    await enqueueThreadGeneration(currentId, trigger);
+    return;
+  }
   await generateBotReply();
 }
 

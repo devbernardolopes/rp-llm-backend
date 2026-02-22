@@ -266,5 +266,12 @@
   "threadBudgetTooltip": "Budget de sortie estimé pour ce chat.\nMax. utilisateur : {userMax}\nContexte du modèle : {contextText}\nTokens de prompt estimés : {promptTokens}\nMarge de sécurité : 256\nmax_tokens effectif : {effectiveMax}",
   "generationQueuedToast": "Generation queued (position {position}).",
   "generationQueuedNotice": "Generation queued. Waiting for active generation.",
-  "generationQueuedNoticeWithPos": "Generation queued. Waiting for active generation (queue position {position})."
+  "generationQueuedNoticeWithPos": "Generation queued. Waiting for active generation (queue position {position}).",
+  "generatingLabel": "Generating...",
+  "regeneratingLabel": "Regenerating...",
+  "truncatedMessageLine1": "This message has been truncated by the currently active model.",
+  "truncatedMessageLine2": "You can delete or regenerate this message. You can also trigger another model response, or send a new message.",
+  "generationErrorLine1": "Generation failed for this message.",
+  "generationErrorLine3": "You can regenerate this message, switch model, or continue the chat.",
+  "threadQueueBadgeTitle": "Queued for generation (position {position})"
 }
