@@ -256,6 +256,38 @@ const I18N = {
     enableAutoTtsAria: "Enable auto TTS",
     disableAutoTtsAria: "Disable auto TTS",
     threadBudgetUnavailable: "Thread budget unavailable.",
+    settingsTtsTestTitle: "Play TTS Test",
+    msgDeleteTitle: "Delete message",
+    msgRegenerateTitle: "Regenerate message",
+    msgEditTitle: "Edit message",
+    msgCopyTitle: "Copy message",
+    msgMetadataTitle: "Message metadata",
+    msgContextTitle: "Message context",
+    msgSpeakTitle: "Speak message",
+    msgSpeakCancelTitle: "Cancel speech",
+    msgSpeakLoadingTitle: "Loading speech... Click again to cancel.",
+    msgVoiceUnavailableTitle:
+      "Voice support is not configured in this browser.",
+    msgVoiceUnavailableAria: "Voice support unavailable",
+    msgMetadataUnavailableEdited:
+      "Metadata is not available in user edited messages.",
+    msgMetadataUnavailableEditedAria:
+      "Metadata unavailable for user edited message",
+    msgMetadataUnavailableInitial:
+      "Metadata is not available for initial messages.",
+    msgMetadataUnavailableInitialAria:
+      "Metadata unavailable for initial message",
+    msgMetadataUnavailableGenerating:
+      "Metadata unavailable while generating.",
+    msgMetadataUnavailableGeneratingAria:
+      "Metadata unavailable while generating",
+    threadBudgetTooltip:
+      "Estimated effective output budget for this thread.\nUser max: {userMax}\nModel context: {contextText}\nEstimated prompt tokens: {promptTokens}\nSafety margin: 256\nEffective max_tokens: {effectiveMax}",
+    generationQueuedToast: "Generation queued (position {position}).",
+    generationQueuedNotice:
+      "Generation queued. Waiting for active generation.",
+    generationQueuedNoticeWithPos:
+      "Generation queued. Waiting for active generation (queue position {position}).",
     openRouterApiKey: "OpenRouter API Key",
     modelLabel: "Model",
     pricingLabel: "Pricing",
@@ -561,6 +593,8 @@ const state = {
   },
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
+  activeGenerationThreadId: null,
+  generationQueue: [],
   selectedThreadIds: new Set(),
   characterTagFilters: [],
   characterSortMode: "updated_desc",
@@ -632,6 +666,7 @@ async function init() {
   initBrowserTtsSupport();
   updateModelPill();
   await migrateLegacySessions();
+  await hydrateGenerationQueue();
   await ensurePersonasInitialized();
   await renderAll();
   setupCrossWindowSync();
@@ -639,6 +674,19 @@ async function init() {
   renderCharacterTagFilterChips();
   updateThreadRenameButtonState();
   updateScrollBottomButtonVisibility();
+}
+
+async function hydrateGenerationQueue() {
+  const threads = await db.threads.toArray();
+  state.generationQueue = threads
+    .filter((t) => String(t.pendingGenerationReason || "").trim())
+    .sort(
+      (a, b) =>
+        Number(a.pendingGenerationQueuedAt || 0) -
+        Number(b.pendingGenerationQueuedAt || 0),
+    )
+    .map((t) => Number(t.id))
+    .filter(Number.isInteger);
 }
 
 function ensureTagCatalogInitialized() {
@@ -789,6 +837,12 @@ async function applyInterfaceLanguage() {
   if (dbImport) dbImport.textContent = t("importDatabase");
   const dbHint = document.getElementById("database-hint");
   if (dbHint) dbHint.textContent = t("databaseHint");
+  const ttsTestBtn = document.getElementById("tts-test-play-btn");
+  if (ttsTestBtn) {
+    ttsTestBtn.textContent = t("playTtsTest");
+    ttsTestBtn.setAttribute("title", t("settingsTtsTestTitle"));
+    ttsTestBtn.setAttribute("aria-label", t("settingsTtsTestTitle"));
+  }
 }
 
 function setupEvents() {
@@ -4331,6 +4385,8 @@ async function startNewThread(characterId) {
     selectedPersonaId: defaultPersonaForCharacter?.id || null,
     autoTtsEnabled: false,
     lastPersonaInjectionPersonaId: null,
+    pendingGenerationReason: "",
+    pendingGenerationQueuedAt: 0,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -4352,7 +4408,11 @@ async function startNewThread(characterId) {
   const shouldTriggerWithoutInitial =
     shouldAutoTriggerFirstAi && initialMessages.length === 0;
   if (shouldTriggerFromInitial || shouldTriggerWithoutInitial) {
-    await generateBotReply();
+    if (state.sending) {
+      await enqueueThreadGeneration(threadId, "waiting_for_active_generation");
+    } else {
+      await generateBotReply();
+    }
   }
   showToast(t("threadCreated"), "success");
 }
@@ -4407,6 +4467,9 @@ async function deleteThread(threadId) {
   const ok = await openConfirmDialog(t("deleteThreadTitle"), t("deleteThreadConfirm"));
   if (!ok) return;
 
+  state.generationQueue = state.generationQueue.filter(
+    (id) => Number(id) !== Number(threadId),
+  );
   await db.threads.delete(threadId);
   state.selectedThreadIds.delete(Number(threadId));
   broadcastSyncEvent({
@@ -4462,6 +4525,11 @@ async function openThread(threadId) {
   await renderThreads();
   updateScrollBottomButtonVisibility();
   showChatView();
+  if (thread.pendingGenerationReason) {
+    const id = Number(thread.id);
+    if (!state.generationQueue.includes(id)) state.generationQueue.push(id);
+  }
+  await tryStartQueuedGenerationForCurrentThread();
 }
 
 function updateThreadRenameButtonState() {
@@ -4647,6 +4715,22 @@ function renderChat() {
 
   if (!currentThread) return;
 
+  if (
+    conversationHistory.length === 0 &&
+    String(currentThread.pendingGenerationReason || "").trim()
+  ) {
+    const note = document.createElement("p");
+    note.className = "muted";
+    const pos =
+      state.generationQueue.indexOf(Number(currentThread.id)) >= 0
+        ? state.generationQueue.indexOf(Number(currentThread.id)) + 1
+        : null;
+    note.textContent = pos
+      ? tf("generationQueuedNoticeWithPos", { position: pos })
+      : t("generationQueuedNotice");
+    log.appendChild(note);
+  }
+
   conversationHistory.forEach((message, idx) => {
     log.appendChild(buildMessageRow(message, idx, false));
   });
@@ -4709,7 +4793,7 @@ function buildMessageRow(message, index, streaming) {
 
   if (message.role === "assistant") {
     controls.appendChild(messageIndex);
-    const delBtn = iconButton("delete", "Delete message", async () => {
+    const delBtn = iconButton("delete", t("msgDeleteTitle"), async () => {
         await deleteMessageAt(index);
       });
     delBtn.classList.add("msg-delete-btn");
@@ -4717,39 +4801,39 @@ function buildMessageRow(message, index, streaming) {
     delBtn.disabled = disableControlsForRow;
     controls.appendChild(delBtn);
 
-    const regenBtn = iconButton("regenerate", "Regenerate message", async () => {
+    const regenBtn = iconButton("regenerate", t("msgRegenerateTitle"), async () => {
       await regenerateMessage(index);
     });
     regenBtn.classList.add("msg-regen-btn");
     regenBtn.disabled = state.sending || disableControlsForRow;
     controls.appendChild(regenBtn);
-    const editBtn = iconButton("edit", "Edit message", async () => {
+    const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
     editBtn.disabled = disableControlsForRow || isTruncated || hasGenerationError;
     controls.appendChild(editBtn);
 
-    const copyBtn = iconButton("copy", "Copy message", async () => {
+    const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
       await copyMessage(message.content || "");
     });
     copyBtn.classList.add("msg-copy-btn");
     copyBtn.disabled = disableControlsForRow;
     controls.appendChild(copyBtn);
-    const infoBtn = iconButton("info", "Message metadata", async () => {
+    const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
       await openMessageMetadataModal(index);
     });
     infoBtn.classList.add("msg-info-btn");
     applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
     controls.appendChild(infoBtn);
-    const contextBtn = iconButton("context", "Message context", async () => {
+    const contextBtn = iconButton("context", t("msgContextTitle"), async () => {
       await openMessageContextModal(index);
     });
     contextBtn.classList.add("msg-context-btn");
     contextBtn.disabled = disableControlsForRow || !hasMessageContextData(message);
     controls.appendChild(contextBtn);
 
-    const speakerBtn = iconButton("speaker", "Speak message", async (e) => {
+    const speakerBtn = iconButton("speaker", t("msgSpeakTitle"), async (e) => {
       const clickedBtn = e?.currentTarget;
       const resolvedIndex = resolveMessageIndexFromButton(clickedBtn, index);
       ttsDebug("bubble-click", {
@@ -4765,13 +4849,13 @@ function buildMessageRow(message, index, streaming) {
     controls.appendChild(speakerBtn);
   } else {
     controls.appendChild(messageIndex);
-    const editBtn = iconButton("edit", "Edit message", async () => {
+    const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
     editBtn.disabled = disableControlsForRow || isTruncated || hasGenerationError;
     controls.appendChild(editBtn);
-    const infoBtn = iconButton("info", "Message metadata", async () => {
+    const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
       await openMessageMetadataModal(index);
     });
     infoBtn.classList.add("msg-info-btn");
@@ -4833,31 +4917,22 @@ function applyInfoButtonAvailability(button, message, isStreaming) {
   const isUserEdited = message?.userEdited === true;
   button.disabled = !!isStreaming || isInitial || isUserEdited;
   if (isUserEdited) {
-    button.setAttribute(
-      "title",
-      "Metadata is not available in user edited messages.",
-    );
-    button.setAttribute(
-      "aria-label",
-      "Metadata unavailable for user edited message",
-    );
+    button.setAttribute("title", t("msgMetadataUnavailableEdited"));
+    button.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
     return;
   }
   if (isInitial) {
-    button.setAttribute(
-      "title",
-      "Metadata is not available for initial messages.",
-    );
-    button.setAttribute("aria-label", "Metadata unavailable for initial message");
+    button.setAttribute("title", t("msgMetadataUnavailableInitial"));
+    button.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
     return;
   }
   if (isStreaming) {
-    button.setAttribute("title", "Metadata unavailable while generating.");
-    button.setAttribute("aria-label", "Metadata unavailable while generating");
+    button.setAttribute("title", t("msgMetadataUnavailableGenerating"));
+    button.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
     return;
   }
-  button.setAttribute("title", "Message metadata");
-  button.setAttribute("aria-label", "Message metadata");
+  button.setAttribute("title", t("msgMetadataTitle"));
+  button.setAttribute("aria-label", t("msgMetadataTitle"));
 }
 
 function buildTruncationNotice() {
@@ -5103,25 +5178,22 @@ function updateMessageSpeakerButton(button, index) {
   button.classList.toggle("tts-speaking", isSpeaking);
   if (!ttsReady) {
     button.innerHTML = ICONS.speaker;
-    button.setAttribute(
-      "title",
-      "Voice support is not configured in this browser.",
-    );
-    button.setAttribute("aria-label", "Voice support unavailable");
+    button.setAttribute("title", t("msgVoiceUnavailableTitle"));
+    button.setAttribute("aria-label", t("msgVoiceUnavailableAria"));
     return;
   }
   if (isLoading) {
     button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>';
-    button.setAttribute("title", "Loading speech... Click again to cancel.");
-    button.setAttribute("aria-label", "Loading speech");
+    button.setAttribute("title", t("msgSpeakLoadingTitle"));
+    button.setAttribute("aria-label", t("msgSpeakLoadingTitle"));
   } else if (isSpeaking) {
     button.innerHTML = ICONS.stop;
-    button.setAttribute("title", "Cancel speech");
-    button.setAttribute("aria-label", "Cancel speech");
+    button.setAttribute("title", t("msgSpeakCancelTitle"));
+    button.setAttribute("aria-label", t("msgSpeakCancelTitle"));
   } else {
     button.innerHTML = ICONS.speaker;
-    button.setAttribute("title", "Speak message");
-    button.setAttribute("aria-label", "Speak message");
+    button.setAttribute("title", t("msgSpeakTitle"));
+    button.setAttribute("aria-label", t("msgSpeakTitle"));
   }
 }
 
@@ -5192,7 +5264,13 @@ async function sendMessage(options = {}) {
 
 async function generateBotReply() {
   if (!currentThread || !currentCharacter || state.sending) return;
+  const threadId = Number(currentThread.id);
   const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(conversationHistory);
+  const generationCharacter = currentCharacter;
+  const generationPersona = currentPersona;
+  const generationThreadSnapshot = { ...currentThread };
+  const generationHistory = conversationHistory;
+  const pendingIndex = generationHistory.length;
 
   const log = document.getElementById("chat-log");
   const pending = {
@@ -5208,42 +5286,52 @@ async function generateBotReply() {
     usedLoreEntries: [],
     usedMemorySummary: "",
   };
-  conversationHistory.push(pending);
-  await persistCurrentThread();
-  const pendingRow = buildMessageRow(
-    pending,
-    conversationHistory.length - 1,
-    true,
-  );
-  const pendingContent = pendingRow.querySelector(".message-content");
-  pendingContent.innerHTML =
-    '<span class="spinner" aria-hidden="true"></span> Generating...';
-  log.appendChild(pendingRow);
-  scrollChatToBottom();
+  generationHistory.push(pending);
+  await clearThreadGenerationQueueFlag(threadId);
+  await persistThreadMessagesById(threadId, generationHistory);
+  let pendingRow = null;
+  if (isViewingThread(threadId)) {
+    pendingRow = buildMessageRow(
+      pending,
+      pendingIndex,
+      true,
+    );
+    const pendingContent = pendingRow.querySelector(".message-content");
+    pendingContent.innerHTML =
+      '<span class="spinner" aria-hidden="true"></span> Generating...';
+    log.appendChild(pendingRow);
+    scrollChatToBottom();
+  }
 
   state.sending = true;
+  state.activeGenerationThreadId = threadId;
   state.chatAutoScroll = true;
   state.abortController = new AbortController();
   setSendingState(true);
 
   try {
-    const promptContext = await buildSystemPrompt(currentCharacter, {
+    const promptContext = await buildSystemPrompt(generationCharacter, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
       returnTrace: true,
+      personaOverride: generationPersona,
+      historyOverride: generationHistory,
+      threadOverride: generationThreadSnapshot,
     });
     const systemPrompt = promptContext.prompt;
     const result = await callOpenRouter(
       systemPrompt,
-      conversationHistory,
+      generationHistory,
       state.settings.model,
       (chunk) => {
         pending.content += chunk;
-        pendingRow.querySelector(".message-content").innerHTML =
-          renderMessageHtml(pending.content, pending.role);
-        if (state.settings.streamEnabled) {
-          persistCurrentThread().catch(() => {});
+        if (pendingRow && isViewingThread(threadId)) {
+          pendingRow.querySelector(".message-content").innerHTML =
+            renderMessageHtml(pending.content, pending.role);
         }
-        scrollChatToBottom();
+        if (state.settings.streamEnabled) {
+          persistThreadMessagesById(threadId, generationHistory).catch(() => {});
+        }
+        if (isViewingThread(threadId)) scrollChatToBottom();
       },
       state.abortController.signal,
     );
@@ -5265,23 +5353,32 @@ async function generateBotReply() {
       : [];
     pending.usedMemorySummary = String(promptContext.memory || "");
     pending.generationError = "";
-    renderMessageContent(pendingRow.querySelector(".message-content"), pending);
-    pendingRow.dataset.streaming = "0";
-    refreshAllSpeakerButtons();
-    commitPendingPersonaInjectionMarker();
-    await persistCurrentThread();
-    maybeAutoSpeakAssistantMessage(conversationHistory.length - 1).catch(
-      () => {},
-    );
-    await maybeGenerateThreadTitle();
-    scrollChatToBottom();
+    if (pendingRow && isViewingThread(threadId)) {
+      renderMessageContent(pendingRow.querySelector(".message-content"), pending);
+      pendingRow.dataset.streaming = "0";
+      refreshAllSpeakerButtons();
+    }
+    if (currentThread && Number(currentThread.id) === threadId) {
+      commitPendingPersonaInjectionMarker();
+    } else {
+      state.pendingPersonaInjectionPersonaId = null;
+    }
+    await persistThreadMessagesById(threadId, generationHistory);
+    if (isViewingThread(threadId)) {
+      maybeAutoSpeakAssistantMessage(pendingIndex).catch(
+        () => {},
+      );
+      await maybeGenerateThreadTitle();
+      scrollChatToBottom();
+    }
 
     if (
-      currentCharacter.useMemory !== false &&
-      conversationHistory.length > 0 &&
-      conversationHistory.length % 20 === 0
+      generationCharacter.useMemory !== false &&
+      generationHistory.length > 0 &&
+      generationHistory.length % 20 === 0 &&
+      isViewingThread(threadId)
     ) {
-      await summarizeMemory(currentCharacter);
+      await summarizeMemory(generationCharacter);
     }
 
     await renderThreads();
@@ -5289,15 +5386,17 @@ async function generateBotReply() {
     state.pendingPersonaInjectionPersonaId = null;
     if (isAbortError(e)) {
       if (!pending.content.trim()) {
-        const idx = conversationHistory.lastIndexOf(pending);
-        if (idx >= 0) conversationHistory.splice(idx, 1);
-        pendingRow.remove();
+        const idx = generationHistory.lastIndexOf(pending);
+        if (idx >= 0) generationHistory.splice(idx, 1);
+        if (pendingRow) pendingRow.remove();
       } else {
-        renderMessageContent(pendingRow.querySelector(".message-content"), pending);
-        pendingRow.dataset.streaming = "0";
-        refreshAllSpeakerButtons();
+        if (pendingRow && isViewingThread(threadId)) {
+          renderMessageContent(pendingRow.querySelector(".message-content"), pending);
+          pendingRow.dataset.streaming = "0";
+          refreshAllSpeakerButtons();
+        }
       }
-      await persistCurrentThread();
+      await persistThreadMessagesById(threadId, generationHistory);
       await renderThreads();
       showToast(t("generationCancelled"), "success");
     } else {
@@ -5305,14 +5404,16 @@ async function generateBotReply() {
       if (!String(pending.content || "").trim()) {
         pending.content = "";
       }
-      pendingRow.dataset.streaming = "0";
-      renderMessageContent(
-        pendingRow.querySelector(".message-content"),
-        pending,
-      );
-      refreshAllSpeakerButtons();
-      refreshMessageControlStates();
-      await persistCurrentThread();
+      if (pendingRow && isViewingThread(threadId)) {
+        pendingRow.dataset.streaming = "0";
+        renderMessageContent(
+          pendingRow.querySelector(".message-content"),
+          pending,
+        );
+        refreshAllSpeakerButtons();
+        refreshMessageControlStates();
+      }
+      await persistThreadMessagesById(threadId, generationHistory);
       await renderThreads();
       showToast(t("generationFailed"), "error");
     }
@@ -5320,7 +5421,9 @@ async function generateBotReply() {
     state.pendingPersonaInjectionPersonaId = null;
     state.abortController = null;
     state.sending = false;
+    state.activeGenerationThreadId = null;
     setSendingState(false);
+    await tryStartQueuedGenerationForCurrentThread();
   }
 }
 
@@ -6402,6 +6505,96 @@ function cancelOngoingGeneration() {
   state.abortController.abort();
 }
 
+function isViewingThread(threadId) {
+  return (
+    !!currentThread &&
+    Number(currentThread.id) === Number(threadId) &&
+    document.getElementById("chat-view")?.classList.contains("active")
+  );
+}
+
+async function persistThreadMessagesById(threadId, messages, extra = {}) {
+  const updated = {
+    messages: Array.isArray(messages) ? messages : [],
+    updatedAt: Date.now(),
+    ...extra,
+  };
+  await db.threads.update(threadId, updated);
+  if (currentThread && Number(currentThread.id) === Number(threadId)) {
+    currentThread = { ...currentThread, ...updated };
+    conversationHistory = updated.messages;
+    state.lastSyncSeenUpdatedAt = Number(updated.updatedAt || 0);
+  }
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId,
+    updatedAt: updated.updatedAt,
+  });
+}
+
+async function enqueueThreadGeneration(threadId, reason = "busy") {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return;
+  if (!state.generationQueue.includes(id)) {
+    state.generationQueue.push(id);
+  }
+  const queuedAt = Date.now();
+  await db.threads.update(id, {
+    pendingGenerationReason: reason,
+    pendingGenerationQueuedAt: queuedAt,
+    updatedAt: queuedAt,
+  });
+  if (currentThread && Number(currentThread.id) === id) {
+    currentThread.pendingGenerationReason = reason;
+    currentThread.pendingGenerationQueuedAt = queuedAt;
+    currentThread.updatedAt = queuedAt;
+    renderChat();
+  }
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: id,
+    updatedAt: queuedAt,
+  });
+  await renderThreads();
+  const position = state.generationQueue.indexOf(id) + 1;
+  if (position > 0) {
+    showToast(tf("generationQueuedToast", { position }), "success");
+  }
+}
+
+async function clearThreadGenerationQueueFlag(threadId) {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return;
+  state.generationQueue = state.generationQueue.filter((x) => Number(x) !== id);
+  const updatedAt = Date.now();
+  await db.threads.update(id, {
+    pendingGenerationReason: "",
+    pendingGenerationQueuedAt: 0,
+    updatedAt,
+  });
+  if (currentThread && Number(currentThread.id) === id) {
+    currentThread.pendingGenerationReason = "";
+    currentThread.pendingGenerationQueuedAt = 0;
+    currentThread.updatedAt = updatedAt;
+    renderChat();
+  }
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: id,
+    updatedAt,
+  });
+}
+
+async function tryStartQueuedGenerationForCurrentThread() {
+  if (state.sending || !currentThread) return;
+  const threadId = Number(currentThread.id);
+  if (!state.generationQueue.includes(threadId)) return;
+  const head = Number(state.generationQueue[0]);
+  if (head !== threadId) return;
+  await clearThreadGenerationQueueFlag(threadId);
+  await generateBotReply();
+}
+
 async function persistCurrentThread() {
   if (!currentThread) return;
 
@@ -6549,7 +6742,7 @@ async function migrateLegacySessions() {
 
 async function buildSystemPrompt(character, options = {}) {
   const defaultPersona = await getCharacterDefaultPersona(character);
-  const personaForContext = currentPersona || defaultPersona;
+  const personaForContext = options?.personaOverride || currentPersona || defaultPersona;
   const basePromptRaw = (
     character.systemPrompt ||
     state.settings.globalPromptTemplate ||
@@ -6571,13 +6764,19 @@ async function buildSystemPrompt(character, options = {}) {
     .filter((part) => String(part || "").trim())
     .join("\n\n")
     .trim();
-  const loreEntries = await getCharacterLoreEntries(character);
+  const loreEntries = await getCharacterLoreEntries(character, {
+    historyOverride: options?.historyOverride,
+    personaOverride: personaForContext,
+  });
   const memory =
     character.useMemory === false ? null : await getMemorySummary(character.id);
   const contextSections = [];
   state.pendingPersonaInjectionPersonaId = null;
   let systemPromptWithPersona = promptBeforePersona;
-  if (personaForContext && shouldInjectPersonaContext(personaForContext)) {
+  if (
+    personaForContext &&
+    shouldInjectPersonaContext(personaForContext, options?.threadOverride || null)
+  ) {
     const personaInjected = renderPersonaInjectionContent(personaForContext);
     systemPromptWithPersona = applyPersonaInjectionPlacement(
       promptBeforePersona,
@@ -6627,7 +6826,7 @@ async function openMessageContextModal(index) {
   pre.textContent = JSON.stringify(view, null, 2);
 }
 
-function shouldInjectPersonaContext(persona) {
+function shouldInjectPersonaContext(persona, threadOverride = null) {
   if (!persona) return false;
   const mode =
     state.settings.personaInjectionWhen === "on_change"
@@ -6635,7 +6834,8 @@ function shouldInjectPersonaContext(persona) {
       : "always";
   if (mode === "always") return true;
   const currentPersonaId = Number(persona.id);
-  const lastInjected = Number(currentThread?.lastPersonaInjectionPersonaId);
+  const sourceThread = threadOverride || currentThread;
+  const lastInjected = Number(sourceThread?.lastPersonaInjectionPersonaId);
   if (!Number.isInteger(lastInjected)) return true;
   return lastInjected !== currentPersonaId;
 }
@@ -6707,7 +6907,7 @@ function takeLoreEntriesByTokenBudget(entries, tokenBudget) {
   return picked;
 }
 
-async function getCharacterLoreEntries(character) {
+async function getCharacterLoreEntries(character, options = {}) {
   const loreIds = Array.isArray(character.lorebookIds)
     ? character.lorebookIds.map(Number).filter(Number.isInteger)
     : [];
@@ -6720,10 +6920,14 @@ async function getCharacterLoreEntries(character) {
     5,
     ...lorebooks.map((lb) => Math.max(5, Number(lb.scanDepth) || 50)),
   );
-  const recent = conversationHistory.slice(-scanWindow);
+  const historySource = Array.isArray(options?.historyOverride)
+    ? options.historyOverride
+    : conversationHistory;
+  const recent = historySource.slice(-scanWindow);
   const baseSource = recent.map((m) => String(m.content || "")).join("\n").toLowerCase();
   const defaultPersona = await getCharacterDefaultPersona(character);
-  const personaName = currentPersona?.name || defaultPersona?.name || "You";
+  const personaName =
+    options?.personaOverride?.name || currentPersona?.name || defaultPersona?.name || "You";
   const charName = character?.name || "Character";
   const results = [];
 
@@ -7274,13 +7478,12 @@ async function updateThreadBudgetIndicator() {
     pill.classList.add("warn");
   }
   const contextText = contextWindow > 0 ? String(contextWindow) : "unknown";
-  pill.title =
-    `Estimated effective output budget for this thread.\n` +
-    `User max: ${userMax}\n` +
-    `Model context: ${contextText}\n` +
-    `Estimated prompt tokens: ${promptTokens}\n` +
-    `Safety margin: 256\n` +
-    `Effective max_tokens: ${effectiveMax}`;
+  pill.title = tf("threadBudgetTooltip", {
+    userMax,
+    contextText,
+    promptTokens,
+    effectiveMax,
+  });
 }
 
 function extractAssistantText(payload) {
