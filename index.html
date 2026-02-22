@@ -35,6 +35,7 @@
           <button class="option-btn" data-open-modal="lore-modal" title="Lore Books" aria-label="Lore Books">📚</button>
           <button class="option-btn" data-open-modal="shortcuts-modal" title="Shortcuts" aria-label="Shortcuts">⌨️</button>
           <button class="option-btn" data-open-modal="tags-modal" title="Tags" aria-label="Tags">🏷️</button>
+          <button class="option-btn" data-open-modal="database-modal" title="Database" aria-label="Database">🗄️</button>
         </div>
       </aside>
 
@@ -95,6 +96,7 @@
             aria-label="Rename thread"
           ></button>
           <div id="chat-model-pill" class="model-pill">Model: -</div>
+          <div id="chat-budget-pill" class="model-pill">Max out: -</div>
         </header>
 
         <div id="chat-log" class="chat-log"></div>
@@ -214,6 +216,39 @@
             Model
             <select id="model-select"></select>
           </label>
+          <div class="settings-inline-row model-filter-row">
+            <label>
+              Pricing
+              <select id="model-pricing-filter">
+                <option value="all">All</option>
+                <option value="free">Free</option>
+                <option value="paid">Paid</option>
+              </select>
+            </label>
+            <label>
+              Modality
+              <select id="model-modality-filter">
+                <option value="text-only">Text -&gt; Text</option>
+                <option value="all">All</option>
+              </select>
+            </label>
+            <label>
+              Order
+              <select id="model-sort-order">
+                <option value="name_asc">Name A-Z</option>
+                <option value="name_desc">Name Z-A</option>
+                <option value="created_desc">Created Newest</option>
+                <option value="created_asc">Created Oldest</option>
+              </select>
+            </label>
+            <button id="model-refresh-btn" class="secondary-btn" type="button">
+              Reload
+            </button>
+          </div>
+          <div id="model-selected-meta" class="muted"></div>
+          <div id="model-roleplay-warning" class="model-warning hidden">
+            This model is NOT recommended for roleplaying.
+          </div>
           <label>
             <div class="label-inline">
               <span>Max Tokens</span>
@@ -223,7 +258,7 @@
               id="max-tokens-slider"
               type="range"
               min="512"
-              max="16384"
+              max="8192"
               step="64"
             />
           </label>
@@ -291,10 +326,6 @@
               rows="8"
               placeholder='[{"pattern":"^«([\\s\\S]*)»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">«$1»</span>"}]'
             ></textarea>
-          </label>
-          <label class="checkbox-line">
-            <input type="checkbox" id="prefer-free-variant" />
-            Prefer `:free` model variant when available
           </label>
           <label>
             Cancel Generation Shortcut
@@ -450,6 +481,23 @@
             <textarea id="shortcuts-raw" rows="14"></textarea>
           </label>
           <button id="save-shortcuts-btn" class="primary-btn">Save Shortcuts</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="database-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="database-title">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="database-title">Database Management</h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <button id="export-db-btn" class="primary-btn" type="button">Export Database</button>
+          <button id="import-db-btn" class="secondary-btn" type="button">Import Database</button>
+          <input id="import-db-input" type="file" accept=".json,application/json" class="hidden" />
+          <p id="database-hint" class="muted">
+            Import will overwrite the current local data (characters, threads, settings, UI state, and more).
+          </p>
         </div>
       </div>
     </div>
