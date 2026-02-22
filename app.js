@@ -90,9 +90,9 @@ const DEFAULT_SETTINGS = {
   shortcutsRaw: "",
   tagsInitialized: false,
   customTags: [],
-  modelPricingFilter: "all",
+  modelPricingFilter: "free",
   modelModalityFilter: "text-only",
-  modelSortOrder: "name_asc",
+  modelSortOrder: "created_desc",
 };
 
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
@@ -123,6 +123,21 @@ const I18N = {
     autoReply: "Auto-reply",
     enterToSend: "ENTER to send",
     settingsTitle: "Settings",
+    togglePane: "Toggle pane",
+    clear: "Clear",
+    filterByTag: "Filter by tag",
+    characterOrdering: "Character ordering",
+    lastModifiedNewest: "Last Modified: Newest",
+    lastModifiedOldest: "Last Modified: Oldest",
+    threadsMost: "Threads: Most",
+    threadsLeast: "Threads: Least",
+    tagFiltersActive: "Tag filters active.",
+    editCurrentCharacter: "Edit current character",
+    scrollToBottom: "Scroll to bottom",
+    promptHistory: "Prompt history",
+    promptPlaceholder: "What do you say or do? Enter to send, Shift+Enter for newline",
+    selectedPersonaAvatar: "Persona avatar",
+    selectPersona: "Select persona",
     confirm: "Confirm",
     ok: "OK",
     message: "Message",
@@ -166,6 +181,165 @@ const I18N = {
     generationFailed: "Generation failed.",
     regenerationCancelled: "Regeneration cancelled.",
     messageCopied: "Message copied.",
+    missingFieldTitle: "Missing Field",
+    invalidFileTitle: "Invalid File",
+    pleaseChooseImageFile: "Please choose an image file.",
+    dropFailedTitle: "Drop Failed",
+    dropReadFailed: "Unable to read dropped file as text.",
+    loadedFileIntoField: "Loaded {name} into field.",
+    messageUpdated: "Message updated.",
+    openThreadFirst: "Open a thread first.",
+    ttsAssistantOnly: "TTS is only available for assistant messages.",
+    messageEmpty: "Message is empty.",
+    ttsFailed: "TTS failed: {error}",
+    ttsTestFailed: "TTS test failed: {error}",
+    personaSwitched: "Persona switched to {name}.",
+    personaDescriptionTitle: "Persona Description",
+    personaDescriptionLimit: "Persona description must be 100 words or less.",
+    noPersonasYet: "No personas yet.",
+    dragToReorder: "Drag to reorder",
+    defaultSuffix: "Default",
+    globalDefaultSuffix: "Global Default",
+    useGlobalDefault: "Use global default",
+    threadWord: "Thread",
+    threadTitleDefault: "Thread {id}",
+    threadTitleAtDate: "Thread {date}",
+    createdAtLabel: "Created: {value}",
+    updatedAtLabel: "Updated: {value}",
+    characterIdThreadCount: "char #{id} - {count} threads",
+    less: "less",
+    more: "more...",
+    noTagsMatched: "No characters match the active tag filters.",
+    noCharactersStart: "No characters yet. Create one to begin.",
+    selectAllThreads: "Select all threads",
+    selectThread: "Select thread",
+    deleteSelectedThreads: "Delete selected threads",
+    deleteThreadsTitle: "Delete Threads",
+    deleteSelectedThreadsConfirm: "Delete {count} selected thread{suffix}?",
+    deletedThreadsToast: "{count} thread{suffix} deleted.",
+    editThreadCharacter: "Edit thread character",
+    deleteThreadAria: "Delete thread",
+    duplicateThreadAria: "Duplicate thread",
+    favoriteThread: "Favorite thread",
+    unfavoriteThread: "Unfavorite thread",
+    renameThreadAria: "Rename thread",
+    deleteCharacterAria: "Delete character",
+    duplicateCharacterAria: "Duplicate character",
+    editCharacterAria: "Edit character",
+    exportCharacterAria: "Export character",
+    deletePersonaTitle: "Delete Persona",
+    deletePersonaConfirm: "Delete this persona?",
+    editPersonaAria: "Edit persona",
+    deleteLoreBookTitle: "Delete Lore Book",
+    deleteThreadTitle: "Delete Thread",
+    deleteThreadConfirm: "Delete this thread?",
+    editLoreBookAria: "Edit lore book",
+    deleteLoreBookAria: "Delete lore book",
+    invalidLoreBookTitle: "Invalid Lore Book",
+    invalidLoreEntryTitle: "Invalid Lore Entry",
+    loreAtLeastOneEntry: "At least one lore entry is required.",
+    invalidInitialMessagesTitle: "Invalid Initial Messages",
+    invalidInitialMessagesMessage: "Could not parse initial messages.",
+    characterNameRequired: "Character name is required.",
+    personaNameRequired: "Persona name is required.",
+    threadTitleRequired: "Thread title is required.",
+    renameThreadTitle: "Rename Thread",
+    threadTitleLabel: "Thread Title",
+    updatePersona: "Update Persona",
+    regenerateFailedTitle: "Regenerate Failed",
+    copyFailedTitle: "Copy Failed",
+    copyFailedMessage: "Unable to copy message.",
+    autoTtsEnabled: "Auto TTS enabled.",
+    autoTtsDisabled: "Auto TTS disabled.",
+    autoTtsTitleOn: "Auto TTS: On",
+    autoTtsTitleOff: "Auto TTS: Off",
+    enableAutoTtsAria: "Enable auto TTS",
+    disableAutoTtsAria: "Disable auto TTS",
+    threadBudgetUnavailable: "Thread budget unavailable.",
+    openRouterApiKey: "OpenRouter API Key",
+    modelLabel: "Model",
+    pricingLabel: "Pricing",
+    modalityLabel: "Modality",
+    orderLabel: "Order",
+    all: "All",
+    free: "Free",
+    paid: "Paid",
+    textToText: "Text -> Text",
+    nameAsc: "Name A-Z",
+    nameDesc: "Name Z-A",
+    createdNewest: "Created Newest",
+    createdOldest: "Created Oldest",
+    reload: "Reload",
+    modelNotRecommendedRoleplay: "This model is NOT recommended for roleplaying.",
+    maxTokensLabel: "Max Tokens",
+    temperatureLabel: "Temperature",
+    ttsTestTextLabel: "TTS Test Text",
+    playTtsTest: "Play TTS Test",
+    renderMarkdown: "Render Markdown in messages",
+    allowRawHtml: "Allow raw HTML in messages",
+    streamMessages: "Stream Messages",
+    autoPairSymbols: "Auto-pair editor symbols",
+    markdownCustomCss: "Markdown Custom CSS",
+    postprocessRules: "Post-processing Rules (JSON)",
+    cancelGenerationShortcut: "Cancel Generation Shortcut",
+    goHomeShortcut: "Go Home Shortcut",
+    newCharacterShortcut: "New Character Shortcut",
+    defaultCharacterPrompt: "Default Character Prompt",
+    memorySummarizerPrompt: "Memory Summarizer System Prompt",
+    personaInjectionTemplate: "Persona Injection Template",
+    personaInjectionTiming: "Persona Injection Timing",
+    always: "Always",
+    onPersonaChange: "On Persona Change (first message always injects)",
+    nameLabel: "Name",
+    avatarUrl: "Avatar URL",
+    avatarFile: "Avatar File",
+    personaDescription: "Description (max 100 words)",
+    setDefaultPersona: "Set as default persona",
+    savePersona: "Save Persona",
+    loreBookManagement: "Lore Book Management",
+    createLoreBook: "+ Create Lore Book",
+    importLoreBook: "↥ Import Lore Book",
+    backToList: "← Back to List",
+    avatarUrlOptional: "Avatar URL (optional)",
+    descriptionOptional: "Description (optional)",
+    scanDepth: "Scan Depth",
+    tokenBudget: "Token Budget",
+    recursiveScanning: "Recursive Scanning",
+    addEntry: "+ Add Entry",
+    saveLoreBook: "Save Lore Book",
+    shortcutEntries: "Shortcut Entries",
+    saveShortcuts: "Save Shortcuts",
+    tagManager: "Tag Manager",
+    customTagsOnePerLine: "Custom tags (one per line)",
+    predefinedTagsHint: "Predefined tags are always available. Add your own tags here.",
+    saveTags: "Save Tags",
+    createCharacterTitle: "Create Character",
+    editCharacterTitle: "Edit Character",
+    characterPrompt: "Character Prompt",
+    defaultPersonaOverride: "Default User Persona Override (Character-only)",
+    oneTimeExtraPrompt: "One-time only Extra System/Character Prompt",
+    writingInstructions: "Writing Instructions",
+    initialMessages: "Initial Messages",
+    tagsCommaSeparated: "Tags (comma-separated)",
+    personaInjectionPlacement: "Persona Injection Placement",
+    atEndCharacterPrompt: "At End of Character Prompt",
+    enableMemory: "Enable Memory",
+    enablePostprocess: "Enable Post-processing Rules",
+    autoTriggerAiFirst: "Auto-trigger AI first message",
+    avatarScaleInChat: "Avatar Scale (In Chat)",
+    ttsLanguage: "TTS Language",
+    ttsVoice: "TTS Voice",
+    ttsRate: "TTS Rate",
+    ttsPitch: "TTS Pitch",
+    testCharacterVoice: "Test Character Voice",
+    loreBooksForCharacter: "Lore Books for this character",
+    createdLabel: "Created",
+    updatedLabel: "Updated",
+    threadsLower: "threads",
+    charPrefix: "char",
+    noCharactersMatchTags: "No characters match the active tag filters.",
+    noCharactersYet: "No characters yet. Create one to begin.",
+    noThreadsYet: "No threads yet.",
     languageLabel: "Interface Language",
     languageAuto: "Auto (browser)",
     languageEnglish: "English",
@@ -548,6 +722,7 @@ function updateCheckboxLabelText(inputId, text) {
 async function applyInterfaceLanguage() {
   state.i18nLang = resolveInterfaceLanguage();
   await loadLocaleBundle(state.i18nLang);
+  applyDataI18n();
 
   const createBtn = document.getElementById("create-character-btn");
   if (createBtn && !document.getElementById("left-pane")?.classList.contains("collapsed")) {
@@ -614,28 +789,6 @@ async function applyInterfaceLanguage() {
   if (dbImport) dbImport.textContent = t("importDatabase");
   const dbHint = document.getElementById("database-hint");
   if (dbHint) dbHint.textContent = t("databaseHint");
-  const uiLangSelect = document.getElementById("ui-language-select");
-  const uiLangLabel = uiLangSelect?.closest("label");
-  const labelNodes = uiLangLabel
-    ? Array.from(uiLangLabel.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE)
-    : [];
-  if (labelNodes.length > 0) labelNodes[0].nodeValue = `${t("languageLabel")}\n            `;
-  if (uiLangSelect) {
-    const oAuto = uiLangSelect.querySelector('option[value="auto"]');
-    const oEn = uiLangSelect.querySelector('option[value="en"]');
-    const oFr = uiLangSelect.querySelector('option[value="fr"]');
-    const oIt = uiLangSelect.querySelector('option[value="it"]');
-    const oDe = uiLangSelect.querySelector('option[value="de"]');
-    const oEs = uiLangSelect.querySelector('option[value="es"]');
-    const oPt = uiLangSelect.querySelector('option[value="pt-BR"]');
-    if (oAuto) oAuto.textContent = t("languageAuto");
-    if (oEn) oEn.textContent = t("languageEnglish");
-    if (oFr) oFr.textContent = t("languageFrench");
-    if (oIt) oIt.textContent = t("languageItalian");
-    if (oDe) oDe.textContent = t("languageGerman");
-    if (oEs) oEs.textContent = t("languageSpanish");
-    if (oPt) oPt.textContent = t("languagePortugueseBr");
-  }
 }
 
 function setupEvents() {
@@ -948,6 +1101,26 @@ function setupEvents() {
   ]);
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 128);
+}
+
+function applyDataI18n() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (!key) return;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (!key) return;
+    el.setAttribute("placeholder", t(key));
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-title");
+    if (!key) return;
+    const value = t(key);
+    el.setAttribute("title", value);
+    el.setAttribute("aria-label", value);
+  });
 }
 
 function updateNameLengthCounter(inputId, counterId, maxLen = 128) {
@@ -1626,22 +1799,19 @@ async function setupSettingsControls() {
   modelPricingFilter?.addEventListener("change", () => {
     state.settings.modelPricingFilter = modelPricingFilter.value;
     saveSettings();
-    renderSettingsModelOptions();
-    refreshSelectedModelMeta(modelSelectedMeta);
+    populateSettingsModels({ force: true }).catch(() => {});
   });
 
   modelModalityFilter?.addEventListener("change", () => {
     state.settings.modelModalityFilter = modelModalityFilter.value;
     saveSettings();
-    renderSettingsModelOptions();
-    refreshSelectedModelMeta(modelSelectedMeta);
+    populateSettingsModels({ force: true }).catch(() => {});
   });
 
   modelSortOrder?.addEventListener("change", () => {
     state.settings.modelSortOrder = modelSortOrder.value;
     saveSettings();
-    renderSettingsModelOptions();
-    refreshSelectedModelMeta(modelSelectedMeta);
+    populateSettingsModels({ force: true }).catch(() => {});
   });
 
   modelRefreshBtn?.addEventListener("click", () => {
@@ -2307,8 +2477,8 @@ async function renderCharacters() {
     empty.className = "muted";
     empty.textContent =
       activeFilters.length > 0
-        ? "No characters match the active tag filters."
-        : "No characters yet. Create one to begin.";
+        ? t("noTagsMatched")
+        : t("noCharactersStart");
     grid.appendChild(empty);
     return;
   }
@@ -2331,11 +2501,14 @@ async function renderCharacters() {
 
     const id = document.createElement("p");
     id.className = "character-id";
-    id.textContent = `char #${char.id} - ${threadCountByCharId.get(Number(char.id)) || 0} threads`;
+    id.textContent = tf("characterIdThreadCount", {
+      id: char.id,
+      count: threadCountByCharId.get(Number(char.id)) || 0,
+    });
 
     const dates = document.createElement("p");
     dates.className = "character-dates";
-    dates.textContent = `Created: ${formatDateTime(char.createdAt)}\nUpdated: ${formatDateTime(char.updatedAt)}`;
+    dates.textContent = `${tf("createdAtLabel", { value: formatDateTime(char.createdAt) })}\n${tf("updatedAtLabel", { value: formatDateTime(char.updatedAt) })}`;
 
     const tags = Array.isArray(char.tags)
       ? char.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
@@ -2375,7 +2548,7 @@ async function renderCharacters() {
       const more = document.createElement("button");
       more.type = "button";
       more.className = "tag-more-btn";
-      more.textContent = expanded ? "less" : "more...";
+      more.textContent = expanded ? t("less") : t("more");
       more.addEventListener("click", (e) => {
         e.stopPropagation();
         if (expanded) state.expandedCharacterTagIds.delete(Number(char.id));
@@ -2388,7 +2561,7 @@ async function renderCharacters() {
     const actions = document.createElement("div");
     actions.className = "card-actions";
 
-    const deleteCharBtn = iconButton("delete", "Delete character", async (e) => {
+    const deleteCharBtn = iconButton("delete", t("deleteCharacterAria"), async (e) => {
       e.stopPropagation();
       await deleteCharacter(char.id);
     });
@@ -2396,21 +2569,21 @@ async function renderCharacters() {
     actions.appendChild(deleteCharBtn);
 
     actions.appendChild(
-      iconButton("duplicate", "Duplicate character", async (e) => {
+      iconButton("duplicate", t("duplicateCharacterAria"), async (e) => {
         e.stopPropagation();
         await duplicateCharacter(char.id);
       }),
     );
 
     actions.appendChild(
-      iconButton("edit", "Edit character", (e) => {
+      iconButton("edit", t("editCharacterAria"), (e) => {
         e.stopPropagation();
         openCharacterModal(char);
       }),
     );
 
     actions.appendChild(
-      iconButton("export", "Export character", async (e) => {
+      iconButton("export", t("exportCharacterAria"), async (e) => {
         e.stopPropagation();
         await exportCharacter(char.id);
       }),
@@ -2444,7 +2617,7 @@ async function renderThreads() {
   if (threads.length === 0) {
     const empty = document.createElement("p");
     empty.className = "muted";
-    empty.textContent = "No threads yet.";
+    empty.textContent = t("noThreadsYet");
     list.appendChild(empty);
     return;
   }
@@ -2455,7 +2628,7 @@ async function renderThreads() {
   const selectAll = document.createElement("input");
   selectAll.type = "checkbox";
   selectAll.className = "thread-select thread-select-all thread-bulk-select";
-  selectAll.title = "Select all threads";
+  selectAll.title = t("selectAllThreads");
   selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
   selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
   selectAll.addEventListener("change", () => {
@@ -2466,7 +2639,7 @@ async function renderThreads() {
     }
     renderThreads();
   });
-  const deleteSelectedBtn = iconButton("delete", "Delete selected threads", async () => {
+  const deleteSelectedBtn = iconButton("delete", t("deleteSelectedThreads"), async () => {
     await deleteSelectedThreads();
   });
   deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
@@ -2501,7 +2674,7 @@ async function renderThreads() {
     selectBox.type = "checkbox";
     selectBox.className = "thread-select";
     selectBox.checked = state.selectedThreadIds.has(Number(thread.id));
-    selectBox.title = "Select thread";
+    selectBox.title = t("selectThread");
     selectBox.addEventListener("click", (e) => e.stopPropagation());
     selectBox.addEventListener("change", () => {
       if (selectBox.checked) state.selectedThreadIds.add(Number(thread.id));
@@ -2512,7 +2685,7 @@ async function renderThreads() {
     const avatar = document.createElement("img");
     avatar.className = "thread-avatar";
     avatar.src =
-      char?.avatar || fallbackAvatar(char?.name || "Thread", 512, 512);
+      char?.avatar || fallbackAvatar(char?.name || t("threadWord"), 512, 512);
     avatar.alt = "thread avatar";
 
     const info = document.createElement("div");
@@ -2524,15 +2697,15 @@ async function renderThreads() {
 
     const titleBtn = document.createElement("button");
     titleBtn.className = "thread-title";
-    titleBtn.textContent = thread.title || `Thread ${thread.id}`;
-    titleBtn.title = thread.title || `Thread ${thread.id}`;
+    titleBtn.textContent = thread.title || tf("threadTitleDefault", { id: thread.id });
+    titleBtn.title = thread.title || tf("threadTitleDefault", { id: thread.id });
     titleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       openThread(thread.id);
     });
     const titleRow = document.createElement("div");
     titleRow.className = "thread-title-row";
-    const renameMiniBtn = iconButton("edit", "Rename thread", async (e) => {
+    const renameMiniBtn = iconButton("edit", t("renameThreadAria"), async (e) => {
       e.stopPropagation();
       await renameThread(thread.id);
     });
@@ -2544,7 +2717,7 @@ async function renderThreads() {
     const actions = document.createElement("div");
     actions.className = "actions";
 
-    const deleteThreadBtn = iconButton("delete", "Delete thread", async (e) => {
+    const deleteThreadBtn = iconButton("delete", t("deleteThreadAria"), async (e) => {
       e.stopPropagation();
       await deleteThread(thread.id);
     });
@@ -2553,7 +2726,7 @@ async function renderThreads() {
 
     if (char) {
       actions.appendChild(
-        iconButton("edit", "Edit thread character", async (e) => {
+        iconButton("edit", t("editThreadCharacter"), async (e) => {
           e.stopPropagation();
           const latestCharacter = await db.characters.get(char.id);
           if (latestCharacter) openCharacterModal(latestCharacter);
@@ -2562,14 +2735,14 @@ async function renderThreads() {
     }
 
     actions.appendChild(
-      iconButton("duplicate", "Duplicate thread", async (e) => {
+      iconButton("duplicate", t("duplicateThreadAria"), async (e) => {
         e.stopPropagation();
         await duplicateThread(thread.id);
       }),
     );
     const favBtn = iconButton(
       thread.favorite ? "starFilled" : "star",
-      thread.favorite ? "Unfavorite thread" : "Favorite thread",
+      thread.favorite ? t("unfavoriteThread") : t("favoriteThread"),
       async (e) => {
         e.stopPropagation();
         await toggleThreadFavorite(thread.id);
@@ -2590,9 +2763,10 @@ async function deleteSelectedThreads() {
     .map(Number)
     .filter(Number.isInteger);
   if (ids.length === 0) return;
+  const suffix = ids.length === 1 ? "" : "s";
   const ok = await openConfirmDialog(
-    "Delete Threads",
-    `Delete ${ids.length} selected thread${ids.length === 1 ? "" : "s"}?`,
+    t("deleteThreadsTitle"),
+    tf("deleteSelectedThreadsConfirm", { count: ids.length, suffix }),
   );
   if (!ok) return;
 
@@ -2615,10 +2789,7 @@ async function deleteSelectedThreads() {
   state.selectedThreadIds.clear();
   await renderThreads();
   await renderCharacters();
-  showToast(
-    `${ids.length} thread${ids.length === 1 ? "" : "s"} deleted.`,
-    "success",
-  );
+  showToast(tf("deletedThreadsToast", { count: ids.length, suffix }), "success");
 }
 
 function iconButton(iconKey, ariaLabel, handler) {
@@ -2725,7 +2896,7 @@ async function openCharacterModal(character = null) {
   state.charModalTtsTestPlaying = false;
   state.editingCharacterId = character?.id || null;
   document.getElementById("character-title").textContent =
-    state.editingCharacterId ? "Edit Character" : "Create Character";
+    state.editingCharacterId ? t("editCharacterTitle") : t("createCharacterTitle");
 
   document.getElementById("char-name").value = character?.name || "";
   updateNameLengthCounter("char-name", "char-name-count", 128);
@@ -2795,8 +2966,8 @@ async function saveCharacterFromModal() {
     );
   } catch (err) {
     await openInfoDialog(
-      "Invalid Initial Messages",
-      String(err?.message || "Could not parse initial messages."),
+      t("invalidInitialMessagesTitle"),
+      String(err?.message || t("invalidInitialMessagesMessage")),
     );
     return;
   }
@@ -2835,7 +3006,7 @@ async function saveCharacterFromModal() {
   };
 
   if (!payload.name) {
-    await openInfoDialog("Missing Field", "Character name is required.");
+    await openInfoDialog(t("missingFieldTitle"), t("characterNameRequired"));
     return;
   }
 
@@ -2971,7 +3142,7 @@ async function renderPersonaSelector() {
   personas.forEach((persona) => {
     const opt = document.createElement("option");
     opt.value = String(persona.id);
-    opt.textContent = `${persona.name || `Persona ${persona.id}`}${persona.isDefault ? " (Default)" : ""}`;
+    opt.textContent = `${persona.name || `Persona ${persona.id}`}${persona.isDefault ? ` (${t("defaultSuffix")})` : ""}`;
     select.appendChild(opt);
   });
 
@@ -3019,7 +3190,10 @@ async function onPersonaSelectChange() {
     threadId: currentThread.id,
     updatedAt,
   });
-  showToast(`Persona switched to ${currentPersona?.name || "You"}.`, "success");
+  showToast(
+    tf("personaSwitched", { name: currentPersona?.name || "You" }),
+    "success",
+  );
 }
 
 function updatePersonaPickerDisplay() {
@@ -3040,13 +3214,13 @@ async function savePersonaFromModal() {
   const wantsDefault = document.getElementById("persona-is-default").checked;
 
   if (!name) {
-    await openInfoDialog("Missing Field", "Persona name is required.");
+    await openInfoDialog(t("missingFieldTitle"), t("personaNameRequired"));
     return;
   }
   if (countWords(description) > 100) {
     await openInfoDialog(
-      "Persona Description",
-      "Persona description must be 100 words or less.",
+      t("personaDescriptionTitle"),
+      t("personaDescriptionLimit"),
     );
     return;
   }
@@ -3086,7 +3260,7 @@ async function savePersonaFromModal() {
   document.getElementById("persona-description").value = "";
   document.getElementById("persona-is-default").checked = false;
   state.editingPersonaId = null;
-  document.getElementById("save-persona-btn").textContent = "Save Persona";
+  document.getElementById("save-persona-btn").textContent = t("savePersona");
   state.modalDirty["personas-modal"] = false;
 
   await ensurePersonasInitialized();
@@ -3108,7 +3282,7 @@ async function renderPersonaModalList() {
   if (personas.length === 0) {
     const empty = document.createElement("p");
     empty.className = "muted";
-    empty.textContent = "No personas yet.";
+    empty.textContent = t("noPersonasYet");
     list.appendChild(empty);
     return;
   }
@@ -3126,7 +3300,7 @@ async function renderPersonaModalList() {
     const drag = document.createElement("span");
     drag.className = "persona-drag";
     drag.textContent = ":::";
-    drag.title = "Drag to reorder";
+    drag.title = t("dragToReorder");
 
     const avatar = document.createElement("img");
     avatar.className = "thread-avatar";
@@ -3143,7 +3317,7 @@ async function renderPersonaModalList() {
     info.className = "thread-info";
     const title = document.createElement("div");
     title.className = "thread-title";
-    title.textContent = `${persona.name}${persona.isDefault ? " (Default)" : ""}`;
+    title.textContent = `${persona.name}${persona.isDefault ? ` (${t("defaultSuffix")})` : ""}`;
     const desc = document.createElement("div");
     desc.className = "thread-meta";
     desc.textContent = persona.description || "";
@@ -3153,18 +3327,18 @@ async function renderPersonaModalList() {
     actions.className = "actions";
     if (!persona.isDefault) {
       actions.appendChild(
-        iconButton("badge", "Set default persona", async () => {
+        iconButton("badge", t("setDefaultPersona"), async () => {
           await setDefaultPersona(persona.id);
         }),
       );
     }
     actions.appendChild(
-      iconButton("regenerate", "Edit persona", async () => {
+      iconButton("regenerate", t("editPersonaAria"), async () => {
         loadPersonaForEditing(persona);
       }),
     );
     actions.appendChild(
-      iconButton("delete", "Delete persona", async () => {
+      iconButton("delete", t("deletePersonaTitle"), async () => {
         await deletePersona(persona.id);
       }),
     );
@@ -3175,7 +3349,7 @@ async function renderPersonaModalList() {
 }
 
 async function deletePersona(personaId) {
-  const ok = await openConfirmDialog("Delete Persona", "Delete this persona?");
+  const ok = await openConfirmDialog(t("deletePersonaTitle"), t("deletePersonaConfirm"));
   if (!ok) return;
   const persona = await db.personas.get(personaId);
   await db.personas.delete(personaId);
@@ -3218,7 +3392,7 @@ function loadPersonaForEditing(persona) {
   document.getElementById("persona-description").value =
     persona.description || "";
   document.getElementById("persona-is-default").checked = !!persona.isDefault;
-  document.getElementById("save-persona-btn").textContent = "Update Persona";
+  document.getElementById("save-persona-btn").textContent = t("updatePersona");
 }
 
 async function getOrderedPersonas() {
@@ -3253,12 +3427,12 @@ async function populateCharDefaultPersonaOverrideSelect(selectedId = null) {
   select.innerHTML = "";
   const defaultOpt = document.createElement("option");
   defaultOpt.value = "";
-  defaultOpt.textContent = "Use global default";
+  defaultOpt.textContent = t("useGlobalDefault");
   select.appendChild(defaultOpt);
   personas.forEach((persona) => {
     const opt = document.createElement("option");
     opt.value = String(persona.id);
-    opt.textContent = `${persona.name || `Persona ${persona.id}`}${persona.isDefault ? " (Global Default)" : ""}`;
+    opt.textContent = `${persona.name || `Persona ${persona.id}`}${persona.isDefault ? ` (${t("globalDefaultSuffix")})` : ""}`;
     select.appendChild(opt);
   });
   const targetId = Number(selectedId);
@@ -3366,7 +3540,7 @@ function onPersonaAvatarFileChange(e) {
   const file = e.target.files?.[0];
   if (!file) return;
   if (!file.type.startsWith("image/")) {
-    openInfoDialog("Invalid File", "Please choose an image file.");
+    openInfoDialog(t("invalidFileTitle"), t("pleaseChooseImageFile"));
     e.target.value = "";
     return;
   }
@@ -3644,7 +3818,7 @@ async function renderLorebookManagementList() {
     });
     exportBtn.disabled = true;
     actions.appendChild(exportBtn);
-    const deleteBtn = iconButton("delete", "Delete lore book", async () => {
+    const deleteBtn = iconButton("delete", t("deleteLoreBookAria"), async () => {
       await deleteLorebook(lorebook.id);
     });
     deleteBtn.classList.add("danger-icon-btn");
@@ -3695,7 +3869,7 @@ async function collectLorebookFromEditor() {
     .filter((entry) => entry.keys.length > 0 || entry.content.length > 0);
 
   if (entries.length === 0) {
-    await openInfoDialog("Invalid Lore Book", "At least one lore entry is required.");
+    await openInfoDialog(t("invalidLoreBookTitle"), t("loreAtLeastOneEntry"));
     return null;
   }
   for (let i = 0; i < entries.length; i += 1) {
@@ -3784,7 +3958,7 @@ async function deleteLorebook(lorebookId) {
       affected.length > 20 ? `\n...and ${affected.length - 20} more.` : "";
     message += `\n\nUsed by:\n${lines}${extra}`;
   }
-  const ok = await openConfirmDialog("Delete Lore Book", message);
+  const ok = await openConfirmDialog(t("deleteLoreBookTitle"), message);
   if (!ok) return;
 
   await db.transaction("rw", db.lorebooks, db.characters, async () => {
@@ -3893,9 +4067,9 @@ async function onTextAreaFileDrop(e) {
     const text = await file.text();
     target.value = String(text || "");
     target.dispatchEvent(new Event("input", { bubbles: true }));
-    showToast(`Loaded ${file.name} into field.`, "success");
+    showToast(tf("loadedFileIntoField", { name: file.name }), "success");
   } catch {
-    await openInfoDialog("Drop Failed", "Unable to read dropped file as text.");
+    await openInfoDialog(t("dropFailedTitle"), t("dropReadFailed"));
   }
 }
 
@@ -3903,7 +4077,7 @@ function onAvatarFileChange(e) {
   const file = e.target.files?.[0];
   if (!file) return;
   if (!file.type.startsWith("image/")) {
-    openInfoDialog("Invalid File", "Please choose an image file.");
+    openInfoDialog(t("invalidFileTitle"), t("pleaseChooseImageFile"));
     e.target.value = "";
     return;
   }
@@ -4139,7 +4313,7 @@ async function deleteCharacter(characterId) {
   }
 
   await renderAll();
-  showToast("Character deleted.", "success");
+  showToast(t("characterDeleted"), "success");
 }
 
 async function startNewThread(characterId) {
@@ -4150,7 +4324,7 @@ async function startNewThread(characterId) {
 
   const newThread = {
     characterId,
-    title: `Thread ${new Date().toLocaleString()}`,
+    title: tf("threadTitleAtDate", { date: new Date().toLocaleString() }),
     titleGenerated: false,
     titleManual: false,
     messages: initialMessages,
@@ -4189,7 +4363,7 @@ async function duplicateThread(threadId) {
 
   const copy = {
     characterId: source.characterId,
-    title: `${source.title || `Thread ${source.id}`} Copy`,
+    title: `${source.title || tf("threadTitleDefault", { id: source.id })} Copy`,
     titleGenerated: false,
     titleManual: false,
     messages: [...(source.messages || [])],
@@ -4230,7 +4404,7 @@ async function toggleThreadFavorite(threadId) {
 }
 
 async function deleteThread(threadId) {
-  const ok = await openConfirmDialog("Delete Thread", "Delete this thread?");
+  const ok = await openConfirmDialog(t("deleteThreadTitle"), t("deleteThreadConfirm"));
   if (!ok) return;
 
   await db.threads.delete(threadId);
@@ -4304,8 +4478,11 @@ function updateAutoTtsToggleButton() {
   const enabled = !!(currentThread && currentThread.autoTtsEnabled === true);
   btn.classList.toggle("is-active", enabled);
   btn.disabled = !currentThread;
-  btn.setAttribute("title", `Auto TTS: ${enabled ? "On" : "Off"}`);
-  btn.setAttribute("aria-label", enabled ? "Disable auto TTS" : "Enable auto TTS");
+  btn.setAttribute("title", enabled ? t("autoTtsTitleOn") : t("autoTtsTitleOff"));
+  btn.setAttribute(
+    "aria-label",
+    enabled ? t("disableAutoTtsAria") : t("enableAutoTtsAria"),
+  );
 }
 
 async function toggleThreadAutoTts() {
@@ -4324,7 +4501,7 @@ async function toggleThreadAutoTts() {
     threadId: currentThread.id,
     updatedAt,
   });
-  showToast(`Auto TTS ${next ? "enabled" : "disabled"}.`, "success");
+  showToast(next ? t("autoTtsEnabled") : t("autoTtsDisabled"), "success");
 }
 
 async function maybeAutoSpeakAssistantMessage(messageIndex) {
@@ -4349,9 +4526,9 @@ async function renameThread(threadId) {
   const thread = await db.threads.get(threadId);
   if (!thread) return;
   const next = await openTextInputDialog({
-    title: "Rename Thread",
-    label: "Thread Title",
-    value: thread.title || `Thread ${thread.id}`,
+    title: t("renameThreadTitle"),
+    label: t("threadTitleLabel"),
+    value: thread.title || tf("threadTitleDefault", { id: thread.id }),
     saveLabel: "Save",
     cancelLabel: "Cancel",
     maxLength: 128,
@@ -4359,7 +4536,7 @@ async function renameThread(threadId) {
   if (next === null) return;
   const title = String(next || "").trim().slice(0, 128);
   if (!title) {
-    await openInfoDialog("Missing Field", "Thread title is required.");
+    await openInfoDialog(t("missingFieldTitle"), t("threadTitleRequired"));
     return;
   }
   const updatedAt = Date.now();
@@ -4389,11 +4566,11 @@ function updateChatTitle() {
   const titleEl = document.getElementById("chat-title");
   if (!titleEl) return;
   if (!currentThread) {
-    titleEl.textContent = "Thread";
+    titleEl.textContent = t("threadWord");
     return;
   }
   const displayTitle = `${currentCharacter?.name || "Unknown"} - ${
-    currentThread.title || `Thread ${currentThread.id}`
+    currentThread.title || tf("threadTitleDefault", { id: currentThread.id })
   }`;
   titleEl.textContent = displayTitle;
 }
@@ -4796,7 +4973,7 @@ function beginInlineMessageEdit(index, contentEl) {
     refreshMessageControlStates();
     await persistCurrentThread();
     await renderThreads();
-    showToast("Message updated.", "success");
+    showToast(t("messageUpdated"), "success");
   };
 
   editor.addEventListener(
@@ -5239,7 +5416,7 @@ async function regenerateMessage(index) {
       await persistCurrentThread();
       renderChat();
       await renderThreads();
-      await openInfoDialog("Regenerate Failed", String(e.message || "Unknown error"));
+      await openInfoDialog(t("regenerateFailedTitle"), String(e.message || t("unknownError")));
     }
   } finally {
     state.pendingPersonaInjectionPersonaId = null;
@@ -5261,7 +5438,7 @@ async function copyMessage(text) {
     await navigator.clipboard.writeText(text);
     showToast(t("messageCopied"), "success");
   } catch {
-    await openInfoDialog("Copy Failed", "Unable to copy message.");
+    await openInfoDialog(t("copyFailedTitle"), t("copyFailedMessage"));
   }
 }
 
@@ -5376,7 +5553,7 @@ async function playCharacterTtsTestFromModal() {
     await playTtsAudio(text, getTtsOptionsFromCharacterModal());
   } catch (err) {
     if (isTtsCancelledError(err)) return;
-    showToast(`TTS test failed: ${err.message || "unknown error"}`, "error");
+    showToast(tf("ttsTestFailed", { error: err.message || t("unknownError") }), "error");
   } finally {
     state.charModalTtsTestPlaying = false;
     updateCharTtsTestButtonState();
@@ -5546,7 +5723,7 @@ async function toggleMessageSpeech(index) {
       hasThread: !!currentThread,
       hasCharacter: !!currentCharacter,
     });
-    showToast("Open a thread first.", "error");
+    showToast(t("openThreadFirst"), "error");
     return;
   }
   const message = conversationHistory[index];
@@ -5556,12 +5733,12 @@ async function toggleMessageSpeech(index) {
       role: message?.role,
       hasMessage: !!message,
     });
-    showToast("TTS is only available for assistant messages.", "error");
+    showToast(t("ttsAssistantOnly"), "error");
     return;
   }
   if (!String(message.content || "").trim()) {
     ttsDebug("toggleMessageSpeech:blocked-empty-message", { index });
-    showToast("Message is empty.", "error");
+    showToast(t("messageEmpty"), "error");
     return;
   }
 
@@ -5626,7 +5803,7 @@ async function toggleMessageSpeech(index) {
       state.tts.audio = null;
     }
     refreshAllSpeakerButtons();
-    showToast(`TTS failed: ${err.message || "unknown error"}`, "error");
+    showToast(tf("ttsFailed", { error: err.message || t("unknownError") }), "error");
   }
 }
 
@@ -7044,7 +7221,7 @@ async function updateThreadBudgetIndicator() {
   if (!isChatViewActive || !currentThread || !currentCharacter) {
     pill.textContent = "Max out: -";
     pill.classList.remove("warn", "danger");
-    pill.title = "Thread budget unavailable.";
+    pill.title = t("threadBudgetUnavailable");
     return;
   }
 
