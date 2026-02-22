@@ -33,3 +33,12 @@ db.version(4).stores({
   threads: "++id, characterId, title, updatedAt, createdAt",
   personas: "++id, name, isDefault, order, updatedAt",
 });
+
+db.version(5).stores({
+  characters: "++id, name",
+  lorebooks: "++id, name, createdAt, updatedAt",
+  memories: "++id, characterId, summary, createdAt",
+  sessions: "++id, characterId, messages, updatedAt",
+  threads: "++id, characterId, title, updatedAt, createdAt",
+  personas: "++id, name, isDefault, order, updatedAt",
+});

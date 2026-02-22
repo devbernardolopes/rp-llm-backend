@@ -51,6 +51,8 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-4h4l5-4v12l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M18.5 7a7 7 0 0 1 0 10"></path></svg>',
   stop: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>',
   info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6"></path><circle cx="12" cy="7.5" r="1"></circle></svg>',
+  context:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5a3 3 0 0 1 5.7-1.2A3.2 3.2 0 0 1 18 7v.2a3 3 0 0 1 1 5.7A3.2 3.2 0 0 1 16 18h-1a3 3 0 0 1-6 0H8a3.2 3.2 0 0 1-3-5.1A3 3 0 0 1 6 7v-.2A3.2 3.2 0 0 1 9 5z"></path><path d="M10 9.5v5"></path><path d="M14 9.5v5"></path><path d="M10 12h4"></path></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
   starFilled:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
@@ -340,8 +342,19 @@ const state = {
     "personas-modal": false,
     "shortcuts-modal": false,
     "tags-modal": false,
+    "lore-modal": false,
   },
   charModalTtsTestPlaying: false,
+  imagePreview: {
+    scale: 1,
+    minScale: 0.2,
+    maxScale: 6,
+    src: "",
+  },
+  lore: {
+    editingId: null,
+    entries: [],
+  },
 };
 
 const TTS_DEBUG = true;
@@ -545,6 +558,21 @@ function setupEvents() {
   document
     .getElementById("scroll-bottom-btn")
     .addEventListener("click", () => scrollChatToBottom(true));
+  document
+    .getElementById("image-preview-download-btn")
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      downloadImagePreview();
+    });
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("wheel", onImagePreviewWheel, { passive: false });
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      resetImagePreviewZoom();
+    });
   document.getElementById("pane-toggle").addEventListener("click", togglePane);
   document.getElementById("edit-current-character-btn").innerHTML = ICONS.edit;
   document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
@@ -563,6 +591,14 @@ function setupEvents() {
   document
     .getElementById("char-avatar")
     .addEventListener("input", onAvatarUrlInput);
+  ["char-system-prompt", "char-one-time-extra-prompt", "char-initial-messages"].forEach(
+    (id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("dragover", onTextAreaFileDragOver);
+      el.addEventListener("drop", onTextAreaFileDrop);
+    },
+  );
   document
     .getElementById("char-tags-input")
     .addEventListener("input", renderCharacterTagPresetButtons);
@@ -632,6 +668,29 @@ function setupEvents() {
     .addEventListener("click", saveShortcutsFromModal);
   document.getElementById("save-tags-btn").addEventListener("click", saveTagsFromModal);
   document
+    .getElementById("create-lorebook-btn")
+    .addEventListener("click", () => openLoreEditor());
+  document
+    .getElementById("import-lorebook-btn")
+    .addEventListener("click", () => {
+      showToast("Lore Book import will be added soon.", "success");
+    });
+  document
+    .getElementById("lore-editor-back-btn")
+    .addEventListener("click", closeLoreEditor);
+  document
+    .getElementById("cancel-lore-editor-btn")
+    .addEventListener("click", closeLoreEditor);
+  document
+    .getElementById("add-lore-entry-btn")
+    .addEventListener("click", () => {
+      addLoreEntryEditor();
+      renderLoreEntryEditors();
+    });
+  document
+    .getElementById("save-lorebook-btn")
+    .addEventListener("click", saveLorebookFromEditor);
+  document
     .getElementById("confirm-yes-btn")
     .addEventListener("click", () => resolveConfirmDialog(true));
   document
@@ -697,7 +756,9 @@ function setupEvents() {
   document.querySelectorAll(".modal").forEach((modal) => {
     modal.addEventListener("click", (e) => {
       if (e.target !== modal) return;
-      if (modal.id === "confirm-modal") {
+      if (modal.id === "image-preview-modal") {
+        closeImagePreview();
+      } else if (modal.id === "confirm-modal") {
         resolveConfirmDialog(false);
       } else {
         closeActiveModal();
@@ -731,6 +792,14 @@ function setupEvents() {
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
   markModalDirtyOnInput("tags-modal", ["#tags-custom-raw"]);
+  markModalDirtyOnInput("lore-modal", [
+    "#lore-name",
+    "#lore-avatar",
+    "#lore-description",
+    "#lore-scan-depth",
+    "#lore-token-budget",
+    "#lore-recursive-scanning",
+  ]);
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 128);
 }
@@ -1169,6 +1238,12 @@ function onGlobalKeyDown(e) {
 }
 
 function closeAnyOpenModal() {
+  const imagePreviewModal = document.getElementById("image-preview-modal");
+  if (imagePreviewModal && !imagePreviewModal.classList.contains("hidden")) {
+    closeImagePreview();
+    return;
+  }
+
   const confirmModal = document.getElementById("confirm-modal");
   if (confirmModal && !confirmModal.classList.contains("hidden")) {
     resolveConfirmDialog(false);
@@ -2184,6 +2259,9 @@ async function renderThreads() {
 
   threads.forEach((thread) => {
     const char = charMap.get(thread.characterId);
+    const chatViewActive = document
+      .getElementById("chat-view")
+      ?.classList.contains("active");
 
     const row = document.createElement("div");
     row.className = "thread-row";
@@ -2191,7 +2269,7 @@ async function renderThreads() {
       if (e.target?.closest(".actions")) return;
       openThread(thread.id);
     });
-    if (currentThread?.id === thread.id) {
+    if (chatViewActive && currentThread?.id === thread.id) {
       row.classList.add("active-thread");
     }
 
@@ -2368,6 +2446,7 @@ function showMainView() {
   document.getElementById("chat-view").classList.remove("active");
   updateThreadRenameButtonState();
   updateAutoTtsToggleButton();
+  renderThreads().catch(() => {});
   updateScrollBottomButtonVisibility();
 }
 
@@ -2376,6 +2455,7 @@ function showChatView() {
   document.getElementById("main-view").classList.remove("active");
   updateThreadRenameButtonState();
   updateAutoTtsToggleButton();
+  renderThreads().catch(() => {});
   updateScrollBottomButtonVisibility();
 }
 
@@ -2391,6 +2471,9 @@ function openModal(modalId) {
   } else if (modalId === "shortcuts-modal") {
     document.getElementById("shortcuts-raw").value =
       state.settings.shortcutsRaw || "";
+  } else if (modalId === "lore-modal") {
+    closeLoreEditor();
+    renderLorebookManagementList().catch(() => {});
   } else if (modalId === "tags-modal") {
     document.getElementById("tags-custom-raw").value = (
       Array.isArray(state.settings.customTags) ? state.settings.customTags : []
@@ -3081,6 +3164,414 @@ function formatDateTime(value) {
   }
 }
 
+function parseCsvValues(value) {
+  return String(value || "")
+    .split(",")
+    .map((v) => normalizeTagValue(v))
+    .filter(Boolean)
+    .filter(
+      (v, i, arr) => arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i,
+    );
+}
+
+function normalizeLorebookEntry(entry, fallbackIndex = 0) {
+  const keys = Array.isArray(entry?.keys)
+    ? entry.keys
+    : parseCsvValues(entry?.key || "");
+  const secondaryKeys = Array.isArray(entry?.secondaryKeys)
+    ? entry.secondaryKeys
+    : parseCsvValues(entry?.keysecondary || "");
+  return {
+    id: Number(entry?.id) || Date.now() + fallbackIndex,
+    keys: keys.map((k) => normalizeTagValue(k)).filter(Boolean),
+    secondaryKeys: secondaryKeys.map((k) => normalizeTagValue(k)).filter(Boolean),
+    content: String(entry?.content || "").trim(),
+  };
+}
+
+function normalizeLorebookRecord(record) {
+  if (!record || typeof record !== "object") return null;
+  const entriesRaw = Array.isArray(record.entries)
+    ? record.entries
+    : record.entries && typeof record.entries === "object"
+      ? Object.values(record.entries)
+      : [];
+  const entries = entriesRaw
+    .map((entry, idx) => normalizeLorebookEntry(entry, idx))
+    .filter((entry) => entry && entry.content);
+  return {
+    id: record.id,
+    name: String(record.name || "").trim(),
+    avatar: String(record.avatar || "").trim(),
+    description: String(record.description || "").slice(0, 512),
+    scanDepth: Math.max(5, Math.min(100, Number(record.scanDepth) || 50)),
+    tokenBudget: Math.max(100, Math.min(1000, Number(record.tokenBudget) || 200)),
+    recursiveScanning: record.recursiveScanning === true,
+    entries,
+    createdAt: Number(record.createdAt) || Date.now(),
+    updatedAt: Number(record.updatedAt) || Date.now(),
+  };
+}
+
+async function getAllLorebooks() {
+  const all = await db.lorebooks.toArray();
+  return all
+    .map((entry) => normalizeLorebookRecord(entry))
+    .filter(Boolean)
+    .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+}
+
+function addLoreEntryEditor(entry = null) {
+  state.lore.entries.push(
+    normalizeLorebookEntry(
+      entry || {
+        id: Date.now() + state.lore.entries.length,
+        keys: [],
+        secondaryKeys: [],
+        content: "",
+      },
+      state.lore.entries.length,
+    ),
+  );
+  state.modalDirty["lore-modal"] = true;
+}
+
+function closeLoreEditor() {
+  state.lore.editingId = null;
+  state.lore.entries = [];
+  document.getElementById("lore-list-view")?.classList.remove("hidden");
+  document.getElementById("lore-editor-view")?.classList.add("hidden");
+}
+
+function openLoreEditor(lorebook = null) {
+  const normalized = normalizeLorebookRecord(lorebook || {});
+  state.lore.editingId = normalized?.id || null;
+  state.lore.entries = Array.isArray(normalized?.entries)
+    ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx))
+    : [];
+
+  document.getElementById("lore-name").value = normalized?.name || "";
+  document.getElementById("lore-avatar").value = normalized?.avatar || "";
+  document.getElementById("lore-description").value = normalized?.description || "";
+  document.getElementById("lore-scan-depth").value = String(
+    normalized?.scanDepth || 50,
+  );
+  document.getElementById("lore-token-budget").value = String(
+    normalized?.tokenBudget || 200,
+  );
+  document.getElementById("lore-recursive-scanning").checked =
+    normalized?.recursiveScanning === true;
+
+  if (state.lore.entries.length === 0) addLoreEntryEditor();
+  renderLoreEntryEditors();
+  document.getElementById("lore-list-view")?.classList.add("hidden");
+  document.getElementById("lore-editor-view")?.classList.remove("hidden");
+  state.modalDirty["lore-modal"] = false;
+}
+
+function renderLoreEntryEditors() {
+  const root = document.getElementById("lore-entries-list");
+  if (!root) return;
+  root.innerHTML = "";
+  state.lore.entries.forEach((entry, index) => {
+    const card = document.createElement("div");
+    card.className = "lore-entry-card";
+
+    const head = document.createElement("div");
+    head.className = "lore-entry-title";
+    const label = document.createElement("span");
+    label.textContent = `Entry ${String(index + 1).padStart(2, "0")}`;
+    const delBtn = iconButton("delete", "Delete entry", () => {
+      state.lore.entries.splice(index, 1);
+      if (state.lore.entries.length === 0) addLoreEntryEditor();
+      state.modalDirty["lore-modal"] = true;
+      renderLoreEntryEditors();
+    });
+    delBtn.classList.add("danger-icon-btn");
+    head.append(label, delBtn);
+
+    const keysInput = document.createElement("textarea");
+    keysInput.rows = 2;
+    keysInput.placeholder = "Keys (comma-separated)";
+    keysInput.value = (entry.keys || []).join(", ");
+    keysInput.addEventListener("input", () => {
+      entry.keys = parseCsvValues(keysInput.value);
+      state.modalDirty["lore-modal"] = true;
+    });
+
+    const secondaryInput = document.createElement("textarea");
+    secondaryInput.rows = 2;
+    secondaryInput.placeholder = "Secondary Keys (comma-separated, optional)";
+    secondaryInput.value = (entry.secondaryKeys || []).join(", ");
+    secondaryInput.addEventListener("input", () => {
+      entry.secondaryKeys = parseCsvValues(secondaryInput.value);
+      state.modalDirty["lore-modal"] = true;
+    });
+
+    const contentInput = document.createElement("textarea");
+    contentInput.rows = 8;
+    contentInput.maxLength = 10480;
+    contentInput.placeholder = "Entry content";
+    contentInput.value = entry.content || "";
+    contentInput.addEventListener("input", () => {
+      entry.content = String(contentInput.value || "");
+      state.modalDirty["lore-modal"] = true;
+    });
+
+    card.append(head, keysInput, secondaryInput, contentInput);
+    root.appendChild(card);
+  });
+}
+
+async function renderLorebookManagementList() {
+  const list = document.getElementById("lorebook-list");
+  if (!list) return;
+  const lorebooks = await getAllLorebooks();
+  const characters = await db.characters.toArray();
+  list.innerHTML = "";
+  if (lorebooks.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No lore books yet.";
+    list.appendChild(empty);
+    return;
+  }
+
+  lorebooks.forEach((lorebook) => {
+    const users = characters.filter((char) =>
+      Array.isArray(char.lorebookIds) &&
+      char.lorebookIds.map(Number).includes(Number(lorebook.id)),
+    );
+
+    const row = document.createElement("div");
+    row.className = "lorebook-row";
+
+    const avatar = document.createElement("img");
+    avatar.className = "lorebook-avatar";
+    avatar.src =
+      lorebook.avatar || fallbackAvatar(lorebook.name || "LB", 512, 512);
+    avatar.alt = `${lorebook.name || "Lore Book"} avatar`;
+
+    const main = document.createElement("div");
+    main.className = "lorebook-main";
+    const title = document.createElement("div");
+    title.className = "lorebook-title";
+    title.textContent = lorebook.name || "Untitled Lore Book";
+    const meta = document.createElement("div");
+    meta.className = "lorebook-meta";
+    meta.textContent = `Created: ${formatDateTime(lorebook.createdAt)}\nUpdated: ${formatDateTime(lorebook.updatedAt)}`;
+    meta.style.whiteSpace = "pre-line";
+    const usage = document.createElement("div");
+    usage.className = "lorebook-usage";
+    const usageLabel = document.createElement("span");
+    usageLabel.className = "muted";
+    usageLabel.textContent = "Used by:";
+    usage.appendChild(usageLabel);
+    if (users.length === 0) {
+      const none = document.createElement("span");
+      none.className = "muted";
+      none.textContent = "none";
+      usage.appendChild(none);
+    } else {
+      users.forEach((char) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "lorebook-usage-btn";
+        chip.textContent = char.name || `Character #${char.id}`;
+        chip.addEventListener("click", async () => {
+          await openCharacterModal(char);
+          const target = document.getElementById("char-lorebooks-list");
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            target.classList.add("char-lore-focus");
+            window.setTimeout(() => target.classList.remove("char-lore-focus"), 1400);
+          }
+        });
+        usage.appendChild(chip);
+      });
+    }
+    main.append(title, meta, usage);
+
+    const actions = document.createElement("div");
+    actions.className = "lorebook-actions";
+    actions.appendChild(
+      iconButton("edit", "Edit lore book", () => openLoreEditor(lorebook)),
+    );
+    actions.appendChild(
+      iconButton("duplicate", "Duplicate lore book", async () => {
+        await duplicateLorebook(lorebook.id);
+      }),
+    );
+    const exportBtn = iconButton("export", "Export lore book", async () => {
+      showToast("Lore Book export will be added soon.", "success");
+    });
+    exportBtn.disabled = true;
+    actions.appendChild(exportBtn);
+    const deleteBtn = iconButton("delete", "Delete lore book", async () => {
+      await deleteLorebook(lorebook.id);
+    });
+    deleteBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteBtn);
+
+    row.append(avatar, main, actions);
+    list.appendChild(row);
+  });
+}
+
+async function collectLorebookFromEditor() {
+  const name = String(document.getElementById("lore-name")?.value || "").trim();
+  const description = String(
+    document.getElementById("lore-description")?.value || "",
+  )
+    .trim()
+    .slice(0, 512);
+  const avatar = String(document.getElementById("lore-avatar")?.value || "").trim();
+  const scanDepth = Math.max(
+    5,
+    Math.min(100, Number(document.getElementById("lore-scan-depth")?.value) || 50),
+  );
+  const tokenBudget = Math.max(
+    100,
+    Math.min(
+      1000,
+      Number(document.getElementById("lore-token-budget")?.value) || 200,
+    ),
+  );
+  const recursiveScanning =
+    document.getElementById("lore-recursive-scanning")?.checked === true;
+
+  if (name.length < 2 || name.length > 128) {
+    await openInfoDialog(
+      "Invalid Lore Book",
+      "Name must have between 2 and 128 characters.",
+    );
+    return null;
+  }
+
+  const entries = state.lore.entries
+    .map((entry, idx) => ({
+      id: Number(entry.id) || Date.now() + idx,
+      keys: parseCsvValues((entry.keys || []).join(", ")),
+      secondaryKeys: parseCsvValues((entry.secondaryKeys || []).join(", ")),
+      content: String(entry.content || "").trim(),
+    }))
+    .filter((entry) => entry.keys.length > 0 || entry.content.length > 0);
+
+  if (entries.length === 0) {
+    await openInfoDialog("Invalid Lore Book", "At least one lore entry is required.");
+    return null;
+  }
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i];
+    if (entry.keys.length === 0) {
+      await openInfoDialog(
+        "Invalid Lore Entry",
+        `Entry ${i + 1} requires at least one key.`,
+      );
+      return null;
+    }
+    if (!entry.content || entry.content.length < 1 || entry.content.length > 10480) {
+      await openInfoDialog(
+        "Invalid Lore Entry",
+        `Entry ${i + 1} content must be between 1 and 10480 characters.`,
+      );
+      return null;
+    }
+  }
+
+  return {
+    name,
+    avatar,
+    description,
+    scanDepth,
+    tokenBudget,
+    recursiveScanning,
+    entries,
+    updatedAt: Date.now(),
+  };
+}
+
+async function saveLorebookFromEditor() {
+  const payload = await collectLorebookFromEditor();
+  if (!payload) return;
+  if (state.lore.editingId) {
+    await db.lorebooks.update(state.lore.editingId, payload);
+    showToast("Lore Book updated.", "success");
+  } else {
+    payload.createdAt = Date.now();
+    await db.lorebooks.add(payload);
+    showToast("Lore Book created.", "success");
+  }
+  state.modalDirty["lore-modal"] = false;
+  closeLoreEditor();
+  await renderLorebookManagementList();
+  await renderCharacterLorebookList(getSelectedLorebookIds());
+}
+
+async function duplicateLorebook(lorebookId) {
+  const source = await db.lorebooks.get(lorebookId);
+  const normalized = normalizeLorebookRecord(source);
+  if (!normalized) return;
+  const copy = {
+    ...normalized,
+    name: `${normalized.name} Copy`,
+    entries: normalized.entries.map((entry, idx) => ({
+      ...entry,
+      id: Date.now() + idx,
+    })),
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  delete copy.id;
+  await db.lorebooks.add(copy);
+  await renderLorebookManagementList();
+  await renderCharacterLorebookList(getSelectedLorebookIds());
+  showToast("Lore Book duplicated.", "success");
+}
+
+async function deleteLorebook(lorebookId) {
+  const lorebook = normalizeLorebookRecord(await db.lorebooks.get(lorebookId));
+  if (!lorebook) return;
+  const allCharacters = await db.characters.toArray();
+  const affected = allCharacters.filter((char) =>
+    Array.isArray(char.lorebookIds) &&
+    char.lorebookIds.map(Number).includes(Number(lorebookId)),
+  );
+  let message = `Delete lore book "${lorebook.name}"?`;
+  if (affected.length > 0) {
+    const lines = affected
+      .slice(0, 20)
+      .map((char) => `- ${char.name || `Character #${char.id}`}`)
+      .join("\n");
+    const extra =
+      affected.length > 20 ? `\n...and ${affected.length - 20} more.` : "";
+    message += `\n\nUsed by:\n${lines}${extra}`;
+  }
+  const ok = await openConfirmDialog("Delete Lore Book", message);
+  if (!ok) return;
+
+  await db.transaction("rw", db.lorebooks, db.characters, async () => {
+    await db.lorebooks.delete(lorebookId);
+    for (const char of affected) {
+      const next = (char.lorebookIds || []).filter(
+        (id) => Number(id) !== Number(lorebookId),
+      );
+      await db.characters.update(char.id, {
+        lorebookIds: next,
+        updatedAt: Date.now(),
+      });
+    }
+  });
+  if (currentCharacter && Number(currentCharacter.id) > 0) {
+    const refreshed = await db.characters.get(currentCharacter.id);
+    if (refreshed) currentCharacter = refreshed;
+  }
+  await renderLorebookManagementList();
+  await renderCharacters();
+  await renderCharacterLorebookList(getSelectedLorebookIds());
+  showToast("Lore Book deleted.", "success");
+}
+
 function hasMeaningfulAssistantMessage(history) {
   return (Array.isArray(history) ? history : []).some((m) => {
     if (normalizeApiRole(m?.apiRole || m?.role) !== "assistant") return false;
@@ -3149,6 +3640,26 @@ function getSelectedLorebookIds() {
 
 function onAvatarUrlInput() {
   renderAvatarPreview(document.getElementById("char-avatar").value.trim());
+}
+
+function onTextAreaFileDragOver(e) {
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+}
+
+async function onTextAreaFileDrop(e) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  const file = e.dataTransfer?.files?.[0];
+  if (!target || !file) return;
+  try {
+    const text = await file.text();
+    target.value = String(text || "");
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+    showToast(`Loaded ${file.name} into field.`, "success");
+  } catch {
+    await openInfoDialog("Drop Failed", "Unable to read dropped file as text.");
+  }
 }
 
 function onAvatarFileChange(e) {
@@ -3704,6 +4215,12 @@ function buildMessageRow(message, index, streaming) {
     infoBtn.classList.add("msg-info-btn");
     applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
     controls.appendChild(infoBtn);
+    const contextBtn = iconButton("context", "Message context", async () => {
+      await openMessageContextModal(index);
+    });
+    contextBtn.classList.add("msg-context-btn");
+    contextBtn.disabled = disableControlsForRow || !hasMessageContextData(message);
+    controls.appendChild(contextBtn);
 
     const speakerBtn = iconButton("speaker", "Speak message", async (e) => {
       const clickedBtn = e?.currentTarget;
@@ -3768,6 +4285,15 @@ function renderMessageContent(contentEl, message) {
   if (message.truncatedByFilter === true) {
     contentEl.appendChild(buildTruncationNotice());
   }
+}
+
+function hasMessageContextData(message) {
+  if (!message) return false;
+  const loreCount = Array.isArray(message.usedLoreEntries)
+    ? message.usedLoreEntries.length
+    : 0;
+  const hasMemory = !!String(message.usedMemorySummary || "").trim();
+  return loreCount > 0 || hasMemory;
 }
 
 function applyInfoButtonAvailability(button, message, isStreaming) {
@@ -4133,6 +4659,8 @@ async function generateBotReply() {
     generationId: "",
     completionMeta: null,
     generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
   };
   conversationHistory.push(pending);
   await persistCurrentThread();
@@ -4153,9 +4681,11 @@ async function generateBotReply() {
   setSendingState(true);
 
   try {
-    const systemPrompt = await buildSystemPrompt(currentCharacter, {
+    const promptContext = await buildSystemPrompt(currentCharacter, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
+      returnTrace: true,
     });
+    const systemPrompt = promptContext.prompt;
     const result = await callOpenRouter(
       systemPrompt,
       conversationHistory,
@@ -4184,6 +4714,10 @@ async function generateBotReply() {
     pending.completionMeta = result.completionMeta || null;
     pending.generationInfo = result.generationInfo || null;
     pending.generationFetchDebug = result.generationFetchDebug || [];
+    pending.usedLoreEntries = Array.isArray(promptContext.loreEntries)
+      ? promptContext.loreEntries
+      : [];
+    pending.usedMemorySummary = String(promptContext.memory || "");
     renderMessageContent(pendingRow.querySelector(".message-content"), pending);
     pendingRow.dataset.streaming = "0";
     refreshAllSpeakerButtons();
@@ -4259,9 +4793,11 @@ async function regenerateMessage(index) {
   setSendingState(true);
 
   try {
-    const systemPrompt = await buildSystemPrompt(currentCharacter, {
+    const promptContext = await buildSystemPrompt(currentCharacter, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
+      returnTrace: true,
     });
+    const systemPrompt = promptContext.prompt;
     target.content = "";
     renderChat();
     const row = document.getElementById("chat-log").children[index];
@@ -4299,6 +4835,10 @@ async function regenerateMessage(index) {
     target.completionMeta = result.completionMeta || null;
     target.generationInfo = result.generationInfo || null;
     target.generationFetchDebug = result.generationFetchDebug || [];
+    target.usedLoreEntries = Array.isArray(promptContext.loreEntries)
+      ? promptContext.loreEntries
+      : [];
+    target.usedMemorySummary = String(promptContext.memory || "");
     commitPendingPersonaInjectionMarker();
     await persistCurrentThread();
     renderChat();
@@ -4795,15 +5335,64 @@ function refreshMessageControlStates() {
     row.querySelectorAll(".msg-info-btn").forEach((btn) => {
       applyInfoButtonAvailability(btn, message, isStreaming);
     });
+    row.querySelectorAll(".msg-context-btn").forEach((btn) => {
+      btn.disabled = isStreaming || !hasMessageContextData(message);
+    });
   });
 }
 
 function openImagePreview(src) {
   if (!src) return;
   const img = document.getElementById("image-preview-img");
+  const modal = document.getElementById("image-preview-modal");
   if (!img) return;
+  state.imagePreview.src = src;
   img.src = src;
-  openModal("image-preview-modal");
+  resetImagePreviewZoom();
+  modal?.classList.remove("hidden");
+}
+
+function closeImagePreview() {
+  const modal = document.getElementById("image-preview-modal");
+  modal?.classList.add("hidden");
+}
+
+function applyImagePreviewZoom() {
+  const img = document.getElementById("image-preview-img");
+  if (!img) return;
+  const scale = Math.max(
+    state.imagePreview.minScale,
+    Math.min(state.imagePreview.maxScale, Number(state.imagePreview.scale) || 1),
+  );
+  state.imagePreview.scale = scale;
+  img.style.transform = `scale(${scale})`;
+}
+
+function resetImagePreviewZoom() {
+  state.imagePreview.scale = 1;
+  applyImagePreviewZoom();
+}
+
+function onImagePreviewWheel(e) {
+  const modal = document.getElementById("image-preview-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? 0.12 : -0.12;
+  state.imagePreview.scale += delta;
+  applyImagePreviewZoom();
+}
+
+function downloadImagePreview() {
+  const src = String(state.imagePreview.src || "").trim();
+  if (!src) return;
+  const a = document.createElement("a");
+  a.href = src;
+  a.download = "image";
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 async function openMessageMetadataModal(index) {
@@ -5041,18 +5630,43 @@ async function buildSystemPrompt(character, options = {}) {
   }
 
   if (loreEntries.length > 0) {
-    contextSections.push(
-      `## Lore Context\n${loreEntries.map((e) => `- ${e.content}`).join("\n")}`,
-    );
+    contextSections.push(`## Lore Context\n${loreEntries
+      .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
+      .join("\n")}`);
   }
   if (memory) {
     contextSections.push(`## Memory Context\n${memory}`);
   }
 
-  return [systemPromptWithPersona, ...contextSections]
+  const prompt = [systemPromptWithPersona, ...contextSections]
     .filter(Boolean)
     .join("\n\n")
     .trim();
+  if (options?.returnTrace === true) {
+    return {
+      prompt,
+      loreEntries: Array.isArray(loreEntries) ? loreEntries : [],
+      memory: memory || "",
+    };
+  }
+  return prompt;
+}
+
+async function openMessageContextModal(index) {
+  const message = conversationHistory[index];
+  if (!message || !hasMessageContextData(message)) return;
+  openModal("message-context-modal");
+  const pre = document.getElementById("message-context-json");
+  if (!pre) return;
+  const view = {
+    index: index + 1,
+    role: message.role || "",
+    usedMemorySummary: message.usedMemorySummary || "",
+    usedLoreEntries: Array.isArray(message.usedLoreEntries)
+      ? message.usedLoreEntries
+      : [],
+  };
+  pre.textContent = JSON.stringify(view, null, 2);
 }
 
 function shouldInjectPersonaContext(persona) {
@@ -5099,12 +5713,93 @@ function replaceUserPlaceholders(text, replacement) {
     .replace(/\[\[\s*user\s*\]\]/gi, name);
 }
 
+function replaceLorePlaceholders(text, personaName, charName) {
+  return String(text || "")
+    .replace(/\{\{\s*user\s*\}\}/gi, personaName || "You")
+    .replace(/\[\[\s*user\s*\]\]/gi, personaName || "You")
+    .replace(/\{\{\s*char\s*\}\}/gi, charName || "Character")
+    .replace(/\[\[\s*char\s*\]\]/gi, charName || "Character");
+}
+
+function doesLoreEntryMatch(entry, sourceText) {
+  const hay = String(sourceText || "").toLowerCase();
+  const keys = (entry?.keys || []).map((k) => String(k || "").toLowerCase()).filter(Boolean);
+  const secondary = (entry?.secondaryKeys || [])
+    .map((k) => String(k || "").toLowerCase())
+    .filter(Boolean);
+  if (keys.length === 0) return false;
+  const primaryMatch = keys.some((k) => hay.includes(k));
+  if (!primaryMatch) return false;
+  if (secondary.length === 0) return true;
+  return secondary.every((k) => hay.includes(k));
+}
+
+function takeLoreEntriesByTokenBudget(entries, tokenBudget) {
+  const budget = Math.max(100, Math.min(1000, Number(tokenBudget) || 200));
+  let used = 0;
+  const picked = [];
+  for (const entry of entries) {
+    const content = String(entry?.content || "").trim();
+    if (!content) continue;
+    const estimatedTokens = Math.ceil(content.length / 4);
+    if (picked.length > 0 && used + estimatedTokens > budget) break;
+    picked.push(entry);
+    used += estimatedTokens;
+  }
+  return picked;
+}
+
 async function getCharacterLoreEntries(character) {
   const loreIds = Array.isArray(character.lorebookIds)
     ? character.lorebookIds.map(Number).filter(Number.isInteger)
     : [];
   if (loreIds.length === 0) return [];
-  return db.lorebooks.where("id").anyOf(loreIds).toArray();
+  const lorebooksRaw = await db.lorebooks.where("id").anyOf(loreIds).toArray();
+  const lorebooks = lorebooksRaw.map((lb) => normalizeLorebookRecord(lb)).filter(Boolean);
+  if (lorebooks.length === 0) return [];
+
+  const scanWindow = Math.max(
+    5,
+    ...lorebooks.map((lb) => Math.max(5, Number(lb.scanDepth) || 50)),
+  );
+  const recent = conversationHistory.slice(-scanWindow);
+  const baseSource = recent.map((m) => String(m.content || "")).join("\n").toLowerCase();
+  const defaultPersona = await getCharacterDefaultPersona(character);
+  const personaName = currentPersona?.name || defaultPersona?.name || "You";
+  const charName = character?.name || "Character";
+  const results = [];
+
+  lorebooks.forEach((lb) => {
+    if (!Array.isArray(lb.entries) || lb.entries.length === 0) return;
+    let source = baseSource;
+    const matched = [];
+    const matchedIds = new Set();
+    const maxPasses = lb.recursiveScanning ? 4 : 1;
+    for (let pass = 0; pass < maxPasses; pass += 1) {
+      let addedThisPass = 0;
+      lb.entries.forEach((entry) => {
+        if (matchedIds.has(entry.id)) return;
+        if (!doesLoreEntryMatch(entry, source)) return;
+        matched.push(entry);
+        matchedIds.add(entry.id);
+        addedThisPass += 1;
+      });
+      if (addedThisPass === 0) break;
+      if (lb.recursiveScanning) {
+        source += `\n${matched.slice(-addedThisPass).map((e) => e.content).join("\n")}`.toLowerCase();
+      }
+    }
+
+    const budgeted = takeLoreEntriesByTokenBudget(matched, lb.tokenBudget);
+    budgeted.forEach((entry) => {
+      results.push({
+        lorebookName: lb.name || "Lore Book",
+        entryId: entry.id,
+        content: replaceLorePlaceholders(entry.content, personaName, charName),
+      });
+    });
+  });
+  return results;
 }
 
 async function getMemorySummary(characterId) {

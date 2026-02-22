@@ -380,13 +380,60 @@
     </div>
 
     <div id="lore-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="lore-title">
-      <div class="modal-card">
+      <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="lore-title">Lore Books</h3>
+          <h3 id="lore-title">Lore Book Management</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
-          <p class="muted">Lore book management will be added here.</p>
+          <div id="lore-list-view">
+            <div class="lore-toolbar">
+              <button id="create-lorebook-btn" class="primary-btn" type="button">+ Create Lore Book</button>
+              <button id="import-lorebook-btn" class="secondary-btn" type="button">↥ Import Lore Book</button>
+            </div>
+            <div id="lorebook-list" class="lorebook-list"></div>
+          </div>
+
+          <div id="lore-editor-view" class="hidden">
+            <div class="lore-toolbar">
+              <button id="lore-editor-back-btn" class="secondary-btn" type="button">← Back to List</button>
+            </div>
+            <div class="two-col lore-editor-grid">
+              <label>
+                Name
+                <input id="lore-name" type="text" minlength="2" maxlength="128" />
+              </label>
+              <label>
+                Avatar URL (optional)
+                <input id="lore-avatar" type="text" placeholder="optional" />
+              </label>
+              <label class="full">
+                Description (optional)
+                <textarea id="lore-description" rows="3" maxlength="512"></textarea>
+              </label>
+              <label>
+                Scan Depth
+                <input id="lore-scan-depth" type="number" min="5" max="100" step="1" />
+              </label>
+              <label>
+                Token Budget
+                <input id="lore-token-budget" type="number" min="100" max="1000" step="10" />
+              </label>
+              <label class="full checkbox-line">
+                <input id="lore-recursive-scanning" type="checkbox" />
+                Recursive Scanning
+              </label>
+            </div>
+            <div class="lore-entry-head">
+              <h4 id="lore-entries-title">Entries</h4>
+              <button id="add-lore-entry-btn" class="secondary-btn" type="button">+ Add Entry</button>
+            </div>
+            <div id="lore-entries-list" class="lore-entries-list"></div>
+            <div class="modal-footer">
+              <button id="cancel-lore-editor-btn" class="secondary-btn" type="button">Cancel</button>
+              <button id="save-lorebook-btn" class="primary-btn" type="button">Save Lore Book</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -575,6 +622,13 @@
 
     <div id="image-preview-modal" class="modal hidden image-preview-modal" role="dialog" aria-modal="true" aria-label="Image preview">
       <div class="modal-card image-preview-card">
+        <button
+          id="image-preview-download-btn"
+          class="icon-btn image-preview-download-btn"
+          type="button"
+          title="Download image"
+          aria-label="Download image"
+        >↓</button>
         <img id="image-preview-img" alt="Preview" />
       </div>
     </div>
@@ -587,6 +641,18 @@
         </div>
         <div class="modal-body">
           <pre id="message-metadata-json" class="metadata-json"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div id="message-context-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="message-context-title">
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="message-context-title">Message Context</h3>
+          <button class="icon-btn modal-close" data-close-modal aria-label="Close context">&times;</button>
+        </div>
+        <div class="modal-body">
+          <pre id="message-context-json" class="metadata-json"></pre>
         </div>
       </div>
     </div>
