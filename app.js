@@ -93,6 +93,7 @@ const DEFAULT_SETTINGS = {
   modelPricingFilter: "free",
   modelModalityFilter: "text-only",
   modelSortOrder: "created_desc",
+  toastDurationMs: 2600,
 };
 
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
@@ -104,11 +105,13 @@ const I18N = {
     createCharacter: "+ Character",
     importCharacter: "Import Character",
     settings: "Settings",
+    home: "HOME",
     database: "Database",
     personas: "Personas",
     loreBooks: "Lore Books",
     shortcuts: "Shortcuts",
     tags: "Tags",
+    guide: "Guide",
     databaseManagement: "Database Management",
     exportDatabase: "Export Database",
     importDatabase: "Import Database",
@@ -123,6 +126,12 @@ const I18N = {
     autoReply: "Auto-reply",
     enterToSend: "ENTER to send",
     settingsTitle: "Settings",
+    tabAppearance: "Appearance",
+    tabApi: "API",
+    tabTts: "TTS",
+    tabThreads: "Threads",
+    tabShortcuts: "Shortcuts",
+    tabPrompting: "Prompting",
     togglePane: "Toggle pane",
     clear: "Clear",
     filterByTag: "Filter by tag",
@@ -195,7 +204,7 @@ const I18N = {
     ttsTestFailed: "TTS test failed: {error}",
     personaSwitched: "Persona switched to {name}.",
     personaDescriptionTitle: "Persona Description",
-    personaDescriptionLimit: "Persona description must be 100 words or less.",
+    personaDescriptionLimit: "Persona description must be 100 characters or less.",
     noPersonasYet: "No personas yet.",
     dragToReorder: "Drag to reorder",
     defaultSuffix: "Default",
@@ -288,6 +297,7 @@ const I18N = {
       "Generation queued. Waiting for active generation.",
     generationQueuedNoticeWithPos:
       "Generation queued. Waiting for active generation (queue position {position}).",
+    guideComingSoon: "Guide will be added soon.",
     queuedLabel: "Queued {position}/{size}",
     generatingLabel: "Generating...",
     regeneratingLabel: "Regenerating...",
@@ -316,6 +326,7 @@ const I18N = {
     modelNotRecommendedRoleplay: "This model is NOT recommended for roleplaying.",
     maxTokensLabel: "Max Tokens",
     temperatureLabel: "Temperature",
+    toastDelayLabel: "Toast Delay",
     ttsTestTextLabel: "TTS Test Text",
     playTtsTest: "Play TTS Test",
     renderMarkdown: "Render Markdown in messages",
@@ -336,7 +347,8 @@ const I18N = {
     nameLabel: "Name",
     avatarUrl: "Avatar URL",
     avatarFile: "Avatar File",
-    personaDescription: "Description (max 100 words)",
+    personaDescription: "Description (max 100 chars)",
+    personaInternalDescription: "Internal Description (optional)",
     setDefaultPersona: "Set as default persona",
     savePersona: "Save Persona",
     loreBookManagement: "Lore Book Management",
@@ -353,9 +365,10 @@ const I18N = {
     shortcutEntries: "Shortcut Entries",
     saveShortcuts: "Save Shortcuts",
     tagManager: "Tag Manager",
-    customTagsOnePerLine: "Custom tags (one per line)",
-    predefinedTagsHint: "Predefined tags are always available. Add your own tags here.",
-    saveTags: "Save Tags",
+    tagInputPlaceholder: "New tag",
+    removeTagTitle: "Remove Tag",
+    removeTagConfirmSimple: "Remove this tag?",
+    removeTagAffectsChars: "Removing this tag will update these characters:\n\n{list}{extra}\n\nContinue?",
     createCharacterTitle: "Create Character",
     editCharacterTitle: "Edit Character",
     characterPrompt: "Character Prompt",
@@ -645,6 +658,7 @@ const state = {
     timerId: null,
     seq: 0,
   },
+  renderThreadsSeq: 0,
 };
 
 const TTS_DEBUG = true;
@@ -783,15 +797,20 @@ async function applyInterfaceLanguage() {
   await loadLocaleBundle(state.i18nLang);
   applyDataI18n();
 
+  const paneCollapsed = document
+    .getElementById("left-pane")
+    ?.classList.contains("collapsed");
   const createBtn = document.getElementById("create-character-btn");
-  if (createBtn && !document.getElementById("left-pane")?.classList.contains("collapsed")) {
+  if (createBtn && !paneCollapsed) {
     createBtn.textContent = t("createCharacter");
+  }
+  const homeBtn = document.getElementById("home-btn");
+  if (homeBtn) {
+    homeBtn.textContent = paneCollapsed ? "H" : t("home");
+    homeBtn.title = paneCollapsed ? t("home") : "";
   }
   const importBtn = document.getElementById("import-character-btn");
   if (importBtn) {
-    const paneCollapsed = document
-      .getElementById("left-pane")
-      ?.classList.contains("collapsed");
     importBtn.textContent = paneCollapsed
       ? "↥"
       : `↥ ${t("importCharacter")}`;
@@ -822,9 +841,14 @@ async function applyInterfaceLanguage() {
     bottomButtons[5].title = t("database");
     bottomButtons[5].setAttribute("aria-label", t("database"));
   }
+  if (bottomButtons[6]) {
+    bottomButtons[6].title = t("guide");
+    bottomButtons[6].setAttribute("aria-label", t("guide"));
+  }
 
-  const backBtn = document.getElementById("back-to-main");
-  if (backBtn) backBtn.textContent = t("back");
+  if (homeBtn && !document.getElementById("left-pane")?.classList.contains("collapsed")) {
+    homeBtn.textContent = t("home");
+  }
   const popTitle = document.querySelector(".popover-title");
   if (popTitle) popTitle.textContent = t("previousPrompts");
   const sendBtn = document.getElementById("send-btn");
@@ -880,6 +904,9 @@ function setupEvents() {
     .getElementById("import-db-input")
     .addEventListener("change", importDatabaseBackupFromFile);
   document
+    .getElementById("guide-btn")
+    ?.addEventListener("click", () => showToast(t("guideComingSoon"), "success"));
+  document
     .getElementById("save-character-btn")
     .addEventListener("click", saveCharacterFromModal);
   document
@@ -891,7 +918,7 @@ function setupEvents() {
     .getElementById("shortcuts-toggle-btn")
     .addEventListener("click", toggleShortcutsVisibility);
   document
-    .getElementById("back-to-main")
+    .getElementById("home-btn")
     .addEventListener("click", showMainView);
   document
     .getElementById("rename-thread-btn")
@@ -993,7 +1020,10 @@ function setupEvents() {
     updateNameLengthCounter("char-name", "char-name-count", 128);
   });
   document.getElementById("persona-name").addEventListener("input", () => {
-    updateNameLengthCounter("persona-name", "persona-name-count", 128);
+    updateNameLengthCounter("persona-name", "persona-name-count", 64);
+  });
+  document.getElementById("persona-description").addEventListener("input", () => {
+    updateNameLengthCounter("persona-description", "persona-description-count", 100);
   });
   const addTagBtn = document.getElementById("character-tag-filter-add");
   if (addTagBtn) {
@@ -1029,7 +1059,15 @@ function setupEvents() {
   document
     .getElementById("save-shortcuts-btn")
     .addEventListener("click", saveShortcutsFromModal);
-  document.getElementById("save-tags-btn").addEventListener("click", saveTagsFromModal);
+  document.getElementById("add-tag-btn").addEventListener("click", addTagFromManagerInput);
+  document.getElementById("tag-manager-input").addEventListener("input", updateTagManagerAddButtonState);
+  document.getElementById("tag-manager-input").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (!document.getElementById("add-tag-btn").disabled) {
+      addTagFromManagerInput().catch(() => {});
+    }
+  });
   document
     .getElementById("create-lorebook-btn")
     .addEventListener("click", () => openLoreEditor());
@@ -1152,10 +1190,10 @@ function setupEvents() {
     "#persona-name",
     "#persona-avatar",
     "#persona-description",
+    "#persona-internal-description",
     "#persona-is-default",
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
-  markModalDirtyOnInput("tags-modal", ["#tags-custom-raw"]);
   markModalDirtyOnInput("lore-modal", [
     "#lore-name",
     "#lore-avatar",
@@ -1165,7 +1203,10 @@ function setupEvents() {
     "#lore-recursive-scanning",
   ]);
   updateNameLengthCounter("char-name", "char-name-count", 128);
-  updateNameLengthCounter("persona-name", "persona-name-count", 128);
+  updateNameLengthCounter("persona-name", "persona-name-count", 64);
+  updateNameLengthCounter("persona-description", "persona-description-count", 100);
+  updateToastDelayDisplay();
+  setupSettingsTabsLayout();
 }
 
 function applyDataI18n() {
@@ -1672,6 +1713,8 @@ async function setupSettingsControls() {
   const maxTokensValue = document.getElementById("max-tokens-value");
   const temperatureSlider = document.getElementById("temperature-slider");
   const temperatureValue = document.getElementById("temperature-value");
+  const toastDelaySlider = document.getElementById("toast-delay-slider");
+  const toastDelayValue = document.getElementById("toast-delay-value");
   if (uiLanguageSelect) {
     uiLanguageSelect.querySelector('option[value="auto"]').textContent =
       t("languageAuto");
@@ -1777,6 +1820,14 @@ async function setupSettingsControls() {
   temperatureValue.textContent = clampTemperature(
     state.settings.temperature,
   ).toFixed(2);
+  if (toastDelaySlider) {
+    const delay = clampToastDuration(state.settings.toastDurationMs);
+    state.settings.toastDurationMs = delay;
+    toastDelaySlider.value = String(delay);
+    if (toastDelayValue) {
+      toastDelayValue.textContent = `${Math.round(delay / 100) / 10}s`;
+    }
+  }
   updateSettingsRangeTone(maxTokensSlider, Number(maxTokensSlider.value), {
     warnBelow: 1024,
     dangerAbove: 4096,
@@ -1953,6 +2004,15 @@ async function setupSettingsControls() {
     });
     saveSettings();
   });
+  toastDelaySlider?.addEventListener("input", () => {
+    const value = clampToastDuration(Number(toastDelaySlider.value));
+    state.settings.toastDurationMs = value;
+    toastDelaySlider.value = String(value);
+    if (toastDelayValue) {
+      toastDelayValue.textContent = `${Math.round(value / 100) / 10}s`;
+    }
+    saveSettings();
+  });
 
 
   globalPromptTemplate.addEventListener("input", () => {
@@ -2002,10 +2062,160 @@ async function setupSettingsControls() {
       state.settings.uiLanguage = uiLanguageSelect.value || "auto";
       saveSettings();
       await applyInterfaceLanguage();
+      updateToastDelayDisplay();
       await renderShortcutsBar();
       setSendingState(state.sending);
     });
   }
+}
+
+function clampToastDuration(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 2600;
+  return Math.max(1000, Math.min(10000, Math.round(num / 100) * 100));
+}
+
+function updateToastDelayDisplay() {
+  const slider = document.getElementById("toast-delay-slider");
+  const valueEl = document.getElementById("toast-delay-value");
+  if (!slider || !valueEl) return;
+  const value = clampToastDuration(state.settings.toastDurationMs);
+  slider.value = String(value);
+  valueEl.textContent = `${Math.round(value / 100) / 10}s`;
+}
+
+function getSettingsGroupForNode(node) {
+  if (!node) return "appearance";
+  if (node.getAttribute?.("data-settings-group")) {
+    return node.getAttribute("data-settings-group");
+  }
+  const id = node.id || "";
+  const has = (selector) => !!node.querySelector?.(selector);
+  if (
+    has("#openrouter-api-key") ||
+    has("#model-select") ||
+    has("#model-pricing-filter") ||
+    has("#model-modality-filter") ||
+    has("#model-sort-order") ||
+    has("#model-refresh-btn") ||
+    has("#max-tokens-slider") ||
+    has("#temperature-slider")
+  ) return "api";
+  if (has("#model-selected-meta") || has("#model-roleplay-warning")) return "api";
+  if (has("#puter-signin-btn") || has("#tts-test-text") || has("#tts-test-play-btn")) return "tts";
+  if (
+    has("#markdown-enabled") ||
+    has("#allow-message-html") ||
+    has("#stream-enabled") ||
+    has("#autopair-enabled") ||
+    has("#markdown-custom-css") ||
+    has("#postprocess-rules-json")
+  ) return "threads";
+  if (has("#cancel-shortcut") || has("#home-shortcut") || has("#new-character-shortcut")) return "shortcuts";
+  if (
+    has("#global-prompt-template") ||
+    has("#summary-system-prompt") ||
+    has("#persona-injection-template") ||
+    has("#persona-injection-when")
+  ) return "prompting";
+  if (has("#ui-language-select") || has("#toast-delay-slider")) return "appearance";
+  const text = `${node.textContent || ""}`.toLowerCase();
+  if (
+    id === "openrouter-api-key" ||
+    id === "model-select" ||
+    id === "model-selected-meta" ||
+    id === "model-roleplay-warning" ||
+    id === "max-tokens-slider" ||
+    id === "temperature-slider" ||
+    id === "model-pricing-filter" ||
+    id === "model-modality-filter" ||
+    id === "model-sort-order" ||
+    id === "model-refresh-btn" ||
+    text.includes("openrouter api key")
+  ) {
+    return "api";
+  }
+  if (
+    id === "puter-signin-btn" ||
+    id === "tts-test-text" ||
+    id === "tts-test-play-btn" ||
+    id === "tts-test-status" ||
+    text.includes("tts")
+  ) {
+    return "tts";
+  }
+  if (
+    id === "markdown-enabled" ||
+    id === "allow-message-html" ||
+    id === "stream-enabled" ||
+    id === "autopair-enabled" ||
+    id === "markdown-custom-css" ||
+    id === "postprocess-rules-json"
+  ) {
+    return "threads";
+  }
+  if (
+    id === "cancel-shortcut" ||
+    id === "home-shortcut" ||
+    id === "new-character-shortcut"
+  ) {
+    return "shortcuts";
+  }
+  if (
+    id === "global-prompt-template" ||
+    id === "summary-system-prompt" ||
+    id === "persona-injection-template" ||
+    id === "persona-injection-when"
+  ) {
+    return "prompting";
+  }
+  if (id === "ui-language-select" || id === "toast-delay-slider") {
+    return "appearance";
+  }
+  return "appearance";
+}
+
+function setupSettingsTabsLayout() {
+  const body = document.getElementById("settings-modal-body");
+  const tabs = document.querySelectorAll("[data-settings-tab-btn]");
+  if (!body || tabs.length === 0 || body.dataset.tabsReady === "1") return;
+
+  const groups = [
+    "appearance",
+    "api",
+    "tts",
+    "threads",
+    "shortcuts",
+    "prompting",
+  ];
+  const panels = new Map();
+  groups.forEach((group) => {
+    const panel = document.createElement("div");
+    panel.className = "settings-tab-panel";
+    panel.dataset.settingsTabPanel = group;
+    if (group !== "appearance") panel.classList.add("hidden");
+    panels.set(group, panel);
+    body.appendChild(panel);
+  });
+
+  const movable = Array.from(body.children).filter(
+    (el) => !el.classList.contains("settings-tab-panel"),
+  );
+  movable.forEach((node) => {
+    const target = panels.get(getSettingsGroupForNode(node));
+    (target || panels.get("appearance")).appendChild(node);
+  });
+
+  tabs.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tab = btn.getAttribute("data-settings-tab-btn") || "appearance";
+      tabs.forEach((b) => b.classList.toggle("active", b === btn));
+      panels.forEach((panel, key) => {
+        panel.classList.toggle("hidden", key !== tab);
+      });
+    });
+  });
+  body.dataset.tabsReady = "1";
 }
 
 function loadSettings() {
@@ -2160,9 +2370,10 @@ function showToast(message, type = "success") {
   toast.className = `toast ${type}`;
   toast.textContent = message;
   container.appendChild(toast);
+  const delay = clampToastDuration(state.settings.toastDurationMs);
   window.setTimeout(() => {
     toast.remove();
-  }, 2600);
+  }, delay);
 }
 
 function openConfirmDialog(title, message) {
@@ -2348,55 +2559,109 @@ async function saveShortcutsFromModal() {
   showToast(t("shortcutsSaved"), "success");
 }
 
-async function saveTagsFromModal() {
-  const raw = String(document.getElementById("tags-custom-raw")?.value || "");
-  const previousTags = getAllAvailableTags();
-  const tags = raw
-    .split(/\r?\n/)
-    .map((line) => normalizeTagValue(line))
-    .filter(Boolean)
-    .filter(
-      (tag, i, arr) =>
-        arr.findIndex((x) => x.toLowerCase() === tag.toLowerCase()) === i,
-    );
-  const nextTagLowers = new Set(tags.map((t) => t.toLowerCase()));
-  const removedTags = previousTags.filter((t) => !nextTagLowers.has(t.toLowerCase()));
-  const removedTagLowers = new Set(removedTags.map((t) => t.toLowerCase()));
+function isValidNewManagerTag(inputValue) {
+  const tag = normalizeTagValue(inputValue);
+  if (tag.length < 2) return false;
+  return !getAllAvailableTags().some((t) => t.toLowerCase() === tag.toLowerCase());
+}
 
-  let affectedCharacters = [];
-  if (removedTags.length > 0) {
-    const allCharacters = await db.characters.toArray();
-    affectedCharacters = allCharacters.filter((char) =>
-      (Array.isArray(char.tags) ? char.tags : []).some((tag) =>
-        removedTagLowers.has(String(tag || "").toLowerCase()),
-      ),
+function updateTagManagerAddButtonState() {
+  const input = document.getElementById("tag-manager-input");
+  const btn = document.getElementById("add-tag-btn");
+  if (!input || !btn) return;
+  btn.disabled = !isValidNewManagerTag(input.value);
+}
+
+function renderTagManagerList() {
+  const list = document.getElementById("tag-manager-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const tags = [...getAllAvailableTags()].reverse();
+  tags.forEach((tag) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "tag-filter-chip";
+    chip.textContent = tag;
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "tag-remove-btn";
+    removeBtn.textContent = "X";
+    removeBtn.setAttribute("aria-label", `${t("removeTagTitle")}: ${tag}`);
+    removeBtn.title = t("removeTagTitle");
+    removeBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await removeTagFromCatalog(tag);
+    });
+    chip.appendChild(removeBtn);
+    list.appendChild(chip);
+  });
+}
+
+async function addTagFromManagerInput() {
+  const input = document.getElementById("tag-manager-input");
+  if (!input) return;
+  const tag = normalizeTagValue(input.value);
+  if (tag.length < 2) return;
+  if (!isValidNewManagerTag(tag)) return;
+  const existing = Array.isArray(state.settings.customTags)
+    ? state.settings.customTags.map((t) => normalizeTagValue(t)).filter(Boolean)
+    : [];
+  existing.push(tag);
+  state.settings.customTags = existing;
+  state.settings.tagsInitialized = true;
+  saveSettings();
+  input.value = "";
+  updateTagManagerAddButtonState();
+  renderTagManagerList();
+  renderTagPresetsDataList();
+  renderCharacterTagPresetButtons();
+  renderCharacterTagFilterChips();
+  await renderCharacters();
+  showToast(t("tagsUpdated"), "success");
+}
+
+async function removeTagFromCatalog(tag) {
+  const normalized = normalizeTagValue(tag);
+  const lower = normalized.toLowerCase();
+  if (!normalized) return;
+  const allCharacters = await db.characters.toArray();
+  const affectedCharacters = allCharacters.filter((char) =>
+    (Array.isArray(char.tags) ? char.tags : []).some(
+      (t) => String(t || "").toLowerCase() === lower,
+    ),
+  );
+  if (affectedCharacters.length > 0) {
+    const affectedList = affectedCharacters
+      .slice(0, 12)
+      .map((c) => `- ${c.name || `Character #${c.id}`} (#${c.id})`)
+      .join("\n");
+    const extra =
+      affectedCharacters.length > 12
+        ? `\n...and ${affectedCharacters.length - 12} more.`
+        : "";
+    const ok = await openConfirmDialog(
+      t("removeTagsConfirmTitle"),
+      tf("removeTagAffectsChars", { list: affectedList, extra }),
     );
-    if (affectedCharacters.length > 0) {
-      const affectedList = affectedCharacters
-        .slice(0, 12)
-        .map((c) => `- ${c.name || `Character #${c.id}`} (#${c.id})`)
-        .join("\n");
-      const extra =
-        affectedCharacters.length > 12
-          ? `\n...and ${affectedCharacters.length - 12} more.`
-          : "";
-      const ok = await openConfirmDialog(
-        "Remove Tags",
-        `Removing tags will update these characters:\n\n${affectedList}${extra}\n\nContinue?`,
-      );
-      if (!ok) return;
-    }
+    if (!ok) return;
+  } else {
+    const ok = await openConfirmDialog(t("removeTagTitle"), t("removeTagConfirmSimple"));
+    if (!ok) return;
   }
 
-  state.settings.customTags = tags;
+  const nextTags = (Array.isArray(state.settings.customTags)
+    ? state.settings.customTags
+    : []
+  ).filter((t) => String(t || "").toLowerCase() !== lower);
+  state.settings.customTags = nextTags;
   state.settings.tagsInitialized = true;
   saveSettings();
 
-  if (removedTags.length > 0 && affectedCharacters.length > 0) {
+  if (affectedCharacters.length > 0) {
     await db.transaction("rw", db.characters, async () => {
       for (const char of affectedCharacters) {
         const nextCharTags = (Array.isArray(char.tags) ? char.tags : []).filter(
-          (tag) => !removedTagLowers.has(String(tag || "").toLowerCase()),
+          (t) => String(t || "").toLowerCase() !== lower,
         );
         await db.characters.update(char.id, {
           tags: nextCharTags,
@@ -2404,22 +2669,22 @@ async function saveTagsFromModal() {
         });
       }
     });
-    if (currentCharacter) {
-      const refreshed = await db.characters.get(currentCharacter.id);
-      if (refreshed) currentCharacter = refreshed;
-    }
-    state.characterTagFilters = state.characterTagFilters.filter(
-      (tag) => !removedTagLowers.has(String(tag || "").toLowerCase()),
-    );
-    saveUiState();
   }
 
+  state.characterTagFilters = state.characterTagFilters.filter(
+    (t) => String(t || "").toLowerCase() !== lower,
+  );
+  saveUiState();
+  if (currentCharacter) {
+    const refreshed = await db.characters.get(currentCharacter.id);
+    if (refreshed) currentCharacter = refreshed;
+  }
+  renderTagManagerList();
+  updateTagManagerAddButtonState();
   renderTagPresetsDataList();
   renderCharacterTagPresetButtons();
   renderCharacterTagFilterChips();
   await renderCharacters();
-  state.modalDirty["tags-modal"] = false;
-  closeActiveModal();
   showToast(t("tagsUpdated"), "success");
 }
 
@@ -2663,8 +2928,11 @@ async function renderCharacters() {
 
 async function renderThreads() {
   const list = document.getElementById("thread-list");
+  if (!list) return;
+  const renderSeq = ++state.renderThreadsSeq;
   const previousScrollTop = Number(list?.scrollTop || 0);
   const threads = await db.threads.toArray();
+  if (renderSeq !== state.renderThreadsSeq) return;
   threads.sort((a, b) => {
     const af = a.favorite ? 1 : 0;
     const bf = b.favorite ? 1 : 0;
@@ -2724,6 +2992,7 @@ async function renderThreads() {
       .filter(([id]) => Number.isInteger(id)),
   );
   const characters = await db.characters.where("id").anyOf(charIds).toArray();
+  if (renderSeq !== state.renderThreadsSeq) return;
   const charMap = new Map(characters.map((c) => [c.id, c]));
 
   threads.forEach((thread) => {
@@ -2734,6 +3003,7 @@ async function renderThreads() {
 
     const row = document.createElement("div");
     row.className = "thread-row";
+    row.dataset.threadId = String(thread.id);
     row.addEventListener("click", (e) => {
       if (e.target?.closest(".actions")) return;
       openThread(thread.id);
@@ -2836,9 +3106,12 @@ async function renderThreads() {
 
     actions.prepend(selectBox);
     row.append(avatar, info, actions);
-    list.appendChild(row);
+    if (!list.querySelector(`.thread-row[data-thread-id="${thread.id}"]`)) {
+      list.appendChild(row);
+    }
   });
   const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
+  if (renderSeq !== state.renderThreadsSeq) return;
   list.scrollTop = Math.min(previousScrollTop, maxScroll);
 }
 
@@ -2892,6 +3165,7 @@ function togglePane() {
   const shell = document.getElementById("app-shell");
   const createBtn = document.getElementById("create-character-btn");
   const importBtn = document.getElementById("import-character-btn");
+  const homeBtn = document.getElementById("home-btn");
   pane.classList.toggle("collapsed");
   shell.classList.toggle(
     "pane-collapsed",
@@ -2903,6 +3177,10 @@ function togglePane() {
     ? ">"
     : "<";
   if (pane.classList.contains("collapsed")) {
+    if (homeBtn) {
+      homeBtn.textContent = "H";
+      homeBtn.title = t("home");
+    }
     createBtn.textContent = "+";
     createBtn.title = t("createCharacter");
     if (importBtn) {
@@ -2910,6 +3188,10 @@ function togglePane() {
       importBtn.title = t("importCharacter");
     }
   } else {
+    if (homeBtn) {
+      homeBtn.textContent = t("home");
+      homeBtn.title = "";
+    }
     createBtn.textContent = t("createCharacter");
     createBtn.title = "";
     if (importBtn) {
@@ -2950,6 +3232,9 @@ function openModal(modalId) {
   if (modalId === "personas-modal") {
     renderPersonaModalList();
   } else if (modalId === "settings-modal") {
+    const firstTab = document.querySelector('[data-settings-tab-btn="appearance"]');
+    if (firstTab instanceof HTMLButtonElement) firstTab.click();
+    updateToastDelayDisplay();
     populateSettingsModels().catch(() => {});
   } else if (modalId === "shortcuts-modal") {
     document.getElementById("shortcuts-raw").value =
@@ -2958,9 +3243,10 @@ function openModal(modalId) {
     closeLoreEditor();
     renderLorebookManagementList().catch(() => {});
   } else if (modalId === "tags-modal") {
-    document.getElementById("tags-custom-raw").value = (
-      Array.isArray(state.settings.customTags) ? state.settings.customTags : []
-    ).join("\n");
+    const input = document.getElementById("tag-manager-input");
+    if (input) input.value = "";
+    renderTagManagerList();
+    updateTagManagerAddButtonState();
   }
 }
 
@@ -3296,13 +3582,16 @@ async function savePersonaFromModal() {
   const description = document
     .getElementById("persona-description")
     .value.trim();
+  const internalDescription = document
+    .getElementById("persona-internal-description")
+    .value.trim();
   const wantsDefault = document.getElementById("persona-is-default").checked;
 
   if (!name) {
     await openInfoDialog(t("missingFieldTitle"), t("personaNameRequired"));
     return;
   }
-  if (countWords(description) > 100) {
+  if (description.length > 100) {
     await openInfoDialog(
       t("personaDescriptionTitle"),
       t("personaDescriptionLimit"),
@@ -3321,6 +3610,7 @@ async function savePersonaFromModal() {
       name,
       avatar,
       description,
+      internalDescription,
       isDefault: shouldBeDefault,
       updatedAt: Date.now(),
     });
@@ -3330,6 +3620,7 @@ async function savePersonaFromModal() {
       name,
       avatar,
       description,
+      internalDescription,
       isDefault: shouldBeDefault,
       order: personas.length,
       createdAt: Date.now(),
@@ -3339,10 +3630,12 @@ async function savePersonaFromModal() {
   }
 
   document.getElementById("persona-name").value = "";
-  updateNameLengthCounter("persona-name", "persona-name-count", 128);
+  updateNameLengthCounter("persona-name", "persona-name-count", 64);
   document.getElementById("persona-avatar").value = "";
   document.getElementById("persona-avatar-file").value = "";
   document.getElementById("persona-description").value = "";
+  document.getElementById("persona-internal-description").value = "";
+  updateNameLengthCounter("persona-description", "persona-description-count", 100);
   document.getElementById("persona-is-default").checked = false;
   state.editingPersonaId = null;
   document.getElementById("save-persona-btn").textContent = t("savePersona");
@@ -3418,15 +3711,15 @@ async function renderPersonaModalList() {
       );
     }
     actions.appendChild(
-      iconButton("regenerate", t("editPersonaAria"), async () => {
+      iconButton("edit", t("editPersonaAria"), async () => {
         loadPersonaForEditing(persona);
       }),
     );
-    actions.appendChild(
-      iconButton("delete", t("deletePersonaTitle"), async () => {
-        await deletePersona(persona.id);
-      }),
-    );
+    const deleteBtn = iconButton("delete", t("deletePersonaTitle"), async () => {
+      await deletePersona(persona.id);
+    });
+    deleteBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteBtn);
 
     row.append(drag, avatar, info, actions);
     list.appendChild(row);
@@ -3471,11 +3764,14 @@ async function deletePersona(personaId) {
 function loadPersonaForEditing(persona) {
   state.editingPersonaId = persona.id;
   document.getElementById("persona-name").value = persona.name || "";
-  updateNameLengthCounter("persona-name", "persona-name-count", 128);
+  updateNameLengthCounter("persona-name", "persona-name-count", 64);
   document.getElementById("persona-avatar").value = persona.avatar || "";
   document.getElementById("persona-avatar-file").value = "";
   document.getElementById("persona-description").value =
     persona.description || "";
+  document.getElementById("persona-internal-description").value =
+    persona.internalDescription || "";
+  updateNameLengthCounter("persona-description", "persona-description-count", 100);
   document.getElementById("persona-is-default").checked = !!persona.isDefault;
   document.getElementById("save-persona-btn").textContent = t("updatePersona");
 }
@@ -3536,6 +3832,7 @@ async function ensurePersonasInitialized() {
       name: "You",
       avatar: "",
       description: "",
+      internalDescription: "",
       isDefault: true,
       order: 0,
       createdAt: Date.now(),
@@ -5354,15 +5651,22 @@ async function generateBotReply() {
   await persistThreadMessagesById(threadId, generationHistory);
   let pendingRow = null;
   if (isViewingThread(threadId)) {
-    pendingRow = buildMessageRow(
-      pending,
-      pendingIndex,
-      true,
+    pendingRow = log?.querySelector(
+      `.chat-row[data-message-index="${pendingIndex}"]`,
     );
-    const pendingContent = pendingRow.querySelector(".message-content");
-    pendingContent.innerHTML =
-      `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
-    log.appendChild(pendingRow);
+    if (!pendingRow) {
+      pendingRow = buildMessageRow(
+        pending,
+        pendingIndex,
+        true,
+      );
+      log.appendChild(pendingRow);
+    }
+    const pendingContent = pendingRow?.querySelector(".message-content");
+    if (pendingContent) {
+      pendingContent.innerHTML =
+        `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
+    }
     scrollChatToBottom();
   }
 
@@ -6769,11 +7073,14 @@ function findLatestPendingAssistantIndex(messages) {
   for (let i = list.length - 1; i >= 0; i -= 1) {
     const m = list[i];
     if (!m || m.role !== "assistant") continue;
-    if (!String(m.content || "").trim()) {
-      const status = String(m.generationStatus || "").trim();
-      if (status === "queued" || status === "generating" || status === "regenerating") {
-        return i;
-      }
+    const status = String(m.generationStatus || "").trim();
+    if (status === "queued" || status === "generating" || status === "regenerating") {
+      return i;
+    }
+    const emptyContent = !String(m.content || "").trim();
+    const hasError = !!String(m.generationError || "").trim();
+    if (emptyContent && !hasError && m.truncatedByFilter !== true) {
+      return i;
     }
   }
   return -1;

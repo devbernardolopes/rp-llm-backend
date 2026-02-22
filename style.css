@@ -68,6 +68,12 @@ body {
   padding: 0;
 }
 
+#left-pane.collapsed .pane-home-btn {
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+}
+
 #left-pane.collapsed .thread-row {
   display: flex;
   justify-content: center;
@@ -89,6 +95,12 @@ body {
 
 #pane-toggle {
   align-self: flex-end;
+}
+
+.pane-home-btn {
+  height: 34px;
+  font-size: 12px;
+  padding: 0 10px;
 }
 
 .pane-top {
@@ -1130,6 +1142,34 @@ textarea {
   gap: 12px;
 }
 
+.settings-tabs {
+  padding: 0 12px 10px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-tab-btn {
+  border: 1px solid var(--line);
+  background: #1b2639;
+  color: var(--text);
+  border-radius: 8px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.settings-tab-btn.active {
+  border-color: #5a85c6;
+  background: #233553;
+}
+
+.settings-tab-panel.hidden {
+  display: none;
+}
+
 .modal-body label {
   display: flex;
   flex-direction: column;
@@ -1181,6 +1221,10 @@ textarea {
 
 .modal-body textarea {
   resize: vertical;
+}
+
+.clickable-avatar {
+  cursor: zoom-in;
 }
 
 .modal-body input[type="checkbox"],
@@ -1401,6 +1445,52 @@ textarea {
 .char-lore-focus {
   box-shadow: 0 0 0 2px #d8be63 inset;
   border-color: #8d7f3a;
+}
+
+.tag-manager-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.tag-manager-input-row .primary-btn {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+}
+
+.tag-manager-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.tag-filter-chip {
+  border: 1px solid #3f5173;
+  background: #1d2a40;
+  color: #dfe8f9;
+  border-radius: 999px;
+  padding: 4px 8px 4px 10px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-remove-btn {
+  border: 1px solid #915353;
+  background: #4b2525;
+  color: #f7c4c4;
+  border-radius: 999px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .persona-row {

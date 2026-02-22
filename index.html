@@ -15,6 +15,7 @@
     <div id="app-shell">
       <aside id="left-pane" class="expanded">
         <button id="pane-toggle" class="icon-btn" data-i18n-title="togglePane" title="Collapse pane" aria-label="Toggle pane">&lt;</button>
+        <button id="home-btn" class="secondary-btn pane-home-btn" data-i18n="home">HOME</button>
 
         <div class="pane-top">
           <div class="pane-top-header">
@@ -36,6 +37,7 @@
           <button class="option-btn" data-open-modal="shortcuts-modal" data-i18n-title="shortcuts" title="Shortcuts" aria-label="Shortcuts">⌨️</button>
           <button class="option-btn" data-open-modal="tags-modal" data-i18n-title="tags" title="Tags" aria-label="Tags">🏷️</button>
           <button class="option-btn" data-open-modal="database-modal" data-i18n-title="database" title="Database" aria-label="Database">🗄️</button>
+          <button id="guide-btn" class="option-btn" data-i18n-title="guide" title="Guide" aria-label="Guide">❓</button>
         </div>
       </aside>
 
@@ -76,7 +78,6 @@
 
       <section id="chat-view" class="view">
         <header class="chat-header">
-          <button id="back-to-main" class="secondary-btn" data-i18n="back">Back</button>
           <button
             id="edit-current-character-btn"
             class="icon-btn"
@@ -195,7 +196,22 @@
           <h3 id="settings-title" data-i18n="settingsTitle">Settings</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
-        <div class="modal-body">
+        <div class="settings-tabs" id="settings-tabs">
+          <button class="settings-tab-btn active" type="button" data-settings-tab-btn="appearance" data-i18n="tabAppearance">Appearance</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="api" data-i18n="tabApi">API</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="tts" data-i18n="tabTts">TTS</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="threads" data-i18n="tabThreads">Threads</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="shortcuts" data-i18n="tabShortcuts">Shortcuts</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="prompting" data-i18n="tabPrompting">Prompting</button>
+        </div>
+        <div class="modal-body" id="settings-modal-body">
+          <label data-settings-group="appearance">
+            <div class="label-inline">
+              <span data-i18n="toastDelayLabel">Toast Delay</span>
+              <span id="toast-delay-value" class="muted"></span>
+            </div>
+            <input id="toast-delay-slider" type="range" min="1000" max="10000" step="200" />
+          </label>
           <label>
             <span data-i18n="languageLabel">Interface Language</span>
             <select id="ui-language-select">
@@ -390,9 +406,9 @@
           <label>
             <div class="label-inline">
               <span data-i18n="nameLabel">Name</span>
-              <span id="persona-name-count" class="muted">0/128</span>
+              <span id="persona-name-count" class="muted">0/64</span>
             </div>
-            <input id="persona-name" type="text" maxlength="128" />
+            <input id="persona-name" type="text" maxlength="64" />
           </label>
           <label>
             <span data-i18n="avatarUrl">Avatar URL</span>
@@ -403,8 +419,15 @@
             <input id="persona-avatar-file" type="file" accept="image/*" />
           </label>
           <label>
-            <span data-i18n="personaDescription">Description (max 100 words)</span>
-            <textarea id="persona-description" rows="3"></textarea>
+            <div class="label-inline">
+              <span data-i18n="personaDescription">Description (max 100 chars)</span>
+              <span id="persona-description-count" class="muted">0/100</span>
+            </div>
+            <textarea id="persona-description" rows="3" maxlength="100"></textarea>
+          </label>
+          <label>
+            <span data-i18n="personaInternalDescription">Internal Description (optional)</span>
+            <textarea id="persona-internal-description" rows="4"></textarea>
           </label>
           <label class="checkbox-line">
             <input id="persona-is-default" type="checkbox" />
@@ -515,15 +538,11 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
-          <label>
-            <span data-i18n="customTagsOnePerLine">Custom tags (one per line)</span>
-            <textarea id="tags-custom-raw" rows="12"></textarea>
-          </label>
-          <p class="muted" data-i18n="predefinedTagsHint">Predefined tags are always available. Add your own tags here.</p>
-        </div>
-        <div class="modal-footer">
-          <button class="secondary-btn" data-close-modal data-i18n="cancel">Cancel</button>
-          <button id="save-tags-btn" class="primary-btn" data-i18n="saveTags">Save Tags</button>
+          <div class="tag-manager-input-row">
+            <input id="tag-manager-input" type="text" data-i18n-placeholder="tagInputPlaceholder" placeholder="New tag" />
+            <button id="add-tag-btn" class="primary-btn" type="button" disabled>+</button>
+          </div>
+          <div id="tag-manager-list" class="tag-manager-list"></div>
         </div>
       </div>
     </div>

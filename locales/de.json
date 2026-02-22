@@ -274,5 +274,7 @@
   "generationErrorLine1": "Generation failed for this message.",
   "generationErrorLine3": "You can regenerate this message, switch model, or continue the chat.",
   "threadQueueBadgeTitle": "Queued for generation (position {position})",
-  "queuedLabel": "Queued {position}/{size}"
+  "queuedLabel": "Queued {position}/{size}",
+  "guide": "Guide",
+  "guideComingSoon": "Guide will be added soon."
 }
