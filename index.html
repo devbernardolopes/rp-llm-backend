@@ -451,6 +451,39 @@
             <textarea id="char-system-prompt" rows="8"></textarea>
           </label>
           <label class="full">
+            Default User Persona Override (Character-only)
+            <select id="char-default-persona-override"></select>
+          </label>
+          <label class="full">
+            One-time only Extra System/Character Prompt
+            <textarea
+              id="char-one-time-extra-prompt"
+              rows="4"
+              placeholder="Appended only for the first assistant generation."
+            ></textarea>
+          </label>
+          <label class="full">
+            Writing Instructions
+            <textarea
+              id="char-writing-instructions"
+              rows="4"
+              placeholder="Reserved for future implementation."
+              disabled
+            ></textarea>
+          </label>
+          <label class="full">
+            Initial Messages
+            <textarea
+              id="char-initial-messages"
+              rows="8"
+              placeholder="[AI]: text...
+
+[USER]: text...
+
+[SYSTEM]: text..."
+            ></textarea>
+          </label>
+          <label class="full">
             Tags (comma-separated)
             <input
               id="char-tags-input"

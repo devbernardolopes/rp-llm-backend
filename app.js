@@ -705,6 +705,9 @@ function setupEvents() {
     "#char-name",
     "#char-avatar",
     "#char-system-prompt",
+    "#char-default-persona-override",
+    "#char-one-time-extra-prompt",
+    "#char-initial-messages",
     "#char-persona-injection-placement",
     "#char-use-memory",
     "#char-use-postprocess",
@@ -755,6 +758,197 @@ function parseTagList(value) {
 
 function formatTagList(tags) {
   return (Array.isArray(tags) ? tags : []).map((t) => normalizeTagValue(t)).filter(Boolean).join(", ");
+}
+
+function normalizeInitialMessageRole(role) {
+  const normalized = normalizeApiRole(role);
+  if (
+    normalized !== "system" &&
+    normalized !== "user" &&
+    normalized !== "assistant"
+  ) {
+    return null;
+  }
+  return normalized;
+}
+
+function parseInitialMessagesInput(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return { raw: "", messages: [] };
+  const parsedAsTagged = parseTaggedInitialMessages(text);
+  if (parsedAsTagged.messages.length > 0) {
+    return parsedAsTagged;
+  }
+
+  // Free-text fallback: no role tags found, treat everything as one assistant message.
+  const singleAssistantFallback = () => ({
+    raw: text,
+    messages: [
+      {
+        role: "assistant",
+        apiRole: "assistant",
+        content: text,
+      },
+    ],
+  });
+
+  // Backward compatibility for old JSON-based initial message definitions.
+  let parsed = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return singleAssistantFallback();
+  }
+  const arr = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed?.messages)
+      ? parsed.messages
+      : null;
+  if (!arr) {
+    return singleAssistantFallback();
+  }
+  const messages = [];
+  arr.forEach((entry, idx) => {
+    if (!entry || typeof entry !== "object") {
+      throw new Error(`Initial message #${idx + 1} must be an object.`);
+    }
+    const role = normalizeInitialMessageRole(entry.role || entry.apiRole);
+    if (!role) {
+      throw new Error(
+        `Initial message #${idx + 1} has invalid role. Use system, user, or assistant.`,
+      );
+    }
+    const content = normalizeContentParts(entry.content);
+    if (!String(content || "").trim()) return;
+    messages.push({
+      role,
+      apiRole: role,
+      content: String(content),
+    });
+  });
+  return { raw: text, messages };
+}
+
+function serializeInitialMessages(messages) {
+  const safe = (Array.isArray(messages) ? messages : []).map((m) => ({
+    role: normalizeInitialMessageRole(m?.role || m?.apiRole) || "user",
+    content: String(m?.content || ""),
+  }));
+  return JSON.stringify(safe, null, 2);
+}
+
+function parseTaggedInitialMessages(text) {
+  const lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+  const roleLinePattern =
+    /^\s*\[(AI|BOT|ASSISTANT|USER|SYSTEM)\]\s*:?\s*(.*)$/i;
+  const messages = [];
+  const leadingLines = [];
+  let sawRoleTag = false;
+  let current = null;
+
+  const pushCurrent = () => {
+    if (!current) return;
+    const content = current.lines.join("\n").trim();
+    if (content) {
+      messages.push({
+        role: current.role,
+        apiRole: current.role,
+        content,
+      });
+    }
+    current = null;
+  };
+
+  lines.forEach((line) => {
+    const match = line.match(roleLinePattern);
+    if (!match) {
+      if (current) current.lines.push(line);
+      else if (!sawRoleTag) leadingLines.push(line);
+      return;
+    }
+
+    sawRoleTag = true;
+    pushCurrent();
+    const rawRole = String(match[1] || "").toLowerCase();
+    const role =
+      rawRole === "ai" || rawRole === "bot" || rawRole === "assistant"
+        ? "assistant"
+        : rawRole === "system"
+          ? "system"
+          : "user";
+    current = {
+      role,
+      lines: [String(match[2] || "")],
+    };
+  });
+
+  pushCurrent();
+  const leadingContent = leadingLines.join("\n").trim();
+  if (sawRoleTag && leadingContent) {
+    messages.unshift({
+      role: "assistant",
+      apiRole: "assistant",
+      content: leadingContent,
+    });
+  }
+  return { raw: text, messages };
+}
+
+function formatInitialMessagesForEditor(messages) {
+  const list = Array.isArray(messages) ? messages : [];
+  if (list.length === 0) return "";
+  return list
+    .map((m) => {
+      const role = normalizeApiRole(m?.apiRole || m?.role);
+      const label =
+        role === "assistant" ? "AI" : role === "system" ? "SYSTEM" : "USER";
+      const content = String(m?.content || "");
+      return `[${label}]: ${content}`;
+    })
+    .join("\n\n");
+}
+
+function replaceInitialMessagePlaceholders(content, personaName, charName) {
+  return String(content || "")
+    .replace(/\{\{\s*user\s*\}\}/gi, personaName || "You")
+    .replace(/\{\{\s*char\s*\}\}/gi, charName || "Character");
+}
+
+async function buildThreadInitialMessages(character) {
+  const source = Array.isArray(character?.initialMessages)
+    ? character.initialMessages
+    : [];
+  const defaultPersona = await getCharacterDefaultPersona(character);
+  const personaName = defaultPersona?.name || "You";
+  const charName = character?.name || "Character";
+  const now = Date.now();
+  return source.map((m, i) => {
+    const role = normalizeInitialMessageRole(m?.role || m?.apiRole) || "user";
+    const content = replaceInitialMessagePlaceholders(
+      String(m?.content || ""),
+      personaName,
+      charName,
+    );
+    const payload = {
+      role,
+      apiRole: role,
+      content,
+      createdAt: now + i,
+      isInitial: true,
+    };
+    if (role === "user") {
+      payload.senderName = personaName;
+      payload.senderAvatar = defaultPersona?.avatar || "";
+      payload.senderPersonaId = defaultPersona?.id || null;
+    }
+    return payload;
+  });
+}
+
+function shouldAutoReplyFromInitialMessages(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return false;
+  const last = messages[messages.length - 1];
+  return normalizeApiRole(last?.apiRole || last?.role) === "user";
 }
 
 function getAllAvailableTags() {
@@ -2210,7 +2404,7 @@ function closeActiveModal() {
   state.modalDirty[closingId] = false;
 }
 
-function openCharacterModal(character = null) {
+async function openCharacterModal(character = null) {
   state.charModalTtsTestPlaying = false;
   state.editingCharacterId = character?.id || null;
   document.getElementById("character-title").textContent =
@@ -2222,6 +2416,18 @@ function openCharacterModal(character = null) {
   document.getElementById("char-avatar-file").value = "";
   document.getElementById("char-system-prompt").value =
     character?.systemPrompt || "";
+  await populateCharDefaultPersonaOverrideSelect(
+    character?.defaultPersonaOverrideId || null,
+  );
+  document.getElementById("char-one-time-extra-prompt").value =
+    character?.oneTimeExtraPrompt || "";
+  document.getElementById("char-writing-instructions").value =
+    character?.writingInstructions || "";
+  document.getElementById("char-initial-messages").value =
+    character?.initialMessagesRaw ||
+    ((character?.initialMessages || []).length > 0
+      ? formatInitialMessagesForEditor(character?.initialMessages || [])
+      : "");
   setCharacterTagsInputValue(character?.tags || []);
   renderCharacterTagPresetButtons();
   document.getElementById("char-persona-injection-placement").value =
@@ -2263,9 +2469,32 @@ function openCharacterModal(character = null) {
 async function saveCharacterFromModal() {
   const selectedLorebookIds = getSelectedLorebookIds();
   const selectedTts = getResolvedCharTtsSelection();
+  let parsedInitialMessages = null;
+  try {
+    parsedInitialMessages = parseInitialMessagesInput(
+      document.getElementById("char-initial-messages").value,
+    );
+  } catch (err) {
+    await openInfoDialog(
+      "Invalid Initial Messages",
+      String(err?.message || "Could not parse initial messages."),
+    );
+    return;
+  }
   const payload = {
     name: document.getElementById("char-name").value.trim(),
     systemPrompt: document.getElementById("char-system-prompt").value.trim(),
+    defaultPersonaOverrideId:
+      Number(document.getElementById("char-default-persona-override").value) ||
+      null,
+    oneTimeExtraPrompt: document
+      .getElementById("char-one-time-extra-prompt")
+      .value.trim(),
+    writingInstructions: document
+      .getElementById("char-writing-instructions")
+      .value.trim(),
+    initialMessagesRaw: parsedInitialMessages.raw,
+    initialMessages: parsedInitialMessages.messages,
     useMemory: document.getElementById("char-use-memory").checked,
     usePostProcessing: document.getElementById("char-use-postprocess").checked,
     personaInjectionPlacement:
@@ -2424,7 +2653,7 @@ async function renderPersonaSelector() {
     select.appendChild(opt);
   });
 
-  const defaultPersona = await getDefaultPersona();
+  const defaultPersona = await getCharacterDefaultPersona(currentCharacter);
   const requestedId = Number(currentThread?.selectedPersonaId);
   const existing = requestedId
     ? personas.find((p) => p.id === requestedId)
@@ -2453,7 +2682,7 @@ async function onPersonaSelectChange() {
   const personaId = Number(select.value);
   currentPersona = personaId
     ? await db.personas.get(personaId)
-    : await getDefaultPersona();
+    : await getCharacterDefaultPersona(currentCharacter);
   updatePersonaPickerDisplay();
   if (!currentThread) return;
   const updatedAt = Date.now();
@@ -2680,6 +2909,40 @@ async function getDefaultPersona() {
   return personas.find((p) => p.isDefault) || null;
 }
 
+async function getCharacterDefaultPersona(character) {
+  const overrideId = Number(character?.defaultPersonaOverrideId);
+  if (Number.isInteger(overrideId) && overrideId > 0) {
+    const overridePersona = await db.personas.get(overrideId);
+    if (overridePersona) return overridePersona;
+  }
+  return getDefaultPersona();
+}
+
+async function populateCharDefaultPersonaOverrideSelect(selectedId = null) {
+  await ensurePersonasInitialized();
+  const select = document.getElementById("char-default-persona-override");
+  if (!select) return;
+  const personas = await getOrderedPersonas();
+  select.innerHTML = "";
+  const defaultOpt = document.createElement("option");
+  defaultOpt.value = "";
+  defaultOpt.textContent = "Use global default";
+  select.appendChild(defaultOpt);
+  personas.forEach((persona) => {
+    const opt = document.createElement("option");
+    opt.value = String(persona.id);
+    opt.textContent = `${persona.name || `Persona ${persona.id}`}${persona.isDefault ? " (Global Default)" : ""}`;
+    select.appendChild(opt);
+  });
+  const targetId = Number(selectedId);
+  if (Number.isInteger(targetId) && targetId > 0) {
+    const exists = personas.some((p) => Number(p.id) === targetId);
+    select.value = exists ? String(targetId) : "";
+  } else {
+    select.value = "";
+  }
+}
+
 async function ensurePersonasInitialized() {
   const personas = await getOrderedPersonas();
   if (personas.length === 0) {
@@ -2804,6 +3067,26 @@ function formatDateTime(value) {
   } catch {
     return "-";
   }
+}
+
+function hasMeaningfulAssistantMessage(history) {
+  return (Array.isArray(history) ? history : []).some((m) => {
+    if (normalizeApiRole(m?.apiRole || m?.role) !== "assistant") return false;
+    if (m?.pending === true) return false;
+    return String(m?.content || "").trim().length > 0;
+  });
+}
+
+function shouldIncludeOneTimeExtraPrompt(history) {
+  return !hasMeaningfulAssistantMessage(history);
+}
+
+function isFirstAssistantMessageIndex(index, history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  const first = list.findIndex(
+    (m) => normalizeApiRole(m?.apiRole || m?.role) === "assistant",
+  );
+  return first === index;
 }
 
 function updateCharacterPromptPlaceholder() {
@@ -2991,14 +3274,16 @@ async function deleteCharacter(characterId) {
 async function startNewThread(characterId) {
   const character = await db.characters.get(characterId);
   if (!character) return;
+  const defaultPersonaForCharacter = await getCharacterDefaultPersona(character);
+  const initialMessages = await buildThreadInitialMessages(character);
 
   const newThread = {
     characterId,
     title: `Thread ${new Date().toLocaleString()}`,
     titleGenerated: false,
     titleManual: false,
-    messages: [],
-    selectedPersonaId: currentPersona?.id || null,
+    messages: initialMessages,
+    selectedPersonaId: defaultPersonaForCharacter?.id || null,
     lastPersonaInjectionPersonaId: null,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -3013,6 +3298,12 @@ async function startNewThread(characterId) {
   await renderThreads();
   await renderCharacters();
   await openThread(threadId);
+  if (
+    state.settings.autoReplyEnabled !== false &&
+    shouldAutoReplyFromInitialMessages(initialMessages)
+  ) {
+    await generateBotReply();
+  }
   showToast("Thread created.", "success");
 }
 
@@ -3348,6 +3639,10 @@ function buildMessageRow(message, index, streaming) {
       await openMessageMetadataModal(index);
     });
     infoBtn.classList.add("msg-info-btn");
+    infoBtn.disabled =
+      disableControlsForRow ||
+      message.isInitial === true ||
+      message.userEdited === true;
     controls.appendChild(infoBtn);
 
     const speakerBtn = iconButton("speaker", "Speak message", async (e) => {
@@ -3376,6 +3671,10 @@ function buildMessageRow(message, index, streaming) {
       await openMessageMetadataModal(index);
     });
     infoBtn.classList.add("msg-info-btn");
+    infoBtn.disabled =
+      disableControlsForRow ||
+      message.isInitial === true ||
+      message.userEdited === true;
     controls.appendChild(infoBtn);
   }
 
@@ -3499,6 +3798,7 @@ function beginInlineMessageEdit(index, contentEl) {
       return;
     }
     message.content = next;
+    message.userEdited = true;
     renderMessageContent(contentEl, message);
     await persistCurrentThread();
     await renderThreads();
@@ -3721,6 +4021,7 @@ async function sendMessage(options = {}) {
 
 async function generateBotReply() {
   if (!currentThread || !currentCharacter || state.sending) return;
+  const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(conversationHistory);
 
   const log = document.getElementById("chat-log");
   const pending = {
@@ -3753,7 +4054,9 @@ async function generateBotReply() {
   setSendingState(true);
 
   try {
-    const systemPrompt = await buildSystemPrompt(currentCharacter);
+    const systemPrompt = await buildSystemPrompt(currentCharacter, {
+      includeOneTimeExtraPrompt: includeOneTimeExtra,
+    });
     const result = await callOpenRouter(
       systemPrompt,
       conversationHistory,
@@ -3844,6 +4147,7 @@ async function regenerateMessage(index) {
   if (!target || target.role !== "assistant") return;
 
   const prior = conversationHistory.slice(0, index);
+  const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
   const originalContent = String(target.content || "");
 
   stopTtsPlayback();
@@ -3853,7 +4157,9 @@ async function regenerateMessage(index) {
   setSendingState(true);
 
   try {
-    const systemPrompt = await buildSystemPrompt(currentCharacter);
+    const systemPrompt = await buildSystemPrompt(currentCharacter, {
+      includeOneTimeExtraPrompt: includeOneTimeExtra,
+    });
     target.content = "";
     renderChat();
     const row = document.getElementById("chat-log").children[index];
@@ -3882,6 +4188,8 @@ async function regenerateMessage(index) {
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
     target.content = reply || "(No content returned)";
+    target.isInitial = false;
+    target.userEdited = false;
     target.finishReason = String(result.finishReason || "");
     target.nativeFinishReason = String(result.nativeFinishReason || "");
     target.truncatedByFilter = result.truncatedByFilter === true;
@@ -4382,7 +4690,10 @@ function refreshMessageControlStates() {
       btn.disabled = isStreaming || isTruncated;
     });
     row.querySelectorAll(".msg-info-btn").forEach((btn) => {
-      btn.disabled = isStreaming;
+      btn.disabled =
+        isStreaming ||
+        message?.isInitial === true ||
+        message?.userEdited === true;
     });
   });
 }
@@ -4398,6 +4709,7 @@ function openImagePreview(src) {
 async function openMessageMetadataModal(index) {
   const message = conversationHistory[index];
   if (!message) return;
+  if (message.isInitial === true || message.userEdited === true) return;
   openModal("message-metadata-modal");
   const pre = document.getElementById("message-metadata-json");
   if (!pre) return;
@@ -4588,8 +4900,8 @@ async function migrateLegacySessions() {
   }
 }
 
-async function buildSystemPrompt(character) {
-  const defaultPersona = await getDefaultPersona();
+async function buildSystemPrompt(character, options = {}) {
+  const defaultPersona = await getCharacterDefaultPersona(character);
   const personaForContext = currentPersona || defaultPersona;
   const basePromptRaw = (
     character.systemPrompt ||
@@ -4600,16 +4912,28 @@ async function buildSystemPrompt(character) {
     basePromptRaw,
     defaultPersona?.name || "You",
   );
+  const oneTimeExtraRaw =
+    options?.includeOneTimeExtraPrompt === true
+      ? String(character?.oneTimeExtraPrompt || "").trim()
+      : "";
+  const oneTimeExtra = replaceUserPlaceholders(
+    oneTimeExtraRaw,
+    defaultPersona?.name || "You",
+  );
+  const promptBeforePersona = [basePrompt, oneTimeExtra]
+    .filter((part) => String(part || "").trim())
+    .join("\n\n")
+    .trim();
   const loreEntries = await getCharacterLoreEntries(character);
   const memory =
     character.useMemory === false ? null : await getMemorySummary(character.id);
   const contextSections = [];
   state.pendingPersonaInjectionPersonaId = null;
-  let systemPromptWithPersona = basePrompt;
+  let systemPromptWithPersona = promptBeforePersona;
   if (personaForContext && shouldInjectPersonaContext(personaForContext)) {
     const personaInjected = renderPersonaInjectionContent(personaForContext);
     systemPromptWithPersona = applyPersonaInjectionPlacement(
-      basePrompt,
+      promptBeforePersona,
       personaInjected,
       character?.personaInjectionPlacement || "end_system_prompt",
     );
