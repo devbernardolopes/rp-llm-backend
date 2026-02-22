@@ -711,6 +711,7 @@ function setupEvents() {
     "#char-persona-injection-placement",
     "#char-use-memory",
     "#char-use-postprocess",
+    "#char-auto-trigger-first-ai",
     "#char-avatar-scale",
     "#char-tags-input",
     "#char-tts-voice",
@@ -2218,7 +2219,7 @@ async function renderThreads() {
     const titleBtn = document.createElement("button");
     titleBtn.className = "thread-title";
     titleBtn.textContent = thread.title || `Thread ${thread.id}`;
-    titleBtn.title = "Open thread";
+    titleBtn.title = thread.title || `Thread ${thread.id}`;
     titleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       openThread(thread.id);
@@ -2436,6 +2437,8 @@ async function openCharacterModal(character = null) {
     character?.useMemory !== false;
   document.getElementById("char-use-postprocess").checked =
     character?.usePostProcessing !== false;
+  document.getElementById("char-auto-trigger-first-ai").checked =
+    character?.autoTriggerAiFirstMessage !== false;
   document.getElementById("char-avatar-scale").value = String(
     Number(character?.avatarScale) || 1,
   );
@@ -2497,6 +2500,9 @@ async function saveCharacterFromModal() {
     initialMessages: parsedInitialMessages.messages,
     useMemory: document.getElementById("char-use-memory").checked,
     usePostProcessing: document.getElementById("char-use-postprocess").checked,
+    autoTriggerAiFirstMessage: document.getElementById(
+      "char-auto-trigger-first-ai",
+    ).checked,
     personaInjectionPlacement:
       document.getElementById("char-persona-injection-placement").value ||
       "end_system_prompt",
@@ -3298,10 +3304,14 @@ async function startNewThread(characterId) {
   await renderThreads();
   await renderCharacters();
   await openThread(threadId);
-  if (
+  const shouldAutoTriggerFirstAi =
+    (character?.autoTriggerAiFirstMessage ?? true) !== false;
+  const shouldTriggerFromInitial =
     state.settings.autoReplyEnabled !== false &&
-    shouldAutoReplyFromInitialMessages(initialMessages)
-  ) {
+    shouldAutoReplyFromInitialMessages(initialMessages);
+  const shouldTriggerWithoutInitial =
+    shouldAutoTriggerFirstAi && initialMessages.length === 0;
+  if (shouldTriggerFromInitial || shouldTriggerWithoutInitial) {
     await generateBotReply();
   }
   showToast("Thread created.", "success");
@@ -3639,10 +3649,7 @@ function buildMessageRow(message, index, streaming) {
       await openMessageMetadataModal(index);
     });
     infoBtn.classList.add("msg-info-btn");
-    infoBtn.disabled =
-      disableControlsForRow ||
-      message.isInitial === true ||
-      message.userEdited === true;
+    applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
     controls.appendChild(infoBtn);
 
     const speakerBtn = iconButton("speaker", "Speak message", async (e) => {
@@ -3671,10 +3678,7 @@ function buildMessageRow(message, index, streaming) {
       await openMessageMetadataModal(index);
     });
     infoBtn.classList.add("msg-info-btn");
-    infoBtn.disabled =
-      disableControlsForRow ||
-      message.isInitial === true ||
-      message.userEdited === true;
+    applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
     controls.appendChild(infoBtn);
   }
 
@@ -3711,6 +3715,39 @@ function renderMessageContent(contentEl, message) {
   if (message.truncatedByFilter === true) {
     contentEl.appendChild(buildTruncationNotice());
   }
+}
+
+function applyInfoButtonAvailability(button, message, isStreaming) {
+  if (!button) return;
+  const isInitial = message?.isInitial === true;
+  const isUserEdited = message?.userEdited === true;
+  button.disabled = !!isStreaming || isInitial || isUserEdited;
+  if (isUserEdited) {
+    button.setAttribute(
+      "title",
+      "Metadata is not available in user edited messages.",
+    );
+    button.setAttribute(
+      "aria-label",
+      "Metadata unavailable for user edited message",
+    );
+    return;
+  }
+  if (isInitial) {
+    button.setAttribute(
+      "title",
+      "Metadata is not available for initial messages.",
+    );
+    button.setAttribute("aria-label", "Metadata unavailable for initial message");
+    return;
+  }
+  if (isStreaming) {
+    button.setAttribute("title", "Metadata unavailable while generating.");
+    button.setAttribute("aria-label", "Metadata unavailable while generating");
+    return;
+  }
+  button.setAttribute("title", "Message metadata");
+  button.setAttribute("aria-label", "Message metadata");
 }
 
 function buildTruncationNotice() {
@@ -3800,6 +3837,7 @@ function beginInlineMessageEdit(index, contentEl) {
     message.content = next;
     message.userEdited = true;
     renderMessageContent(contentEl, message);
+    refreshMessageControlStates();
     await persistCurrentThread();
     await renderThreads();
     showToast("Message updated.", "success");
@@ -4690,10 +4728,7 @@ function refreshMessageControlStates() {
       btn.disabled = isStreaming || isTruncated;
     });
     row.querySelectorAll(".msg-info-btn").forEach((btn) => {
-      btn.disabled =
-        isStreaming ||
-        message?.isInitial === true ||
-        message?.userEdited === true;
+      applyInfoButtonAvailability(btn, message, isStreaming);
     });
   });
 }
