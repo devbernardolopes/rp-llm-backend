@@ -84,6 +84,7 @@ const DEFAULT_SETTINGS = {
   personaInjectionTemplate:
     "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
   personaInjectionWhen: "always",
+  writingInstructionsInjectionWhen: "always",
   markdownCustomCss:
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
   postprocessRulesJson: "[]",
@@ -98,6 +99,69 @@ const DEFAULT_SETTINGS = {
 
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
 const LOCALES_BASE_PATH = "locales";
+const BOT_LANGUAGE_OPTIONS = [
+  "en",
+  "fr",
+  "it",
+  "de",
+  "es",
+  "pt-BR",
+  "pt-PT",
+  "ja",
+  "ko",
+  "zh-CN",
+  "zh-TW",
+  "ru",
+  "ar",
+  "nl",
+  "tr",
+  "pl",
+  "sv",
+  "da",
+  "fi",
+  "no",
+  "cs",
+  "ro",
+  "hu",
+  "el",
+  "he",
+  "hi",
+  "id",
+  "th",
+  "vi",
+];
+
+const BOT_LANGUAGE_FLAGS = {
+  en: "🇺🇸",
+  fr: "🇫🇷",
+  it: "🇮🇹",
+  de: "🇩🇪",
+  es: "🇪🇸",
+  "pt-BR": "🇧🇷",
+  "pt-PT": "🇵🇹",
+  ja: "🇯🇵",
+  ko: "🇰🇷",
+  "zh-CN": "🇨🇳",
+  "zh-TW": "🇹🇼",
+  ru: "🇷🇺",
+  ar: "🇸🇦",
+  nl: "🇳🇱",
+  tr: "🇹🇷",
+  pl: "🇵🇱",
+  sv: "🇸🇪",
+  da: "🇩🇰",
+  fi: "🇫🇮",
+  no: "🇳🇴",
+  cs: "🇨🇿",
+  ro: "🇷🇴",
+  hu: "🇭🇺",
+  el: "🇬🇷",
+  he: "🇮🇱",
+  hi: "🇮🇳",
+  id: "🇮🇩",
+  th: "🇹🇭",
+  vi: "🇻🇳",
+};
 
 const I18N = {
   en: {
@@ -342,8 +406,13 @@ const I18N = {
     memorySummarizerPrompt: "Memory Summarizer System Prompt",
     personaInjectionTemplate: "Persona Injection Template",
     personaInjectionTiming: "Persona Injection Timing",
+    writingInstructionsInjectionTiming: "Writing Instructions Injection Timing",
     always: "Always",
     onPersonaChange: "On Persona Change (first message always injects)",
+    everyOther: "Every Other",
+    everySecond: "Every Second",
+    everyThird: "Every Third",
+    everyFourth: "Every Fourth",
     nameLabel: "Name",
     avatarUrl: "Avatar URL",
     avatarFile: "Avatar File",
@@ -379,6 +448,17 @@ const I18N = {
     tagsCommaSeparated: "Tags (comma-separated)",
     personaInjectionPlacement: "Persona Injection Placement",
     atEndCharacterPrompt: "At End of Character Prompt",
+    botConfiguration: "Bot Configuration",
+    preferLanguageMatchingUserPersona: "Prefer Language Matching User Persona",
+    addLanguage: "Add Language",
+    add: "Add",
+    enableTts: "Enable TTS",
+    preferLoreBooksInMatchingLanguage: "Prefer Lore Books in Matching Language",
+    removeLanguageTitle: "Remove Language",
+    removeLanguageConfirm: "Remove language definition {lang}?",
+    removeLanguageConfirmWithThreads:
+      "Remove language definition {lang}? This will delete {count} thread(s) using this language.",
+    languageRequired: "At least one language definition is required.",
     enableMemory: "Enable Memory",
     enablePostprocess: "Enable Post-processing Rules",
     autoTriggerAiFirst: "Auto-trigger AI first message",
@@ -659,6 +739,10 @@ const state = {
     seq: 0,
   },
   renderThreadsSeq: 0,
+  charModalDefinitions: [],
+  charModalActiveLanguage: "",
+  charModalActiveTab: "lang",
+  charModalPendingThreadDeleteIds: [],
 };
 
 const TTS_DEBUG = true;
@@ -792,6 +876,10 @@ function updateCheckboxLabelText(inputId, text) {
   nodes[nodes.length - 1].nodeValue = ` ${text}`;
 }
 
+function getHomeButtonText() {
+  return `⌂ ${t("home")}`;
+}
+
 async function applyInterfaceLanguage() {
   state.i18nLang = resolveInterfaceLanguage();
   await loadLocaleBundle(state.i18nLang);
@@ -806,7 +894,7 @@ async function applyInterfaceLanguage() {
   }
   const homeBtn = document.getElementById("home-btn");
   if (homeBtn) {
-    homeBtn.textContent = paneCollapsed ? "H" : t("home");
+    homeBtn.textContent = paneCollapsed ? "⌂" : getHomeButtonText();
     homeBtn.title = paneCollapsed ? t("home") : "";
   }
   const importBtn = document.getElementById("import-character-btn");
@@ -847,7 +935,7 @@ async function applyInterfaceLanguage() {
   }
 
   if (homeBtn && !document.getElementById("left-pane")?.classList.contains("collapsed")) {
-    homeBtn.textContent = t("home");
+    homeBtn.textContent = getHomeButtonText();
   }
   const popTitle = document.querySelector(".popover-title");
   if (popTitle) popTitle.textContent = t("previousPrompts");
@@ -920,6 +1008,46 @@ function setupEvents() {
   document
     .getElementById("home-btn")
     .addEventListener("click", showMainView);
+  document
+    .getElementById("char-config-tab-btn")
+    .addEventListener("click", () => {
+      saveActiveCharacterDefinitionFromForm();
+      setCharacterModalTab("config");
+      renderCharacterDefinitionTabs();
+    });
+  document
+    .getElementById("char-add-lang-btn")
+    .addEventListener("click", () => {
+      saveActiveCharacterDefinitionFromForm();
+      populateCharacterLanguageSelectOptions();
+      const modal = document.getElementById("char-language-modal");
+      if (!modal) return;
+      modal.classList.remove("hidden");
+    });
+  document
+    .getElementById("char-language-cancel")
+    .addEventListener("click", () => {
+      document.getElementById("char-language-modal")?.classList.add("hidden");
+    });
+  document
+    .getElementById("char-language-cancel-x")
+    .addEventListener("click", () => {
+      document.getElementById("char-language-modal")?.classList.add("hidden");
+    });
+  document
+    .getElementById("char-language-add")
+    .addEventListener("click", () => {
+      const select = document.getElementById("char-language-select");
+      const code = normalizeBotLanguageCode(select?.value || "");
+      if (!code) return;
+      if (state.charModalDefinitions.some((d) => d.language === code)) return;
+      state.charModalDefinitions.push(createEmptyCharacterDefinition(code));
+      state.charModalActiveLanguage = code;
+      document.getElementById("char-language-modal")?.classList.add("hidden");
+      loadActiveCharacterDefinitionToForm();
+      setCharacterModalTab("lang");
+      renderCharacterDefinitionTabs();
+    });
   document
     .getElementById("rename-thread-btn")
     .addEventListener("click", renameCurrentThread);
@@ -1160,6 +1288,8 @@ function setupEvents() {
       if (e.target !== modal) return;
       if (modal.id === "image-preview-modal") {
         closeImagePreview();
+      } else if (modal.id === "char-language-modal") {
+        modal.classList.add("hidden");
       } else if (modal.id === "confirm-modal") {
         resolveConfirmDialog(false);
       } else {
@@ -1173,7 +1303,9 @@ function setupEvents() {
     "#char-avatar",
     "#char-system-prompt",
     "#char-default-persona-override",
+    "#char-prefer-persona-language",
     "#char-one-time-extra-prompt",
+    "#char-writing-instructions",
     "#char-initial-messages",
     "#char-persona-injection-placement",
     "#char-use-memory",
@@ -1185,6 +1317,8 @@ function setupEvents() {
     "#char-tts-language",
     "#char-tts-rate",
     "#char-tts-pitch",
+    "#char-tts-enabled",
+    "#char-prefer-lore-language",
   ]);
   markModalDirtyOnInput("personas-modal", [
     "#persona-name",
@@ -1681,6 +1815,12 @@ function closeAnyOpenModal() {
     return;
   }
 
+  const charLanguageModal = document.getElementById("char-language-modal");
+  if (charLanguageModal && !charLanguageModal.classList.contains("hidden")) {
+    charLanguageModal.classList.add("hidden");
+    return;
+  }
+
   if (state.activeModalId) {
     closeActiveModal();
     return;
@@ -1698,11 +1838,9 @@ function closeAnyOpenModal() {
 async function setupSettingsControls() {
   const uiLanguageSelect = document.getElementById("ui-language-select");
   const openRouterApiKey = document.getElementById("openrouter-api-key");
-  const puterSignInBtn = document.getElementById("puter-signin-btn");
   const ttsTestText = document.getElementById("tts-test-text");
   const ttsTestPlayBtn = document.getElementById("tts-test-play-btn");
   const ttsTestStatus = document.getElementById("tts-test-status");
-  const puterRow = puterSignInBtn?.closest(".settings-inline-row");
   const modelSelect = document.getElementById("model-select");
   const modelPricingFilter = document.getElementById("model-pricing-filter");
   const modelModalityFilter = document.getElementById("model-modality-filter");
@@ -1795,6 +1933,9 @@ async function setupSettingsControls() {
     "persona-injection-template",
   );
   const personaInjectionWhen = document.getElementById("persona-injection-when");
+  const writingInstructionsInjectionWhen = document.getElementById(
+    "writing-instructions-injection-when",
+  );
   const shortcutsRaw = document.getElementById("shortcuts-raw");
   markdownCheck.checked = !!state.settings.markdownEnabled;
   allowMessageHtml.checked = state.settings.allowMessageHtml !== false;
@@ -1849,6 +1990,13 @@ async function setupSettingsControls() {
     state.settings.personaInjectionWhen === "on_change"
       ? "on_change"
       : "always";
+  const writingWhen = normalizeWritingInstructionsTiming(
+    state.settings.writingInstructionsInjectionWhen,
+  );
+  state.settings.writingInstructionsInjectionWhen = writingWhen;
+  if (writingInstructionsInjectionWhen) {
+    writingInstructionsInjectionWhen.value = writingWhen;
+  }
   shortcutsRaw.value = state.settings.shortcutsRaw || "";
   cancelShortcut.value =
     state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
@@ -1861,7 +2009,6 @@ async function setupSettingsControls() {
   if (ttsTestText) {
     ttsTestText.value = "This is a test voice playback.";
   }
-  if (puterRow) puterRow.classList.add("hidden");
 
   if (ttsTestPlayBtn) {
     ttsTestPlayBtn.addEventListener("click", async () => {
@@ -2037,6 +2184,13 @@ async function setupSettingsControls() {
       personaInjectionWhen.value === "on_change" ? "on_change" : "always";
     saveSettings();
   });
+  writingInstructionsInjectionWhen?.addEventListener("change", () => {
+    state.settings.writingInstructionsInjectionWhen =
+      normalizeWritingInstructionsTiming(writingInstructionsInjectionWhen.value);
+    writingInstructionsInjectionWhen.value =
+      state.settings.writingInstructionsInjectionWhen;
+    saveSettings();
+  });
 
   cancelShortcut.addEventListener("change", () => {
     state.settings.cancelShortcut = normalizeShortcutString(
@@ -2102,7 +2256,7 @@ function getSettingsGroupForNode(node) {
     has("#temperature-slider")
   ) return "api";
   if (has("#model-selected-meta") || has("#model-roleplay-warning")) return "api";
-  if (has("#puter-signin-btn") || has("#tts-test-text") || has("#tts-test-play-btn")) return "tts";
+  if (has("#tts-test-text") || has("#tts-test-play-btn")) return "tts";
   if (
     has("#markdown-enabled") ||
     has("#allow-message-html") ||
@@ -2116,7 +2270,8 @@ function getSettingsGroupForNode(node) {
     has("#global-prompt-template") ||
     has("#summary-system-prompt") ||
     has("#persona-injection-template") ||
-    has("#persona-injection-when")
+    has("#persona-injection-when") ||
+    has("#writing-instructions-injection-when")
   ) return "prompting";
   if (has("#ui-language-select") || has("#toast-delay-slider")) return "appearance";
   const text = `${node.textContent || ""}`.toLowerCase();
@@ -2136,7 +2291,6 @@ function getSettingsGroupForNode(node) {
     return "api";
   }
   if (
-    id === "puter-signin-btn" ||
     id === "tts-test-text" ||
     id === "tts-test-play-btn" ||
     id === "tts-test-status" ||
@@ -2165,7 +2319,8 @@ function getSettingsGroupForNode(node) {
     id === "global-prompt-template" ||
     id === "summary-system-prompt" ||
     id === "persona-injection-template" ||
-    id === "persona-injection-when"
+    id === "persona-injection-when" ||
+    id === "writing-instructions-injection-when"
   ) {
     return "prompting";
   }
@@ -2814,27 +2969,79 @@ async function renderCharacters() {
   }
 
   sortedCharacters.forEach((char) => {
+    const resolved = resolveCharacterForLanguage(char, char?.selectedCardLanguage);
+    const threadCount = threadCountByCharId.get(Number(char.id)) || 0;
     const card = document.createElement("article");
     card.className = "character-card";
+
+    const avatarWrap = document.createElement("div");
+    avatarWrap.className = "character-avatar-wrap";
+
+    const langFlag = document.createElement("span");
+    langFlag.className = "character-avatar-flag";
+    langFlag.textContent = getBotLanguageFlag(resolved.activeLanguage);
+    avatarWrap.appendChild(langFlag);
+
+    const idOverlay = document.createElement("span");
+    idOverlay.className = "character-avatar-id";
+    idOverlay.textContent = `#${char.id}`;
+    avatarWrap.appendChild(idOverlay);
+
+    const threadOverlay = document.createElement("span");
+    threadOverlay.className = "character-avatar-threads";
+    threadOverlay.textContent = String(threadCount);
+    avatarWrap.appendChild(threadOverlay);
 
     const avatar = document.createElement("img");
     avatar.className = "character-avatar";
     avatar.src =
-      char.avatar || fallbackAvatar(char.name || "Character", 512, 512);
-    avatar.alt = `${char.name || "Character"} avatar`;
+      resolved.avatar || fallbackAvatar(resolved.name || "Character", 512, 512);
+    avatar.alt = `${resolved.name || "Character"} avatar`;
     avatar.addEventListener("click", () => startNewThread(char.id));
+    avatarWrap.appendChild(avatar);
+
+    const defCount = Array.isArray(resolved.definitions)
+      ? resolved.definitions.length
+      : 1;
+    if (defCount > 1) {
+      const leftBtn = document.createElement("button");
+      leftBtn.type = "button";
+      leftBtn.className = "character-lang-nav left";
+      leftBtn.textContent = "‹";
+      leftBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const defs = resolved.definitions || [];
+        if (defs.length <= 1) return;
+        const idx = defs.findIndex((d) => d.language === resolved.activeLanguage);
+        const nextIdx = idx <= 0 ? defs.length - 1 : idx - 1;
+        await db.characters.update(char.id, {
+          selectedCardLanguage: defs[nextIdx].language,
+        });
+        await renderCharacters();
+      });
+
+      const rightBtn = document.createElement("button");
+      rightBtn.type = "button";
+      rightBtn.className = "character-lang-nav right";
+      rightBtn.textContent = "›";
+      rightBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const defs = resolved.definitions || [];
+        if (defs.length <= 1) return;
+        const idx = defs.findIndex((d) => d.language === resolved.activeLanguage);
+        const nextIdx = idx >= defs.length - 1 || idx < 0 ? 0 : idx + 1;
+        await db.characters.update(char.id, {
+          selectedCardLanguage: defs[nextIdx].language,
+        });
+        await renderCharacters();
+      });
+      card.append(leftBtn, rightBtn);
+    }
 
     const name = document.createElement("h3");
     name.className = "character-name";
-    name.textContent = char.name || "Unnamed";
+    name.textContent = resolved.name || "Unnamed";
     name.addEventListener("click", () => startNewThread(char.id));
-
-    const id = document.createElement("p");
-    id.className = "character-id";
-    id.textContent = tf("characterIdThreadCount", {
-      id: char.id,
-      count: threadCountByCharId.get(Number(char.id)) || 0,
-    });
 
     const dates = document.createElement("p");
     dates.className = "character-dates";
@@ -2919,7 +3126,7 @@ async function renderCharacters() {
       }),
     );
 
-    card.append(avatar, name, id, dates);
+    card.append(avatarWrap, name, dates);
     if (tags.length > 0) card.appendChild(tagsWrap);
     card.append(actions);
     grid.appendChild(card);
@@ -2997,6 +3204,9 @@ async function renderThreads() {
 
   threads.forEach((thread) => {
     const char = charMap.get(thread.characterId);
+    const resolvedChar = char
+      ? resolveCharacterForLanguage(char, thread.characterLanguage || "")
+      : null;
     const chatViewActive = document
       .getElementById("chat-view")
       ?.classList.contains("active");
@@ -3027,7 +3237,8 @@ async function renderThreads() {
     const avatar = document.createElement("img");
     avatar.className = "thread-avatar";
     avatar.src =
-      char?.avatar || fallbackAvatar(char?.name || t("threadWord"), 512, 512);
+      resolvedChar?.avatar ||
+      fallbackAvatar(resolvedChar?.name || char?.name || t("threadWord"), 512, 512);
     avatar.alt = "thread avatar";
 
     const info = document.createElement("div");
@@ -3035,7 +3246,7 @@ async function renderThreads() {
 
     const meta = document.createElement("div");
     meta.className = "thread-meta";
-    meta.innerHTML = `<span>${escapeHtml(char?.name || "Unknown")}</span><span>#${thread.id}</span>`;
+    meta.innerHTML = `<span>${escapeHtml(resolvedChar?.name || char?.name || "Unknown")}</span><span>#${thread.id}</span>`;
     const queuePos = queuePosByThreadId.get(Number(thread.id)) || 0;
     if (queuePos > 0) {
       const queueBadge = document.createElement("span");
@@ -3171,14 +3382,10 @@ function togglePane() {
     "pane-collapsed",
     pane.classList.contains("collapsed"),
   );
-  document.getElementById("pane-toggle").textContent = pane.classList.contains(
-    "collapsed",
-  )
-    ? ">"
-    : "<";
+  document.getElementById("pane-toggle").textContent = "☰";
   if (pane.classList.contains("collapsed")) {
     if (homeBtn) {
-      homeBtn.textContent = "H";
+      homeBtn.textContent = "⌂";
       homeBtn.title = t("home");
     }
     createBtn.textContent = "+";
@@ -3189,7 +3396,7 @@ function togglePane() {
     }
   } else {
     if (homeBtn) {
-      homeBtn.textContent = t("home");
+      homeBtn.textContent = getHomeButtonText();
       homeBtn.title = "";
     }
     createBtn.textContent = t("createCharacter");
@@ -3259,38 +3466,308 @@ function closeActiveModal() {
   }
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
+  if (closingId === "character-modal") {
+    state.charModalPendingThreadDeleteIds = [];
+  }
   state.activeModalId = null;
   state.modalDirty[closingId] = false;
 }
 
+function normalizeBotLanguageCode(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "en";
+  if (raw.toLowerCase().startsWith("pt-br")) return "pt-BR";
+  if (raw.toLowerCase().startsWith("pt-pt")) return "pt-PT";
+  return raw;
+}
+
+function getBotLanguageFlag(code) {
+  return BOT_LANGUAGE_FLAGS[code] || "🏳";
+}
+
+function createEmptyCharacterDefinition(language = "en") {
+  return {
+    language: normalizeBotLanguageCode(language),
+    name: "",
+    avatar: "",
+    systemPrompt: "",
+    oneTimeExtraPrompt: "",
+    writingInstructions: "",
+    initialMessagesRaw: "",
+    initialMessages: [],
+    personaInjectionPlacement: "end_system_prompt",
+    ttsEnabled: true,
+    ttsVoice: DEFAULT_TTS_VOICE,
+    ttsLanguage: DEFAULT_TTS_LANGUAGE,
+    ttsRate: 1.4,
+    ttsPitch: 1.1,
+    preferLoreBooksMatchingLanguage: true,
+    lorebookIds: [],
+  };
+}
+
+function getInitialBotDefinitionLanguage() {
+  const ui = state.settings.uiLanguage;
+  if (ui && ui !== "auto") return normalizeBotLanguageCode(ui);
+  return normalizeBotLanguageCode(state.i18nLang || "en");
+}
+
+function normalizeCharacterDefinitions(character = null) {
+  const defsRaw = Array.isArray(character?.definitions) ? character.definitions : [];
+  const defs = defsRaw
+    .map((d) => ({
+      ...createEmptyCharacterDefinition(d?.language || "en"),
+      ...d,
+      language: normalizeBotLanguageCode(d?.language || "en"),
+      ttsEnabled: d?.ttsEnabled !== false,
+      preferLoreBooksMatchingLanguage: d?.preferLoreBooksMatchingLanguage !== false,
+      lorebookIds: Array.isArray(d?.lorebookIds)
+        ? d.lorebookIds.map(Number).filter(Number.isInteger)
+        : [],
+    }))
+    .filter((d, i, arr) => arr.findIndex((x) => x.language === d.language) === i);
+  if (defs.length > 0) return defs;
+  const fallbackLanguage = getInitialBotDefinitionLanguage();
+  const fallback = createEmptyCharacterDefinition(fallbackLanguage);
+  fallback.name = String(character?.name || "");
+  fallback.avatar = String(character?.avatar || "");
+  fallback.systemPrompt = String(character?.systemPrompt || "");
+  fallback.oneTimeExtraPrompt = String(character?.oneTimeExtraPrompt || "");
+  fallback.writingInstructions = String(character?.writingInstructions || "");
+  fallback.initialMessagesRaw =
+    String(character?.initialMessagesRaw || "") ||
+    formatInitialMessagesForEditor(character?.initialMessages || []);
+  fallback.initialMessages = Array.isArray(character?.initialMessages)
+    ? character.initialMessages
+    : [];
+  fallback.personaInjectionPlacement =
+    character?.personaInjectionPlacement || "end_system_prompt";
+  fallback.ttsEnabled = character?.ttsEnabled !== false;
+  fallback.ttsVoice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
+  fallback.ttsLanguage = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
+  fallback.ttsRate = Number.isFinite(Number(character?.ttsRate))
+    ? Number(character.ttsRate)
+    : 1.4;
+  fallback.ttsPitch = Number.isFinite(Number(character?.ttsPitch))
+    ? Number(character.ttsPitch)
+    : 1.1;
+  fallback.preferLoreBooksMatchingLanguage =
+    character?.preferLoreBooksMatchingLanguage !== false;
+  fallback.lorebookIds = Array.isArray(character?.lorebookIds)
+    ? character.lorebookIds.map(Number).filter(Number.isInteger)
+    : [];
+  return [fallback];
+}
+
+function resolveCharacterLanguageDefinition(character, preferredLanguage = "") {
+  const defs = normalizeCharacterDefinitions(character);
+  const preferred = normalizeBotLanguageCode(
+    preferredLanguage || character?.selectedCardLanguage || defs[0]?.language || "en",
+  );
+  const def = defs.find((d) => d.language === preferred) || defs[0];
+  return {
+    definitions: defs,
+    definition: def,
+    language: def?.language || defs[0]?.language || "en",
+  };
+}
+
+function resolveCharacterForLanguage(character, preferredLanguage = "") {
+  const base = character || {};
+  const resolved = resolveCharacterLanguageDefinition(base, preferredLanguage);
+  return {
+    ...base,
+    ...(resolved.definition || {}),
+    definitions: resolved.definitions,
+    activeLanguage: resolved.language,
+  };
+}
+
+function getActiveCharacterDefinition() {
+  return state.charModalDefinitions.find(
+    (d) => d.language === state.charModalActiveLanguage,
+  );
+}
+
+function setCharacterModalTab(tab = "lang") {
+  state.charModalActiveTab = tab === "config" ? "config" : "lang";
+  const showLang = state.charModalActiveTab === "lang";
+  document
+    .querySelectorAll(".lang-field")
+    .forEach((el) => el.classList.toggle("hidden", !showLang));
+  document
+    .querySelectorAll(".global-field")
+    .forEach((el) => el.classList.toggle("hidden", showLang));
+  const configBtn = document.getElementById("char-config-tab-btn");
+  if (configBtn) configBtn.classList.toggle("active", !showLang);
+}
+
+function renderCharacterDefinitionTabs() {
+  const root = document.getElementById("char-def-tabs-left");
+  if (!root) return;
+  root.innerHTML = "";
+  state.charModalDefinitions.forEach((def) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "settings-tab-btn char-def-tab-btn";
+    if (def.language === state.charModalActiveLanguage && state.charModalActiveTab === "lang") {
+      btn.classList.add("active");
+    }
+    btn.innerHTML = `<span>${getBotLanguageFlag(def.language)} ${escapeHtml(def.language)}</span>`;
+    btn.addEventListener("click", () => {
+      saveActiveCharacterDefinitionFromForm();
+      state.charModalActiveLanguage = def.language;
+      loadActiveCharacterDefinitionToForm();
+      setCharacterModalTab("lang");
+      renderCharacterDefinitionTabs();
+    });
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "char-def-tab-delete";
+    del.textContent = "×";
+    del.disabled = state.charModalDefinitions.length <= 1;
+    del.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (state.charModalDefinitions.length <= 1) {
+        await openInfoDialog(t("message"), t("languageRequired"));
+        return;
+      }
+      let affectedThreads = [];
+      if (Number.isInteger(Number(state.editingCharacterId))) {
+        const threadsForChar = await db.threads
+          .where("characterId")
+          .equals(Number(state.editingCharacterId))
+          .toArray();
+        affectedThreads = threadsForChar.filter(
+          (th) => normalizeBotLanguageCode(th.characterLanguage || "") === def.language,
+        );
+      }
+      const removeMsg =
+        affectedThreads.length > 0
+          ? tf("removeLanguageConfirmWithThreads", {
+              lang: def.language,
+              count: affectedThreads.length,
+            })
+          : tf("removeLanguageConfirm", { lang: def.language });
+      const ok = await openConfirmDialog(
+        t("removeLanguageTitle"),
+        removeMsg,
+      );
+      if (!ok) return;
+      saveActiveCharacterDefinitionFromForm();
+      state.charModalDefinitions = state.charModalDefinitions.filter(
+        (x) => x.language !== def.language,
+      );
+      if (state.charModalActiveLanguage === def.language) {
+        state.charModalActiveLanguage = state.charModalDefinitions[0]?.language || "";
+      }
+      if (affectedThreads.length > 0) {
+        const idsToDelete = affectedThreads
+          .map((th) => Number(th.id))
+          .filter(Number.isInteger);
+        state.charModalPendingThreadDeleteIds = Array.from(
+          new Set([
+            ...(Array.isArray(state.charModalPendingThreadDeleteIds)
+              ? state.charModalPendingThreadDeleteIds
+              : []),
+            ...idsToDelete,
+          ]),
+        );
+      }
+      loadActiveCharacterDefinitionToForm();
+      renderCharacterDefinitionTabs();
+    });
+    btn.appendChild(del);
+    root.appendChild(btn);
+  });
+  const configBtn = document.getElementById("char-config-tab-btn");
+  if (configBtn) configBtn.classList.toggle("active", state.charModalActiveTab === "config");
+}
+
+function saveActiveCharacterDefinitionFromForm() {
+  const def = getActiveCharacterDefinition();
+  if (!def) return;
+  def.name = String(document.getElementById("char-name")?.value || "").trim();
+  def.avatar = String(document.getElementById("char-avatar")?.value || "").trim();
+  def.systemPrompt = String(document.getElementById("char-system-prompt")?.value || "").trim();
+  def.oneTimeExtraPrompt = String(document.getElementById("char-one-time-extra-prompt")?.value || "").trim();
+  def.writingInstructions = String(document.getElementById("char-writing-instructions")?.value || "").trim();
+  def.initialMessagesRaw = String(document.getElementById("char-initial-messages")?.value || "");
+  def.personaInjectionPlacement =
+    String(document.getElementById("char-persona-injection-placement")?.value || "end_system_prompt");
+  def.ttsEnabled = !!document.getElementById("char-tts-enabled")?.checked;
+  const selectedTts = getResolvedCharTtsSelection();
+  def.ttsVoice = selectedTts.voice;
+  def.ttsLanguage = selectedTts.language;
+  def.ttsRate = selectedTts.rate;
+  def.ttsPitch = selectedTts.pitch;
+  def.preferLoreBooksMatchingLanguage =
+    document.getElementById("char-prefer-lore-language")?.checked !== false;
+  def.lorebookIds = getSelectedLorebookIds();
+}
+
+function loadActiveCharacterDefinitionToForm() {
+  const def = getActiveCharacterDefinition();
+  if (!def) return;
+  document.getElementById("char-name").value = def.name || "";
+  updateNameLengthCounter("char-name", "char-name-count", 128);
+  document.getElementById("char-avatar").value = def.avatar || "";
+  document.getElementById("char-avatar-file").value = "";
+  document.getElementById("char-system-prompt").value = def.systemPrompt || "";
+  document.getElementById("char-one-time-extra-prompt").value = def.oneTimeExtraPrompt || "";
+  document.getElementById("char-writing-instructions").value = def.writingInstructions || "";
+  document.getElementById("char-initial-messages").value =
+    def.initialMessagesRaw ||
+    ((def.initialMessages || []).length > 0
+      ? formatInitialMessagesForEditor(def.initialMessages || [])
+      : "");
+  document.getElementById("char-persona-injection-placement").value =
+    def.personaInjectionPlacement || "end_system_prompt";
+  document.getElementById("char-tts-enabled").checked = def.ttsEnabled !== false;
+  populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
+  populateCharTtsVoiceSelect(def.ttsVoice || DEFAULT_TTS_VOICE);
+  document.getElementById("char-tts-rate").value = String(
+    Math.max(0.5, Math.min(2, Number(def.ttsRate) || 1.4)),
+  );
+  document.getElementById("char-tts-pitch").value = String(
+    Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1)),
+  );
+  document.getElementById("char-prefer-lore-language").checked =
+    def.preferLoreBooksMatchingLanguage !== false;
+  updateCharTtsRatePitchLabels();
+  renderAvatarPreview(def.avatar || "");
+  renderCharacterLorebookList(def.lorebookIds || []);
+}
+
+function populateCharacterLanguageSelectOptions() {
+  const select = document.getElementById("char-language-select");
+  if (!select) return;
+  const used = new Set(state.charModalDefinitions.map((d) => d.language));
+  select.innerHTML = "";
+  BOT_LANGUAGE_OPTIONS.filter((code) => !used.has(code)).forEach((code) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = `${getBotLanguageFlag(code)} ${code}`;
+    select.appendChild(opt);
+  });
+}
+
 async function openCharacterModal(character = null) {
   state.charModalTtsTestPlaying = false;
+  state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
   document.getElementById("character-title").textContent =
     state.editingCharacterId ? t("editCharacterTitle") : t("createCharacterTitle");
+  state.charModalDefinitions = normalizeCharacterDefinitions(character);
+  state.charModalActiveLanguage =
+    state.charModalDefinitions[0]?.language || getInitialBotDefinitionLanguage();
+  state.charModalActiveTab = "lang";
 
-  document.getElementById("char-name").value = character?.name || "";
-  updateNameLengthCounter("char-name", "char-name-count", 128);
-  document.getElementById("char-avatar").value = character?.avatar || "";
-  document.getElementById("char-avatar-file").value = "";
-  document.getElementById("char-system-prompt").value =
-    character?.systemPrompt || "";
   await populateCharDefaultPersonaOverrideSelect(
     character?.defaultPersonaOverrideId || null,
   );
-  document.getElementById("char-one-time-extra-prompt").value =
-    character?.oneTimeExtraPrompt || "";
-  document.getElementById("char-writing-instructions").value =
-    character?.writingInstructions || "";
-  document.getElementById("char-initial-messages").value =
-    character?.initialMessagesRaw ||
-    ((character?.initialMessages || []).length > 0
-      ? formatInitialMessagesForEditor(character?.initialMessages || [])
-      : "");
-  setCharacterTagsInputValue(character?.tags || []);
-  renderCharacterTagPresetButtons();
-  document.getElementById("char-persona-injection-placement").value =
-    character?.personaInjectionPlacement || "end_system_prompt";
+  document.getElementById("char-prefer-persona-language").checked =
+    character?.preferLanguageMatchingUserPersona !== false;
   document.getElementById("char-use-memory").checked =
     character?.useMemory !== false;
   document.getElementById("char-use-postprocess").checked =
@@ -3300,79 +3777,135 @@ async function openCharacterModal(character = null) {
   document.getElementById("char-avatar-scale").value = String(
     Number(character?.avatarScale) || 1,
   );
-  const lang = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
-  const voice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
-  const rate = Number.isFinite(Number(character?.ttsRate))
-    ? Number(character.ttsRate)
-    : 1.4;
-  const pitch = Number.isFinite(Number(character?.ttsPitch))
-    ? Number(character.ttsPitch)
-    : 1.1;
-  document.getElementById("char-tts-language").value = lang;
-  populateCharTtsLanguageSelect(lang);
-  populateCharTtsVoiceSelect(voice);
-  document.getElementById("char-tts-rate").value = String(
-    Math.max(0.5, Math.min(2, rate)),
-  );
-  document.getElementById("char-tts-pitch").value = String(
-    Math.max(0, Math.min(2, pitch)),
-  );
+  setCharacterTagsInputValue(character?.tags || []);
+  renderCharacterTagPresetButtons();
+
+  renderCharacterDefinitionTabs();
+  loadActiveCharacterDefinitionToForm();
+  setCharacterModalTab("lang");
+  populateCharacterLanguageSelectOptions();
+
   updateCharTtsRatePitchLabels();
   updateCharTtsTestButtonState();
-  renderAvatarPreview(character?.avatar || "");
-  renderCharacterLorebookList(character?.lorebookIds || []);
   updateCharacterPromptPlaceholder();
   state.modalDirty["character-modal"] = false;
+  document.getElementById("char-language-modal")?.classList.add("hidden");
 
   openModal("character-modal");
 }
 
 async function saveCharacterFromModal() {
-  const selectedLorebookIds = getSelectedLorebookIds();
-  const selectedTts = getResolvedCharTtsSelection();
-  let parsedInitialMessages = null;
-  try {
-    parsedInitialMessages = parseInitialMessagesInput(
-      document.getElementById("char-initial-messages").value,
-    );
-  } catch (err) {
-    await openInfoDialog(
-      t("invalidInitialMessagesTitle"),
-      String(err?.message || t("invalidInitialMessagesMessage")),
-    );
+  saveActiveCharacterDefinitionFromForm();
+  const defs = state.charModalDefinitions.map((def) => ({ ...def }));
+  if (defs.length === 0) {
+    await openInfoDialog(t("missingFieldTitle"), t("languageRequired"));
     return;
   }
+
+  let hasAtLeastOneName = false;
+  for (let i = 0; i < defs.length; i += 1) {
+    const def = defs[i];
+    def.language = normalizeBotLanguageCode(def.language || "en");
+    def.name = String(def.name || "").trim();
+    def.avatar = String(def.avatar || "").trim();
+    def.systemPrompt = String(def.systemPrompt || "").trim();
+    def.oneTimeExtraPrompt = String(def.oneTimeExtraPrompt || "").trim();
+    def.writingInstructions = String(def.writingInstructions || "").trim();
+    def.personaInjectionPlacement =
+      def.personaInjectionPlacement || "end_system_prompt";
+    def.ttsEnabled = def.ttsEnabled !== false;
+    def.ttsVoice = String(def.ttsVoice || DEFAULT_TTS_VOICE);
+    def.ttsLanguage = String(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
+    def.ttsRate = Math.max(0.5, Math.min(2, Number(def.ttsRate) || 1.4));
+    def.ttsPitch = Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1));
+    def.preferLoreBooksMatchingLanguage =
+      def.preferLoreBooksMatchingLanguage !== false;
+    def.lorebookIds = Array.isArray(def.lorebookIds)
+      ? def.lorebookIds.map(Number).filter(Number.isInteger)
+      : [];
+    if (def.name) hasAtLeastOneName = true;
+    try {
+      const parsedInitialMessages = parseInitialMessagesInput(
+        def.initialMessagesRaw || "",
+      );
+      def.initialMessagesRaw = parsedInitialMessages.raw;
+      def.initialMessages = parsedInitialMessages.messages;
+    } catch (err) {
+      await openInfoDialog(
+        t("invalidInitialMessagesTitle"),
+        String(err?.message || t("invalidInitialMessagesMessage")),
+      );
+      return;
+    }
+  }
+
+  if (!hasAtLeastOneName) {
+    await openInfoDialog(t("missingFieldTitle"), t("characterNameRequired"));
+    return;
+  }
+
+  const uiLang = normalizeBotLanguageCode(state.settings.uiLanguage || "en");
+  const primaryDef =
+    defs.find((d) => d.language === uiLang) ||
+    defs.find((d) => !!String(d.name || "").trim()) ||
+    defs[0];
+  let previousSelectedCardLanguage = "";
+  if (state.editingCharacterId) {
+    const existingChar = await db.characters.get(state.editingCharacterId);
+    previousSelectedCardLanguage = normalizeBotLanguageCode(
+      existingChar?.selectedCardLanguage || "",
+    );
+  }
+  const selectedCardLanguage =
+    defs.find((d) => d.language === previousSelectedCardLanguage)?.language ||
+    defs[0]?.language ||
+    "en";
+  const selectedLorebookIds = Array.isArray(primaryDef?.lorebookIds)
+    ? primaryDef.lorebookIds
+    : [];
+  const selectedTts = {
+    voice: primaryDef?.ttsVoice || DEFAULT_TTS_VOICE,
+    language: primaryDef?.ttsLanguage || DEFAULT_TTS_LANGUAGE,
+    rate: Math.max(0.5, Math.min(2, Number(primaryDef?.ttsRate) || 1.4)),
+    pitch: Math.max(0, Math.min(2, Number(primaryDef?.ttsPitch) || 1.1)),
+  };
+
   const payload = {
-    name: document.getElementById("char-name").value.trim(),
-    systemPrompt: document.getElementById("char-system-prompt").value.trim(),
+    name: String(primaryDef?.name || "").trim(),
+    systemPrompt: String(primaryDef?.systemPrompt || "").trim(),
+    definitions: defs,
+    selectedCardLanguage,
+    preferLanguageMatchingUserPersona:
+      document.getElementById("char-prefer-persona-language").checked !== false,
     defaultPersonaOverrideId:
       Number(document.getElementById("char-default-persona-override").value) ||
       null,
-    oneTimeExtraPrompt: document
-      .getElementById("char-one-time-extra-prompt")
-      .value.trim(),
-    writingInstructions: document
-      .getElementById("char-writing-instructions")
-      .value.trim(),
-    initialMessagesRaw: parsedInitialMessages.raw,
-    initialMessages: parsedInitialMessages.messages,
+    oneTimeExtraPrompt: String(primaryDef?.oneTimeExtraPrompt || "").trim(),
+    writingInstructions: String(primaryDef?.writingInstructions || "").trim(),
+    initialMessagesRaw: String(primaryDef?.initialMessagesRaw || ""),
+    initialMessages: Array.isArray(primaryDef?.initialMessages)
+      ? primaryDef.initialMessages
+      : [],
     useMemory: document.getElementById("char-use-memory").checked,
     usePostProcessing: document.getElementById("char-use-postprocess").checked,
     autoTriggerAiFirstMessage: document.getElementById(
       "char-auto-trigger-first-ai",
     ).checked,
-    personaInjectionPlacement:
-      document.getElementById("char-persona-injection-placement").value ||
-      "end_system_prompt",
+    personaInjectionPlacement: String(
+      primaryDef?.personaInjectionPlacement || "end_system_prompt",
+    ),
     avatarScale:
       Number(document.getElementById("char-avatar-scale").value) || 1,
     tags: getCharacterTagsFromModal(),
+    ttsEnabled: primaryDef?.ttsEnabled !== false,
     ttsVoice: selectedTts.voice,
     ttsLanguage: selectedTts.language,
     ttsRate: selectedTts.rate,
     ttsPitch: selectedTts.pitch,
+    preferLoreBooksMatchingLanguage:
+      primaryDef?.preferLoreBooksMatchingLanguage !== false,
     lorebookIds: selectedLorebookIds,
-    avatar: document.getElementById("char-avatar").value.trim(),
+    avatar: String(primaryDef?.avatar || "").trim(),
     updatedAt: Date.now(),
   };
 
@@ -3394,7 +3927,11 @@ async function saveCharacterFromModal() {
       currentCharacter &&
       Number(currentCharacter.id) === Number(state.editingCharacterId)
     ) {
-      currentCharacter = { ...currentCharacter, ...payload };
+      const merged = { ...currentCharacter, ...payload };
+      currentCharacter = resolveCharacterForLanguage(
+        merged,
+        currentThread?.characterLanguage || "",
+      );
       renderChat();
     }
     showToast(t("characterUpdated"), "success");
@@ -3404,8 +3941,31 @@ async function saveCharacterFromModal() {
     showToast(t("characterCreated"), "success");
   }
 
+  const pendingThreadDeleteIds = Array.isArray(state.charModalPendingThreadDeleteIds)
+    ? state.charModalPendingThreadDeleteIds
+        .map((id) => Number(id))
+        .filter(Number.isInteger)
+    : [];
+  if (pendingThreadDeleteIds.length > 0) {
+    state.generationQueue = state.generationQueue.filter(
+      (id) => !pendingThreadDeleteIds.includes(Number(id)),
+    );
+    await db.threads.bulkDelete(pendingThreadDeleteIds);
+    pendingThreadDeleteIds.forEach((id) =>
+      state.selectedThreadIds.delete(Number(id)),
+    );
+    if (currentThread && pendingThreadDeleteIds.includes(Number(currentThread.id))) {
+      currentThread = null;
+      currentCharacter = null;
+      conversationHistory = [];
+      showMainView();
+      updateAutoTtsToggleButton();
+    }
+  }
+
   closeActiveModal();
   state.modalDirty["character-modal"] = false;
+  state.charModalPendingThreadDeleteIds = [];
   await renderAll();
 }
 
@@ -4377,6 +4937,52 @@ function shouldIncludeOneTimeExtraPrompt(history) {
   return !hasMeaningfulAssistantMessage(history);
 }
 
+function normalizeWritingInstructionsTiming(value) {
+  const v = String(value || "always").toLowerCase();
+  if (
+    v === "always" ||
+    v === "every_other" ||
+    v === "every_second" ||
+    v === "every_third" ||
+    v === "every_fourth"
+  ) {
+    return v;
+  }
+  return "always";
+}
+
+function getThreadWritingInstructionsTurnCount(thread = currentThread) {
+  const raw = Number(thread?.writingInstructionsTurnCount);
+  if (Number.isInteger(raw) && raw >= 0) return raw;
+  return 0;
+}
+
+function getNextWritingInstructionsTurnIndex(thread = currentThread) {
+  return getThreadWritingInstructionsTurnCount(thread) + 1;
+}
+
+function shouldInjectWritingInstructionsForTurn(turnIndex) {
+  const mode = normalizeWritingInstructionsTiming(
+    state.settings.writingInstructionsInjectionWhen,
+  );
+  const turn = Math.max(1, Number(turnIndex) || 1);
+  if (mode === "always") return true;
+  if (mode === "every_other") return turn % 2 === 1;
+  if (mode === "every_second") return turn % 2 === 0;
+  if (mode === "every_third") return turn % 3 === 0;
+  if (mode === "every_fourth") return turn % 4 === 0;
+  return true;
+}
+
+function isLatestAssistantMessageIndex(index, history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  const latest = list
+    .map((m, i) => ({ m, i }))
+    .filter(({ m }) => normalizeApiRole(m?.apiRole || m?.role) === "assistant")
+    .pop();
+  return latest ? latest.i === index : false;
+}
+
 function isFirstAssistantMessageIndex(index, history = conversationHistory) {
   const list = Array.isArray(history) ? history : [];
   const first = list.findIndex(
@@ -4701,11 +5307,16 @@ async function deleteCharacter(characterId) {
 async function startNewThread(characterId) {
   const character = await db.characters.get(characterId);
   if (!character) return;
+  const resolvedCharacter = resolveCharacterForLanguage(
+    character,
+    character?.selectedCardLanguage || "",
+  );
   const defaultPersonaForCharacter = await getCharacterDefaultPersona(character);
-  const initialMessages = await buildThreadInitialMessages(character);
+  const initialMessages = await buildThreadInitialMessages(resolvedCharacter);
 
   const newThread = {
     characterId,
+    characterLanguage: resolvedCharacter.activeLanguage || "",
     title: tf("threadTitleAtDate", { date: new Date().toLocaleString() }),
     titleGenerated: false,
     titleManual: false,
@@ -4713,6 +5324,7 @@ async function startNewThread(characterId) {
     selectedPersonaId: defaultPersonaForCharacter?.id || null,
     autoTtsEnabled: false,
     lastPersonaInjectionPersonaId: null,
+    writingInstructionsTurnCount: 0,
     pendingGenerationReason: "",
     pendingGenerationQueuedAt: 0,
     createdAt: Date.now(),
@@ -4729,7 +5341,7 @@ async function startNewThread(characterId) {
   await renderCharacters();
   await openThread(threadId);
   const shouldAutoTriggerFirstAi =
-    (character?.autoTriggerAiFirstMessage ?? true) !== false;
+    (resolvedCharacter?.autoTriggerAiFirstMessage ?? true) !== false;
   const shouldTriggerFromInitial =
     state.settings.autoReplyEnabled !== false &&
     shouldAutoReplyFromInitialMessages(initialMessages);
@@ -4747,6 +5359,7 @@ async function duplicateThread(threadId) {
 
   const copy = {
     characterId: source.characterId,
+    characterLanguage: source.characterLanguage || "",
     title: `${source.title || tf("threadTitleDefault", { id: source.id })} Copy`,
     titleGenerated: false,
     titleManual: false,
@@ -4754,6 +5367,10 @@ async function duplicateThread(threadId) {
     selectedPersonaId: source.selectedPersonaId || null,
     autoTtsEnabled: source.autoTtsEnabled === true,
     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
+    writingInstructionsTurnCount:
+      Number(source.writingInstructionsTurnCount) >= 0
+        ? Number(source.writingInstructionsTurnCount)
+        : 0,
     favorite: !!source.favorite,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -4818,8 +5435,20 @@ async function openThread(threadId) {
   if (!thread) return;
 
   stopTtsPlayback();
-  const character = await db.characters.get(thread.characterId);
-  currentThread = thread;
+  const characterBase = await db.characters.get(thread.characterId);
+  const character = characterBase
+    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
+    : null;
+  currentThread = {
+    ...thread,
+    writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
+  };
+  if (!thread.characterLanguage && character?.activeLanguage) {
+    currentThread.characterLanguage = character.activeLanguage;
+    await db.threads.update(thread.id, {
+      characterLanguage: character.activeLanguage,
+    });
+  }
   currentCharacter = character || null;
   conversationHistory = (thread.messages || []).map((m) => ({
     ...m,
@@ -5618,6 +6247,12 @@ async function generateBotReply() {
   const generationPersona = currentPersona;
   const generationThreadSnapshot = { ...currentThread };
   const generationHistory = conversationHistory;
+  let writingTurnCountForThread = getThreadWritingInstructionsTurnCount(
+    generationThreadSnapshot,
+  );
+  const writingTurnIndex = getNextWritingInstructionsTurnIndex(
+    generationThreadSnapshot,
+  );
 
   const log = document.getElementById("chat-log");
   const existingPendingIdx = findLatestPendingAssistantIndex(generationHistory);
@@ -5629,6 +6264,10 @@ async function generateBotReply() {
     pending.generationStatus = "generating";
     pending.generationError = "";
     pending.truncatedByFilter = false;
+    if (!Number.isInteger(Number(pending.writingInstructionsTurnIndex))) {
+      pending.writingInstructionsTurnIndex = writingTurnIndex;
+      pending.writingInstructionsCounted = false;
+    }
   } else {
     pending = {
       role: "assistant",
@@ -5643,6 +6282,8 @@ async function generateBotReply() {
       generationInfo: null,
       usedLoreEntries: [],
       usedMemorySummary: "",
+      writingInstructionsTurnIndex: writingTurnIndex,
+      writingInstructionsCounted: false,
     };
     generationHistory.push(pending);
     pendingIndex = generationHistory.length - 1;
@@ -5679,6 +6320,7 @@ async function generateBotReply() {
   try {
     const promptContext = await buildSystemPrompt(generationCharacter, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
+      writingInstructionsTurnIndex: Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
       returnTrace: true,
       personaOverride: generationPersona,
       historyOverride: generationHistory,
@@ -5726,6 +6368,13 @@ async function generateBotReply() {
     pending.usedMemorySummary = String(promptContext.memory || "");
     pending.generationError = "";
     pending.generationStatus = "";
+    if (pending.writingInstructionsCounted !== true) {
+      pending.writingInstructionsCounted = true;
+      writingTurnCountForThread = Math.max(
+        writingTurnCountForThread,
+        Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
+      );
+    }
     if (isViewingThread(threadId)) {
       const liveRow = document.querySelector(
         `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
@@ -5744,7 +6393,9 @@ async function generateBotReply() {
     } else {
       state.pendingPersonaInjectionPersonaId = null;
     }
-    await persistThreadMessagesById(threadId, generationHistory);
+    await persistThreadMessagesById(threadId, generationHistory, {
+      writingInstructionsTurnCount: writingTurnCountForThread,
+    });
     if (isViewingThread(threadId)) {
       maybeAutoSpeakAssistantMessage(pendingIndex).catch(
         () => {},
@@ -5828,7 +6479,22 @@ async function deleteMessageAt(index) {
   if (index < 0 || index >= conversationHistory.length) return;
 
   stopTtsPlayback();
+  const target = conversationHistory[index];
+  const targetRole = normalizeApiRole(target?.apiRole || target?.role);
+  const latestCountedTurn = getThreadWritingInstructionsTurnCount(currentThread);
+  const targetTurn = Number(target?.writingInstructionsTurnIndex);
+  const isLatestAssistant =
+    targetRole === "assistant" &&
+    isLatestAssistantMessageIndex(index, conversationHistory);
+  const isLatestCountedAssistant =
+    isLatestAssistant &&
+    target?.writingInstructionsCounted === true &&
+    Number.isInteger(targetTurn) &&
+    targetTurn === latestCountedTurn;
   conversationHistory.splice(index, 1);
+  if (isLatestCountedAssistant && currentThread) {
+    currentThread.writingInstructionsTurnCount = Math.max(0, latestCountedTurn - 1);
+  }
   await persistCurrentThread();
   renderChat();
 }
@@ -5842,6 +6508,11 @@ async function regenerateMessage(index) {
 
   const prior = conversationHistory.slice(0, index);
   const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
+  const regenWritingTurnIndex = Number(target.writingInstructionsTurnIndex) || 0;
+  const effectiveWritingTurnIndex =
+    regenWritingTurnIndex > 0
+      ? regenWritingTurnIndex
+      : Math.max(1, getThreadWritingInstructionsTurnCount(currentThread));
   const originalContent = String(target.content || "");
 
   stopTtsPlayback();
@@ -5853,6 +6524,7 @@ async function regenerateMessage(index) {
   try {
     const promptContext = await buildSystemPrompt(currentCharacter, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
+      writingInstructionsTurnIndex: effectiveWritingTurnIndex,
       returnTrace: true,
     });
     const systemPrompt = promptContext.prompt;
@@ -5900,6 +6572,9 @@ async function regenerateMessage(index) {
       ? promptContext.loreEntries
       : [];
     target.usedMemorySummary = String(promptContext.memory || "");
+    if (!Number.isInteger(Number(target.writingInstructionsTurnIndex))) {
+      target.writingInstructionsTurnIndex = effectiveWritingTurnIndex;
+    }
     commitPendingPersonaInjectionMarker();
     await persistCurrentThread();
     renderChat();
@@ -5943,59 +6618,6 @@ async function copyMessage(text) {
   } catch {
     await openInfoDialog(t("copyFailedTitle"), t("copyFailedMessage"));
   }
-}
-
-async function refreshPuterAuthStatus() {
-  const statusEl = document.getElementById("puter-auth-status");
-  if (!statusEl) return false;
-  if (!window.puter?.auth) {
-    statusEl.textContent = "Puter: SDK unavailable";
-    return false;
-  }
-  try {
-    if (typeof window.puter.auth.isSignedIn === "function") {
-      const signed = await window.puter.auth.isSignedIn();
-      statusEl.textContent = signed ? "Puter: signed in" : "Puter: signed out";
-      return !!signed;
-    }
-    if (typeof window.puter.auth.getUser === "function") {
-      await window.puter.auth.getUser();
-      statusEl.textContent = "Puter: signed in";
-      return true;
-    }
-    statusEl.textContent = "Puter: status unknown";
-    return false;
-  } catch {
-    statusEl.textContent = "Puter: signed out";
-    return false;
-  }
-}
-
-async function ensurePuterSignedIn({ interactive = false } = {}) {
-  if (!window.puter?.auth) {
-    throw new Error("Puter auth is unavailable.");
-  }
-  if (typeof window.puter.auth.isSignedIn === "function") {
-    try {
-      const signed = await window.puter.auth.isSignedIn();
-      if (signed) return true;
-    } catch {
-      // ignore and continue to interactive sign-in if allowed
-    }
-  } else if (typeof window.puter.auth.getUser === "function") {
-    try {
-      await window.puter.auth.getUser();
-      return true;
-    } catch {
-      // ignore and continue
-    }
-  }
-
-  if (!interactive || typeof window.puter.auth.signIn !== "function") {
-    return false;
-  }
-  await window.puter.auth.signIn();
-  return await refreshPuterAuthStatus();
 }
 
 function getCurrentCharacterTtsOptions() {
@@ -7115,6 +7737,7 @@ async function persistCurrentThread() {
     selectedPersonaId: currentThread.selectedPersonaId || null,
     lastPersonaInjectionPersonaId:
       currentThread.lastPersonaInjectionPersonaId || null,
+    writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(currentThread),
     updatedAt: Date.now(),
   };
 
@@ -7218,8 +7841,14 @@ async function refreshCurrentThreadFromDb() {
   if (!currentThread) return;
   const thread = await db.threads.get(currentThread.id);
   if (!thread) return;
+  const characterBase = thread.characterId
+    ? await db.characters.get(thread.characterId)
+    : null;
   currentThread = thread;
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
+  currentCharacter = characterBase
+    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
+    : currentCharacter;
   conversationHistory = (thread.messages || []).map((m) => ({
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
@@ -7246,6 +7875,7 @@ async function migrateLegacySessions() {
       titleManual: false,
       messages: session.messages || [],
       lastPersonaInjectionPersonaId: null,
+      writingInstructionsTurnCount: 0,
       createdAt: session.updatedAt || Date.now(),
       updatedAt: session.updatedAt || Date.now(),
     });
@@ -7255,24 +7885,37 @@ async function migrateLegacySessions() {
 async function buildSystemPrompt(character, options = {}) {
   const defaultPersona = await getCharacterDefaultPersona(character);
   const personaForContext = options?.personaOverride || currentPersona || defaultPersona;
+  const charName = String(character?.name || "Character");
+  const personaName = String(defaultPersona?.name || "You");
   const basePromptRaw = (
     character.systemPrompt ||
     state.settings.globalPromptTemplate ||
-    ""
+  ""
   ).trim();
   const basePrompt = replaceUserPlaceholders(
     basePromptRaw,
-    defaultPersona?.name || "You",
+    personaName,
   );
+  const writingInstructionsRaw = String(character?.writingInstructions || "").trim();
+  const writingTurnIndex = Math.max(
+    1,
+    Number(options?.writingInstructionsTurnIndex) || 1,
+  );
+  const includeWritingInstructions =
+    writingInstructionsRaw.length > 0 &&
+    shouldInjectWritingInstructionsForTurn(writingTurnIndex);
+  const writingInstructions = includeWritingInstructions
+    ? replaceLorePlaceholders(writingInstructionsRaw, personaName, charName)
+    : "";
   const oneTimeExtraRaw =
     options?.includeOneTimeExtraPrompt === true
       ? String(character?.oneTimeExtraPrompt || "").trim()
       : "";
   const oneTimeExtra = replaceUserPlaceholders(
     oneTimeExtraRaw,
-    defaultPersona?.name || "You",
+    personaName,
   );
-  const promptBeforePersona = [basePrompt, oneTimeExtra]
+  const promptBeforePersona = [basePrompt, writingInstructions, oneTimeExtra]
     .filter((part) => String(part || "").trim())
     .join("\n\n")
     .trim();
