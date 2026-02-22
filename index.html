@@ -79,27 +79,14 @@
       <section id="chat-view" class="view">
         <header class="chat-header">
           <button
-            id="edit-current-character-btn"
+            id="pane-toggle-chat"
             class="icon-btn"
-            data-i18n-title="editCurrentCharacter"
-            title="Edit current character"
-            aria-label="Edit current character"
-          ></button>
-          <button
-            id="auto-tts-toggle-btn"
-            class="icon-btn"
-            data-i18n-title="autoTtsTitleOff"
-            title="Auto TTS: Off"
-            aria-label="Toggle auto TTS"
-          ></button>
+            data-i18n-title="togglePane"
+            title="Toggle pane"
+            aria-label="Toggle pane"
+          >=</button>
           <div id="chat-title">Thread</div>
-          <button
-            id="rename-thread-btn"
-            class="icon-btn"
-            data-i18n-title="renameThreadAria"
-            title="Rename thread"
-            aria-label="Rename thread"
-          ></button>
+          <button id="auto-tts-toggle-btn" class="icon-btn" data-i18n-title="autoTtsTitleOff" title="Auto TTS: Off" aria-label="Toggle auto TTS"></button>
           <div id="chat-model-pill" class="model-pill">Model: -</div>
           <div id="chat-budget-pill" class="model-pill">Max out: -</div>
         </header>
@@ -137,15 +124,11 @@
               </div>
             </label>
             <button id="send-btn" class="primary-btn" data-i18n="send">Send</button>
-            <button id="shortcuts-toggle-btn" class="secondary-btn" type="button" data-i18n="hideShortcuts">Hide Shortcuts</button>
-            <label class="checkbox-line auto-reply-line">
-              <input type="checkbox" id="auto-reply-enabled" checked />
-              Auto-reply
-            </label>
-            <label class="checkbox-line auto-reply-line">
-              <input type="checkbox" id="enter-to-send-enabled" checked />
-              ENTER to send
-            </label>
+            <div class="send-toggle-row">
+              <button id="auto-reply-enabled" class="option-btn send-toggle-btn" type="button" data-i18n-title="autoReply" title="Auto-reply" aria-label="Auto-reply">🤖</button>
+              <button id="enter-to-send-enabled" class="option-btn send-toggle-btn" type="button" data-i18n-title="enterToSend" title="ENTER to send" aria-label="ENTER to send">⏎</button>
+              <button id="shortcuts-toggle-btn" class="option-btn send-toggle-btn" type="button" data-i18n-title="showShortcuts" title="Show shortcuts" aria-label="Show shortcuts">⌨</button>
+            </div>
           </div>
         </div>
       </section>
@@ -211,6 +194,14 @@
               <span id="toast-delay-value" class="muted"></span>
             </div>
             <input id="toast-delay-slider" type="range" min="1000" max="10000" step="200" />
+          </label>
+          <label data-settings-group="appearance">
+            <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
+            <select id="marquee-behavior-select">
+              <option value="disabled" data-i18n="marqueeBehaviorDisabled">Disabled</option>
+              <option value="hover" data-i18n="marqueeBehaviorOnHover">On Hover</option>
+              <option value="always" data-i18n="marqueeBehaviorAlways">Always</option>
+            </select>
           </label>
           <label>
             <span data-i18n="languageLabel">Interface Language</span>

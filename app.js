@@ -95,6 +95,7 @@ const DEFAULT_SETTINGS = {
   modelModalityFilter: "text-only",
   modelSortOrder: "created_desc",
   toastDurationMs: 2600,
+  marqueeBehavior: "disabled",
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 7,
 };
@@ -431,6 +432,10 @@ const I18N = {
     maxTokensLabel: "Max Tokens",
     temperatureLabel: "Temperature",
     toastDelayLabel: "Toast Delay",
+    marqueeBehaviorLabel: "Marquee Behavior",
+    marqueeBehaviorDisabled: "Disabled",
+    marqueeBehaviorOnHover: "On Hover",
+    marqueeBehaviorAlways: "Always",
     ttsTestTextLabel: "TTS Test Text",
     playTtsTest: "Play TTS Test",
     renderMarkdown: "Render Markdown in messages",
@@ -983,13 +988,11 @@ async function applyInterfaceLanguage() {
   const sendBtn = document.getElementById("send-btn");
   if (sendBtn && !state.sending) sendBtn.textContent = t("send");
   const shortcutsToggle = document.getElementById("shortcuts-toggle-btn");
-  if (shortcutsToggle) {
-    shortcutsToggle.textContent = state.shortcutsVisible
-      ? t("hideShortcuts")
-      : t("showShortcuts");
-  }
-  updateCheckboxLabelText("auto-reply-enabled", t("autoReply"));
-  updateCheckboxLabelText("enter-to-send-enabled", t("enterToSend"));
+  if (shortcutsToggle) shortcutsToggle.title = state.shortcutsVisible ? t("hideShortcuts") : t("showShortcuts");
+  const autoReplyToggle = document.getElementById("auto-reply-enabled");
+  if (autoReplyToggle) autoReplyToggle.title = t("autoReply");
+  const enterToggle = document.getElementById("enter-to-send-enabled");
+  if (enterToggle) enterToggle.title = t("enterToSend");
 
   const settingsTitle = document.getElementById("settings-title");
   if (settingsTitle) settingsTitle.textContent = t("settingsTitle");
@@ -1092,9 +1095,7 @@ function setupEvents() {
       setCharacterModalTab("lang");
       renderCharacterDefinitionTabs();
     });
-  document
-    .getElementById("rename-thread-btn")
-    .addEventListener("click", renameCurrentThread);
+  document.getElementById("pane-toggle-chat")?.addEventListener("click", togglePane);
   document
     .getElementById("scroll-bottom-btn")
     .addEventListener("click", () => scrollChatToBottom(true));
@@ -1129,14 +1130,7 @@ function setupEvents() {
       resetImagePreviewZoom();
     });
   document.getElementById("pane-toggle").addEventListener("click", togglePane);
-  document.getElementById("edit-current-character-btn").innerHTML = ICONS.edit;
   document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
-  document
-    .getElementById("edit-current-character-btn")
-    .addEventListener("click", () => {
-      if (!currentCharacter) return;
-      openCharacterModal(currentCharacter);
-    });
   document
     .getElementById("auto-tts-toggle-btn")
     .addEventListener("click", toggleThreadAutoTts);
@@ -1308,6 +1302,7 @@ function setupEvents() {
   });
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
+    refreshAllHoverMarquees();
   });
   if (typeof ResizeObserver !== "undefined") {
     const ro = new ResizeObserver(() => {
@@ -1897,6 +1892,9 @@ async function setupSettingsControls() {
   const temperatureValue = document.getElementById("temperature-value");
   const toastDelaySlider = document.getElementById("toast-delay-slider");
   const toastDelayValue = document.getElementById("toast-delay-value");
+  const marqueeBehaviorSelect = document.getElementById(
+    "marquee-behavior-select",
+  );
   const threadAutoTitleEnabled = document.getElementById(
     "thread-autotitle-enabled",
   );
@@ -1999,8 +1997,14 @@ async function setupSettingsControls() {
   state.settings.threadAutoTitleMinMessages = minMessages;
   threadAutoTitleMinMessages.value = String(minMessages);
   threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
-  autoReplyEnabled.checked = state.settings.autoReplyEnabled !== false;
-  enterToSendEnabled.checked = state.settings.enterToSendEnabled !== false;
+  autoReplyEnabled?.classList.toggle(
+    "is-active",
+    state.settings.autoReplyEnabled !== false,
+  );
+  enterToSendEnabled?.classList.toggle(
+    "is-active",
+    state.settings.enterToSendEnabled !== false,
+  );
   markdownCustomCss.value = state.settings.markdownCustomCss || "";
   postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
   const initialSliderMax = getSettingsMaxTokensUpperBound(modelSelect.value);
@@ -2026,6 +2030,11 @@ async function setupSettingsControls() {
     if (toastDelayValue) {
       toastDelayValue.textContent = `${Math.round(delay / 100) / 10}s`;
     }
+  }
+  if (marqueeBehaviorSelect) {
+    const behavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
+    state.settings.marqueeBehavior = behavior;
+    marqueeBehaviorSelect.value = behavior;
   }
   updateSettingsRangeTone(maxTokensSlider, Number(maxTokensSlider.value), {
     warnBelow: 1024,
@@ -2177,13 +2186,21 @@ async function setupSettingsControls() {
     saveSettings();
   });
 
-  autoReplyEnabled.addEventListener("change", () => {
-    state.settings.autoReplyEnabled = autoReplyEnabled.checked;
+  autoReplyEnabled?.addEventListener("click", () => {
+    state.settings.autoReplyEnabled = !(state.settings.autoReplyEnabled !== false);
+    autoReplyEnabled.classList.toggle(
+      "is-active",
+      state.settings.autoReplyEnabled !== false,
+    );
     saveSettings();
   });
 
-  enterToSendEnabled.addEventListener("change", () => {
-    state.settings.enterToSendEnabled = enterToSendEnabled.checked;
+  enterToSendEnabled?.addEventListener("click", () => {
+    state.settings.enterToSendEnabled = !(state.settings.enterToSendEnabled !== false);
+    enterToSendEnabled.classList.toggle(
+      "is-active",
+      state.settings.enterToSendEnabled !== false,
+    );
     saveSettings();
   });
 
@@ -2233,6 +2250,14 @@ async function setupSettingsControls() {
       toastDelayValue.textContent = `${Math.round(value / 100) / 10}s`;
     }
     saveSettings();
+  });
+  marqueeBehaviorSelect?.addEventListener("change", () => {
+    state.settings.marqueeBehavior = normalizeMarqueeBehavior(
+      marqueeBehaviorSelect.value,
+    );
+    marqueeBehaviorSelect.value = state.settings.marqueeBehavior;
+    saveSettings();
+    refreshAllHoverMarquees();
   });
 
 
@@ -2303,6 +2328,13 @@ function clampToastDuration(value) {
   return Math.max(1000, Math.min(10000, Math.round(num / 100) * 100));
 }
 
+function normalizeMarqueeBehavior(value) {
+  const v = String(value || "").toLowerCase();
+  if (v === "always") return "always";
+  if (v === "hover") return "hover";
+  return "disabled";
+}
+
 function updateToastDelayDisplay() {
   const slider = document.getElementById("toast-delay-slider");
   const valueEl = document.getElementById("toast-delay-value");
@@ -2349,7 +2381,11 @@ function getSettingsGroupForNode(node) {
     has("#persona-injection-when") ||
     has("#writing-instructions-injection-when")
   ) return "prompting";
-  if (has("#ui-language-select") || has("#toast-delay-slider")) return "appearance";
+  if (
+    has("#ui-language-select") ||
+    has("#toast-delay-slider") ||
+    has("#marquee-behavior-select")
+  ) return "appearance";
   const text = `${node.textContent || ""}`.toLowerCase();
   if (
     id === "openrouter-api-key" ||
@@ -2402,7 +2438,11 @@ function getSettingsGroupForNode(node) {
   ) {
     return "prompting";
   }
-  if (id === "ui-language-select" || id === "toast-delay-slider") {
+  if (
+    id === "ui-language-select" ||
+    id === "toast-delay-slider" ||
+    id === "marquee-behavior-select"
+  ) {
     return "appearance";
   }
   return "appearance";
@@ -2457,6 +2497,9 @@ function loadSettings() {
     if (raw) {
       const parsed = JSON.parse(raw);
       state.settings = { ...DEFAULT_SETTINGS, ...parsed };
+      state.settings.marqueeBehavior = normalizeMarqueeBehavior(
+        state.settings.marqueeBehavior,
+      );
     }
   } catch {
     state.settings = { ...DEFAULT_SETTINGS };
@@ -2929,7 +2972,8 @@ async function renderShortcutsBar() {
   bar.innerHTML = "";
   bar.classList.toggle("hidden", !state.shortcutsVisible);
   if (toggleBtn) {
-    toggleBtn.textContent = state.shortcutsVisible
+    toggleBtn.classList.toggle("is-active", state.shortcutsVisible);
+    toggleBtn.title = state.shortcutsVisible
       ? t("hideShortcuts")
       : t("showShortcuts");
     toggleBtn.disabled = entries.length === 0;
@@ -3132,7 +3176,7 @@ async function renderCharacters() {
 
     const name = document.createElement("h3");
     name.className = "character-name";
-    name.textContent = resolved.name || "Unnamed";
+    applyHoverMarquee(name, resolved.name || "Unnamed");
     name.addEventListener("click", () => startNewThread(char.id));
 
     const dates = document.createElement("p");
@@ -3346,7 +3390,7 @@ async function renderThreads() {
     const metaId = document.createElement("span");
     metaId.textContent = `#${thread.id}`;
     const metaLang = createLanguageFlagIconElement(
-      resolvedChar?.activeLanguage || thread.characterLanguage || "",
+      thread.characterLanguage || resolvedChar?.activeLanguage || "",
       "thread-language-flag",
     );
     meta.append(metaName, metaId, metaLang);
@@ -3363,8 +3407,9 @@ async function renderThreads() {
 
     const titleBtn = document.createElement("button");
     titleBtn.className = "thread-title";
-    titleBtn.textContent = thread.title || tf("threadTitleDefault", { id: thread.id });
-    titleBtn.title = thread.title || tf("threadTitleDefault", { id: thread.id });
+    const threadTitleText =
+      thread.title || tf("threadTitleDefault", { id: thread.id });
+    applyHoverMarquee(titleBtn, threadTitleText);
     titleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       openThread(thread.id);
@@ -3486,6 +3531,8 @@ function togglePane() {
     pane.classList.contains("collapsed"),
   );
   document.getElementById("pane-toggle").textContent = "=";
+  const chatPaneToggle = document.getElementById("pane-toggle-chat");
+  if (chatPaneToggle) chatPaneToggle.textContent = "=";
   if (pane.classList.contains("collapsed")) {
     if (homeBtn) {
       homeBtn.textContent = "H";
@@ -3649,6 +3696,9 @@ function getInitialBotDefinitionLanguage() {
 }
 
 function normalizeCharacterDefinitions(character = null) {
+  if (!character) {
+    return [createEmptyCharacterDefinition(getInitialBotDefinitionLanguage())];
+  }
   const defsRaw = Array.isArray(character?.definitions) ? character.definitions : [];
   const defs = defsRaw
     .map((d) => ({
@@ -3663,7 +3713,9 @@ function normalizeCharacterDefinitions(character = null) {
     }))
     .filter((d, i, arr) => arr.findIndex((x) => x.language === d.language) === i);
   if (defs.length > 0) return defs;
-  const fallbackLanguage = getInitialBotDefinitionLanguage();
+  const fallbackLanguage = normalizeBotLanguageCode(
+    character?.selectedCardLanguage || character?.language || "en",
+  );
   const fallback = createEmptyCharacterDefinition(fallbackLanguage);
   fallback.name = String(character?.name || "");
   fallback.avatar = String(character?.avatar || "");
@@ -5734,13 +5786,55 @@ function updateChatTitle() {
   const titleEl = document.getElementById("chat-title");
   if (!titleEl) return;
   if (!currentThread) {
-    titleEl.textContent = t("threadWord");
+    applyHoverMarquee(titleEl, t("threadWord"));
     return;
   }
-  const displayTitle = `${currentCharacter?.name || "Unknown"} - ${
-    currentThread.title || tf("threadTitleDefault", { id: currentThread.id })
-  }`;
-  titleEl.textContent = displayTitle;
+  const displayTitle =
+    currentThread.title || tf("threadTitleDefault", { id: currentThread.id });
+  applyHoverMarquee(titleEl, displayTitle);
+}
+
+function applyHoverMarquee(element, fullText) {
+  if (!element) return;
+  const text = String(fullText || "");
+  let inner = element.querySelector(".hover-marquee-inner");
+  if (!inner) {
+    inner = document.createElement("span");
+    inner.className = "hover-marquee-inner";
+    element.textContent = "";
+    element.appendChild(inner);
+  }
+  inner.textContent = text;
+  element.classList.add("hover-marquee");
+  element.setAttribute("title", text);
+  requestAnimationFrame(() => updateHoverMarqueeState(element));
+}
+
+function updateHoverMarqueeState(element) {
+  if (!element) return;
+  const inner = element.querySelector(".hover-marquee-inner");
+  if (!inner) return;
+  const behavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
+  const overflow = Math.ceil(inner.scrollWidth - element.clientWidth);
+  const canAnimate = overflow > 8 && behavior !== "disabled";
+  if (canAnimate) {
+    element.classList.add("marquee-overflow");
+    element.classList.toggle("marquee-always", behavior === "always");
+    element.style.setProperty("--marquee-shift", `-${overflow}px`);
+    const durationSec = Math.max(7, Math.min(22, overflow / 24 + 6));
+    element.style.setProperty("--marquee-duration", `${durationSec}s`);
+  } else {
+    element.classList.remove("marquee-overflow");
+    element.classList.remove("marquee-always");
+    element.style.removeProperty("--marquee-shift");
+    element.style.removeProperty("--marquee-duration");
+  }
+}
+
+function refreshAllHoverMarquees() {
+  document.querySelectorAll(".hover-marquee").forEach((el) => {
+    updateHoverMarqueeState(el);
+  });
 }
 
 async function maybeGenerateThreadTitle() {

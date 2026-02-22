@@ -306,6 +306,41 @@ body {
   flex: 1;
 }
 
+.hover-marquee {
+  position: relative;
+}
+
+.hover-marquee .hover-marquee-inner {
+  display: inline-block;
+  min-width: 100%;
+  white-space: nowrap;
+  transform: translateX(0);
+  will-change: transform;
+}
+
+.hover-marquee.marquee-overflow:hover .hover-marquee-inner {
+  animation: hover-marquee-scroll var(--marquee-duration, 10s) linear infinite;
+}
+
+.hover-marquee.marquee-overflow.marquee-always .hover-marquee-inner {
+  animation: hover-marquee-scroll var(--marquee-duration, 10s) linear infinite;
+}
+
+@keyframes hover-marquee-scroll {
+  0%,
+  16% {
+    transform: translateX(0);
+  }
+  62%,
+  80% {
+    transform: translateX(var(--marquee-shift, -48px));
+  }
+  80.01%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
 .thread-rename-mini {
   width: 16px !important;
   min-width: 16px !important;
@@ -752,6 +787,9 @@ textarea {
   margin: 0;
   font-size: 16px;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .character-id {
@@ -1149,6 +1187,26 @@ textarea {
   min-width: 136px;
 }
 
+.send-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.send-toggle-btn {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0;
+}
+
+.send-toggle-btn.is-active {
+  background: #2f6fca;
+  border-color: #4f8fe8;
+  color: #fff;
+}
+
 #send-btn.is-generating {
   background: #3d2226;
   color: #ffd7db;
@@ -1165,7 +1223,7 @@ textarea {
   flex: 1 1 auto;
   padding: 10px;
   resize: vertical;
-  min-height: 84px;
+  min-height: 72px;
   max-height: 34vh;
   width: 100%;
   height: 100%;

@@ -304,5 +304,9 @@
   "removeLanguageTitle": "Remove Language",
   "removeLanguageConfirm": "Remove language definition {lang}?",
   "removeLanguageConfirmWithThreads": "Remove language definition {lang}? This will delete {count} thread(s) using this language.",
-  "languageRequired": "At least one language definition is required."
+  "languageRequired": "At least one language definition is required.",
+  "marqueeBehaviorLabel": "Marquee Behavior",
+  "marqueeBehaviorDisabled": "Disabled",
+  "marqueeBehaviorOnHover": "On Hover",
+  "marqueeBehaviorAlways": "Always"
 }
