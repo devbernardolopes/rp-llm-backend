@@ -273,5 +273,6 @@
   "truncatedMessageLine2": "You can delete or regenerate this message. You can also trigger another model response, or send a new message.",
   "generationErrorLine1": "Generation failed for this message.",
   "generationErrorLine3": "You can regenerate this message, switch model, or continue the chat.",
-  "threadQueueBadgeTitle": "Queued for generation (position {position})"
+  "threadQueueBadgeTitle": "Queued for generation (position {position})",
+  "queuedLabel": "Queued {position}/{size}"
 }

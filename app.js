@@ -288,6 +288,7 @@ const I18N = {
       "Generation queued. Waiting for active generation.",
     generationQueuedNoticeWithPos:
       "Generation queued. Waiting for active generation (queue position {position}).",
+    queuedLabel: "Queued {position}/{size}",
     generatingLabel: "Generating...",
     regeneratingLabel: "Regenerating...",
     truncatedMessageLine1:
@@ -2717,15 +2718,10 @@ async function renderThreads() {
   const charIds = [
     ...new Set(threads.map((t) => t.characterId).filter(Boolean)),
   ];
-  const queuedSorted = threads
-    .filter((t) => String(t.pendingGenerationReason || "").trim())
-    .sort(
-      (a, b) =>
-        Number(a.pendingGenerationQueuedAt || 0) -
-        Number(b.pendingGenerationQueuedAt || 0),
-    );
   const queuePosByThreadId = new Map(
-    queuedSorted.map((t, i) => [Number(t.id), i + 1]),
+    state.generationQueue
+      .map((id, i) => [Number(id), i + 1])
+      .filter(([id]) => Number.isInteger(id)),
   );
   const characters = await db.characters.where("id").anyOf(charIds).toArray();
   const charMap = new Map(characters.map((c) => [c.id, c]));
@@ -4770,10 +4766,11 @@ function renderChat() {
     Number.isInteger(currentId) &&
     activeThreadId === currentId;
   conversationHistory.forEach((message, idx) => {
+    const status = String(message?.generationStatus || "").trim();
     const rowStreaming =
-      isActiveGenerationThread &&
       message?.role === "assistant" &&
-      String(message?.generationStatus || "").trim() !== "";
+      (status === "queued" ||
+        (isActiveGenerationThread && (status === "generating" || status === "regenerating")));
     log.appendChild(buildMessageRow(message, idx, rowStreaming));
   });
 
@@ -4916,11 +4913,14 @@ function buildMessageRow(message, index, streaming) {
     beginInlineMessageEdit(index, content);
   });
   if (streaming) {
-    const statusLabel =
-      message?.generationStatus === "regenerating"
-        ? t("regeneratingLabel")
-        : t("generatingLabel");
-    if (String(message?.content || "").trim()) {
+    let statusLabel = t("generatingLabel");
+    const isQueued = message?.generationStatus === "queued";
+    if (message?.generationStatus === "regenerating") {
+      statusLabel = t("regeneratingLabel");
+    } else if (isQueued) {
+      statusLabel = String(message?.content || "").trim() || t("generatingLabel");
+    }
+    if (!isQueued && String(message?.content || "").trim()) {
       content.innerHTML = renderMessageHtml(message.content, message.role);
     } else {
       content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(statusLabel)}`;
@@ -5321,24 +5321,35 @@ async function generateBotReply() {
   const generationPersona = currentPersona;
   const generationThreadSnapshot = { ...currentThread };
   const generationHistory = conversationHistory;
-  const pendingIndex = generationHistory.length;
 
   const log = document.getElementById("chat-log");
-  const pending = {
-    role: "assistant",
-    content: "",
-    generationStatus: "generating",
-    createdAt: Date.now(),
-    finishReason: "",
-    nativeFinishReason: "",
-    truncatedByFilter: false,
-    generationId: "",
-    completionMeta: null,
-    generationInfo: null,
-    usedLoreEntries: [],
-    usedMemorySummary: "",
-  };
-  generationHistory.push(pending);
+  const existingPendingIdx = findLatestPendingAssistantIndex(generationHistory);
+  let pending = null;
+  let pendingIndex = existingPendingIdx;
+  if (existingPendingIdx >= 0) {
+    pending = generationHistory[existingPendingIdx];
+    pending.content = "";
+    pending.generationStatus = "generating";
+    pending.generationError = "";
+    pending.truncatedByFilter = false;
+  } else {
+    pending = {
+      role: "assistant",
+      content: "",
+      generationStatus: "generating",
+      createdAt: Date.now(),
+      finishReason: "",
+      nativeFinishReason: "",
+      truncatedByFilter: false,
+      generationId: "",
+      completionMeta: null,
+      generationInfo: null,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+    };
+    generationHistory.push(pending);
+    pendingIndex = generationHistory.length - 1;
+  }
   await clearThreadGenerationQueueFlag(threadId);
   await persistThreadMessagesById(threadId, generationHistory);
   let pendingRow = null;
@@ -5376,9 +5387,14 @@ async function generateBotReply() {
       state.settings.model,
       (chunk) => {
         pending.content += chunk;
-        if (pendingRow && isViewingThread(threadId)) {
-          pendingRow.querySelector(".message-content").innerHTML =
-            renderMessageHtml(pending.content, pending.role);
+        if (isViewingThread(threadId)) {
+          const liveRow = document.querySelector(
+            `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+          );
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(pending.content, pending.role);
+          }
         }
         if (state.settings.streamEnabled) {
           persistThreadMessagesById(threadId, generationHistory).catch(() => {});
@@ -5406,9 +5422,17 @@ async function generateBotReply() {
     pending.usedMemorySummary = String(promptContext.memory || "");
     pending.generationError = "";
     pending.generationStatus = "";
-    if (pendingRow && isViewingThread(threadId)) {
-      renderMessageContent(pendingRow.querySelector(".message-content"), pending);
-      pendingRow.dataset.streaming = "0";
+    if (isViewingThread(threadId)) {
+      const liveRow = document.querySelector(
+        `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+      );
+      const liveContent = liveRow?.querySelector(".message-content");
+      if (liveContent) {
+        renderMessageContent(liveContent, pending);
+      } else {
+        renderChat();
+      }
+      if (liveRow) liveRow.dataset.streaming = "0";
       refreshAllSpeakerButtons();
     }
     if (currentThread && Number(currentThread.id) === threadId) {
@@ -5444,9 +5468,17 @@ async function generateBotReply() {
         if (pendingRow) pendingRow.remove();
       } else {
         pending.generationStatus = "";
-        if (pendingRow && isViewingThread(threadId)) {
-          renderMessageContent(pendingRow.querySelector(".message-content"), pending);
-          pendingRow.dataset.streaming = "0";
+        if (isViewingThread(threadId)) {
+          const liveRow = document.querySelector(
+            `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+          );
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            renderMessageContent(liveContent, pending);
+          } else {
+            renderChat();
+          }
+          if (liveRow) liveRow.dataset.streaming = "0";
           refreshAllSpeakerButtons();
         }
       }
@@ -5459,12 +5491,17 @@ async function generateBotReply() {
       if (!String(pending.content || "").trim()) {
         pending.content = "";
       }
-      if (pendingRow && isViewingThread(threadId)) {
-        pendingRow.dataset.streaming = "0";
-        renderMessageContent(
-          pendingRow.querySelector(".message-content"),
-          pending,
+      if (isViewingThread(threadId)) {
+        const liveRow = document.querySelector(
+          `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
         );
+        const liveContent = liveRow?.querySelector(".message-content");
+        if (liveRow) liveRow.dataset.streaming = "0";
+        if (liveContent) {
+          renderMessageContent(liveContent, pending);
+        } else {
+          renderChat();
+        }
         refreshAllSpeakerButtons();
         refreshMessageControlStates();
       }
@@ -6601,22 +6638,51 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
 async function enqueueThreadGeneration(threadId, reason = "busy") {
   const id = Number(threadId);
   if (!Number.isInteger(id)) return;
-  if (!state.generationQueue.includes(id)) {
-    state.generationQueue.push(id);
-  }
+  const wasQueued = state.generationQueue.includes(id);
+  if (!wasQueued) state.generationQueue.push(id);
+  const queueSize = state.generationQueue.length;
+  const queuePos = state.generationQueue.indexOf(id) + 1;
   const queuedAt = Date.now();
+  const thread = await db.threads.get(id);
+  const threadMessages = Array.isArray(thread?.messages)
+    ? thread.messages.map((m) => ({ ...m }))
+    : [];
+  if (!wasQueued) {
+    const pendingIdx = findLatestPendingAssistantIndex(threadMessages);
+    if (pendingIdx >= 0) {
+      threadMessages[pendingIdx].generationStatus = "queued";
+      threadMessages[pendingIdx].content = tf("queuedLabel", {
+        position: queuePos,
+        size: queueSize,
+      });
+      threadMessages[pendingIdx].generationError = "";
+      threadMessages[pendingIdx].truncatedByFilter = false;
+    } else {
+      threadMessages.push({
+        role: "assistant",
+        content: tf("queuedLabel", { position: queuePos, size: queueSize }),
+        createdAt: queuedAt,
+        generationStatus: "queued",
+        generationError: "",
+        truncatedByFilter: false,
+        usedLoreEntries: [],
+        usedMemorySummary: "",
+      });
+    }
+  }
+  updateQueuedPlaceholdersInMessages(id, threadMessages);
   await db.threads.update(id, {
+    messages: threadMessages,
     pendingGenerationReason: reason,
     pendingGenerationQueuedAt: queuedAt,
     updatedAt: queuedAt,
   });
   if (currentThread && Number(currentThread.id) === id) {
+    conversationHistory = threadMessages;
     currentThread.pendingGenerationReason = reason;
     currentThread.pendingGenerationQueuedAt = queuedAt;
     currentThread.updatedAt = queuedAt;
-    if (!state.sending && conversationHistory.length === 0) {
-      renderChat();
-    }
+    renderChat();
   }
   broadcastSyncEvent({
     type: "thread-updated",
@@ -6624,9 +6690,8 @@ async function enqueueThreadGeneration(threadId, reason = "busy") {
     updatedAt: queuedAt,
   });
   await renderThreads();
-  const position = state.generationQueue.indexOf(id) + 1;
-  if (position > 0) {
-    showToast(tf("generationQueuedToast", { position }), "success");
+  if (queuePos > 0) {
+    showToast(tf("generationQueuedToast", { position: queuePos }), "success");
   }
 }
 
@@ -6634,22 +6699,48 @@ async function clearThreadGenerationQueueFlag(threadId) {
   const id = Number(threadId);
   if (!Number.isInteger(id)) return;
   state.generationQueue = state.generationQueue.filter((x) => Number(x) !== id);
+  const queuedIds = [...state.generationQueue];
   const updatedAt = Date.now();
+  const thread = await db.threads.get(id);
+  const threadMessages = Array.isArray(thread?.messages)
+    ? thread.messages.map((m) => ({ ...m }))
+    : [];
+  updateQueuedPlaceholdersInMessages(id, threadMessages);
   await db.threads.update(id, {
+    messages: threadMessages,
     pendingGenerationReason: "",
     pendingGenerationQueuedAt: 0,
     updatedAt,
   });
+  for (const qid of queuedIds) {
+    const qThread = await db.threads.get(qid);
+    if (!qThread) continue;
+    const qMessages = Array.isArray(qThread.messages)
+      ? qThread.messages.map((m) => ({ ...m }))
+      : [];
+    updateQueuedPlaceholdersInMessages(qid, qMessages);
+    await db.threads.update(qid, { messages: qMessages, updatedAt: Date.now() });
+  }
   if (currentThread && Number(currentThread.id) === id) {
+    conversationHistory = threadMessages;
     currentThread.pendingGenerationReason = "";
     currentThread.pendingGenerationQueuedAt = 0;
     currentThread.updatedAt = updatedAt;
+    renderChat();
   }
   broadcastSyncEvent({
     type: "thread-updated",
     threadId: id,
     updatedAt,
   });
+  for (const qid of queuedIds) {
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: qid,
+      updatedAt: Date.now(),
+    });
+  }
+  await renderThreads();
 }
 
 async function tryStartQueuedGenerationForCurrentThread() {
@@ -6671,6 +6762,42 @@ async function requestBotReplyForCurrentThread(trigger = "manual_send") {
     return;
   }
   await generateBotReply();
+}
+
+function findLatestPendingAssistantIndex(messages) {
+  const list = Array.isArray(messages) ? messages : [];
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const m = list[i];
+    if (!m || m.role !== "assistant") continue;
+    if (!String(m.content || "").trim()) {
+      const status = String(m.generationStatus || "").trim();
+      if (status === "queued" || status === "generating" || status === "regenerating") {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
+function updateQueuedPlaceholdersInMessages(threadId, messages) {
+  const id = Number(threadId);
+  const list = Array.isArray(messages) ? messages : [];
+  const queueIndex = state.generationQueue.indexOf(id);
+  const queueSize = state.generationQueue.length;
+  list.forEach((m) => {
+    if (!m || m.role !== "assistant") return;
+    if (String(m.generationStatus || "").trim() !== "queued") return;
+    if (queueIndex >= 0 && queueSize > 0) {
+      m.content = tf("queuedLabel", {
+        position: queueIndex + 1,
+        size: queueSize,
+      });
+    } else {
+      m.content = "";
+      m.generationStatus = "";
+    }
+  });
+  return list;
 }
 
 async function persistCurrentThread() {
