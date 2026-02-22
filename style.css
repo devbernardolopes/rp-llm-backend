@@ -285,6 +285,12 @@ body {
   background: #2a3850;
 }
 
+#auto-tts-toggle-btn.is-active {
+  background: #223a2b;
+  border-color: #3f7d50;
+  color: #d4f8df;
+}
+
 .icon-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;

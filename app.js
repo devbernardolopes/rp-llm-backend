@@ -547,12 +547,16 @@ function setupEvents() {
     .addEventListener("click", () => scrollChatToBottom(true));
   document.getElementById("pane-toggle").addEventListener("click", togglePane);
   document.getElementById("edit-current-character-btn").innerHTML = ICONS.edit;
+  document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
   document
     .getElementById("edit-current-character-btn")
     .addEventListener("click", () => {
       if (!currentCharacter) return;
       openCharacterModal(currentCharacter);
     });
+  document
+    .getElementById("auto-tts-toggle-btn")
+    .addEventListener("click", toggleThreadAutoTts);
   document
     .getElementById("char-avatar-file")
     .addEventListener("change", onAvatarFileChange);
@@ -2363,6 +2367,7 @@ function showMainView() {
   document.getElementById("main-view").classList.add("active");
   document.getElementById("chat-view").classList.remove("active");
   updateThreadRenameButtonState();
+  updateAutoTtsToggleButton();
   updateScrollBottomButtonVisibility();
 }
 
@@ -2370,6 +2375,7 @@ function showChatView() {
   document.getElementById("chat-view").classList.add("active");
   document.getElementById("main-view").classList.remove("active");
   updateThreadRenameButtonState();
+  updateAutoTtsToggleButton();
   updateScrollBottomButtonVisibility();
 }
 
@@ -3290,6 +3296,7 @@ async function startNewThread(characterId) {
     titleManual: false,
     messages: initialMessages,
     selectedPersonaId: defaultPersonaForCharacter?.id || null,
+    autoTtsEnabled: false,
     lastPersonaInjectionPersonaId: null,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -3328,6 +3335,7 @@ async function duplicateThread(threadId) {
     titleManual: false,
     messages: [...(source.messages || [])],
     selectedPersonaId: source.selectedPersonaId || null,
+    autoTtsEnabled: source.autoTtsEnabled === true,
     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
     favorite: !!source.favorite,
     createdAt: Date.now(),
@@ -3378,6 +3386,7 @@ async function deleteThread(threadId) {
     currentCharacter = null;
     conversationHistory = [];
     showMainView();
+    updateAutoTtsToggleButton();
   }
   await renderThreads();
   await renderCharacters();
@@ -3407,6 +3416,7 @@ async function openThread(threadId) {
 
   updateChatTitle();
   updateThreadRenameButtonState();
+  updateAutoTtsToggleButton();
   updateModelPill();
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
@@ -3426,6 +3436,49 @@ function updateThreadRenameButtonState() {
   if (!btn) return;
   btn.innerHTML = ICONS.edit;
   btn.disabled = !currentThread;
+}
+
+function updateAutoTtsToggleButton() {
+  const btn = document.getElementById("auto-tts-toggle-btn");
+  if (!btn) return;
+  btn.innerHTML = ICONS.speaker;
+  const enabled = !!(currentThread && currentThread.autoTtsEnabled === true);
+  btn.classList.toggle("is-active", enabled);
+  btn.disabled = !currentThread;
+  btn.setAttribute("title", `Auto TTS: ${enabled ? "On" : "Off"}`);
+  btn.setAttribute("aria-label", enabled ? "Disable auto TTS" : "Enable auto TTS");
+}
+
+async function toggleThreadAutoTts() {
+  if (!currentThread) return;
+  const next = !(currentThread.autoTtsEnabled === true);
+  const updatedAt = Date.now();
+  currentThread.autoTtsEnabled = next;
+  state.lastSyncSeenUpdatedAt = updatedAt;
+  await db.threads.update(currentThread.id, {
+    autoTtsEnabled: next,
+    updatedAt,
+  });
+  updateAutoTtsToggleButton();
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: currentThread.id,
+    updatedAt,
+  });
+  showToast(`Auto TTS ${next ? "enabled" : "disabled"}.`, "success");
+}
+
+async function maybeAutoSpeakAssistantMessage(messageIndex) {
+  if (!currentThread || currentThread.autoTtsEnabled !== true) return;
+  if (!state.tts.voiceSupportReady) return;
+  const msg = conversationHistory[messageIndex];
+  if (!msg || msg.role !== "assistant") return;
+  if (!String(msg.content || "").trim()) return;
+  try {
+    await toggleMessageSpeech(messageIndex);
+  } catch {
+    // keep silent for auto mode failures
+  }
 }
 
 async function renameCurrentThread() {
@@ -3770,7 +3823,15 @@ function beginInlineMessageEdit(index, contentEl) {
   const message = conversationHistory[index];
   if (!message) return;
   if (message.truncatedByFilter === true) return;
-  stopTtsPlayback();
+  const activeTtsIndex = Number.isInteger(state.tts.speakingMessageIndex)
+    ? state.tts.speakingMessageIndex
+    : Number.isInteger(state.tts.loadingMessageIndex)
+      ? state.tts.loadingMessageIndex
+      : null;
+  // Keep playback when editing a message that appears before the currently spoken/loading one.
+  if (!(Number.isInteger(activeTtsIndex) && index < activeTtsIndex)) {
+    stopTtsPlayback();
+  }
 
   if (
     state.editingMessageIndex !== null &&
@@ -4128,6 +4189,9 @@ async function generateBotReply() {
     refreshAllSpeakerButtons();
     commitPendingPersonaInjectionMarker();
     await persistCurrentThread();
+    maybeAutoSpeakAssistantMessage(conversationHistory.length - 1).catch(
+      () => {},
+    );
     await maybeGenerateThreadTitle();
     scrollChatToBottom();
 
@@ -4238,6 +4302,7 @@ async function regenerateMessage(index) {
     commitPendingPersonaInjectionMarker();
     await persistCurrentThread();
     renderChat();
+    maybeAutoSpeakAssistantMessage(index).catch(() => {});
     await renderThreads();
   } catch (e) {
     state.pendingPersonaInjectionPersonaId = null;
