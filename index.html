@@ -1044,28 +1044,28 @@
           </button>
         </div>
         <div class="modal-body two-col">
-          <label class="lang-field">
+          <div class="lang-field">
             <div class="label-inline">
               <span data-i18n="nameLabel">Name</span>
               <span id="char-name-count" class="muted">0/128</span>
             </div>
             <input id="char-name" type="text" maxlength="128" />
-          </label>
-          <label class="full lang-field">
-            <span data-i18n="avatars">Avatars</span>
+          </div>
+          <div class="full lang-field">
+            <span data-i18n="avatars" class="block mb-2">Avatars</span>
             <div id="char-avatars-container" class="char-avatars-container">
-              <div id="char-avatar-dropzone" class="char-avatar-dropzone">
+              <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone">
                 <span class="dropzone-plus">+</span>
                 <span class="dropzone-hint">Drag & drop or click</span>
-              </div>
+              </button>
               <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="hidden" />
             </div>
-          </label>
-          <label class="full lang-field">
+          </div>
+          <div class="full lang-field">
             <span data-i18n="characterPrompt">Character Prompt</span>
             <textarea id="char-system-prompt" rows="8"></textarea>
-          </label>
-          <label class="full global-field">
+          </div>
+          <div class="full global-field">
             <span class="checkbox-line">
               <input
                 id="char-prefer-persona-language"
@@ -1076,14 +1076,14 @@
                 >Prefer Language Matching User Persona</span
               >
             </span>
-          </label>
-          <label class="full global-field">
+          </div>
+          <div class="full global-field">
             <span data-i18n="defaultPersonaOverride"
               >Default User Persona Override (Character-only)</span
             >
             <select id="char-default-persona-override"></select>
-          </label>
-          <label class="full lang-field">
+          </div>
+          <div class="full lang-field">
             <span data-i18n="oneTimeExtraPrompt"
               >One-time only Extra System/Character Prompt</span
             >
@@ -1092,16 +1092,16 @@
               rows="4"
               placeholder="Appended only for the first assistant generation."
             ></textarea>
-          </label>
-          <label class="full lang-field">
+          </div>
+          <div class="full lang-field">
             <span data-i18n="writingInstructions">Writing Instructions</span>
             <textarea
               id="char-writing-instructions"
               rows="4"
               placeholder="Reserved for future implementation."
             ></textarea>
-          </label>
-          <label class="full lang-field">
+          </div>
+          <div class="full lang-field">
             <span data-i18n="initialMessages">Initial Messages</span>
             <textarea
               id="char-initial-messages"
@@ -1112,8 +1112,8 @@
 
 [SYSTEM]: text..."
             ></textarea>
-          </label>
-          <label class="full global-field">
+          </div>
+          <div class="full global-field">
             <span data-i18n="tagsCommaSeparated">Tags (comma-separated)</span>
             <input
               id="char-tags-input"
@@ -1122,8 +1122,8 @@
               placeholder="Roleplay, Female, Hero"
             />
             <div id="char-tags-presets" class="tag-presets-list"></div>
-          </label>
-          <label class="full lang-field">
+          </div>
+          <div class="full lang-field">
             <span data-i18n="personaInjectionPlacement"
               >Persona Injection Placement</span
             >
@@ -1135,30 +1135,30 @@
                 At End of Character Prompt
               </option>
             </select>
-          </label>
-          <label class="global-field">
+          </div>
+          <div class="global-field">
             <span class="checkbox-line">
               <input id="char-use-memory" type="checkbox" />
               <span data-i18n="enableMemory">Enable Memory</span>
             </span>
-          </label>
-          <label class="global-field">
+          </div>
+          <div class="global-field">
             <span class="checkbox-line">
               <input id="char-use-postprocess" type="checkbox" checked />
               <span data-i18n="enablePostprocess"
                 >Enable Post-processing Rules</span
               >
             </span>
-          </label>
-          <label class="global-field">
+          </div>
+          <div class="global-field">
             <span class="checkbox-line">
               <input id="char-auto-trigger-first-ai" type="checkbox" checked />
               <span data-i18n="autoTriggerAiFirst"
                 >Auto-trigger AI first message</span
               >
             </span>
-          </label>
-          <label class="global-field">
+          </div>
+          <div class="global-field">
             <span data-i18n="avatarScaleInChat">Avatar Scale (In Chat)</span>
             <select id="char-avatar-scale">
               <option value="1">1x</option>
@@ -1166,22 +1166,22 @@
               <option value="3">3x</option>
               <option value="4">4x</option>
             </select>
-          </label>
-          <label class="lang-field">
+          </div>
+          <div class="lang-field">
             <span class="checkbox-line">
               <input id="char-tts-enabled" type="checkbox" checked />
               <span data-i18n="enableTts">Enable TTS</span>
             </span>
-          </label>
-          <label class="lang-field">
+          </div>
+          <div class="lang-field">
             <span data-i18n="ttsLanguage">TTS Language</span>
             <select id="char-tts-language"></select>
-          </label>
-          <label class="lang-field">
+          </div>
+          <div class="lang-field">
             <span data-i18n="ttsVoice">TTS Voice</span>
             <select id="char-tts-voice"></select>
-          </label>
-          <label class="lang-field">
+          </div>
+          <div class="lang-field">
             <div class="label-inline">
               <span data-i18n="ttsRate">TTS Rate</span>
               <span id="char-tts-rate-value" class="muted"></span>
@@ -1193,8 +1193,8 @@
               max="2"
               step="0.1"
             />
-          </label>
-          <label class="lang-field">
+          </div>
+          <div class="lang-field">
             <div class="label-inline">
               <span data-i18n="ttsPitch">TTS Pitch</span>
               <span id="char-tts-pitch-value" class="muted"></span>
@@ -1206,26 +1206,26 @@
               max="2"
               step="0.1"
             />
-          </label>
-          <label class="full lang-field">
+          </div>
+          <div class="full lang-field">
             <button id="char-tts-test-btn" class="secondary-btn" type="button">
               <span data-i18n="testCharacterVoice">Test Character Voice</span>
             </button>
-          </label>
-          <label class="full lang-field">
+          </div>
+          <div class="full lang-field">
             <span class="checkbox-line">
               <input id="char-prefer-lore-language" type="checkbox" checked />
               <span data-i18n="preferLoreBooksInMatchingLanguage"
                 >Prefer Lore Books in Matching Language</span
               >
             </span>
-          </label>
-          <label class="full lang-field">
+          </div>
+          <div class="full lang-field">
             <span data-i18n="loreBooksForCharacter"
               >Lore Books for this character</span
             >
             <div id="char-lorebooks-list" class="check-list"></div>
-          </label>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="secondary-btn" data-close-modal data-i18n="cancel">

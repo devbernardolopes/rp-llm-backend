@@ -1637,6 +1637,8 @@ textarea {
   position: relative;
   width: 120px;
   height: 120px;
+  min-width: 120px;
+  flex-shrink: 0;
   border-radius: 10px;
   overflow: hidden;
   border: 2px solid var(--line);
@@ -1692,6 +1694,8 @@ textarea {
 .char-avatar-dropzone {
   width: 120px;
   height: 120px;
+  min-width: 120px;
+  flex-shrink: 0;
   border: 2px dashed var(--line);
   border-radius: 10px;
   display: flex;
@@ -1701,6 +1705,10 @@ textarea {
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
   gap: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
 }
 
 .char-avatar-dropzone:hover {

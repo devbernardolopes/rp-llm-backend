@@ -5283,7 +5283,12 @@ function setupCharAvatarDropzone() {
   const fileInput = document.getElementById("char-avatar-file-input");
   if (!dropzone || !fileInput) return;
 
-  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Dropzone clicked");
+    fileInput.click();
+  });
 
   dropzone.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -5296,6 +5301,7 @@ function setupCharAvatarDropzone() {
 
   dropzone.addEventListener("drop", (e) => {
     e.preventDefault();
+    e.stopPropagation();
     dropzone.classList.remove("drag-over");
     const files = e.dataTransfer?.files;
     if (files) handleAvatarFiles(files);
@@ -5307,6 +5313,15 @@ function setupCharAvatarDropzone() {
     fileInput.value = "";
   });
 }
+
+function triggerAvatarFileSelect() {
+  console.log("triggerAvatarFileSelect called");
+  const fileInput = document.getElementById("char-avatar-file-input");
+  console.log("fileInput:", fileInput);
+  if (fileInput) fileInput.click();
+}
+
+window.triggerAvatarFileSelect = triggerAvatarFileSelect;
 
 async function handleAvatarFiles(files) {
   for (const file of files) {
@@ -5346,21 +5361,41 @@ function renderCharAvatars() {
   if (!container) return;
 
   container.innerHTML = "";
+  container.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
 
   state.charModalAvatars.forEach((avatar, index) => {
     const item = document.createElement("div");
     item.className = "char-avatar-item" + (index === 0 ? " is-main" : "");
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
 
     if (avatar.type === "video") {
       const video = document.createElement("video");
       video.src = avatar.data;
       video.muted = true;
       video.loop = true;
+      video.preload = "metadata";
+      video.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openImagePreview(avatar.data);
+      });
+      video.addEventListener("mousedown", (e) => e.preventDefault());
       item.appendChild(video);
     } else {
       const img = document.createElement("img");
       img.src = avatar.data;
-      img.addEventListener("click", () => openImagePreview(avatar.data));
+      img.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openImagePreview(avatar.data);
+      });
+      img.addEventListener("mousedown", (e) => e.preventDefault());
       item.appendChild(img);
     }
 
@@ -5368,7 +5403,11 @@ function renderCharAvatars() {
     removeBtn.className = "avatar-remove-btn";
     removeBtn.innerHTML = "&times;";
     removeBtn.title = "Remove";
-    removeBtn.onclick = () => removeAvatar(index);
+    removeBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeAvatar(index);
+    };
     item.appendChild(removeBtn);
 
     if (index === 0) {
