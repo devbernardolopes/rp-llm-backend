@@ -98,6 +98,7 @@ const DEFAULT_SETTINGS = {
   marqueeBehavior: "disabled",
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 7,
+  chatMessageAlignment: "left",
 };
 
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
@@ -412,6 +413,9 @@ const I18N = {
     threadQueueBadgeTitle: "Queued for generation (position {position})",
     threadAutoTitleEnabled: "Enable Auto-titling for Threads",
     threadAutoTitleMinMessages: "Min. Messages",
+    chatMessageAlignment: "Message Alignment",
+    messageAlignmentLeft: "Left (Default)",
+    messageAlignmentCenter: "Center",
     resetAppData: "Reset App Data",
     resetAppDataSoon: "Reset app data will be added soon.",
     openRouterApiKey: "OpenRouter API Key",
@@ -460,6 +464,7 @@ const I18N = {
     everyFourth: "Every Fourth",
     nameLabel: "Name",
     avatarUrl: "Avatar URL",
+    avatars: "Avatars",
     avatarFile: "Avatar File",
     personaDescription: "Description (max 100 chars)",
     personaInternalDescription: "Internal Description (optional)",
@@ -789,6 +794,7 @@ const state = {
   charModalActiveLanguage: "",
   charModalActiveTab: "lang",
   charModalPendingThreadDeleteIds: [],
+  charModalAvatars: [],
 };
 
 const TTS_DEBUG = true;
@@ -826,6 +832,7 @@ async function init() {
   await renderAll();
   setupCrossWindowSync();
   applyMarkdownCustomCss();
+  applyChatMessageAlignment();
   renderCharacterTagFilterChips();
   updateThreadRenameButtonState();
   updateScrollBottomButtonVisibility();
@@ -1134,12 +1141,7 @@ function setupEvents() {
   document
     .getElementById("auto-tts-toggle-btn")
     .addEventListener("click", toggleThreadAutoTts);
-  document
-    .getElementById("char-avatar-file")
-    .addEventListener("change", onAvatarFileChange);
-  document
-    .getElementById("char-avatar")
-    .addEventListener("input", onAvatarUrlInput);
+  setupCharAvatarDropzone();
   ["char-system-prompt", "char-one-time-extra-prompt", "char-initial-messages"].forEach(
     (id) => {
       const el = document.getElementById(id);
@@ -1151,12 +1153,6 @@ function setupEvents() {
   document
     .getElementById("char-tags-input")
     .addEventListener("input", renderCharacterTagPresetButtons);
-  document
-    .getElementById("char-avatar-preview")
-    .addEventListener("click", () => {
-      const src = document.getElementById("char-avatar-preview")?.src || "";
-      if (src) openImagePreview(src);
-    });
   document
     .getElementById("char-tts-language")
     .addEventListener("change", () => populateCharTtsVoiceSelect());
@@ -1339,7 +1335,6 @@ function setupEvents() {
 
   markModalDirtyOnInput("character-modal", [
     "#char-name",
-    "#char-avatar",
     "#char-system-prompt",
     "#char-default-persona-override",
     "#char-prefer-persona-language",
@@ -1997,6 +1992,10 @@ async function setupSettingsControls() {
   state.settings.threadAutoTitleMinMessages = minMessages;
   threadAutoTitleMinMessages.value = String(minMessages);
   threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
+  const chatMessageAlignment = document.getElementById("chat-message-alignment");
+  if (chatMessageAlignment) {
+    chatMessageAlignment.value = state.settings.chatMessageAlignment || "left";
+  }
   autoReplyEnabled?.classList.toggle(
     "is-active",
     state.settings.autoReplyEnabled !== false,
@@ -2184,6 +2183,11 @@ async function setupSettingsControls() {
     state.settings.threadAutoTitleMinMessages = value;
     threadAutoTitleMinMessages.value = String(value);
     saveSettings();
+  });
+  document.getElementById("chat-message-alignment")?.addEventListener("change", (e) => {
+    state.settings.chatMessageAlignment = e.target.value;
+    saveSettings();
+    applyChatMessageAlignment();
   });
 
   autoReplyEnabled?.addEventListener("click", () => {
@@ -2765,6 +2769,16 @@ function applyMarkdownCustomCss() {
     document.head.appendChild(styleTag);
   }
   styleTag.textContent = String(state.settings.markdownCustomCss || "");
+}
+
+function applyChatMessageAlignment() {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  if (state.settings.chatMessageAlignment === "center") {
+    log.classList.add("chat-messages-centered");
+  } else {
+    log.classList.remove("chat-messages-centered");
+  }
 }
 
 function parseShortcutEntries(raw) {
@@ -3882,7 +3896,8 @@ function saveActiveCharacterDefinitionFromForm() {
   const def = getActiveCharacterDefinition();
   if (!def) return;
   def.name = String(document.getElementById("char-name")?.value || "").trim();
-  def.avatar = String(document.getElementById("char-avatar")?.value || "").trim();
+  def.avatars = state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [];
+  def.avatar = state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "";
   def.systemPrompt = String(document.getElementById("char-system-prompt")?.value || "").trim();
   def.oneTimeExtraPrompt = String(document.getElementById("char-one-time-extra-prompt")?.value || "").trim();
   def.writingInstructions = String(document.getElementById("char-writing-instructions")?.value || "").trim();
@@ -3905,8 +3920,11 @@ function loadActiveCharacterDefinitionToForm() {
   if (!def) return;
   document.getElementById("char-name").value = def.name || "";
   updateNameLengthCounter("char-name", "char-name-count", 128);
-  document.getElementById("char-avatar").value = def.avatar || "";
-  document.getElementById("char-avatar-file").value = "";
+  state.charModalAvatars = Array.isArray(def.avatars) ? [...def.avatars] : [];
+  if (state.charModalAvatars.length === 0 && def.avatar) {
+    state.charModalAvatars = [{ type: "image", data: def.avatar, name: "" }];
+  }
+  renderCharAvatars();
   document.getElementById("char-system-prompt").value = def.systemPrompt || "";
   document.getElementById("char-one-time-extra-prompt").value = def.oneTimeExtraPrompt || "";
   document.getElementById("char-writing-instructions").value = def.writingInstructions || "";
@@ -3929,7 +3947,6 @@ function loadActiveCharacterDefinitionToForm() {
   document.getElementById("char-prefer-lore-language").checked =
     def.preferLoreBooksMatchingLanguage !== false;
   updateCharTtsRatePitchLabels();
-  renderAvatarPreview(def.avatar || "");
   renderCharacterLorebookList(def.lorebookIds || []);
 }
 
@@ -3950,6 +3967,7 @@ async function openCharacterModal(character = null) {
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
+  state.charModalAvatars = [];
   document.getElementById("character-title").textContent =
     state.editingCharacterId ? t("editCharacterTitle") : t("createCharacterTitle");
   state.charModalDefinitions = normalizeCharacterDefinitions(character);
@@ -5236,10 +5254,6 @@ function getSelectedLorebookIds() {
     .filter((id) => Number.isInteger(id));
 }
 
-function onAvatarUrlInput() {
-  renderAvatarPreview(document.getElementById("char-avatar").value.trim());
-}
-
 function onTextAreaFileDragOver(e) {
   e.preventDefault();
   if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
@@ -5260,28 +5274,137 @@ async function onTextAreaFileDrop(e) {
   }
 }
 
-function onAvatarFileChange(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  if (!file.type.startsWith("image/")) {
-    openInfoDialog(t("invalidFileTitle"), t("pleaseChooseImageFile"));
-    e.target.value = "";
-    return;
-  }
+const MAX_AVATAR_SIZE_MB = 10;
+const MAX_AVATAR_SIZE_BYTES = MAX_AVATAR_SIZE_MB * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "video/mp4"];
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    const result = typeof reader.result === "string" ? reader.result : "";
-    document.getElementById("char-avatar").value = result;
-    renderAvatarPreview(result);
-  };
-  reader.readAsDataURL(file);
+function setupCharAvatarDropzone() {
+  const dropzone = document.getElementById("char-avatar-dropzone");
+  const fileInput = document.getElementById("char-avatar-file-input");
+  if (!dropzone || !fileInput) return;
+
+  dropzone.addEventListener("click", () => fileInput.click());
+
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("drag-over");
+  });
+
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.classList.remove("drag-over");
+  });
+
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("drag-over");
+    const files = e.dataTransfer?.files;
+    if (files) handleAvatarFiles(files);
+  });
+
+  fileInput.addEventListener("change", (e) => {
+    const files = e.target.files;
+    if (files) handleAvatarFiles(files);
+    fileInput.value = "";
+  });
 }
 
-function renderAvatarPreview(src) {
-  const preview = document.getElementById("char-avatar-preview");
-  const fallback = fallbackAvatar("C", 512, 512);
-  preview.src = src || fallback;
+async function handleAvatarFiles(files) {
+  for (const file of files) {
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      openInfoDialog(t("invalidFileTitle"), "Please choose an image or MP4 video file.");
+      continue;
+    }
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      openInfoDialog(t("invalidFileTitle"), `File must be less than ${MAX_AVATAR_SIZE_MB}MB.`);
+      continue;
+    }
+    await addAvatarFromFile(file);
+  }
+}
+
+function addAvatarFromFile(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      const avatarType = file.type.startsWith("video") ? "video" : "image";
+      state.charModalAvatars.push({
+        type: avatarType,
+        data: result,
+        name: file.name,
+      });
+      state.modalDirty["character-modal"] = true;
+      renderCharAvatars();
+      resolve();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderCharAvatars() {
+  const container = document.getElementById("char-avatars-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  state.charModalAvatars.forEach((avatar, index) => {
+    const item = document.createElement("div");
+    item.className = "char-avatar-item" + (index === 0 ? " is-main" : "");
+
+    if (avatar.type === "video") {
+      const video = document.createElement("video");
+      video.src = avatar.data;
+      video.muted = true;
+      video.loop = true;
+      item.appendChild(video);
+    } else {
+      const img = document.createElement("img");
+      img.src = avatar.data;
+      img.addEventListener("click", () => openImagePreview(avatar.data));
+      item.appendChild(img);
+    }
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "avatar-remove-btn";
+    removeBtn.innerHTML = "&times;";
+    removeBtn.title = "Remove";
+    removeBtn.onclick = () => removeAvatar(index);
+    item.appendChild(removeBtn);
+
+    if (index === 0) {
+      const mainBadge = document.createElement("span");
+      mainBadge.className = "avatar-main-badge";
+      mainBadge.textContent = "Main";
+      item.appendChild(mainBadge);
+    }
+
+    container.appendChild(item);
+  });
+
+  const dropzone = document.createElement("div");
+  dropzone.id = "char-avatar-dropzone";
+  dropzone.className = "char-avatar-dropzone";
+  dropzone.innerHTML = `
+    <span class="dropzone-plus">+</span>
+    <span class="dropzone-hint">Drag & drop or click</span>
+  `;
+  container.appendChild(dropzone);
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.id = "char-avatar-file-input";
+  fileInput.className = "hidden";
+  fileInput.accept = "image/*,video/mp4";
+  fileInput.multiple = true;
+  container.appendChild(fileInput);
+
+  setupCharAvatarDropzone();
+}
+
+function removeAvatar(index) {
+  state.charModalAvatars.splice(index, 1);
+  state.modalDirty["character-modal"] = true;
+  renderCharAvatars();
 }
 
 async function duplicateCharacter(characterId) {
