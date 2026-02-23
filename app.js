@@ -766,6 +766,7 @@ const state = {
     minScale: 0.2,
     maxScale: 6,
     src: "",
+    isVideo: false,
     panX: 0,
     panY: 0,
     panning: false,
@@ -5286,8 +5287,34 @@ function setupCharAvatarDropzone() {
   dropzone.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Dropzone clicked");
-    fileInput.click();
+    
+    const tempInput = document.createElement('input');
+    tempInput.type = 'file';
+    tempInput.accept = 'image/*,video/mp4';
+    tempInput.multiple = true;
+    tempInput.style.position = 'fixed';
+    tempInput.style.top = '0';
+    tempInput.style.left = '0';
+    tempInput.style.opacity = '0';
+    document.body.appendChild(tempInput);
+    
+    tempInput.addEventListener('change', (event) => {
+      if (event.target.files && event.target.files.length > 0) {
+        handleAvatarFiles(event.target.files);
+      }
+      document.body.removeChild(tempInput);
+    });
+    
+    tempInput.click();
+  });
+
+  dropzone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      // Trigger click on the dropzone
+      dropzone.click();
+    }
   });
 
   dropzone.addEventListener("dragover", (e) => {
@@ -5383,7 +5410,7 @@ function renderCharAvatars() {
       video.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        openImagePreview(avatar.data);
+        openVideoPreview(avatar.data);
       });
       video.addEventListener("mousedown", (e) => e.preventDefault());
       item.appendChild(video);
@@ -5423,6 +5450,9 @@ function renderCharAvatars() {
   const dropzone = document.createElement("div");
   dropzone.id = "char-avatar-dropzone";
   dropzone.className = "char-avatar-dropzone";
+  dropzone.setAttribute("tabindex", "0");
+  dropzone.setAttribute("role", "button");
+  dropzone.setAttribute("aria-label", "Upload avatar");
   dropzone.innerHTML = `
     <span class="dropzone-plus">+</span>
     <span class="dropzone-hint">Drag & drop or click</span>
@@ -5432,7 +5462,7 @@ function renderCharAvatars() {
   const fileInput = document.createElement("input");
   fileInput.type = "file";
   fileInput.id = "char-avatar-file-input";
-  fileInput.className = "hidden";
+  fileInput.className = "visually-hidden";
   fileInput.accept = "image/*,video/mp4";
   fileInput.multiple = true;
   container.appendChild(fileInput);
@@ -7789,19 +7819,62 @@ function computeEffectiveMaxTokensForRequest(modelId, promptMessages) {
 function openImagePreview(src) {
   if (!src) return;
   const img = document.getElementById("image-preview-img");
+  const video = document.getElementById("image-preview-video");
   const modal = document.getElementById("image-preview-modal");
+  const downloadBtn = document.getElementById("image-preview-download-btn");
   if (!img) return;
   state.imagePreview.src = src;
+  state.imagePreview.isVideo = false;
   img.src = src;
   img.draggable = false;
+  img.classList.remove("hidden");
+  if (video) video.classList.add("hidden");
+  downloadBtn.title = "Download image";
+  downloadBtn.setAttribute("aria-label", "Download image");
   resetImagePreviewZoom();
+  modal?.classList.remove("hidden");
+}
+
+function openVideoPreview(src) {
+  if (!src) return;
+  const video = document.getElementById("image-preview-video");
+  const img = document.getElementById("image-preview-img");
+  const modal = document.getElementById("image-preview-modal");
+  const downloadBtn = document.getElementById("image-preview-download-btn");
+  if (!video || !img || !modal) return;
+  
+  img.classList.add("hidden");
+  video.classList.remove("hidden");
+  video.src = src;
+  state.imagePreview.src = src;
+  state.imagePreview.isVideo = true;
+  video.controls = true;
+  video.play();
+  
+  downloadBtn.title = "Download video";
+  downloadBtn.setAttribute("aria-label", "Download video");
+  
   modal?.classList.remove("hidden");
 }
 
 function closeImagePreview() {
   endImagePreviewPanning();
+  const video = document.getElementById("image-preview-video");
+  if (video) {
+    video.pause();
+    video.src = "";
+  }
+  const img = document.getElementById("image-preview-img");
+  if (img) {
+    img.classList.remove("hidden");
+  }
+  const videoEl = document.getElementById("image-preview-video");
+  if (videoEl) {
+    videoEl.classList.add("hidden");
+  }
   const modal = document.getElementById("image-preview-modal");
   modal?.classList.add("hidden");
+  state.imagePreview.isVideo = false;
 }
 
 function applyImagePreviewZoom() {
@@ -7825,6 +7898,7 @@ function resetImagePreviewZoom() {
 function onImagePreviewWheel(e) {
   const modal = document.getElementById("image-preview-modal");
   if (!modal || modal.classList.contains("hidden")) return;
+  if (state.imagePreview.isVideo) return;
   e.preventDefault();
   const delta = e.deltaY < 0 ? 0.12 : -0.12;
   state.imagePreview.scale += delta;
@@ -7834,6 +7908,7 @@ function onImagePreviewWheel(e) {
 function onImagePreviewPointerDown(e) {
   const modal = document.getElementById("image-preview-modal");
   if (!modal || modal.classList.contains("hidden")) return;
+  if (state.imagePreview.isVideo) return;
   if (e.pointerType === "mouse" && e.button !== 0) return;
   const img = document.getElementById("image-preview-img");
   if (!img) return;
@@ -7890,7 +7965,7 @@ function downloadImagePreview() {
   if (!src) return;
   const a = document.createElement("a");
   a.href = src;
-  a.download = "image";
+  a.download = state.imagePreview.isVideo ? "video" : "image";
   a.target = "_blank";
   a.rel = "noopener noreferrer";
   document.body.appendChild(a);

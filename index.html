@@ -1054,11 +1054,11 @@
           <div class="full lang-field">
             <span data-i18n="avatars" class="block mb-2">Avatars</span>
             <div id="char-avatars-container" class="char-avatars-container">
-              <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone">
+              <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
                 <span class="dropzone-plus">+</span>
                 <span class="dropzone-hint">Drag & drop or click</span>
               </button>
-              <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="hidden" />
+              <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
             </div>
           </div>
           <div class="full lang-field">
@@ -1290,19 +1290,20 @@
       class="modal hidden image-preview-modal"
       role="dialog"
       aria-modal="true"
-      aria-label="Image preview"
+      aria-label="Media preview"
     >
       <div class="modal-card image-preview-card">
         <button
           id="image-preview-download-btn"
           class="icon-btn image-preview-download-btn"
           type="button"
-          title="Download image"
-          aria-label="Download image"
+          title="Download"
+          aria-label="Download"
         >
           v
         </button>
         <img id="image-preview-img" alt="Preview" />
+        <video id="image-preview-video" controls class="hidden"></video>
       </div>
     </div>
 
