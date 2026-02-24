@@ -3513,13 +3513,16 @@ async function renderThreads() {
     const metaName = document.createElement("span");
     metaName.textContent = resolvedChar?.name || char?.name || "Unknown";
     applyHoverMarquee(metaName, metaName.textContent);
+    meta.append(metaName);
+    const metaRight = document.createElement("div");
+    metaRight.className = "thread-meta-right";
     const metaId = document.createElement("span");
     metaId.textContent = `#${thread.id}`;
     const metaLang = createLanguageFlagIconElement(
       thread.characterLanguage || resolvedChar?.activeLanguage || "",
       "thread-language-flag",
     );
-    meta.append(metaName, metaId, metaLang);
+    metaRight.append(metaId, metaLang);
 
     const titleBtn = document.createElement("button");
     titleBtn.className = "thread-title";
@@ -3536,8 +3539,8 @@ async function renderThreads() {
       e.stopPropagation();
       await renameThread(thread.id);
     });
-    renameMiniBtn.classList.add("thread-rename-mini");
-    titleRow.append(titleBtn, renameMiniBtn);
+    renameMiniBtn.classList.add("thread-rename-mini", "thread-rename-top");
+    titleRow.append(titleBtn);
 
     info.append(titleRow, meta);
 
@@ -3581,9 +3584,9 @@ async function renderThreads() {
 
     actions.prepend(selectBox);
     if (queueBadge) {
-      row.append(avatar, info, queueBadge, actions);
+      row.append(avatar, info, metaRight, renameMiniBtn, queueBadge, actions);
     } else {
-      row.append(avatar, info, actions);
+      row.append(avatar, info, metaRight, renameMiniBtn, actions);
     }
     list.appendChild(row);
   });
@@ -6158,6 +6161,15 @@ function updateChatTitle() {
 function applyHoverMarquee(element, fullText) {
   if (!element) return;
   const text = String(fullText || "");
+  const behavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
+  if (behavior === "disabled") {
+    element.classList.remove("hover-marquee", "marquee-overflow", "marquee-always");
+    element.style.removeProperty("--marquee-shift");
+    element.style.removeProperty("--marquee-duration");
+    element.textContent = text;
+    element.setAttribute("title", text);
+    return;
+  }
   let inner = element.querySelector(".hover-marquee-inner");
   if (!inner) {
     inner = document.createElement("span");

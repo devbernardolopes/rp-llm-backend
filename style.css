@@ -54,7 +54,9 @@ body {
 
 #left-pane.collapsed .pane-title,
 #left-pane.collapsed .thread-info,
-#left-pane.collapsed .thread-row .actions {
+#left-pane.collapsed .thread-row .actions,
+#left-pane.collapsed .thread-rename-top,
+#left-pane.collapsed .thread-meta-right {
   display: none;
 }
 
@@ -195,12 +197,12 @@ body {
   border-radius: 12px;
   padding: 4px 6px;
   display: grid;
-  grid-template-columns: 62px 1fr auto;
+  grid-template-columns: 62px minmax(0, 1fr);
   grid-template-rows: auto auto auto;
   grid-template-areas:
-    "avatar title actions"
-    "avatar meta actions"
-    "avatar badge actions";
+    "avatar title"
+    "avatar meta"
+    "avatar actions";
   column-gap: 8px;
   row-gap: 2px;
   align-items: start;
@@ -245,70 +247,73 @@ body {
 
 .thread-title-row {
   grid-area: title;
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
+  display: block;
   width: 100%;
   min-width: 0;
-  position: relative;
+  padding-right: 22px;
 }
 
 .thread-title-row .thread-title {
-  flex: 1;
+  display: block;
+  width: 100%;
   min-width: 0;
   overflow: hidden;
-}
-
-.thread-title-row .thread-rename-mini {
-  position: absolute;
-  right: 0;
-  flex-shrink: 0;
-}
-
-.thread-title-row .thread-title {
-  flex: 1;
-  min-width: 0;
-  overflow: visible;
-}
-
-.thread-title-row .thread-rename-mini {
-  flex-shrink: 0;
-  margin-left: auto;
 }
 
 .thread-meta {
   grid-area: meta;
   display: flex;
-  gap: 6px;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   min-width: 0;
   font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
-  overflow: visible;
+  overflow: hidden;
+  padding-right: 68px;
+}
+
+.thread-meta > span:first-child {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thread-meta-right {
+  grid-area: meta;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  justify-self: end;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.thread-meta-right > span:first-child {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.thread-rename-top {
+  grid-area: title;
+  justify-self: end;
+  align-self: start;
 }
 
 .thread-queue-badge {
-  grid-area: badge;
-  grid-row: 3;
+  grid-area: actions;
   align-self: center;
   justify-self: start;
   margin-left: 4px;
 }
 
-.thread-row .actions .thread-queue-badge,
-.thread-row .actions .thread-generating-badge,
-.thread-row .actions .thread-cooldown-badge {
-  grid-area: badge;
-  grid-row: 3;
-  align-self: center;
-  margin-right: 4px;
-}
-
 .thread-generating-badge {
-  grid-area: badge;
-  grid-row: 3;
+  grid-area: actions;
   align-self: center;
   justify-self: start;
   display: inline-flex;
@@ -319,8 +324,7 @@ body {
 }
 
 .thread-cooldown-badge {
-  grid-area: badge;
-  grid-row: 3;
+  grid-area: actions;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -364,6 +368,7 @@ body {
   min-width: 100%;
   white-space: nowrap;
   transform: translateX(0);
+  animation: none;
   will-change: transform;
 }
 
