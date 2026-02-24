@@ -720,6 +720,23 @@ textarea {
   border: 1px solid var(--line);
   cursor: pointer;
   display: block;
+  transition: transform 0.3s ease;
+}
+
+.character-card:hover .character-avatar,
+.character-card:focus-within .character-avatar {
+  transform: scale(1.08);
+}
+
+.character-avatar-carousel {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.character-card:hover .character-avatar-carousel,
+.character-card:focus-within .character-avatar-carousel {
+  transform: scale(1.08);
 }
 
 .character-avatar-wrap {
@@ -967,6 +984,21 @@ textarea {
 
 .new-chat-btn:hover {
   background: #3d7a50;
+}
+
+.new-chat-btn.card-hover-highlight {
+  animation: new-chat-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes new-chat-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(45, 90, 61, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px 2px rgba(45, 90, 61, 0.5);
+  }
 }
 
 .new-chat-btn .hover-marquee-inner {
@@ -1583,6 +1615,10 @@ textarea {
   justify-content: space-between;
 }
 
+#settings-modal .modal-header {
+  padding-bottom: 16px;
+}
+
 .modal-footer {
   border-bottom: none;
   border-top: 1px solid var(--line);
@@ -1593,11 +1629,6 @@ textarea {
 .modal-body {
   padding: 12px;
   overflow-y: auto;
-}
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
 .settings-tabs {
@@ -1610,6 +1641,16 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 3;
+}
+
+#settings-tabs {
+  margin-top: 12px;
+  margin-left: 12px;
+  margin-right: 12px;
+}
+
+.settings-tab-btn:first-child {
+  margin-left: 0;
 }
 
 .settings-tab-btn {
@@ -1644,6 +1685,7 @@ textarea {
   justify-content: flex-start;
   align-items: flex-start;
   flex-direction: column;
+  margin-top: 12px;
 }
 
 .char-def-tabs-row {

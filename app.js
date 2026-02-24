@@ -3605,6 +3605,19 @@ async function renderCharacters() {
     });
     actions.appendChild(newChatBtn);
 
+    card.addEventListener("mouseenter", () => {
+      newChatBtn.classList.add("card-hover-highlight");
+    });
+    card.addEventListener("mouseleave", () => {
+      newChatBtn.classList.remove("card-hover-highlight");
+    });
+    card.addEventListener("focusin", () => {
+      newChatBtn.classList.add("card-hover-highlight");
+    });
+    card.addEventListener("focusout", () => {
+      newChatBtn.classList.remove("card-hover-highlight");
+    });
+
     const deleteCharBtn = iconButton("delete", t("deleteCharacterAria"), async (e) => {
       e.stopPropagation();
       await deleteCharacter(char.id);
