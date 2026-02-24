@@ -1283,7 +1283,7 @@ function setupEvents() {
       state.expandedCharacterTagIds.clear();
       saveUiState();
       renderCharacterTagFilterChips();
-      await renderCharacters();
+      updateCharacterCardsVisibility();
     });
   document
     .getElementById("character-sort-select")
@@ -1799,7 +1799,7 @@ function removeCharacterTagFilter(tag) {
   state.characterTagFilters = state.characterTagFilters.filter((t) => t.toLowerCase() !== lower);
   saveUiState();
   renderCharacterTagFilterChips();
-  renderCharacters();
+  updateCharacterCardsVisibility();
 }
 
 function toggleCharacterTagFilter(tag) {
@@ -1816,7 +1816,44 @@ function toggleCharacterTagFilter(tag) {
   }
   saveUiState();
   renderCharacterTagFilterChips();
-  renderCharacters();
+  updateCharacterCardsVisibility();
+}
+
+async function updateCharacterCardsVisibility() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const characters = await db.characters.toArray();
+  const activeFilters = Array.isArray(state.characterTagFilters)
+    ? state.characterTagFilters.map((t) => t.toLowerCase())
+    : [];
+  const cards = grid.querySelectorAll(".character-card");
+  cards.forEach(card => {
+    const charId = card.dataset.characterId;
+    const char = characters.find(c => Number(c.id) === Number(charId));
+    if (!char) {
+      card.style.display = "none";
+      return;
+    }
+    const tags = Array.isArray(char.tags)
+      ? char.tags.map((t) => String(t || "").toLowerCase())
+      : [];
+    const shouldShow = activeFilters.length === 0 || activeFilters.every((f) => tags.includes(f));
+    card.style.display = shouldShow ? "" : "none";
+  });
+  const empty = grid.querySelector(".muted");
+  const visibleCards = grid.querySelectorAll(".character-card:not([style*='display: none'])");
+  if (visibleCards.length === 0) {
+    if (!empty) {
+      const emptyMsg = document.createElement("p");
+      emptyMsg.className = "muted";
+      emptyMsg.textContent = activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+      grid.appendChild(emptyMsg);
+    } else {
+      empty.textContent = activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+    }
+  } else if (empty) {
+    empty.remove();
+  }
 }
 
 function getCharacterSortParts(sortMode) {
@@ -3338,7 +3375,13 @@ async function renderCharacters() {
   });
 
   const existingCards = grid.querySelectorAll(".character-card");
+  const carouselStates = new Map();
   existingCards.forEach(card => {
+    const charId = card.dataset.characterId;
+    if (card._saveVideoTimes) card._saveVideoTimes();
+    if (card._getCarouselState) {
+      carouselStates.set(charId, card._getCarouselState());
+    }
     if (card._stopCarousel) card._stopCarousel();
   });
 
@@ -3489,14 +3532,15 @@ async function renderCharacters() {
 
       carouselContainer.addEventListener("click", () => openCharacterModal(char));
 
-      const startCarousel = () => {
+      const startCarousel = (startIndex = 0) => {
         if (carouselInterval) clearInterval(carouselInterval);
-        const firstEl = avatarElements[0];
-        if (firstEl.tagName === "VIDEO") {
-          firstEl.dataset.videoEnded = "false";
-          firstEl.play().catch(() => {});
+        currentAvatarIndex = startIndex;
+        showAvatar(currentAvatarIndex);
+        const currentEl = avatarElements[currentAvatarIndex];
+        if (currentEl.tagName === "VIDEO") {
+          currentEl.dataset.videoEnded = "false";
+          currentEl.play().catch(() => {});
         }
-        showAvatar(0);
         scheduleNextTransition();
       };
 
@@ -3512,6 +3556,18 @@ async function renderCharacters() {
             el.dataset.videoEnded = "false";
           }
         });
+      };
+
+      const getCarouselState = () => {
+        return {
+          currentIndex: currentAvatarIndex,
+          videoTimes: avatarElements.map(el => {
+            if (el.tagName === "VIDEO") {
+              return el.currentTime;
+            }
+            return 0;
+          })
+        };
       };
 
       const saveVideoTimes = () => {
@@ -3539,12 +3595,7 @@ async function renderCharacters() {
       card._stopCarousel = stopCarousel;
       card._saveVideoTimes = saveVideoTimes;
       card._restoreVideoTimes = restoreVideoTimes;
-
-      const langRibbonWrap = document.createElement("span");
-      langRibbonWrap.className = "character-avatar-ribbon-wrap";
-      const langFlag = createLanguageFlagRibbonElement(resolved.activeLanguage);
-      langRibbonWrap.appendChild(langFlag);
-      carouselContainer.appendChild(langRibbonWrap);
+      card._getCarouselState = getCarouselState;
 
       const idOverlay = document.createElement("span");
       idOverlay.className = "character-avatar-id";
@@ -3566,12 +3617,6 @@ async function renderCharacters() {
       avatar.addEventListener("click", () => openCharacterModal(char));
       avatarWrap.appendChild(avatar);
 
-      const langRibbonWrap = document.createElement("span");
-      langRibbonWrap.className = "character-avatar-ribbon-wrap";
-      const langFlag = createLanguageFlagRibbonElement(resolved.activeLanguage);
-      langRibbonWrap.appendChild(langFlag);
-      avatarWrap.appendChild(langRibbonWrap);
-
       const idOverlay = document.createElement("span");
       idOverlay.className = "character-avatar-id";
       idOverlay.textContent = `#${char.id}`;
@@ -3583,56 +3628,36 @@ async function renderCharacters() {
       avatarWrap.appendChild(threadOverlay);
     }
 
-    const defCount = Array.isArray(resolved.definitions)
-      ? resolved.definitions.length
-      : 1;
-    if (defCount > 1) {
-      const leftBtn = document.createElement("button");
-      leftBtn.type = "button";
-      leftBtn.className = "character-lang-nav left";
-      leftBtn.textContent = "<";
-      leftBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const defs = resolved.definitions || [];
-        if (defs.length <= 1) return;
-        const idx = defs.findIndex((d) => d.language === resolved.activeLanguage);
-        const nextIdx = idx <= 0 ? defs.length - 1 : idx - 1;
-        state.characterCardSlide = { charId: Number(char.id), direction: "prev" };
-        await db.characters.update(char.id, {
-          selectedCardLanguage: defs[nextIdx].language,
-        });
-        await renderCharacters();
-      });
-
-      const rightBtn = document.createElement("button");
-      rightBtn.type = "button";
-      rightBtn.className = "character-lang-nav right";
-      rightBtn.textContent = ">";
-      rightBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const defs = resolved.definitions || [];
-        if (defs.length <= 1) return;
-        const idx = defs.findIndex((d) => d.language === resolved.activeLanguage);
-        const nextIdx = idx >= defs.length - 1 || idx < 0 ? 0 : idx + 1;
-        state.characterCardSlide = { charId: Number(char.id), direction: "next" };
-        await db.characters.update(char.id, {
-          selectedCardLanguage: defs[nextIdx].language,
-        });
-        await renderCharacters();
-      });
-      avatarWrap.append(leftBtn, rightBtn);
-    }
-
     const name = document.createElement("h3");
     name.className = "character-name";
     applyHoverMarquee(name, resolved.name || "Unnamed");
     name.addEventListener("click", () => openCharacterModal(char));
 
-    const dates = document.createElement("p");
-    dates.className = "character-dates";
-    dates.textContent = `${tf("createdAtLabel", { value: formatDateTime(char.createdAt) })}\n${tf("updatedAtLabel", { value: formatDateTime(char.updatedAt) })}`;
+    const langFlagsWrap = document.createElement("div");
+    langFlagsWrap.className = "character-lang-flags";
+    const definitions = resolved.definitions || [];
+    const activeLang = resolved.activeLanguage || definitions[0]?.language || "en";
+    definitions.forEach(def => {
+      const flag = createLanguageFlagRibbonElement(def.language);
+      flag.classList.add("character-lang-flag");
+      if (def.language === activeLang) {
+        flag.classList.add("active");
+      }
+      flag.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (def.language === activeLang) return;
+        await db.characters.update(char.id, {
+          selectedCardLanguage: def.language,
+        });
+        const card = e.target.closest(".character-card");
+        if (card) {
+          const flags = card.querySelectorAll(".character-lang-flag");
+          flags.forEach(f => f.classList.remove("active"));
+          e.target.classList.add("active");
+        }
+      });
+      langFlagsWrap.appendChild(flag);
+    });
 
     const tags = Array.isArray(char.tags)
       ? char.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
@@ -3640,11 +3665,12 @@ async function renderCharacters() {
     const tagsWrap = document.createElement("div");
     tagsWrap.className = "character-tags";
     const expanded = state.expandedCharacterTagIds.has(Number(char.id));
-    const visibleCount = expanded ? tags.length : Math.min(tags.length, 3);
-    tags.slice(0, visibleCount).forEach((tag) => {
+    if (expanded) tagsWrap.classList.add("tags-expanded");
+    tags.forEach((tag, idx) => {
       const chip = document.createElement("button");
       chip.type = "button";
       chip.className = "tag-chip";
+      if (idx >= 3) chip.classList.add("tag-extra");
       if (activeFilters.includes(tag.toLowerCase())) {
         chip.classList.add("active-filter");
       }
@@ -3664,7 +3690,7 @@ async function renderCharacters() {
         }
         saveUiState();
         renderCharacterTagFilterChips();
-        renderCharacters();
+        updateCharacterCardsVisibility();
       });
       tagsWrap.appendChild(chip);
     });
@@ -3677,9 +3703,17 @@ async function renderCharacters() {
         e.stopPropagation();
         if (expanded) state.expandedCharacterTagIds.delete(Number(char.id));
         else state.expandedCharacterTagIds.add(Number(char.id));
-        renderCharacters();
+        const card = e.target.closest(".character-card");
+        if (card) {
+          const tagsDiv = card.querySelector(".character-tags");
+          if (tagsDiv) {
+            tagsDiv.classList.toggle("tags-expanded");
+          }
+          e.target.textContent = tagsDiv.classList.contains("tags-expanded") ? t("less") : t("more");
+        }
       });
       tagsWrap.appendChild(more);
+      if (expanded) tagsWrap.classList.add("tags-expanded");
     }
 
     const actions = document.createElement("div");
@@ -3725,24 +3759,35 @@ async function renderCharacters() {
     );
 
     actions.appendChild(
-      iconButton("edit", t("editCharacterAria"), (e) => {
-        e.stopPropagation();
-        openCharacterModal(char);
-      }),
-    );
-
-    actions.appendChild(
       iconButton("export", t("exportCharacterAria"), async (e) => {
         e.stopPropagation();
         await exportCharacter(char.id);
       }),
     );
 
-    card.append(avatarWrap, name, dates);
+    card.append(avatarWrap, name, langFlagsWrap);
     if (tags.length > 0) card.appendChild(tagsWrap);
     card.append(actions);
     grid.appendChild(card);
   });
+
+  carouselStates.forEach((state, charId) => {
+    const card = grid.querySelector(`.character-card[data-character-id="${charId}"]`);
+    if (card && card._startCarousel) {
+      const savedTimes = state.videoTimes || [];
+      if (card._restoreVideoTimes) {
+        card._restoreVideoTimes();
+      }
+      const elems = card.querySelectorAll(".character-avatar");
+      savedTimes.forEach((time, idx) => {
+        if (elems[idx] && elems[idx].tagName === "VIDEO" && time > 0) {
+          elems[idx].currentTime = time;
+        }
+      });
+      card._startCarousel(state.currentIndex || 0);
+    }
+  });
+
   const maxScroll = Math.max(0, grid.scrollHeight - grid.clientHeight);
   grid.scrollTop = Math.min(previousScrollTop, maxScroll);
   state.characterCardSlide = null;
@@ -4243,7 +4288,7 @@ function createLanguageFlagIconElement(code, className = "") {
 
 function createLanguageFlagRibbonElement(code) {
   const span = document.createElement("span");
-  span.className = "character-avatar-flag-ribbon flag-icon-inline";
+  span.className = "character-lang-flag-elem";
   const iconCode = getBotLanguageFlagIconCode(code);
   if (iconCode) {
     span.style.backgroundImage = `url("assets/flag-icons/flags/4x3/${iconCode}.svg")`;
