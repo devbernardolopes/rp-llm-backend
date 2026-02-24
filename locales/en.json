@@ -343,5 +343,6 @@
   "editWritingInstructionAria": "Edit writing instruction",
   "duplicateWritingInstructionAria": "Duplicate writing instruction",
   "exportWritingInstructionAria": "Export writing instruction",
-  "deleteWritingInstructionAria": "Delete writing instruction"
+  "deleteWritingInstructionAria": "Delete writing instruction",
+  "version": "Version"
 }

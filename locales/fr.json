@@ -352,5 +352,6 @@
   "editWritingInstructionAria": "Modifier les instructions d'écriture",
   "duplicateWritingInstructionAria": "Dupliquer les instructions d'écriture",
   "exportWritingInstructionAria": "Exporter les instructions d'écriture",
-  "deleteWritingInstructionAria": "Supprimer les instructions d'écriture"
+  "deleteWritingInstructionAria": "Supprimer les instructions d'écriture",
+  "version": "Version"
 }

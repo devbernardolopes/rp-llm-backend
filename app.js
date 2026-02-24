@@ -2104,6 +2104,11 @@ function closeAnyOpenModal() {
 }
 
 async function setupSettingsControls() {
+  const appVersionEl = document.getElementById("app-version");
+  if (appVersionEl && typeof CONFIG.version === "string") {
+    appVersionEl.textContent = CONFIG.version;
+  }
+
   const uiLanguageSelect = document.getElementById("ui-language-select");
   const openRouterApiKey = document.getElementById("openrouter-api-key");
   const ttsTestText = document.getElementById("tts-test-text");

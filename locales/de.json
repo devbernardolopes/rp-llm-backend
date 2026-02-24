@@ -352,5 +352,6 @@
   "editWritingInstructionAria": "Schreibanweisung bearbeiten",
   "duplicateWritingInstructionAria": "Schreibanweisung duplizieren",
   "exportWritingInstructionAria": "Schreibanweisung exportieren",
-  "deleteWritingInstructionAria": "Schreibanweisung löschen"
+  "deleteWritingInstructionAria": "Schreibanweisung löschen",
+  "version": "Version"
 }

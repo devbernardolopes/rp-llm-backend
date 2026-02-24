@@ -1,5 +1,11 @@
 {
   "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "version:patch": "npm version patch && node -e \"const fs=require('fs');let c=fs.readFileSync('config.js','utf8');c=c.replace(/version:\\s*['\\\"][^'\\\"]+['\\\"]/,`version: \\\"${require('./package.json').version}\\\"`);fs.writeFileSync('config.js',c)\"",
+    "version:minor": "npm version minor && node -e \"const fs=require('fs');let c=fs.readFileSync('config.js','utf8');c=c.replace(/version:\\s*['\\\"][^'\\\"]+['\\\"]/,`version: \\\"${require('./package.json').version}\\\"`);fs.writeFileSync('config.js',c)\"",
+    "version:major": "npm version major && node -e \"const fs=require('fs');let c=fs.readFileSync('config.js','utf8');c=c.replace(/version:\\s*['\\\"][^'\\\"]+['\\\"]/,`version: \\\"${require('./package.json').version}\\\"`);fs.writeFileSync('config.js',c)\""
+  },
   "dependencies": {
     "@xenova/transformers": "^2.17.2",
     "flag-icons": "^7.5.0",
