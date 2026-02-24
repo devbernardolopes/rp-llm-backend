@@ -308,5 +308,11 @@
   "marqueeBehaviorLabel": "Marquee Behavior",
   "marqueeBehaviorDisabled": "Disabled",
   "marqueeBehaviorOnHover": "On Hover",
-  "marqueeBehaviorAlways": "Always"
+  "marqueeBehaviorAlways": "Always",
+  "newChat": "Neuer Chat",
+  "newChatAria": "Neuen Chat mit {name} starten",
+  "removeAvatarTitle": "Avatar entfernen",
+  "removeAvatarConfirm": "Dieses Avatar entfernen?",
+  "unsavedChangesTitle": "Ungespeicherte Änderungen",
+  "unsavedChangesConfirm": "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich schließen?"
 }

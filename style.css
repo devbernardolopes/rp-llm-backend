@@ -860,6 +860,36 @@ textarea {
   margin-top: auto;
 }
 
+.new-chat-btn {
+  background: #2d5a3d;
+  color: #a8e6b8;
+  border: 1px solid #3d7a50;
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+  flex: 1 1 auto;
+  height: 30px;
+}
+
+.new-chat-btn:hover {
+  background: #3d7a50;
+}
+
+.new-chat-btn .hover-marquee-inner {
+  min-width: 100%;
+}
+
+.new-chat-btn.marquee-overflow .hover-marquee-inner {
+  padding-right: 20px;
+}
+
+@media (max-width: 480px) {
+  .new-chat-btn {
+    flex: 1 1 100%;
+    order: -1;
+  }
+}
+
 #chat-view {
   padding: 18px 22px;
   position: relative;
@@ -1454,7 +1484,7 @@ textarea {
 }
 
 .settings-tabs {
-  padding: 0 12px 10px;
+  padding: 10px 12px;
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
@@ -1495,6 +1525,15 @@ textarea {
 
 #char-def-tabs {
   justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.char-def-tabs-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 100%;
   align-items: center;
 }
 
@@ -1505,13 +1544,21 @@ textarea {
 }
 
 #char-config-tab-btn {
-  margin-left: auto;
+  width: auto;
+  text-align: left;
+  margin-bottom: 8px;
+  margin-left: 12px;
+  margin-right: 6px;
 }
 
 .char-def-tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.char-def-tabs-left > .char-def-tab-btn:first-child {
+  margin-left: 12px;
 }
 
 .char-def-tab-label {
@@ -1560,7 +1607,9 @@ textarea {
   }
 }
 
-.modal-body label {
+.modal-body label,
+.modal-body .form-field,
+.modal-body .lang-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1700,12 +1749,36 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
+  padding: 0;
 }
 
 .char-avatar-item .avatar-remove-btn:hover {
   background: #3d2226;
+}
+
+.char-avatar-item .avatar-set-main-btn {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #4a9eff;
+  color: #4a9eff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  padding: 0;
+}
+
+.char-avatar-item .avatar-set-main-btn:hover {
+  background: #4a9eff;
+  color: #fff;
 }
 
 .char-avatar-item .avatar-main-badge {

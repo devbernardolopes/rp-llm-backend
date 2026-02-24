@@ -355,11 +355,11 @@
             &times;
           </button>
         </div>
-        <div class="modal-body">
-          <label>
+<div class="modal-body">
+          <div class="form-field">
             <span id="text-input-label">Value</span>
             <input id="text-input-value" type="text" maxlength="128" />
-          </label>
+          </div>
         </div>
         <div class="modal-footer">
           <button id="text-input-cancel" class="secondary-btn">Cancel</button>
@@ -431,7 +431,7 @@
           </button>
         </div>
         <div class="modal-body" id="settings-modal-body">
-          <label data-settings-group="appearance">
+<div class="form-field" data-settings-group="appearance">
             <div class="label-inline">
               <span data-i18n="toastDelayLabel">Toast Delay</span>
               <span id="toast-delay-value" class="muted"></span>
@@ -443,8 +443,8 @@
               max="10000"
               step="200"
             />
-          </label>
-          <label data-settings-group="appearance">
+          </div>
+<div class="form-field" data-settings-group="appearance">
             <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
             <select id="marquee-behavior-select">
               <option value="disabled" data-i18n="marqueeBehaviorDisabled">
@@ -457,8 +457,8 @@
                 Always
               </option>
             </select>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="languageLabel">Interface Language</span>
             <select id="ui-language-select">
               <option value="auto">Auto (browser)</option>
@@ -469,8 +469,8 @@
               <option value="es">Espanol</option>
               <option value="pt-BR">Portugues (Brasil)</option>
             </select>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
             <input
               id="openrouter-api-key"
@@ -479,21 +479,21 @@
               autocomplete="off"
               spellcheck="false"
             />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="modelLabel">Model</span>
             <select id="model-select"></select>
-          </label>
+          </div>
           <div class="settings-inline-row model-filter-row">
-            <label>
+<div class="form-field">
               <span data-i18n="pricingLabel">Pricing</span>
               <select id="model-pricing-filter">
                 <option value="all" data-i18n="all">All</option>
                 <option value="free" data-i18n="free">Free</option>
                 <option value="paid" data-i18n="paid">Paid</option>
               </select>
-            </label>
-            <label>
+            </div>
+<div class="form-field">
               <span data-i18n="modalityLabel">Modality</span>
               <select id="model-modality-filter">
                 <option value="text-only" data-i18n="textToText">
@@ -501,8 +501,8 @@
                 </option>
                 <option value="all" data-i18n="all">All</option>
               </select>
-            </label>
-            <label>
+            </div>
+<div class="form-field">
               <span data-i18n="orderLabel">Order</span>
               <select id="model-sort-order">
                 <option value="name_asc" data-i18n="nameAsc">Name A-Z</option>
@@ -514,7 +514,7 @@
                   Created Oldest
                 </option>
               </select>
-            </label>
+            </div>
             <button
               id="model-refresh-btn"
               class="secondary-btn"
@@ -530,7 +530,7 @@
               >This model is NOT recommended for roleplaying.</span
             >
           </div>
-          <label>
+<div class="form-field">
             <div class="label-inline">
               <span data-i18n="maxTokensLabel">Max Tokens</span>
               <span id="max-tokens-value" class="muted"></span>
@@ -542,8 +542,8 @@
               max="8192"
               step="64"
             />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <div class="label-inline">
               <span data-i18n="temperatureLabel">Temperature</span>
               <span id="temperature-value" class="muted"></span>
@@ -555,15 +555,15 @@
               max="2"
               step="0.05"
             />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="ttsTestTextLabel">TTS Test Text</span>
             <textarea
               id="tts-test-text"
               rows="2"
               placeholder="This is a test voice playback."
             ></textarea>
-          </label>
+          </div>
           <div class="settings-inline-row">
             <button
               id="tts-test-play-btn"
@@ -575,29 +575,29 @@
             </button>
             <span id="tts-test-status" class="muted">TTS: idle</span>
           </div>
-          <label class="checkbox-line">
+<span class="checkbox-line">
             <input type="checkbox" id="markdown-enabled" />
             <span data-i18n="renderMarkdown">Render Markdown in messages</span>
-          </label>
-          <label class="checkbox-line">
+          </span>
+<span class="checkbox-line">
             <input type="checkbox" id="allow-message-html" />
             <span data-i18n="allowRawHtml">Allow raw HTML in messages</span>
-          </label>
-          <label class="checkbox-line">
+          </span>
+<span class="checkbox-line">
             <input type="checkbox" id="stream-enabled" checked />
             <span data-i18n="streamMessages">Stream Messages</span>
-          </label>
-          <label class="checkbox-line">
+          </span>
+<span class="checkbox-line">
             <input type="checkbox" id="autopair-enabled" checked />
             <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
-          </label>
-          <label class="checkbox-line">
+          </span>
+<span class="checkbox-line">
             <input type="checkbox" id="thread-autotitle-enabled" checked />
             <span data-i18n="threadAutoTitleEnabled"
               >Enable Auto-titling for Threads</span
             >
-          </label>
-          <label>
+          </span>
+<div class="form-field">
             <span data-i18n="threadAutoTitleMinMessages">Min. Messages</span>
             <input
               id="thread-autotitle-min-messages"
@@ -607,8 +607,8 @@
               step="1"
               value="7"
             />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="chatMessageAlignment">Message Alignment</span>
             <select id="chat-message-alignment">
               <option value="left" data-i18n="messageAlignmentLeft">
@@ -618,16 +618,16 @@
                 Center
               </option>
             </select>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="markdownCustomCss">Markdown Custom CSS</span>
             <textarea
               id="markdown-custom-css"
               rows="6"
               placeholder=".md-em { color: #E6D97A; }"
             ></textarea>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="postprocessRules"
               >Post-processing Rules (JSON)</span
             >
@@ -636,26 +636,26 @@
               rows="8"
               placeholder='[{"pattern":"^Â«([\\s\\S]*)Â»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">Â«$1Â»</span>"}]'
             ></textarea>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="cancelGenerationShortcut"
               >Cancel Generation Shortcut</span
             >
             <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
             <input id="home-shortcut" type="text" placeholder="Alt+H" />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="newCharacterShortcut">New Character Shortcut</span>
             <input
               id="new-character-shortcut"
               type="text"
               placeholder="Alt+N"
             />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="defaultCharacterPrompt"
               >Default Character Prompt</span
             >
@@ -664,8 +664,8 @@
               rows="7"
               placeholder="Used when a character prompt is empty."
             ></textarea>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="memorySummarizerPrompt"
               >Memory Summarizer System Prompt</span
             >
@@ -674,8 +674,8 @@
               rows="3"
               placeholder="System prompt for memory summarization."
             ></textarea>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="personaInjectionTemplate"
               >Persona Injection Template</span
             >
@@ -684,8 +684,8 @@
               rows="5"
               placeholder="Template for active persona injection."
             ></textarea>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="personaInjectionTiming"
               >Persona Injection Timing</span
             >
@@ -695,8 +695,8 @@
                 On Persona Change (first message always injects)
               </option>
             </select>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="writingInstructionsInjectionTiming"
               >Writing Instructions Injection Timing</span
             >
@@ -715,7 +715,7 @@
                 Every Fourth
               </option>
             </select>
-          </label>
+          </div>
         </div>
       </div>
     </div>
@@ -733,22 +733,22 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
-          <label>
+<div class="form-field">
             <div class="label-inline">
               <span data-i18n="nameLabel">Name</span>
               <span id="persona-name-count" class="muted">0/64</span>
             </div>
             <input id="persona-name" type="text" maxlength="64" />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="avatarUrl">Avatar URL</span>
             <input id="persona-avatar" type="text" placeholder="optional" />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="avatarFile">Avatar File</span>
             <input id="persona-avatar-file" type="file" accept="image/*" />
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <div class="label-inline">
               <span data-i18n="personaDescription"
                 >Description (max 100 chars)</span
@@ -760,17 +760,17 @@
               rows="3"
               maxlength="100"
             ></textarea>
-          </label>
-          <label>
+          </div>
+<div class="form-field">
             <span data-i18n="personaInternalDescription"
               >Internal Description (optional)</span
             >
             <textarea id="persona-internal-description" rows="4"></textarea>
-          </label>
-          <label class="checkbox-line">
+          </div>
+<span class="checkbox-line">
             <input id="persona-is-default" type="checkbox" />
             <span data-i18n="setDefaultPersona">Set as default persona</span>
-          </label>
+          </span>
           <button
             id="save-persona-btn"
             class="primary-btn"
@@ -832,7 +832,7 @@
               </button>
             </div>
             <div class="two-col lore-editor-grid">
-              <label>
+<div class="form-field">
                 <span data-i18n="nameLabel">Name</span>
                 <input
                   id="lore-name"
@@ -840,12 +840,12 @@
                   minlength="2"
                   maxlength="128"
                 />
-              </label>
-              <label>
+              </div>
+<div class="form-field">
                 <span data-i18n="avatarUrlOptional">Avatar URL (optional)</span>
                 <input id="lore-avatar" type="text" placeholder="optional" />
-              </label>
-              <label class="full">
+              </div>
+<div class="form-field full">
                 <span data-i18n="descriptionOptional"
                   >Description (optional)</span
                 >
@@ -854,8 +854,8 @@
                   rows="3"
                   maxlength="512"
                 ></textarea>
-              </label>
-              <label>
+              </div>
+<div class="form-field">
                 <span data-i18n="scanDepth">Scan Depth</span>
                 <input
                   id="lore-scan-depth"
@@ -864,8 +864,8 @@
                   max="100"
                   step="1"
                 />
-              </label>
-              <label>
+              </div>
+<div class="form-field">
                 <span data-i18n="tokenBudget">Token Budget</span>
                 <input
                   id="lore-token-budget"
@@ -874,11 +874,11 @@
                   max="1000"
                   step="10"
                 />
-              </label>
-              <label class="full checkbox-line">
+              </div>
+<span class="checkbox-line">
                 <input id="lore-recursive-scanning" type="checkbox" />
                 <span data-i18n="recursiveScanning">Recursive Scanning</span>
-              </label>
+              </span>
             </div>
             <div class="lore-entry-head">
               <h4 id="lore-entries-title">Entries</h4>
@@ -927,11 +927,11 @@
           <h3 id="shortcuts-title" data-i18n="shortcuts">Shortcuts</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
-        <div class="modal-body">
-          <label>
+<div class="modal-body">
+          <div class="form-field">
             <span data-i18n="shortcutEntries">Shortcut Entries</span>
             <textarea id="shortcuts-raw" rows="14"></textarea>
-          </label>
+          </div>
           <button
             id="save-shortcuts-btn"
             class="primary-btn"
@@ -1030,10 +1030,6 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div id="char-def-tabs" class="settings-tabs">
-          <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
-          <button id="char-add-lang-btn" class="settings-tab-btn" type="button">
-            +
-          </button>
           <button
             id="char-config-tab-btn"
             class="settings-tab-btn"
@@ -1042,15 +1038,14 @@
           >
             Bot Configuration
           </button>
+          <div class="char-def-tabs-row">
+            <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
+            <button id="char-add-lang-btn" class="settings-tab-btn" type="button">
+              +
+            </button>
+          </div>
         </div>
         <div class="modal-body two-col">
-          <div class="lang-field">
-            <div class="label-inline">
-              <span data-i18n="nameLabel">Name</span>
-              <span id="char-name-count" class="muted">0/128</span>
-            </div>
-            <input id="char-name" type="text" maxlength="128" />
-          </div>
           <div class="full lang-field">
             <span data-i18n="avatars" class="block mb-2">Avatars</span>
             <div id="char-avatars-container" class="char-avatars-container">
@@ -1060,6 +1055,13 @@
               </button>
               <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
             </div>
+          </div>
+          <div class="full lang-field">
+            <div class="label-inline">
+              <span data-i18n="nameLabel">Name</span>
+              <span id="char-name-count" class="muted">0/128</span>
+            </div>
+            <input id="char-name" type="text" maxlength="128" />
           </div>
           <div class="full lang-field">
             <span data-i18n="characterPrompt">Character Prompt</span>
@@ -1256,11 +1258,10 @@
             &times;
           </button>
         </div>
-        <div class="modal-body">
-          <label>
-            <span data-i18n="languageLabel">Interface Language</span>
+<div class="modal-body">
+          <div class="form-field">
             <select id="char-language-select"></select>
-          </label>
+          </div>
         </div>
         <div class="modal-footer">
           <button

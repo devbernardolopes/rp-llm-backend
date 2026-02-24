@@ -308,5 +308,11 @@
   "marqueeBehaviorLabel": "Marquee Behavior",
   "marqueeBehaviorDisabled": "Disabled",
   "marqueeBehaviorOnHover": "On Hover",
-  "marqueeBehaviorAlways": "Always"
+  "marqueeBehaviorAlways": "Always",
+  "newChat": "Nuevo Chat",
+  "newChatAria": "Iniciar nuevo chat con {name}",
+  "removeAvatarTitle": "Eliminar Avatar",
+  "removeAvatarConfirm": "¿Eliminar este avatar?",
+  "unsavedChangesTitle": "Cambios sin guardar",
+  "unsavedChangesConfirm": "Tienes cambios sin guardar. ¿Estás seguro de que quieres cerrar?"
 }

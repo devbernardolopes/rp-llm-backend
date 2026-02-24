@@ -195,8 +195,36 @@ const BOT_LANGUAGE_FLAG_ICON_CODES = {
   he: "il",
   hi: "in",
   id: "id",
-  th: "th",
-  vi: "vn",
+};
+
+const BOT_LANGUAGE_NAMES = {
+  en: "English",
+  fr: "French",
+  it: "Italian",
+  de: "German",
+  es: "Spanish",
+  "pt-BR": "Portuguese (Brazil)",
+  "pt-PT": "Portuguese (Portugal)",
+  ja: "Japanese",
+  ko: "Korean",
+  "zh-CN": "Chinese (Simplified)",
+  "zh-TW": "Chinese (Traditional)",
+  ru: "Russian",
+  ar: "Arabic",
+  nl: "Dutch",
+  tr: "Turkish",
+  pl: "Polish",
+  sv: "Swedish",
+  da: "Danish",
+  fi: "Finnish",
+  no: "Norwegian",
+  cs: "Czech",
+  ro: "Romanian",
+  hu: "Hungarian",
+  el: "Greek",
+  he: "Hebrew",
+  hi: "Hindi",
+  id: "Indonesian",
 };
 
 const I18N = {
@@ -3144,7 +3172,7 @@ async function renderCharacters() {
     avatar.src =
       resolved.avatar || fallbackAvatar(resolved.name || "Character", 512, 512);
     avatar.alt = `${resolved.name || "Character"} avatar`;
-    avatar.addEventListener("click", () => startNewThread(char.id));
+    avatar.addEventListener("click", () => openCharacterModal(char));
     avatarWrap.appendChild(avatar);
 
     const defCount = Array.isArray(resolved.definitions)
@@ -3192,7 +3220,7 @@ async function renderCharacters() {
     const name = document.createElement("h3");
     name.className = "character-name";
     applyHoverMarquee(name, resolved.name || "Unnamed");
-    name.addEventListener("click", () => startNewThread(char.id));
+    name.addEventListener("click", () => openCharacterModal(char));
 
     const dates = document.createElement("p");
     dates.className = "character-dates";
@@ -3248,6 +3276,18 @@ async function renderCharacters() {
 
     const actions = document.createElement("div");
     actions.className = "card-actions";
+
+    const newChatBtn = document.createElement("button");
+    newChatBtn.type = "button";
+    newChatBtn.className = "secondary-btn new-chat-btn";
+    newChatBtn.textContent = t("newChat");
+    newChatBtn.setAttribute("aria-label", tf("newChatAria", { name: resolved.name || "character" }));
+    applyHoverMarquee(newChatBtn, t("newChat"));
+    newChatBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      startNewThread(char.id);
+    });
+    actions.appendChild(newChatBtn);
 
     const deleteCharBtn = iconButton("delete", t("deleteCharacterAria"), async (e) => {
       e.stopPropagation();
@@ -3402,6 +3442,7 @@ async function renderThreads() {
     meta.className = "thread-meta";
     const metaName = document.createElement("span");
     metaName.textContent = resolvedChar?.name || char?.name || "Unknown";
+    applyHoverMarquee(metaName, metaName.textContent);
     const metaId = document.createElement("span");
     metaId.textContent = `#${thread.id}`;
     const metaLang = createLanguageFlagIconElement(
@@ -3622,12 +3663,16 @@ function openModal(modalId) {
   }
 }
 
-function closeActiveModal() {
+async function closeActiveModal() {
   if (!state.activeModalId) return;
   const closingId = state.activeModalId;
   if (closingId === "text-input-modal") {
     resolveTextInputDialog(false);
     return;
+  }
+  if (closingId === "character-modal" && state.modalDirty[closingId]) {
+    const ok = await openConfirmDialog(t("unsavedChangesTitle"), t("unsavedChangesConfirm"));
+    if (!ok) return;
   }
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
@@ -3652,6 +3697,10 @@ function getBotLanguageFlag(code) {
 
 function getBotLanguageFlagIconCode(code) {
   return BOT_LANGUAGE_FLAG_ICON_CODES[normalizeBotLanguageCode(code)] || "";
+}
+
+function getBotLanguageName(code) {
+  return BOT_LANGUAGE_NAMES[normalizeBotLanguageCode(code)] || normalizeBotLanguageCode(code);
 }
 
 function createLanguageFlagIconElement(code, className = "") {
@@ -3956,10 +4005,43 @@ function populateCharacterLanguageSelectOptions() {
   if (!select) return;
   const used = new Set(state.charModalDefinitions.map((d) => d.language));
   select.innerHTML = "";
+  const FLAG_EMOJI = {
+    en: "🇺🇸",
+    fr: "🇫🇷",
+    it: "🇮🇹",
+    de: "🇩🇪",
+    es: "🇪🇸",
+    "pt-BR": "🇧🇷",
+    "pt-PT": "🇵🇹",
+    ja: "🇯🇵",
+    ko: "🇰🇷",
+    "zh-CN": "🇨🇳",
+    "zh-TW": "🇹🇼",
+    ru: "🇷🇺",
+    ar: "🇸🇦",
+    nl: "🇳🇱",
+    tr: "🇹🇷",
+    pl: "🇵🇱",
+    sv: "🇸🇪",
+    da: "🇩🇰",
+    fi: "🇫🇮",
+    no: "🇳🇴",
+    cs: "🇨🇿",
+    ro: "🇷🇴",
+    hu: "🇭🇺",
+    el: "🇬🇷",
+    he: "🇮🇱",
+    hi: "🇮🇳",
+    id: "🇮🇩",
+    th: "🇹🇭",
+    vi: "🇻🇳",
+  };
   BOT_LANGUAGE_OPTIONS.filter((code) => !used.has(code)).forEach((code) => {
     const opt = document.createElement("option");
     opt.value = code;
-    opt.textContent = code;
+    const flagEmoji = FLAG_EMOJI[code] || "🌐";
+    const langName = getBotLanguageName(code);
+    opt.textContent = `${flagEmoji} ${langName} (${code})`;
     select.appendChild(opt);
   });
 }
@@ -3972,8 +4054,11 @@ async function openCharacterModal(character = null) {
   document.getElementById("character-title").textContent =
     state.editingCharacterId ? t("editCharacterTitle") : t("createCharacterTitle");
   state.charModalDefinitions = normalizeCharacterDefinitions(character);
-  state.charModalActiveLanguage =
-    state.charModalDefinitions[0]?.language || getInitialBotDefinitionLanguage();
+  const cardLanguage = character?.selectedCardLanguage || "";
+  const hasCardLanguage = cardLanguage && state.charModalDefinitions.some(d => d.language === cardLanguage);
+  state.charModalActiveLanguage = hasCardLanguage
+    ? cardLanguage
+    : state.charModalDefinitions[0]?.language || getInitialBotDefinitionLanguage();
   state.charModalActiveTab = "lang";
 
   await populateCharDefaultPersonaOverrideSelect(
@@ -5430,9 +5515,11 @@ function renderCharAvatars() {
     removeBtn.className = "avatar-remove-btn";
     removeBtn.innerHTML = "&times;";
     removeBtn.title = "Remove";
-    removeBtn.onclick = (e) => {
+    removeBtn.onclick = async (e) => {
       e.preventDefault();
       e.stopPropagation();
+      const ok = await openConfirmDialog(t("removeAvatarTitle"), t("removeAvatarConfirm"));
+      if (!ok) return;
       removeAvatar(index);
     };
     item.appendChild(removeBtn);
@@ -5442,6 +5529,17 @@ function renderCharAvatars() {
       mainBadge.className = "avatar-main-badge";
       mainBadge.textContent = "Main";
       item.appendChild(mainBadge);
+    } else {
+      const setMainBtn = document.createElement("button");
+      setMainBtn.className = "avatar-set-main-btn";
+      setMainBtn.innerHTML = "&#9733;";
+      setMainBtn.title = "Set as main";
+      setMainBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setAvatarAsMain(index);
+      };
+      item.appendChild(setMainBtn);
     }
 
     container.appendChild(item);
@@ -5472,6 +5570,14 @@ function renderCharAvatars() {
 
 function removeAvatar(index) {
   state.charModalAvatars.splice(index, 1);
+  state.modalDirty["character-modal"] = true;
+  renderCharAvatars();
+}
+
+function setAvatarAsMain(index) {
+  if (index === 0) return;
+  const avatar = state.charModalAvatars.splice(index, 1)[0];
+  state.charModalAvatars.unshift(avatar);
   state.modalDirty["character-modal"] = true;
   renderCharAvatars();
 }
