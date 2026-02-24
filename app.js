@@ -893,7 +893,7 @@ async function init() {
   await ensurePersonasInitialized();
   await renderAll();
   setupCrossWindowSync();
-  applyMarkdownCustomCss();
+  // applyMarkdownCustomCss(); // Disabled - using markdown-it library
   applyChatMessageAlignment();
   renderCharacterTagFilterChips();
   updateThreadRenameButtonState();
@@ -2253,7 +2253,9 @@ async function setupSettingsControls() {
     "is-active",
     state.settings.enterToSendEnabled !== false,
   );
-  markdownCustomCss.value = state.settings.markdownCustomCss || "";
+  if (markdownCustomCss) {
+    markdownCustomCss.value = state.settings.markdownCustomCss || "";
+  }
   postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
   const initialSliderMax = getSettingsMaxTokensUpperBound(modelSelect.value);
   state.settings.maxTokens = clampMaxTokens(
@@ -2465,12 +2467,14 @@ async function setupSettingsControls() {
     saveSettings();
   });
 
+  /*
   markdownCustomCss.addEventListener("input", () => {
     state.settings.markdownCustomCss = markdownCustomCss.value;
     saveSettings();
     applyMarkdownCustomCss();
     if (currentThread) renderChat();
   });
+  */
 
   postprocessRulesJson.addEventListener("input", () => {
     state.settings.postprocessRulesJson = postprocessRulesJson.value;
@@ -3095,6 +3099,7 @@ function resolveTextInputDialog(save) {
   }
 }
 
+/*
 function applyMarkdownCustomCss() {
   const id = "dynamic-markdown-style";
   let styleTag = document.getElementById(id);
@@ -3105,6 +3110,7 @@ function applyMarkdownCustomCss() {
   }
   styleTag.textContent = String(state.settings.markdownCustomCss || "");
 }
+*/
 
 function applyChatMessageAlignment() {
   const log = document.getElementById("chat-log");
@@ -11140,6 +11146,14 @@ function renderMessageHtml(content, role = "assistant") {
     return state.settings.allowMessageHtml
       ? raw.replace(/\n/g, "<br>")
       : escapeHtml(raw).replace(/\n/g, "<br>");
+  }
+  if (typeof window.markdownit === "function") {
+    const md = window.markdownit("default", {
+      html: state.settings.allowMessageHtml,
+      linkify: true,
+      typographer: true,
+    });
+    return md.render(raw);
   }
   return markdownToHtml(raw);
 }
