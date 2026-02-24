@@ -876,7 +876,9 @@ async function init() {
     if (state.cooldownQueueTickInFlight) return;
     state.cooldownQueueTickInFlight = true;
     try {
-      updateCooldownPinnedToast();
+      const seconds = getCooldownRemainingSeconds();
+      updateCooldownPinnedToast(seconds);
+      refreshCurrentThreadCooldownBubble(seconds);
       await tickQueueCooldownState();
     } finally {
       state.cooldownQueueTickInFlight = false;
@@ -2719,16 +2721,19 @@ function showToast(message, type = "success") {
   }, delay);
 }
 
-function updateCooldownPinnedToast() {
+function updateCooldownPinnedToast(secondsOverride = null) {
   const container = document.getElementById("toast-container");
   if (!container) return;
   const existing = container.querySelector(".toast.cooldown-pinned");
-  const active = isInCompletionCooldown();
+  const seconds =
+    Number.isFinite(Number(secondsOverride)) && Number(secondsOverride) > 0
+      ? Number(secondsOverride)
+      : getCooldownRemainingSeconds();
+  const active = seconds > 0;
   if (!active) {
     existing?.remove();
     return;
   }
-  const seconds = getCooldownRemainingSeconds();
   const text = tf("cooldownToastActive", { seconds });
   const toast = existing || document.createElement("div");
   toast.className = "toast cooldown-pinned";
@@ -6970,30 +6975,50 @@ async function generateBotReply() {
   if (!currentThread || !currentCharacter || state.sending) return;
   const cooldown = Number(state.settings.completionCooldown) || 0;
   if (cooldown > 0 && isInCompletionCooldown()) {
-    const pending = {
-      role: "assistant",
-      content: "",
-      generationStatus: "cooling_down",
-      createdAt: Date.now(),
-      finishReason: "",
-      nativeFinishReason: "",
-      truncatedByFilter: false,
-      generationId: "",
-      completionMeta: null,
-      generationInfo: null,
-      usedLoreEntries: [],
-      usedMemorySummary: "",
-      writingInstructionsTurnIndex: 0,
-      writingInstructionsCounted: false,
-    };
-    conversationHistory.push(pending);
-    await persistCurrentThread();
-    const log = document.getElementById("chat-log");
-    if (log) {
-      const row = buildMessageRow(pending, conversationHistory.length - 1, true);
-      log.appendChild(row);
-      scrollChatToBottom();
+    const threadId = Number(currentThread.id);
+    if (!state.generationQueue.includes(threadId)) {
+      state.generationQueue.push(threadId);
     }
+    const seconds = getCooldownRemainingSeconds();
+    const cooldownLabel = tf("cooldownToastActive", { seconds });
+    const existingPendingIdx = findLatestPendingAssistantIndex(conversationHistory);
+    if (existingPendingIdx >= 0) {
+      const pending = conversationHistory[existingPendingIdx];
+      pending.generationStatus = "cooling_down";
+      pending.content = cooldownLabel;
+      pending.generationError = "";
+      pending.truncatedByFilter = false;
+    } else {
+      conversationHistory.push({
+        role: "assistant",
+        content: cooldownLabel,
+        generationStatus: "cooling_down",
+        createdAt: Date.now(),
+        finishReason: "",
+        nativeFinishReason: "",
+        truncatedByFilter: false,
+        generationId: "",
+        completionMeta: null,
+        generationInfo: null,
+        usedLoreEntries: [],
+        usedMemorySummary: "",
+        writingInstructionsTurnIndex: 0,
+        writingInstructionsCounted: false,
+      });
+    }
+    const nowTs = Date.now();
+    currentThread.pendingGenerationReason = "cooldown";
+    currentThread.pendingGenerationQueuedAt =
+      Number(currentThread.pendingGenerationQueuedAt || nowTs);
+    await persistCurrentThread();
+    await db.threads.update(threadId, {
+      pendingGenerationReason: "cooldown",
+      pendingGenerationQueuedAt: currentThread.pendingGenerationQueuedAt,
+      updatedAt: Date.now(),
+    });
+    renderChat();
+    setSendingState(state.sending);
+    updateCooldownPinnedToast(seconds);
     await renderThreads();
     return;
   }
@@ -7769,8 +7794,14 @@ function setSendingState(sending) {
   const isBlockedByQueueOrCooldown =
     pendingState === "queued" || pendingState === "cooling_down";
   sendBtn.disabled = isBlockedByQueueOrCooldown;
-  sendBtn.classList.toggle("is-generating", currentThreadGenerating);
-  sendBtn.classList.toggle("danger-btn", currentThreadGenerating);
+  sendBtn.classList.toggle(
+    "is-generating",
+    currentThreadGenerating || isBlockedByQueueOrCooldown,
+  );
+  sendBtn.classList.toggle(
+    "danger-btn",
+    currentThreadGenerating || isBlockedByQueueOrCooldown,
+  );
   sendBtn.textContent = currentThreadGenerating ? t("cancel") : t("send");
   personaSelect.disabled = currentThreadGenerating || isBlockedByQueueOrCooldown;
   refreshMessageControlStates();
@@ -8518,7 +8549,6 @@ async function processNextQueuedThread() {
   await clearThreadGenerationQueueFlag(nextThreadId);
   const thread = await db.threads.get(nextThreadId);
   if (!thread) {
-    state.generationQueue.shift();
     await processNextQueuedThread();
     return;
   }
@@ -8527,7 +8557,6 @@ async function processNextQueuedThread() {
     ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
     : null;
   if (!character) {
-    state.generationQueue.shift();
     await processNextQueuedThread();
     return;
   }
@@ -8591,47 +8620,32 @@ async function processNextQueuedThread() {
       returnTrace: true,
     });
     const systemPrompt = promptContext.prompt;
-    const model = state.settings.model || "anthropic/claude-3-sonnet-20240229";
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      throw new Error("API key not configured");
-    }
-    const messages = buildMessagesForApi(tempConversation, systemPrompt, character, tempPersona);
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_tokens: Number(state.settings.maxTokens) || 2048,
-        temperature: Number(state.settings.temperature) || 1,
-        apiKey,
-      }),
-      signal: state.abortController.signal,
-    });
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText || `API error: ${response.status}`);
-    }
-    const reply = await response.json();
-    pending.content = reply.content || "";
-    pending.finishReason = reply.finish_reason || "";
-    pending.nativeFinishReason = reply.finish_reason || "";
+    const result = await callOpenRouter(
+      systemPrompt,
+      tempConversation,
+      state.settings.model,
+      null,
+      state.abortController.signal,
+    );
+    pending.content = result.content || "";
+    pending.finishReason = result.finishReason || "";
+    pending.nativeFinishReason = result.nativeFinishReason || "";
     pending.generationStatus = "";
     if (Number(state.settings.completionCooldown) > 0) {
       state.lastCompletionTime = Date.now();
       updateCooldownPinnedToast();
     }
-    pending.generationId = reply.id || "";
-    pending.completionMeta = reply.model ? { model: reply.model } : null;
-    pending.generationInfo = {
-      prompt: promptContext.trace,
-      completion: reply,
-    };
+    pending.generationId = String(result.generationId || "");
+    pending.completionMeta = result.completionMeta || null;
+    pending.generationInfo = result.generationInfo || null;
+    pending.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
+      ? promptContext.usedLoreEntries
+      : [];
+    pending.usedMemorySummary = promptContext.usedMemorySummary || "";
     if (pending.writingInstructionsTurnIndex && !pending.writingInstructionsCounted) {
       tempThread.writingInstructionsTurnCount = (tempThread.writingInstructionsTurnCount || 0) + 1;
     }
-    pending.truncatedByFilter = reply.truncated_by_filter === true;
+    pending.truncatedByFilter = result.truncatedByFilter === true;
     await db.threads.update(nextThreadId, {
       messages: tempConversation,
       updatedAt: Date.now(),
@@ -8651,7 +8665,6 @@ async function processNextQueuedThread() {
     state.sending = false;
     state.activeGenerationThreadId = null;
     setSendingState(false);
-    state.generationQueue.shift();
     await renderThreads();
     await processNextQueuedThread();
   }
@@ -8694,6 +8707,27 @@ function getThreadPendingGenerationState(threadId, messages = []) {
   return "";
 }
 
+function refreshCurrentThreadCooldownBubble(secondsOverride = null) {
+  if (!currentThread || !Array.isArray(conversationHistory)) return;
+  const seconds =
+    Number.isFinite(Number(secondsOverride)) && Number(secondsOverride) > 0
+      ? Number(secondsOverride)
+      : getCooldownRemainingSeconds();
+  if (seconds <= 0) return;
+  const label = tf("cooldownToastActive", { seconds });
+  const idx = findLatestPendingAssistantIndex(conversationHistory);
+  if (idx < 0) return;
+  const msg = conversationHistory[idx];
+  if (!msg || String(msg.generationStatus || "").trim() !== "cooling_down") return;
+  if (String(msg.content || "") === label) return;
+  msg.content = label;
+  const row = document.querySelector(`#chat-log .chat-row[data-message-index="${idx}"]`);
+  const content = row?.querySelector(".message-content");
+  if (content) {
+    content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(label)}`;
+  }
+}
+
 async function ensureQueuedThreadCoolingDown(threadId) {
   const id = Number(threadId);
   if (!Number.isInteger(id)) return;
@@ -8704,6 +8738,7 @@ async function ensureQueuedThreadCoolingDown(threadId) {
     : [];
   const seconds = getCooldownRemainingSeconds();
   const label = tf("cooldownToastActive", { seconds });
+  const hadPendingBefore = findLatestPendingAssistantIndex(messages) >= 0;
   let idx = findLatestPendingAssistantIndex(messages);
   let prevContent = "";
   let prevStatus = "";
@@ -8732,7 +8767,7 @@ async function ensureQueuedThreadCoolingDown(threadId) {
 
   const needsReason = String(thread.pendingGenerationReason || "").trim() !== "cooldown";
   const hasChanges =
-    idx < 0 ||
+    !hadPendingBefore ||
     needsReason ||
     prevContent !== label ||
     prevStatus !== "cooling_down";
@@ -9643,9 +9678,13 @@ function updateModelPill() {
   const chatPill = document.getElementById("chat-model-pill");
   const homePill = document.getElementById("home-model-pill");
   if (!chatPill && !homePill) return;
-  const model =
-    state.lastUsedModel || resolveModelForRequest(state.settings.model);
-  const provider = state.lastUsedProvider ? ` (${state.lastUsedProvider})` : "";
+  const model = resolveModelForRequest(state.settings.model);
+  const provider =
+    state.lastUsedModel &&
+    state.lastUsedProvider &&
+    String(state.lastUsedModel) === String(model)
+      ? ` (${state.lastUsedProvider})`
+      : "";
   const text = `Model: ${model}${provider}`;
   if (chatPill) chatPill.textContent = text;
   if (homePill) homePill.textContent = text;

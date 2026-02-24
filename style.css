@@ -339,9 +339,12 @@ body {
 
 .thread-cooldown-badge {
   grid-area: actions;
+  align-self: center;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: max-content;
   min-width: 14px;
   height: 16px;
   padding: 0 3px;
