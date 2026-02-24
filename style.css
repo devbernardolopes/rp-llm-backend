@@ -950,6 +950,16 @@ textarea {
   text-overflow: ellipsis;
 }
 
+.character-tagline {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #aab6cf;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .character-lang-flags {
   display: flex;
   flex-wrap: wrap;

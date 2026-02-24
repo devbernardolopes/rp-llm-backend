@@ -876,19 +876,6 @@ document.addEventListener("visibilitychange", () => {
 });
 
 function updateCarouselForPaneState() {
-  const grid = document.getElementById("character-grid");
-  if (!grid) return;
-  const pane = document.getElementById("left-pane");
-  const isMainScreenVisible = pane && !pane.classList.contains("collapsed");
-  const cards = grid.querySelectorAll(".character-card");
-  
-  cards.forEach(card => {
-    if (isMainScreenVisible) {
-      if (card._startCarousel) card._startCarousel();
-    } else {
-      if (card._stopCarousel) card._stopCarousel();
-    }
-  });
 }
 
 async function init() {
@@ -3711,6 +3698,12 @@ async function renderCharacters() {
       openCharacterModal(char, lang);
     });
 
+    const tagline = document.createElement("div");
+    tagline.className = "character-tagline";
+    const taglineText = resolved.tagline || "";
+    tagline.textContent = taglineText ? taglineText : "---";
+    applyHoverMarquee(tagline, tagline.textContent);
+
     const langFlagsWrap = document.createElement("div");
     langFlagsWrap.className = "character-lang-flags";
     const definitions = resolved.definitions || [];
@@ -3846,7 +3839,7 @@ async function renderCharacters() {
       }),
     );
 
-    card.append(avatarWrap, name, langFlagsWrap);
+    card.append(avatarWrap, name, tagline, langFlagsWrap);
     if (tags.length > 0) card.appendChild(tagsWrap);
     card.append(actions);
     grid.appendChild(card);
@@ -4387,6 +4380,7 @@ function createEmptyCharacterDefinition(language = "en") {
   return {
     language: normalizeBotLanguageCode(language),
     name: "",
+    tagline: "",
     systemPrompt: "",
     oneTimeExtraPrompt: "",
     writingInstructions: "",
@@ -4438,6 +4432,7 @@ function normalizeCharacterDefinitions(character = null) {
   );
   const fallback = createEmptyCharacterDefinition(fallbackLanguage);
   fallback.name = String(character?.name || "");
+  fallback.tagline = String(character?.tagline || "");
   fallback.systemPrompt = String(character?.systemPrompt || "");
   fallback.oneTimeExtraPrompt = String(character?.oneTimeExtraPrompt || "");
   fallback.writingInstructions = String(character?.writingInstructions || "");
@@ -4602,6 +4597,7 @@ function saveActiveCharacterDefinitionFromForm() {
   const def = getActiveCharacterDefinition();
   if (!def) return;
   def.name = String(document.getElementById("char-name")?.value || "").trim();
+  def.tagline = String(document.getElementById("char-tagline")?.value || "").trim();
   def.systemPrompt = String(document.getElementById("char-system-prompt")?.value || "").trim();
   def.oneTimeExtraPrompt = String(document.getElementById("char-one-time-extra-prompt")?.value || "").trim();
   def.writingInstructions = String(document.getElementById("char-writing-instructions")?.value || "").trim();
@@ -4625,6 +4621,8 @@ function loadActiveCharacterDefinitionToForm() {
   if (!def) return;
   document.getElementById("char-name").value = def.name || "";
   updateNameLengthCounter("char-name", "char-name-count", 128);
+  document.getElementById("char-tagline").value = def.tagline || "";
+  updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
   document.getElementById("char-system-prompt").value = def.systemPrompt || "";
   document.getElementById("char-one-time-extra-prompt").value = def.oneTimeExtraPrompt || "";
   document.getElementById("char-writing-instructions").value = def.writingInstructions || "";
@@ -4831,7 +4829,7 @@ async function saveCharacterFromModal() {
 
   const payload = {
     name: String(primaryDef?.name || "").trim(),
-    systemPrompt: String(primaryDef?.systemPrompt || "").trim(),
+    tagline: String(primaryDef?.tagline || "").trim(),
     definitions: defs,
     selectedCardLanguage,
     preferLanguageMatchingUserPersona:
@@ -6518,6 +6516,13 @@ function renderCharAvatars() {
         openVideoPreview(avatar.data);
       });
       video.addEventListener("mousedown", (e) => e.preventDefault());
+      item.addEventListener("mouseenter", () => {
+        video.play().catch(() => {});
+      });
+      item.addEventListener("mouseleave", () => {
+        video.pause();
+        video.currentTime = 0;
+      });
       item.appendChild(video);
     } else {
       const img = document.createElement("img");
@@ -9030,7 +9035,7 @@ function renderSettingsModelOptions() {
   }
   modelSelect.value = targetModel || DEFAULT_SETTINGS.model;
 
-  renderModelCustomDropdown(filtered, targetModel);
+  renderModelCustomDropdown(filtered, catalog, targetModel);
 
   const maxTokensSlider = document.getElementById("max-tokens-slider");
   const maxTokensValue = document.getElementById("max-tokens-value");
@@ -9049,7 +9054,7 @@ function renderSettingsModelOptions() {
   refreshSelectedModelMeta();
 }
 
-function renderModelCustomDropdown(models, selectedModel) {
+function renderModelCustomDropdown(models, catalog, selectedModel) {
   const dropdownOptions = document.getElementById("model-dropdown-options");
   const dropdown = document.getElementById("model-custom-dropdown");
   const display = document.getElementById("model-select-display");
@@ -9140,7 +9145,7 @@ function renderModelCustomDropdown(models, selectedModel) {
     });
   }
 
-  const selectedModelData = models.find((m) => m.id === selectedModel);
+  const selectedModelData = models.find((m) => m.id === selectedModel) || catalog.find((m) => m.id === selectedModel);
   if (selectedModelData) {
     const lowContextMark = isLowContextRoleplayModel(selectedModelData) ? " | ! <=16k" : "";
     const moderationMark = selectedModelData.isModerated === true ? " | Moderated" : "";

@@ -188,6 +188,7 @@
   "always": "Immer",
   "onPersonaChange": "Bei Persona-Wechsel (erste Nachricht injiziert immer)",
   "nameLabel": "Name",
+  "taglineLabel": "Tagline",
   "avatarUrl": "Avatar-URL",
   "avatarFile": "Avatar-Datei",
   "personaDescription": "Beschreibung (max. 100 Wörter)",

@@ -188,6 +188,7 @@
   "always": "Always",
   "onPersonaChange": "On Persona Change (first message always injects)",
   "nameLabel": "Name",
+  "taglineLabel": "Tagline",
   "avatarUrl": "Avatar URL",
   "avatarFile": "Avatar File",
   "personaDescription": "Description (max 100 chars)",
