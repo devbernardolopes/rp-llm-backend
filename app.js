@@ -6845,7 +6845,7 @@ async function maybeGenerateThreadTitle() {
     const result = await callOpenRouter(
       "You create concise, descriptive chat thread titles.",
       [{ role: "user", content: titlePrompt }],
-      "openrouter/auto",
+      "openrouter/free",
     );
     const raw = String(result?.content || "").trim();
     if (!raw) return;
@@ -8761,6 +8761,7 @@ function selectModelFromDropdown(modelId) {
     state.settings.model = modelId;
     saveSettings();
     refreshSelectedModelMeta();
+    updateModelPill();
   }
   const dropdown = document.getElementById("model-custom-dropdown");
   if (dropdown) {
