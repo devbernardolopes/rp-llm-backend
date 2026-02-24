@@ -5042,7 +5042,7 @@ async function renderPersonaModalList() {
     drag.title = t("dragToReorder");
 
     const avatar = document.createElement("img");
-    avatar.className = "thread-avatar";
+    avatar.className = "persona-avatar";
     avatar.src =
       persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
     avatar.alt = "persona avatar";
@@ -5053,12 +5053,12 @@ async function renderPersonaModalList() {
     });
 
     const info = document.createElement("div");
-    info.className = "thread-info";
+    info.className = "persona-info";
     const title = document.createElement("div");
-    title.className = "thread-title";
+    title.className = "persona-title";
     title.textContent = `${persona.name}${persona.isDefault ? ` (${t("defaultSuffix")})` : ""}`;
     const desc = document.createElement("div");
-    desc.className = "thread-meta";
+    desc.className = "persona-meta";
     desc.textContent = persona.description || "";
     info.append(title, desc);
 
