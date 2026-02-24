@@ -642,34 +642,67 @@ textarea {
   gap: 8px;
 }
 
+.character-filters.collapsed .character-filters-content {
+  display: none;
+}
+
+.filters-toggle-btn {
+  display: inline-flex;
+  align-self: flex-end;
+}
+
 .character-filters-row {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) auto auto minmax(190px, 260px);
+  display: flex;
   gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.character-filters-controls {
+  display: inline-flex;
   align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.character-filters-row select {
+  flex: 0 1 auto;
+  min-width: 120px;
+}
+
+.sort-dir-btn {
+  font-size: 16px;
+  padding: 4px 8px;
 }
 
 .filter-chips {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  min-height: 28px;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.filter-chips-overflow {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-height: 56px;
-  overflow-y: auto;
-  align-content: flex-start;
+  overflow: hidden;
+  max-height: 24px;
+  width: 100%;
 }
 
-.filter-chip {
-  border: 1px solid #3a4a68;
-  background: #1f2b41;
-  color: var(--text);
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
-  cursor: pointer;
+.filter-chips-overflow.expanded {
+  max-height: none;
+  overflow: visible;
 }
 
-.filter-chip:hover {
-  background: #2a3955;
+.filter-tag-more-btn {
+  align-self: flex-start;
 }
 
 .filter-active-cue {
@@ -2367,7 +2400,12 @@ textarea {
   }
 
   .character-filters-row {
-    grid-template-columns: 1fr 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .character-filters-controls {
+    justify-content: flex-end;
   }
 
   .persona-picker,

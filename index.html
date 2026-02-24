@@ -132,56 +132,60 @@
           <div id="home-model-pill" class="model-pill">Model: -</div>
         </header>
         <section id="character-filters" class="character-filters">
-          <div class="character-filters-row">
-            <input
-              id="character-tag-filter-input"
-              list="tag-presets"
-              type="text"
-              data-i18n-placeholder="filterByTag"
-              placeholder="Filter by tag"
-            />
-            <button
-              id="character-tag-filter-clear"
-              class="secondary-btn"
-              type="button"
-              data-i18n="clear"
-            >
-              Clear
-            </button>
-            <select
-              id="character-sort-select"
-              data-i18n-title="characterOrdering"
-              aria-label="Character ordering"
-            >
-              <option value="updated_desc" data-i18n="lastModifiedNewest">
-                Last Modified: Newest
-              </option>
-              <option value="updated_asc" data-i18n="lastModifiedOldest">
-                Last Modified: Oldest
-              </option>
-              <option value="created_desc" data-i18n="createdNewest">
-                Created: Newest
-              </option>
-              <option value="created_asc" data-i18n="createdOldest">
-                Created: Oldest
-              </option>
-              <option value="threads_desc" data-i18n="threadsMost">
-                Threads: Most
-              </option>
-              <option value="threads_asc" data-i18n="threadsLeast">
-                Threads: Least
-              </option>
-              <option value="name_asc" data-i18n="nameAsc">Name: A-Z</option>
-              <option value="name_desc" data-i18n="nameDesc">Name: Z-A</option>
-            </select>
-          </div>
-          <div id="character-tag-filter-chips" class="filter-chips"></div>
-          <div
-            id="character-filter-active-cue"
-            class="filter-active-cue hidden"
-            data-i18n="tagFiltersActive"
+          <button
+            id="character-filters-toggle"
+            class="icon-btn filters-toggle-btn"
+            type="button"
+            aria-label="Toggle filters"
           >
-            Tag filters active.
+            &#9650;
+          </button>
+          <div class="character-filters-content">
+            <div class="character-filters-row">
+              <div id="character-tag-filter-chips" class="filter-chips"></div>
+              <div class="character-filters-controls">
+                <select
+                  id="character-sort-select"
+                  data-i18n-title="characterOrdering"
+                  aria-label="Character ordering"
+                >
+                  <option value="created" data-i18n="characterSortCreationDate">
+                    Creation Date
+                  </option>
+                  <option value="updated" data-i18n="characterSortUpdateDate">
+                    Update Date
+                  </option>
+                  <option value="name" data-i18n="characterSortName">Name</option>
+                  <option value="threads" data-i18n="characterSortChats">
+                    # Chats
+                  </option>
+                </select>
+                <button
+                  id="character-sort-dir-btn"
+                  class="icon-btn sort-dir-btn"
+                  type="button"
+                  aria-label="Toggle sort direction"
+                >
+                  &#8593;
+                </button>
+                <button
+                  id="character-tag-filter-clear"
+                  class="icon-btn"
+                  type="button"
+                  aria-label="Clear filters"
+                  title="Clear filters"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+            <div
+              id="character-filter-active-cue"
+              class="filter-active-cue hidden"
+              data-i18n="tagFiltersActive"
+            >
+              Tag filters active.
+            </div>
           </div>
         </section>
         <section id="character-grid" class="character-grid"></section>

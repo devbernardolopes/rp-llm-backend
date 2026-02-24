@@ -319,5 +319,11 @@
   "unsavedChangesConfirm": "Você tem alterações não salvas. Tem certeza que deseja fechar?",
   "completionCooldownLabel": "Cooldown de Completion",
   "coolingDownLabel": "Esfriando",
-  "cooldownToastActive": "Cooldown active: {seconds}s"
+  "cooldownToastActive": "Cooldown active: {seconds}s",
+  "sortAscending": "Ascending",
+  "sortDescending": "Descending",
+  "characterSortCreationDate": "Creation Date",
+  "characterSortUpdateDate": "Update Date",
+  "characterSortName": "Name",
+  "characterSortChats": "# Chats"
 }

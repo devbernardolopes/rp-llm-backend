@@ -319,5 +319,11 @@
   "unsavedChangesConfirm": "Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir fermer ?",
   "completionCooldownLabel": "Délai de completion",
   "coolingDownLabel": "Refroidissement",
-  "cooldownToastActive": "Cooldown active: {seconds}s"
+  "cooldownToastActive": "Cooldown active: {seconds}s",
+  "sortAscending": "Ascending",
+  "sortDescending": "Descending",
+  "characterSortCreationDate": "Creation Date",
+  "characterSortUpdateDate": "Update Date",
+  "characterSortName": "Name",
+  "characterSortChats": "# Chats"
 }

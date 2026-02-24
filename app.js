@@ -784,6 +784,7 @@ const state = {
   characterTagFilters: [],
   characterSortMode: "updated_desc",
   expandedCharacterTagIds: new Set(),
+  expandedCharacterTagFilters: false,
   modalDirty: {
     "character-modal": false,
     "personas-modal": false,
@@ -1253,21 +1254,6 @@ function setupEvents() {
   document.getElementById("persona-description").addEventListener("input", () => {
     updateNameLengthCounter("persona-description", "persona-description-count", 100);
   });
-  const addTagBtn = document.getElementById("character-tag-filter-add");
-  if (addTagBtn) {
-    addTagBtn.addEventListener("click", addCharacterTagFilterFromInput);
-  }
-  document
-    .getElementById("character-tag-filter-input")
-    .addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        addCharacterTagFilterFromInput();
-      }
-    });
-  document
-    .getElementById("character-tag-filter-input")
-    .addEventListener("change", addCharacterTagFilterFromInput);
   document
     .getElementById("character-tag-filter-clear")
     .addEventListener("click", async () => {
@@ -1280,9 +1266,28 @@ function setupEvents() {
   document
     .getElementById("character-sort-select")
     .addEventListener("change", async (e) => {
-      state.characterSortMode = String(e.target.value || "updated_desc");
+      const parts = getCharacterSortParts(state.characterSortMode);
+      state.characterSortMode = `${e.target.value}_${parts.dir}`;
       saveUiState();
+      renderCharacterTagFilterChips();
       await renderCharacters();
+    });
+  document
+    .getElementById("character-sort-dir-btn")
+    .addEventListener("click", async () => {
+      const parts = getCharacterSortParts(state.characterSortMode);
+      state.characterSortMode =
+        parts.dir === "desc" ? `${parts.base}_asc` : `${parts.base}_desc`;
+      saveUiState();
+      renderCharacterTagFilterChips();
+      await renderCharacters();
+    });
+  document
+    .getElementById("character-filters-toggle")
+    .addEventListener("click", () => {
+      const filters = document.getElementById("character-filters");
+      filters.classList.toggle("collapsed");
+      updateCharacterFiltersToggleUi();
     });
   document
     .getElementById("save-shortcuts-btn")
@@ -1767,19 +1772,6 @@ function renderCharacterTagPresetButtons() {
   });
 }
 
-function addCharacterTagFilterFromInput() {
-  const input = document.getElementById("character-tag-filter-input");
-  if (!input) return;
-  const tag = normalizeTagValue(input.value);
-  if (!tag) return;
-  const exists = state.characterTagFilters.some((t) => t.toLowerCase() === tag.toLowerCase());
-  if (!exists) state.characterTagFilters.push(tag);
-  input.value = "";
-  saveUiState();
-  renderCharacterTagFilterChips();
-  renderCharacters();
-}
-
 function removeCharacterTagFilter(tag) {
   const lower = String(tag || "").toLowerCase();
   state.characterTagFilters = state.characterTagFilters.filter((t) => t.toLowerCase() !== lower);
@@ -1788,25 +1780,100 @@ function removeCharacterTagFilter(tag) {
   renderCharacters();
 }
 
+function toggleCharacterTagFilter(tag) {
+  const normalized = normalizeTagValue(tag);
+  if (!normalized) return;
+  const lower = normalized.toLowerCase();
+  const exists = state.characterTagFilters.some((t) => t.toLowerCase() === lower);
+  if (exists) {
+    state.characterTagFilters = state.characterTagFilters.filter(
+      (t) => t.toLowerCase() !== lower,
+    );
+  } else {
+    state.characterTagFilters.push(normalized);
+  }
+  saveUiState();
+  renderCharacterTagFilterChips();
+  renderCharacters();
+}
+
+function getCharacterSortParts(sortMode) {
+  const raw = String(sortMode || "updated_desc");
+  const m = raw.match(/^(created|updated|name|threads)_(asc|desc)$/);
+  if (m) return { base: m[1], dir: m[2] };
+  return { base: "updated", dir: "desc" };
+}
+
+function updateCharacterFiltersToggleUi() {
+  const filters = document.getElementById("character-filters");
+  const btn = document.getElementById("character-filters-toggle");
+  if (!filters || !btn) return;
+  const collapsed = filters.classList.contains("collapsed");
+  btn.innerHTML = collapsed ? "&#9660;" : "&#9650;";
+}
+
 function renderCharacterTagFilterChips() {
   const chips = document.getElementById("character-tag-filter-chips");
   const cue = document.getElementById("character-filter-active-cue");
   const sortSelect = document.getElementById("character-sort-select");
-  if (sortSelect) sortSelect.value = state.characterSortMode || "updated_desc";
+  const sortDirBtn = document.getElementById("character-sort-dir-btn");
+  const sortParts = getCharacterSortParts(state.characterSortMode);
+  if (sortSelect) sortSelect.value = sortParts.base;
+  if (sortDirBtn) {
+    const isDesc = sortParts.dir === "desc";
+    sortDirBtn.innerHTML = isDesc ? "&#8595;" : "&#8593;";
+    sortDirBtn.setAttribute(
+      "title",
+      isDesc ? t("sortDescending") : t("sortAscending"),
+    );
+  }
+  updateCharacterFiltersToggleUi();
   if (!chips || !cue) return;
   chips.innerHTML = "";
-  const filters = Array.isArray(state.characterTagFilters)
+  const selectedFilters = Array.isArray(state.characterTagFilters)
     ? state.characterTagFilters
     : [];
-  filters.forEach((tag) => {
+  cue.classList.toggle("hidden", selectedFilters.length === 0);
+
+  const allTags = getAllAvailableTags();
+  if (allTags.length === 0) return;
+
+  const isExpanded = state.expandedCharacterTagFilters === true;
+  const chipsWrap = document.createElement("div");
+  chipsWrap.className = "filter-chips-overflow";
+  if (isExpanded) chipsWrap.classList.add("expanded");
+
+  allTags.forEach((tag) => {
     const chip = document.createElement("button");
     chip.type = "button";
-    chip.className = "filter-chip";
-    chip.textContent = `#${tag} x`;
-    chip.addEventListener("click", () => removeCharacterTagFilter(tag));
-    chips.appendChild(chip);
+    chip.className = "tag-chip";
+    if (selectedFilters.some((f) => String(f).toLowerCase() === tag.toLowerCase())) {
+      chip.classList.add("active-filter");
+    }
+    chip.textContent = tag;
+    chip.addEventListener("click", () => toggleCharacterTagFilter(tag));
+    chipsWrap.appendChild(chip);
   });
-  cue.classList.toggle("hidden", filters.length === 0);
+  chips.appendChild(chipsWrap);
+  const moreBtn = document.createElement("button");
+  moreBtn.type = "button";
+  moreBtn.className = "tag-more-btn filter-tag-more-btn hidden";
+  chips.appendChild(moreBtn);
+  const refreshMore = () => {
+    const overflow = chipsWrap.scrollHeight > chipsWrap.clientHeight + 1;
+    if (!overflow && !isExpanded) {
+      moreBtn.classList.add("hidden");
+      return;
+    }
+    moreBtn.classList.remove("hidden");
+    moreBtn.textContent = isExpanded ? t("less") : t("more");
+  };
+  moreBtn.addEventListener("click", () => {
+    state.expandedCharacterTagFilters = !isExpanded;
+    saveUiState();
+    renderCharacterTagFilterChips();
+  });
+  requestAnimationFrame(refreshMore);
 }
 
 function onInputKeyDown(e) {
@@ -2649,7 +2716,8 @@ function loadUiState() {
         .filter(Boolean);
     }
     if (typeof parsed.characterSortMode === "string" && parsed.characterSortMode) {
-      state.characterSortMode = parsed.characterSortMode;
+      const parts = getCharacterSortParts(parsed.characterSortMode);
+      state.characterSortMode = `${parts.base}_${parts.dir}`;
     }
   } catch {
     state.shortcutsVisible = true;
@@ -3225,7 +3293,8 @@ async function renderCharacters() {
 
   const sortedCharacters = [...filteredCharacters];
   sortedCharacters.sort((a, b) => {
-    const mode = state.characterSortMode || "updated_desc";
+    const parts = getCharacterSortParts(state.characterSortMode);
+    const mode = `${parts.base}_${parts.dir}`;
     const nameA = String(a.name || "").toLowerCase();
     const nameB = String(b.name || "").toLowerCase();
     const createdA = Number(a.createdAt || 0);
