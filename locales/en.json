@@ -311,8 +311,8 @@
   "marqueeBehaviorAlways": "Always",
   "newChat": "New Chat",
   "newChatAria": "Start new chat with {name}",
-  "removeAvatarTitle": "Remove Avatar",
-  "removeAvatarConfirm": "Remove this avatar?",
   "unsavedChangesTitle": "Unsaved Changes",
-  "unsavedChangesConfirm": "You have unsaved changes. Are you sure you want to close?"
+  "unsavedChangesConfirm": "You have unsaved changes. Are you sure you want to close?",
+  "completionCooldownLabel": "Completion Cooldown",
+  "coolingDownLabel": "Cooling down"
 }

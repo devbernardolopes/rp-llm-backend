@@ -195,11 +195,12 @@ body {
   border-radius: 12px;
   padding: 4px 6px;
   display: grid;
-  grid-template-columns: 62px minmax(0, 1fr);
-  grid-template-rows: auto auto;
+  grid-template-columns: 62px 1fr auto;
+  grid-template-rows: auto auto auto;
   grid-template-areas:
-    "avatar info"
-    "avatar actions";
+    "avatar title actions"
+    "avatar meta actions"
+    "avatar badge actions";
   column-gap: 8px;
   row-gap: 2px;
   align-items: start;
@@ -239,33 +240,87 @@ body {
 }
 
 .thread-info {
-  grid-area: info;
+  display: contents;
+}
+
+.thread-title-row {
+  grid-area: title;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  position: relative;
+}
+
+.thread-title-row .thread-title {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  align-self: start;
+  overflow: hidden;
+}
+
+.thread-title-row .thread-rename-mini {
+  position: absolute;
+  right: 0;
+  flex-shrink: 0;
+}
+
+.thread-title-row .thread-title {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+}
+
+.thread-title-row .thread-rename-mini {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .thread-meta {
+  grid-area: meta;
   display: flex;
   gap: 6px;
   align-items: center;
+  justify-content: space-between;
+  min-width: 0;
   font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
   overflow: visible;
 }
 
-.thread-meta > span:first-child {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1 1 auto;
+.thread-queue-badge {
+  grid-area: badge;
+  grid-row: 3;
+  align-self: center;
+  justify-self: start;
+  margin-left: 4px;
 }
 
-.thread-queue-badge {
+.thread-row .actions .thread-queue-badge,
+.thread-row .actions .thread-generating-badge,
+.thread-row .actions .thread-cooldown-badge {
+  grid-area: badge;
+  grid-row: 3;
+  align-self: center;
+  margin-right: 4px;
+}
+
+.thread-generating-badge {
+  grid-area: badge;
+  grid-row: 3;
+  align-self: center;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 16px;
+}
+
+.thread-cooldown-badge {
+  grid-area: badge;
+  grid-row: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -273,19 +328,13 @@ body {
   height: 16px;
   padding: 0 5px;
   border-radius: 999px;
-  border: 1px solid #6f5f28;
-  background: #3a3218;
-  color: #f8e9a8;
+  border: 1px solid #4a7ab8;
+  background: #1e3a5f;
+  color: #a8d4ff;
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
   flex: 0 0 auto;
-}
-
-.thread-title-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
 }
 
 .thread-title {

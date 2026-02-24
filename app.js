@@ -96,6 +96,7 @@ const DEFAULT_SETTINGS = {
   modelSortOrder: "created_desc",
   toastDurationMs: 2600,
   marqueeBehavior: "disabled",
+  completionCooldown: 2,
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 7,
   chatMessageAlignment: "left",
@@ -751,10 +752,9 @@ const state = {
   activeModalId: null,
   promptHistoryOpen: false,
   chatAutoScroll: true,
-  lastTapAt: 0,
-  sending: false,
   lastUsedModel: "",
   lastUsedProvider: "",
+  lastCompletionTime: 0,
   draggingPersonaId: null,
   tabId: `tab-${Math.random().toString(36).slice(2)}`,
   syncChannel: null,
@@ -2051,6 +2051,14 @@ async function setupSettingsControls() {
   temperatureValue.textContent = clampTemperature(
     state.settings.temperature,
   ).toFixed(2);
+  const completionCooldownSlider = document.getElementById("completion-cooldown-slider");
+  const completionCooldownValue = document.getElementById("completion-cooldown-value");
+  if (completionCooldownSlider) {
+    completionCooldownSlider.value = String(state.settings.completionCooldown ?? 2);
+    if (completionCooldownValue) {
+      completionCooldownValue.textContent = `${completionCooldownSlider.value}s`;
+    }
+  }
   if (toastDelaySlider) {
     const delay = clampToastDuration(state.settings.toastDurationMs);
     state.settings.toastDurationMs = delay;
@@ -2275,6 +2283,15 @@ async function setupSettingsControls() {
     });
     saveSettings();
   });
+  completionCooldownSlider?.addEventListener("input", () => {
+    const value = Number(completionCooldownSlider.value);
+    state.settings.completionCooldown = value;
+    completionCooldownSlider.value = String(value);
+    if (completionCooldownValue) {
+      completionCooldownValue.textContent = `${value}s`;
+    }
+    saveSettings();
+  });
   toastDelaySlider?.addEventListener("input", () => {
     const value = clampToastDuration(Number(toastDelaySlider.value));
     state.settings.toastDurationMs = value;
@@ -2350,7 +2367,6 @@ async function setupSettingsControls() {
       await applyInterfaceLanguage();
       updateToastDelayDisplay();
       await renderShortcutsBar();
-      setSendingState(state.sending);
     });
   }
 }
@@ -3327,6 +3343,32 @@ async function renderCharacters() {
   state.characterCardSlide = null;
 }
 
+function updateThreadBulkBar() {
+  const bulkBar = document.getElementById("thread-bulk-bar");
+  if (!bulkBar) return;
+  const selectAll = bulkBar.querySelector(".thread-select-all");
+  const deleteBtn = bulkBar.querySelector(".thread-bulk-delete");
+  const list = document.getElementById("thread-list");
+  if (!list) return;
+  const threadRows = list.querySelectorAll(".thread-row");
+  const totalThreads = threadRows.length;
+  const selectedCount = state.selectedThreadIds.size;
+  if (selectAll) {
+    selectAll.checked = selectedCount > 0 && selectedCount === totalThreads;
+    selectAll.indeterminate = selectedCount > 0 && selectedCount < totalThreads;
+  }
+  if (deleteBtn) {
+    deleteBtn.disabled = selectedCount === 0;
+  }
+  threadRows.forEach((row) => {
+    const checkbox = row.querySelector(".thread-select");
+    if (checkbox) {
+      const threadId = Number(row.dataset.threadId);
+      checkbox.checked = state.selectedThreadIds.has(threadId);
+    }
+  });
+}
+
 async function renderThreads() {
   const list = document.getElementById("thread-list");
   if (!list) return;
@@ -3348,41 +3390,14 @@ async function renderThreads() {
     ),
   );
 
-  list.innerHTML = "";
   if (threads.length === 0) {
+    list.innerHTML = "";
     const empty = document.createElement("p");
     empty.className = "muted";
     empty.textContent = t("noThreadsYet");
     list.appendChild(empty);
-    list.scrollTop = 0;
     return;
   }
-
-  const bulkBar = document.createElement("div");
-  bulkBar.className = "thread-bulk-bar";
-  const selectedCount = state.selectedThreadIds.size;
-  const selectAll = document.createElement("input");
-  selectAll.type = "checkbox";
-  selectAll.className = "thread-select thread-select-all thread-bulk-select";
-  selectAll.title = t("selectAllThreads");
-  selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
-  selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
-  selectAll.addEventListener("change", () => {
-    if (selectAll.checked) {
-      threads.forEach((t) => state.selectedThreadIds.add(Number(t.id)));
-    } else {
-      state.selectedThreadIds.clear();
-    }
-    renderThreads();
-  });
-  const deleteSelectedBtn = iconButton("delete", t("deleteSelectedThreads"), async () => {
-    await deleteSelectedThreads();
-  });
-  deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
-  deleteSelectedBtn.disabled = selectedCount === 0;
-
-  bulkBar.append(selectAll, deleteSelectedBtn);
-  list.appendChild(bulkBar);
 
   const charIds = [
     ...new Set(threads.map((t) => t.characterId).filter(Boolean)),
@@ -3396,6 +3411,35 @@ async function renderThreads() {
   if (renderSeq !== state.renderThreadsSeq) return;
   const charMap = new Map(characters.map((c) => [c.id, c]));
 
+  list.innerHTML = "";
+
+  const bulkBar = document.createElement("div");
+  bulkBar.className = "thread-bulk-bar";
+  bulkBar.id = "thread-bulk-bar";
+  const selectAll = document.createElement("input");
+  selectAll.type = "checkbox";
+  selectAll.className = "thread-select thread-select-all thread-bulk-select";
+  selectAll.title = t("selectAllThreads");
+  selectAll.addEventListener("change", () => {
+    if (selectAll.checked) {
+      threads.forEach((t) => state.selectedThreadIds.add(Number(t.id)));
+    } else {
+      state.selectedThreadIds.clear();
+    }
+    updateThreadBulkBar();
+  });
+  const deleteSelectedBtn = iconButton("delete", t("deleteSelectedThreads"), async () => {
+    await deleteSelectedThreads();
+  });
+  deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
+  bulkBar.append(selectAll, deleteSelectedBtn);
+  list.appendChild(bulkBar);
+
+  const selectedCount = state.selectedThreadIds.size;
+  selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
+  selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
+  deleteSelectedBtn.disabled = selectedCount === 0;
+
   threads.forEach((thread) => {
     const char = charMap.get(thread.characterId);
     const resolvedChar = char
@@ -3407,14 +3451,14 @@ async function renderThreads() {
 
     const row = document.createElement("div");
     row.className = "thread-row";
+    if (chatViewActive && Number(currentThread?.id) === Number(thread.id)) {
+      row.classList.add("active-thread");
+    }
     row.dataset.threadId = String(thread.id);
     row.addEventListener("click", (e) => {
       if (e.target?.closest(".actions")) return;
       openThread(thread.id);
     });
-    if (chatViewActive && currentThread?.id === thread.id) {
-      row.classList.add("active-thread");
-    }
 
     const selectBox = document.createElement("input");
     selectBox.type = "checkbox";
@@ -3425,7 +3469,7 @@ async function renderThreads() {
     selectBox.addEventListener("change", () => {
       if (selectBox.checked) state.selectedThreadIds.add(Number(thread.id));
       else state.selectedThreadIds.delete(Number(thread.id));
-      renderThreads();
+      updateThreadBulkBar();
     });
 
     const avatar = document.createElement("img");
@@ -3434,6 +3478,32 @@ async function renderThreads() {
       resolvedChar?.avatar ||
       fallbackAvatar(resolvedChar?.name || char?.name || t("threadWord"), 512, 512);
     avatar.alt = "thread avatar";
+
+    const isGenerating = state.sending && Number(state.activeGenerationThreadId) === Number(thread.id);
+    const isInCooldown = !isGenerating && isInCompletionCooldown() && currentThread && Number(currentThread.id) !== Number(thread.id);
+    const queuePos = (isGenerating || isInCooldown) ? 0 : (queuePosByThreadId.get(Number(thread.id)) || 0);
+    let queueBadge;
+    if (isGenerating) {
+      queueBadge = document.createElement("span");
+      queueBadge.className = "thread-generating-badge";
+      queueBadge.innerHTML = '<span class="spinner" aria-hidden="true"></span>';
+      queueBadge.setAttribute("title", t("generatingLabel"));
+      queueBadge.setAttribute("aria-label", t("generatingLabel"));
+    } else if (isInCooldown) {
+      const remaining = getCooldownRemainingSeconds();
+      queueBadge = document.createElement("span");
+      queueBadge.className = "thread-cooldown-badge";
+      queueBadge.textContent = `C${remaining}`;
+      queueBadge.setAttribute("title", t("coolingDownLabel"));
+      queueBadge.setAttribute("aria-label", t("coolingDownLabel"));
+    } else if (queuePos > 0) {
+      queueBadge = document.createElement("span");
+      queueBadge.className = "thread-queue-badge";
+      queueBadge.textContent = `Q${queuePos}`;
+      const queueTitle = tf("threadQueueBadgeTitle", { position: queuePos });
+      queueBadge.setAttribute("title", queueTitle);
+      queueBadge.setAttribute("aria-label", queueTitle);
+    }
 
     const info = document.createElement("div");
     info.className = "thread-info";
@@ -3450,16 +3520,6 @@ async function renderThreads() {
       "thread-language-flag",
     );
     meta.append(metaName, metaId, metaLang);
-    const queuePos = queuePosByThreadId.get(Number(thread.id)) || 0;
-    if (queuePos > 0) {
-      const queueBadge = document.createElement("span");
-      queueBadge.className = "thread-queue-badge";
-      queueBadge.textContent = `Q${queuePos}`;
-      const queueTitle = tf("threadQueueBadgeTitle", { position: queuePos });
-      queueBadge.setAttribute("title", queueTitle);
-      queueBadge.setAttribute("aria-label", queueTitle);
-      meta.appendChild(queueBadge);
-    }
 
     const titleBtn = document.createElement("button");
     titleBtn.className = "thread-title";
@@ -3520,11 +3580,14 @@ async function renderThreads() {
     actions.appendChild(favBtn);
 
     actions.prepend(selectBox);
-    row.append(avatar, info, actions);
-    if (!list.querySelector(`.thread-row[data-thread-id="${thread.id}"]`)) {
-      list.appendChild(row);
+    if (queueBadge) {
+      row.append(avatar, info, queueBadge, actions);
+    } else {
+      row.append(avatar, info, actions);
     }
+    list.appendChild(row);
   });
+
   const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
   if (renderSeq !== state.renderThreadsSeq) return;
   list.scrollTop = Math.min(previousScrollTop, maxScroll);
@@ -5979,7 +6042,7 @@ async function openThread(threadId) {
     const id = Number(thread.id);
     if (!state.generationQueue.includes(id)) state.generationQueue.push(id);
   }
-  await tryStartQueuedGenerationForCurrentThread();
+  await processNextQueuedThread();
 }
 
 function updateThreadRenameButtonState() {
@@ -6788,8 +6851,54 @@ async function sendMessage(options = {}) {
   await requestBotReplyForCurrentThread("manual_send_auto_reply");
 }
 
+function isInCompletionCooldown() {
+  const cooldown = Number(state.settings.completionCooldown) || 0;
+  if (cooldown <= 0) return false;
+  const now = Date.now();
+  const timeSinceLastCompletion = now - (state.lastCompletionTime || 0);
+  return timeSinceLastCompletion < (cooldown * 1000);
+}
+
+function getCooldownRemainingSeconds() {
+  const cooldown = Number(state.settings.completionCooldown) || 0;
+  if (cooldown <= 0) return 0;
+  const now = Date.now();
+  const timeSinceLastCompletion = now - (state.lastCompletionTime || 0);
+  const remaining = cooldown - (timeSinceLastCompletion / 1000);
+  return Math.max(0, Math.ceil(remaining));
+}
+
 async function generateBotReply() {
   if (!currentThread || !currentCharacter || state.sending) return;
+  const cooldown = Number(state.settings.completionCooldown) || 0;
+  if (cooldown > 0 && isInCompletionCooldown()) {
+    const pending = {
+      role: "assistant",
+      content: "",
+      generationStatus: "cooling_down",
+      createdAt: Date.now(),
+      finishReason: "",
+      nativeFinishReason: "",
+      truncatedByFilter: false,
+      generationId: "",
+      completionMeta: null,
+      generationInfo: null,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+      writingInstructionsTurnIndex: 0,
+      writingInstructionsCounted: false,
+    };
+    conversationHistory.push(pending);
+    await persistCurrentThread();
+    const log = document.getElementById("chat-log");
+    if (log) {
+      const row = buildMessageRow(pending, conversationHistory.length - 1, true);
+      log.appendChild(row);
+      scrollChatToBottom();
+    }
+    await renderThreads();
+    return;
+  }
   const threadId = Number(currentThread.id);
   const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(conversationHistory);
   const generationCharacter = currentCharacter;
@@ -6917,6 +7026,9 @@ async function generateBotReply() {
     pending.usedMemorySummary = String(promptContext.memory || "");
     pending.generationError = "";
     pending.generationStatus = "";
+    if (Number(state.settings.completionCooldown) > 0) {
+      state.lastCompletionTime = Date.now();
+    }
     if (pending.writingInstructionsCounted !== true) {
       pending.writingInstructionsCounted = true;
       writingTurnCountForThread = Math.max(
@@ -7019,7 +7131,8 @@ async function generateBotReply() {
     state.sending = false;
     state.activeGenerationThreadId = null;
     setSendingState(false);
-    await tryStartQueuedGenerationForCurrentThread();
+    await renderThreads();
+    await processNextQueuedThread();
   }
 }
 
@@ -8271,6 +8384,156 @@ async function tryStartQueuedGenerationForCurrentThread() {
   if (head !== threadId) return;
   await clearThreadGenerationQueueFlag(threadId);
   await generateBotReply();
+}
+
+async function processNextQueuedThread() {
+  if (state.sending) return;
+  if (state.generationQueue.length === 0) return;
+  const nextThreadId = Number(state.generationQueue[0]);
+  if (!nextThreadId) return;
+  if (currentThread && Number(currentThread.id) === nextThreadId) {
+    await tryStartQueuedGenerationForCurrentThread();
+    return;
+  }
+  await clearThreadGenerationQueueFlag(nextThreadId);
+  const thread = await db.threads.get(nextThreadId);
+  if (!thread) {
+    state.generationQueue.shift();
+    await processNextQueuedThread();
+    return;
+  }
+  const characterBase = await db.characters.get(thread.characterId);
+  const character = characterBase
+    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
+    : null;
+  if (!character) {
+    state.generationQueue.shift();
+    await processNextQueuedThread();
+    return;
+  }
+  const tempThread = {
+    ...thread,
+    writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
+  };
+  const tempConversation = (thread.messages || []).map((m) => ({
+    ...m,
+    role: m.role === "ai" ? "assistant" : m.role,
+  }));
+  const tempPersona = thread.selectedPersonaId
+    ? await db.personas.get(thread.selectedPersonaId)
+    : null;
+  const existingPendingIdx = findLatestPendingAssistantIndex(tempConversation);
+  let pending = null;
+  let pendingIndex = existingPendingIdx;
+  const writingTurnCountForThread = getThreadWritingInstructionsTurnCount(tempThread);
+  const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
+  if (existingPendingIdx >= 0) {
+    pending = tempConversation[existingPendingIdx];
+    pending.content = "";
+    pending.generationStatus = "generating";
+    pending.generationError = "";
+    pending.truncatedByFilter = false;
+    if (!Number.isInteger(Number(pending.writingInstructionsTurnIndex))) {
+      pending.writingInstructionsTurnIndex = writingTurnIndex;
+      pending.writingInstructionsCounted = false;
+    }
+  } else {
+    pending = {
+      role: "assistant",
+      content: "",
+      generationStatus: "generating",
+      createdAt: Date.now(),
+      finishReason: "",
+      nativeFinishReason: "",
+      truncatedByFilter: false,
+      generationId: "",
+      completionMeta: null,
+      generationInfo: null,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+      writingInstructionsTurnIndex: writingTurnIndex,
+      writingInstructionsCounted: false,
+    };
+    tempConversation.push(pending);
+    pendingIndex = tempConversation.length - 1;
+  }
+  await persistThreadMessagesById(nextThreadId, tempConversation);
+  state.sending = true;
+  state.activeGenerationThreadId = nextThreadId;
+  state.chatAutoScroll = true;
+  state.abortController = new AbortController();
+  setSendingState(true);
+  try {
+    const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(tempConversation);
+    const promptContext = await buildSystemPrompt(character, {
+      includeOneTimeExtraPrompt: includeOneTimeExtra,
+      writingInstructionsTurnIndex: Number(pending.writingInstructionsTurnIndex) || 1,
+      returnTrace: true,
+    });
+    const systemPrompt = promptContext.prompt;
+    const model = state.settings.model || "anthropic/claude-3-sonnet-20240229";
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      throw new Error("API key not configured");
+    }
+    const messages = buildMessagesForApi(tempConversation, systemPrompt, character, tempPersona);
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages,
+        max_tokens: Number(state.settings.maxTokens) || 2048,
+        temperature: Number(state.settings.temperature) || 1,
+        apiKey,
+      }),
+      signal: state.abortController.signal,
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || `API error: ${response.status}`);
+    }
+    const reply = await response.json();
+    pending.content = reply.content || "";
+    pending.finishReason = reply.finish_reason || "";
+    pending.nativeFinishReason = reply.finish_reason || "";
+    pending.generationStatus = "";
+    if (Number(state.settings.completionCooldown) > 0) {
+      state.lastCompletionTime = Date.now();
+    }
+    pending.generationId = reply.id || "";
+    pending.completionMeta = reply.model ? { model: reply.model } : null;
+    pending.generationInfo = {
+      prompt: promptContext.trace,
+      completion: reply,
+    };
+    if (pending.writingInstructionsTurnIndex && !pending.writingInstructionsCounted) {
+      tempThread.writingInstructionsTurnCount = (tempThread.writingInstructionsTurnCount || 0) + 1;
+    }
+    pending.truncatedByFilter = reply.truncated_by_filter === true;
+    await db.threads.update(nextThreadId, {
+      messages: tempConversation,
+      updatedAt: Date.now(),
+      writingInstructionsTurnCount: tempThread.writingInstructionsTurnCount,
+    });
+    await persistLorebookStates(nextThreadId, tempConversation);
+  } catch (e) {
+    if (e.name === "AbortError") {
+      pending.generationStatus = "cancelled";
+    } else {
+      pending.generationError = e.message || String(e);
+      pending.generationStatus = "error";
+    }
+  } finally {
+    state.pendingPersonaInjectionPersonaId = null;
+    state.abortController = null;
+    state.sending = false;
+    state.activeGenerationThreadId = null;
+    setSendingState(false);
+    state.generationQueue.shift();
+    await renderThreads();
+    await processNextQueuedThread();
+  }
 }
 
 async function requestBotReplyForCurrentThread(trigger = "manual_send") {

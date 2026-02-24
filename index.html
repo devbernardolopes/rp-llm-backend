@@ -556,7 +556,20 @@
               step="0.05"
             />
           </div>
-<div class="form-field">
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="completionCooldownLabel">Completion Cooldown</span>
+              <span id="completion-cooldown-value" class="muted"></span>
+            </div>
+            <input
+              id="completion-cooldown-slider"
+              type="range"
+              min="0"
+              max="15"
+              step="1"
+            />
+          </div>
+          <div class="form-field">
             <span data-i18n="ttsTestTextLabel">TTS Test Text</span>
             <textarea
               id="tts-test-text"
