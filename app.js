@@ -822,6 +822,7 @@ const state = {
   renderThreadsSeq: 0,
   cooldownToastTimerId: null,
   cooldownQueueTickInFlight: false,
+  unreadNeedsUserScrollThreadId: null,
   charModalDefinitions: [],
   charModalActiveLanguage: "",
   charModalActiveTab: "lang",
@@ -1342,6 +1343,7 @@ function setupEvents() {
     if (state.sending) {
       state.chatAutoScroll = isChatNearBottom();
     }
+    maybeProcessUnreadMessagesSeen(true).catch(() => {});
     updateScrollBottomButtonVisibility();
   });
   window.addEventListener("resize", () => {
@@ -3536,8 +3538,17 @@ async function renderThreads() {
       !isGenerating &&
       String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
       isInCompletionCooldown();
+    const unreadCount = getUnreadAssistantCount(thread.messages || []);
     const queuePos = (isGenerating || isInCooldown) ? 0 : (queuePosByThreadId.get(Number(thread.id)) || 0);
-    let queueBadge;
+    const statusBadges = document.createElement("div");
+    statusBadges.className = "thread-status-badges";
+    if (unreadCount > 0) {
+      const unreadBadge = document.createElement("span");
+      unreadBadge.className = "thread-unread-badge";
+      unreadBadge.textContent = String(unreadCount);
+      statusBadges.appendChild(unreadBadge);
+    }
+    let queueBadge = null;
     if (isGenerating) {
       queueBadge = document.createElement("span");
       queueBadge.className = "thread-generating-badge";
@@ -3560,6 +3571,9 @@ async function renderThreads() {
       const queueTitle = tf("threadQueueBadgeTitle", { position: queuePos });
       queueBadge.setAttribute("title", queueTitle);
       queueBadge.setAttribute("aria-label", queueTitle);
+    }
+    if (queueBadge) {
+      statusBadges.appendChild(queueBadge);
     }
 
     const info = document.createElement("div");
@@ -3621,12 +3635,12 @@ async function renderThreads() {
       );
     }
 
-    actions.appendChild(
-      iconButton("duplicate", t("duplicateThreadAria"), async (e) => {
-        e.stopPropagation();
-        await duplicateThread(thread.id);
-      }),
-    );
+    const duplicateBtn = iconButton("duplicate", t("duplicateThreadAria"), async (e) => {
+      e.stopPropagation();
+      await duplicateThread(thread.id);
+    });
+    duplicateBtn.disabled = threadHasPendingBotActivity(thread);
+    actions.appendChild(duplicateBtn);
     const favBtn = iconButton(
       thread.favorite ? "starFilled" : "star",
       thread.favorite ? t("unfavoriteThread") : t("favoriteThread"),
@@ -3640,8 +3654,8 @@ async function renderThreads() {
     actions.appendChild(favBtn);
 
     actions.prepend(selectBox);
-    if (queueBadge) {
-      row.append(avatar, info, metaRight, renameMiniBtn, queueBadge, actions);
+    if (statusBadges.children.length > 0) {
+      row.append(avatar, info, metaRight, renameMiniBtn, statusBadges, actions);
     } else {
       row.append(avatar, info, metaRight, renameMiniBtn, actions);
     }
@@ -3665,7 +3679,28 @@ async function deleteSelectedThreads() {
   );
   if (!ok) return;
 
+  const activeId = Number(state.activeGenerationThreadId);
+  if (
+    state.sending &&
+    Number.isInteger(activeId) &&
+    ids.includes(activeId) &&
+    state.abortController
+  ) {
+    cancelOngoingGeneration();
+  }
+  state.generationQueue = state.generationQueue.filter(
+    (id) => !ids.includes(Number(id)),
+  );
   for (const id of ids) {
+    try {
+      await db.threads.update(id, {
+        pendingGenerationReason: "",
+        pendingGenerationQueuedAt: 0,
+        updatedAt: Date.now(),
+      });
+    } catch {
+      // thread might already be deleted
+    }
     await db.threads.delete(id);
     broadcastSyncEvent({
       type: "thread-updated",
@@ -3739,6 +3774,7 @@ function togglePane() {
 
 function showMainView() {
   stopTtsPlayback();
+  state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
   document.getElementById("chat-view").classList.remove("active");
   updateThreadRenameButtonState();
@@ -5976,6 +6012,10 @@ async function startNewThread(characterId) {
 async function duplicateThread(threadId) {
   const source = await db.threads.get(threadId);
   if (!source) return;
+  if (threadHasPendingBotActivity(source)) {
+    showToast(t("generationQueuedNotice"), "warning");
+    return;
+  }
 
   const copy = {
     characterId: source.characterId,
@@ -6028,9 +6068,25 @@ async function deleteThread(threadId) {
   const ok = await openConfirmDialog(t("deleteThreadTitle"), t("deleteThreadConfirm"));
   if (!ok) return;
 
+  if (
+    state.sending &&
+    Number(state.activeGenerationThreadId) === Number(threadId) &&
+    state.abortController
+  ) {
+    cancelOngoingGeneration();
+  }
   state.generationQueue = state.generationQueue.filter(
     (id) => Number(id) !== Number(threadId),
   );
+  try {
+    await db.threads.update(threadId, {
+      pendingGenerationReason: "",
+      pendingGenerationQueuedAt: 0,
+      updatedAt: Date.now(),
+    });
+  } catch {
+    // thread might already be gone
+  }
   await db.threads.delete(threadId);
   state.selectedThreadIds.delete(Number(threadId));
   broadcastSyncEvent({
@@ -6096,6 +6152,10 @@ async function openThread(threadId) {
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
   renderChat();
+  state.unreadNeedsUserScrollThreadId =
+    getUnreadAssistantCount(conversationHistory) > 0
+      ? Number(thread.id)
+      : null;
   const input = document.getElementById("user-input");
   input.value = "";
   state.activeShortcut = null;
@@ -6109,6 +6169,29 @@ async function openThread(threadId) {
     if (!state.generationQueue.includes(id)) state.generationQueue.push(id);
   }
   await processNextQueuedThread();
+}
+
+function threadHasPendingBotActivity(thread) {
+  if (!thread) return false;
+  const id = Number(thread.id);
+  if (
+    state.sending &&
+    Number(state.activeGenerationThreadId) === id
+  ) {
+    return true;
+  }
+  if (String(thread.pendingGenerationReason || "").trim()) return true;
+  const messages = Array.isArray(thread.messages) ? thread.messages : [];
+  return messages.some((m) => {
+    if (!m || m.role !== "assistant") return false;
+    const st = String(m.generationStatus || "").trim();
+    return (
+      st === "queued" ||
+      st === "cooling_down" ||
+      st === "generating" ||
+      st === "regenerating"
+    );
+  });
 }
 
 function updateThreadRenameButtonState() {
@@ -6393,6 +6476,67 @@ function renderChat() {
   scheduleThreadBudgetIndicatorUpdate();
 }
 
+function getUnreadAssistantCount(messages) {
+  const list = Array.isArray(messages) ? messages : [];
+  let count = 0;
+  for (const m of list) {
+    if (!m || m.role !== "assistant") continue;
+    if (Number(m.unreadAt) > 0) count += 1;
+  }
+  return count;
+}
+
+async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
+  if (!currentThread) return;
+  const currentId = Number(currentThread.id);
+  if (!Number.isInteger(currentId)) return;
+  if (state.unreadNeedsUserScrollThreadId !== currentId) return;
+  if (!fromUserScroll) return;
+
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const logRect = log.getBoundingClientRect();
+  let changed = false;
+  const now = Date.now();
+
+  for (let i = 0; i < conversationHistory.length; i += 1) {
+    const message = conversationHistory[i];
+    if (!message || message.role !== "assistant" || Number(message.unreadAt) <= 0) continue;
+    const row = log.querySelector(`.chat-row[data-message-index="${i}"]`);
+    if (!row) continue;
+    const rowRect = row.getBoundingClientRect();
+    const isVisible =
+      rowRect.bottom > logRect.top + 6 &&
+      rowRect.top < logRect.bottom - 6;
+    if (!isVisible) continue;
+    message.unreadAt = 0;
+    changed = true;
+    const block = row.querySelector(".message-block");
+    if (block) {
+      block.classList.remove("message-block-unread");
+      block.classList.add("message-block-unread-clearing");
+      window.setTimeout(() => {
+        block.classList.remove("message-block-unread-clearing");
+      }, 700);
+    }
+  }
+
+  if (!changed) return;
+
+  const remaining = getUnreadAssistantCount(conversationHistory);
+  if (remaining === 0) {
+    state.unreadNeedsUserScrollThreadId = null;
+  }
+
+  await persistCurrentThread();
+  await renderThreads();
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: currentId,
+    updatedAt: now,
+  });
+}
+
 function buildMessageRow(message, index, streaming) {
   const row = document.createElement("div");
   row.className = "chat-row";
@@ -6427,6 +6571,9 @@ function buildMessageRow(message, index, streaming) {
 
   const block = document.createElement("div");
   block.className = "message-block";
+  if (message?.role === "assistant" && Number(message?.unreadAt) > 0) {
+    block.classList.add("message-block-unread");
+  }
 
   const header = document.createElement("div");
   header.className = "message-header";
@@ -7149,6 +7296,9 @@ async function generateBotReply() {
     pending.usedMemorySummary = String(promptContext.memory || "");
     pending.generationError = "";
     pending.generationStatus = "";
+    if (!isViewingThread(threadId)) {
+      pending.unreadAt = Date.now();
+    }
     if (Number(state.settings.completionCooldown) > 0) {
       state.lastCompletionTime = Date.now();
       updateCooldownPinnedToast();
@@ -8631,6 +8781,7 @@ async function processNextQueuedThread() {
     pending.finishReason = result.finishReason || "";
     pending.nativeFinishReason = result.nativeFinishReason || "";
     pending.generationStatus = "";
+    pending.unreadAt = Date.now();
     if (Number(state.settings.completionCooldown) > 0) {
       state.lastCompletionTime = Date.now();
       updateCooldownPinnedToast();
