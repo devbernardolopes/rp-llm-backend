@@ -1839,6 +1839,16 @@ async function updateCharacterCardsVisibility() {
       : [];
     const shouldShow = activeFilters.length === 0 || activeFilters.every((f) => tags.includes(f));
     card.style.display = shouldShow ? "" : "none";
+
+    const tagChips = card.querySelectorAll(".character-tags .tag-chip");
+    tagChips.forEach(chip => {
+      const chipText = chip.textContent.toLowerCase();
+      if (activeFilters.includes(chipText)) {
+        chip.classList.add("active-filter");
+      } else {
+        chip.classList.remove("active-filter");
+      }
+    });
   });
   const empty = grid.querySelector(".muted");
   const visibleCards = grid.querySelectorAll(".character-card:not([style*='display: none'])");
@@ -3531,7 +3541,10 @@ async function renderCharacters() {
 
       avatarWrap.appendChild(carouselContainer);
 
-      carouselContainer.addEventListener("click", () => openCharacterModal(char));
+      carouselContainer.addEventListener("click", () => {
+        const lang = card.dataset.activeCardLanguage;
+        openCharacterModal(char, lang);
+      });
 
       const startCarousel = (startIndex = 0) => {
         if (carouselInterval) clearInterval(carouselInterval);
@@ -3615,7 +3628,10 @@ async function renderCharacters() {
       avatar.src =
         resolved.avatar || fallbackAvatar(resolved.name || "Character", 512, 512);
       avatar.alt = `${resolved.name || "Character"} avatar`;
-      avatar.addEventListener("click", () => openCharacterModal(char));
+      avatar.addEventListener("click", () => {
+        const lang = card.dataset.activeCardLanguage;
+        openCharacterModal(char, lang);
+      });
       avatarWrap.appendChild(avatar);
 
       const idOverlay = document.createElement("span");
@@ -3632,7 +3648,10 @@ async function renderCharacters() {
     const name = document.createElement("h3");
     name.className = "character-name";
     applyHoverMarquee(name, resolved.name || "Unnamed");
-    name.addEventListener("click", () => openCharacterModal(char));
+    name.addEventListener("click", () => {
+      const lang = card.dataset.activeCardLanguage;
+      openCharacterModal(char, lang);
+    });
 
     const langFlagsWrap = document.createElement("div");
     langFlagsWrap.className = "character-lang-flags";
@@ -4614,7 +4633,7 @@ function populateCharacterLanguageSelectOptions() {
   });
 }
 
-async function openCharacterModal(character = null) {
+async function openCharacterModal(character = null, selectedCardLanguage = null) {
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
@@ -4625,7 +4644,7 @@ async function openCharacterModal(character = null) {
   }
   renderCharAvatars();
   state.charModalDefinitions = normalizeCharacterDefinitions(character);
-  const cardLanguage = character?.selectedCardLanguage || "";
+  const cardLanguage = selectedCardLanguage || character?.selectedCardLanguage || "";
   const hasCardLanguage = cardLanguage && state.charModalDefinitions.some(d => d.language === cardLanguage);
   state.charModalActiveLanguage = hasCardLanguage
     ? cardLanguage
@@ -6517,7 +6536,6 @@ async function deleteThread(threadId) {
     updateAutoTtsToggleButton();
   }
   await renderThreads();
-  await renderCharacters();
   showToast(t("threadDeleted"), "success");
 }
 
