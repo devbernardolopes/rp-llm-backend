@@ -4259,7 +4259,6 @@ function createEmptyCharacterDefinition(language = "en") {
   return {
     language: normalizeBotLanguageCode(language),
     name: "",
-    avatar: "",
     systemPrompt: "",
     oneTimeExtraPrompt: "",
     writingInstructions: "",
@@ -4288,16 +4287,21 @@ function normalizeCharacterDefinitions(character = null) {
   }
   const defsRaw = Array.isArray(character?.definitions) ? character.definitions : [];
   const defs = defsRaw
-    .map((d) => ({
-      ...createEmptyCharacterDefinition(d?.language || "en"),
-      ...d,
-      language: normalizeBotLanguageCode(d?.language || "en"),
-      ttsEnabled: d?.ttsEnabled !== false,
-      preferLoreBooksMatchingLanguage: d?.preferLoreBooksMatchingLanguage !== false,
-      lorebookIds: Array.isArray(d?.lorebookIds)
-        ? d.lorebookIds.map(Number).filter(Number.isInteger)
-        : [],
-    }))
+    .map((d) => {
+      const def = {
+        ...createEmptyCharacterDefinition(d?.language || "en"),
+        ...d,
+        language: normalizeBotLanguageCode(d?.language || "en"),
+        ttsEnabled: d?.ttsEnabled !== false,
+        preferLoreBooksMatchingLanguage: d?.preferLoreBooksMatchingLanguage !== false,
+        lorebookIds: Array.isArray(d?.lorebookIds)
+          ? d.lorebookIds.map(Number).filter(Number.isInteger)
+          : [],
+      };
+      delete def.avatar;
+      delete def.avatars;
+      return def;
+    })
     .filter((d, i, arr) => arr.findIndex((x) => x.language === d.language) === i);
   if (defs.length > 0) return defs;
   const fallbackLanguage = normalizeBotLanguageCode(
@@ -4305,7 +4309,6 @@ function normalizeCharacterDefinitions(character = null) {
   );
   const fallback = createEmptyCharacterDefinition(fallbackLanguage);
   fallback.name = String(character?.name || "");
-  fallback.avatar = String(character?.avatar || "");
   fallback.systemPrompt = String(character?.systemPrompt || "");
   fallback.oneTimeExtraPrompt = String(character?.oneTimeExtraPrompt || "");
   fallback.writingInstructions = String(character?.writingInstructions || "");
@@ -4469,8 +4472,6 @@ function saveActiveCharacterDefinitionFromForm() {
   const def = getActiveCharacterDefinition();
   if (!def) return;
   def.name = String(document.getElementById("char-name")?.value || "").trim();
-  def.avatars = state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [];
-  def.avatar = state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "";
   def.systemPrompt = String(document.getElementById("char-system-prompt")?.value || "").trim();
   def.oneTimeExtraPrompt = String(document.getElementById("char-one-time-extra-prompt")?.value || "").trim();
   def.writingInstructions = String(document.getElementById("char-writing-instructions")?.value || "").trim();
@@ -4493,11 +4494,6 @@ function loadActiveCharacterDefinitionToForm() {
   if (!def) return;
   document.getElementById("char-name").value = def.name || "";
   updateNameLengthCounter("char-name", "char-name-count", 128);
-  state.charModalAvatars = Array.isArray(def.avatars) ? [...def.avatars] : [];
-  if (state.charModalAvatars.length === 0 && def.avatar) {
-    state.charModalAvatars = [{ type: "image", data: def.avatar, name: "" }];
-  }
-  renderCharAvatars();
   document.getElementById("char-system-prompt").value = def.systemPrompt || "";
   document.getElementById("char-one-time-extra-prompt").value = def.oneTimeExtraPrompt || "";
   document.getElementById("char-writing-instructions").value = def.writingInstructions || "";
@@ -4573,9 +4569,12 @@ async function openCharacterModal(character = null) {
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
-  state.charModalAvatars = [];
-  document.getElementById("character-title").textContent =
-    state.editingCharacterId ? t("editCharacterTitle") : t("createCharacterTitle");
+  const hasAvatars = character?.avatars && Array.isArray(character.avatars) && character.avatars.length > 0;
+  state.charModalAvatars = hasAvatars ? [...character.avatars] : [];
+  if (state.charModalAvatars.length === 0 && character?.avatar) {
+    state.charModalAvatars = [{ type: "image", data: character.avatar, name: "" }];
+  }
+  renderCharAvatars();
   state.charModalDefinitions = normalizeCharacterDefinitions(character);
   const cardLanguage = character?.selectedCardLanguage || "";
   const hasCardLanguage = cardLanguage && state.charModalDefinitions.some(d => d.language === cardLanguage);
@@ -4628,7 +4627,6 @@ async function saveCharacterFromModal() {
     const def = defs[i];
     def.language = normalizeBotLanguageCode(def.language || "en");
     def.name = String(def.name || "").trim();
-    def.avatar = String(def.avatar || "").trim();
     def.systemPrompt = String(def.systemPrompt || "").trim();
     def.oneTimeExtraPrompt = String(def.oneTimeExtraPrompt || "").trim();
     def.writingInstructions = String(def.writingInstructions || "").trim();
@@ -4644,6 +4642,8 @@ async function saveCharacterFromModal() {
     def.lorebookIds = Array.isArray(def.lorebookIds)
       ? def.lorebookIds.map(Number).filter(Number.isInteger)
       : [];
+    delete def.avatar;
+    delete def.avatars;
     if (!def.name) missingNameLanguages.push(def.language);
     try {
       const parsedInitialMessages = parseInitialMessagesInput(
@@ -4731,7 +4731,8 @@ async function saveCharacterFromModal() {
     preferLoreBooksMatchingLanguage:
       primaryDef?.preferLoreBooksMatchingLanguage !== false,
     lorebookIds: selectedLorebookIds,
-    avatar: String(primaryDef?.avatar || "").trim(),
+    avatar: state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
+    avatars: state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [],
     updatedAt: Date.now(),
   };
 
@@ -6114,6 +6115,7 @@ async function duplicateCharacter(characterId) {
       ? [...source.lorebookIds]
       : [],
     tags: Array.isArray(source.tags) ? [...source.tags] : [],
+    avatars: Array.isArray(source.avatars) ? [...source.avatars] : [],
     name: `${source.name} Copy`,
     createdAt: Date.now(),
     updatedAt: Date.now(),

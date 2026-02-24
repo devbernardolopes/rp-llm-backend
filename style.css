@@ -1903,6 +1903,11 @@ textarea {
   cursor: zoom-in;
 }
 
+.char-avatars-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
 .char-avatars-container {
   display: flex;
   flex-wrap: wrap;
