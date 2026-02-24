@@ -96,6 +96,8 @@ const DEFAULT_SETTINGS = {
   modelSortOrder: "created_desc",
   toastDurationMs: 2600,
   marqueeBehavior: "disabled",
+  botCardAvatarEffect: "none",
+  botCardAvatarTransitionDelay: 4,
   completionCooldown: 2,
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 7,
@@ -848,6 +850,21 @@ function isTtsCancelledError(error) {
 }
 
 window.addEventListener("DOMContentLoaded", init);
+
+document.addEventListener("visibilitychange", () => {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const cards = grid.querySelectorAll(".character-card");
+  if (document.hidden) {
+    cards.forEach(card => {
+      if (card._stopCarousel) card._stopCarousel();
+    });
+  } else {
+    cards.forEach(card => {
+      if (card._startCarousel) card._startCarousel();
+    });
+  }
+});
 
 async function init() {
   loadSettings();
@@ -2332,6 +2349,41 @@ async function setupSettingsControls() {
     refreshAllHoverMarquees();
   });
 
+  const botCardAvatarEffectSelect = document.getElementById("bot-card-avatar-effect");
+  const botCardAvatarTransitionDelaySlider = document.getElementById("bot-card-avatar-transition-delay-slider");
+  const botCardAvatarTransitionDelayValue = document.getElementById("bot-card-avatar-transition-delay-value");
+  if (botCardAvatarEffectSelect) {
+    botCardAvatarEffectSelect.value = state.settings.botCardAvatarEffect || "none";
+  }
+  if (botCardAvatarTransitionDelaySlider) {
+    const delay = Math.max(4, Math.min(30, Number(state.settings.botCardAvatarTransitionDelay) || 4));
+    state.settings.botCardAvatarTransitionDelay = delay;
+    botCardAvatarTransitionDelaySlider.value = String(delay);
+    if (botCardAvatarTransitionDelayValue) {
+      botCardAvatarTransitionDelayValue.textContent = `${delay}s`;
+    }
+    if (botCardAvatarEffectSelect) {
+      botCardAvatarTransitionDelaySlider.disabled = botCardAvatarEffectSelect.value !== "carousel";
+    }
+  }
+  botCardAvatarEffectSelect?.addEventListener("change", () => {
+    state.settings.botCardAvatarEffect = botCardAvatarEffectSelect.value;
+    saveSettings();
+    if (botCardAvatarTransitionDelaySlider) {
+      botCardAvatarTransitionDelaySlider.disabled = botCardAvatarEffectSelect.value !== "carousel";
+    }
+    renderCharacters();
+  });
+  botCardAvatarTransitionDelaySlider?.addEventListener("input", () => {
+    const value = Math.max(4, Math.min(30, Number(botCardAvatarTransitionDelaySlider.value) || 4));
+    state.settings.botCardAvatarTransitionDelay = value;
+    botCardAvatarTransitionDelaySlider.value = String(value);
+    if (botCardAvatarTransitionDelayValue) {
+      botCardAvatarTransitionDelayValue.textContent = `${value}s`;
+    }
+    saveSettings();
+  });
+
 
   globalPromptTemplate.addEventListener("input", () => {
     state.settings.globalPromptTemplate = globalPromptTemplate.value;
@@ -2469,6 +2521,8 @@ function getSettingsGroupForNode(node) {
     id === "model-modality-filter" ||
     id === "model-sort-order" ||
     id === "model-refresh-btn" ||
+    id === "completion-cooldown-slider" ||
+    id === "completion-cooldown-value" ||
     text.includes("openrouter api key")
   ) {
     return "api";
@@ -2512,7 +2566,10 @@ function getSettingsGroupForNode(node) {
   if (
     id === "ui-language-select" ||
     id === "toast-delay-slider" ||
-    id === "marquee-behavior-select"
+    id === "marquee-behavior-select" ||
+    id === "bot-card-avatar-effect" ||
+    id === "bot-card-avatar-transition-delay-slider" ||
+    id === "bot-card-avatar-transition-delay-value"
   ) {
     return "appearance";
   }
@@ -3188,6 +3245,11 @@ async function renderCharacters() {
     return updatedB - updatedA;
   });
 
+  const existingCards = grid.querySelectorAll(".character-card");
+  existingCards.forEach(card => {
+    if (card._stopCarousel) card._stopCarousel();
+  });
+
   grid.innerHTML = "";
   if (sortedCharacters.length === 0) {
     const empty = document.createElement("p");
@@ -3216,29 +3278,159 @@ async function renderCharacters() {
     const avatarWrap = document.createElement("div");
     avatarWrap.className = "character-avatar-wrap";
 
-    const langRibbonWrap = document.createElement("span");
-    langRibbonWrap.className = "character-avatar-ribbon-wrap";
-    const langFlag = createLanguageFlagRibbonElement(resolved.activeLanguage);
-    langRibbonWrap.appendChild(langFlag);
-    avatarWrap.appendChild(langRibbonWrap);
+    const avatars = resolved.avatars || [];
+    const hasMultipleAvatars = avatars.length > 1;
+    const avatarEffect = state.settings.botCardAvatarEffect || "none";
+    const avatarTransitionDelay = Number(state.settings.botCardAvatarTransitionDelay) || 4;
+    const transitionDelayMs = avatarTransitionDelay * 1000;
 
-    const idOverlay = document.createElement("span");
-    idOverlay.className = "character-avatar-id";
-    idOverlay.textContent = `#${char.id}`;
-    avatarWrap.appendChild(idOverlay);
+    if (hasMultipleAvatars && avatarEffect === "carousel") {
+      let currentAvatarIndex = 0;
+      let carouselInterval = null;
 
-    const threadOverlay = document.createElement("span");
-    threadOverlay.className = "character-avatar-threads";
-    threadOverlay.textContent = String(threadCount);
-    avatarWrap.appendChild(threadOverlay);
+      const createAvatarElement = (avatarData, index) => {
+        const isVideo = avatarData.type === "video";
+        let el;
+        if (isVideo) {
+          el = document.createElement("video");
+          el.muted = true;
+          el.loop = false;
+          el.playsInline = true;
+        } else {
+          el = document.createElement("img");
+        }
+        el.className = "character-avatar";
+        el.src = avatarData.data;
+        el.alt = `${resolved.name || "Character"} avatar`;
+        el.style.position = "absolute";
+        el.style.top = "0";
+        el.style.left = "0";
+        el.style.width = "100%";
+        el.style.height = "100%";
+        el.style.objectFit = "cover";
+        el.style.opacity = index === 0 ? "1" : "0";
+        el.style.transition = "opacity 0.5s ease-in-out";
+        el.style.zIndex = index === 0 ? "1" : "0";
+        if (isVideo) {
+          el.dataset.videoPlayed = "false";
+        }
+        return el;
+      };
 
-    const avatar = document.createElement("img");
-    avatar.className = "character-avatar";
-    avatar.src =
-      resolved.avatar || fallbackAvatar(resolved.name || "Character", 512, 512);
-    avatar.alt = `${resolved.name || "Character"} avatar`;
-    avatar.addEventListener("click", () => openCharacterModal(char));
-    avatarWrap.appendChild(avatar);
+      const carouselContainer = document.createElement("div");
+      carouselContainer.className = "character-avatar-carousel";
+      carouselContainer.style.position = "relative";
+      carouselContainer.style.width = "100%";
+      carouselContainer.style.height = "100%";
+
+      const avatarElements = avatars.map((avatar, index) => {
+        const el = createAvatarElement(avatar, index);
+        carouselContainer.appendChild(el);
+        return el;
+      });
+
+      const showAvatar = (index) => {
+        avatarElements.forEach((el, i) => {
+          el.style.opacity = i === index ? "1" : "0";
+          el.style.zIndex = i === index ? "1" : "0";
+        });
+      };
+
+      const advanceCarousel = () => {
+        const currentEl = avatarElements[currentAvatarIndex];
+        if (currentEl.tagName === "VIDEO" && currentEl.dataset.videoPlayed !== "true") {
+          currentEl.currentTime = 0;
+          currentEl.play().catch(() => {});
+          currentEl.dataset.videoPlayed = "true";
+          return;
+        }
+
+        currentAvatarIndex = (currentAvatarIndex + 1) % avatars.length;
+        showAvatar(currentAvatarIndex);
+
+        const nextEl = avatarElements[currentAvatarIndex];
+        if (nextEl.tagName === "VIDEO") {
+          nextEl.dataset.videoPlayed = "false";
+          nextEl.currentTime = 0;
+          nextEl.play().catch(() => {});
+          nextEl.dataset.videoPlayed = "true";
+        }
+      };
+
+      avatarWrap.appendChild(carouselContainer);
+
+      carouselContainer.addEventListener("click", () => openCharacterModal(char));
+
+      const startCarousel = () => {
+        if (carouselInterval) clearInterval(carouselInterval);
+        const firstVideo = avatarElements.find(el => el.tagName === "VIDEO");
+        if (firstVideo) {
+          firstVideo.dataset.videoPlayed = "false";
+          firstVideo.play().catch(() => {});
+          firstVideo.dataset.videoPlayed = "true";
+        }
+        carouselInterval = setInterval(advanceCarousel, transitionDelayMs);
+      };
+
+      const stopCarousel = () => {
+        if (carouselInterval) {
+          clearInterval(carouselInterval);
+          carouselInterval = null;
+        }
+        avatarElements.forEach(el => {
+          if (el.tagName === "VIDEO") {
+            el.pause();
+            el.currentTime = 0;
+          }
+        });
+      };
+
+      card.dataset.carouselActive = "true";
+      card._startCarousel = startCarousel;
+      card._stopCarousel = stopCarousel;
+
+      const langRibbonWrap = document.createElement("span");
+      langRibbonWrap.className = "character-avatar-ribbon-wrap";
+      const langFlag = createLanguageFlagRibbonElement(resolved.activeLanguage);
+      langRibbonWrap.appendChild(langFlag);
+      carouselContainer.appendChild(langRibbonWrap);
+
+      const idOverlay = document.createElement("span");
+      idOverlay.className = "character-avatar-id";
+      idOverlay.textContent = `#${char.id}`;
+      carouselContainer.appendChild(idOverlay);
+
+      const threadOverlay = document.createElement("span");
+      threadOverlay.className = "character-avatar-threads";
+      threadOverlay.textContent = String(threadCount);
+      carouselContainer.appendChild(threadOverlay);
+
+      startCarousel();
+    } else {
+      const avatar = document.createElement("img");
+      avatar.className = "character-avatar";
+      avatar.src =
+        resolved.avatar || fallbackAvatar(resolved.name || "Character", 512, 512);
+      avatar.alt = `${resolved.name || "Character"} avatar`;
+      avatar.addEventListener("click", () => openCharacterModal(char));
+      avatarWrap.appendChild(avatar);
+
+      const langRibbonWrap = document.createElement("span");
+      langRibbonWrap.className = "character-avatar-ribbon-wrap";
+      const langFlag = createLanguageFlagRibbonElement(resolved.activeLanguage);
+      langRibbonWrap.appendChild(langFlag);
+      avatarWrap.appendChild(langRibbonWrap);
+
+      const idOverlay = document.createElement("span");
+      idOverlay.className = "character-avatar-id";
+      idOverlay.textContent = `#${char.id}`;
+      avatarWrap.appendChild(idOverlay);
+
+      const threadOverlay = document.createElement("span");
+      threadOverlay.className = "character-avatar-threads";
+      threadOverlay.textContent = String(threadCount);
+      avatarWrap.appendChild(threadOverlay);
+    }
 
     const defCount = Array.isArray(resolved.definitions)
       ? resolved.definitions.length

@@ -459,6 +459,27 @@
               </option>
             </select>
           </div>
+          <div class="form-field" data-settings-group="appearance">
+            <span data-i18n="botCardAvatarEffectLabel">BOT Card Avatar Effect</span>
+            <select id="bot-card-avatar-effect">
+              <option value="none" data-i18n="botCardAvatarEffectNone">None</option>
+              <option value="carousel" data-i18n="botCardAvatarEffectCarousel">Carousel</option>
+            </select>
+          </div>
+          <div class="form-field" data-settings-group="appearance">
+            <div class="label-inline">
+              <span data-i18n="botCardAvatarTransitionDelayLabel">Transition Delay</span>
+              <span id="bot-card-avatar-transition-delay-value" class="muted"></span>
+            </div>
+            <input
+              id="bot-card-avatar-transition-delay-slider"
+              type="range"
+              min="4"
+              max="30"
+              step="1"
+              disabled
+            />
+          </div>
 <div class="form-field">
             <span data-i18n="languageLabel">Interface Language</span>
             <select id="ui-language-select">
