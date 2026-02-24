@@ -7394,7 +7394,7 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
     state.unreadNeedsUserScrollThreadId = null;
   }
 
-  await persistCurrentThread();
+  await persistCurrentThread(true);
   await renderThreads();
   broadcastSyncEvent({
     type: "thread-updated",
@@ -8047,11 +8047,17 @@ async function generateBotReply() {
     currentThread.pendingGenerationQueuedAt =
       Number(currentThread.pendingGenerationQueuedAt || nowTs);
     await persistCurrentThread();
-    await db.threads.update(threadId, {
+    const allFinished = conversationHistory.every(
+      (m) => !m.generationStatus || m.generationStatus === "",
+    );
+    const updateData = {
       pendingGenerationReason: "cooldown",
       pendingGenerationQueuedAt: currentThread.pendingGenerationQueuedAt,
-      updatedAt: Date.now(),
-    });
+    };
+    if (allFinished) {
+      updateData.updatedAt = Date.now();
+    }
+    await db.threads.update(threadId, updateData);
     renderChat();
     setSendingState(state.sending);
     updateCooldownPinnedToast(seconds);
@@ -9616,22 +9622,38 @@ function isViewingThread(threadId) {
 }
 
 async function persistThreadMessagesById(threadId, messages, extra = {}) {
+  const msgs = Array.isArray(messages) ? messages : [];
+  const allMessagesFinished = msgs.every(
+    (m) => !m.generationStatus || m.generationStatus === "",
+  );
+
   const updated = {
-    messages: Array.isArray(messages) ? messages : [],
-    updatedAt: Date.now(),
+    messages: msgs,
     ...extra,
   };
+
+  if (allMessagesFinished) {
+    updated.updatedAt = Date.now();
+  }
+
   await db.threads.update(threadId, updated);
   if (currentThread && Number(currentThread.id) === Number(threadId)) {
-    currentThread = { ...currentThread, ...updated };
-    conversationHistory = updated.messages;
-    state.lastSyncSeenUpdatedAt = Number(updated.updatedAt || 0);
+    if (updated.updatedAt) {
+      currentThread = { ...currentThread, ...updated };
+      conversationHistory = updated.messages;
+      state.lastSyncSeenUpdatedAt = Number(updated.updatedAt || 0);
+    } else {
+      currentThread.messages = updated.messages;
+      conversationHistory = updated.messages;
+    }
   }
-  broadcastSyncEvent({
-    type: "thread-updated",
-    threadId,
-    updatedAt: updated.updatedAt,
-  });
+  if (updated.updatedAt) {
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId,
+      updatedAt: updated.updatedAt,
+    });
+  }
 }
 
 async function enqueueThreadGeneration(threadId, reason = "busy") {
@@ -9718,7 +9740,14 @@ async function clearThreadGenerationQueueFlag(threadId) {
       ? qThread.messages.map((m) => ({ ...m }))
       : [];
     updateQueuedPlaceholdersInMessages(qid, qMessages);
-    await db.threads.update(qid, { messages: qMessages, updatedAt: Date.now() });
+    const allFinished = qMessages.every(
+      (m) => !m.generationStatus || m.generationStatus === "",
+    );
+    const qUpdate = { messages: qMessages };
+    if (allFinished) {
+      qUpdate.updatedAt = Date.now();
+    }
+    await db.threads.update(qid, qUpdate);
   }
   if (currentThread && Number(currentThread.id) === id) {
     conversationHistory = threadMessages;
@@ -9732,13 +9761,6 @@ async function clearThreadGenerationQueueFlag(threadId) {
     threadId: id,
     updatedAt,
   });
-  for (const qid of queuedIds) {
-    broadcastSyncEvent({
-      type: "thread-updated",
-      threadId: qid,
-      updatedAt: Date.now(),
-    });
-  }
   await renderThreads();
 }
 
@@ -10078,8 +10100,13 @@ function updateQueuedPlaceholdersInMessages(threadId, messages) {
   return list;
 }
 
-async function persistCurrentThread() {
+async function persistCurrentThread(forceUpdate = false) {
   if (!currentThread) return;
+
+  const allMessagesFinished = conversationHistory.every(
+    (m) => !m.generationStatus || m.generationStatus === "",
+  );
+  const shouldUpdateTimestamp = forceUpdate || allMessagesFinished;
 
   const updated = {
     messages: conversationHistory,
@@ -10087,17 +10114,27 @@ async function persistCurrentThread() {
     lastPersonaInjectionPersonaId:
       currentThread.lastPersonaInjectionPersonaId || null,
     writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(currentThread),
-    updatedAt: Date.now(),
   };
 
+  if (shouldUpdateTimestamp) {
+    updated.updatedAt = Date.now();
+  }
+
   await db.threads.update(currentThread.id, updated);
-  currentThread = { ...currentThread, ...updated };
-  state.lastSyncSeenUpdatedAt = Number(currentThread.updatedAt || 0);
-  broadcastSyncEvent({
-    type: "thread-updated",
-    threadId: currentThread.id,
-    updatedAt: currentThread.updatedAt,
-  });
+  if (shouldUpdateTimestamp) {
+    currentThread = { ...currentThread, ...updated };
+    state.lastSyncSeenUpdatedAt = Number(currentThread.updatedAt || 0);
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: currentThread.id,
+      updatedAt: currentThread.updatedAt,
+    });
+  } else {
+    currentThread.messages = updated.messages;
+    currentThread.selectedPersonaId = updated.selectedPersonaId;
+    currentThread.lastPersonaInjectionPersonaId = updated.lastPersonaInjectionPersonaId;
+    currentThread.writingInstructionsTurnCount = updated.writingInstructionsTurnCount;
+  }
 }
 
 function isChatNearBottom() {
