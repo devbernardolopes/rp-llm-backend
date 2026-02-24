@@ -857,11 +857,11 @@ document.addEventListener("visibilitychange", () => {
   const cards = grid.querySelectorAll(".character-card");
   if (document.hidden) {
     cards.forEach(card => {
-      if (card._stopCarousel) card._stopCarousel();
+      if (card._saveVideoTimes) card._saveVideoTimes();
     });
   } else {
     cards.forEach(card => {
-      if (card._startCarousel) card._startCarousel();
+      if (card._restoreVideoTimes) card._restoreVideoTimes();
     });
   }
 });
@@ -3422,9 +3422,31 @@ async function renderCharacters() {
         });
       };
 
+      const saveVideoTimes = () => {
+        avatarElements.forEach(el => {
+          if (el.tagName === "VIDEO") {
+            el.dataset.savedTime = String(el.currentTime);
+          }
+        });
+      };
+
+      const restoreVideoTimes = () => {
+        avatarElements.forEach(el => {
+          if (el.tagName === "VIDEO") {
+            const savedTime = parseFloat(el.dataset.savedTime) || 0;
+            if (savedTime > 0 && el.paused) {
+              el.currentTime = savedTime;
+              el.play().catch(() => {});
+            }
+          }
+        });
+      };
+
       card.dataset.carouselActive = "true";
       card._startCarousel = startCarousel;
       card._stopCarousel = stopCarousel;
+      card._saveVideoTimes = saveVideoTimes;
+      card._restoreVideoTimes = restoreVideoTimes;
 
       const langRibbonWrap = document.createElement("span");
       langRibbonWrap.className = "character-avatar-ribbon-wrap";
