@@ -126,17 +126,19 @@
         </div>
       </aside>
 
+      <button
+        id="pane-overlay-toggle"
+        class="pane-overlay-toggle"
+        title="Toggle panel"
+        aria-label="Toggle panel"
+      >
+        <svg class="pane-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
       <main id="main-view" class="view active">
         <header class="main-header">
-          <button
-            id="pane-toggle"
-            class="icon-btn"
-            data-i18n-title="togglePane"
-            title="Toggle pane"
-            aria-label="Toggle pane"
-          >
-            =
-          </button>
           <h1>SCENARA</h1>
           <div id="home-model-pill" class="model-pill">Model: -</div>
         </header>
@@ -202,15 +204,6 @@
 
       <section id="chat-view" class="view">
         <header class="chat-header">
-          <button
-            id="pane-toggle-chat"
-            class="icon-btn"
-            data-i18n-title="togglePane"
-            title="Toggle pane"
-            aria-label="Toggle pane"
-          >
-            =
-          </button>
           <div id="chat-title">Thread</div>
           <button
             id="auto-tts-toggle-btn"

@@ -1222,6 +1222,7 @@ function setupEvents() {
       resetImagePreviewZoom();
     });
   document.getElementById("pane-toggle").addEventListener("click", togglePane);
+  document.getElementById("pane-overlay-toggle").addEventListener("click", togglePane);
   document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
   document
     .getElementById("auto-tts-toggle-btn")
@@ -4248,6 +4249,7 @@ function togglePane() {
   const createBtn = document.getElementById("create-character-btn");
   const importBtn = document.getElementById("import-character-btn");
   const homeBtn = document.getElementById("home-btn");
+  const overlayToggle = document.getElementById("pane-overlay-toggle");
   pane.classList.toggle("collapsed");
   shell.classList.toggle(
     "pane-collapsed",
@@ -4256,6 +4258,9 @@ function togglePane() {
   document.getElementById("pane-toggle").textContent = "=";
   const chatPaneToggle = document.getElementById("pane-toggle-chat");
   if (chatPaneToggle) chatPaneToggle.textContent = "=";
+  if (overlayToggle) {
+    overlayToggle.classList.toggle("collapsed", pane.classList.contains("collapsed"));
+  }
   if (pane.classList.contains("collapsed")) {
     if (homeBtn) {
       homeBtn.textContent = "H";

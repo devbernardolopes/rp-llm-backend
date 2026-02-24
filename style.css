@@ -29,6 +29,7 @@ body {
   height: 100vh;
   min-height: 0;
   transition: grid-template-columns 0.2s ease;
+  position: relative;
 }
 
 #app-shell.pane-collapsed {
@@ -100,6 +101,61 @@ body {
 
 #pane-toggle {
   align-self: center;
+}
+
+.pane-overlay-toggle {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 64px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.pane-overlay-toggle:hover {
+  background: #2a3a52;
+}
+
+.pane-overlay-toggle .pane-toggle-icon {
+  width: 16px;
+  height: 24px;
+  color: var(--text);
+  transition: transform 0.2s;
+}
+
+.pane-overlay-toggle.collapsed .pane-toggle-icon {
+  transform: rotate(180deg);
+}
+
+#left-pane.collapsed + .pane-overlay-toggle .pane-toggle-icon {
+  transform: rotate(180deg);
+}
+
+#app-shell.pane-collapsed .pane-overlay-toggle {
+  left: 84px;
+}
+
+#app-shell:not(.pane-collapsed) .pane-overlay-toggle {
+  left: 360px;
+}
+
+@media (max-width: 768px) {
+  #app-shell:not(.pane-collapsed) .pane-overlay-toggle {
+    left: calc(100% - 14px);
+  }
+  #app-shell.pane-collapsed .pane-overlay-toggle {
+    left: 84px;
+  }
 }
 
 .pane-home-btn {
