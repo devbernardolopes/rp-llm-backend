@@ -794,6 +794,7 @@ const state = {
     "shortcuts-modal": false,
     "tags-modal": false,
     "lore-modal": false,
+    "writing-instructions-modal": false,
   },
   charModalTtsTestPlaying: false,
   imagePreview: {
@@ -1169,6 +1170,12 @@ function setupEvents() {
       modal.classList.remove("hidden");
     });
   document
+    .getElementById("char-writing-instructions-select")
+    .addEventListener("change", () => {
+      state.modalDirty["character-modal"] = true;
+      updateCharWritingInstructionsVisibility();
+    });
+  document
     .getElementById("char-language-cancel")
     .addEventListener("click", () => {
       document.getElementById("char-language-modal")?.classList.add("hidden");
@@ -1348,6 +1355,40 @@ function setupEvents() {
     .getElementById("save-lorebook-btn")
     .addEventListener("click", saveLorebookFromEditor);
   document
+    .getElementById("create-writing-instruction-btn")
+    .addEventListener("click", () => openWritingInstructionEditor());
+  document
+    .getElementById("writing-instructions-editor-back-btn")
+    .addEventListener("click", () => switchWritingInstructionsView("list"));
+  document
+    .getElementById("cancel-writing-instruction-btn")
+    .addEventListener("click", () => switchWritingInstructionsView("list"));
+  document
+    .getElementById("save-writing-instruction-btn")
+    .addEventListener("click", saveWritingInstruction);
+  document
+    .getElementById("writing-instruction-add-lang-btn")
+    .addEventListener("click", openWritingInstructionLanguageModal);
+  document
+    .getElementById("writing-instruction-language-cancel")
+    .addEventListener("click", closeWritingInstructionLanguageModal);
+  document
+    .getElementById("writing-instruction-language-cancel-x")
+    .addEventListener("click", closeWritingInstructionLanguageModal);
+  document
+    .getElementById("writing-instruction-language-add")
+    .addEventListener("click", addWritingInstructionLanguage);
+  document
+    .getElementById("writing-instruction-name")
+    .addEventListener("input", updateWritingInstructionNameCount);
+  document
+    .getElementById("writing-instruction-text")
+    .addEventListener("input", () => {
+      updateWritingInstructionTextCount();
+      saveActiveWritingInstructionFromForm();
+      updateSaveWritingInstructionButton();
+    });
+  document
     .getElementById("confirm-yes-btn")
     .addEventListener("click", () => resolveConfirmDialog(true));
   document
@@ -1435,6 +1476,7 @@ function setupEvents() {
     "#char-prefer-persona-language",
     "#char-one-time-extra-prompt",
     "#char-writing-instructions",
+    "#char-writing-instructions-select",
     "#char-initial-messages",
     "#char-persona-injection-placement",
     "#char-use-memory",
@@ -4267,6 +4309,8 @@ function openModal(modalId) {
     if (input) input.value = "";
     renderTagManagerList();
     updateTagManagerAddButtonState();
+  } else if (modalId === "writing-instructions-modal") {
+    openWritingInstructionsManager().catch(() => {});
   }
 }
 
@@ -4346,6 +4390,7 @@ function createEmptyCharacterDefinition(language = "en") {
     systemPrompt: "",
     oneTimeExtraPrompt: "",
     writingInstructions: "",
+    writingInstructionId: "",
     initialMessagesRaw: "",
     initialMessages: [],
     personaInjectionPlacement: "end_system_prompt",
@@ -4396,6 +4441,7 @@ function normalizeCharacterDefinitions(character = null) {
   fallback.systemPrompt = String(character?.systemPrompt || "");
   fallback.oneTimeExtraPrompt = String(character?.oneTimeExtraPrompt || "");
   fallback.writingInstructions = String(character?.writingInstructions || "");
+  fallback.writingInstructionId = String(character?.writingInstructionId || "");
   fallback.initialMessagesRaw =
     String(character?.initialMessagesRaw || "") ||
     formatInitialMessagesForEditor(character?.initialMessages || []);
@@ -4559,6 +4605,7 @@ function saveActiveCharacterDefinitionFromForm() {
   def.systemPrompt = String(document.getElementById("char-system-prompt")?.value || "").trim();
   def.oneTimeExtraPrompt = String(document.getElementById("char-one-time-extra-prompt")?.value || "").trim();
   def.writingInstructions = String(document.getElementById("char-writing-instructions")?.value || "").trim();
+  def.writingInstructionId = String(document.getElementById("char-writing-instructions-select")?.value || "");
   def.initialMessagesRaw = String(document.getElementById("char-initial-messages")?.value || "");
   def.personaInjectionPlacement =
     String(document.getElementById("char-persona-injection-placement")?.value || "end_system_prompt");
@@ -4581,6 +4628,8 @@ function loadActiveCharacterDefinitionToForm() {
   document.getElementById("char-system-prompt").value = def.systemPrompt || "";
   document.getElementById("char-one-time-extra-prompt").value = def.oneTimeExtraPrompt || "";
   document.getElementById("char-writing-instructions").value = def.writingInstructions || "";
+  populateCharWritingInstructionsSelect(def.writingInstructionId);
+  updateCharWritingInstructionsVisibility();
   document.getElementById("char-initial-messages").value =
     def.initialMessagesRaw ||
     ((def.initialMessages || []).length > 0
@@ -4792,6 +4841,7 @@ async function saveCharacterFromModal() {
       null,
     oneTimeExtraPrompt: String(primaryDef?.oneTimeExtraPrompt || "").trim(),
     writingInstructions: String(primaryDef?.writingInstructions || "").trim(),
+    writingInstructionId: String(primaryDef?.writingInstructionId || ""),
     initialMessagesRaw: String(primaryDef?.initialMessagesRaw || ""),
     initialMessages: Array.isArray(primaryDef?.initialMessages)
       ? primaryDef.initialMessages
@@ -4932,6 +4982,37 @@ function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
   });
   const hasPreferred = names.includes(preferredVoice);
   voiceSelect.value = hasPreferred ? preferredVoice : names[0];
+}
+
+async function populateCharWritingInstructionsSelect(preferredId = "") {
+  const select = document.getElementById("char-writing-instructions-select");
+  const textarea = document.getElementById("char-writing-instructions");
+  if (!select || !textarea) return;
+  const currentLang = state.charModalActiveLanguage || state.settings.interfaceLanguage || "en";
+  const allWi = await getAllWritingInstructions();
+  const matchingWi = allWi.filter((wi) => wi.instructions && wi.instructions[currentLang]);
+  select.innerHTML = "";
+  const customOpt = document.createElement("option");
+  customOpt.value = "";
+  customOpt.textContent = t("customInstructions");
+  select.appendChild(customOpt);
+  matchingWi.forEach((wi) => {
+    const opt = document.createElement("option");
+    opt.value = String(wi.id);
+    opt.textContent = wi.name || `Writing Instruction #${wi.id}`;
+    select.appendChild(opt);
+  });
+  const hasPreferred = matchingWi.some((wi) => String(wi.id) === preferredId);
+  select.value = hasPreferred ? preferredId : "";
+  updateCharWritingInstructionsVisibility();
+}
+
+function updateCharWritingInstructionsVisibility() {
+  const select = document.getElementById("char-writing-instructions-select");
+  const textarea = document.getElementById("char-writing-instructions");
+  if (!select || !textarea) return;
+  const isCustom = !select.value;
+  textarea.classList.toggle("hidden", !isCustom);
 }
 
 function updateCharTtsRatePitchLabels() {
@@ -5834,6 +5915,337 @@ async function deleteLorebook(lorebookId) {
   await renderCharacters();
   await renderCharacterLorebookList(getSelectedLorebookIds());
   showToast(t("loreDeleted"), "success");
+}
+
+let state_writingInstructions = {
+  editingId: null,
+  definitions: [],
+  activeLanguage: "",
+};
+
+async function getAllWritingInstructions() {
+  return await db.writingInstructions.orderBy("id").toArray();
+}
+
+function normalizeWritingInstructionRecord(wi) {
+  if (!wi) return null;
+  return {
+    id: Number(wi.id) || null,
+    name: String(wi.name || "").trim(),
+    instructions: typeof wi.instructions === "object" && wi.instructions !== null ? wi.instructions : {},
+    createdAt: Number(wi.createdAt) || Date.now(),
+    updatedAt: Number(wi.updatedAt) || Date.now(),
+  };
+}
+
+async function openWritingInstructionsManager() {
+  await renderWritingInstructionsList();
+  switchWritingInstructionsView("list");
+}
+
+async function renderWritingInstructionsList() {
+  const list = document.getElementById("writing-instructions-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const writingInstructions = await getAllWritingInstructions();
+  if (writingInstructions.length === 0) {
+    list.innerHTML = `<p class="muted" data-i18n="noWritingInstructionsYet">No writing instructions yet.</p>`;
+    return;
+  }
+  for (const wi of writingInstructions) {
+    const row = document.createElement("div");
+    row.className = "lorebook-row";
+    const avatar = document.createElement("div");
+    avatar.className = "lorebook-avatar";
+    avatar.style.display = "flex";
+    avatar.style.alignItems = "center";
+    avatar.style.justifyContent = "center";
+    avatar.style.background = "#253147";
+    avatar.style.fontSize = "20px";
+    avatar.textContent = "WI";
+    const main = document.createElement("div");
+    main.className = "lorebook-main";
+    const title = document.createElement("div");
+    title.className = "lorebook-title";
+    title.textContent = wi.name || "Untitled";
+    const meta = document.createElement("div");
+    meta.className = "lorebook-meta";
+    meta.style.display = "flex";
+    meta.style.gap = "4px";
+    const langs = Object.keys(wi.instructions || {});
+    langs.forEach((lang) => {
+      const flag = createLanguageFlagIconElement(lang);
+      meta.appendChild(flag);
+    });
+    main.appendChild(title);
+    main.appendChild(meta);
+    const actions = document.createElement("div");
+    actions.className = "lorebook-actions";
+    actions.appendChild(
+      iconButton("edit", t("editWritingInstructionAria"), () => openWritingInstructionEditor(wi)),
+    );
+    actions.appendChild(
+      iconButton("copy", t("duplicateWritingInstructionAria"), async () => {
+        await duplicateWritingInstruction(wi.id);
+      }),
+    );
+    actions.appendChild(
+      iconButton("export", t("exportWritingInstructionAria"), async () => {
+        await exportWritingInstruction(wi.id);
+      }),
+    );
+    const deleteBtn = iconButton("delete", t("deleteWritingInstructionAria"), async () => {
+      await deleteWritingInstruction(wi.id);
+    });
+    deleteBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteBtn);
+    row.append(avatar, main, actions);
+    list.appendChild(row);
+  }
+}
+
+function switchWritingInstructionsView(view) {
+  const listView = document.getElementById("writing-instructions-list-view");
+  const editorView = document.getElementById("writing-instructions-editor-view");
+  if (view === "list") {
+    listView?.classList.remove("hidden");
+    editorView?.classList.add("hidden");
+  } else {
+    listView?.classList.add("hidden");
+    editorView?.classList.remove("hidden");
+  }
+}
+
+async function openWritingInstructionEditor(writingInstruction = null) {
+  const normalized = normalizeWritingInstructionRecord(writingInstruction || {});
+  state_writingInstructions.editingId = normalized.id || null;
+  const interfaceLang = state.settings.interfaceLanguage || "en";
+  if (!normalized.instructions || Object.keys(normalized.instructions).length === 0) {
+    state_writingInstructions.definitions = [{ language: interfaceLang, instructions: "" }];
+  } else {
+    state_writingInstructions.definitions = Object.entries(normalized.instructions).map(
+      ([language, instructions]) => ({ language, instructions: instructions || "" }),
+    );
+  }
+  state_writingInstructions.activeLanguage = state_writingInstructions.definitions[0]?.language || interfaceLang;
+  document.getElementById("writing-instruction-name").value = normalized.name || "";
+  updateWritingInstructionNameCount();
+  renderWritingInstructionTabs();
+  loadActiveWritingInstructionToForm();
+  switchWritingInstructionsView("editor");
+}
+
+function renderWritingInstructionTabs() {
+  const root = document.getElementById("writing-instruction-tabs-left");
+  if (!root) return;
+  root.innerHTML = "";
+  if (!state_writingInstructions.definitions || state_writingInstructions.definitions.length === 0) return;
+  state_writingInstructions.definitions.forEach((def) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "settings-tab-btn char-def-tab-btn";
+    if (def.language === state_writingInstructions.activeLanguage) {
+      btn.classList.add("active");
+    }
+    const label = document.createElement("span");
+    label.className = "char-def-tab-label";
+    const flag = createLanguageFlagIconElement(def.language, "char-def-tab-flag");
+    const text = document.createElement("span");
+    text.textContent = def.language;
+    label.append(flag, text);
+    btn.appendChild(label);
+    btn.addEventListener("click", () => {
+      saveActiveWritingInstructionFromForm();
+      state_writingInstructions.activeLanguage = def.language;
+      loadActiveWritingInstructionToForm();
+      renderWritingInstructionTabs();
+    });
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "char-def-tab-delete";
+    del.textContent = "x";
+    del.disabled = state_writingInstructions.definitions.length <= 1;
+    del.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (state_writingInstructions.definitions.length <= 1) {
+        await openInfoDialog(t("message"), t("languageRequired"));
+        return;
+      }
+      const ok = await openConfirmDialog(t("removeLanguageTitle"), t("removeLanguageConfirm", { lang: def.language }));
+      if (!ok) return;
+      saveActiveWritingInstructionFromForm();
+      state_writingInstructions.definitions = state_writingInstructions.definitions.filter(
+        (x) => x.language !== def.language,
+      );
+      if (state_writingInstructions.activeLanguage === def.language) {
+        state_writingInstructions.activeLanguage = state_writingInstructions.definitions[0]?.language || "";
+      }
+      loadActiveWritingInstructionToForm();
+      renderWritingInstructionTabs();
+    });
+    btn.appendChild(del);
+    root.appendChild(btn);
+  });
+}
+
+function getActiveWritingInstructionDefinition() {
+  return state_writingInstructions.definitions.find(
+    (d) => d.language === state_writingInstructions.activeLanguage,
+  );
+}
+
+function saveActiveWritingInstructionFromForm() {
+  const def = getActiveWritingInstructionDefinition();
+  if (!def) return;
+  def.instructions = String(document.getElementById("writing-instruction-text")?.value || "").trim();
+}
+
+function loadActiveWritingInstructionToForm() {
+  const def = getActiveWritingInstructionDefinition();
+  const textField = document.getElementById("writing-instruction-text");
+  if (textField && def) {
+    textField.value = def.instructions || "";
+    updateWritingInstructionTextCount();
+  } else if (textField) {
+    textField.value = "";
+    updateWritingInstructionTextCount();
+  }
+  updateSaveWritingInstructionButton();
+}
+
+function updateWritingInstructionNameCount() {
+  const nameInput = document.getElementById("writing-instruction-name");
+  const countSpan = document.getElementById("writing-instruction-name-count");
+  if (nameInput && countSpan) {
+    countSpan.textContent = `${nameInput.value.length}/64`;
+  }
+}
+
+function updateWritingInstructionTextCount() {
+  const textInput = document.getElementById("writing-instruction-text");
+  const countSpan = document.getElementById("writing-instruction-text-count");
+  if (textInput && countSpan) {
+    countSpan.textContent = `${textInput.value.length}/20480`;
+  }
+}
+
+function updateSaveWritingInstructionButton() {
+  const saveBtn = document.getElementById("save-writing-instruction-btn");
+  if (!saveBtn) return;
+  const name = String(document.getElementById("writing-instruction-name")?.value || "").trim();
+  const hasAllContent = state_writingInstructions.definitions.every(
+    (d) => String(d.instructions || "").trim().length > 0,
+  );
+  saveBtn.disabled = !name || !hasAllContent;
+}
+
+async function saveWritingInstruction() {
+  saveActiveWritingInstructionFromForm();
+  const name = String(document.getElementById("writing-instruction-name")?.value || "").trim();
+  if (!name) {
+    await openInfoDialog(t("missingFieldTitle"), t("nameRequired"));
+    return;
+  }
+  const hasAllContent = state_writingInstructions.definitions.every(
+    (d) => String(d.instructions || "").trim().length > 0,
+  );
+  if (!hasAllContent) {
+    await openInfoDialog(t("missingFieldTitle"), t("writingInstructionsRequired"));
+    return;
+  }
+  const instructions = {};
+  state_writingInstructions.definitions.forEach((d) => {
+    instructions[d.language] = d.instructions;
+  });
+  const payload = {
+    name,
+    instructions,
+    updatedAt: Date.now(),
+  };
+  if (state_writingInstructions.editingId) {
+    await db.writingInstructions.update(state_writingInstructions.editingId, payload);
+    showToast(t("writingInstructionUpdated"), "success");
+  } else {
+    payload.createdAt = Date.now();
+    await db.writingInstructions.add(payload);
+    showToast(t("writingInstructionCreated"), "success");
+  }
+  await renderWritingInstructionsList();
+  switchWritingInstructionsView("list");
+}
+
+async function duplicateWritingInstruction(writingInstructionId) {
+  const source = await db.writingInstructions.get(writingInstructionId);
+  if (!source) return;
+  const copy = {
+    name: `${source.name} (copy)`,
+    instructions: { ...source.instructions },
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await db.writingInstructions.add(copy);
+  await renderWritingInstructionsList();
+  showToast(t("writingInstructionDuplicated"), "success");
+}
+
+async function deleteWritingInstruction(writingInstructionId) {
+  const wi = normalizeWritingInstructionRecord(await db.writingInstructions.get(writingInstructionId));
+  if (!wi) return;
+  const ok = await openConfirmDialog(
+    t("deleteWritingInstructionTitle"),
+    t("deleteWritingInstructionConfirm", { name: wi.name }),
+  );
+  if (!ok) return;
+  await db.writingInstructions.delete(writingInstructionId);
+  await renderWritingInstructionsList();
+  showToast(t("writingInstructionDeleted"), "success");
+}
+
+async function exportWritingInstruction(writingInstructionId) {
+  const wi = normalizeWritingInstructionRecord(await db.writingInstructions.get(writingInstructionId));
+  if (!wi) return;
+  const interfaceLang = state.settings.interfaceLanguage || "en";
+  const content = wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${wi.name.replace(/[^a-z0-9]/gi, "_")}.md`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(t("writingInstructionExported"), "success");
+}
+
+function openWritingInstructionLanguageModal() {
+  const select = document.getElementById("writing-instruction-language-select");
+  if (!select) return;
+  const usedLanguages = new Set(state_writingInstructions.definitions.map((d) => d.language));
+  select.innerHTML = "";
+  BOT_LANGUAGE_OPTIONS.filter((code) => !usedLanguages.has(code)).forEach((code) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = getBotLanguageName(code);
+    select.appendChild(opt);
+  });
+  document.getElementById("writing-instruction-language-modal")?.classList.remove("hidden");
+}
+
+function closeWritingInstructionLanguageModal() {
+  document.getElementById("writing-instruction-language-modal")?.classList.add("hidden");
+}
+
+async function addWritingInstructionLanguage() {
+  const select = document.getElementById("writing-instruction-language-select");
+  const lang = select?.value;
+  if (!lang) return;
+  saveActiveWritingInstructionFromForm();
+  state_writingInstructions.definitions.push({ language: lang, instructions: "" });
+  state_writingInstructions.activeLanguage = lang;
+  closeWritingInstructionLanguageModal();
+  loadActiveWritingInstructionToForm();
+  renderWritingInstructionTabs();
 }
 
 function hasMeaningfulAssistantMessage(history) {
@@ -8732,7 +9144,7 @@ function renderModelCustomDropdown(models, selectedModel) {
   if (selectedModelData) {
     const lowContextMark = isLowContextRoleplayModel(selectedModelData) ? " | ! <=16k" : "";
     const moderationMark = selectedModelData.isModerated === true ? " | Moderated" : "";
-    display.textContent = `${selectedModelData.name} (${selectedModel.id})${lowContextMark}${moderationMark}`;
+    display.textContent = `${selectedModelData.name} (${selectedModelData.id})${lowContextMark}${moderationMark}`;
   } else if (selectedModel) {
     display.textContent = `${selectedModel} (custom)`;
   } else {
@@ -9828,7 +10240,17 @@ async function buildSystemPrompt(character, options = {}) {
     basePromptRaw,
     personaName,
   );
-  const writingInstructionsRaw = String(character?.writingInstructions || "").trim();
+  let writingInstructionsRaw = "";
+  const wiId = character?.writingInstructionId;
+  if (wiId) {
+    const wi = await db.writingInstructions.get(Number(wiId));
+    if (wi && wi.instructions) {
+      const threadLanguage = character?.activeLanguage || options?.characterLanguage || "en";
+      writingInstructionsRaw = String(wi.instructions[threadLanguage] || Object.values(wi.instructions)[0] || "").trim();
+    }
+  } else {
+    writingInstructionsRaw = String(character?.writingInstructions || "").trim();
+  }
   const writingTurnIndex = Math.max(
     1,
     Number(options?.writingInstructionsTurnIndex) || 1,

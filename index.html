@@ -98,6 +98,15 @@
           </button>
           <button
             class="option-btn"
+            data-open-modal="writing-instructions-modal"
+            data-i18n-title="writingInstructions"
+            title="Writing Instructions"
+            aria-label="Writing Instructions"
+          >
+            &#128221;
+          </button>
+          <button
+            class="option-btn"
             data-open-modal="database-modal"
             data-i18n-title="database"
             title="Database"
@@ -1140,14 +1149,19 @@
               placeholder="Appended only for the first assistant generation."
             ></textarea>
           </div>
-          <div class="full lang-field">
-            <span data-i18n="writingInstructions">Writing Instructions</span>
-            <textarea
-              id="char-writing-instructions"
-              rows="4"
-              placeholder="Reserved for future implementation."
-            ></textarea>
-          </div>
+            <div class="full lang-field">
+              <div class="writing-instructions-header">
+                <span data-i18n="writingInstructions">Writing Instructions</span>
+                <select id="char-writing-instructions-select">
+                  <option value="" data-i18n="customInstructions">Custom Instructions</option>
+                </select>
+              </div>
+              <textarea
+                id="char-writing-instructions"
+                rows="4"
+                placeholder="Reserved for future implementation."
+              ></textarea>
+            </div>
           <div class="full lang-field">
             <span data-i18n="initialMessages">Initial Messages</span>
             <textarea
@@ -1397,6 +1411,142 @@
         </div>
         <div class="modal-body">
           <pre id="message-context-json" class="metadata-json"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="writing-instructions-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="writing-instructions-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="writing-instructions-title" data-i18n="writingInstructionsManager">
+            Writing Instructions Manager
+          </h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="writing-instructions-list-view">
+            <div class="lore-toolbar">
+              <button
+                id="create-writing-instruction-btn"
+                class="primary-btn"
+                type="button"
+                data-i18n="addWritingInstruction"
+              >
+                + Add Writing Instruction
+              </button>
+            </div>
+            <div id="writing-instructions-list" class="lorebook-list"></div>
+          </div>
+
+          <div id="writing-instructions-editor-view" class="hidden">
+            <div class="lore-toolbar">
+              <button
+                id="writing-instructions-editor-back-btn"
+                class="secondary-btn"
+                type="button"
+                data-i18n="backToList"
+              >
+                < Back to List
+              </button>
+            </div>
+            <div class="two-col lore-editor-grid">
+              <div class="form-field full">
+                <span data-i18n="nameLabel">Name</span>
+                <input
+                  id="writing-instruction-name"
+                  type="text"
+                  minlength="1"
+                  maxlength="64"
+                />
+                <span id="writing-instruction-name-count" class="muted">0/64</span>
+              </div>
+            </div>
+            <div id="writing-instruction-tabs" class="settings-tabs">
+              <div class="char-def-tabs-row">
+                <div id="writing-instruction-tabs-left" class="char-def-tabs-left"></div>
+                <button id="writing-instruction-add-lang-btn" class="settings-tab-btn" type="button" onclick="openWritingInstructionLanguageModal()">
+                  +
+                </button>
+              </div>
+            </div>
+            <div id="writing-instruction-content-area" class="full lang-field">
+              <span data-i18n="writingInstructions">Writing Instructions</span>
+              <textarea
+                id="writing-instruction-text"
+                rows="8"
+                maxlength="20480"
+              ></textarea>
+              <span id="writing-instruction-text-count" class="muted">0/20480</span>
+            </div>
+            <div class="modal-footer">
+              <button
+                id="cancel-writing-instruction-btn"
+                class="secondary-btn"
+                type="button"
+                data-i18n="cancel"
+              >
+                Cancel
+              </button>
+              <button
+                id="save-writing-instruction-btn"
+                class="primary-btn"
+                type="button"
+                data-i18n="saveWritingInstruction"
+              >
+                Save Writing Instruction
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="writing-instruction-language-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="writing-instruction-language-title"
+    >
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="writing-instruction-language-title" data-i18n="addLanguage">Add Language</h3>
+          <button
+            class="icon-btn modal-close"
+            id="writing-instruction-language-cancel-x"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-field">
+            <select id="writing-instruction-language-select"></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="writing-instruction-language-cancel"
+            class="secondary-btn"
+            type="button"
+            data-i18n="cancel"
+          >
+            Cancel
+          </button>
+          <button
+            id="writing-instruction-language-add"
+            class="primary-btn"
+            type="button"
+            data-i18n="add"
+          >
+            Add
+          </button>
         </div>
       </div>
     </div>

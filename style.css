@@ -1992,7 +1992,21 @@ textarea {
 .settings-inline-row {
   display: flex;
   align-items: center;
+}
+
+.writing-instructions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
+}
+
+.writing-instructions-header span {
+  flex-shrink: 0;
+}
+
+.writing-instructions-header select {
+  max-width: 200px;
 }
 
 .model-filter-row {

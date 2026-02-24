@@ -73,3 +73,13 @@ db.version(6).stores({
     }
   });
 });
+
+db.version(7).stores({
+  characters: "++id, name",
+  lorebooks: "++id, name, createdAt, updatedAt",
+  memories: "++id, characterId, summary, createdAt",
+  sessions: "++id, characterId, messages, updatedAt",
+  threads: "++id, characterId, title, updatedAt, createdAt",
+  personas: "++id, name, isDefault, order, updatedAt",
+  writingInstructions: "++id, name, createdAt, updatedAt",
+});
