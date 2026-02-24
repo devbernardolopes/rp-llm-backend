@@ -2553,6 +2553,7 @@ function setupSettingsTabsLayout() {
   tabs.forEach((btn) => {
     btn.addEventListener("click", () => {
       const tab = btn.getAttribute("data-settings-tab-btn") || "appearance";
+      localStorage.setItem("rp-settings-last-tab", tab);
       tabs.forEach((b) => b.classList.toggle("active", b === btn));
       panels.forEach((panel, key) => {
         panel.classList.toggle("hidden", key !== tab);
@@ -3804,8 +3805,13 @@ function openModal(modalId) {
   if (modalId === "personas-modal") {
     renderPersonaModalList();
   } else if (modalId === "settings-modal") {
-    const firstTab = document.querySelector('[data-settings-tab-btn="appearance"]');
-    if (firstTab instanceof HTMLButtonElement) firstTab.click();
+    const lastTab = localStorage.getItem("rp-settings-last-tab") || "appearance";
+    const tabBtn = document.querySelector(`[data-settings-tab-btn="${lastTab}"]`);
+    if (tabBtn instanceof HTMLButtonElement) tabBtn.click();
+    else {
+      const firstTab = document.querySelector('[data-settings-tab-btn="appearance"]');
+      if (firstTab instanceof HTMLButtonElement) firstTab.click();
+    }
     updateToastDelayDisplay();
     populateSettingsModels().catch(() => {});
   } else if (modalId === "shortcuts-modal") {
