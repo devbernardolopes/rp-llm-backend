@@ -2109,9 +2109,28 @@ textarea {
 
 .char-avatars-container {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px;
   align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  touch-action: pan-x;
+}
+
+.char-avatars-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.char-avatars-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.char-avatars-container::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
 }
 
 .char-avatar-item {
