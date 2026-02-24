@@ -1395,6 +1395,37 @@
       </div>
     </div>
 
+    <div
+      id="message-model-info-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="message-model-info-title"
+    >
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="message-model-info-title">Generation Parameters</h3>
+          <button
+            class="icon-btn modal-close"
+            data-close-modal
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="model-info-row">
+            <span class="model-info-label">Model:</span>
+            <span id="message-model-info-model" class="model-info-value"></span>
+          </div>
+          <div class="model-info-row">
+            <span class="model-info-label">Temperature:</span>
+            <span id="message-model-info-temperature" class="model-info-value"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <script src="config.js"></script>
     <script src="db.js"></script>

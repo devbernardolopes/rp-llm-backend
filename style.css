@@ -1267,6 +1267,12 @@ textarea {
   border-color: #8faa4d;
 }
 
+.message-controls .msg-model-info-btn:not(:disabled) {
+  color: #d4e8ff;
+  background: #2a4a6f;
+  border-color: #4a7ab0;
+}
+
 .btn-spinner {
   width: 12px;
   height: 12px;
@@ -2114,6 +2120,25 @@ textarea {
   padding: 10px;
   max-height: 62vh;
   overflow: auto;
+}
+
+.model-info-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.model-info-row:last-child {
+  border-bottom: none;
+}
+.model-info-label {
+  font-weight: 500;
+  color: var(--muted);
+  min-width: 100px;
+}
+.model-info-value {
+  color: var(--text);
+  word-break: break-all;
 }
 
 .lore-toolbar {

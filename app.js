@@ -53,6 +53,8 @@ const ICONS = {
   info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6"></path><circle cx="12" cy="7.5" r="1"></circle></svg>',
   context:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5a3 3 0 0 1 5.7-1.2A3.2 3.2 0 0 1 18 7v.2a3 3 0 0 1 1 5.7A3.2 3.2 0 0 1 16 18h-1a3 3 0 0 1-6 0H8a3.2 3.2 0 0 1-3-5.1A3 3 0 0 1 6 7v-.2A3.2 3.2 0 0 1 9 5z"></path><path d="M10 9.5v5"></path><path d="M14 9.5v5"></path><path d="M10 12h4"></path></svg>',
+  model:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M9 9h6v6H9z"></path><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"></path></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
   starFilled:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
@@ -856,16 +858,36 @@ document.addEventListener("visibilitychange", () => {
   const grid = document.getElementById("character-grid");
   if (!grid) return;
   const cards = grid.querySelectorAll(".character-card");
+  const pane = document.getElementById("left-pane");
+  const isMainScreenVisible = pane && !pane.classList.contains("collapsed");
+  
   if (document.hidden) {
     cards.forEach(card => {
       if (card._saveVideoTimes) card._saveVideoTimes();
     });
-  } else {
+  } else if (isMainScreenVisible) {
     cards.forEach(card => {
       if (card._restoreVideoTimes) card._restoreVideoTimes();
+      if (card._startCarousel) card._startCarousel();
     });
   }
 });
+
+function updateCarouselForPaneState() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const pane = document.getElementById("left-pane");
+  const isMainScreenVisible = pane && !pane.classList.contains("collapsed");
+  const cards = grid.querySelectorAll(".character-card");
+  
+  cards.forEach(card => {
+    if (isMainScreenVisible) {
+      if (card._startCarousel) card._startCarousel();
+    } else {
+      if (card._stopCarousel) card._stopCarousel();
+    }
+  });
+}
 
 async function init() {
   loadSettings();
@@ -2508,6 +2530,7 @@ async function setupSettingsControls() {
       await applyInterfaceLanguage();
       updateToastDelayDisplay();
       await renderShortcutsBar();
+      await renderCharacters();
     });
   }
 }
@@ -3723,6 +3746,7 @@ async function renderCharacters() {
   const maxScroll = Math.max(0, grid.scrollHeight - grid.clientHeight);
   grid.scrollTop = Math.min(previousScrollTop, maxScroll);
   state.characterCardSlide = null;
+  updateCarouselForPaneState();
 }
 
 function updateThreadBulkBar() {
@@ -4104,6 +4128,7 @@ function togglePane() {
       importBtn.title = "";
     }
   }
+  updateCarouselForPaneState();
 }
 
 function showMainView() {
@@ -4764,8 +4789,8 @@ async function saveCharacterFromModal() {
     }
   }
 
-  closeActiveModal();
   state.modalDirty["character-modal"] = false;
+  closeActiveModal();
   state.charModalPendingThreadDeleteIds = [];
   await renderAll();
 }
@@ -6965,6 +6990,29 @@ function buildMessageRow(message, index, streaming) {
     infoBtn.classList.add("msg-info-btn");
     applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
     controls.appendChild(infoBtn);
+    const modelInfoBtn = iconButton("model", t("msgModelInfoTitle"), async () => {
+      await openMessageModelInfoModal(index);
+    });
+    modelInfoBtn.classList.add("msg-model-info-btn");
+    const isInitial = message?.isInitial === true;
+    const isUserEdited = message?.userEdited === true;
+    if (disableControlsForRow || isInitial || isUserEdited || !message.model) {
+      modelInfoBtn.disabled = true;
+      if (isUserEdited) {
+        modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableEdited"));
+        modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+      } else if (isInitial) {
+        modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableInitial"));
+        modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
+      } else if (disableControlsForRow) {
+        modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableGenerating"));
+        modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
+      }
+    } else {
+      modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
+      modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
+    }
+    controls.appendChild(modelInfoBtn);
     const contextBtn = iconButton("context", t("msgContextTitle"), async () => {
       await openMessageContextModal(index);
     });
@@ -7531,6 +7579,8 @@ async function generateBotReply() {
     pending.generationStatus = "generating";
     pending.generationError = "";
     pending.truncatedByFilter = false;
+    pending.model = state.settings.model || "";
+    pending.temperature = Number(state.settings.temperature) || 0;
     if (!Number.isInteger(Number(pending.writingInstructionsTurnIndex))) {
       pending.writingInstructionsTurnIndex = writingTurnIndex;
       pending.writingInstructionsCounted = false;
@@ -7551,6 +7601,8 @@ async function generateBotReply() {
       usedMemorySummary: "",
       writingInstructionsTurnIndex: writingTurnIndex,
       writingInstructionsCounted: false,
+      model: state.settings.model || "",
+      temperature: Number(state.settings.temperature) || 0,
     };
     generationHistory.push(pending);
     pendingIndex = generationHistory.length - 1;
@@ -7629,6 +7681,8 @@ async function generateBotReply() {
     pending.completionMeta = result.completionMeta || null;
     pending.generationInfo = result.generationInfo || null;
     pending.generationFetchDebug = result.generationFetchDebug || [];
+    pending.model = result.model || state.settings.model || "";
+    pending.temperature = Number(state.settings.temperature) || 0;
     pending.usedLoreEntries = Array.isArray(promptContext.loreEntries)
       ? promptContext.loreEntries
       : [];
@@ -7661,6 +7715,12 @@ async function generateBotReply() {
       }
       if (liveRow) liveRow.dataset.streaming = "0";
       refreshAllSpeakerButtons();
+      const modelInfoBtn = liveRow?.querySelector(".msg-model-info-btn");
+      if (modelInfoBtn && pending.model) {
+        modelInfoBtn.disabled = false;
+        modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
+        modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
+      }
     }
     if (currentThread && Number(currentThread.id) === threadId) {
       commitPendingPersonaInjectionMarker();
@@ -7709,6 +7769,12 @@ async function generateBotReply() {
           }
           if (liveRow) liveRow.dataset.streaming = "0";
           refreshAllSpeakerButtons();
+          const modelInfoBtn = liveRow?.querySelector(".msg-model-info-btn");
+          if (modelInfoBtn && pending.model) {
+            modelInfoBtn.disabled = false;
+            modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
+            modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
+          }
         }
       }
       await persistThreadMessagesById(threadId, generationHistory);
@@ -7841,6 +7907,8 @@ async function regenerateMessage(index) {
     target.completionMeta = result.completionMeta || null;
     target.generationInfo = result.generationInfo || null;
     target.generationFetchDebug = result.generationFetchDebug || [];
+    target.model = result.model || state.settings.model || "";
+    target.temperature = Number(state.settings.temperature) || 0;
     target.generationError = "";
     target.generationStatus = "";
     target.usedLoreEntries = Array.isArray(promptContext.loreEntries)
@@ -8324,6 +8392,27 @@ function refreshMessageControlStates() {
     });
     row.querySelectorAll(".msg-context-btn").forEach((btn) => {
       btn.disabled = isStreaming || !hasMessageContextData(message);
+    });
+    row.querySelectorAll(".msg-model-info-btn").forEach((btn) => {
+      const isInitial = message?.isInitial === true;
+      const isUserEdited = message?.userEdited === true;
+      btn.disabled = isStreaming || isInitial || isUserEdited || !message?.model;
+      if (isUserEdited) {
+        btn.setAttribute("title", t("msgMetadataUnavailableEdited"));
+        btn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+      } else if (isInitial) {
+        btn.setAttribute("title", t("msgMetadataUnavailableInitial"));
+        btn.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
+      } else if (isStreaming) {
+        btn.setAttribute("title", t("msgMetadataUnavailableGenerating"));
+        btn.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
+      } else if (!message?.model) {
+        btn.setAttribute("title", t("msgMetadataUnavailableEdited"));
+        btn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+      } else {
+        btn.setAttribute("title", t("msgModelInfoTitle"));
+        btn.setAttribute("aria-label", t("msgModelInfoTitle"));
+      }
     });
   });
 }
@@ -9128,6 +9217,8 @@ async function processNextQueuedThread() {
     pending.generationId = String(result.generationId || "");
     pending.completionMeta = result.completionMeta || null;
     pending.generationInfo = result.generationInfo || null;
+    pending.model = result.model || state.settings.model || "";
+    pending.temperature = Number(state.settings.temperature) || 0;
     pending.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
       ? promptContext.usedLoreEntries
       : [];
@@ -9592,6 +9683,21 @@ async function openMessageContextModal(index) {
       : [],
   };
   pre.textContent = JSON.stringify(view, null, 2);
+}
+
+async function openMessageModelInfoModal(index) {
+  const message = conversationHistory[index];
+  if (!message) return;
+  if (!message.model && !message.temperature) return;
+  openModal("message-model-info-modal");
+  const modelEl = document.getElementById("message-model-info-model");
+  const temperatureEl = document.getElementById("message-model-info-temperature");
+  if (modelEl) {
+    modelEl.textContent = message.model || "-";
+  }
+  if (temperatureEl) {
+    temperatureEl.textContent = message.temperature != null ? message.temperature : "-";
+  }
 }
 
 function shouldInjectPersonaContext(persona, threadOverride = null) {

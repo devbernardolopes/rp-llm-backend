@@ -251,6 +251,7 @@
   "msgEditTitle": "Editar mensaje",
   "msgCopyTitle": "Copiar mensaje",
   "msgMetadataTitle": "Metadatos del mensaje",
+  "msgModelInfoTitle": "Parámetros de generación",
   "msgContextTitle": "Contexto del mensaje",
   "msgSpeakTitle": "Leer mensaje",
   "msgSpeakCancelTitle": "Cancelar lectura",
