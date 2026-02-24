@@ -860,14 +860,14 @@ document.addEventListener("visibilitychange", () => {
   const grid = document.getElementById("character-grid");
   if (!grid) return;
   const cards = grid.querySelectorAll(".character-card");
-  const pane = document.getElementById("left-pane");
-  const isMainScreenVisible = pane && !pane.classList.contains("collapsed");
+  const mainView = document.getElementById("main-view");
+  const isMainViewActive = mainView && mainView.classList.contains("active");
   
   if (document.hidden) {
     cards.forEach(card => {
       if (card._saveVideoTimes) card._saveVideoTimes();
     });
-  } else if (isMainScreenVisible) {
+  } else if (isMainViewActive) {
     cards.forEach(card => {
       if (card._restoreVideoTimes) card._restoreVideoTimes();
       if (card._startCarousel) card._startCarousel();
@@ -4293,6 +4293,7 @@ function showMainView() {
   renderThreads().catch(() => {});
   updateScrollBottomButtonVisibility();
   scheduleThreadBudgetIndicatorUpdate();
+  startAllCarousels();
 }
 
 function showChatView() {
@@ -4303,6 +4304,26 @@ function showChatView() {
   setSendingState(state.sending);
   renderThreads().catch(() => {});
   updateScrollBottomButtonVisibility();
+  stopAllCarousels();
+}
+
+function stopAllCarousels() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const cards = grid.querySelectorAll(".character-card");
+  cards.forEach(card => {
+    if (card._stopCarousel) card._stopCarousel();
+  });
+}
+
+function startAllCarousels() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const cards = grid.querySelectorAll(".character-card");
+  cards.forEach(card => {
+    if (card._restoreVideoTimes) card._restoreVideoTimes();
+    if (card._startCarousel) card._startCarousel();
+  });
 }
 
 function openModal(modalId) {
