@@ -3402,6 +3402,7 @@ async function renderCharacters() {
     const threadCount = threadCountByCharId.get(Number(char.id)) || 0;
     const card = document.createElement("article");
     card.className = "character-card";
+    card.dataset.characterId = String(char.id);
     if (state.characterCardSlide && Number(state.characterCardSlide.charId) === Number(char.id)) {
       card.classList.add(
         state.characterCardSlide.direction === "prev"
@@ -3637,6 +3638,7 @@ async function renderCharacters() {
     langFlagsWrap.className = "character-lang-flags";
     const definitions = resolved.definitions || [];
     const activeLang = resolved.activeLanguage || definitions[0]?.language || "en";
+    card.dataset.activeCardLanguage = activeLang;
     definitions.forEach(def => {
       const flag = createLanguageFlagRibbonElement(def.language);
       flag.classList.add("character-lang-flag");
@@ -3645,12 +3647,14 @@ async function renderCharacters() {
       }
       flag.addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (def.language === activeLang) return;
+        const card = e.target.closest(".character-card");
+        const currentLang = card?.dataset.activeCardLanguage || activeLang;
+        if (def.language === currentLang) return;
         await db.characters.update(char.id, {
           selectedCardLanguage: def.language,
         });
-        const card = e.target.closest(".character-card");
         if (card) {
+          card.dataset.activeCardLanguage = def.language;
           const flags = card.querySelectorAll(".character-lang-flag");
           flags.forEach(f => f.classList.remove("active"));
           e.target.classList.add("active");
