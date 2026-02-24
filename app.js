@@ -3325,6 +3325,25 @@ async function renderCharacters() {
 
       const avatarElements = avatars.map((avatar, index) => {
         const el = createAvatarElement(avatar, index);
+        if (el.tagName === "VIDEO") {
+          el.addEventListener("loadedmetadata", () => {
+            el.dataset.duration = String(el.duration);
+          });
+          el.addEventListener("ended", () => {
+            el.dataset.videoEnded = "true";
+            if (carouselInterval) {
+              clearInterval(carouselInterval);
+              carouselInterval = null;
+            }
+            const videoDuration = Number(el.dataset.duration) || 0;
+            if (videoDuration > 0 && videoDuration > avatarTransitionDelay) {
+              advanceCarousel();
+            } else {
+              const remainingDelay = avatarTransitionDelay - videoDuration;
+              carouselInterval = setTimeout(advanceCarousel, remainingDelay * 1000);
+            }
+          });
+        }
         carouselContainer.appendChild(el);
         return el;
       });
@@ -3336,13 +3355,30 @@ async function renderCharacters() {
         });
       };
 
+      const scheduleNextTransition = () => {
+        if (carouselInterval) {
+          clearInterval(carouselInterval);
+          carouselInterval = null;
+        }
+        const currentEl = avatarElements[currentAvatarIndex];
+        if (currentEl.tagName === "VIDEO") {
+          const videoDuration = Number(currentEl.dataset.duration) || 0;
+          if (videoDuration > 0 && videoDuration > avatarTransitionDelay) {
+            return;
+          }
+        }
+        carouselInterval = setInterval(advanceCarousel, transitionDelayMs);
+      };
+
       const advanceCarousel = () => {
         const currentEl = avatarElements[currentAvatarIndex];
-        if (currentEl.tagName === "VIDEO" && currentEl.dataset.videoPlayed !== "true") {
-          currentEl.currentTime = 0;
-          currentEl.play().catch(() => {});
-          currentEl.dataset.videoPlayed = "true";
-          return;
+        if (currentEl.tagName === "VIDEO" && currentEl.dataset.videoEnded !== "true") {
+          const videoDuration = Number(currentEl.dataset.duration) || 0;
+          if (videoDuration > 0 && videoDuration > avatarTransitionDelay) {
+            currentEl.currentTime = 0;
+            currentEl.play().catch(() => {});
+            return;
+          }
         }
 
         currentAvatarIndex = (currentAvatarIndex + 1) % avatars.length;
@@ -3350,11 +3386,11 @@ async function renderCharacters() {
 
         const nextEl = avatarElements[currentAvatarIndex];
         if (nextEl.tagName === "VIDEO") {
-          nextEl.dataset.videoPlayed = "false";
+          nextEl.dataset.videoEnded = "false";
           nextEl.currentTime = 0;
           nextEl.play().catch(() => {});
-          nextEl.dataset.videoPlayed = "true";
         }
+        scheduleNextTransition();
       };
 
       avatarWrap.appendChild(carouselContainer);
@@ -3363,13 +3399,13 @@ async function renderCharacters() {
 
       const startCarousel = () => {
         if (carouselInterval) clearInterval(carouselInterval);
-        const firstVideo = avatarElements.find(el => el.tagName === "VIDEO");
-        if (firstVideo) {
-          firstVideo.dataset.videoPlayed = "false";
-          firstVideo.play().catch(() => {});
-          firstVideo.dataset.videoPlayed = "true";
+        const firstEl = avatarElements[0];
+        if (firstEl.tagName === "VIDEO") {
+          firstEl.dataset.videoEnded = "false";
+          firstEl.play().catch(() => {});
         }
-        carouselInterval = setInterval(advanceCarousel, transitionDelayMs);
+        showAvatar(0);
+        scheduleNextTransition();
       };
 
       const stopCarousel = () => {
@@ -3381,6 +3417,7 @@ async function renderCharacters() {
           if (el.tagName === "VIDEO") {
             el.pause();
             el.currentTime = 0;
+            el.dataset.videoEnded = "false";
           }
         });
       };
