@@ -314,5 +314,6 @@
   "unsavedChangesTitle": "Ungespeicherte Änderungen",
   "unsavedChangesConfirm": "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich schließen?",
   "completionCooldownLabel": "Completion Abkühlzeit",
-  "coolingDownLabel": "Abkühlen"
+  "coolingDownLabel": "Abkühlen",
+  "cooldownToastActive": "Cooldown active: {seconds}s"
 }

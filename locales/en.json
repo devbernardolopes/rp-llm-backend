@@ -314,5 +314,6 @@
   "unsavedChangesTitle": "Unsaved Changes",
   "unsavedChangesConfirm": "You have unsaved changes. Are you sure you want to close?",
   "completionCooldownLabel": "Completion Cooldown",
-  "coolingDownLabel": "Cooling down"
+  "coolingDownLabel": "Cooling down",
+  "cooldownToastActive": "Cooldown active: {seconds}s"
 }

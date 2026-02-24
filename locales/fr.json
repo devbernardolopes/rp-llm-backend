@@ -314,5 +314,6 @@
   "unsavedChangesTitle": "Modifications non enregistrées",
   "unsavedChangesConfirm": "Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir fermer ?",
   "completionCooldownLabel": "Délai de completion",
-  "coolingDownLabel": "Refroidissement"
+  "coolingDownLabel": "Refroidissement",
+  "cooldownToastActive": "Cooldown active: {seconds}s"
 }

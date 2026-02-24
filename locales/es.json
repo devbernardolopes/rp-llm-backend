@@ -314,5 +314,6 @@
   "unsavedChangesTitle": "Cambios sin guardar",
   "unsavedChangesConfirm": "Tienes cambios sin guardar. ¿Estás seguro de que quieres cerrar?",
   "completionCooldownLabel": "Enfriamiento de Completion",
-  "coolingDownLabel": "Enfriando"
+  "coolingDownLabel": "Enfriando",
+  "cooldownToastActive": "Cooldown active: {seconds}s"
 }

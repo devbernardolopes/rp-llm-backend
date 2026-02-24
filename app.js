@@ -465,6 +465,7 @@ const I18N = {
     maxTokensLabel: "Max Tokens",
     temperatureLabel: "Temperature",
     toastDelayLabel: "Toast Delay",
+    cooldownToastActive: "Cooldown active: {seconds}s",
     marqueeBehaviorLabel: "Marquee Behavior",
     marqueeBehaviorDisabled: "Disabled",
     marqueeBehaviorOnHover: "On Hover",
@@ -819,6 +820,8 @@ const state = {
   },
   characterCardSlide: null,
   renderThreadsSeq: 0,
+  cooldownToastTimerId: null,
+  cooldownQueueTickInFlight: false,
   charModalDefinitions: [],
   charModalActiveLanguage: "",
   charModalActiveTab: "lang",
@@ -865,6 +868,20 @@ async function init() {
   renderCharacterTagFilterChips();
   updateThreadRenameButtonState();
   updateScrollBottomButtonVisibility();
+  updateCooldownPinnedToast();
+  if (state.cooldownToastTimerId) {
+    window.clearInterval(state.cooldownToastTimerId);
+  }
+  state.cooldownToastTimerId = window.setInterval(async () => {
+    if (state.cooldownQueueTickInFlight) return;
+    state.cooldownQueueTickInFlight = true;
+    try {
+      updateCooldownPinnedToast();
+      await tickQueueCooldownState();
+    } finally {
+      state.cooldownQueueTickInFlight = false;
+    }
+  }, 250);
 }
 
 async function hydrateGenerationQueue() {
@@ -2291,6 +2308,7 @@ async function setupSettingsControls() {
       completionCooldownValue.textContent = `${value}s`;
     }
     saveSettings();
+    updateCooldownPinnedToast();
   });
   toastDelaySlider?.addEventListener("input", () => {
     const value = clampToastDuration(Number(toastDelaySlider.value));
@@ -2699,6 +2717,29 @@ function showToast(message, type = "success") {
   window.setTimeout(() => {
     toast.remove();
   }, delay);
+}
+
+function updateCooldownPinnedToast() {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+  const existing = container.querySelector(".toast.cooldown-pinned");
+  const active = isInCompletionCooldown();
+  if (!active) {
+    existing?.remove();
+    return;
+  }
+  const seconds = getCooldownRemainingSeconds();
+  const text = tf("cooldownToastActive", { seconds });
+  const toast = existing || document.createElement("div");
+  toast.className = "toast cooldown-pinned";
+  toast.textContent = text;
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  if (!existing) {
+    container.prepend(toast);
+  } else if (container.firstElementChild !== toast) {
+    container.prepend(toast);
+  }
 }
 
 function openConfirmDialog(title, message) {
@@ -3457,6 +3498,10 @@ async function renderThreads() {
     row.dataset.threadId = String(thread.id);
     row.addEventListener("click", (e) => {
       if (e.target?.closest(".actions")) return;
+      const chatViewActive = document
+        .getElementById("chat-view")
+        ?.classList.contains("active");
+      if (chatViewActive && Number(currentThread?.id) === Number(thread.id)) return;
       openThread(thread.id);
     });
 
@@ -3479,8 +3524,13 @@ async function renderThreads() {
       fallbackAvatar(resolvedChar?.name || char?.name || t("threadWord"), 512, 512);
     avatar.alt = "thread avatar";
 
-    const isGenerating = state.sending && Number(state.activeGenerationThreadId) === Number(thread.id);
-    const isInCooldown = !isGenerating && isInCompletionCooldown() && currentThread && Number(currentThread.id) !== Number(thread.id);
+    const isGenerating =
+      state.sending &&
+      Number(state.activeGenerationThreadId) === Number(thread.id);
+    const isInCooldown =
+      !isGenerating &&
+      String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
+      isInCompletionCooldown();
     const queuePos = (isGenerating || isInCooldown) ? 0 : (queuePosByThreadId.get(Number(thread.id)) || 0);
     let queueBadge;
     if (isGenerating) {
@@ -3490,12 +3540,14 @@ async function renderThreads() {
       queueBadge.setAttribute("title", t("generatingLabel"));
       queueBadge.setAttribute("aria-label", t("generatingLabel"));
     } else if (isInCooldown) {
-      const remaining = getCooldownRemainingSeconds();
       queueBadge = document.createElement("span");
       queueBadge.className = "thread-cooldown-badge";
-      queueBadge.textContent = `C${remaining}`;
-      queueBadge.setAttribute("title", t("coolingDownLabel"));
-      queueBadge.setAttribute("aria-label", t("coolingDownLabel"));
+      queueBadge.textContent = "C";
+      const cooldownTitle = tf("cooldownToastActive", {
+        seconds: getCooldownRemainingSeconds(),
+      });
+      queueBadge.setAttribute("title", cooldownTitle);
+      queueBadge.setAttribute("aria-label", cooldownTitle);
     } else if (queuePos > 0) {
       queueBadge = document.createElement("span");
       queueBadge.className = "thread-queue-badge";
@@ -5994,6 +6046,12 @@ async function deleteThread(threadId) {
 }
 
 async function openThread(threadId) {
+  const chatViewActive = document
+    .getElementById("chat-view")
+    ?.classList.contains("active");
+  if (chatViewActive && Number(currentThread?.id) === Number(threadId)) {
+    return;
+  }
   const thread = await db.threads.get(threadId);
   if (!thread) return;
 
@@ -6320,6 +6378,7 @@ function renderChat() {
     const rowStreaming =
       message?.role === "assistant" &&
       (status === "queued" ||
+        status === "cooling_down" ||
         (isActiveGenerationThread && (status === "generating" || status === "regenerating")));
     log.appendChild(buildMessageRow(message, idx, rowStreaming));
   });
@@ -6438,6 +6497,13 @@ function buildMessageRow(message, index, streaming) {
     controls.appendChild(speakerBtn);
   } else {
     controls.appendChild(messageIndex);
+    const delBtn = iconButton("delete", t("msgDeleteTitle"), async () => {
+      await deleteMessageAt(index);
+    });
+    delBtn.classList.add("msg-delete-btn");
+    delBtn.classList.add("danger-icon-btn");
+    delBtn.disabled = disableControlsForRow;
+    controls.appendChild(delBtn);
     const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
       beginInlineMessageEdit(index, content);
     });
@@ -6465,12 +6531,17 @@ function buildMessageRow(message, index, streaming) {
   if (streaming) {
     let statusLabel = t("generatingLabel");
     const isQueued = message?.generationStatus === "queued";
+    const isCoolingDown = message?.generationStatus === "cooling_down";
     if (message?.generationStatus === "regenerating") {
       statusLabel = t("regeneratingLabel");
+    } else if (isCoolingDown) {
+      statusLabel =
+        String(message?.content || "").trim() ||
+        tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() });
     } else if (isQueued) {
       statusLabel = String(message?.content || "").trim() || t("generatingLabel");
     }
-    if (!isQueued && String(message?.content || "").trim()) {
+    if (!isQueued && !isCoolingDown && String(message?.content || "").trim()) {
       content.innerHTML = renderMessageHtml(message.content, message.role);
     } else {
       content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(statusLabel)}`;
@@ -6803,6 +6874,21 @@ function refreshAllSpeakerButtons() {
 
 async function sendMessage(options = {}) {
   if (!currentThread || !currentCharacter) return;
+  const pendingState = getThreadPendingGenerationState(
+    Number(currentThread.id),
+    conversationHistory,
+  );
+  if (pendingState === "queued") {
+    showToast(t("generationQueuedNotice"), "warning");
+    return;
+  }
+  if (pendingState === "cooling_down") {
+    showToast(
+      tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() }),
+      "warning",
+    );
+    return;
+  }
   if (state.sending) {
     const activeId = Number(state.activeGenerationThreadId);
     const currentId = Number(currentThread.id);
@@ -7040,6 +7126,7 @@ async function generateBotReply() {
     pending.generationStatus = "";
     if (Number(state.settings.completionCooldown) > 0) {
       state.lastCompletionTime = Date.now();
+      updateCooldownPinnedToast();
     }
     if (pending.writingInstructionsCounted !== true) {
       pending.writingInstructionsCounted = true;
@@ -7664,19 +7751,32 @@ function setSendingState(sending) {
   const personaSelect = document.getElementById("persona-select");
   const currentId = Number(currentThread?.id);
   const activeId = Number(state.activeGenerationThreadId);
+  const hasGeneratingMarker = Array.isArray(conversationHistory)
+    ? conversationHistory.some((m) => {
+        if (!m || m.role !== "assistant") return false;
+        const st = String(m.generationStatus || "").trim();
+        return st === "generating" || st === "regenerating";
+      })
+    : false;
   const currentThreadGenerating =
-    sending &&
     Number.isInteger(currentId) &&
+    currentId > 0 &&
     Number.isInteger(activeId) &&
-    currentId === activeId;
-  sendBtn.disabled = false;
+    activeId > 0 &&
+    currentId === activeId &&
+    (hasGeneratingMarker || !!state.abortController);
+  const pendingState = getThreadPendingGenerationState(currentId, conversationHistory);
+  const isBlockedByQueueOrCooldown =
+    pendingState === "queued" || pendingState === "cooling_down";
+  sendBtn.disabled = isBlockedByQueueOrCooldown;
   sendBtn.classList.toggle("is-generating", currentThreadGenerating);
   sendBtn.classList.toggle("danger-btn", currentThreadGenerating);
   sendBtn.textContent = currentThreadGenerating ? t("cancel") : t("send");
-  personaSelect.disabled = currentThreadGenerating;
+  personaSelect.disabled = currentThreadGenerating || isBlockedByQueueOrCooldown;
   refreshMessageControlStates();
   refreshAllSpeakerButtons();
   if (currentThreadGenerating) closePromptHistory();
+  renderThreads().catch(() => {});
 }
 
 function refreshMessageControlStates() {
@@ -8394,6 +8494,10 @@ async function tryStartQueuedGenerationForCurrentThread() {
   if (!state.generationQueue.includes(threadId)) return;
   const head = Number(state.generationQueue[0]);
   if (head !== threadId) return;
+  if (isInCompletionCooldown()) {
+    await ensureQueuedThreadCoolingDown(threadId);
+    return;
+  }
   await clearThreadGenerationQueueFlag(threadId);
   await generateBotReply();
 }
@@ -8403,6 +8507,10 @@ async function processNextQueuedThread() {
   if (state.generationQueue.length === 0) return;
   const nextThreadId = Number(state.generationQueue[0]);
   if (!nextThreadId) return;
+  if (isInCompletionCooldown()) {
+    await ensureQueuedThreadCoolingDown(nextThreadId);
+    return;
+  }
   if (currentThread && Number(currentThread.id) === nextThreadId) {
     await tryStartQueuedGenerationForCurrentThread();
     return;
@@ -8512,6 +8620,7 @@ async function processNextQueuedThread() {
     pending.generationStatus = "";
     if (Number(state.settings.completionCooldown) > 0) {
       state.lastCompletionTime = Date.now();
+      updateCooldownPinnedToast();
     }
     pending.generationId = reply.id || "";
     pending.completionMeta = reply.model ? { model: reply.model } : null;
@@ -8559,13 +8668,123 @@ async function requestBotReplyForCurrentThread(trigger = "manual_send") {
   await generateBotReply();
 }
 
+function getThreadPendingGenerationState(threadId, messages = []) {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return "";
+  if (
+    state.sending &&
+    Number(state.activeGenerationThreadId) === id
+  ) {
+    return "generating";
+  }
+  const list = Array.isArray(messages) ? messages : [];
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const m = list[i];
+    if (!m || m.role !== "assistant") continue;
+    const status = String(m.generationStatus || "").trim();
+    if (
+      status === "queued" ||
+      status === "cooling_down" ||
+      status === "generating" ||
+      status === "regenerating"
+    ) {
+      return status;
+    }
+  }
+  return "";
+}
+
+async function ensureQueuedThreadCoolingDown(threadId) {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return;
+  const thread = await db.threads.get(id);
+  if (!thread) return;
+  const messages = Array.isArray(thread.messages)
+    ? thread.messages.map((m) => ({ ...m }))
+    : [];
+  const seconds = getCooldownRemainingSeconds();
+  const label = tf("cooldownToastActive", { seconds });
+  let idx = findLatestPendingAssistantIndex(messages);
+  let prevContent = "";
+  let prevStatus = "";
+  if (idx < 0) {
+    idx = messages.length;
+    messages.push({
+      role: "assistant",
+      content: label,
+      createdAt: Date.now(),
+      generationStatus: "cooling_down",
+      generationError: "",
+      truncatedByFilter: false,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+    });
+    prevContent = "";
+    prevStatus = "";
+  } else {
+    prevContent = String(messages[idx].content || "");
+    prevStatus = String(messages[idx].generationStatus || "").trim();
+    messages[idx].generationStatus = "cooling_down";
+    messages[idx].content = label;
+    messages[idx].generationError = "";
+    messages[idx].truncatedByFilter = false;
+  }
+
+  const needsReason = String(thread.pendingGenerationReason || "").trim() !== "cooldown";
+  const hasChanges =
+    idx < 0 ||
+    needsReason ||
+    prevContent !== label ||
+    prevStatus !== "cooling_down";
+  if (!hasChanges) return;
+
+  const updatedAt = Date.now();
+  await db.threads.update(id, {
+    messages,
+    pendingGenerationReason: "cooldown",
+    pendingGenerationQueuedAt: Number(thread.pendingGenerationQueuedAt || updatedAt),
+    updatedAt,
+  });
+  if (currentThread && Number(currentThread.id) === id) {
+    conversationHistory = messages;
+    currentThread.pendingGenerationReason = "cooldown";
+    currentThread.pendingGenerationQueuedAt = Number(
+      thread.pendingGenerationQueuedAt || updatedAt,
+    );
+    currentThread.updatedAt = updatedAt;
+    renderChat();
+  }
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: id,
+    updatedAt,
+  });
+  await renderThreads();
+}
+
+async function tickQueueCooldownState() {
+  if (state.sending || state.generationQueue.length === 0) return;
+  const headId = Number(state.generationQueue[0]);
+  if (!Number.isInteger(headId)) return;
+  if (isInCompletionCooldown()) {
+    await ensureQueuedThreadCoolingDown(headId);
+    return;
+  }
+  await processNextQueuedThread();
+}
+
 function findLatestPendingAssistantIndex(messages) {
   const list = Array.isArray(messages) ? messages : [];
   for (let i = list.length - 1; i >= 0; i -= 1) {
     const m = list[i];
     if (!m || m.role !== "assistant") continue;
     const status = String(m.generationStatus || "").trim();
-    if (status === "queued" || status === "generating" || status === "regenerating") {
+    if (
+      status === "queued" ||
+      status === "cooling_down" ||
+      status === "generating" ||
+      status === "regenerating"
+    ) {
       return i;
     }
     const emptyContent = !String(m.content || "").trim();
@@ -9421,12 +9640,15 @@ function buildOpenRouterErrorMessage(payload, fallbackMessage) {
 }
 
 function updateModelPill() {
-  const pill = document.getElementById("chat-model-pill");
-  if (!pill) return;
+  const chatPill = document.getElementById("chat-model-pill");
+  const homePill = document.getElementById("home-model-pill");
+  if (!chatPill && !homePill) return;
   const model =
     state.lastUsedModel || resolveModelForRequest(state.settings.model);
   const provider = state.lastUsedProvider ? ` (${state.lastUsedProvider})` : "";
-  pill.textContent = `Model: ${model}${provider}`;
+  const text = `Model: ${model}${provider}`;
+  if (chatPill) chatPill.textContent = text;
+  if (homePill) homePill.textContent = text;
   scheduleThreadBudgetIndicatorUpdate();
 }
 

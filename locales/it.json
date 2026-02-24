@@ -314,5 +314,6 @@
   "unsavedChangesTitle": "Modifiche non salvate",
   "unsavedChangesConfirm": "Hai modifiche non salvate. Sei sicuro di voler chiudere?",
   "completionCooldownLabel": "Raffreddamento Completion",
-  "coolingDownLabel": "Raffreddamento"
+  "coolingDownLabel": "Raffreddamento",
+  "cooldownToastActive": "Cooldown active: {seconds}s"
 }
