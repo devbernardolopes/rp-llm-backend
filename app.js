@@ -899,6 +899,7 @@ async function init() {
   updateThreadRenameButtonState();
   updateScrollBottomButtonVisibility();
   updateCooldownPinnedToast();
+  updateDocumentTitleWithUnread();
   if (state.cooldownToastTimerId) {
     window.clearInterval(state.cooldownToastTimerId);
   }
@@ -3894,6 +3895,25 @@ function updateThreadBulkBar() {
   });
 }
 
+function updateDocumentTitleWithUnread() {
+  db.threads.toArray().then((threads) => {
+    let totalUnread = 0;
+    for (const thread of threads) {
+      const messages = Array.isArray(thread.messages) ? thread.messages : [];
+      for (const m of messages) {
+        if (m.role === "assistant" && Number(m.unreadAt) > 0) {
+          totalUnread += 1;
+        }
+      }
+    }
+    if (totalUnread > 0) {
+      document.title = `(${totalUnread}) Scenara`;
+    } else {
+      document.title = "Scenara";
+    }
+  });
+}
+
 async function renderThreads() {
   const list = document.getElementById("thread-list");
   if (!list) return;
@@ -4142,6 +4162,7 @@ async function renderThreads() {
   const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
   if (renderSeq !== state.renderThreadsSeq) return;
   list.scrollTop = Math.min(previousScrollTop, maxScroll);
+  updateDocumentTitleWithUnread();
 }
 
 async function deleteSelectedThreads() {
