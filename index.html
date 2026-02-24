@@ -508,7 +508,13 @@
           </div>
 <div class="form-field">
             <span data-i18n="modelLabel">Model</span>
-            <select id="model-select"></select>
+            <div class="model-select-wrapper">
+              <select id="model-select"></select>
+              <div id="model-select-display" class="model-select-display">Loading...</div>
+              <div id="model-custom-dropdown" class="model-custom-dropdown hidden">
+                <div id="model-dropdown-options" class="model-dropdown-options"></div>
+              </div>
+            </div>
           </div>
           <div class="settings-inline-row model-filter-row">
 <div class="form-field">

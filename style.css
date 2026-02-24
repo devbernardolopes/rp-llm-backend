@@ -1187,6 +1187,134 @@ textarea {
   color: #ffb3b3;
 }
 
+.model-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+#model-select {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+#model-select-display {
+  position: relative;
+  padding: 10px 12px;
+  padding-right: 30px;
+  background: #151a23;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color 0.15s;
+}
+
+#model-select-display:hover {
+  border-color: #409cff;
+}
+
+#model-select-display::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-top-color: #666;
+  pointer-events: none;
+}
+
+.model-select-wrapper:has(#model-select-display)::after {
+  display: none;
+}
+
+.model-custom-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: #1e2736;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  z-index: 1000;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.model-dropdown-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.model-dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s;
+}
+
+.model-dropdown-option:last-child {
+  border-bottom: none;
+}
+
+.model-dropdown-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.model-dropdown-option.selected {
+  background: rgba(64, 156, 255, 0.15);
+}
+
+.model-dropdown-option.favorite {
+  color: #ffd700;
+}
+
+.model-dropdown-option.favorite .model-name {
+  color: #ffd700;
+}
+
+.model-dropdown-option .model-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-dropdown-option .model-star {
+  cursor: pointer;
+  padding: 4px;
+  font-size: 14px;
+  color: #666;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.model-dropdown-option .model-star:hover {
+  transform: scale(1.2);
+}
+
+.model-dropdown-option .model-star.favorited {
+  color: #ffd700;
+}
+
+.model-dropdown-header {
+  padding: 8px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #888;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.2);
+}
+
 .chat-log {
   flex: 1;
   overflow-y: auto;

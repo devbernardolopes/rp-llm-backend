@@ -103,6 +103,7 @@ const DEFAULT_SETTINGS = {
   completionCooldown: 2,
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 7,
+  favoriteModels: [],
   chatMessageAlignment: "left",
 };
 
@@ -2145,7 +2146,7 @@ async function setupSettingsControls() {
   // MODEL_OPTIONS.forEach((m) => {
   //   const opt = document.createElement("option");
   //   opt.value = m.value;
-  //   opt.textContent = m.label;
+  //   opt.label = m.label;
   //   modelSelect.appendChild(opt);
   // });
   modelSelect.value = state.settings.model;
@@ -2155,6 +2156,21 @@ async function setupSettingsControls() {
     saveSettings();
   }
   refreshSelectedModelMeta(modelSelectedMeta);
+
+  const modelSelectDisplay = document.getElementById("model-select-display");
+  const modelCustomDropdown = document.getElementById("model-custom-dropdown");
+  if (modelSelectDisplay && modelCustomDropdown) {
+    modelSelectDisplay.addEventListener("click", (e) => {
+      e.stopPropagation();
+      modelCustomDropdown.classList.toggle("hidden");
+    });
+    document.addEventListener("click", () => {
+      modelCustomDropdown.classList.add("hidden");
+    });
+    modelCustomDropdown.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+  }
 
   const markdownCheck = document.getElementById("markdown-enabled");
   const allowMessageHtml = document.getElementById("allow-message-html");
@@ -6829,7 +6845,7 @@ async function maybeGenerateThreadTitle() {
     const result = await callOpenRouter(
       "You create concise, descriptive chat thread titles.",
       [{ role: "user", content: titlePrompt }],
-      state.settings.model,
+      "openrouter/auto",
     );
     const raw = String(result?.content || "").trim();
     if (!raw) return;
@@ -7929,6 +7945,7 @@ async function regenerateMessage(index) {
   state.sending = true;
   state.chatAutoScroll = true;
   state.abortController = new AbortController();
+  state.activeGenerationThreadId = currentThread.id;
   setSendingState(true);
 
   try {
@@ -8011,6 +8028,7 @@ async function regenerateMessage(index) {
   } finally {
     state.pendingPersonaInjectionPersonaId = null;
     state.abortController = null;
+    state.activeGenerationThreadId = null;
     state.sending = false;
     setSendingState(false);
   }
@@ -8563,7 +8581,13 @@ function renderSettingsModelOptions() {
     return true;
   });
 
+  const favoriteModels = state.settings.favoriteModels || [];
+
   filtered.sort((a, b) => {
+    const aFav = favoriteModels.includes(a.id);
+    const bFav = favoriteModels.includes(b.id);
+    if (aFav && !bFav) return -1;
+    if (!aFav && bFav) return 1;
     if (sortOrder === "name_desc") return b.name.localeCompare(a.name);
     if (sortOrder === "created_asc") return a.created - b.created;
     if (sortOrder === "created_desc") return b.created - a.created;
@@ -8594,6 +8618,8 @@ function renderSettingsModelOptions() {
   }
   modelSelect.value = targetModel || DEFAULT_SETTINGS.model;
 
+  renderModelCustomDropdown(filtered, targetModel);
+
   const maxTokensSlider = document.getElementById("max-tokens-slider");
   const maxTokensValue = document.getElementById("max-tokens-value");
   if (maxTokensSlider && maxTokensValue) {
@@ -8609,6 +8635,138 @@ function renderSettingsModelOptions() {
     maxTokensValue.textContent = String(state.settings.maxTokens);
   }
   refreshSelectedModelMeta();
+}
+
+function renderModelCustomDropdown(models, selectedModel) {
+  const dropdownOptions = document.getElementById("model-dropdown-options");
+  const dropdown = document.getElementById("model-custom-dropdown");
+  const display = document.getElementById("model-select-display");
+  if (!dropdownOptions || !dropdown || !display) return;
+
+  const favoriteModels = state.settings.favoriteModels || [];
+  const favoriteModelsList = models.filter((m) => favoriteModels.includes(m.id));
+  const otherModelsList = models.filter((m) => !favoriteModels.includes(m.id));
+
+  dropdownOptions.innerHTML = "";
+
+  if (favoriteModelsList.length > 0) {
+    const header = document.createElement("div");
+    header.className = "model-dropdown-header";
+    header.textContent = t("favoriteModels");
+    dropdownOptions.appendChild(header);
+
+    favoriteModelsList.forEach((m) => {
+      const isSelected = m.id === selectedModel;
+      const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
+      const moderationMark = m.isModerated === true ? " | Moderated" : "";
+
+      const option = document.createElement("div");
+      option.className = `model-dropdown-option${isSelected ? " selected" : ""} favorite`;
+      option.dataset.modelId = m.id;
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "model-name";
+      nameSpan.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+      nameSpan.style.color = "#ffd700";
+
+      const starSpan = document.createElement("span");
+      starSpan.className = "model-star favorited";
+      starSpan.innerHTML = "&#9733;";
+      starSpan.title = t("modelUnfavorite");
+      starSpan.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleModelFavorite(m.id);
+      });
+
+      option.appendChild(nameSpan);
+      option.appendChild(starSpan);
+      option.addEventListener("click", () => {
+        selectModelFromDropdown(m.id);
+      });
+
+      dropdownOptions.appendChild(option);
+    });
+  }
+
+  if (otherModelsList.length > 0) {
+    if (favoriteModelsList.length > 0) {
+      const header = document.createElement("div");
+      header.className = "model-dropdown-header";
+      header.textContent = t("all");
+      dropdownOptions.appendChild(header);
+    }
+
+    otherModelsList.forEach((m) => {
+      const isSelected = m.id === selectedModel;
+      const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
+      const moderationMark = m.isModerated === true ? " | Moderated" : "";
+
+      const option = document.createElement("div");
+      option.className = `model-dropdown-option${isSelected ? " selected" : ""}`;
+      option.dataset.modelId = m.id;
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "model-name";
+      nameSpan.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+
+      const starSpan = document.createElement("span");
+      starSpan.className = "model-star";
+      starSpan.innerHTML = "&#9734;";
+      starSpan.title = t("modelFavorite");
+      starSpan.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleModelFavorite(m.id);
+      });
+
+      option.appendChild(nameSpan);
+      option.appendChild(starSpan);
+      option.addEventListener("click", () => {
+        selectModelFromDropdown(m.id);
+      });
+
+      dropdownOptions.appendChild(option);
+    });
+  }
+
+  const selectedModelData = models.find((m) => m.id === selectedModel);
+  if (selectedModelData) {
+    const lowContextMark = isLowContextRoleplayModel(selectedModelData) ? " | ! <=16k" : "";
+    const moderationMark = selectedModelData.isModerated === true ? " | Moderated" : "";
+    display.textContent = `${selectedModelData.name} (${selectedModel.id})${lowContextMark}${moderationMark}`;
+  } else if (selectedModel) {
+    display.textContent = `${selectedModel} (custom)`;
+  } else {
+    display.textContent = "Select a model...";
+  }
+}
+
+function toggleModelFavorite(modelId) {
+  if (!state.settings.favoriteModels) {
+    state.settings.favoriteModels = [];
+  }
+  const index = state.settings.favoriteModels.indexOf(modelId);
+  if (index === -1) {
+    state.settings.favoriteModels.push(modelId);
+  } else {
+    state.settings.favoriteModels.splice(index, 1);
+  }
+  saveSettings();
+  renderSettingsModelOptions();
+}
+
+function selectModelFromDropdown(modelId) {
+  const modelSelect = document.getElementById("model-select");
+  if (modelSelect) {
+    modelSelect.value = modelId;
+    state.settings.model = modelId;
+    saveSettings();
+    refreshSelectedModelMeta();
+  }
+  const dropdown = document.getElementById("model-custom-dropdown");
+  if (dropdown) {
+    dropdown.classList.add("hidden");
+  }
+  renderSettingsModelOptions();
 }
 
 async function fetchOpenRouterModelCatalog(signal) {

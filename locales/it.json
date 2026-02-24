@@ -326,5 +326,8 @@
   "characterSortCreationDate": "Creation Date",
   "characterSortUpdateDate": "Update Date",
   "characterSortName": "Name",
-  "characterSortChats": "# Chats"
+  "characterSortChats": "# Chats",
+  "modelFavorite": "Preferito",
+  "modelUnfavorite": "Rimuovi dai preferiti",
+  "favoriteModels": "Preferiti"
 }
