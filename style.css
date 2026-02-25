@@ -2072,7 +2072,7 @@ textarea {
   justify-content: flex-start;
   align-items: flex-start;
   flex-direction: column;
-  margin-top: 12px;
+  margin-top: 6px;
 }
 
 .char-def-tabs-row {
@@ -2303,8 +2303,9 @@ textarea {
 }
 
 .char-avatars-section {
-  padding: 16px 20px;
+  padding: 10px 0 8px;
   border-bottom: 1px solid var(--line);
+  margin-top: 4px;
 }
 
 .char-avatars-container {
