@@ -2282,9 +2282,12 @@ textarea {
 }
 
 .checkbox-line {
+  display: flex;
+  width: 100%;
   flex-direction: row !important;
   align-items: center;
   gap: 8px;
+  white-space: normal;
 }
 
 .checkbox-line input[type="checkbox"],
