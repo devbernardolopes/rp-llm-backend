@@ -747,6 +747,9 @@ const I18N = {
     oneTimeExtraPrompt: "One-time only Extra System/Character Prompt",
     writingInstructions: "Writing Instructions",
     writingInstructionsNone: "None",
+    apply: "Apply",
+    closeWithoutSaving: "Close Without Saving",
+    saveAndClose: "Save and Close",
     initialMessages: "Initial Messages",
     tagsCommaSeparated: "Tags (comma-separated)",
     personaInjectionPlacement: "Persona Injection Placement",
@@ -992,6 +995,7 @@ const state = {
   confirmResolver: null,
   textInputResolver: null,
   confirmMode: "confirm",
+  unsavedResolver: null,
   activeShortcut: null,
   abortController: null,
   tts: {
@@ -1539,7 +1543,10 @@ function setupEvents() {
     ?.addEventListener("click", () => showToast(t("guideComingSoon"), "success"));
   document
     .getElementById("save-character-btn")
-    .addEventListener("click", saveCharacterFromModal);
+    .addEventListener("click", () => saveCharacterFromModal());
+  document
+    .getElementById("apply-character-btn")
+    ?.addEventListener("click", () => applyCharacterFromModal());
   document
     .getElementById("char-tts-test-btn")
     .addEventListener("click", playCharacterTtsTestFromModal);
@@ -1577,7 +1584,7 @@ function setupEvents() {
   document
     .getElementById("char-writing-instructions-select")
     .addEventListener("change", () => {
-      state.modalDirty["character-modal"] = true;
+      setModalDirtyState("character-modal", true);
       updateCharWritingInstructionsVisibility();
     });
   document
@@ -1887,11 +1894,23 @@ function setupEvents() {
         modal.classList.add("hidden");
       } else if (modal.id === "confirm-modal") {
         resolveConfirmDialog(false);
+      } else if (modal.id === "unsaved-modal") {
+        resolveUnsavedDialog("back");
       } else {
         closeActiveModal();
       }
     });
   });
+
+  document
+    .getElementById("unsaved-back-btn")
+    ?.addEventListener("click", () => resolveUnsavedDialog("back"));
+  document
+    .getElementById("unsaved-close-btn")
+    ?.addEventListener("click", () => resolveUnsavedDialog("close"));
+  document
+    .getElementById("unsaved-save-btn")
+    ?.addEventListener("click", () => resolveUnsavedDialog("save"));
 
   markModalDirtyOnInput("character-modal", [
     "#char-name",
@@ -1934,6 +1953,7 @@ function setupEvents() {
     "#lore-token-budget",
     "#lore-recursive-scanning",
   ]);
+  updateCharacterModalActionButtons();
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
   updateNameLengthCounter("persona-description", "persona-description-count", 100);
@@ -3309,13 +3329,27 @@ function markModalDirtyOnInput(modalId, selectors) {
   selectors.forEach((selector) => {
     const el = document.querySelector(selector);
     if (!el) return;
-    el.addEventListener("input", () => {
-      state.modalDirty[modalId] = true;
-    });
-    el.addEventListener("change", () => {
-      state.modalDirty[modalId] = true;
-    });
+    const markDirty = () => setModalDirtyState(modalId, true);
+    el.addEventListener("input", markDirty);
+    el.addEventListener("change", markDirty);
   });
+}
+
+function updateCharacterModalActionButtons() {
+  const isDirty = !!state.modalDirty["character-modal"];
+  const saveBtn = document.getElementById("save-character-btn");
+  const applyBtn = document.getElementById("apply-character-btn");
+  [saveBtn, applyBtn].forEach((btn) => {
+    if (!btn) return;
+    btn.disabled = !isDirty;
+  });
+}
+
+function setModalDirtyState(modalId, isDirty) {
+  state.modalDirty[modalId] = !!isDirty;
+  if (modalId === "character-modal") {
+    updateCharacterModalActionButtons();
+  }
 }
 
 function normalizeShortcutString(value) {
@@ -3439,6 +3473,26 @@ function openConfirmDialog(title, message) {
       title || t("confirm");
     document.getElementById("confirm-message").textContent = message || "";
     state.confirmResolver = resolve;
+    modal.classList.remove("hidden");
+  });
+}
+
+function resolveUnsavedDialog(action = "back") {
+  const modal = document.getElementById("unsaved-modal");
+  modal?.classList.add("hidden");
+  const resolver = state.unsavedResolver;
+  state.unsavedResolver = null;
+  if (resolver) resolver(action || "back");
+}
+
+function openUnsavedChangesDialog() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("unsaved-modal");
+    if (!modal) {
+      resolve("back");
+      return;
+    }
+    state.unsavedResolver = resolve;
     modal.classList.remove("hidden");
   });
 }
@@ -4763,7 +4817,7 @@ function openModal(modalId) {
   if (!modal) return;
   state.activeModalId = modalId;
   modal.classList.remove("hidden");
-  state.modalDirty[modalId] = false;
+  setModalDirtyState(modalId, false);
   if (modalId === "personas-modal") {
     renderPersonaModalList();
   } else if (modalId === "settings-modal") {
@@ -4800,8 +4854,15 @@ async function closeActiveModal() {
     return;
   }
   if (closingId === "character-modal" && state.modalDirty[closingId]) {
-    const ok = await openConfirmDialog(t("unsavedChangesTitle"), t("unsavedChangesConfirm"));
-    if (!ok) return;
+    const action = await openUnsavedChangesDialog();
+    if (action === "back") return;
+    if (action === "close") {
+      setModalDirtyState(closingId, false);
+    } else if (action === "save") {
+      const saved = await saveCharacterFromModal({ close: false });
+      if (!saved) return;
+      setModalDirtyState(closingId, false);
+    }
   }
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
@@ -4809,7 +4870,7 @@ async function closeActiveModal() {
     state.charModalPendingThreadDeleteIds = [];
   }
   state.activeModalId = null;
-  state.modalDirty[closingId] = false;
+  setModalDirtyState(closingId, false);
 }
 
 function normalizeBotLanguageCode(value) {
@@ -5379,12 +5440,12 @@ async function openCharacterModal(character = null, selectedCardLanguage = null)
   openModal("character-modal");
 }
 
-async function saveCharacterFromModal() {
+async function saveCharacterFromModal({ close = true } = {}) {
   saveActiveCharacterDefinitionFromForm();
   const defs = state.charModalDefinitions.map((def) => ({ ...def }));
   if (defs.length === 0) {
     await openInfoDialog(t("missingFieldTitle"), t("languageRequired"));
-    return;
+    return false;
   }
 
   const missingNameLanguages = [];
@@ -7254,7 +7315,7 @@ function addAvatarFromFile(file) {
         data: result,
         name: file.name,
       });
-      state.modalDirty["character-modal"] = true;
+      setModalDirtyState("character-modal", true);
       renderCharAvatars();
       resolve();
     };
@@ -7402,7 +7463,7 @@ function renderCharAvatars() {
 
 function removeAvatar(index) {
   state.charModalAvatars.splice(index, 1);
-  state.modalDirty["character-modal"] = true;
+  setModalDirtyState("character-modal", true);
   renderCharAvatars();
 }
 
@@ -7410,7 +7471,7 @@ function setAvatarAsMain(index) {
   if (index === 0) return;
   const avatar = state.charModalAvatars.splice(index, 1)[0];
   state.charModalAvatars.unshift(avatar);
-  state.modalDirty["character-modal"] = true;
+  setModalDirtyState("character-modal", true);
   renderCharAvatars();
 }
 
@@ -7426,7 +7487,7 @@ function moveAvatar(index, offset) {
   }
   const avatar = state.charModalAvatars.splice(index, 1)[0];
   state.charModalAvatars.splice(targetIndex, 0, avatar);
-  state.modalDirty["character-modal"] = true;
+  setModalDirtyState("character-modal", true);
   renderCharAvatars();
 }
 

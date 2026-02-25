@@ -341,6 +341,51 @@
     </div>
 
     <div
+      id="unsaved-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="unsaved-title"
+    >
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="unsaved-title" data-i18n="unsavedChangesTitle">
+            Unsaved Changes
+          </h3>
+        </div>
+        <div class="modal-body">
+          <p id="unsaved-message" data-i18n="unsavedChangesConfirm"></p>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="unsaved-back-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="back"
+          >
+            Back
+          </button>
+          <button
+            id="unsaved-close-btn"
+            class="secondary-btn danger-btn"
+            type="button"
+            data-i18n="closeWithoutSaving"
+          >
+            Close Without Saving
+          </button>
+          <button
+            id="unsaved-save-btn"
+            class="primary-btn"
+            type="button"
+            data-i18n="saveAndClose"
+          >
+            Save and Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
       id="text-input-modal"
       class="modal hidden"
       role="dialog"
@@ -1020,6 +1065,15 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div id="char-def-tabs" class="settings-tabs">
+          <div id="char-avatars-section" class="char-avatars-section">
+            <div id="char-avatars-container" class="char-avatars-container">
+              <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
+                <span class="dropzone-plus">+</span>
+                <span class="dropzone-hint">Drag & drop or click</span>
+              </button>
+              <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
+            </div>
+          </div>
           <div class="char-def-tabs-row char-def-tabs-main-row">
             <button
               id="char-config-tab-btn"
@@ -1046,15 +1100,6 @@
             >
               Tags
             </button>
-          </div>
-          <div id="char-avatars-section" class="char-avatars-section">
-            <div id="char-avatars-container" class="char-avatars-container">
-              <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
-                <span class="dropzone-plus">+</span>
-                <span class="dropzone-hint">Drag & drop or click</span>
-              </button>
-              <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
-            </div>
           </div>
           <div class="char-def-tabs-row">
             <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
@@ -1290,7 +1335,22 @@
           <button class="secondary-btn" data-close-modal data-i18n="cancel">
             Cancel
           </button>
-          <button id="save-character-btn" class="primary-btn" data-i18n="save">
+          <button
+            id="apply-character-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="apply"
+            disabled
+          >
+            Apply
+          </button>
+          <button
+            id="save-character-btn"
+            class="primary-btn"
+            type="button"
+            data-i18n="save"
+            disabled
+          >
             Save
           </button>
         </div>

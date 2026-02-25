@@ -551,7 +551,10 @@ body {
   color: #d4f8df;
 }
 
-.icon-btn:disabled {
+.icon-btn:disabled,
+.option-btn:disabled,
+.primary-btn:disabled,
+.secondary-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -653,8 +656,8 @@ textarea {
 }
 
 #main-view {
-  padding: 16px 20px 14px;
-  gap: 12px;
+  padding: 10px 20px 10px;
+  gap: 8px;
   min-height: 0;
 }
 
@@ -663,7 +666,7 @@ textarea {
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
 
 .main-header h1 {
@@ -739,16 +742,16 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 64px;
+  min-width: 0;
 }
 
 .character-sort-btn {
-  width: 48px;
-  height: 48px;
-  padding: 4px;
-  border-radius: 12px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 8px;
   border: 1px solid var(--line);
-  background: var(--panel-2);
+  background: #1d2434;
   display: flex;
   align-items: center;
   justify-content: center;
