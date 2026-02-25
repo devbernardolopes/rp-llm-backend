@@ -1514,16 +1514,20 @@
               </button>
             </div>
             <div class="two-col lore-editor-grid">
-              <div class="form-field full">
+            <div class="form-field full">
+              <div class="label-inline">
                 <span data-i18n="nameLabel">Name</span>
-                <input
-                  id="writing-instruction-name"
-                  type="text"
-                  minlength="1"
-                  maxlength="64"
-                />
-                <span id="writing-instruction-name-count" class="muted">0/64</span>
+                <span id="writing-instruction-name-count" class="muted label-count"
+                  >0/64</span
+                >
               </div>
+              <input
+                id="writing-instruction-name"
+                type="text"
+                minlength="1"
+                maxlength="64"
+              />
+            </div>
             </div>
             <div id="writing-instruction-tabs" class="settings-tabs">
               <div class="char-def-tabs-row">

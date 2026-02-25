@@ -1996,10 +1996,18 @@ function setupModalTextareas() {
     header.setAttribute("aria-expanded", "true");
     const title = document.createElement("span");
     title.textContent = labelText;
+    const rightGroup = document.createElement("span");
+    rightGroup.className = "textarea-collapse-header-right";
+    const countEl =
+      textarea.id && document.getElementById(`${textarea.id}-count`);
+    if (countEl) {
+      rightGroup.appendChild(countEl);
+    }
     const icon = document.createElement("span");
     icon.className = "textarea-collapse-icon";
     icon.textContent = "▴";
-    header.append(title, icon);
+    rightGroup.appendChild(icon);
+    header.append(title, rightGroup);
     const body = document.createElement("div");
     body.className = "textarea-collapse-body";
     parent.insertBefore(wrapper, textarea);

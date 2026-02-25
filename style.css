@@ -1918,6 +1918,17 @@ textarea {
   font-size: 14px;
   transition: transform 0.2s ease;
 }
+.textarea-collapse-header-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.textarea-collapse-count {
+  color: var(--muted);
+  font-size: 12px;
+  min-width: 3ch;
+  text-align: right;
+}
 .textarea-collapse-body textarea {
   width: 100%;
   border-radius: 10px;
