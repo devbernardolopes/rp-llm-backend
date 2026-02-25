@@ -854,6 +854,17 @@ function isTtsCancelledError(error) {
   return error?.name === "TtsCancelledError";
 }
 
+function preprocessForTTS(text) {
+  return text
+    .replace(/\*+/g, "")
+    .replace(/`+/g, "")
+    .replace(/#+\s?/g, "")
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/[_~]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 window.addEventListener("DOMContentLoaded", init);
 
 document.addEventListener("visibilitychange", () => {
@@ -8596,7 +8607,7 @@ async function playTtsAudio(text, options, playback = {}) {
   if (!hasBrowserTtsSupport()) {
     throw new Error("Browser TTS is unavailable.");
   }
-  const normalizedText = String(text || "").trim();
+  const normalizedText = preprocessForTTS(text);
   if (!normalizedText) {
     ttsDebug("playTtsAudio:empty-text");
     throw new Error("Text is empty.");
