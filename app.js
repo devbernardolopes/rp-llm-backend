@@ -169,35 +169,6 @@ const CUSTOM_KOKORO_VOICE_URLS = {
     "https://rp-llm-backend.vercel.app/assets/kokoro-extra-voices/pm_santa.pt",
 };
 
-function getKokoroLanguageKey(language = "") {
-  const normalized = normalizeBotLanguageCode(language || "") || "";
-  const lower = normalized.toLowerCase();
-  if (!lower) return "en";
-  if (lower.startsWith("pt-br")) return "pt-BR";
-  if (lower.startsWith("pt")) return "pt";
-  if (lower.startsWith("zh")) return "zh";
-  if (lower.startsWith("en")) return "en";
-  if (lower.startsWith("fr")) return "fr";
-  if (lower.startsWith("it")) return "it";
-  if (lower.startsWith("ja")) return "ja";
-  if (lower.startsWith("hi")) return "hi";
-  return lower;
-}
-
-function getFilteredKokoroVoicesForLanguage(language = "") {
-  const key = getKokoroLanguageKey(language);
-  const prefixes = KOKORO_LANGUAGE_VOICE_PREFIXES[key] || [];
-  if (prefixes.length === 0) return [];
-  return KOKORO_VOICE_OPTIONS.filter((voice) => {
-    const prefix = (voice || "").split("_")[0];
-    return prefixes.includes(prefix);
-  });
-}
-
-function isKokoroSupportedForLanguage(language = "") {
-  return getFilteredKokoroVoicesForLanguage(language).length > 0;
-}
-
 function patchKokoroVoiceFetch() {
   if (state.tts.kokoro.fetchPatched) return;
   if (typeof window === "undefined" || typeof window.fetch !== "function") return;
@@ -987,18 +958,19 @@ const state = {
     activeRequestId: 0,
     voiceSupportReady: false,
     currentAudioUrl: null,
-      kokoro: {
-        modulePromise: null,
-        instance: null,
-        config: {
-          device: "wasm",
-          dtype: "q8",
-        },
-        loading: false,
-        fetchPatched: false,
-        voiceListLoaded: false,
+    kokoro: {
+      modulePromise: null,
+      instance: null,
+      config: {
+        device: "wasm",
+        dtype: "q8",
       },
+      loading: false,
+      fetchPatched: false,
+      voiceListLoaded: false,
+    },
   },
+  avatarSnapshotCache: new Map(),
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
   activeGenerationThreadId: null,
@@ -4282,10 +4254,13 @@ async function renderThreads() {
 
     const avatar = document.createElement("img");
     avatar.className = "thread-avatar";
-    avatar.src =
-      resolvedChar?.avatar ||
-      fallbackAvatar(resolvedChar?.name || char?.name || t("threadWord"), 512, 512);
-    avatar.alt = "thread avatar";
+    const threadFallback = resolvedChar?.name || char?.name || t("threadWord");
+    if (resolvedChar) {
+      setCharacterAvatarImage(avatar, resolvedChar, threadFallback, 512);
+    } else {
+      avatar.src = fallbackAvatar(threadFallback, 512, 512);
+    }
+    avatar.alt = `${threadFallback} avatar`;
 
     const isGenerating =
       state.sending &&
@@ -4681,6 +4656,94 @@ function createLanguageFlagRibbonElement(code) {
     span.textContent = getBotLanguageFlag(code);
   }
   return span;
+}
+
+function getPrimaryAvatarInfo(character) {
+  const avatars = Array.isArray(character?.avatars) ? character.avatars : [];
+  if (avatars.length > 0) {
+    const first = avatars[0];
+    if (first && first.data) {
+      return {
+        type: first.type || "image",
+        data: first.data,
+      };
+    }
+  }
+  if (character?.avatar) {
+    return {
+      type: "image",
+      data: character.avatar,
+    };
+  }
+  return null;
+}
+
+async function ensureVideoAvatarSnapshot(src) {
+  if (!src) return null;
+  if (state.avatarSnapshotCache.has(src)) return state.avatarSnapshotCache.get(src);
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+  video.src = src;
+  try {
+    await new Promise((resolve, reject) => {
+      const onLoaded = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = (err) => {
+        cleanup();
+        reject(err);
+      };
+      const cleanup = () => {
+        video.removeEventListener("loadeddata", onLoaded);
+        video.removeEventListener("error", onError);
+      };
+      video.addEventListener("loadeddata", onLoaded, { once: true });
+      video.addEventListener("error", onError, { once: true });
+    });
+    const width = video.videoWidth || 256;
+    const height = video.videoHeight || 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/png");
+      state.avatarSnapshotCache.set(src, dataUrl);
+      return dataUrl;
+    }
+  } catch (err) {
+    console.warn("avatar:snapshot-failed", src, err);
+  } finally {
+    video.pause();
+    video.src = "";
+  }
+  state.avatarSnapshotCache.set(src, null);
+  return null;
+}
+
+function setCharacterAvatarImage(img, character, fallbackName, fallbackSize = 512) {
+  const info = getPrimaryAvatarInfo(character);
+  const fallbackUrl = fallbackAvatar(fallbackName || t("threadWord"), fallbackSize, fallbackSize);
+  img.dataset.avatarVideo = "";
+  if (!info?.data) {
+    img.src = fallbackUrl;
+    return;
+  }
+  if (info.type === "video") {
+    img.dataset.avatarVideo = info.data;
+    img.src = fallbackUrl;
+    ensureVideoAvatarSnapshot(info.data)
+      .then((preview) => {
+        if (preview) img.src = preview;
+      })
+      .catch(() => {});
+    return;
+  }
+  img.src = info.data;
 }
 
 function createEmptyCharacterDefinition(language = "en") {
@@ -7897,12 +7960,25 @@ function buildMessageRow(message, index, streaming) {
   const userName = message.senderName || fallbackSender;
   const userAvatar = message.senderAvatar || fallbackAvatar(userName, 512, 512);
   const botName = currentCharacter?.name || "Character";
-  const botAvatar =
-    currentCharacter?.avatar ||
-    fallbackAvatar(currentCharacter?.name || "Character", 512, 512);
-  avatar.src = message.role === "assistant" ? botAvatar : userAvatar;
-  avatar.classList.add("clickable-avatar");
-  avatar.addEventListener("click", () => openImagePreview(avatar.src));
+    const botAvatar =
+      currentCharacter?.avatar ||
+      fallbackAvatar(currentCharacter?.name || "Character", 512, 512);
+    const chatFsName =
+      message.role === "assistant" ? botName : userName || t("message");
+    if (message.role === "assistant") {
+      setCharacterAvatarImage(avatar, currentCharacter, botName, 256);
+    } else {
+      setCharacterAvatarImage(avatar, { avatar: userAvatar }, chatFsName, 256);
+    }
+    avatar.classList.add("clickable-avatar");
+    avatar.addEventListener("click", () => {
+      const videoSrc = avatar.dataset.avatarVideo;
+      if (videoSrc) {
+        openVideoPreview(videoSrc);
+      } else {
+        openImagePreview(avatar.src);
+      }
+    });
   if (message.role === "assistant") {
     const mult = Math.max(
       1,
