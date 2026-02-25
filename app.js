@@ -2266,6 +2266,7 @@ function toggleModalTag(tag) {
   const next = exists ? tags.filter((t) => t.toLowerCase() !== lower) : [...tags, tag];
   setCharacterTagsInputValue(next);
   renderCharacterTagPresetButtons();
+  setModalDirtyState("character-modal", true);
 }
 
 function renderCharacterTagPresetButtons() {
@@ -3877,6 +3878,10 @@ async function renderCharacters() {
   if (!grid) return;
   const previousScrollTop = Number(grid.scrollTop || 0);
   const characters = await db.characters.toArray();
+  const filters = document.getElementById("character-filters");
+  if (filters) {
+    filters.classList.toggle("hidden", characters.length === 0);
+  }
   const threads = await db.threads.toArray();
   const threadCountByCharId = new Map();
   threads.forEach((thread) => {
@@ -4146,16 +4151,6 @@ async function renderCharacters() {
       card._restoreVideoTimes = restoreVideoTimes;
       card._getCarouselState = getCarouselState;
 
-      const idOverlay = document.createElement("span");
-      idOverlay.className = "character-avatar-id";
-      idOverlay.textContent = `#${char.id}`;
-      carouselContainer.appendChild(idOverlay);
-
-      const threadOverlay = document.createElement("span");
-      threadOverlay.className = "character-avatar-threads";
-      threadOverlay.textContent = String(threadCount);
-      carouselContainer.appendChild(threadOverlay);
-
       startCarousel();
     } else {
       const avatar = document.createElement("img");
@@ -4168,16 +4163,17 @@ async function renderCharacters() {
       });
       avatarWrap.appendChild(avatar);
 
-      const idOverlay = document.createElement("span");
-      idOverlay.className = "character-avatar-id";
-      idOverlay.textContent = `#${char.id}`;
-      avatarWrap.appendChild(idOverlay);
-
-      const threadOverlay = document.createElement("span");
-      threadOverlay.className = "character-avatar-threads";
-      threadOverlay.textContent = String(threadCount);
-      avatarWrap.appendChild(threadOverlay);
     }
+
+    const idOverlay = document.createElement("span");
+    idOverlay.className = "character-avatar-id";
+    idOverlay.textContent = `#${char.id}`;
+    avatarWrap.appendChild(idOverlay);
+
+    const threadOverlay = document.createElement("span");
+    threadOverlay.className = "character-avatar-threads";
+    threadOverlay.textContent = String(threadCount);
+    avatarWrap.appendChild(threadOverlay);
 
     const name = document.createElement("h3");
     name.className = "character-name";
@@ -4190,8 +4186,8 @@ async function renderCharacters() {
     const tagline = document.createElement("div");
     tagline.className = "character-tagline";
     const taglineText = resolved.tagline || "";
-    tagline.textContent = taglineText ? taglineText : "---";
-    applyHoverMarquee(tagline, tagline.textContent);
+    tagline.textContent = taglineText;
+    applyHoverMarquee(tagline, taglineText);
 
     const langFlagsWrap = document.createElement("div");
     langFlagsWrap.className = "character-lang-flags";
@@ -4217,14 +4213,24 @@ async function renderCharacters() {
           const flags = card.querySelectorAll(".character-lang-flag");
           flags.forEach(f => f.classList.remove("active"));
           e.target.classList.add("active");
+          const targetDef =
+            definitions.find((d) => d.language === def.language) || def;
+          const displayName = targetDef?.name || resolved.name || "Unnamed";
+          applyHoverMarquee(name, displayName);
+          const displayTagline = targetDef?.tagline || "";
+          tagline.textContent = displayTagline;
+          applyHoverMarquee(tagline, displayTagline);
         }
       });
       langFlagsWrap.appendChild(flag);
     });
 
-    const tags = Array.isArray(char.tags)
-      ? char.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
-      : [];
+    const tags = (Array.isArray(char.tags) ? char.tags : [])
+      .map((t) => normalizeTagValue(t))
+      .filter(Boolean)
+      .sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" }),
+      );
     const tagsWrap = document.createElement("div");
     tagsWrap.className = "character-tags";
     const expanded = state.expandedCharacterTagIds.has(Number(char.id));
@@ -5621,10 +5627,17 @@ async function saveCharacterFromModal({ close = true } = {}) {
     }
   }
 
-  state.modalDirty["character-modal"] = false;
-  closeActiveModal();
   state.charModalPendingThreadDeleteIds = [];
+  setModalDirtyState("character-modal", false);
   await renderAll();
+  if (close) {
+    closeActiveModal();
+  }
+  return true;
+}
+
+async function applyCharacterFromModal() {
+  return saveCharacterFromModal({ close: false });
 }
 
 function populateCharTtsLanguageSelect(
