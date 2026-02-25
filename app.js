@@ -1689,14 +1689,12 @@ function setupEvents() {
     "#char-tags-input",
     "#char-tts-voice",
     "#char-tts-language",
-    "#char-tts-voice",
     "#char-tts-rate",
     "#char-tts-pitch",
     "#char-tts-provider",
     "#char-tts-kokoro-device",
     "#char-tts-kokoro-dtype",
     "#char-tts-kokoro-voice",
-    "#char-tts-enabled",
     "#char-prefer-lore-language",
   ]);
   markModalDirtyOnInput("personas-modal", [
@@ -4719,7 +4717,6 @@ function createEmptyCharacterDefinition(language = "en") {
     initialMessagesRaw: "",
     initialMessages: [],
     personaInjectionPlacement: "end_system_prompt",
-    ttsEnabled: true,
     ttsVoice: DEFAULT_TTS_VOICE,
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
       ttsRate: DEFAULT_TTS_RATE,
@@ -4751,7 +4748,6 @@ function normalizeCharacterDefinitions(character = null) {
         ...createEmptyCharacterDefinition(d?.language || "en"),
         ...d,
         language: normalizeBotLanguageCode(d?.language || "en"),
-        ttsEnabled: d?.ttsEnabled !== false,
         ttsProvider: d?.ttsProvider || "browser",
         kokoroDevice: d?.kokoroDevice || "wasm",
         kokoroDtype: d?.kokoroDtype || "q8",
@@ -4790,7 +4786,6 @@ function normalizeCharacterDefinitions(character = null) {
     : [];
   fallback.personaInjectionPlacement =
     character?.personaInjectionPlacement || "end_system_prompt";
-  fallback.ttsEnabled = character?.ttsEnabled !== false;
   fallback.ttsVoice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
   fallback.ttsLanguage = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   fallback.ttsRate = Number.isFinite(Number(character?.ttsRate))
@@ -4959,7 +4954,6 @@ function saveActiveCharacterDefinitionFromForm() {
   def.initialMessagesRaw = String(document.getElementById("char-initial-messages")?.value || "");
   def.personaInjectionPlacement =
     String(document.getElementById("char-persona-injection-placement")?.value || "end_system_prompt");
-  def.ttsEnabled = !!document.getElementById("char-tts-enabled")?.checked;
   const selectedTts = getResolvedCharTtsSelection();
   def.ttsVoice = selectedTts.voice;
   def.ttsLanguage = selectedTts.language;
@@ -4997,7 +4991,6 @@ function loadActiveCharacterDefinitionToForm() {
       : "");
   document.getElementById("char-persona-injection-placement").value =
     def.personaInjectionPlacement || "end_system_prompt";
-  document.getElementById("char-tts-enabled").checked = def.ttsEnabled !== false;
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   populateCharTtsVoiceSelect(def.ttsVoice || DEFAULT_TTS_VOICE);
     document.getElementById("char-tts-rate").value = String(
@@ -5139,7 +5132,6 @@ async function saveCharacterFromModal() {
     def.writingInstructions = String(def.writingInstructions || "").trim();
     def.personaInjectionPlacement =
       def.personaInjectionPlacement || "end_system_prompt";
-    def.ttsEnabled = def.ttsEnabled !== false;
     def.ttsVoice = String(def.ttsVoice || DEFAULT_TTS_VOICE);
     def.ttsLanguage = String(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
     def.ttsRate = Math.max(
@@ -5237,7 +5229,6 @@ async function saveCharacterFromModal() {
     avatarScale:
       Number(document.getElementById("char-avatar-scale").value) || 1,
     tags: getCharacterTagsFromModal(),
-    ttsEnabled: primaryDef?.ttsEnabled !== false,
     ttsVoice: selectedTts.voice,
     ttsLanguage: selectedTts.language,
     ttsRate: selectedTts.rate,
@@ -7062,6 +7053,37 @@ function renderCharAvatars() {
       item.appendChild(setMainBtn);
     }
 
+    const orderOverlay = document.createElement("div");
+    orderOverlay.className = "char-avatar-order";
+
+    const movePrevBtn = document.createElement("button");
+    movePrevBtn.className = "avatar-order-btn avatar-order-btn-prev";
+    movePrevBtn.type = "button";
+    movePrevBtn.title = "Move earlier";
+    movePrevBtn.innerHTML = "&#8592;";
+    movePrevBtn.disabled = index === 0;
+    movePrevBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      moveAvatar(index, -1);
+    };
+
+    const moveNextBtn = document.createElement("button");
+    moveNextBtn.className = "avatar-order-btn avatar-order-btn-next";
+    moveNextBtn.type = "button";
+    moveNextBtn.title = "Move later";
+    moveNextBtn.innerHTML = "&#8594;";
+    moveNextBtn.disabled = index === state.charModalAvatars.length - 1;
+    moveNextBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      moveAvatar(index, 1);
+    };
+
+    orderOverlay.appendChild(movePrevBtn);
+    orderOverlay.appendChild(moveNextBtn);
+    item.appendChild(orderOverlay);
+
     container.appendChild(item);
   });
 
@@ -7098,6 +7120,22 @@ function setAvatarAsMain(index) {
   if (index === 0) return;
   const avatar = state.charModalAvatars.splice(index, 1)[0];
   state.charModalAvatars.unshift(avatar);
+  state.modalDirty["character-modal"] = true;
+  renderCharAvatars();
+}
+
+function moveAvatar(index, offset) {
+  const targetIndex = index + offset;
+  if (
+    !Number.isInteger(index) ||
+    !Number.isInteger(targetIndex) ||
+    targetIndex < 0 ||
+    targetIndex >= state.charModalAvatars.length
+  ) {
+    return;
+  }
+  const avatar = state.charModalAvatars.splice(index, 1)[0];
+  state.charModalAvatars.splice(targetIndex, 0, avatar);
   state.modalDirty["character-modal"] = true;
   renderCharAvatars();
 }
