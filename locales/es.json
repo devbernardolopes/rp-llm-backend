@@ -368,5 +368,10 @@
   "kokoroVoice": "Voz Kokoro",
   "kokoroVoicesLoading": "Cargando voces de Kokoro...",
   "kokoroVoicesUnavailable": "No hay voces de Kokoro disponibles para este idioma.",
-  "writingInstructionsNone": "Ninguno"
+  "writingInstructionsNone": "Ninguno",
+  "msgSystemPromptTitle": "Instrucción del sistema",
+  "msgSystemPromptModalTitle": "Instrucción del sistema",
+  "msgSystemPromptEntryLabel": "Mensaje del sistema {index}",
+  "msgSystemPromptUnavailable": "Instrucción del sistema no disponible",
+  "msgSystemPromptUnavailableGenerating": "La instrucción del sistema aún no está lista"
 }

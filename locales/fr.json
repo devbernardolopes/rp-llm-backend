@@ -368,5 +368,10 @@
   "kokoroVoice": "Voix Kokoro",
   "kokoroVoicesLoading": "Chargement des voix Kokoro...",
   "kokoroVoicesUnavailable": "Aucune voix Kokoro disponible pour cette langue.",
-  "writingInstructionsNone": "Aucun"
+  "writingInstructionsNone": "Aucun",
+  "msgSystemPromptTitle": "Invite système",
+  "msgSystemPromptModalTitle": "Invite système",
+  "msgSystemPromptEntryLabel": "Message système {index}",
+  "msgSystemPromptUnavailable": "Invite système indisponible",
+  "msgSystemPromptUnavailableGenerating": "L'invite système n'est pas encore prête"
 }

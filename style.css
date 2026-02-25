@@ -2534,6 +2534,17 @@ textarea {
   overflow: auto;
 }
 
+.system-prompt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.system-prompt-label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
 .model-info-row {
   display: flex;
   gap: 12px;

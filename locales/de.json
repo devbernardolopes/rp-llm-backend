@@ -368,5 +368,10 @@
   "kokoroVoice": "Kokoro-Stimme",
   "kokoroVoicesLoading": "Kokoro-Stimmen werden geladen...",
   "kokoroVoicesUnavailable": "Für diese Sprache sind keine Kokoro-Stimmen verfügbar.",
-  "writingInstructionsNone": "Keine"
+  "writingInstructionsNone": "Keine",
+  "msgSystemPromptTitle": "Systemeingabe",
+  "msgSystemPromptModalTitle": "Systemeingabe",
+  "msgSystemPromptEntryLabel": "Systemnachricht {index}",
+  "msgSystemPromptUnavailable": "Systemeingabe nicht verfügbar",
+  "msgSystemPromptUnavailableGenerating": "Die Systemeingabe ist noch nicht bereit"
 }

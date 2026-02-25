@@ -368,5 +368,10 @@
   "kokoroVoice": "Voce Kokoro",
   "kokoroVoicesLoading": "Caricamento delle voci Kokoro...",
   "kokoroVoicesUnavailable": "Nessuna voce Kokoro disponibile per questa lingua.",
-  "writingInstructionsNone": "Nessuno"
+  "writingInstructionsNone": "Nessuno",
+  "msgSystemPromptTitle": "Prompt di sistema",
+  "msgSystemPromptModalTitle": "Prompt di sistema",
+  "msgSystemPromptEntryLabel": "Messaggio di sistema {index}",
+  "msgSystemPromptUnavailable": "Prompt di sistema non disponibile",
+  "msgSystemPromptUnavailableGenerating": "Il prompt di sistema non è ancora pronto"
 }

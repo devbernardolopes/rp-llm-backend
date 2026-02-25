@@ -8434,6 +8434,37 @@ function buildMessageRow(message, index, streaming) {
       modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
     }
     controls.appendChild(modelInfoBtn);
+    const systemPromptBtn = iconButton(
+      "badge",
+      t("msgSystemPromptTitle"),
+      async () => {
+        await openMessageSystemPromptModal(index);
+      },
+    );
+    systemPromptBtn.classList.add("msg-system-prompt-btn");
+    const hasSystemContent = hasSystemMessagesData(message);
+    const systemDisabled = disableControlsForRow || !hasSystemContent;
+    systemPromptBtn.disabled = systemDisabled;
+    if (disableControlsForRow) {
+      systemPromptBtn.setAttribute(
+        "title",
+        t("msgSystemPromptUnavailableGenerating"),
+      );
+      systemPromptBtn.setAttribute(
+        "aria-label",
+        t("msgSystemPromptUnavailableGenerating"),
+      );
+    } else if (!hasSystemContent) {
+      systemPromptBtn.setAttribute("title", t("msgSystemPromptUnavailable"));
+      systemPromptBtn.setAttribute(
+        "aria-label",
+        t("msgSystemPromptUnavailable"),
+      );
+    } else {
+      systemPromptBtn.setAttribute("title", t("msgSystemPromptTitle"));
+      systemPromptBtn.setAttribute("aria-label", t("msgSystemPromptTitle"));
+    }
+    controls.appendChild(systemPromptBtn);
     const contextBtn = iconButton("context", t("msgContextTitle"), async () => {
       await openMessageContextModal(index);
     });
@@ -8540,6 +8571,16 @@ function hasMessageContextData(message) {
     : 0;
   const hasMemory = !!String(message.usedMemorySummary || "").trim();
   return loreCount > 0 || hasMemory;
+}
+
+function hasSystemMessagesData(message) {
+  if (!message) return false;
+  return (
+    Array.isArray(message.systemMessages) &&
+    message.systemMessages.some((entry) =>
+      String(entry?.content || "").trim(),
+    )
+  );
 }
 
 function applyInfoButtonAvailability(button, message, isStreaming) {
@@ -9116,6 +9157,11 @@ async function generateBotReply() {
     pending.generationFetchDebug = result.generationFetchDebug || [];
     pending.model = result.model || state.settings.model || "";
     pending.temperature = Number(state.settings.temperature) || 0;
+    pending.systemMessages = Array.isArray(result.systemMessages)
+      ? result.systemMessages.filter(
+          (entry) => entry && String(entry.content || "").trim(),
+        )
+      : [];
     pending.usedLoreEntries = Array.isArray(promptContext.loreEntries)
       ? promptContext.loreEntries
       : [];
@@ -9360,6 +9406,12 @@ async function regenerateMessage(index) {
     messagesToSave[index].model = target.model;
     target.temperature = Number(state.settings.temperature) || 0;
     messagesToSave[index].temperature = target.temperature;
+    target.systemMessages = Array.isArray(result.systemMessages)
+      ? result.systemMessages.filter(
+          (entry) => entry && String(entry.content || "").trim(),
+        )
+      : [];
+    messagesToSave[index].systemMessages = target.systemMessages;
     target.generationError = "";
     target.generationStatus = "";
     messagesToSave[index] = { ...target };
@@ -10062,6 +10114,26 @@ function refreshMessageControlStates() {
       } else {
         btn.setAttribute("title", t("msgModelInfoTitle"));
         btn.setAttribute("aria-label", t("msgModelInfoTitle"));
+      }
+    });
+    row.querySelectorAll(".msg-system-prompt-btn").forEach((btn) => {
+      const hasSystem = hasSystemMessagesData(message);
+      btn.disabled = isStreaming || !hasSystem;
+      if (isStreaming) {
+        btn.setAttribute(
+          "title",
+          t("msgSystemPromptUnavailableGenerating"),
+        );
+        btn.setAttribute(
+          "aria-label",
+          t("msgSystemPromptUnavailableGenerating"),
+        );
+      } else if (!hasSystem) {
+        btn.setAttribute("title", t("msgSystemPromptUnavailable"));
+        btn.setAttribute("aria-label", t("msgSystemPromptUnavailable"));
+      } else {
+        btn.setAttribute("title", t("msgSystemPromptTitle"));
+        btn.setAttribute("aria-label", t("msgSystemPromptTitle"));
       }
     });
   });
@@ -11532,6 +11604,34 @@ async function openMessageModelInfoModal(index) {
   }
 }
 
+async function openMessageSystemPromptModal(index) {
+  const message = conversationHistory[index];
+  if (!message || !hasSystemMessagesData(message)) return;
+  const container = document.getElementById("message-system-prompt-list");
+  if (!container) return;
+  container.innerHTML = "";
+  message.systemMessages.forEach((entry, idx) => {
+    if (!entry || !String(entry.content || "").trim()) return;
+    const entryWrapper = document.createElement("div");
+    entryWrapper.className = "system-prompt-entry";
+    const label = document.createElement("div");
+    label.className = "system-prompt-label";
+    label.textContent = tf("msgSystemPromptEntryLabel", { index: idx + 1 });
+    const pre = document.createElement("pre");
+    pre.className = "metadata-json";
+    pre.textContent = String(entry.content || "");
+    entryWrapper.append(label, pre);
+    container.appendChild(entryWrapper);
+  });
+  if (!container.hasChildNodes()) {
+    const notice = document.createElement("p");
+    notice.className = "muted";
+    notice.textContent = t("msgSystemPromptUnavailable");
+    container.appendChild(notice);
+  }
+  openModal("message-system-prompt-modal");
+}
+
 function shouldInjectPersonaContext(persona, threadOverride = null) {
   if (!persona) return false;
   const mode =
@@ -11724,6 +11824,12 @@ async function callOpenRouter(
       content: m.content,
     })),
   ];
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
   const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
     resolvedModel,
     promptMessages,
@@ -11738,17 +11844,24 @@ async function callOpenRouter(
 
   try {
     const attempts = body.stream ? 1 : 3;
-    return await requestCompletionWithRetry(body, attempts, onChunk, signal);
+    const response = await requestCompletionWithRetry(
+      body,
+      attempts,
+      onChunk,
+      signal,
+    );
+    return { ...response, systemMessages };
   } catch (primaryErr) {
     if (!fallbackModel) throw primaryErr;
     const fallbackBody = { ...body, model: fallbackModel };
     const fallbackAttempts = fallbackBody.stream ? 1 : 2;
-    return requestCompletionWithRetry(
+    const fallbackResponse = await requestCompletionWithRetry(
       fallbackBody,
       fallbackAttempts,
       onChunk,
       signal,
     );
+    return { ...fallbackResponse, systemMessages };
   }
 }
 
