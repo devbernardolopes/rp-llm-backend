@@ -362,5 +362,6 @@
   "kokoroDeviceCpu": "CPU",
   "kokoroDtype": "Quantizzazione Kokoro",
   "kokoroVoice": "Voce Kokoro",
-  "kokoroVoicesLoading": "Caricamento delle voci Kokoro..."
+  "kokoroVoicesLoading": "Caricamento delle voci Kokoro...",
+  "kokoroVoicesUnavailable": "Nessuna voce Kokoro disponibile per questa lingua."
 }
