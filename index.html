@@ -1241,6 +1241,39 @@
             </span>
           </div>
           <div class="lang-field">
+            <span data-i18n="ttsProvider">TTS Provider</span>
+            <select id="char-tts-provider">
+              <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
+              <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
+            </select>
+          </div>
+          <div id="char-tts-kokoro-config" class="kokoro-config hidden">
+            <div class="lang-field">
+              <span data-i18n="kokoroDevice">Kokoro Device</span>
+              <select id="char-tts-kokoro-device">
+                <option value="wasm" data-i18n="kokoroDeviceWasm">WASM</option>
+                <option value="webgpu" data-i18n="kokoroDeviceWebgpu">WebGPU</option>
+                <option value="cpu" data-i18n="kokoroDeviceCpu">CPU</option>
+              </select>
+            </div>
+            <div class="lang-field">
+              <span data-i18n="kokoroDtype">Kokoro Quantization</span>
+              <select id="char-tts-kokoro-dtype">
+                <option value="fp32">FP32</option>
+                <option value="fp16">FP16</option>
+                <option value="q8">Q8</option>
+                <option value="q4">Q4</option>
+                <option value="q4f16">Q4f16</option>
+              </select>
+            </div>
+            <div class="lang-field">
+              <span data-i18n="kokoroVoice">Kokoro Voice</span>
+              <select id="char-tts-kokoro-voice">
+                <option data-i18n="kokoroVoicesLoading">Loading Kokoro voices...</option>
+              </select>
+            </div>
+          </div>
+          <div class="lang-field">
             <span data-i18n="ttsLanguage">TTS Language</span>
             <select id="char-tts-language"></select>
           </div>

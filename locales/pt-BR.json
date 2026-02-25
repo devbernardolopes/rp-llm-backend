@@ -353,5 +353,14 @@
   "duplicateWritingInstructionAria": "Duplicar instrução de escrita",
   "exportWritingInstructionAria": "Exportar instrução de escrita",
   "deleteWritingInstructionAria": "Excluir instrução de escrita",
-  "version": "Versão"
+  "version": "Versão",
+  "ttsProviderBrowser": "Navegador (speechSynthesis)",
+  "ttsProviderKokoro": "Kokoro.js (local)",
+  "kokoroDevice": "Dispositivo Kokoro",
+  "kokoroDeviceWasm": "WASM",
+  "kokoroDeviceWebgpu": "WebGPU",
+  "kokoroDeviceCpu": "CPU",
+  "kokoroDtype": "Quantização Kokoro",
+  "kokoroVoice": "Voz Kokoro",
+  "kokoroVoicesLoading": "Carregando vozes Kokoro..."
 }

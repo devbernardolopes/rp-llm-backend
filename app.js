@@ -107,6 +107,110 @@ const DEFAULT_SETTINGS = {
   chatMessageAlignment: "left",
 };
 
+const DEFAULT_KOKORO_VOICE = "af_heart";
+const KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
+const KOKORO_MODULE_PATHS = [
+  "./node_modules/kokoro-js/dist/kokoro.web.js",
+  "https://cdn.jsdelivr.net/npm/kokoro-js/dist/kokoro.web.js",
+];
+const KOKORO_DEVICE_OPTIONS = ["wasm", "webgpu", "cpu"];
+const KOKORO_DTYPE_OPTIONS = ["fp32", "fp16", "q8", "q4", "q4f16"];
+const KOKORO_VOICE_OPTIONS = [
+  "af_heart",
+  "af_alloy",
+  "af_aoede",
+  "af_bella",
+  "af_jessica",
+  "af_kore",
+  "af_nicole",
+  "af_nova",
+  "af_river",
+  "af_sarah",
+  "af_sky",
+  "am_adam",
+  "am_echo",
+  "am_eric",
+  "am_fenrir",
+  "am_liam",
+  "am_michael",
+  "am_onyx",
+  "am_puck",
+  "am_santa",
+  "bf_alice",
+  "bf_emma",
+  "bf_isabella",
+  "bf_lily",
+  "bm_daniel",
+  "bm_fable",
+  "bm_george",
+  "bm_lewis",
+];
+
+async function loadKokoroModule() {
+  if (state.tts.kokoro.modulePromise) return state.tts.kokoro.modulePromise;
+  state.tts.kokoro.modulePromise = (async () => {
+    for (const path of KOKORO_MODULE_PATHS) {
+      try {
+        return await import(path);
+      } catch (err) {
+        console.warn("kokoro:import-failed", path, err);
+      }
+    }
+    throw new Error("Unable to load Kokoro.js module.");
+  })();
+  return state.tts.kokoro.modulePromise;
+}
+
+async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
+  const normalizedDevice = KOKORO_DEVICE_OPTIONS.includes(device) ? device : "wasm";
+  const normalizedDtype = KOKORO_DTYPE_OPTIONS.includes(dtype) ? dtype : "q8";
+  if (
+    state.tts.kokoro.instance &&
+    state.tts.kokoro.config.device === normalizedDevice &&
+    state.tts.kokoro.config.dtype === normalizedDtype
+  ) {
+    return state.tts.kokoro.instance;
+  }
+  const module = await loadKokoroModule();
+  const KokoroTTS = module?.KokoroTTS;
+  if (!KokoroTTS) {
+    throw new Error("Kokoro.js module is missing KokoroTTS.");
+  }
+  state.tts.kokoro.loading = true;
+  await Promise.resolve();
+  try {
+    const instance = await KokoroTTS.from_pretrained(KOKORO_MODEL_ID, {
+      device: normalizedDevice,
+      dtype: normalizedDtype,
+      progress_callback: (info) => ttsDebug("kokoro:progress", info),
+    });
+    state.tts.kokoro.instance = instance;
+    state.tts.kokoro.config.device = normalizedDevice;
+    state.tts.kokoro.config.dtype = normalizedDtype;
+    state.tts.kokoro.loading = false;
+    populateKokoroVoiceSelect();
+    return instance;
+  } catch (err) {
+    state.tts.kokoro.loading = false;
+    throw err;
+  } finally {
+    updateTtsSupportUi();
+  }
+}
+
+function getActiveCharacterTtsProvider() {
+  if (currentCharacter?.ttsProvider) return currentCharacter.ttsProvider;
+  return "browser";
+}
+
+function isActiveTtsProviderReady(provider = null) {
+  const active = provider || getActiveCharacterTtsProvider();
+  if (active === "kokoro") {
+    return !!state.tts.kokoro.instance && !state.tts.kokoro.loading;
+  }
+  return hasBrowserTtsSupport() && state.tts.voiceSupportReady === true;
+}
+
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
 const LOCALES_BASE_PATH = "locales";
 const BOT_LANGUAGE_OPTIONS = [
@@ -778,6 +882,16 @@ const state = {
     requestSeq: 0,
     activeRequestId: 0,
     voiceSupportReady: false,
+    currentAudioUrl: null,
+    kokoro: {
+      modulePromise: null,
+      instance: null,
+      config: {
+        device: "wasm",
+        dtype: "q8",
+      },
+      loading: false,
+    },
   },
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
@@ -1258,6 +1372,14 @@ function setupEvents() {
   document
     .getElementById("char-tts-pitch")
     .addEventListener("input", updateCharTtsRatePitchLabels);
+  const ttsProviderSelect = document.getElementById("char-tts-provider");
+  if (ttsProviderSelect) {
+    ttsProviderSelect.addEventListener("change", () => {
+      refreshCharTtsProviderFields();
+      updateTtsSupportUi();
+    });
+  }
+  refreshCharTtsProviderFields();
   document
     .getElementById("save-persona-btn")
     .addEventListener("click", savePersonaFromModal);
@@ -1485,8 +1607,13 @@ function setupEvents() {
     "#char-tags-input",
     "#char-tts-voice",
     "#char-tts-language",
+    "#char-tts-voice",
     "#char-tts-rate",
     "#char-tts-pitch",
+    "#char-tts-provider",
+    "#char-tts-kokoro-device",
+    "#char-tts-kokoro-dtype",
+    "#char-tts-kokoro-voice",
     "#char-tts-enabled",
     "#char-prefer-lore-language",
   ]);
@@ -4316,6 +4443,11 @@ function showChatView() {
   renderThreads().catch(() => {});
   updateScrollBottomButtonVisibility();
   stopAllCarousels();
+  if (state.unreadNeedsUserScrollThreadId) {
+    window.requestAnimationFrame(() => {
+      maybeProcessUnreadMessagesSeen(false).catch(() => {});
+    });
+  }
 }
 
 function stopAllCarousels() {
@@ -4458,6 +4590,11 @@ function createEmptyCharacterDefinition(language = "en") {
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
     ttsRate: 1.4,
     ttsPitch: 1.1,
+    ttsProvider: "browser",
+    kokoroDevice: "wasm",
+    kokoroDtype: "q8",
+    kokoroVoice: DEFAULT_KOKORO_VOICE,
+    kokoroSpeed: 1,
     preferLoreBooksMatchingLanguage: true,
     lorebookIds: [],
   };
@@ -4481,6 +4618,15 @@ function normalizeCharacterDefinitions(character = null) {
         ...d,
         language: normalizeBotLanguageCode(d?.language || "en"),
         ttsEnabled: d?.ttsEnabled !== false,
+        ttsProvider: d?.ttsProvider || "browser",
+        kokoroDevice: d?.kokoroDevice || "wasm",
+        kokoroDtype: d?.kokoroDtype || "q8",
+        kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
+        kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
+          ? Number(d.kokoroSpeed)
+          : Number.isFinite(Number(d?.ttsRate))
+          ? Number(d.ttsRate)
+          : 1,
         preferLoreBooksMatchingLanguage: d?.preferLoreBooksMatchingLanguage !== false,
         lorebookIds: Array.isArray(d?.lorebookIds)
           ? d.lorebookIds.map(Number).filter(Number.isInteger)
@@ -4519,6 +4665,15 @@ function normalizeCharacterDefinitions(character = null) {
   fallback.ttsPitch = Number.isFinite(Number(character?.ttsPitch))
     ? Number(character.ttsPitch)
     : 1.1;
+  fallback.ttsProvider = character?.ttsProvider || "browser";
+  fallback.kokoroDevice = character?.kokoroDevice || "wasm";
+  fallback.kokoroDtype = character?.kokoroDtype || "q8";
+  fallback.kokoroVoice = String(character?.kokoroVoice || DEFAULT_KOKORO_VOICE);
+  fallback.kokoroSpeed = Number.isFinite(Number(character?.kokoroSpeed))
+    ? Number(character.kokoroSpeed)
+    : Number.isFinite(Number(character?.ttsRate))
+      ? Number(character.ttsRate)
+      : 1;
   fallback.preferLoreBooksMatchingLanguage =
     character?.preferLoreBooksMatchingLanguage !== false;
   fallback.lorebookIds = Array.isArray(character?.lorebookIds)
@@ -4676,6 +4831,14 @@ function saveActiveCharacterDefinitionFromForm() {
   def.ttsLanguage = selectedTts.language;
   def.ttsRate = selectedTts.rate;
   def.ttsPitch = selectedTts.pitch;
+  def.ttsProvider = getCharModalTtsProviderSelection();
+  def.kokoroDevice =
+    String(document.getElementById("char-tts-kokoro-device")?.value || "wasm");
+  def.kokoroDtype =
+    String(document.getElementById("char-tts-kokoro-dtype")?.value || "q8");
+  def.kokoroVoice =
+    String(document.getElementById("char-tts-kokoro-voice")?.value || DEFAULT_KOKORO_VOICE);
+  def.kokoroSpeed = selectedTts.rate;
   def.preferLoreBooksMatchingLanguage =
     document.getElementById("char-prefer-lore-language")?.checked !== false;
   def.lorebookIds = getSelectedLorebookIds();
@@ -4709,9 +4872,17 @@ function loadActiveCharacterDefinitionToForm() {
   document.getElementById("char-tts-pitch").value = String(
     Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1)),
   );
+  document.getElementById("char-tts-provider").value =
+    def.ttsProvider || "browser";
+  const kokoroDevice = document.getElementById("char-tts-kokoro-device");
+  if (kokoroDevice) kokoroDevice.value = def.kokoroDevice || "wasm";
+  const kokoroDtype = document.getElementById("char-tts-kokoro-dtype");
+  if (kokoroDtype) kokoroDtype.value = def.kokoroDtype || "q8";
+  populateKokoroVoiceSelect(def.kokoroVoice || DEFAULT_KOKORO_VOICE);
   document.getElementById("char-prefer-lore-language").checked =
     def.preferLoreBooksMatchingLanguage !== false;
   updateCharTtsRatePitchLabels();
+  refreshCharTtsProviderFields();
   renderCharacterLorebookList(def.lorebookIds || []);
 }
 
@@ -5090,25 +5261,51 @@ function updateCharTtsRatePitchLabels() {
 }
 
 function getResolvedTtsSelection(
-  languageInput,
-  voiceInput,
-  rateInput,
-  pitchInput,
-) {
-  const language =
-    String(languageInput || DEFAULT_TTS_LANGUAGE).trim() ||
-    DEFAULT_TTS_LANGUAGE;
-  const voice =
-    String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
-  const rate = Math.max(0.5, Math.min(2, Number(rateInput) || 1.4));
-  const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1.1));
-  return {
-    language,
-    voice,
-    rate,
-    pitch,
-  };
-}
+    languageInput,
+    voiceInput,
+    rateInput,
+    pitchInput,
+  ) {
+    const language =
+      String(languageInput || DEFAULT_TTS_LANGUAGE).trim() ||
+      DEFAULT_TTS_LANGUAGE;
+    const voice =
+      String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
+    const rate = Math.max(0.5, Math.min(2, Number(rateInput) || 1.4));
+    const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1.1));
+    return {
+      language,
+      voice,
+      rate,
+      pitch,
+    };
+  }
+
+  function buildKokoroOptions(source = {}, rateFallback = 1.4) {
+    const fallbackRate = Math.max(0.5, Math.min(2, Number(rateFallback) || 1.4));
+    const sourceSpeed = Number.isFinite(Number(source?.kokoroSpeed))
+      ? Number(source.kokoroSpeed)
+      : fallbackRate;
+    return {
+      device: String(source?.kokoroDevice || "wasm"),
+      dtype: String(source?.kokoroDtype || "q8"),
+      voice: String(source?.kokoroVoice || DEFAULT_KOKORO_VOICE),
+      speed: Math.max(0.5, Math.min(2, sourceSpeed)),
+    };
+  }
+
+  function buildKokoroOptions(source = {}, rateFallback = 1.4) {
+    const fallbackRate = Math.max(0.5, Math.min(2, Number(rateFallback) || 1.4));
+    const sourceSpeed = Number.isFinite(Number(source?.kokoroSpeed))
+      ? Number(source.kokoroSpeed)
+      : fallbackRate;
+    return {
+      device: String(source?.kokoroDevice || "wasm"),
+      dtype: String(source?.kokoroDtype || "q8"),
+      voice: String(source?.kokoroVoice || DEFAULT_KOKORO_VOICE),
+      speed: Math.max(0.5, Math.min(2, sourceSpeed)),
+    };
+  }
 
 function getResolvedCharTtsSelection() {
   return getResolvedTtsSelection(
@@ -5117,6 +5314,58 @@ function getResolvedCharTtsSelection() {
     document.getElementById("char-tts-rate")?.value,
     document.getElementById("char-tts-pitch")?.value,
   );
+}
+
+function refreshCharTtsProviderFields() {
+  const providerSelect = document.getElementById("char-tts-provider");
+  const kokoroConfig = document.getElementById("char-tts-kokoro-config");
+  const isKokoro = providerSelect?.value === "kokoro";
+  kokoroConfig?.classList.toggle("hidden", !isKokoro);
+  ["char-tts-language", "char-tts-voice"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = isKokoro;
+  });
+  const pitch = document.getElementById("char-tts-pitch");
+  if (pitch) pitch.disabled = isKokoro;
+  const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
+  if (isKokoro) {
+    setKokoroVoiceLoadingPlaceholder();
+  } else if (kokoroVoice) {
+    kokoroVoice.disabled = true;
+  }
+}
+
+function setKokoroVoiceLoadingPlaceholder() {
+  const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
+  if (!kokoroVoice) return;
+  kokoroVoice.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = t("kokoroVoicesLoading");
+  kokoroVoice.appendChild(placeholder);
+  kokoroVoice.disabled = true;
+}
+
+function getCharModalTtsProviderSelection() {
+  const select = document.getElementById("char-tts-provider");
+  return select?.value === "kokoro" ? "kokoro" : "browser";
+}
+
+function populateKokoroVoiceSelect(preferred = DEFAULT_KOKORO_VOICE) {
+  const select = document.getElementById("char-tts-kokoro-voice");
+  if (!select) return;
+  select.innerHTML = "";
+  KOKORO_VOICE_OPTIONS.forEach((voice) => {
+    const opt = document.createElement("option");
+    opt.value = voice;
+    opt.textContent = voice;
+    select.appendChild(opt);
+  });
+  const available = KOKORO_VOICE_OPTIONS.includes(preferred)
+    ? preferred
+    : KOKORO_VOICE_OPTIONS[0];
+  select.value = available;
+  select.disabled = state.charModalTtsTestPlaying === true;
 }
 
 async function renderPersonaSelector() {
@@ -7090,11 +7339,11 @@ async function openThread(threadId) {
   updateModelPill();
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
-  renderChat();
   state.unreadNeedsUserScrollThreadId =
     getUnreadAssistantCount(conversationHistory) > 0
       ? Number(thread.id)
       : null;
+  renderChat();
   const input = document.getElementById("user-input");
   input.value = "";
   state.activeShortcut = null;
@@ -7434,10 +7683,6 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
 
   const log = document.getElementById("chat-log");
   if (!log) return;
-  if (!fromUserScroll) {
-    const noScrollbar = log.scrollHeight <= log.clientHeight + 4;
-    if (!noScrollbar) return;
-  }
   const logRect = log.getBoundingClientRect();
   let changed = false;
   const now = Date.now();
@@ -7899,7 +8144,8 @@ function hasBrowserTtsSupport() {
 }
 
 function updateTtsSupportUi() {
-  const supported = state.tts.voiceSupportReady === true;
+  const provider = getActiveCharacterTtsProvider();
+  const supported = isActiveTtsProviderReady(provider);
   const statusEl = document.getElementById("tts-test-status");
   const playBtn = document.getElementById("tts-test-play-btn");
   if (
@@ -7907,9 +8153,11 @@ function updateTtsSupportUi() {
     (!statusEl.textContent ||
       statusEl.textContent.startsWith("TTS: unsupported"))
   ) {
-    statusEl.textContent = supported
-      ? "TTS: idle"
-      : "TTS: unsupported in this browser";
+    const fallbackText =
+      provider === "kokoro"
+        ? "TTS: Kokoro unavailable"
+        : "TTS: unsupported in this browser";
+    statusEl.textContent = supported ? "TTS: idle" : fallbackText;
   }
   if (playBtn) {
     playBtn.disabled = !supported;
@@ -7957,7 +8205,7 @@ function updateMessageSpeakerButton(button, index) {
   const hasContent = !!String(msg?.content || "").trim();
   const isLoading = isTtsIndexMatch(state.tts.loadingMessageIndex, index);
   const isSpeaking = isTtsIndexMatch(state.tts.speakingMessageIndex, index);
-  const ttsReady = state.tts.voiceSupportReady === true;
+  const ttsReady = isActiveTtsProviderReady();
   button.disabled =
     !isAssistant || streaming || !hasContent || !ttsReady;
   button.classList.toggle("tts-loading", isLoading);
@@ -8579,31 +8827,43 @@ async function copyMessage(text) {
 }
 
 function getCurrentCharacterTtsOptions() {
-  const resolved = getResolvedTtsSelection(
-    currentCharacter?.ttsLanguage,
-    currentCharacter?.ttsVoice,
-    currentCharacter?.ttsRate,
-    currentCharacter?.ttsPitch,
-  );
-  const options = {
-    voice: resolved.voice || DEFAULT_TTS_VOICE,
-    language: resolved.language || DEFAULT_TTS_LANGUAGE,
-    rate: resolved.rate,
-    pitch: resolved.pitch,
-  };
-  return options;
-}
+    const resolved = getResolvedTtsSelection(
+      currentCharacter?.ttsLanguage,
+      currentCharacter?.ttsVoice,
+      currentCharacter?.ttsRate,
+      currentCharacter?.ttsPitch,
+    );
+    const provider = String(currentCharacter?.ttsProvider || "browser").toLowerCase();
+    const options = {
+      voice: resolved.voice || DEFAULT_TTS_VOICE,
+      language: resolved.language || DEFAULT_TTS_LANGUAGE,
+      rate: resolved.rate,
+      pitch: resolved.pitch,
+      provider,
+      kokoro: buildKokoroOptions(currentCharacter, resolved.rate),
+    };
+    return options;
+  }
 
-function getTtsOptionsFromCharacterModal() {
-  const resolved = getResolvedCharTtsSelection();
-  const options = {
-    voice: resolved.voice || DEFAULT_TTS_VOICE,
-    language: resolved.language || DEFAULT_TTS_LANGUAGE,
-    rate: resolved.rate,
-    pitch: resolved.pitch,
-  };
-  return options;
-}
+  function getTtsOptionsFromCharacterModal() {
+    const resolved = getResolvedCharTtsSelection();
+    const provider = getCharModalTtsProviderSelection();
+    const kokoroSource = {
+      kokoroDevice: document.getElementById("char-tts-kokoro-device")?.value,
+      kokoroDtype: document.getElementById("char-tts-kokoro-dtype")?.value,
+      kokoroVoice: document.getElementById("char-tts-kokoro-voice")?.value,
+      kokoroSpeed: resolved.rate,
+    };
+    const options = {
+      voice: resolved.voice || DEFAULT_TTS_VOICE,
+      language: resolved.language || DEFAULT_TTS_LANGUAGE,
+      rate: resolved.rate,
+      pitch: resolved.pitch,
+      provider,
+      kokoro: buildKokoroOptions(kokoroSource, resolved.rate),
+    };
+    return options;
+  }
 
 function updateCharTtsTestButtonState() {
   const btn = document.getElementById("char-tts-test-btn");
@@ -8643,14 +8903,41 @@ async function playCharacterTtsTestFromModal() {
   }
 }
 
-async function playTtsAudio(text, options, playback = {}) {
-  if (!hasBrowserTtsSupport()) {
-    throw new Error("Browser TTS is unavailable.");
-  }
+async function playTtsAudio(text, options = {}, playback = {}) {
   const normalizedText = preprocessForTTS(text);
   if (!normalizedText) {
     ttsDebug("playTtsAudio:empty-text");
     throw new Error("Text is empty.");
+  }
+  const provider = String(
+    (options.provider || getActiveCharacterTtsProvider() || "browser").toLowerCase(),
+  );
+  const resolvedRate = Math.max(0.5, Math.min(2, Number(options?.rate || 1.4)));
+  const resolvedPitch = Math.max(0, Math.min(2, Number(options?.pitch || 1.1)));
+  const kokoroSettings = {
+    device: String(options?.kokoro?.device || "wasm"),
+    dtype: String(options?.kokoro?.dtype || "q8"),
+    voice: String(options?.kokoro?.voice || DEFAULT_KOKORO_VOICE),
+    speed: Number.isFinite(Number(options?.kokoro?.speed))
+      ? Number(options.kokoro.speed)
+      : resolvedRate,
+  };
+  const normalizedOptions = {
+    ...options,
+    provider,
+    rate: resolvedRate,
+    pitch: resolvedPitch,
+    kokoro: kokoroSettings,
+  };
+  if (provider === "kokoro") {
+    return playKokoroTts(normalizedText, normalizedOptions, playback);
+  }
+  return playBrowserTts(normalizedText, normalizedOptions, playback);
+}
+
+async function playBrowserTts(normalizedText, options, playback = {}) {
+  if (!hasBrowserTtsSupport()) {
+    throw new Error("Browser TTS is unavailable.");
   }
   const synth = window.speechSynthesis;
   const voices = synth.getVoices?.() || [];
@@ -8663,7 +8950,7 @@ async function playTtsAudio(text, options, playback = {}) {
   const requestId = state.tts.requestSeq + 1;
   state.tts.requestSeq = requestId;
   state.tts.activeRequestId = requestId;
-  ttsDebug("playTtsAudio:start", {
+  ttsDebug("playBrowserTts:start", {
     requestId,
     messageIndex,
     textLength: normalizedText.length,
@@ -8692,7 +8979,7 @@ async function playTtsAudio(text, options, playback = {}) {
 
   try {
     if (requestId !== state.tts.activeRequestId) {
-      ttsDebug("playTtsAudio:stale-request", {
+      ttsDebug("playBrowserTts:stale-request", {
         requestId,
         active: state.tts.activeRequestId,
       });
@@ -8725,7 +9012,7 @@ async function playTtsAudio(text, options, playback = {}) {
       byExactName || byLangExact || byLangPrefix || voices[0] || null;
 
     if (requestId !== state.tts.activeRequestId) {
-      ttsDebug("playTtsAudio:stale-request-before-speak", {
+      ttsDebug("playBrowserTts:stale-request-before-speak", {
         requestId,
         active: state.tts.activeRequestId,
       });
@@ -8740,7 +9027,7 @@ async function playTtsAudio(text, options, playback = {}) {
     refreshAllSpeakerButtons();
     await new Promise((resolve, reject) => {
       utterance.onend = () => {
-        ttsDebug("playTtsAudio:ended");
+        ttsDebug("playBrowserTts:ended");
         if (state.tts.audio === utterance) {
           state.tts.audio = null;
           state.tts.speakingMessageIndex = null;
@@ -8750,7 +9037,7 @@ async function playTtsAudio(text, options, playback = {}) {
         resolve();
       };
       utterance.onerror = (event) => {
-        ttsDebug("playTtsAudio:error", { event });
+        ttsDebug("playBrowserTts:error", { event });
         if (state.tts.audio === utterance) {
           state.tts.audio = null;
           state.tts.speakingMessageIndex = null;
@@ -8767,7 +9054,7 @@ async function playTtsAudio(text, options, playback = {}) {
         }
         reject(new Error("Browser TTS playback failed."));
       };
-      ttsDebug("playTtsAudio:speak", {
+      ttsDebug("playBrowserTts:speak", {
         voice: utterance.voice?.name || "",
         lang: utterance.lang,
       });
@@ -8779,9 +9066,127 @@ async function playTtsAudio(text, options, playback = {}) {
   }
 }
 
+async function playKokoroTts(normalizedText, options, playback = {}) {
+  const messageIndex = Number.isInteger(playback?.messageIndex)
+    ? playback.messageIndex
+    : null;
+  const requestId = state.tts.requestSeq + 1;
+  state.tts.requestSeq = requestId;
+  state.tts.activeRequestId = requestId;
+  ttsDebug("playKokoroTts:start", {
+    requestId,
+    messageIndex,
+    textLength: normalizedText.length,
+    kokoro: options.kokoro,
+  });
+  stopTtsPlayback();
+  state.tts.activeRequestId = requestId;
+  if (messageIndex !== null) {
+    state.tts.loadingMessageIndex = messageIndex;
+    refreshAllSpeakerButtons();
+  }
+  let finalized = false;
+  const finalizeLoadingState = () => {
+    if (finalized) return;
+    finalized = true;
+    if (
+      messageIndex !== null &&
+      state.tts.activeRequestId === requestId &&
+      isTtsIndexMatch(state.tts.loadingMessageIndex, messageIndex)
+    ) {
+      state.tts.loadingMessageIndex = null;
+      refreshAllSpeakerButtons();
+    }
+  };
+
+  try {
+    const kokoro = await ensureKokoroInstance(
+      options.kokoro.device,
+      options.kokoro.dtype,
+    );
+    const raw = await kokoro.generate(normalizedText, {
+      voice: options.kokoro.voice || DEFAULT_KOKORO_VOICE,
+      speed: Number.isFinite(Number(options.kokoro.speed))
+        ? Number(options.kokoro.speed)
+        : options.rate || 1,
+    });
+    const blob = await raw.toBlob();
+    const url = URL.createObjectURL(blob);
+    if (state.tts.currentAudioUrl) {
+      URL.revokeObjectURL(state.tts.currentAudioUrl);
+    }
+    state.tts.currentAudioUrl = url;
+    const audioEl = new Audio(url);
+    let resolved = false;
+    state.tts.audio = audioEl;
+    const finalizePlayback = () => {
+      if (state.tts.audio === audioEl) {
+        state.tts.audio = null;
+        state.tts.speakingMessageIndex = null;
+        state.tts.loadingMessageIndex = null;
+        refreshAllSpeakerButtons();
+      }
+      if (state.tts.currentAudioUrl === url) {
+        URL.revokeObjectURL(url);
+        state.tts.currentAudioUrl = null;
+      }
+    };
+    if (requestId !== state.tts.activeRequestId) {
+      ttsDebug("playKokoroTts:stale-request", {
+        requestId,
+        active: state.tts.activeRequestId,
+      });
+      throw makeTtsCancelledError();
+    }
+    state.tts.loadingMessageIndex = null;
+    finalized = true;
+    if (messageIndex !== null) {
+      state.tts.speakingMessageIndex = messageIndex;
+    }
+    refreshAllSpeakerButtons();
+    await new Promise((resolve, reject) => {
+      audioEl.onended = () => {
+        ttsDebug("playKokoroTts:ended");
+        finalizePlayback();
+        resolve();
+      };
+      audioEl.onerror = () => {
+        ttsDebug("playKokoroTts:error");
+        finalizePlayback();
+        reject(new Error("Kokoro TTS playback failed."));
+      };
+      audioEl
+        .play()
+        .then(() => {
+          // nothing to do here
+        })
+        .catch((err) => {
+          finalizePlayback();
+          reject(err);
+        });
+    });
+    return audioEl;
+  } finally {
+    finalizeLoadingState();
+  }
+}
+
 function stopTtsPlayback(options = {}) {
   state.tts.activeRequestId = state.tts.activeRequestId + 1;
-  if (hasBrowserTtsSupport()) {
+  const audioElement =
+    state.tts.audio instanceof HTMLAudioElement ? state.tts.audio : null;
+  if (audioElement) {
+    try {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+    } catch {
+      // ignore
+    }
+    if (state.tts.currentAudioUrl) {
+      URL.revokeObjectURL(state.tts.currentAudioUrl);
+      state.tts.currentAudioUrl = null;
+    }
+  } else if (hasBrowserTtsSupport()) {
     try {
       window.speechSynthesis.cancel();
     } catch {
@@ -8825,8 +9230,12 @@ async function toggleMessageSpeech(index) {
     return;
   }
 
+  const audioElement =
+    state.tts.audio instanceof HTMLAudioElement ? state.tts.audio : null;
   const hasAudioObject = !!state.tts.audio;
-  const audioIsPlaying = hasBrowserTtsSupport()
+  const audioIsPlaying = audioElement
+    ? !audioElement.paused && !audioElement.ended
+    : hasBrowserTtsSupport()
     ? !!(window.speechSynthesis.speaking || window.speechSynthesis.pending)
     : false;
   if (!hasAudioObject && state.tts.speakingMessageIndex !== null) {

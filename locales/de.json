@@ -353,5 +353,14 @@
   "duplicateWritingInstructionAria": "Schreibanweisung duplizieren",
   "exportWritingInstructionAria": "Schreibanweisung exportieren",
   "deleteWritingInstructionAria": "Schreibanweisung löschen",
-  "version": "Version"
+  "version": "Version",
+  "ttsProviderBrowser": "Browser (speechSynthesis)",
+  "ttsProviderKokoro": "Kokoro.js (lokal)",
+  "kokoroDevice": "Kokoro-Gerät",
+  "kokoroDeviceWasm": "WASM",
+  "kokoroDeviceWebgpu": "WebGPU",
+  "kokoroDeviceCpu": "CPU",
+  "kokoroDtype": "Kokoro-Quantisierung",
+  "kokoroVoice": "Kokoro-Stimme",
+  "kokoroVoicesLoading": "Kokoro-Stimmen werden geladen..."
 }
