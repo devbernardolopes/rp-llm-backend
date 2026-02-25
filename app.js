@@ -144,6 +144,9 @@ const KOKORO_VOICE_OPTIONS = [
   "bm_fable",
   "bm_george",
   "bm_lewis",
+  "pf_dora",
+  "pm_alex",
+  "pm_santa",
 ];
 
 const KOKORO_LANGUAGE_VOICE_PREFIXES = {
@@ -156,6 +159,65 @@ const KOKORO_LANGUAGE_VOICE_PREFIXES = {
   "pt-BR": ["pf", "pm"],
   pt: ["pf", "pm"],
 };
+
+const CUSTOM_KOKORO_VOICE_URLS = {
+  pf_dora:
+    "https://rp-llm-backend.vercel.app/assets/kokoro-extra-voices/pf_dora.pt",
+  pm_alex:
+    "https://rp-llm-backend.vercel.app/assets/kokoro-extra-voices/pm_alex.pt",
+  pm_santa:
+    "https://rp-llm-backend.vercel.app/assets/kokoro-extra-voices/pm_santa.pt",
+};
+
+function getKokoroLanguageKey(language = "") {
+  const normalized = normalizeBotLanguageCode(language || "") || "";
+  const lower = normalized.toLowerCase();
+  if (!lower) return "en";
+  if (lower.startsWith("pt-br")) return "pt-BR";
+  if (lower.startsWith("pt")) return "pt";
+  if (lower.startsWith("zh")) return "zh";
+  if (lower.startsWith("en")) return "en";
+  if (lower.startsWith("fr")) return "fr";
+  if (lower.startsWith("it")) return "it";
+  if (lower.startsWith("ja")) return "ja";
+  if (lower.startsWith("hi")) return "hi";
+  return lower;
+}
+
+function getFilteredKokoroVoicesForLanguage(language = "") {
+  const key = getKokoroLanguageKey(language);
+  const prefixes = KOKORO_LANGUAGE_VOICE_PREFIXES[key] || [];
+  if (prefixes.length === 0) return [];
+  return KOKORO_VOICE_OPTIONS.filter((voice) => {
+    const prefix = (voice || "").split("_")[0];
+    return prefixes.includes(prefix);
+  });
+}
+
+function isKokoroSupportedForLanguage(language = "") {
+  return getFilteredKokoroVoicesForLanguage(language).length > 0;
+}
+
+function patchKokoroVoiceFetch() {
+  if (state.tts.kokoro.fetchPatched) return;
+  if (typeof window === "undefined" || typeof window.fetch !== "function") return;
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async function (input, init) {
+    let url = typeof input === "string" ? input : input?.url;
+    if (typeof url === "string") {
+      const match = url.match(/\/voices\/([^/]+)\.bin$/);
+      const voice = match?.[1];
+      if (voice && CUSTOM_KOKORO_VOICE_URLS[voice]) {
+        const override = CUSTOM_KOKORO_VOICE_URLS[voice];
+        const newInput =
+          typeof input === "string" ? override : new Request(override, input);
+        return originalFetch(newInput, init);
+      }
+    }
+    return originalFetch(input, init);
+  };
+  state.tts.kokoro.fetchPatched = true;
+}
 
 function getKokoroLanguageKey(language = "") {
   const normalized = normalizeBotLanguageCode(language || "") || "";
@@ -211,6 +273,7 @@ async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
   ) {
     return state.tts.kokoro.instance;
   }
+  patchKokoroVoiceFetch();
   const module = await loadKokoroModule();
   const KokoroTTS = module?.KokoroTTS;
   if (!KokoroTTS) {
@@ -924,16 +987,17 @@ const state = {
     activeRequestId: 0,
     voiceSupportReady: false,
     currentAudioUrl: null,
-    kokoro: {
-      modulePromise: null,
-      instance: null,
-      config: {
-        device: "wasm",
-        dtype: "q8",
+      kokoro: {
+        modulePromise: null,
+        instance: null,
+        config: {
+          device: "wasm",
+          dtype: "q8",
+        },
+        loading: false,
+        fetchPatched: false,
+        voiceListLoaded: false,
       },
-      loading: false,
-      voiceListLoaded: false,
-    },
   },
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
