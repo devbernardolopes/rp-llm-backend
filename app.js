@@ -1970,6 +1970,8 @@ let modalTextareaObserver = null;
 function setupModalTextareas() {
   const textareas = document.querySelectorAll(".modal textarea");
   textareas.forEach((textarea) => {
+    const baseRows = Number(textarea.getAttribute("rows") || 3);
+    textarea.dataset.baseRows = baseRows;
     if (textarea.dataset.collapsible === "1") {
       autoExpandTextarea(textarea);
       return;
@@ -2061,7 +2063,11 @@ function autoExpandTextarea(textarea) {
   textarea.style.resize = "none";
   const computed = window.getComputedStyle(textarea);
   const lineHeight = parseFloat(computed.lineHeight) || 24;
-  const minHeight = Number(textarea.dataset.minHeight) || lineHeight * 1.4;
+  const baseRows = Number(textarea.dataset.baseRows) || 4;
+  const minHeight = Math.max(
+    Number(textarea.dataset.minHeight) || 0,
+    lineHeight * baseRows,
+  );
   textarea.dataset.minHeight = minHeight;
   const newHeight = Math.max(textarea.scrollHeight, minHeight);
   textarea.style.height = `${newHeight}px`;
