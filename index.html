@@ -1020,23 +1020,33 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div id="char-def-tabs" class="settings-tabs">
-          <button
-            id="char-config-tab-btn"
-            class="settings-tab-btn"
-            type="button"
-            data-i18n="botConfiguration"
-          >
-            Bot Configuration
-          </button>
-          <button
-            id="char-bg-tab-btn"
-            class="settings-tab-btn disabled"
-            type="button"
-            data-i18n="bgTab"
-            disabled
-          >
-            BG
-          </button>
+          <div class="char-def-tabs-row char-def-tabs-main-row">
+            <button
+              id="char-config-tab-btn"
+              class="settings-tab-btn"
+              type="button"
+              data-i18n="botConfiguration"
+            >
+              Config
+            </button>
+            <button
+              id="char-bg-tab-btn"
+              class="settings-tab-btn disabled"
+              type="button"
+              data-i18n="bgTab"
+              disabled
+            >
+              BG
+            </button>
+            <button
+              id="char-tags-tab-btn"
+              class="settings-tab-btn"
+              type="button"
+              data-i18n="tagsTab"
+            >
+              Tags
+            </button>
+          </div>
           <div id="char-avatars-section" class="char-avatars-section">
             <div id="char-avatars-container" class="char-avatars-container">
               <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
@@ -1125,7 +1135,7 @@
 [SYSTEM]: text..."
             ></textarea>
           </div>
-          <div class="full global-field">
+          <div class="full tags-field hidden">
             <span data-i18n="tagsCommaSeparated">Tags (comma-separated)</span>
             <input
               id="char-tags-input"

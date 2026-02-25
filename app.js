@@ -750,8 +750,9 @@ const I18N = {
     tagsCommaSeparated: "Tags (comma-separated)",
     personaInjectionPlacement: "Persona Injection Placement",
     atEndCharacterPrompt: "At End of Character Prompt",
-    botConfiguration: "Bot Configuration",
+    botConfiguration: "Config",
     bgTab: "BG",
+    tagsTab: "Tags",
     preferLanguageMatchingUserPersona: "Prefer Language Matching User Persona",
     addLanguage: "Add Language",
     add: "Add",
@@ -1554,6 +1555,13 @@ function setupEvents() {
     .addEventListener("click", () => {
       saveActiveCharacterDefinitionFromForm();
       setCharacterModalTab("config");
+      renderCharacterDefinitionTabs();
+    });
+  document
+    .getElementById("char-tags-tab-btn")
+    .addEventListener("click", () => {
+      saveActiveCharacterDefinitionFromForm();
+      setCharacterModalTab("tags");
       renderCharacterDefinitionTabs();
     });
   document
@@ -5077,16 +5085,25 @@ function getActiveCharacterDefinition() {
 }
 
 function setCharacterModalTab(tab = "lang") {
-  state.charModalActiveTab = tab === "config" ? "config" : "lang";
-  const showLang = state.charModalActiveTab === "lang";
+  const normalized =
+    tab === "config" ? "config" : tab === "tags" ? "tags" : "lang";
+  state.charModalActiveTab = normalized;
+  const showLang = normalized === "lang";
+  const showConfig = normalized === "config";
+  const showTags = normalized === "tags";
   document
     .querySelectorAll(".lang-field")
     .forEach((el) => el.classList.toggle("hidden", !showLang));
   document
     .querySelectorAll(".global-field")
-    .forEach((el) => el.classList.toggle("hidden", showLang));
+    .forEach((el) => el.classList.toggle("hidden", !showConfig));
+  document
+    .querySelectorAll(".tags-field")
+    .forEach((el) => el.classList.toggle("hidden", !showTags));
   const configBtn = document.getElementById("char-config-tab-btn");
-  if (configBtn) configBtn.classList.toggle("active", !showLang);
+  if (configBtn) configBtn.classList.toggle("active", showConfig);
+  const tagsBtn = document.getElementById("char-tags-tab-btn");
+  if (tagsBtn) tagsBtn.classList.toggle("active", showTags);
 }
 
 function renderCharacterDefinitionTabs() {
@@ -5175,6 +5192,8 @@ function renderCharacterDefinitionTabs() {
   });
   const configBtn = document.getElementById("char-config-tab-btn");
   if (configBtn) configBtn.classList.toggle("active", state.charModalActiveTab === "config");
+  const tagsBtn = document.getElementById("char-tags-tab-btn");
+  if (tagsBtn) tagsBtn.classList.toggle("active", state.charModalActiveTab === "tags");
 }
 
 function saveActiveCharacterDefinitionFromForm() {

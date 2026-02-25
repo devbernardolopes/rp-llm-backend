@@ -1861,6 +1861,11 @@ textarea {
   max-height: min(90vh, 720px);
 }
 
+#character-modal .modal-card {
+  height: min(90vh, 720px);
+  max-height: min(90vh, 720px);
+}
+
 .modal-card.wide {
   width: min(760px, 100%);
   overflow: hidden;
@@ -2039,9 +2044,6 @@ textarea {
 #char-config-tab-btn {
   width: auto;
   text-align: left;
-  margin-bottom: 8px;
-  margin-left: 12px;
-  margin-right: 6px;
 }
 
 .char-def-tab-btn {
@@ -2085,7 +2087,8 @@ textarea {
 }
 
 .lang-field.hidden,
-.global-field.hidden {
+.global-field.hidden,
+.tags-field.hidden {
   display: none !important;
 }
 
@@ -2102,7 +2105,8 @@ textarea {
 
 .modal-body label,
 .modal-body .form-field,
-.modal-body .lang-field {
+.modal-body .lang-field,
+.modal-body .tags-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
