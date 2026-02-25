@@ -5332,18 +5332,20 @@ function refreshCharTtsProviderFields() {
   });
   const pitch = document.getElementById("char-tts-pitch");
   if (pitch) pitch.disabled = isKokoro;
-    const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
-    if (isKokoro) {
-      if (state.tts.kokoro.voiceListLoaded) {
-        if (kokoroVoice) {
-          kokoroVoice.disabled = state.charModalTtsTestPlaying === true;
-        }
-      } else {
-        setKokoroVoiceLoadingPlaceholder();
+  const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
+  if (isKokoro) {
+    const preferred = kokoroVoice?.value || DEFAULT_KOKORO_VOICE;
+    if (state.tts.kokoro.voiceListLoaded) {
+      populateKokoroVoiceSelect(preferred);
+      if (kokoroVoice) {
+        kokoroVoice.disabled = state.charModalTtsTestPlaying === true;
       }
-    } else if (kokoroVoice) {
-      kokoroVoice.disabled = true;
+    } else {
+      setKokoroVoiceLoadingPlaceholder();
     }
+  } else if (kokoroVoice) {
+    kokoroVoice.disabled = true;
+  }
 }
 
   function setKokoroVoiceLoadingPlaceholder() {
