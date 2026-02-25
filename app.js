@@ -8429,6 +8429,7 @@ async function regenerateMessage(index) {
       : Math.max(1, getThreadWritingInstructionsTurnCount(currentThread));
   const originalContent = String(target.content || "");
   const threadId = Number(currentThread.id);
+  const messagesToSave = conversationHistory.map((m) => ({ ...m }));
 
   stopTtsPlayback();
   state.sending = true;
@@ -8446,6 +8447,8 @@ async function regenerateMessage(index) {
     const systemPrompt = promptContext.prompt;
     target.content = "";
     target.generationStatus = "regenerating";
+    messagesToSave[index].content = target.content;
+    messagesToSave[index].generationStatus = target.generationStatus;
     renderChat();
     const row = document.getElementById("chat-log").children[index];
     const contentEl = row?.querySelector(".message-content");
@@ -8462,6 +8465,7 @@ async function regenerateMessage(index) {
       state.settings.model,
       (chunk) => {
         target.content += chunk;
+        messagesToSave[index].content = target.content;
         if (contentEl)
           contentEl.innerHTML = renderMessageHtml(target.content, target.role);
         scrollChatToBottom();
@@ -8473,31 +8477,48 @@ async function regenerateMessage(index) {
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
     target.content = reply || "(No content returned)";
+    messagesToSave[index].content = target.content;
     target.isInitial = false;
+    messagesToSave[index].isInitial = false;
     target.userEdited = false;
+    messagesToSave[index].userEdited = false;
     target.finishReason = String(result.finishReason || "");
+    messagesToSave[index].finishReason = target.finishReason;
     target.nativeFinishReason = String(result.nativeFinishReason || "");
+    messagesToSave[index].nativeFinishReason = target.nativeFinishReason;
     target.truncatedByFilter = result.truncatedByFilter === true;
+    messagesToSave[index].truncatedByFilter = target.truncatedByFilter;
     target.generationId = String(result.generationId || "");
+    messagesToSave[index].generationId = target.generationId;
     target.completionMeta = result.completionMeta || null;
+    messagesToSave[index].completionMeta = target.completionMeta;
     target.generationInfo = result.generationInfo || null;
+    messagesToSave[index].generationInfo = target.generationInfo;
     target.generationFetchDebug = result.generationFetchDebug || [];
+    messagesToSave[index].generationFetchDebug = target.generationFetchDebug;
     target.model = result.model || state.settings.model || "";
+    messagesToSave[index].model = target.model;
     target.temperature = Number(state.settings.temperature) || 0;
+    messagesToSave[index].temperature = target.temperature;
     target.generationError = "";
     target.generationStatus = "";
+    messagesToSave[index] = { ...target };
     target.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
       ? promptContext.usedLoreEntries
       : [];
+    messagesToSave[index].usedLoreEntries = target.usedLoreEntries;
     target.usedMemorySummary = String(promptContext.memory || "");
+    messagesToSave[index].usedMemorySummary = target.usedMemorySummary;
     if (!Number.isInteger(Number(target.writingInstructionsTurnIndex))) {
       target.writingInstructionsTurnIndex = effectiveWritingTurnIndex;
+      messagesToSave[index].writingInstructionsTurnIndex = target.writingInstructionsTurnIndex;
     }
     if (!isViewingThread(threadId)) {
       target.unreadAt = Date.now();
+      messagesToSave[index].unreadAt = target.unreadAt;
     }
     commitPendingPersonaInjectionMarker();
-    await persistThreadMessagesById(threadId, conversationHistory);
+    await persistThreadMessagesById(threadId, messagesToSave);
     renderChat();
     maybeAutoSpeakAssistantMessage(index).catch(() => {});
     await renderThreads();
@@ -8505,14 +8526,17 @@ async function regenerateMessage(index) {
     state.pendingPersonaInjectionPersonaId = null;
     if (isAbortError(e)) {
       target.generationStatus = "";
-      await persistThreadMessagesById(threadId, conversationHistory);
+      messagesToSave[index].generationStatus = "";
+      await persistThreadMessagesById(threadId, messagesToSave);
       renderChat();
       await renderThreads();
       showToast(t("regenerationCancelled"), "success");
     } else {
       target.content = originalContent;
+      messagesToSave[index].content = originalContent;
       target.generationStatus = "";
-      await persistThreadMessagesById(threadId, conversationHistory);
+      messagesToSave[index].generationStatus = "";
+      await persistThreadMessagesById(threadId, messagesToSave);
       renderChat();
       await renderThreads();
       await openInfoDialog(t("regenerateFailedTitle"), String(e.message || t("unknownError")));
