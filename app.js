@@ -5852,7 +5852,22 @@ function updateCharWritingInstructionsVisibility() {
   const textarea = document.getElementById("char-writing-instructions");
   if (!select || !textarea) return;
   const isCustom = !select.value;
-  textarea.classList.toggle("hidden", !isCustom);
+  const collapse = textarea.closest(".textarea-collapse");
+  if (collapse) {
+    collapse.classList.toggle("hidden", !isCustom);
+    const header = collapse.querySelector(".textarea-collapse-header");
+    const body = collapse.querySelector(".textarea-collapse-body");
+    if (header) {
+      header.setAttribute("aria-expanded", isCustom ? "true" : "false");
+      const icon = header.querySelector(".textarea-collapse-icon");
+      if (icon) icon.textContent = isCustom ? "▴" : "▾";
+    }
+    if (body) {
+      body.classList.toggle("collapsed", !isCustom);
+    }
+  } else {
+    textarea.classList.toggle("hidden", !isCustom);
+  }
 }
 
 function updateCharTtsRatePitchLabels() {
