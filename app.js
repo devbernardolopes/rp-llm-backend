@@ -1068,19 +1068,33 @@ function isTtsCancelledError(error) {
 }
 
 function preprocessForTTS(text) {
-    return text
-      .replace(/\*+/g, "")
-      .replace(/`+/g, "")
-      .replace(/#+\s?/g, "")
-      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-      .replace(/[_~]/g, "")
-      .replace(/\s+/g, " ")
-      .replace(
-        /([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu,
-        "",
-      )
-      .trim();
-  }
+  const sanitized = String(text || "")
+    .replace(/\*+/g, "")
+    .replace(/`+/g, "")
+    .replace(/#+\s?/g, "")
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+    .replace(/[_~]/g, "")
+    .replace(/\s+/g, " ")
+    .replace(
+      /([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu,
+      "",
+    )
+    .trim();
+  return normalizeForTTS(sanitized);
+}
+
+function normalizeForTTS(text) {
+  return text
+    .replace(/’/g, "'")
+    .replace(/(\w)'s\b/g, "$1 is")
+    .replace(/(\w)'re\b/g, "$1 are")
+    .replace(/(\w)'ve\b/g, "$1 have")
+    .replace(/(\w)'ll\b/g, "$1 will")
+    .replace(/(\w)'d\b/g, "$1 would")
+    .replace(/'/g, "")
+    .replace(/–|—/g, ",")
+    .replace(/…/g, "...");
+}
 
 window.addEventListener("DOMContentLoaded", init);
 
