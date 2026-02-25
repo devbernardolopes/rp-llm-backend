@@ -2056,12 +2056,14 @@ function getLabelFromElement(el) {
 function autoExpandTextarea(textarea) {
   if (!textarea) return;
   textarea.style.height = "auto";
+  textarea.style.overflow = "hidden";
+  textarea.style.resize = "none";
   const computed = window.getComputedStyle(textarea);
   const lineHeight = parseFloat(computed.lineHeight) || 24;
   const minHeight = Number(textarea.dataset.minHeight) || lineHeight * 1.4;
   textarea.dataset.minHeight = minHeight;
   const newHeight = Math.max(textarea.scrollHeight, minHeight);
-  textarea.style.height = `${Math.max(newHeight, minHeight)}px`;
+  textarea.style.height = `${newHeight}px`;
 }
 
 function watchModalTextareas() {

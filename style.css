@@ -1923,6 +1923,7 @@ textarea {
   border-radius: 10px;
   background: #111827;
   padding: 10px 12px;
+  overflow: hidden;
 }
 .image-preview-card {
   width: auto;
@@ -2254,8 +2255,9 @@ textarea {
 }
 
 .modal-body textarea {
-  resize: vertical;
+  resize: none;
   min-height: 42px;
+  overflow: hidden;
 }
 
 .clickable-avatar {
