@@ -1064,16 +1064,16 @@
           <h3 id="character-title">BOT</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
-        <div id="char-def-tabs" class="settings-tabs">
-          <div id="char-avatars-section" class="char-avatars-section">
-            <div id="char-avatars-container" class="char-avatars-container">
-              <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
-                <span class="dropzone-plus">+</span>
-                <span class="dropzone-hint">Drag & drop or click</span>
-              </button>
-              <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
-            </div>
+        <div id="char-avatars-section" class="char-avatars-section">
+          <div id="char-avatars-container" class="char-avatars-container">
+            <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
+              <span class="dropzone-plus">+</span>
+              <span class="dropzone-hint">Drag & drop or click</span>
+            </button>
+            <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
           </div>
+        </div>
+        <div id="char-def-tabs" class="settings-tabs">
           <div class="char-def-tabs-row char-def-tabs-main-row">
             <button
               id="char-config-tab-btn"
@@ -1085,10 +1085,9 @@
             </button>
             <button
               id="char-bg-tab-btn"
-              class="settings-tab-btn disabled"
+              class="settings-tab-btn"
               type="button"
               data-i18n="bgTab"
-              disabled
             >
               BG
             </button>
@@ -1101,7 +1100,7 @@
               Tags
             </button>
           </div>
-          <div class="char-def-tabs-row">
+          <div class="char-def-tabs-row char-def-tabs-lang-row">
             <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
             <button id="char-add-lang-btn" class="settings-tab-btn" type="button">
               +
@@ -1155,19 +1154,17 @@
               placeholder="Appended only for the first assistant generation."
             ></textarea>
           </div>
-            <div class="full lang-field">
-              <div class="writing-instructions-header">
-                <span data-i18n="writingInstructions">Writing Instructions</span>
-                <select id="char-writing-instructions-select">
-                  <option value="" data-i18n="customInstructions">Custom Instructions</option>
-                </select>
-              </div>
-              <textarea
-                id="char-writing-instructions"
-                rows="4"
-                placeholder="Reserved for future implementation."
-              ></textarea>
+          <div class="full lang-field">
+            <div class="writing-instructions-header">
+              <span data-i18n="writingInstructions">Writing Instructions</span>
+              <select id="char-writing-instructions-select"></select>
             </div>
+            <textarea
+              id="char-writing-instructions"
+              rows="4"
+              placeholder="Reserved for future implementation."
+            ></textarea>
+          </div>
           <div class="full lang-field">
             <span data-i18n="initialMessages">Initial Messages</span>
             <textarea

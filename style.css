@@ -1865,12 +1865,14 @@ textarea {
   flex-direction: column;
 }
 
-#settings-modal .modal-card {
-  height: min(90vh, 720px);
-  max-height: min(90vh, 720px);
-}
-
-#character-modal .modal-card {
+#settings-modal .modal-card,
+#character-modal .modal-card,
+#personas-modal .modal-card,
+#lore-modal .modal-card,
+#shortcuts-modal .modal-card,
+#tags-modal .modal-card,
+#writing-instructions-modal .modal-card,
+#database-modal .modal-card {
   height: min(90vh, 720px);
   max-height: min(90vh, 720px);
 }
@@ -2112,7 +2114,7 @@ textarea {
 }
 
 .char-def-tabs-left > .char-def-tab-btn:first-child {
-  margin-left: 12px;
+  margin-left: 0;
 }
 
 .char-def-tab-label {
@@ -2317,9 +2319,9 @@ textarea {
 }
 
 .char-avatars-section {
-  padding: 10px 0 8px;
+  padding: 6px 0 8px;
   border-bottom: 1px solid var(--line);
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .char-avatars-container {
