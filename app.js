@@ -6949,13 +6949,21 @@ async function duplicateThread(threadId) {
     return;
   }
 
+  const clonedMessages = (() => {
+    const list = Array.isArray(source.messages) ? source.messages : [];
+    if (typeof structuredClone === "function") {
+      return structuredClone(list);
+    }
+    return list.map((m) => JSON.parse(JSON.stringify(m)));
+  })();
+
   const copy = {
     characterId: source.characterId,
     characterLanguage: source.characterLanguage || "",
     title: `${source.title || tf("threadTitleDefault", { id: source.id })} Copy`,
     titleGenerated: false,
     titleManual: false,
-    messages: [...(source.messages || [])],
+    messages: clonedMessages,
     selectedPersonaId: source.selectedPersonaId || null,
     autoTtsEnabled: source.autoTtsEnabled === true,
     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
@@ -7405,6 +7413,7 @@ function renderChat() {
   scrollChatToBottom();
   updateScrollBottomButtonVisibility();
   scheduleThreadBudgetIndicatorUpdate();
+  maybeProcessUnreadMessagesSeen(false).catch(() => {});
 }
 
 function getUnreadAssistantCount(messages) {
@@ -7422,10 +7431,13 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
   const currentId = Number(currentThread.id);
   if (!Number.isInteger(currentId)) return;
   if (state.unreadNeedsUserScrollThreadId !== currentId) return;
-  if (!fromUserScroll) return;
 
   const log = document.getElementById("chat-log");
   if (!log) return;
+  if (!fromUserScroll) {
+    const noScrollbar = log.scrollHeight <= log.clientHeight + 4;
+    if (!noScrollbar) return;
+  }
   const logRect = log.getBoundingClientRect();
   let changed = false;
   const now = Date.now();
