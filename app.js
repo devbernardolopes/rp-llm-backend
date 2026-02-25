@@ -351,6 +351,24 @@ const BOT_LANGUAGE_FLAGS = {
   vi: "ðŸ‡»ðŸ‡³",
 };
 
+const CHARACTER_SORT_BASES = ["created", "updated", "name", "threads"];
+const CHARACTER_SORT_ICON_TEMPLATES = {
+  created:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="10" fill="%23f5f7ff" opacity="0.35"/><path d="M16 9v14M9 16h14" stroke="%231c2737" stroke-width="2" stroke-linecap="round"/></svg>',
+  updated:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M10 12a8 8 0 1 1 11.3 11.3L16 21" fill="none" stroke="%231c2737" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 9v-4h6" fill="none" stroke="%231c2737" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  name:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text x="9" y="23" font-size="18" font-family="Segoe UI, system-ui" fill="%23f5f7ff">A</text><path d="M9 10l7 12l7-12" fill="none" stroke="%231c2737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  threads:
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="6" y="8" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.65"/><rect x="6" y="14" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.45"/><rect x="6" y="20" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.25"/><path d="M9 8v14" fill="none" stroke="%231c2737" stroke-width="2" stroke-linecap="round"/></svg>',
+};
+const CHARACTER_SORT_LABEL_KEYS = {
+  created: "characterSortCreationDate",
+  updated: "characterSortUpdateDate",
+  name: "characterSortName",
+  threads: "characterSortChats",
+};
+
 const BOT_LANGUAGE_FLAG_ICON_CODES = {
   en: "us",
   fr: "fr",
@@ -712,6 +730,7 @@ const I18N = {
     personaInjectionPlacement: "Persona Injection Placement",
     atEndCharacterPrompt: "At End of Character Prompt",
     botConfiguration: "Bot Configuration",
+    bgTab: "BG",
     preferLanguageMatchingUserPersona: "Prefer Language Matching User Persona",
     addLanguage: "Add Language",
     add: "Add",
@@ -1498,15 +1517,17 @@ function setupEvents() {
       renderCharacterTagFilterChips();
       updateCharacterCardsVisibility();
     });
-  document
-    .getElementById("character-sort-select")
-    .addEventListener("change", async (e) => {
+  const sortBtn = document.getElementById("character-sort-btn");
+  if (sortBtn) {
+    sortBtn.addEventListener("click", async () => {
       const parts = getCharacterSortParts(state.characterSortMode);
-      state.characterSortMode = `${e.target.value}_${parts.dir}`;
+      const nextBase = getNextCharacterSortBase(parts.base);
+      state.characterSortMode = `${nextBase}_${parts.dir}`;
       saveUiState();
       renderCharacterTagFilterChips();
       await renderCharacters();
     });
+  }
   document
     .getElementById("character-sort-dir-btn")
     .addEventListener("click", async () => {
@@ -2132,13 +2153,35 @@ function updateCharacterFiltersToggleUi() {
   btn.innerHTML = collapsed ? "&#9660;" : "&#9650;";
 }
 
+function getCharacterSortIconUrl(base) {
+  const raw = CHARACTER_SORT_ICON_TEMPLATES[base] || CHARACTER_SORT_ICON_TEMPLATES.updated;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(raw)}`;
+}
+
+function getNextCharacterSortBase(current = "updated") {
+  const index = CHARACTER_SORT_BASES.indexOf(current);
+  if (index === -1) return CHARACTER_SORT_BASES[0];
+  return CHARACTER_SORT_BASES[(index + 1) % CHARACTER_SORT_BASES.length];
+}
+
+function updateCharacterSortButton() {
+  const btn = document.getElementById("character-sort-btn");
+  const icon = document.getElementById("character-sort-icon");
+  if (!btn || !icon) return;
+  const parts = getCharacterSortParts(state.characterSortMode);
+  const labelKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
+  const label = t(labelKey);
+  icon.src = getCharacterSortIconUrl(parts.base);
+  icon.alt = label;
+  btn.setAttribute("aria-label", label);
+}
+
 function renderCharacterTagFilterChips() {
   const chips = document.getElementById("character-tag-filter-chips");
   const cue = document.getElementById("character-filter-active-cue");
-  const sortSelect = document.getElementById("character-sort-select");
+  const sortBtn = document.getElementById("character-sort-btn");
   const sortDirBtn = document.getElementById("character-sort-dir-btn");
   const sortParts = getCharacterSortParts(state.characterSortMode);
-  if (sortSelect) sortSelect.value = sortParts.base;
   if (sortDirBtn) {
     const isDesc = sortParts.dir === "desc";
     sortDirBtn.innerHTML = isDesc ? "&#8595;" : "&#8593;";
@@ -2147,6 +2190,7 @@ function renderCharacterTagFilterChips() {
       isDesc ? t("sortDescending") : t("sortAscending"),
     );
   }
+  updateCharacterSortButton();
   updateCharacterFiltersToggleUi();
   if (!chips || !cue) return;
   chips.innerHTML = "";

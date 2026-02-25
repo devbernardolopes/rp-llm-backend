@@ -315,6 +315,7 @@
   "removeTagAffectsChars": "Removing this tag will update these characters:\n\n{list}{extra}\n\nContinue?",
   "tagInputPlaceholder": "New tag",
   "botConfiguration": "Bot Configuration",
+  "bgTab": "BG",
   "preferLanguageMatchingUserPersona": "Prefer Language Matching User Persona",
   "addLanguage": "Add Language",
   "add": "Add",

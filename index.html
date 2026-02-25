@@ -148,25 +148,14 @@
               <div id="character-tag-filter-chips" class="filter-chips"></div>
               <div class="character-filters-controls">
                 <div class="character-sort-field">
-                  <span class="character-sort-label" data-i18n="characterOrdering">
-                    Character ordering
-                  </span>
-                  <select
-                    id="character-sort-select"
+                  <button
+                    id="character-sort-btn"
+                    class="icon-btn character-sort-btn"
+                    type="button"
                     data-i18n-title="characterOrdering"
-                    aria-label="Character ordering"
                   >
-                    <option value="created" data-i18n="characterSortCreationDate">
-                      Creation Date
-                    </option>
-                    <option value="updated" data-i18n="characterSortUpdateDate">
-                      Update Date
-                    </option>
-                    <option value="name" data-i18n="characterSortName">Name</option>
-                    <option value="threads" data-i18n="characterSortChats">
-                      # Chats
-                    </option>
-                  </select>
+                    <img id="character-sort-icon" alt="" />
+                  </button>
                 </div>
                 <button
                   id="character-sort-dir-btn"
@@ -1038,6 +1027,15 @@
             data-i18n="botConfiguration"
           >
             Bot Configuration
+          </button>
+          <button
+            id="char-bg-tab-btn"
+            class="settings-tab-btn disabled"
+            type="button"
+            data-i18n="bgTab"
+            disabled
+          >
+            BG
           </button>
           <div id="char-avatars-section" class="char-avatars-section">
             <div id="char-avatars-container" class="char-avatars-container">
