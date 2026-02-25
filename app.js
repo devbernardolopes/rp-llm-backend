@@ -5528,9 +5528,10 @@ function refreshCharTtsProviderFields() {
   });
   const pitch = document.getElementById("char-tts-pitch");
   if (pitch) pitch.disabled = isKokoro;
-  document
-    .querySelectorAll(".tts-extra-field")
-    .forEach((field) => field.classList.toggle("hidden", isKokoro));
+  document.querySelectorAll(".tts-extra-field").forEach((field) => {
+    field.classList.toggle("hidden", isKokoro);
+    field.style.display = isKokoro ? "none" : "";
+  });
   const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
   if (isKokoro) {
     if (!kokoroSupport) {
