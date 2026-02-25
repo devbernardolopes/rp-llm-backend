@@ -367,5 +367,6 @@
   "kokoroDtype": "Cuantización Kokoro",
   "kokoroVoice": "Voz Kokoro",
   "kokoroVoicesLoading": "Cargando voces de Kokoro...",
-  "kokoroVoicesUnavailable": "No hay voces de Kokoro disponibles para este idioma."
+  "kokoroVoicesUnavailable": "No hay voces de Kokoro disponibles para este idioma.",
+  "writingInstructionsNone": "Ninguno"
 }

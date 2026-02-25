@@ -746,6 +746,7 @@ const I18N = {
     defaultPersonaOverride: "Default User Persona Override (Character-only)",
     oneTimeExtraPrompt: "One-time only Extra System/Character Prompt",
     writingInstructions: "Writing Instructions",
+    writingInstructionsNone: "None",
     initialMessages: "Initial Messages",
     tagsCommaSeparated: "Tags (comma-separated)",
     personaInjectionPlacement: "Persona Injection Placement",
@@ -4956,7 +4957,7 @@ function createEmptyCharacterDefinition(language = "en") {
     systemPrompt: "",
     oneTimeExtraPrompt: "",
     writingInstructions: "",
-    writingInstructionId: "",
+    writingInstructionId: "none",
     initialMessagesRaw: "",
     initialMessages: [],
     personaInjectionPlacement: "end_system_prompt",
@@ -5203,8 +5204,18 @@ function saveActiveCharacterDefinitionFromForm() {
   def.tagline = String(document.getElementById("char-tagline")?.value || "").trim();
   def.systemPrompt = String(document.getElementById("char-system-prompt")?.value || "").trim();
   def.oneTimeExtraPrompt = String(document.getElementById("char-one-time-extra-prompt")?.value || "").trim();
-  def.writingInstructions = String(document.getElementById("char-writing-instructions")?.value || "").trim();
-  def.writingInstructionId = String(document.getElementById("char-writing-instructions-select")?.value || "");
+  const writingInstructionsTextarea = document.getElementById("char-writing-instructions");
+  const writingInstructionsSelect = document.getElementById(
+    "char-writing-instructions-select",
+  );
+  const selectedWritingInstructionId = String(
+    writingInstructionsSelect?.value || "",
+  );
+  def.writingInstructionId = selectedWritingInstructionId;
+  def.writingInstructions =
+    selectedWritingInstructionId === ""
+      ? String(writingInstructionsTextarea?.value || "").trim()
+      : "";
   def.initialMessagesRaw = String(document.getElementById("char-initial-messages")?.value || "");
   def.personaInjectionPlacement =
     String(document.getElementById("char-persona-injection-placement")?.value || "end_system_prompt");
@@ -5617,6 +5628,10 @@ async function populateCharWritingInstructionsSelect(preferredId = "") {
   const allWi = await getAllWritingInstructions();
   const matchingWi = allWi.filter((wi) => wi.instructions && wi.instructions[currentLang]);
   select.innerHTML = "";
+  const noneOpt = document.createElement("option");
+  noneOpt.value = "none";
+  noneOpt.textContent = t("writingInstructionsNone");
+  select.appendChild(noneOpt);
   const customOpt = document.createElement("option");
   customOpt.value = "";
   customOpt.textContent = t("customInstructions");
@@ -5627,8 +5642,17 @@ async function populateCharWritingInstructionsSelect(preferredId = "") {
     opt.textContent = wi.name || `Writing Instruction #${wi.id}`;
     select.appendChild(opt);
   });
-  const hasPreferred = matchingWi.some((wi) => String(wi.id) === preferredId);
-  select.value = hasPreferred ? preferredId : "";
+  const hasPreferred = matchingWi.some(
+    (wi) => String(wi.id) === preferredId,
+  );
+  const isCustomPreferred = preferredId === "";
+  if (isCustomPreferred) {
+    select.value = "";
+  } else if (hasPreferred) {
+    select.value = preferredId;
+  } else {
+    select.value = "none";
+  }
   updateCharWritingInstructionsVisibility();
 }
 
@@ -11326,7 +11350,7 @@ async function buildSystemPrompt(character, options = {}) {
   );
   let writingInstructionsRaw = "";
   const wiId = character?.writingInstructionId;
-  if (wiId) {
+  if (wiId && wiId !== "none") {
     const wi = await db.writingInstructions.get(Number(wiId));
     if (wi && wi.instructions) {
       const threadLanguage = character?.activeLanguage || options?.characterLanguage || "en";

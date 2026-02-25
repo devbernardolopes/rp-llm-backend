@@ -2165,7 +2165,9 @@ textarea {
 }
 
 .writing-instructions-header select {
-  max-width: 200px;
+  flex: 1;
+  min-width: 160px;
+  max-width: none;
 }
 
 .model-filter-row {
