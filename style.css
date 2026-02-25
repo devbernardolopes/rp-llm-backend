@@ -24,6 +24,7 @@ body {
 }
 
 #app-shell {
+  --left-pane-width: 360px;
   display: grid;
   grid-template-columns: 360px 1fr;
   height: 100vh;
@@ -33,6 +34,7 @@ body {
 }
 
 #app-shell.pane-collapsed {
+  --left-pane-width: 84px;
   grid-template-columns: 84px 1fr;
 }
 
@@ -105,7 +107,7 @@ body {
 
 .pane-overlay-toggle {
   position: absolute;
-  left: 100%;
+  left: var(--left-pane-width);
   top: 50%;
   transform: translate(-50%, -50%);
   width: 28px;
@@ -141,16 +143,8 @@ body {
   transform: rotate(180deg);
 }
 
-#app-shell.pane-collapsed .pane-overlay-toggle {
-  left: 84px;
-}
-
-#app-shell:not(.pane-collapsed) .pane-overlay-toggle {
-  left: 360px;
-}
-
 @media (max-width: 768px) {
-  #app-shell:not(.pane-collapsed) .pane-overlay-toggle {
+  .pane-overlay-toggle {
     left: calc(100% - 14px);
   }
   #app-shell.pane-collapsed .pane-overlay-toggle {
@@ -1852,6 +1846,11 @@ textarea {
   flex-direction: column;
 }
 
+#settings-modal .modal-card {
+  height: min(90vh, 720px);
+  max-height: min(90vh, 720px);
+}
+
 .modal-card.wide {
   width: min(760px, 100%);
   overflow: hidden;
@@ -1931,6 +1930,12 @@ textarea {
 
 #settings-modal .modal-header {
   padding-bottom: 16px;
+}
+
+.settings-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .modal-footer {

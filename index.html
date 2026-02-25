@@ -622,9 +622,9 @@
             </span>
             <span class="checkbox-line">
               <input type="checkbox" id="thread-autotitle-enabled" checked />
-              <span data-i18n="threadAutoTitleEnabled"
-                >Enable Auto-titling for Threads</span
-              >
+              <span data-i18n="threadAutoTitleEnabled">
+                Enable Auto-titling for Threads
+              </span>
             </span>
             <div class="form-field">
               <span data-i18n="threadAutoTitleMinMessages">Min. Messages</span>
@@ -648,22 +648,12 @@
                 </option>
               </select>
             </div>
-            <!--
-            <div class="form-field">
-              <span data-i18n="markdownCustomCss">Markdown Custom CSS</span>
-              <textarea
-                id="markdown-custom-css"
-                rows="6"
-                placeholder=".md-em { color: #E6D97A; }"
-              ></textarea>
-            </div>
-            -->
             <div class="form-field">
               <span data-i18n="postprocessRules">Post-processing Rules (JSON)</span>
               <textarea
                 id="postprocess-rules-json"
                 rows="8"
-                placeholder='[{"pattern":"^Â«([\\s\\S]*)Â»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">Â«$1Â»</span>"}]'
+                placeholder='[{"pattern":"^«([\\s\\S]*)»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">«$1»</span>"}]'
               ></textarea>
             </div>
           </div>
@@ -730,341 +720,9 @@
               />
             </div>
           </div>
-<div class="form-field" data-settings-group="appearance">
-            <div class="label-inline">
-              <span data-i18n="toastDelayLabel">Toast Delay</span>
-              <span id="toast-delay-value" class="muted"></span>
-            </div>
-            <input
-              id="toast-delay-slider"
-              type="range"
-              min="1000"
-              max="10000"
-              step="200"
-            />
-          </div>
-<div class="form-field" data-settings-group="appearance">
-            <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
-            <select id="marquee-behavior-select">
-              <option value="disabled" data-i18n="marqueeBehaviorDisabled">
-                Disabled
-              </option>
-              <option value="hover" data-i18n="marqueeBehaviorOnHover">
-                On Hover
-              </option>
-              <option value="always" data-i18n="marqueeBehaviorAlways">
-                Always
-              </option>
-            </select>
-          </div>
-          <div class="form-field" data-settings-group="appearance">
-            <span data-i18n="botCardAvatarEffectLabel">BOT Card Avatar Effect</span>
-            <select id="bot-card-avatar-effect">
-              <option value="none" data-i18n="botCardAvatarEffectNone">None</option>
-              <option value="carousel" data-i18n="botCardAvatarEffectCarousel">Carousel</option>
-            </select>
-          </div>
-          <div class="form-field" data-settings-group="appearance">
-            <div class="label-inline">
-              <span data-i18n="botCardAvatarTransitionDelayLabel">Transition Delay</span>
-              <span id="bot-card-avatar-transition-delay-value" class="muted"></span>
-            </div>
-            <input
-              id="bot-card-avatar-transition-delay-slider"
-              type="range"
-              min="4"
-              max="30"
-              step="1"
-              disabled
-            />
-          </div>
-          <div class="form-field" data-settings-group="appearance">
-            <span data-i18n="version">Version</span>
-            <span id="app-version" class="muted"></span>
-          </div>
-<div class="form-field">
-            <span data-i18n="languageLabel">Interface Language</span>
-            <select id="ui-language-select">
-              <option value="auto">Auto (browser)</option>
-              <option value="en">English</option>
-              <option value="fr">Francais</option>
-              <option value="it">Italiano</option>
-              <option value="de">Deutsch</option>
-              <option value="es">Espanol</option>
-              <option value="pt-BR">Portugues (Brasil)</option>
-            </select>
-          </div>
-<div class="form-field">
-            <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
-            <input
-              id="openrouter-api-key"
-              type="password"
-              placeholder="sk-or-v1-..."
-              autocomplete="off"
-              spellcheck="false"
-            />
-          </div>
-<div class="form-field">
-            <span data-i18n="modelLabel">Model</span>
-            <div class="model-select-wrapper">
-              <select id="model-select"></select>
-              <div id="model-select-display" class="model-select-display">Loading...</div>
-              <div id="model-custom-dropdown" class="model-custom-dropdown hidden">
-                <div id="model-dropdown-options" class="model-dropdown-options"></div>
-              </div>
-            </div>
-          </div>
-          <div class="settings-inline-row model-filter-row">
-<div class="form-field">
-              <span data-i18n="pricingLabel">Pricing</span>
-              <select id="model-pricing-filter">
-                <option value="all" data-i18n="all">All</option>
-                <option value="free" data-i18n="free">Free</option>
-                <option value="paid" data-i18n="paid">Paid</option>
-              </select>
-            </div>
-<div class="form-field">
-              <span data-i18n="modalityLabel">Modality</span>
-              <select id="model-modality-filter">
-                <option value="text-only" data-i18n="textToText">
-                  Text -&gt; Text
-                </option>
-                <option value="all" data-i18n="all">All</option>
-              </select>
-            </div>
-<div class="form-field">
-              <span data-i18n="orderLabel">Order</span>
-              <select id="model-sort-order">
-                <option value="name_asc" data-i18n="nameAsc">Name A-Z</option>
-                <option value="name_desc" data-i18n="nameDesc">Name Z-A</option>
-                <option value="created_desc" data-i18n="createdNewest">
-                  Created Newest
-                </option>
-                <option value="created_asc" data-i18n="createdOldest">
-                  Created Oldest
-                </option>
-              </select>
-            </div>
-            <button
-              id="model-refresh-btn"
-              class="secondary-btn"
-              type="button"
-              data-i18n="reload"
-            >
-              Reload
-            </button>
-          </div>
-          <div id="model-selected-meta" class="muted"></div>
-          <div id="model-roleplay-warning" class="model-warning hidden">
-            <span data-i18n="modelNotRecommendedRoleplay"
-              >This model is NOT recommended for roleplaying.</span
-            >
-          </div>
-<div class="form-field">
-            <div class="label-inline">
-              <span data-i18n="maxTokensLabel">Max Tokens</span>
-              <span id="max-tokens-value" class="muted"></span>
-            </div>
-            <input
-              id="max-tokens-slider"
-              type="range"
-              min="512"
-              max="8192"
-              step="64"
-            />
-          </div>
-<div class="form-field">
-            <div class="label-inline">
-              <span data-i18n="temperatureLabel">Temperature</span>
-              <span id="temperature-value" class="muted"></span>
-            </div>
-            <input
-              id="temperature-slider"
-              type="range"
-              min="0"
-              max="2"
-              step="0.05"
-            />
-          </div>
-          <div class="form-field">
-            <div class="label-inline">
-              <span data-i18n="completionCooldownLabel">Completion Cooldown</span>
-              <span id="completion-cooldown-value" class="muted"></span>
-            </div>
-            <input
-              id="completion-cooldown-slider"
-              type="range"
-              min="0"
-              max="15"
-              step="1"
-            />
-          </div>
-          <div class="form-field">
-            <span data-i18n="ttsTestTextLabel">TTS Test Text</span>
-            <textarea
-              id="tts-test-text"
-              rows="2"
-              placeholder="This is a test voice playback."
-            ></textarea>
-          </div>
-          <div class="settings-inline-row">
-            <button
-              id="tts-test-play-btn"
-              class="secondary-btn"
-              type="button"
-              data-i18n="playTtsTest"
-            >
-              Play TTS Test
-            </button>
-            <span id="tts-test-status" class="muted">TTS: idle</span>
-          </div>
-<span class="checkbox-line">
-            <input type="checkbox" id="markdown-enabled" />
-            <span data-i18n="renderMarkdown">Render Markdown in messages</span>
-          </span>
-<span class="checkbox-line">
-            <input type="checkbox" id="allow-message-html" />
-            <span data-i18n="allowRawHtml">Allow raw HTML in messages</span>
-          </span>
-<span class="checkbox-line">
-            <input type="checkbox" id="stream-enabled" checked />
-            <span data-i18n="streamMessages">Stream Messages</span>
-          </span>
-<span class="checkbox-line">
-            <input type="checkbox" id="autopair-enabled" checked />
-            <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
-          </span>
-<span class="checkbox-line">
-            <input type="checkbox" id="thread-autotitle-enabled" checked />
-            <span data-i18n="threadAutoTitleEnabled"
-              >Enable Auto-titling for Threads</span
-            >
-          </span>
-<div class="form-field">
-            <span data-i18n="threadAutoTitleMinMessages">Min. Messages</span>
-            <input
-              id="thread-autotitle-min-messages"
-              type="number"
-              min="5"
-              max="15"
-              step="1"
-              value="7"
-            />
-          </div>
-<div class="form-field">
-            <span data-i18n="chatMessageAlignment">Message Alignment</span>
-            <select id="chat-message-alignment">
-              <option value="left" data-i18n="messageAlignmentLeft">
-                Left (Default)
-              </option>
-              <option value="center" data-i18n="messageAlignmentCenter">
-                Center
-              </option>
-            </select>
-          </div>
-<!--
-          <div class="form-field">
-            <span data-i18n="markdownCustomCss">Markdown Custom CSS</span>
-            <textarea
-              id="markdown-custom-css"
-              rows="6"
-              placeholder=".md-em { color: #E6D97A; }"
-            ></textarea>
-          </div>
-          -->
-<div class="form-field">
-            <span data-i18n="postprocessRules"
-              >Post-processing Rules (JSON)</span
-            >
-            <textarea
-              id="postprocess-rules-json"
-              rows="8"
-              placeholder='[{"pattern":"^Â«([\\s\\S]*)Â»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">Â«$1Â»</span>"}]'
-            ></textarea>
-          </div>
-<div class="form-field">
-            <span data-i18n="cancelGenerationShortcut"
-              >Cancel Generation Shortcut</span
-            >
-            <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
-          </div>
-<div class="form-field">
-            <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
-            <input id="home-shortcut" type="text" placeholder="Alt+H" />
-          </div>
-<div class="form-field">
-            <span data-i18n="newCharacterShortcut">New Character Shortcut</span>
-            <input
-              id="new-character-shortcut"
-              type="text"
-              placeholder="Alt+N"
-            />
-          </div>
-<div class="form-field">
-            <span data-i18n="defaultCharacterPrompt"
-              >Default Character Prompt</span
-            >
-            <textarea
-              id="global-prompt-template"
-              rows="7"
-              placeholder="Used when a character prompt is empty."
-            ></textarea>
-          </div>
-<div class="form-field">
-            <span data-i18n="memorySummarizerPrompt"
-              >Memory Summarizer System Prompt</span
-            >
-            <textarea
-              id="summary-system-prompt"
-              rows="3"
-              placeholder="System prompt for memory summarization."
-            ></textarea>
-          </div>
-<div class="form-field">
-            <span data-i18n="personaInjectionTemplate"
-              >Persona Injection Template</span
-            >
-            <textarea
-              id="persona-injection-template"
-              rows="5"
-              placeholder="Template for active persona injection."
-            ></textarea>
-          </div>
-<div class="form-field">
-            <span data-i18n="personaInjectionTiming"
-              >Persona Injection Timing</span
-            >
-            <select id="persona-injection-when">
-              <option value="always" data-i18n="always">Always</option>
-              <option value="on_change" data-i18n="onPersonaChange">
-                On Persona Change (first message always injects)
-              </option>
-            </select>
-          </div>
-<div class="form-field">
-            <span data-i18n="writingInstructionsInjectionTiming"
-              >Writing Instructions Injection Timing</span
-            >
-            <select id="writing-instructions-injection-when">
-              <option value="always" data-i18n="always">Always</option>
-              <option value="every_other" data-i18n="everyOther">
-                Every Other
-              </option>
-              <option value="every_second" data-i18n="everySecond">
-                Every Second
-              </option>
-              <option value="every_third" data-i18n="everyThird">
-                Every Third
-              </option>
-              <option value="every_fourth" data-i18n="everyFourth">
-                Every Fourth
-              </option>
-            </select>
-          </div>
         </div>
       </div>
     </div>
-
     <div
       id="personas-modal"
       class="modal hidden"
@@ -1383,21 +1041,21 @@
           >
             Bot Configuration
           </button>
+          <div id="char-avatars-section" class="char-avatars-section">
+            <span data-i18n="avatars" class="block mb-2">Avatars</span>
+            <div id="char-avatars-container" class="char-avatars-container">
+              <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
+                <span class="dropzone-plus">+</span>
+                <span class="dropzone-hint">Drag & drop or click</span>
+              </button>
+              <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
+            </div>
+          </div>
           <div class="char-def-tabs-row">
             <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
             <button id="char-add-lang-btn" class="settings-tab-btn" type="button">
               +
             </button>
-          </div>
-        </div>
-        <div id="char-avatars-section" class="char-avatars-section">
-          <span data-i18n="avatars" class="block mb-2">Avatars</span>
-          <div id="char-avatars-container" class="char-avatars-container">
-            <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
-              <span class="dropzone-plus">+</span>
-              <span class="dropzone-hint">Drag & drop or click</span>
-            </button>
-            <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
           </div>
         </div>
         <div class="modal-body two-col">
@@ -1584,6 +1242,7 @@
               min="0.5"
               max="2"
               step="0.1"
+              value="1"
             />
           </div>
           <div class="lang-field">
