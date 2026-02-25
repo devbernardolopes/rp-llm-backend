@@ -2094,6 +2094,41 @@ textarea {
   font-size: 13px;
 }
 
+.tts-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tts-control-row select {
+  flex: 1;
+}
+
+.tts-test-slot {
+  display: flex;
+  align-items: center;
+}
+
+.tts-test-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #1d283b;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border 0.2s, background 0.2s;
+  padding: 0;
+}
+
+.tts-test-btn:hover {
+  border-color: #5a85c6;
+  background: #232f49;
+}
+
 .settings-inline-row {
   display: flex;
   align-items: center;
