@@ -964,17 +964,38 @@
           <h3 id="shortcuts-title" data-i18n="shortcuts">Shortcuts</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
-<div class="modal-body">
+        <div class="modal-body">
           <div class="form-field">
             <span data-i18n="shortcutEntries">Shortcut Entries</span>
             <textarea id="shortcuts-raw" rows="14"></textarea>
           </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="secondary-btn"
+            type="button"
+            data-close-modal
+            data-i18n="cancel"
+          >
+            Cancel
+          </button>
+          <button
+            id="apply-shortcuts-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="apply"
+            disabled
+          >
+            Apply
+          </button>
           <button
             id="save-shortcuts-btn"
             class="primary-btn"
-            data-i18n="saveShortcuts"
+            type="button"
+            data-i18n="save"
+            disabled
           >
-            Save Shortcuts
+            Save
           </button>
         </div>
       </div>

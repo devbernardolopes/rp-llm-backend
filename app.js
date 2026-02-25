@@ -1753,6 +1753,9 @@ function setupEvents() {
   document
     .getElementById("save-shortcuts-btn")
     .addEventListener("click", saveShortcutsFromModal);
+  document
+    .getElementById("apply-shortcuts-btn")
+    ?.addEventListener("click", () => saveShortcutsFromModal({ close: false }));
   document.getElementById("add-tag-btn").addEventListener("click", addTagFromManagerInput);
   document.getElementById("tag-manager-input").addEventListener("input", updateTagManagerAddButtonState);
   document.getElementById("tag-manager-input").addEventListener("keydown", (e) => {
@@ -1957,7 +1960,7 @@ function setupEvents() {
     "#lore-token-budget",
     "#lore-recursive-scanning",
   ]);
-  updateCharacterModalActionButtons();
+  updateModalActionButtons("character-modal");
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
   updateNameLengthCounter("persona-description", "persona-description-count", 100);
@@ -3467,11 +3470,18 @@ function markModalDirtyOnInput(modalId, selectors) {
   });
 }
 
-function updateCharacterModalActionButtons() {
-  const isDirty = !!state.modalDirty["character-modal"];
-  const saveBtn = document.getElementById("save-character-btn");
-  const applyBtn = document.getElementById("apply-character-btn");
-  [saveBtn, applyBtn].forEach((btn) => {
+function getModalActionButtons(modalId) {
+  const prefix = String(modalId || "").replace(/-modal$/, "");
+  return {
+    applyBtn: document.getElementById(`apply-${prefix}-btn`),
+    saveBtn: document.getElementById(`save-${prefix}-btn`),
+  };
+}
+
+function updateModalActionButtons(modalId) {
+  const { applyBtn, saveBtn } = getModalActionButtons(modalId);
+  const isDirty = !!state.modalDirty[modalId];
+  [applyBtn, saveBtn].forEach((btn) => {
     if (!btn) return;
     btn.disabled = !isDirty;
   });
@@ -3479,9 +3489,7 @@ function updateCharacterModalActionButtons() {
 
 function setModalDirtyState(modalId, isDirty) {
   state.modalDirty[modalId] = !!isDirty;
-  if (modalId === "character-modal") {
-    updateCharacterModalActionButtons();
-  }
+  updateModalActionButtons(modalId);
 }
 
 function normalizeShortcutString(value) {
@@ -3793,16 +3801,19 @@ function serializeShortcutEntries(entries) {
     .join("\n\n");
 }
 
-async function saveShortcutsFromModal() {
+async function saveShortcutsFromModal({ close = true } = {}) {
   const raw = document.getElementById("shortcuts-raw").value;
   const entries = parseShortcutEntries(raw);
   state.settings.shortcutsRaw = serializeShortcutEntries(entries);
   saveSettings();
-  state.modalDirty["shortcuts-modal"] = false;
+  setModalDirtyState("shortcuts-modal", false);
   document.getElementById("shortcuts-raw").value = state.settings.shortcutsRaw;
   await renderShortcutsBar();
-  closeActiveModal();
   showToast(t("shortcutsSaved"), "success");
+  if (close) {
+    closeActiveModal();
+  }
+  return true;
 }
 
 function isValidNewManagerTag(inputValue) {
@@ -4954,6 +4965,11 @@ function openModal(modalId) {
   if (!modal) return;
   state.activeModalId = modalId;
   modal.classList.remove("hidden");
+  window.requestAnimationFrame(() => {
+    modal.querySelectorAll("textarea").forEach((textarea) => {
+      autoExpandTextarea(textarea);
+    });
+  });
   setModalDirtyState(modalId, false);
   if (modalId === "personas-modal") {
     renderPersonaModalList();
@@ -4990,13 +5006,13 @@ async function closeActiveModal() {
     resolveTextInputDialog(false);
     return;
   }
-  if (closingId === "character-modal" && state.modalDirty[closingId]) {
+  if (state.modalDirty[closingId]) {
     const action = await openUnsavedChangesDialog();
     if (action === "back") return;
     if (action === "close") {
       setModalDirtyState(closingId, false);
     } else if (action === "save") {
-      const saved = await saveCharacterFromModal({ close: false });
+      const saved = await handleModalSaveAction(closingId);
       if (!saved) return;
       setModalDirtyState(closingId, false);
     }
@@ -5008,6 +5024,25 @@ async function closeActiveModal() {
   }
   state.activeModalId = null;
   setModalDirtyState(closingId, false);
+}
+
+async function handleModalSaveAction(modalId) {
+  if (modalId === "character-modal") {
+    return saveCharacterFromModal({ close: false });
+  }
+  if (modalId === "shortcuts-modal") {
+    return saveShortcutsFromModal({ close: false });
+  }
+  if (modalId === "personas-modal") {
+    return savePersonaFromModal();
+  }
+  if (modalId === "lore-modal") {
+    return saveLorebookFromEditor();
+  }
+  if (modalId === "writing-instructions-modal") {
+    return saveWritingInstruction();
+  }
+  return true;
 }
 
 function normalizeBotLanguageCode(value) {
@@ -6135,14 +6170,14 @@ async function savePersonaFromModal() {
 
   if (!name) {
     await openInfoDialog(t("missingFieldTitle"), t("personaNameRequired"));
-    return;
+    return false;
   }
   if (description.length > 100) {
     await openInfoDialog(
       t("personaDescriptionTitle"),
       t("personaDescriptionLimit"),
     );
-    return;
+    return false;
   }
 
   const shouldBeDefault = wantsDefault || personas.length === 0;
@@ -6191,6 +6226,7 @@ async function savePersonaFromModal() {
   await renderPersonaModalList();
   await renderPersonaSelector();
   broadcastSyncEvent({ type: "personas-updated" });
+  return true;
 }
 
 async function renderPersonaModalList() {
@@ -6832,7 +6868,7 @@ async function collectLorebookFromEditor() {
 
 async function saveLorebookFromEditor() {
   const payload = await collectLorebookFromEditor();
-  if (!payload) return;
+  if (!payload) return false;
   if (state.lore.editingId) {
     await db.lorebooks.update(state.lore.editingId, payload);
     showToast(t("loreUpdated"), "success");
@@ -6845,6 +6881,7 @@ async function saveLorebookFromEditor() {
   closeLoreEditor();
   await renderLorebookManagementList();
   await renderCharacterLorebookList(getSelectedLorebookIds());
+  return true;
 }
 
 async function duplicateLorebook(lorebookId) {
@@ -7138,14 +7175,14 @@ async function saveWritingInstruction() {
   const name = String(document.getElementById("writing-instruction-name")?.value || "").trim();
   if (!name) {
     await openInfoDialog(t("missingFieldTitle"), t("nameRequired"));
-    return;
+    return false;
   }
   const hasAllContent = state_writingInstructions.definitions.every(
     (d) => String(d.instructions || "").trim().length > 0,
   );
   if (!hasAllContent) {
     await openInfoDialog(t("missingFieldTitle"), t("writingInstructionsRequired"));
-    return;
+    return false;
   }
   const instructions = {};
   state_writingInstructions.definitions.forEach((d) => {
@@ -7166,6 +7203,7 @@ async function saveWritingInstruction() {
   }
   await renderWritingInstructionsList();
   switchWritingInstructionsView("list");
+  return true;
 }
 
 async function duplicateWritingInstruction(writingInstructionId) {
