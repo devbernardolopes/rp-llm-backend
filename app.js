@@ -2324,16 +2324,13 @@ function closeAnyOpenModal() {
 }
 
 async function setupSettingsControls() {
-  const appVersionEl = document.getElementById("app-version");
-  if (appVersionEl && typeof CONFIG.version === "string") {
-    appVersionEl.textContent = CONFIG.version;
+  const settingsVersionEl = document.getElementById("settings-version");
+  if (settingsVersionEl && typeof CONFIG.version === "string") {
+    settingsVersionEl.textContent = CONFIG.version;
   }
 
   const uiLanguageSelect = document.getElementById("ui-language-select");
   const openRouterApiKey = document.getElementById("openrouter-api-key");
-  const ttsTestText = document.getElementById("tts-test-text");
-  const ttsTestPlayBtn = document.getElementById("tts-test-play-btn");
-  const ttsTestStatus = document.getElementById("tts-test-status");
   const modelSelect = document.getElementById("model-select");
   const modelPricingFilter = document.getElementById("model-pricing-filter");
   const modelModalityFilter = document.getElementById("model-modality-filter");
@@ -2556,33 +2553,6 @@ async function setupSettingsControls() {
     state.settings.newCharacterShortcut ||
     DEFAULT_SETTINGS.newCharacterShortcut;
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
-  if (ttsTestText) {
-    ttsTestText.value = "This is a test voice playback.";
-  }
-
-  if (ttsTestPlayBtn) {
-    ttsTestPlayBtn.addEventListener("click", async () => {
-      const text =
-        String(ttsTestText?.value || "").trim() ||
-        "This is a test voice playback.";
-      if (ttsTestStatus) ttsTestStatus.textContent = "TTS: generating...";
-      ttsTestPlayBtn.disabled = true;
-      try {
-        const options = getCurrentCharacterTtsOptions();
-        if (ttsTestStatus) ttsTestStatus.textContent = "TTS: playing";
-        await playTtsAudio(text, options);
-        if (ttsTestStatus) ttsTestStatus.textContent = "TTS: idle";
-      } catch (err) {
-        if (isTtsCancelledError(err)) {
-          if (ttsTestStatus) ttsTestStatus.textContent = "TTS: idle";
-        } else if (ttsTestStatus) {
-          ttsTestStatus.textContent = `TTS: ${err.message || "failed"}`;
-        }
-      } finally {
-        ttsTestPlayBtn.disabled = false;
-      }
-    });
-  }
   updateTtsSupportUi();
 
   openRouterApiKey.addEventListener("input", () => {
@@ -2897,7 +2867,6 @@ function getSettingsGroupForNode(node) {
     has("#temperature-slider")
   ) return "api";
   if (has("#model-selected-meta") || has("#model-roleplay-warning")) return "api";
-  if (has("#tts-test-text") || has("#tts-test-play-btn")) return "tts";
   if (
     has("#markdown-enabled") ||
     has("#allow-message-html") ||
@@ -2906,7 +2875,8 @@ function getSettingsGroupForNode(node) {
     has("#thread-autotitle-enabled") ||
     has("#thread-autotitle-min-messages") ||
     has("#markdown-custom-css") ||
-    has("#postprocess-rules-json")
+    has("#postprocess-rules-json") ||
+    has("#chat-message-alignment")
   ) return "threads";
   if (has("#cancel-shortcut") || has("#home-shortcut") || has("#new-character-shortcut")) return "shortcuts";
   if (
@@ -2940,14 +2910,6 @@ function getSettingsGroupForNode(node) {
     return "api";
   }
   if (
-    id === "tts-test-text" ||
-    id === "tts-test-play-btn" ||
-    id === "tts-test-status" ||
-    text.includes("tts")
-  ) {
-    return "tts";
-  }
-  if (
     id === "markdown-enabled" ||
     id === "allow-message-html" ||
     id === "stream-enabled" ||
@@ -2955,7 +2917,8 @@ function getSettingsGroupForNode(node) {
     id === "thread-autotitle-enabled" ||
     id === "thread-autotitle-min-messages" ||
     id === "markdown-custom-css" ||
-    id === "postprocess-rules-json"
+    id === "postprocess-rules-json" ||
+    id === "chat-message-alignment"
   ) {
     return "threads";
   }
@@ -2994,19 +2957,18 @@ function setupSettingsTabsLayout() {
   if (!body || tabs.length === 0 || body.dataset.tabsReady === "1") return;
 
   const groups = [
-    "appearance",
     "api",
-    "tts",
+    "appearance",
     "threads",
-    "shortcuts",
     "prompting",
+    "shortcuts",
   ];
   const panels = new Map();
   groups.forEach((group) => {
     const panel = document.createElement("div");
     panel.className = "settings-tab-panel";
     panel.dataset.settingsTabPanel = group;
-    if (group !== "appearance") panel.classList.add("hidden");
+    if (group !== "api") panel.classList.add("hidden");
     panels.set(group, panel);
     body.appendChild(panel);
   });
@@ -3902,9 +3864,8 @@ async function renderCharacters() {
     } else {
       const avatar = document.createElement("img");
       avatar.className = "character-avatar";
-      avatar.src =
-        resolved.avatar || fallbackAvatar(resolved.name || "Character", 512, 512);
       avatar.alt = `${resolved.name || "Character"} avatar`;
+      setCharacterAvatarImage(avatar, resolved, resolved.name || "Character", 512);
       avatar.addEventListener("click", () => {
         const lang = card.dataset.activeCardLanguage;
         openCharacterModal(char, lang);
@@ -4564,11 +4525,11 @@ function openModal(modalId) {
   if (modalId === "personas-modal") {
     renderPersonaModalList();
   } else if (modalId === "settings-modal") {
-    const lastTab = localStorage.getItem("rp-settings-last-tab") || "appearance";
+    const lastTab = localStorage.getItem("rp-settings-last-tab") || "api";
     const tabBtn = document.querySelector(`[data-settings-tab-btn="${lastTab}"]`);
     if (tabBtn instanceof HTMLButtonElement) tabBtn.click();
     else {
-      const firstTab = document.querySelector('[data-settings-tab-btn="appearance"]');
+      const firstTab = document.querySelector('[data-settings-tab-btn="api"]');
       if (firstTab instanceof HTMLButtonElement) firstTab.click();
     }
     updateToastDelayDisplay();
@@ -9120,7 +9081,7 @@ async function playCharacterTtsTestFromModal() {
     updateCharTtsTestButtonState();
     return;
   }
-  const textInput = document.getElementById("tts-test-text");
+  const textInput = document.getElementById("char-tts-test-text");
   const text =
     String(textInput?.value || "").trim() || "This is a test voice playback.";
   state.charModalTtsTestPlaying = true;
