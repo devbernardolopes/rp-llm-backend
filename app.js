@@ -262,7 +262,11 @@ async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
     state.tts.kokoro.config.device = normalizedDevice;
     state.tts.kokoro.config.dtype = normalizedDtype;
     state.tts.kokoro.loading = false;
-    populateKokoroVoiceSelect(DEFAULT_KOKORO_VOICE, state.charModalActiveLanguage);
+    const preferredVoice =
+      state.tts.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE;
+    if (!state.tts.kokoro.voiceListLoaded) {
+      populateKokoroVoiceSelect(preferredVoice, state.charModalActiveLanguage);
+    }
     return instance;
   } catch (err) {
     state.tts.kokoro.loading = false;
@@ -283,6 +287,23 @@ function isActiveTtsProviderReady(provider = null) {
     return !!state.tts.kokoro.instance && !state.tts.kokoro.loading;
   }
   return hasBrowserTtsSupport() && state.tts.voiceSupportReady === true;
+}
+
+function preloadKokoroForActiveCharacter() {
+  if (getActiveCharacterTtsProvider() !== "kokoro") return;
+  const device =
+    (currentCharacter?.kokoroDevice &&
+      String(currentCharacter.kokoroDevice).trim()) ||
+    state.tts.kokoro.config.device ||
+    "wasm";
+  const dtype =
+    (currentCharacter?.kokoroDtype &&
+      String(currentCharacter.kokoroDtype).trim()) ||
+    state.tts.kokoro.config.dtype ||
+    "q8";
+  ensureKokoroInstance(device, dtype).catch((err) => {
+    console.warn("kokoro:preload", err);
+  });
 }
 
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
@@ -989,6 +1010,7 @@ const state = {
       loading: false,
       fetchPatched: false,
       voiceListLoaded: false,
+      selectedVoice: DEFAULT_KOKORO_VOICE,
     },
   },
   avatarSnapshotCache: new Map(),
@@ -1638,6 +1660,15 @@ function setupEvents() {
     ttsProviderSelect.addEventListener("change", () => {
       refreshCharTtsProviderFields();
       updateTtsSupportUi();
+    });
+  }
+  const kokoroVoiceSelect = document.getElementById("char-tts-kokoro-voice");
+  if (kokoroVoiceSelect) {
+    kokoroVoiceSelect.addEventListener("change", (event) => {
+      const value = String(event.target?.value || "").trim();
+      if (value) {
+        state.tts.kokoro.selectedVoice = value;
+      }
     });
   }
   refreshCharTtsProviderFields();
@@ -5723,8 +5754,8 @@ function moveCharModalTtsTestButton(target = "tts") {
   if (slot) slot.appendChild(btn);
 }
 
-  function populateKokoroVoiceSelect(
-    preferred = DEFAULT_KOKORO_VOICE,
+function populateKokoroVoiceSelect(
+    preferred = state.tts.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE,
     language = state.charModalActiveLanguage,
   ) {
     const select = document.getElementById("char-tts-kokoro-voice");
@@ -5738,6 +5769,7 @@ function moveCharModalTtsTestButton(target = "tts") {
       select.appendChild(placeholder);
       select.disabled = true;
       state.tts.kokoro.voiceListLoaded = true;
+      state.tts.kokoro.selectedVoice = DEFAULT_KOKORO_VOICE;
       return;
     }
     filtered.forEach((voice) => {
@@ -5752,6 +5784,7 @@ function moveCharModalTtsTestButton(target = "tts") {
     select.value = available;
     select.disabled = state.charModalTtsTestPlaying === true;
     state.tts.kokoro.voiceListLoaded = true;
+    state.tts.kokoro.selectedVoice = available;
   }
 
 async function renderPersonaSelector() {
@@ -7753,6 +7786,7 @@ async function openThread(threadId) {
     });
   }
   currentCharacter = character || null;
+  preloadKokoroForActiveCharacter();
   conversationHistory = (thread.messages || []).map((m) => ({
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
@@ -8592,6 +8626,9 @@ function hasBrowserTtsSupport() {
 function updateTtsSupportUi() {
   const provider = getActiveCharacterTtsProvider();
   const supported = isActiveTtsProviderReady(provider);
+  if (provider === "kokoro" && !supported && !state.tts.kokoro.loading) {
+    preloadKokoroForActiveCharacter();
+  }
   const statusEl = document.getElementById("tts-test-status");
   const playBtn = document.getElementById("tts-test-play-btn");
   if (
