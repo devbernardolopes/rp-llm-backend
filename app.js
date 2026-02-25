@@ -1917,6 +1917,7 @@ function setupEvents() {
 
   markModalDirtyOnInput("character-modal", [
     "#char-name",
+    "#char-tagline",
     "#char-system-prompt",
     "#char-default-persona-override",
     "#char-prefer-persona-language",
