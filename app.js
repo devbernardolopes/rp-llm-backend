@@ -8428,12 +8428,13 @@ async function regenerateMessage(index) {
       ? regenWritingTurnIndex
       : Math.max(1, getThreadWritingInstructionsTurnCount(currentThread));
   const originalContent = String(target.content || "");
+  const threadId = Number(currentThread.id);
 
   stopTtsPlayback();
   state.sending = true;
   state.chatAutoScroll = true;
   state.abortController = new AbortController();
-  state.activeGenerationThreadId = currentThread.id;
+  state.activeGenerationThreadId = threadId;
   setSendingState(true);
 
   try {
@@ -8485,15 +8486,18 @@ async function regenerateMessage(index) {
     target.temperature = Number(state.settings.temperature) || 0;
     target.generationError = "";
     target.generationStatus = "";
-    target.usedLoreEntries = Array.isArray(promptContext.loreEntries)
-      ? promptContext.loreEntries
+    target.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
+      ? promptContext.usedLoreEntries
       : [];
     target.usedMemorySummary = String(promptContext.memory || "");
     if (!Number.isInteger(Number(target.writingInstructionsTurnIndex))) {
       target.writingInstructionsTurnIndex = effectiveWritingTurnIndex;
     }
+    if (!isViewingThread(threadId)) {
+      target.unreadAt = Date.now();
+    }
     commitPendingPersonaInjectionMarker();
-    await persistCurrentThread();
+    await persistThreadMessagesById(threadId, conversationHistory);
     renderChat();
     maybeAutoSpeakAssistantMessage(index).catch(() => {});
     await renderThreads();
@@ -8501,14 +8505,14 @@ async function regenerateMessage(index) {
     state.pendingPersonaInjectionPersonaId = null;
     if (isAbortError(e)) {
       target.generationStatus = "";
-      await persistCurrentThread();
+      await persistThreadMessagesById(threadId, conversationHistory);
       renderChat();
       await renderThreads();
       showToast(t("regenerationCancelled"), "success");
     } else {
       target.content = originalContent;
       target.generationStatus = "";
-      await persistCurrentThread();
+      await persistThreadMessagesById(threadId, conversationHistory);
       renderChat();
       await renderThreads();
       await openInfoDialog(t("regenerateFailedTitle"), String(e.message || t("unknownError")));
