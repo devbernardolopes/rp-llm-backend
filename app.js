@@ -891,6 +891,7 @@ const state = {
         dtype: "q8",
       },
       loading: false,
+      voiceListLoaded: false,
     },
   },
   editingMessageIndex: null,
@@ -969,15 +970,19 @@ function isTtsCancelledError(error) {
 }
 
 function preprocessForTTS(text) {
-  return text
-    .replace(/\*+/g, "")
-    .replace(/`+/g, "")
-    .replace(/#+\s?/g, "")
-    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-    .replace(/[_~]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+    return text
+      .replace(/\*+/g, "")
+      .replace(/`+/g, "")
+      .replace(/#+\s?/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .replace(/[_~]/g, "")
+      .replace(/\s+/g, " ")
+      .replace(
+        /([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu,
+        "",
+      )
+      .trim();
+  }
 
 window.addEventListener("DOMContentLoaded", init);
 
@@ -5327,46 +5332,54 @@ function refreshCharTtsProviderFields() {
   });
   const pitch = document.getElementById("char-tts-pitch");
   if (pitch) pitch.disabled = isKokoro;
-  const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
-  if (isKokoro) {
-    setKokoroVoiceLoadingPlaceholder();
-  } else if (kokoroVoice) {
-    kokoroVoice.disabled = true;
-  }
+    const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
+    if (isKokoro) {
+      if (state.tts.kokoro.voiceListLoaded) {
+        if (kokoroVoice) {
+          kokoroVoice.disabled = state.charModalTtsTestPlaying === true;
+        }
+      } else {
+        setKokoroVoiceLoadingPlaceholder();
+      }
+    } else if (kokoroVoice) {
+      kokoroVoice.disabled = true;
+    }
 }
 
-function setKokoroVoiceLoadingPlaceholder() {
-  const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
-  if (!kokoroVoice) return;
-  kokoroVoice.innerHTML = "";
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = t("kokoroVoicesLoading");
-  kokoroVoice.appendChild(placeholder);
-  kokoroVoice.disabled = true;
-}
+  function setKokoroVoiceLoadingPlaceholder() {
+    if (state.tts.kokoro.voiceListLoaded) return;
+    const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
+    if (!kokoroVoice) return;
+    kokoroVoice.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = t("kokoroVoicesLoading");
+    kokoroVoice.appendChild(placeholder);
+    kokoroVoice.disabled = true;
+  }
 
 function getCharModalTtsProviderSelection() {
   const select = document.getElementById("char-tts-provider");
   return select?.value === "kokoro" ? "kokoro" : "browser";
 }
 
-function populateKokoroVoiceSelect(preferred = DEFAULT_KOKORO_VOICE) {
-  const select = document.getElementById("char-tts-kokoro-voice");
-  if (!select) return;
-  select.innerHTML = "";
-  KOKORO_VOICE_OPTIONS.forEach((voice) => {
-    const opt = document.createElement("option");
-    opt.value = voice;
-    opt.textContent = voice;
-    select.appendChild(opt);
-  });
-  const available = KOKORO_VOICE_OPTIONS.includes(preferred)
-    ? preferred
-    : KOKORO_VOICE_OPTIONS[0];
-  select.value = available;
-  select.disabled = state.charModalTtsTestPlaying === true;
-}
+  function populateKokoroVoiceSelect(preferred = DEFAULT_KOKORO_VOICE) {
+    const select = document.getElementById("char-tts-kokoro-voice");
+    if (!select) return;
+    select.innerHTML = "";
+    KOKORO_VOICE_OPTIONS.forEach((voice) => {
+      const opt = document.createElement("option");
+      opt.value = voice;
+      opt.textContent = voice;
+      select.appendChild(opt);
+    });
+    const available = KOKORO_VOICE_OPTIONS.includes(preferred)
+      ? preferred
+      : KOKORO_VOICE_OPTIONS[0];
+    select.value = available;
+    select.disabled = state.charModalTtsTestPlaying === true;
+    state.tts.kokoro.voiceListLoaded = true;
+  }
 
 async function renderPersonaSelector() {
   await ensurePersonasInitialized();
