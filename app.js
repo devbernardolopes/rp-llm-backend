@@ -1096,6 +1096,38 @@ function normalizeForTTS(text) {
     .replace(/…/g, "...");
 }
 
+function chunkForTTS(text, maxLen = 180) {
+  const normalized = String(text || "").trim();
+  if (!normalized) return [];
+  const sentences = normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [normalized];
+  const chunks = [];
+  let buffer = "";
+
+  for (const sentence of sentences) {
+    if ((buffer + sentence).length <= maxLen) {
+      buffer += sentence;
+    } else {
+      if (buffer) {
+        chunks.push(buffer.trim());
+      }
+      if (sentence.length > maxLen) {
+        for (let i = 0; i < sentence.length; i += maxLen) {
+          chunks.push(sentence.slice(i, i + maxLen).trim());
+        }
+        buffer = "";
+      } else {
+        buffer = sentence;
+      }
+    }
+  }
+
+  if (buffer) {
+    chunks.push(buffer.trim());
+  }
+
+  return chunks.filter(Boolean);
+}
+
 window.addEventListener("DOMContentLoaded", init);
 
 document.addEventListener("visibilitychange", () => {
@@ -9288,81 +9320,87 @@ async function playBrowserTts(normalizedText, options, playback = {}) {
       throw makeTtsCancelledError();
     }
 
-    utterance = new SpeechSynthesisUtterance(normalizedText);
     const desiredVoice = String(options?.voice || DEFAULT_TTS_VOICE).trim();
     const desiredLang = String(
       options?.language || DEFAULT_TTS_LANGUAGE,
     ).trim();
     const desiredRate = Math.max(0.5, Math.min(2, Number(options?.rate) || 1));
     const desiredPitch = Math.max(0, Math.min(2, Number(options?.pitch) || 1));
-    utterance.lang = desiredLang || DEFAULT_TTS_LANGUAGE;
-    utterance.rate = desiredRate;
-    utterance.pitch = desiredPitch;
-    const byExactName = voices.find(
-      (v) => String(v.name || "").toLowerCase() === desiredVoice.toLowerCase(),
-    );
-    const byLangExact = voices.find(
-      (v) =>
-        String(v.lang || "").toLowerCase() === utterance.lang.toLowerCase(),
-    );
-    const byLangPrefix = voices.find((v) =>
-      String(v.lang || "")
-        .toLowerCase()
-        .startsWith(utterance.lang.split("-")[0]?.toLowerCase() || ""),
-    );
-    utterance.voice =
-      byExactName || byLangExact || byLangPrefix || voices[0] || null;
+    const voiceMatcher = () => {
+      const byExactName = voices.find(
+        (v) =>
+          String(v.name || "").toLowerCase() === desiredVoice.toLowerCase(),
+      );
+      if (byExactName) return byExactName;
+      const byLangExact = voices.find(
+        (v) =>
+          String(v.lang || "").toLowerCase() === desiredLang.toLowerCase(),
+      );
+      if (byLangExact) return byLangExact;
+      const baseLang = desiredLang.split("-")[0]?.toLowerCase() || "";
+      const byLangPrefix = voices.find((v) =>
+        String(v.lang || "").toLowerCase().startsWith(baseLang),
+      );
+      return byLangPrefix || voices[0] || null;
+    };
+    const chunks = chunkForTTS(normalizedText);
 
-    if (requestId !== state.tts.activeRequestId) {
-      ttsDebug("playBrowserTts:stale-request-before-speak", {
-        requestId,
-        active: state.tts.activeRequestId,
+    const speakChunk = (chunk) =>
+      new Promise((resolve, reject) => {
+        const utterance = new SpeechSynthesisUtterance(chunk);
+        utterance.voice = voiceMatcher();
+        utterance.lang = desiredLang || DEFAULT_TTS_LANGUAGE;
+        utterance.rate = desiredRate;
+        utterance.pitch = desiredPitch;
+        utterance.onend = () => {
+          ttsDebug("playBrowserTts:chunk-ended", { chunk });
+          if (state.tts.audio === utterance) {
+            state.tts.audio = null;
+          }
+          resolve();
+        };
+        utterance.onerror = (event) => {
+          ttsDebug("playBrowserTts:error", { event });
+          if (state.tts.audio === utterance) {
+            state.tts.audio = null;
+          }
+          const interrupted =
+            requestId !== state.tts.activeRequestId ||
+            String(event?.error || "").toLowerCase() === "interrupted" ||
+            String(event?.error || "").toLowerCase() === "canceled";
+          if (interrupted) {
+            reject(makeTtsCancelledError());
+            return;
+          }
+          reject(new Error("Browser TTS playback failed."));
+        };
+        ttsDebug("playBrowserTts:speak", {
+          voice: utterance.voice?.name || "",
+          lang: utterance.lang,
+        });
+        state.tts.audio = utterance;
+        synth.speak(utterance);
       });
-      throw makeTtsCancelledError();
+
+    if (chunks.length === 0) {
+      return null;
     }
+
     state.tts.loadingMessageIndex = null;
     finalized = true;
     if (messageIndex !== null) {
       state.tts.speakingMessageIndex = messageIndex;
     }
-    state.tts.audio = utterance;
     refreshAllSpeakerButtons();
-    await new Promise((resolve, reject) => {
-      utterance.onend = () => {
-        ttsDebug("playBrowserTts:ended");
-        if (state.tts.audio === utterance) {
-          state.tts.audio = null;
-          state.tts.speakingMessageIndex = null;
-          state.tts.loadingMessageIndex = null;
-          refreshAllSpeakerButtons();
-        }
-        resolve();
-      };
-      utterance.onerror = (event) => {
-        ttsDebug("playBrowserTts:error", { event });
-        if (state.tts.audio === utterance) {
-          state.tts.audio = null;
-          state.tts.speakingMessageIndex = null;
-          state.tts.loadingMessageIndex = null;
-          refreshAllSpeakerButtons();
-        }
-        const interrupted =
-          requestId !== state.tts.activeRequestId ||
-          String(event?.error || "").toLowerCase() === "interrupted" ||
-          String(event?.error || "").toLowerCase() === "canceled";
-        if (interrupted) {
-          reject(makeTtsCancelledError());
-          return;
-        }
-        reject(new Error("Browser TTS playback failed."));
-      };
-      ttsDebug("playBrowserTts:speak", {
-        voice: utterance.voice?.name || "",
-        lang: utterance.lang,
-      });
-      synth.speak(utterance);
-    });
-    return utterance;
+
+    for (const chunk of chunks) {
+      if (requestId !== state.tts.activeRequestId) {
+        ttsDebug("playBrowserTts:stale-request", { requestId });
+        throw makeTtsCancelledError();
+      }
+      await speakChunk(chunk);
+    }
+    return null;
   } finally {
     finalizeLoadingState();
   }
@@ -9406,33 +9444,71 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       options.kokoro.device,
       options.kokoro.dtype,
     );
-    const raw = await kokoro.generate(normalizedText, {
-      voice: options.kokoro.voice || DEFAULT_KOKORO_VOICE,
-      speed: Number.isFinite(Number(options.kokoro.speed))
-        ? Number(options.kokoro.speed)
-        : options.rate || 1,
-    });
-    const blob = await raw.toBlob();
-    const url = URL.createObjectURL(blob);
-    if (state.tts.currentAudioUrl) {
-      URL.revokeObjectURL(state.tts.currentAudioUrl);
+    const chunks = chunkForTTS(normalizedText);
+    if (chunks.length === 0) {
+      return null;
     }
-    state.tts.currentAudioUrl = url;
-    const audioEl = new Audio(url);
-    let resolved = false;
-    state.tts.audio = audioEl;
-    const finalizePlayback = () => {
-      if (state.tts.audio === audioEl) {
-        state.tts.audio = null;
-        state.tts.speakingMessageIndex = null;
-        state.tts.loadingMessageIndex = null;
-        refreshAllSpeakerButtons();
+
+    const playChunk = async (chunk) => {
+      if (requestId !== state.tts.activeRequestId) {
+        ttsDebug("playKokoroTts:stale-request", {
+          requestId,
+          active: state.tts.activeRequestId,
+        });
+        throw makeTtsCancelledError();
       }
-      if (state.tts.currentAudioUrl === url) {
-        URL.revokeObjectURL(url);
-        state.tts.currentAudioUrl = null;
+      const raw = await kokoro.generate(chunk, {
+        voice: options.kokoro.voice || DEFAULT_KOKORO_VOICE,
+        speed: Number.isFinite(Number(options.kokoro.speed))
+          ? Number(options.kokoro.speed)
+          : options.rate || 1,
+      });
+      const blob = await raw.toBlob();
+      const url = URL.createObjectURL(blob);
+      if (state.tts.currentAudioUrl) {
+        URL.revokeObjectURL(state.tts.currentAudioUrl);
       }
+      state.tts.currentAudioUrl = url;
+      const audioEl = new Audio(url);
+      state.tts.audio = audioEl;
+      return new Promise((resolve, reject) => {
+        audioEl.onended = () => {
+          ttsDebug("playKokoroTts:chunk-ended", { chunk });
+          if (state.tts.audio === audioEl) {
+            state.tts.audio = null;
+          }
+          if (state.tts.currentAudioUrl === url) {
+            URL.revokeObjectURL(url);
+            state.tts.currentAudioUrl = null;
+          }
+          resolve();
+        };
+        audioEl.onerror = () => {
+          ttsDebug("playKokoroTts:error");
+          if (state.tts.audio === audioEl) {
+            state.tts.audio = null;
+          }
+          if (state.tts.currentAudioUrl === url) {
+            URL.revokeObjectURL(url);
+            state.tts.currentAudioUrl = null;
+          }
+          reject(new Error("Kokoro TTS playback failed."));
+        };
+        audioEl
+          .play()
+          .catch((err) => {
+            if (state.tts.audio === audioEl) {
+              state.tts.audio = null;
+            }
+            if (state.tts.currentAudioUrl === url) {
+              URL.revokeObjectURL(url);
+              state.tts.currentAudioUrl = null;
+            }
+            reject(err);
+          });
+      });
     };
+
     if (requestId !== state.tts.activeRequestId) {
       ttsDebug("playKokoroTts:stale-request", {
         requestId,
@@ -9446,28 +9522,10 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       state.tts.speakingMessageIndex = messageIndex;
     }
     refreshAllSpeakerButtons();
-    await new Promise((resolve, reject) => {
-      audioEl.onended = () => {
-        ttsDebug("playKokoroTts:ended");
-        finalizePlayback();
-        resolve();
-      };
-      audioEl.onerror = () => {
-        ttsDebug("playKokoroTts:error");
-        finalizePlayback();
-        reject(new Error("Kokoro TTS playback failed."));
-      };
-      audioEl
-        .play()
-        .then(() => {
-          // nothing to do here
-        })
-        .catch((err) => {
-          finalizePlayback();
-          reject(err);
-        });
-    });
-    return audioEl;
+    for (const chunk of chunks) {
+      await playChunk(chunk);
+    }
+    return null;
   } finally {
     finalizeLoadingState();
   }
