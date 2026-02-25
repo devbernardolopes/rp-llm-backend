@@ -659,8 +659,8 @@ textarea {
 }
 
 #main-view {
-  padding: 24px;
-  gap: 20px;
+  padding: 16px 20px 14px;
+  gap: 12px;
   min-height: 0;
 }
 
@@ -669,6 +669,7 @@ textarea {
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
+  padding-bottom: 6px;
 }
 
 .main-header h1 {
@@ -695,16 +696,34 @@ textarea {
   background: #121a27;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.character-filters-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.character-filters-head .character-filters-row {
+  flex: 1;
+}
+
+.character-filters-body {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.character-filters.collapsed .character-filters-content {
+.character-filters.collapsed .character-filters-row,
+.character-filters.collapsed .character-filters-body {
   display: none;
 }
 
 .filters-toggle-btn {
   display: inline-flex;
-  align-self: flex-end;
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
 .character-filters-row {
@@ -717,9 +736,24 @@ textarea {
 
 .character-filters-controls {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   flex: 0 0 auto;
+}
+
+.character-sort-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.character-sort-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .character-filters-row select {
