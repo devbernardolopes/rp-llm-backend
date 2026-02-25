@@ -1838,6 +1838,9 @@ function setupEvents() {
     .getElementById("text-input-cancel-x")
     .addEventListener("click", () => resolveTextInputDialog(false));
 
+  setupModalTextareas();
+  watchModalTextareas();
+
   const input = document.getElementById("user-input");
   const chatLog = document.getElementById("chat-log");
   input.addEventListener("keydown", onInputKeyDown);
@@ -1959,6 +1962,117 @@ function setupEvents() {
   updateNameLengthCounter("persona-description", "persona-description-count", 100);
   updateToastDelayDisplay();
   setupSettingsTabsLayout();
+}
+
+let modalTextareaObserver = null;
+
+function setupModalTextareas() {
+  const textareas = document.querySelectorAll(".modal textarea");
+  textareas.forEach((textarea) => {
+    if (textarea.dataset.collapsible === "1") {
+      autoExpandTextarea(textarea);
+      return;
+    }
+    textarea.dataset.collapsible = "1";
+    const labelInfo = captureTextareaLabel(textarea);
+    const labelText =
+      labelInfo?.text ||
+      textarea.getAttribute("placeholder") ||
+      textarea.getAttribute("title") ||
+      "Input";
+    if (labelInfo?.element) {
+      labelInfo.element.style.display = "none";
+    }
+    const parent = textarea.parentElement;
+    if (!parent) return;
+    const wrapper = document.createElement("div");
+    wrapper.className = "textarea-collapse";
+    const header = document.createElement("button");
+    header.type = "button";
+    header.className = "textarea-collapse-header";
+    header.setAttribute("aria-expanded", "true");
+    const title = document.createElement("span");
+    title.textContent = labelText;
+    const icon = document.createElement("span");
+    icon.className = "textarea-collapse-icon";
+    icon.textContent = "▴";
+    header.append(title, icon);
+    const body = document.createElement("div");
+    body.className = "textarea-collapse-body";
+    parent.insertBefore(wrapper, textarea);
+    wrapper.append(header, body);
+    body.appendChild(textarea);
+    const toggle = () => {
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      const next = !expanded;
+      header.setAttribute("aria-expanded", next ? "true" : "false");
+      body.classList.toggle("collapsed", !next);
+      icon.textContent = next ? "▴" : "▾";
+      if (next) {
+        autoExpandTextarea(textarea);
+      }
+    };
+    header.addEventListener("click", toggle);
+    textarea.addEventListener("input", () => autoExpandTextarea(textarea));
+    textarea.addEventListener("focus", () => autoExpandTextarea(textarea));
+    autoExpandTextarea(textarea);
+  });
+}
+
+function captureTextareaLabel(textarea) {
+  const parent = textarea.parentElement;
+  if (!parent) return null;
+  const children = Array.from(parent.children);
+  const idx = children.indexOf(textarea);
+  for (let i = idx - 1; i >= 0; i -= 1) {
+    const el = children[i];
+    if (!el) continue;
+    const match = getLabelFromElement(el);
+    if (match) return match;
+  }
+  return null;
+}
+
+function getLabelFromElement(el) {
+  if (!el) return null;
+  if (el.matches("span, label")) {
+    const text = String(el.textContent || "").trim();
+    if (text && !/^\d+\/\d+$/.test(text)) {
+      return { element: el, text };
+    }
+  }
+  if (el.matches(".label-inline, .writing-instructions-header")) {
+    const span = el.querySelector("span");
+    if (span) {
+      const text = String(span.textContent || "").trim();
+      if (text && !/^\d+\/\d+$/.test(text)) {
+        return { element: span, text };
+      }
+    }
+  }
+  return null;
+}
+
+function autoExpandTextarea(textarea) {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  const computed = window.getComputedStyle(textarea);
+  const lineHeight = parseFloat(computed.lineHeight) || 24;
+  const minHeight = Number(textarea.dataset.minHeight) || lineHeight * 1.4;
+  textarea.dataset.minHeight = minHeight;
+  const newHeight = Math.max(textarea.scrollHeight, minHeight);
+  textarea.style.height = `${Math.max(newHeight, minHeight)}px`;
+}
+
+function watchModalTextareas() {
+  if (modalTextareaObserver) return;
+  modalTextareaObserver = new MutationObserver(() => {
+    window.requestAnimationFrame(setupModalTextareas);
+  });
+  modalTextareaObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
 }
 
 function applyDataI18n() {
