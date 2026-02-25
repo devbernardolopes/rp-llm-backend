@@ -1851,6 +1851,10 @@ textarea {
   z-index: 210;
 }
 
+#unsaved-modal {
+  z-index: 230;
+}
+
 .modal-card {
   background: #151d2a;
   border: 1px solid var(--line);
