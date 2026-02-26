@@ -1850,7 +1850,6 @@ function setupEvents() {
     .addEventListener("click", () => resolveTextInputDialog(false));
 
   setupModalTextareas();
-  watchModalTextareas();
 
   const input = document.getElementById("user-input");
   const chatLog = document.getElementById("chat-log");
@@ -1976,11 +1975,14 @@ function setupEvents() {
   setupSettingsTabsLayout();
 }
 
-let modalTextareaObserver = null;
 const textareaCollapseStates = new WeakMap();
 
-function setupModalTextareas() {
-  const textareas = document.querySelectorAll(".modal textarea");
+function setupModalTextareas(root = document) {
+  const scope = root || document;
+  const selector = scope === document ? ".modal textarea" : "textarea";
+  const textareas = Array.from(scope.querySelectorAll(selector)).filter((textarea) =>
+    textarea.closest(".modal"),
+  );
   textareas.forEach((textarea) => {
     const baseRows = Number(textarea.getAttribute("rows") || 3);
     textarea.dataset.baseRows = baseRows;
@@ -2133,17 +2135,6 @@ function autoExpandTextarea(textarea) {
   textarea.dataset.minHeight = minHeight;
   const newHeight = Math.max(textarea.scrollHeight, minHeight);
   textarea.style.height = `${newHeight}px`;
-}
-
-function watchModalTextareas() {
-  if (modalTextareaObserver) return;
-  modalTextareaObserver = new MutationObserver(() => {
-    window.requestAnimationFrame(setupModalTextareas);
-  });
-  modalTextareaObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
 }
 
 function applyDataI18n() {
@@ -6742,6 +6733,7 @@ function renderLoreEntryEditors() {
     card.append(head, keysInput, secondaryInput, contentInput);
     root.appendChild(card);
   });
+  setupModalTextareas(root);
 }
 
 async function renderLorebookManagementList() {
