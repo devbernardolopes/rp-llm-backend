@@ -49,6 +49,7 @@ body {
   min-height: 0;
   overflow: hidden;
   transition: width 0.2s ease;
+  position: relative;
 }
 
 #left-pane.collapsed {
