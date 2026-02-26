@@ -1988,6 +1988,7 @@ function setupModalTextareas(root = document) {
     const toggle = () => {
       const expanded = header.getAttribute("aria-expanded") === "true";
       entry.setExpanded(!expanded);
+      saveCharModalTextareaCollapseStates();
     };
     header.addEventListener("click", toggle);
     textarea.addEventListener("input", () => {
