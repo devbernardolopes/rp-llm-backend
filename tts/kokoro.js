@@ -65,11 +65,11 @@ async function loadKokoroModule() {
   return state.tts.kokoro.modulePromise;
 }
 
-async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
+async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
   const normalizedDevice = KOKORO_DEVICE_OPTIONS.includes(device)
     ? device
-    : "wasm";
-  const normalizedDtype = KOKORO_DTYPE_OPTIONS.includes(dtype) ? dtype : "q8";
+    : "webgpu";
+  const normalizedDtype = KOKORO_DTYPE_OPTIONS.includes(dtype) ? dtype : "auto";
   if (
     state.tts.kokoro.instance &&
     state.tts.kokoro.config.device === normalizedDevice &&
@@ -143,12 +143,12 @@ function preloadKokoroForActiveCharacter() {
     (currentCharacter?.kokoroDevice &&
       String(currentCharacter.kokoroDevice).trim()) ||
     state.tts.kokoro.config.device ||
-    "wasm";
+    "webgpu";
   const dtype =
     (currentCharacter?.kokoroDtype &&
       String(currentCharacter.kokoroDtype).trim()) ||
     state.tts.kokoro.config.dtype ||
-    "q8";
+    "auto";
   ensureKokoroInstance(device, dtype).catch((err) => {
     console.warn("kokoro:preload", err);
   });
@@ -163,8 +163,8 @@ function buildKokoroOptions(source = {}, rateFallback = DEFAULT_TTS_RATE) {
     ? Number(source.kokoroSpeed)
     : fallbackRate;
   return {
-    device: String(source?.kokoroDevice || "wasm"),
-    dtype: String(source?.kokoroDtype || "q8"),
+    device: String(source?.kokoroDevice || "webgpu"),
+    dtype: String(source?.kokoroDtype || "auto"),
     voice: String(source?.kokoroVoice || DEFAULT_KOKORO_VOICE),
     speed: Math.max(0.5, Math.min(2, sourceSpeed)),
   };

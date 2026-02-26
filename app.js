@@ -912,8 +912,8 @@ const state = {
       modulePromise: null,
       instance: null,
       config: {
-        device: "wasm",
-        dtype: "q8",
+        device: "webgpu",
+        dtype: "auto",
       },
       loading: false,
       fetchPatched: false,
@@ -5646,10 +5646,10 @@ function saveActiveCharacterDefinitionFromForm() {
   def.ttsPitch = selectedTts.pitch;
   def.ttsProvider = getCharModalTtsProviderSelection();
   def.kokoroDevice = String(
-    document.getElementById("char-tts-kokoro-device")?.value || "wasm",
+    document.getElementById("char-tts-kokoro-device")?.value || "webgpu",
   );
   def.kokoroDtype = String(
-    document.getElementById("char-tts-kokoro-dtype")?.value || "q8",
+    document.getElementById("char-tts-kokoro-dtype")?.value || "auto",
   );
   def.kokoroVoice = String(
     document.getElementById("char-tts-kokoro-voice")?.value ||
@@ -10113,8 +10113,8 @@ async function playTtsAudio(text, options = {}, playback = {}) {
   );
   const resolvedPitch = Math.max(0, Math.min(2, Number(options?.pitch || 1.1)));
   const kokoroSettings = {
-    device: String(options?.kokoro?.device || "wasm"),
-    dtype: String(options?.kokoro?.dtype || "q8"),
+    device: String(options?.kokoro?.device || "webgpu"),
+    dtype: String(options?.kokoro?.dtype || "auto"),
     voice: String(options?.kokoro?.voice || DEFAULT_KOKORO_VOICE),
     speed: Number.isFinite(Number(options?.kokoro?.speed))
       ? Number(options.kokoro.speed)
