@@ -1,6 +1,7 @@
 ﻿function patchKokoroVoiceFetch() {
   if (state.tts.kokoro.fetchPatched) return;
-  if (typeof window === "undefined" || typeof window.fetch !== "function") return;
+  if (typeof window === "undefined" || typeof window.fetch !== "function")
+    return;
   const originalFetch = window.fetch.bind(window);
   window.fetch = async function (input, init) {
     let url = typeof input === "string" ? input : input?.url;
@@ -64,7 +65,9 @@ async function loadKokoroModule() {
 }
 
 async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
-  const normalizedDevice = KOKORO_DEVICE_OPTIONS.includes(device) ? device : "wasm";
+  const normalizedDevice = KOKORO_DEVICE_OPTIONS.includes(device)
+    ? device
+    : "wasm";
   const normalizedDtype = KOKORO_DTYPE_OPTIONS.includes(dtype) ? dtype : "q8";
   if (
     state.tts.kokoro.instance &&
@@ -82,11 +85,26 @@ async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
   state.tts.kokoro.loading = true;
   await Promise.resolve();
   try {
+    // const instance = await KokoroTTS.from_pretrained(KOKORO_MODEL_ID, {
+    //   device: normalizedDevice,
+    //   dtype: normalizedDtype,
+    //   progress_callback: (info) => ttsDebug("kokoro:progress", info),
+    // });
+
     const instance = await KokoroTTS.from_pretrained(KOKORO_MODEL_ID, {
       device: normalizedDevice,
       dtype: normalizedDtype,
       progress_callback: (info) => ttsDebug("kokoro:progress", info),
     });
+
+    // Patch _validate_voice to allow all voices in KOKORO_VOICE_OPTIONS
+    const originalValidate = instance._validate_voice?.bind(instance);
+    instance._validate_voice = function (voice) {
+      if (KOKORO_VOICE_OPTIONS.includes(voice)) return voice;
+      if (originalValidate) return originalValidate(voice);
+      return voice;
+    };
+
     state.tts.kokoro.instance = instance;
     state.tts.kokoro.config.device = normalizedDevice;
     state.tts.kokoro.config.dtype = normalizedDtype;
@@ -187,9 +205,7 @@ function populateKokoroVoiceSelect(
     opt.textContent = voice;
     select.appendChild(opt);
   });
-  const available = filtered.includes(preferred)
-    ? preferred
-    : filtered[0];
+  const available = filtered.includes(preferred) ? preferred : filtered[0];
   select.value = available;
   select.disabled = state.charModalTtsTestPlaying === true;
   state.tts.kokoro.voiceListLoaded = true;
@@ -214,10 +230,8 @@ function decodeKokoroAudioBuffer(arrayBuffer) {
   }
   const copy = arrayBuffer.slice(0);
   return new Promise((resolve, reject) => {
-    context.decodeAudioData(
-      copy,
-      resolve,
-      (err) => reject(err || new Error("Failed to decode Kokoro audio.")),
+    context.decodeAudioData(copy, resolve, (err) =>
+      reject(err || new Error("Failed to decode Kokoro audio.")),
     );
   });
 }
