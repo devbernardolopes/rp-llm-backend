@@ -96,6 +96,7 @@
   "noPersonasYet": "Nessuna Persona ancora.",
   "dragToReorder": "Trascina per riordinare",
   "defaultSuffix": "Predefinito",
+  "personaDefaultName": "Persona",
   "globalDefaultSuffix": "Predefinito globale",
   "threadWord": "Chat",
   "threadTitleDefault": "Chat {id}",

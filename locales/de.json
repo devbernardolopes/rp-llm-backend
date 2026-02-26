@@ -96,6 +96,7 @@
   "noPersonasYet": "Noch keine Personas.",
   "dragToReorder": "Zum Neuanordnen ziehen",
   "defaultSuffix": "Standard",
+  "personaDefaultName": "Persona",
   "globalDefaultSuffix": "Globaler Standard",
   "threadWord": "Chat",
   "threadTitleDefault": "Chat {id}",

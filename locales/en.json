@@ -96,6 +96,7 @@
   "noPersonasYet": "No personas yet.",
   "dragToReorder": "Drag to reorder",
   "defaultSuffix": "Default",
+  "personaDefaultName": "Persona",
   "globalDefaultSuffix": "Global Default",
   "threadWord": "Thread",
   "threadTitleDefault": "Thread {id}",

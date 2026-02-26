@@ -4616,16 +4616,113 @@ async function renderCharacters() {
     const newChatBtn = document.createElement("button");
     newChatBtn.type = "button";
     newChatBtn.className = "secondary-btn new-chat-btn";
-    newChatBtn.textContent = t("newChat");
     newChatBtn.setAttribute(
       "aria-label",
       tf("newChatAria", { name: resolved.name || "character" }),
     );
-    applyHoverMarquee(newChatBtn, t("newChat"));
-    newChatBtn.addEventListener("click", (e) => {
+
+    const newChatBtnMain = document.createElement("span");
+    newChatBtnMain.className = "new-chat-btn-main";
+    newChatBtnMain.textContent = t("newChat");
+    newChatBtn.appendChild(newChatBtnMain);
+
+    const newChatBtnDropdown = document.createElement("span");
+    newChatBtnDropdown.className = "new-chat-btn-dropdown";
+    newChatBtnDropdown.innerHTML = "&#9660;";
+    newChatBtn.appendChild(newChatBtnDropdown);
+
+    applyHoverMarquee(newChatBtnMain, t("newChat"));
+    newChatBtnMain.addEventListener("click", (e) => {
       e.stopPropagation();
       startNewThread(char.id);
     });
+
+    let personaDropdownOpen = false;
+    let personaDropdown = null;
+
+    const showPersonaDropdown = async () => {
+      if (personaDropdownOpen) return;
+      personaDropdownOpen = true;
+      const personas = await getOrderedPersonas();
+      if (personas.length === 0) return;
+
+      personaDropdown = document.createElement("div");
+      personaDropdown.className = "new-chat-persona-dropdown";
+
+      for (const persona of personas) {
+        const item = document.createElement("button");
+        item.className = "new-chat-persona-dropdown-item";
+        item.type = "button";
+
+        if (persona.avatar) {
+          const img = document.createElement("img");
+          img.src = persona.avatar;
+          item.appendChild(img);
+        }
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "persona-name";
+        nameSpan.textContent = persona.name || t("personaDefaultName");
+        item.appendChild(nameSpan);
+
+        if (persona.isDefault) {
+          const badge = document.createElement("span");
+          badge.className = "default-badge";
+          badge.textContent = t("defaultSuffix");
+          item.appendChild(badge);
+        }
+
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          personaDropdownOpen = false;
+          if (personaDropdown && personaDropdown.parentNode) {
+            personaDropdown.parentNode.removeChild(personaDropdown);
+          }
+          personaDropdown = null;
+          startNewThread(char.id, persona.id);
+        });
+
+        personaDropdown.appendChild(item);
+      }
+
+      const rect = newChatBtn.getBoundingClientRect();
+      personaDropdown.style.left = `${rect.left}px`;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+        personaDropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+      } else {
+        personaDropdown.style.top = `${rect.bottom + 4}px`;
+      }
+
+      document.body.appendChild(personaDropdown);
+
+      const closeDropdown = (e) => {
+        if (personaDropdown && !personaDropdown.contains(e.target) && e.target !== newChatBtnDropdown) {
+          personaDropdownOpen = false;
+          if (personaDropdown && personaDropdown.parentNode) {
+            personaDropdown.parentNode.removeChild(personaDropdown);
+          }
+          personaDropdown = null;
+          document.removeEventListener("click", closeDropdown);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", closeDropdown), 0);
+    };
+
+    newChatBtnDropdown.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (personaDropdownOpen && personaDropdown) {
+        personaDropdownOpen = false;
+        if (personaDropdown.parentNode) {
+          personaDropdown.parentNode.removeChild(personaDropdown);
+        }
+        personaDropdown = null;
+      } else {
+        showPersonaDropdown();
+      }
+    });
+
     actions.appendChild(newChatBtn);
 
     card.addEventListener("mouseenter", () => {
@@ -8295,14 +8392,20 @@ async function deleteCharacter(characterId) {
   showToast(t("characterDeleted"), "success");
 }
 
-async function startNewThread(characterId) {
+async function startNewThread(characterId, forcedPersonaId = null) {
   const character = await db.characters.get(characterId);
   if (!character) return;
   const resolvedCharacter = resolveCharacterForLanguage(
     character,
     character?.selectedCardLanguage || "",
   );
-  const defaultPersonaForCharacter = await getCharacterDefaultPersona();
+  let selectedPersona = null;
+  if (forcedPersonaId) {
+    selectedPersona = await db.personas.get(forcedPersonaId);
+  }
+  if (!selectedPersona) {
+    selectedPersona = await getCharacterDefaultPersona();
+  }
   const initialMessages = await buildThreadInitialMessages(resolvedCharacter);
 
   const newThread = {
@@ -8312,7 +8415,7 @@ async function startNewThread(characterId) {
     titleGenerated: false,
     titleManual: false,
     messages: initialMessages,
-    selectedPersonaId: defaultPersonaForCharacter?.id || null,
+    selectedPersonaId: selectedPersona?.id || null,
     autoTtsEnabled: false,
     lastPersonaInjectionPersonaId: null,
     writingInstructionsTurnCount: 0,
