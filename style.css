@@ -47,7 +47,7 @@ body {
   gap: 12px;
   min-width: 74px;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   transition: width 0.2s ease;
   position: relative;
 }
