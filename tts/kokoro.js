@@ -1,4 +1,9 @@
-﻿function patchKokoroVoiceFetch() {
+﻿const CUSTOM_KOKORO_VOICE_URLS = {
+  pf_dora: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pf_dora.bin",
+  pm_santa: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pm_santa.bin",
+};
+
+function patchKokoroVoiceFetch() {
   if (state.tts.kokoro.fetchPatched) return;
   if (typeof window === "undefined" || typeof window.fetch !== "function")
     return;

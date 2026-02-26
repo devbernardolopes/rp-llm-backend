@@ -209,11 +209,6 @@ const KOKORO_LANGUAGE_VOICE_PREFIXES = {
   pt: ["pf", "pm"],
 };
 
-const CUSTOM_KOKORO_VOICE_URLS = {
-  pf_dora: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pf_dora.bin",
-  pm_santa: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pm_santa.bin",
-};
-
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
 const LOCALES_BASE_PATH = "locales";
 const BOT_LANGUAGE_OPTIONS = [
