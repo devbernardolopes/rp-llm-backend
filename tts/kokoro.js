@@ -195,3 +195,46 @@ function populateKokoroVoiceSelect(
   state.tts.kokoro.voiceListLoaded = true;
   state.tts.kokoro.selectedVoice = available;
 }
+
+let sharedKokoroAudioContext = null;
+
+function getSharedKokoroAudioContext() {
+  if (sharedKokoroAudioContext) return sharedKokoroAudioContext;
+  if (typeof window === "undefined") return null;
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) return null;
+  sharedKokoroAudioContext = new AudioCtor();
+  return sharedKokoroAudioContext;
+}
+
+function decodeKokoroAudioBuffer(arrayBuffer) {
+  const context = getSharedKokoroAudioContext();
+  if (!context) {
+    return Promise.reject(new Error("AudioContext is unavailable."));
+  }
+  const copy = arrayBuffer.slice(0);
+  return new Promise((resolve, reject) => {
+    context.decodeAudioData(
+      copy,
+      resolve,
+      (err) => reject(err || new Error("Failed to decode Kokoro audio.")),
+    );
+  });
+}
+
+async function createKokoroBufferSource(arrayBuffer) {
+  const context = getSharedKokoroAudioContext();
+  if (!context) return null;
+  if (context.state === "suspended") {
+    try {
+      await context.resume();
+    } catch {
+      // ignore
+    }
+  }
+  const buffer = await decodeKokoroAudioBuffer(arrayBuffer);
+  const source = context.createBufferSource();
+  source.buffer = buffer;
+  source.connect(context.destination);
+  return source;
+}

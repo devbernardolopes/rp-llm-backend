@@ -869,7 +869,6 @@ const state = {
     requestSeq: 0,
     activeRequestId: 0,
     voiceSupportReady: false,
-    currentAudioUrl: null,
     kokoro: {
       modulePromise: null,
       instance: null,
@@ -10217,11 +10216,36 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
           : options.rate || 1,
       });
       const blob = await raw.toBlob();
-      const url = URL.createObjectURL(blob);
-      if (state.tts.currentAudioUrl) {
-        URL.revokeObjectURL(state.tts.currentAudioUrl);
+      const arrayBuffer = await blob.arrayBuffer();
+      const bufferSource = await createKokoroBufferSource(arrayBuffer);
+      if (bufferSource) {
+        state.tts.audio = bufferSource;
+        return new Promise((resolve, reject) => {
+          bufferSource.onended = () => {
+            ttsDebug("playKokoroTts:chunk-ended", { chunk });
+            if (state.tts.audio === bufferSource) {
+              state.tts.audio = null;
+            }
+            try {
+              bufferSource.disconnect();
+            } catch {
+              // ignore
+            }
+            resolve();
+          };
+          try {
+            bufferSource.start();
+          } catch (err) {
+            try {
+              bufferSource.disconnect();
+            } catch {
+              // ignore
+            }
+            reject(err);
+          }
+        });
       }
-      state.tts.currentAudioUrl = url;
+      const url = URL.createObjectURL(blob);
       const audioEl = new Audio(url);
       state.tts.audio = audioEl;
       return new Promise((resolve, reject) => {
@@ -10230,10 +10254,7 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
           if (state.tts.audio === audioEl) {
             state.tts.audio = null;
           }
-          if (state.tts.currentAudioUrl === url) {
-            URL.revokeObjectURL(url);
-            state.tts.currentAudioUrl = null;
-          }
+          URL.revokeObjectURL(url);
           resolve();
         };
         audioEl.onerror = () => {
@@ -10241,20 +10262,14 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
           if (state.tts.audio === audioEl) {
             state.tts.audio = null;
           }
-          if (state.tts.currentAudioUrl === url) {
-            URL.revokeObjectURL(url);
-            state.tts.currentAudioUrl = null;
-          }
+          URL.revokeObjectURL(url);
           reject(new Error("Kokoro TTS playback failed."));
         };
         audioEl.play().catch((err) => {
           if (state.tts.audio === audioEl) {
             state.tts.audio = null;
           }
-          if (state.tts.currentAudioUrl === url) {
-            URL.revokeObjectURL(url);
-            state.tts.currentAudioUrl = null;
-          }
+          URL.revokeObjectURL(url);
           reject(err);
         });
       });
@@ -10290,12 +10305,29 @@ function stopTtsPlayback(options = {}) {
     try {
       audioElement.pause();
       audioElement.currentTime = 0;
+      const srcUrl = audioElement.currentSrc || audioElement.src;
+      if (typeof srcUrl === "string" && srcUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(srcUrl);
+      }
     } catch {
       // ignore
     }
-    if (state.tts.currentAudioUrl) {
-      URL.revokeObjectURL(state.tts.currentAudioUrl);
-      state.tts.currentAudioUrl = null;
+  }
+  const bufferSource =
+    typeof AudioBufferSourceNode !== "undefined" &&
+    state.tts.audio instanceof AudioBufferSourceNode
+      ? state.tts.audio
+      : null;
+  if (bufferSource) {
+    try {
+      bufferSource.stop();
+    } catch {
+      // ignore
+    }
+    try {
+      bufferSource.disconnect();
+    } catch {
+      // ignore
     }
   } else if (hasBrowserTtsSupport()) {
     try {
