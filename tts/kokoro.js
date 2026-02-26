@@ -82,6 +82,12 @@ async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
       return voice;
     };
 
+    if (voice && CUSTOM_KOKORO_VOICE_URLS[voice]) {
+      const override = CUSTOM_KOKORO_VOICE_URLS[voice];
+      console.log("kokoro:voice-fetch-override", voice, override); // add this
+      // ...
+    }
+
     state.tts.kokoro.instance = instance;
     state.tts.kokoro.config.device = normalizedDevice;
     state.tts.kokoro.config.dtype = normalizedDtype;
