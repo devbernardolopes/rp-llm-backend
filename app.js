@@ -9120,6 +9120,7 @@ function refreshAllSpeakerButtons() {
 
 async function sendMessage(options = {}) {
   if (!currentThread || !currentCharacter) return;
+  stopTtsPlayback();
   const pendingState = getThreadPendingGenerationState(
     Number(currentThread.id),
     conversationHistory,
