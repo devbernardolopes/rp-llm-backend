@@ -43,13 +43,7 @@ function getKokoroLanguageKey(language = "") {
 }
 
 function getFilteredKokoroVoicesForLanguage(language = "") {
-  const key = getKokoroLanguageKey(language);
-  const prefixes = KOKORO_LANGUAGE_VOICE_PREFIXES[key] || [];
-  if (prefixes.length === 0) return [];
-  return KOKORO_VOICE_OPTIONS.filter((voice) => {
-    const prefix = (voice || "").split("_")[0];
-    return prefixes.includes(prefix);
-  });
+  return KOKORO_VOICE_OPTIONS;
 }
 
 function isKokoroSupportedForLanguage(language = "") {
