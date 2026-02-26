@@ -1521,7 +1521,7 @@ function setupEvents() {
     .addEventListener("click", () => {
       document.getElementById("char-language-modal")?.classList.add("hidden");
     });
-  document.getElementById("char-language-add").addEventListener("click", () => {
+  document.getElementById("char-language-add").addEventListener("click", async () => {
     const select = document.getElementById("char-language-select");
     const code = normalizeBotLanguageCode(select?.value || "");
     if (!code) return;
@@ -1537,7 +1537,7 @@ function setupEvents() {
     state.charModalActiveLanguage = code;
     setModalDirtyState("character-modal", true);
     document.getElementById("char-language-modal")?.classList.add("hidden");
-    loadActiveCharacterDefinitionToForm();
+    await loadActiveCharacterDefinitionToForm();
     setCharacterModalTab("lang");
     renderCharacterDefinitionTabs();
   });
@@ -5569,10 +5569,10 @@ function renderCharacterDefinitionTabs() {
     text.textContent = def.language;
     label.append(flag, text);
     btn.appendChild(label);
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       saveActiveCharacterDefinitionFromForm();
       state.charModalActiveLanguage = def.language;
-      loadActiveCharacterDefinitionToForm();
+      await loadActiveCharacterDefinitionToForm();
       setCharacterModalTab("lang");
       renderCharacterDefinitionTabs();
       restoreCharModalTextareaCollapseStates();
@@ -5630,7 +5630,7 @@ function renderCharacterDefinitionTabs() {
           ]),
         );
       }
-      loadActiveCharacterDefinitionToForm();
+      await loadActiveCharacterDefinitionToForm();
       renderCharacterDefinitionTabs();
     });
     btn.appendChild(del);
@@ -5700,7 +5700,7 @@ function saveActiveCharacterDefinitionFromForm() {
   def.lorebookIds = getSelectedLorebookIds();
 }
 
-function loadActiveCharacterDefinitionToForm() {
+async function loadActiveCharacterDefinitionToForm() {
   const def = getActiveCharacterDefinition();
   if (!def) return;
   document.getElementById("char-name").value = def.name || "";
@@ -5712,7 +5712,7 @@ function loadActiveCharacterDefinitionToForm() {
     def.oneTimeExtraPrompt || "";
   document.getElementById("char-writing-instructions").value =
     def.writingInstructions || "";
-  populateCharWritingInstructionsSelect(def.writingInstructionId);
+  await populateCharWritingInstructionsSelect(def.writingInstructionId);
   updateCharWritingInstructionsVisibility();
   document.getElementById("char-initial-messages").value =
     def.initialMessagesRaw ||
@@ -5851,7 +5851,7 @@ async function openCharacterModal(
   renderCharacterTagPresetButtons();
 
   renderCharacterDefinitionTabs();
-  loadActiveCharacterDefinitionToForm();
+  await loadActiveCharacterDefinitionToForm();
   setCharacterModalTab("lang");
   populateCharacterLanguageSelectOptions();
 
