@@ -464,7 +464,6 @@ const I18N = {
     dragToReorder: "Drag to reorder",
     defaultSuffix: "Default",
     globalDefaultSuffix: "Global Default",
-    useGlobalDefault: "Use global default",
     threadWord: "Thread",
     threadTitleDefault: "Thread {id}",
     threadTitleAtDate: "Thread {date}",
@@ -647,7 +646,6 @@ const I18N = {
     createCharacterTitle: "Create Character",
     editCharacterTitle: "Edit Character",
     characterPrompt: "Character Prompt",
-    defaultPersonaOverride: "Default User Persona Override (Character-only)",
     oneTimeExtraPrompt: "One-time only Extra System/Character Prompt",
     writingInstructions: "Writing Instructions",
     writingInstructionsNone: "None",
@@ -661,7 +659,6 @@ const I18N = {
     botConfiguration: "Config",
     bgTab: "BG",
     tagsTab: "Tags",
-    preferLanguageMatchingUserPersona: "Prefer Language Matching User Persona",
     addLanguage: "Add Language",
     add: "Add",
     enableTts: "Enable TTS",
@@ -1857,8 +1854,6 @@ function setupEvents() {
     "#char-name",
     "#char-tagline",
     "#char-system-prompt",
-    "#char-default-persona-override",
-    "#char-prefer-persona-language",
     "#char-one-time-extra-prompt",
     "#char-writing-instructions",
     "#char-writing-instructions-select",
@@ -2325,7 +2320,7 @@ async function buildThreadInitialMessages(character) {
   const source = Array.isArray(character?.initialMessages)
     ? character.initialMessages
     : [];
-  const defaultPersona = await getCharacterDefaultPersona(character);
+  const defaultPersona = await getCharacterDefaultPersona();
   const personaName = defaultPersona?.name || "You";
   const charName = character?.name || "Character";
   const now = Date.now();
@@ -5784,11 +5779,6 @@ async function openCharacterModal(
       getInitialBotDefinitionLanguage();
   state.charModalActiveTab = "lang";
 
-  await populateCharDefaultPersonaOverrideSelect(
-    character?.defaultPersonaOverrideId || null,
-  );
-  document.getElementById("char-prefer-persona-language").checked =
-    character?.preferLanguageMatchingUserPersona !== false;
   document.getElementById("char-use-memory").checked =
     character?.useMemory !== false;
   document.getElementById("char-use-postprocess").checked =
@@ -5908,11 +5898,6 @@ async function saveCharacterFromModal({ close = true } = {}) {
     tagline: String(primaryDef?.tagline || "").trim(),
     definitions: defs,
     selectedCardLanguage,
-    preferLanguageMatchingUserPersona:
-      document.getElementById("char-prefer-persona-language").checked !== false,
-    defaultPersonaOverrideId:
-      Number(document.getElementById("char-default-persona-override").value) ||
-      null,
     oneTimeExtraPrompt: String(primaryDef?.oneTimeExtraPrompt || "").trim(),
     writingInstructions: String(primaryDef?.writingInstructions || "").trim(),
     writingInstructionId: String(primaryDef?.writingInstructionId || ""),
@@ -6286,7 +6271,7 @@ async function renderPersonaSelector() {
     select.appendChild(opt);
   });
 
-  const defaultPersona = await getCharacterDefaultPersona(currentCharacter);
+  const defaultPersona = await getCharacterDefaultPersona();
   const requestedId = Number(currentThread?.selectedPersonaId);
   const existing = requestedId
     ? personas.find((p) => p.id === requestedId)
@@ -6315,7 +6300,7 @@ async function onPersonaSelectChange() {
   const personaId = Number(select.value);
   currentPersona = personaId
     ? await db.personas.get(personaId)
-    : await getCharacterDefaultPersona(currentCharacter);
+    : await getCharacterDefaultPersona();
   updatePersonaPickerDisplay();
   if (!currentThread) return;
   const updatedAt = Date.now();
@@ -6576,38 +6561,8 @@ async function getDefaultPersona() {
   return personas.find((p) => p.isDefault) || null;
 }
 
-async function getCharacterDefaultPersona(character) {
-  const overrideId = Number(character?.defaultPersonaOverrideId);
-  if (Number.isInteger(overrideId) && overrideId > 0) {
-    const overridePersona = await db.personas.get(overrideId);
-    if (overridePersona) return overridePersona;
-  }
+async function getCharacterDefaultPersona() {
   return getDefaultPersona();
-}
-
-async function populateCharDefaultPersonaOverrideSelect(selectedId = null) {
-  await ensurePersonasInitialized();
-  const select = document.getElementById("char-default-persona-override");
-  if (!select) return;
-  const personas = await getOrderedPersonas();
-  select.innerHTML = "";
-  const defaultOpt = document.createElement("option");
-  defaultOpt.value = "";
-  defaultOpt.textContent = t("useGlobalDefault");
-  select.appendChild(defaultOpt);
-  personas.forEach((persona) => {
-    const opt = document.createElement("option");
-    opt.value = String(persona.id);
-    opt.textContent = `${persona.name || `Persona ${persona.id}`}${persona.isDefault ? ` (${t("globalDefaultSuffix")})` : ""}`;
-    select.appendChild(opt);
-  });
-  const targetId = Number(selectedId);
-  if (Number.isInteger(targetId) && targetId > 0) {
-    const exists = personas.some((p) => Number(p.id) === targetId);
-    select.value = exists ? String(targetId) : "";
-  } else {
-    select.value = "";
-  }
 }
 
 async function ensurePersonasInitialized() {
@@ -8222,8 +8177,7 @@ async function startNewThread(characterId) {
     character,
     character?.selectedCardLanguage || "",
   );
-  const defaultPersonaForCharacter =
-    await getCharacterDefaultPersona(character);
+  const defaultPersonaForCharacter = await getCharacterDefaultPersona();
   const initialMessages = await buildThreadInitialMessages(resolvedCharacter);
 
   const newThread = {
@@ -12192,7 +12146,7 @@ async function migrateLegacySessions() {
 }
 
 async function buildSystemPrompt(character, options = {}) {
-  const defaultPersona = await getCharacterDefaultPersona(character);
+  const defaultPersona = await getCharacterDefaultPersona();
   const personaForContext =
     options?.personaOverride || currentPersona || defaultPersona;
   const charName = String(character?.name || "Character");
@@ -12456,7 +12410,7 @@ async function getCharacterLoreEntries(character, options = {}) {
     .map((m) => String(m.content || ""))
     .join("\n")
     .toLowerCase();
-  const defaultPersona = await getCharacterDefaultPersona(character);
+  const defaultPersona = await getCharacterDefaultPersona();
   const personaName =
     options?.personaOverride?.name ||
     currentPersona?.name ||
