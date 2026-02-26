@@ -1909,6 +1909,9 @@ textarea {
   cursor: pointer;
   font-weight: 600;
 }
+.textarea-collapse-header.has-content {
+  color: var(--primary);
+}
 .textarea-collapse-header:hover {
   border-color: #5a85c6;
 }

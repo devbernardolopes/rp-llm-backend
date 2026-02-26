@@ -1166,16 +1166,6 @@
             <select id="char-default-persona-override"></select>
           </div>
           <div class="full lang-field">
-            <span data-i18n="oneTimeExtraPrompt"
-              >One-time only Extra System/Character Prompt</span
-            >
-            <textarea
-              id="char-one-time-extra-prompt"
-              rows="4"
-              placeholder="Appended only for the first assistant generation."
-            ></textarea>
-          </div>
-          <div class="full lang-field">
             <div class="writing-instructions-header">
               <span data-i18n="writingInstructions">Writing Instructions</span>
               <select id="char-writing-instructions-select"></select>
@@ -1184,6 +1174,16 @@
               id="char-writing-instructions"
               rows="4"
               placeholder="Reserved for future implementation."
+            ></textarea>
+          </div>
+          <div class="full lang-field">
+            <span data-i18n="oneTimeExtraPrompt"
+              >One-time only Extra System/Character Prompt</span
+            >
+            <textarea
+              id="char-one-time-extra-prompt"
+              rows="4"
+              placeholder="Appended only for the first assistant generation."
             ></textarea>
           </div>
           <div class="full lang-field">
@@ -1208,7 +1208,7 @@
             />
             <div id="char-tags-presets" class="tag-presets-list"></div>
           </div>
-          <div class="full lang-field">
+          <div class="full lang-field hidden persona-injection-field">
             <span data-i18n="personaInjectionPlacement"
               >Persona Injection Placement</span
             >

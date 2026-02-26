@@ -1606,8 +1606,14 @@ function setupEvents() {
       const code = normalizeBotLanguageCode(select?.value || "");
       if (!code) return;
       if (state.charModalDefinitions.some((d) => d.language === code)) return;
-      state.charModalDefinitions.push(createEmptyCharacterDefinition(code));
+      const primaryName = String(state.charModalDefinitions[0]?.name || "").trim();
+      const newDefinition = createEmptyCharacterDefinition(code);
+      if (primaryName) {
+        newDefinition.name = primaryName;
+      }
+      state.charModalDefinitions.push(newDefinition);
       state.charModalActiveLanguage = code;
+      setModalDirtyState("character-modal", true);
       document.getElementById("char-language-modal")?.classList.add("hidden");
       loadActiveCharacterDefinitionToForm();
       setCharacterModalTab("lang");
@@ -1971,6 +1977,7 @@ function setupEvents() {
 }
 
 let modalTextareaObserver = null;
+const textareaCollapseStates = new WeakMap();
 
 function setupModalTextareas() {
   const textareas = document.querySelectorAll(".modal textarea");
@@ -1979,6 +1986,11 @@ function setupModalTextareas() {
     textarea.dataset.baseRows = baseRows;
     if (textarea.dataset.collapsible === "1") {
       autoExpandTextarea(textarea);
+      const stored = textareaCollapseStates.get(textarea);
+      if (stored) {
+        const hasContent = String(textarea.value || "").trim().length > 0;
+        stored.setExpanded(hasContent);
+      }
       return;
     }
     textarea.dataset.collapsible = "1";
@@ -2010,7 +2022,6 @@ function setupModalTextareas() {
     }
     const icon = document.createElement("span");
     icon.className = "textarea-collapse-icon";
-    icon.textContent = "▴";
     rightGroup.appendChild(icon);
     header.append(title, rightGroup);
     const body = document.createElement("div");
@@ -2018,21 +2029,59 @@ function setupModalTextareas() {
     parent.insertBefore(wrapper, textarea);
     wrapper.append(header, body);
     body.appendChild(textarea);
-    const toggle = () => {
+    const entry = { header, body, icon };
+    entry.refresh = () => {
+      const hasContent = String(textarea.value || "").trim().length > 0;
+      header.classList.toggle("has-content", hasContent);
       const expanded = header.getAttribute("aria-expanded") === "true";
-      const next = !expanded;
+      icon.textContent = expanded ? "▾" : "▴";
+    };
+    entry.setExpanded = (next) => {
+      const current = header.getAttribute("aria-expanded") === "true";
+      if (next === current) {
+        entry.refresh();
+        if (next) autoExpandTextarea(textarea);
+        return;
+      }
       header.setAttribute("aria-expanded", next ? "true" : "false");
       body.classList.toggle("collapsed", !next);
-      icon.textContent = next ? "▴" : "▾";
-      if (next) {
-        autoExpandTextarea(textarea);
-      }
+      if (next) autoExpandTextarea(textarea);
+      entry.refresh();
+    };
+    textareaCollapseStates.set(textarea, entry);
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    entry.setExpanded(hasContent);
+    const toggle = () => {
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      entry.setExpanded(!expanded);
     };
     header.addEventListener("click", toggle);
-    textarea.addEventListener("input", () => autoExpandTextarea(textarea));
-    textarea.addEventListener("focus", () => autoExpandTextarea(textarea));
-    autoExpandTextarea(textarea);
+    textarea.addEventListener("input", () => {
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        autoExpandTextarea(textarea);
+      }
+      entry.refresh();
+    });
+    textarea.addEventListener("focus", () => {
+      if (header.getAttribute("aria-expanded") === "true") {
+        autoExpandTextarea(textarea);
+      }
+    });
   });
+}
+
+
+function resetModalTextareaCollapseStates(root = document) {
+  if (!root) return;
+  root
+    .querySelectorAll(".textarea-collapse textarea")
+    .forEach((textarea) => {
+      const state = textareaCollapseStates.get(textarea);
+      if (!state) return;
+      const hasContent = String(textarea.value || "").trim().length > 0;
+      state.setExpanded(hasContent);
+    });
 }
 
 function captureTextareaLabel(textarea) {
@@ -4970,9 +5019,7 @@ function openModal(modalId) {
   state.activeModalId = modalId;
   modal.classList.remove("hidden");
   window.requestAnimationFrame(() => {
-    modal.querySelectorAll("textarea").forEach((textarea) => {
-      autoExpandTextarea(textarea);
-    });
+    resetModalTextareaCollapseStates(modal);
   });
   setModalDirtyState(modalId, false);
   if (modalId === "personas-modal") {
