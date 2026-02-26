@@ -1,4 +1,28 @@
-﻿function getKokoroLanguageKey(language = "") {
+﻿function patchKokoroVoiceFetch() {
+  if (state.tts.kokoro.fetchPatched) return;
+  if (typeof window === "undefined" || typeof window.fetch !== "function")
+    return;
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async function (input, init) {
+    let url = typeof input === "string" ? input : input?.url;
+    if (typeof url === "string") {
+      const match = url.match(/\/voices\/([^/]+)\.bin$/);
+      const voice = match?.[1];
+      if (voice && CUSTOM_KOKORO_VOICE_URLS[voice]) {
+        const override = CUSTOM_KOKORO_VOICE_URLS[voice];
+        console.log("kokoro:voice-fetch-override", voice, override); // add this
+
+        const newInput =
+          typeof input === "string" ? override : new Request(override, input);
+        return originalFetch(newInput, init);
+      }
+    }
+    return originalFetch(input, init);
+  };
+  state.tts.kokoro.fetchPatched = true;
+}
+
+function getKokoroLanguageKey(language = "") {
   const normalized = normalizeBotLanguageCode(language || "") || "";
   const lower = normalized.toLowerCase();
   if (!lower) return "en";
@@ -54,6 +78,7 @@ async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
   ) {
     return state.tts.kokoro.instance;
   }
+  patchKokoroVoiceFetch();
   const module = await loadKokoroModule();
   const KokoroTTS = module?.KokoroTTS;
   if (!KokoroTTS) {
@@ -81,12 +106,6 @@ async function ensureKokoroInstance(device = "wasm", dtype = "q8") {
       if (originalValidate) return originalValidate(voice);
       return voice;
     };
-
-    if (voice && CUSTOM_KOKORO_VOICE_URLS[voice]) {
-      const override = CUSTOM_KOKORO_VOICE_URLS[voice];
-      console.log("kokoro:voice-fetch-override", voice, override); // add this
-      // ...
-    }
 
     state.tts.kokoro.instance = instance;
     state.tts.kokoro.config.device = normalizedDevice;
