@@ -16,7 +16,10 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="assets/flag-icons/css/flag-icons.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -28,7 +31,13 @@
           title="Toggle panel"
           aria-label="Toggle panel"
         >
-          <svg class="pane-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            class="pane-toggle-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
@@ -402,7 +411,7 @@
             &times;
           </button>
         </div>
-<div class="modal-body">
+        <div class="modal-body">
           <div class="form-field">
             <span id="text-input-label">Value</span>
             <input id="text-input-value" type="text" maxlength="128" />
@@ -427,7 +436,9 @@
           <h3 id="settings-title" data-i18n="settingsTitle">Settings</h3>
           <div class="settings-header-actions">
             <span id="settings-version" class="muted settings-version"></span>
-            <button class="icon-btn modal-close" data-close-modal>&times;</button>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
           </div>
         </div>
         <div class="settings-tabs" id="settings-tabs">
@@ -488,9 +499,17 @@
               <span data-i18n="modelLabel">Model</span>
               <div class="model-select-wrapper">
                 <select id="model-select"></select>
-                <div id="model-select-display" class="model-select-display">Loading...</div>
-                <div id="model-custom-dropdown" class="model-custom-dropdown hidden">
-                  <div id="model-dropdown-options" class="model-dropdown-options"></div>
+                <div id="model-select-display" class="model-select-display">
+                  Loading...
+                </div>
+                <div
+                  id="model-custom-dropdown"
+                  class="model-custom-dropdown hidden"
+                >
+                  <div
+                    id="model-dropdown-options"
+                    class="model-dropdown-options"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -506,7 +525,9 @@
               <div class="form-field">
                 <span data-i18n="modalityLabel">Modality</span>
                 <select id="model-modality-filter">
-                  <option value="text-only" data-i18n="textToText">Text -> Text</option>
+                  <option value="text-only" data-i18n="textToText">
+                    Text -> Text
+                  </option>
                   <option value="all" data-i18n="all">All</option>
                 </select>
               </div>
@@ -514,9 +535,15 @@
                 <span data-i18n="orderLabel">Order</span>
                 <select id="model-sort-order">
                   <option value="name_asc" data-i18n="nameAsc">Name A-Z</option>
-                  <option value="name_desc" data-i18n="nameDesc">Name Z-A</option>
-                  <option value="created_desc" data-i18n="createdNewest">Created Newest</option>
-                  <option value="created_asc" data-i18n="createdOldest">Created Oldest</option>
+                  <option value="name_desc" data-i18n="nameDesc">
+                    Name Z-A
+                  </option>
+                  <option value="created_desc" data-i18n="createdNewest">
+                    Created Newest
+                  </option>
+                  <option value="created_asc" data-i18n="createdOldest">
+                    Created Oldest
+                  </option>
                 </select>
               </div>
               <button
@@ -562,7 +589,9 @@
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="completionCooldownLabel">Completion Cooldown</span>
+                <span data-i18n="completionCooldownLabel"
+                  >Completion Cooldown</span
+                >
                 <span id="completion-cooldown-value" class="muted"></span>
               </div>
               <input
@@ -621,16 +650,30 @@
               </select>
             </div>
             <div class="form-field">
-              <span data-i18n="botCardAvatarEffectLabel">BOT Card Avatar Effect</span>
+              <span data-i18n="botCardAvatarEffectLabel"
+                >BOT Card Avatar Effect</span
+              >
               <select id="bot-card-avatar-effect">
-                <option value="none" data-i18n="botCardAvatarEffectNone">None</option>
-                <option value="carousel" data-i18n="botCardAvatarEffectCarousel">Carousel</option>
+                <option value="none" data-i18n="botCardAvatarEffectNone">
+                  None
+                </option>
+                <option
+                  value="carousel"
+                  data-i18n="botCardAvatarEffectCarousel"
+                >
+                  Carousel
+                </option>
               </select>
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="botCardAvatarTransitionDelayLabel">Transition Delay</span>
-                <span id="bot-card-avatar-transition-delay-value" class="muted"></span>
+                <span data-i18n="botCardAvatarTransitionDelayLabel"
+                  >Transition Delay</span
+                >
+                <span
+                  id="bot-card-avatar-transition-delay-value"
+                  class="muted"
+                ></span>
               </div>
               <input
                 id="bot-card-avatar-transition-delay-slider"
@@ -658,7 +701,9 @@
           <div data-settings-group="threads" class="settings-group">
             <span class="checkbox-line">
               <input type="checkbox" id="markdown-enabled" />
-              <span data-i18n="renderMarkdown">Render Markdown in messages</span>
+              <span data-i18n="renderMarkdown"
+                >Render Markdown in messages</span
+              >
             </span>
             <span class="checkbox-line">
               <input type="checkbox" id="allow-message-html" />
@@ -682,7 +727,9 @@
               </select>
             </div>
             <div class="form-field">
-              <span data-i18n="postprocessRules">Post-processing Rules (JSON)</span>
+              <span data-i18n="postprocessRules"
+                >Post-processing Rules (JSON)</span
+              >
               <textarea
                 id="postprocess-rules-json"
                 rows="8"
@@ -692,7 +739,9 @@
           </div>
           <div data-settings-group="prompting" class="settings-group">
             <div class="form-field">
-              <span data-i18n="defaultCharacterPrompt">Default Character Prompt</span>
+              <span data-i18n="defaultCharacterPrompt"
+                >Default Character Prompt</span
+              >
               <textarea
                 id="global-prompt-template"
                 rows="7"
@@ -700,7 +749,9 @@
               ></textarea>
             </div>
             <div class="form-field">
-              <span data-i18n="memorySummarizerPrompt">Memory Summarizer System Prompt</span>
+              <span data-i18n="memorySummarizerPrompt"
+                >Memory Summarizer System Prompt</span
+              >
               <textarea
                 id="summary-system-prompt"
                 rows="3"
@@ -708,7 +759,9 @@
               ></textarea>
             </div>
             <div class="form-field">
-              <span data-i18n="personaInjectionTemplate">Persona Injection Template</span>
+              <span data-i18n="personaInjectionTemplate"
+                >Persona Injection Template</span
+              >
               <textarea
                 id="persona-injection-template"
                 rows="5"
@@ -716,7 +769,9 @@
               ></textarea>
             </div>
             <div class="form-field">
-              <span data-i18n="personaInjectionTiming">Persona Injection Timing</span>
+              <span data-i18n="personaInjectionTiming"
+                >Persona Injection Timing</span
+              >
               <select id="persona-injection-when">
                 <option value="always" data-i18n="always">Always</option>
                 <option value="on_change" data-i18n="onPersonaChange">
@@ -725,19 +780,31 @@
               </select>
             </div>
             <div class="form-field">
-              <span data-i18n="writingInstructionsInjectionTiming">Writing Instructions Injection Timing</span>
+              <span data-i18n="writingInstructionsInjectionTiming"
+                >Writing Instructions Injection Timing</span
+              >
               <select id="writing-instructions-injection-when">
                 <option value="always" data-i18n="always">Always</option>
-                <option value="every_other" data-i18n="everyOther">Every Other</option>
-                <option value="every_second" data-i18n="everySecond">Every Second</option>
-                <option value="every_third" data-i18n="everyThird">Every Third</option>
-                <option value="every_fourth" data-i18n="everyFourth">Every Fourth</option>
+                <option value="every_other" data-i18n="everyOther">
+                  Every Other
+                </option>
+                <option value="every_second" data-i18n="everySecond">
+                  Every Second
+                </option>
+                <option value="every_third" data-i18n="everyThird">
+                  Every Third
+                </option>
+                <option value="every_fourth" data-i18n="everyFourth">
+                  Every Fourth
+                </option>
               </select>
             </div>
           </div>
           <div data-settings-group="shortcuts" class="settings-group">
             <div class="form-field">
-              <span data-i18n="cancelGenerationShortcut">Cancel Generation Shortcut</span>
+              <span data-i18n="cancelGenerationShortcut"
+                >Cancel Generation Shortcut</span
+              >
               <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
             </div>
             <div class="form-field">
@@ -745,7 +812,9 @@
               <input id="home-shortcut" type="text" placeholder="Alt+H" />
             </div>
             <div class="form-field">
-              <span data-i18n="newCharacterShortcut">New Character Shortcut</span>
+              <span data-i18n="newCharacterShortcut"
+                >New Character Shortcut</span
+              >
               <input
                 id="new-character-shortcut"
                 type="text"
@@ -769,22 +838,22 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
-<div class="form-field">
+          <div class="form-field">
             <div class="label-inline">
               <span data-i18n="nameLabel">Name</span>
               <span id="persona-name-count" class="muted">0/64</span>
             </div>
             <input id="persona-name" type="text" maxlength="64" />
           </div>
-<div class="form-field">
+          <div class="form-field">
             <span data-i18n="avatarUrl">Avatar URL</span>
             <input id="persona-avatar" type="text" placeholder="optional" />
           </div>
-<div class="form-field">
+          <div class="form-field">
             <span data-i18n="avatarFile">Avatar File</span>
             <input id="persona-avatar-file" type="file" accept="image/*" />
           </div>
-<div class="form-field">
+          <div class="form-field">
             <div class="label-inline">
               <span data-i18n="personaDescription"
                 >Description (max 100 chars)</span
@@ -797,13 +866,13 @@
               maxlength="100"
             ></textarea>
           </div>
-<div class="form-field">
+          <div class="form-field">
             <span data-i18n="personaInternalDescription"
               >Internal Description (optional)</span
             >
             <textarea id="persona-internal-description" rows="4"></textarea>
           </div>
-<span class="checkbox-line">
+          <span class="checkbox-line">
             <input id="persona-is-default" type="checkbox" />
             <span data-i18n="setDefaultPersona">Set as default persona</span>
           </span>
@@ -868,7 +937,7 @@
               </button>
             </div>
             <div class="two-col lore-editor-grid">
-<div class="form-field">
+              <div class="form-field">
                 <span data-i18n="nameLabel">Name</span>
                 <input
                   id="lore-name"
@@ -877,11 +946,11 @@
                   maxlength="128"
                 />
               </div>
-<div class="form-field">
+              <div class="form-field">
                 <span data-i18n="avatarUrlOptional">Avatar URL (optional)</span>
                 <input id="lore-avatar" type="text" placeholder="optional" />
               </div>
-<div class="form-field full">
+              <div class="form-field full">
                 <span data-i18n="descriptionOptional"
                   >Description (optional)</span
                 >
@@ -891,7 +960,7 @@
                   maxlength="512"
                 ></textarea>
               </div>
-<div class="form-field">
+              <div class="form-field">
                 <span data-i18n="scanDepth">Scan Depth</span>
                 <input
                   id="lore-scan-depth"
@@ -901,7 +970,7 @@
                   step="1"
                 />
               </div>
-<div class="form-field">
+              <div class="form-field">
                 <span data-i18n="tokenBudget">Token Budget</span>
                 <input
                   id="lore-token-budget"
@@ -911,7 +980,7 @@
                   step="10"
                 />
               </div>
-<span class="checkbox-line">
+              <span class="checkbox-line">
                 <input id="lore-recursive-scanning" type="checkbox" />
                 <span data-i18n="recursiveScanning">Recursive Scanning</span>
               </span>
@@ -1086,11 +1155,23 @@
         </div>
         <div id="char-avatars-section" class="char-avatars-section">
           <div id="char-avatars-container" class="char-avatars-container">
-            <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
+            <button
+              type="button"
+              id="char-avatar-dropzone"
+              class="char-avatar-dropzone"
+              tabindex="0"
+              aria-label="Upload avatar"
+            >
               <span class="dropzone-plus">+</span>
               <span class="dropzone-hint">Drag & drop or click</span>
             </button>
-            <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
+            <input
+              type="file"
+              id="char-avatar-file-input"
+              accept="image/*,video/mp4"
+              multiple
+              class="visually-hidden"
+            />
           </div>
         </div>
         <div id="char-def-tabs" class="settings-tabs">
@@ -1122,7 +1203,11 @@
           </div>
           <div class="char-def-tabs-row char-def-tabs-lang-row">
             <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
-            <button id="char-add-lang-btn" class="settings-tab-btn" type="button">
+            <button
+              id="char-add-lang-btn"
+              class="settings-tab-btn"
+              type="button"
+            >
               +
             </button>
           </div>
@@ -1231,55 +1316,52 @@
               <option value="4">4x</option>
             </select>
           </div>
+          <div class="lang-field">
+            <span data-i18n="ttsProvider">TTS Provider</span>
+            <select id="char-tts-provider">
+              <option value="kokoro" data-i18n="ttsProviderKokoro" selected>
+                Kokoro.js (local)
+              </option>
+              <option value="browser" data-i18n="ttsProviderBrowser">
+                Browser (speechSynthesis)
+              </option>
+            </select>
+          </div>
+          <div id="char-tts-kokoro-config" class="kokoro-config hidden">
             <div class="lang-field">
-              <span data-i18n="ttsProvider">TTS Provider</span>
-              <select id="char-tts-provider">
-                <option
-                  value="kokoro"
-                  data-i18n="ttsProviderKokoro"
-                  selected
-                >
-                  Kokoro.js (local)
+              <span data-i18n="kokoroDevice">Kokoro Device</span>
+              <select id="char-tts-kokoro-device">
+                <option value="webgpu" data-i18n="kokoroDeviceWebgpu">
+                  WebGPU
                 </option>
-                <option value="browser" data-i18n="ttsProviderBrowser">
-                  Browser (speechSynthesis)
-                </option>
+                <option value="wasm" data-i18n="kokoroDeviceWasm">WASM</option>
               </select>
             </div>
-            <div id="char-tts-kokoro-config" class="kokoro-config hidden">
-              <div class="lang-field">
-                <span data-i18n="kokoroDevice">Kokoro Device</span>
-                <select id="char-tts-kokoro-device">
-                  <option value="webgpu" data-i18n="kokoroDeviceWebgpu">
-                    WebGPU
-                  </option>
-                  <option value="wasm" data-i18n="kokoroDeviceWasm">
-                    WASM
+            <div class="lang-field">
+              <span data-i18n="kokoroDtype">Kokoro Quantization</span>
+              <select id="char-tts-kokoro-dtype">
+                <option value="fp16">FP16</option>
+                <option value="q8">Q8</option>
+                <option value="q4">Q4</option>
+                <option value="q4f16">Q4f16</option>
+                <option value="q8f16">Q8f16</option>
+                <option value="auto">AUTO</option>
+                <option value="uint8">UINT8</option>
+                <option value="uint8f16">UINT8F16</option>
+              </select>
+            </div>
+            <div class="lang-field">
+              <span data-i18n="kokoroVoice">Kokoro Voice</span>
+              <div class="tts-control-row">
+                <select id="char-tts-kokoro-voice">
+                  <option data-i18n="kokoroVoicesLoading">
+                    Loading Kokoro voices...
                   </option>
                 </select>
-              </div>
-              <div class="lang-field">
-                <span data-i18n="kokoroDtype">Kokoro Quantization</span>
-                <select id="char-tts-kokoro-dtype">
-                  <option value="fp32">FP32</option>
-                  <option value="fp16">FP16</option>
-                  <option value="q8">Q8</option>
-                  <option value="q4">Q4</option>
-                  <option value="q4f16">Q4f16</option>
-                </select>
-              </div>
-              <div class="lang-field">
-                <span data-i18n="kokoroVoice">Kokoro Voice</span>
-                <div class="tts-control-row">
-                  <select id="char-tts-kokoro-voice">
-                    <option data-i18n="kokoroVoicesLoading">
-                      Loading Kokoro voices...
-                    </option>
-                  </select>
-                  <div class="tts-test-slot" data-slot="kokoro"></div>
-                </div>
+                <div class="tts-test-slot" data-slot="kokoro"></div>
               </div>
             </div>
+          </div>
           <div class="lang-field tts-extra-field" id="char-tts-language-field">
             <span data-i18n="ttsLanguage">TTS Language</span>
             <select id="char-tts-language"></select>
@@ -1288,15 +1370,14 @@
             <span data-i18n="ttsVoice">TTS Voice</span>
             <div class="tts-control-row">
               <select id="char-tts-voice"></select>
-                <div class="tts-test-slot" data-slot="tts">
-                  <button
-                    id="char-tts-test-btn"
-                    class="icon-btn tts-test-btn"
-                    type="button"
-                    data-i18n-title="testCharacterVoice"
-                  >
-                  </button>
-                </div>
+              <div class="tts-test-slot" data-slot="tts">
+                <button
+                  id="char-tts-test-btn"
+                  class="icon-btn tts-test-btn"
+                  type="button"
+                  data-i18n-title="testCharacterVoice"
+                ></button>
+              </div>
             </div>
           </div>
           <div class="lang-field">
@@ -1385,7 +1466,7 @@
             &times;
           </button>
         </div>
-<div class="modal-body">
+        <div class="modal-body">
           <div class="form-field">
             <select id="char-language-select"></select>
           </div>
@@ -1492,7 +1573,10 @@
     >
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="writing-instructions-title" data-i18n="writingInstructionsManager">
+          <h3
+            id="writing-instructions-title"
+            data-i18n="writingInstructionsManager"
+          >
             Writing Instructions Manager
           </h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
@@ -1524,25 +1608,35 @@
               </button>
             </div>
             <div class="two-col lore-editor-grid">
-            <div class="form-field full">
-              <div class="label-inline">
-                <span data-i18n="nameLabel">Name</span>
-                <span id="writing-instruction-name-count" class="muted label-count"
-                  >0/64</span
-                >
+              <div class="form-field full">
+                <div class="label-inline">
+                  <span data-i18n="nameLabel">Name</span>
+                  <span
+                    id="writing-instruction-name-count"
+                    class="muted label-count"
+                    >0/64</span
+                  >
+                </div>
+                <input
+                  id="writing-instruction-name"
+                  type="text"
+                  minlength="1"
+                  maxlength="64"
+                />
               </div>
-              <input
-                id="writing-instruction-name"
-                type="text"
-                minlength="1"
-                maxlength="64"
-              />
-            </div>
             </div>
             <div id="writing-instruction-tabs" class="settings-tabs">
               <div class="char-def-tabs-row">
-                <div id="writing-instruction-tabs-left" class="char-def-tabs-left"></div>
-                <button id="writing-instruction-add-lang-btn" class="settings-tab-btn" type="button" onclick="openWritingInstructionLanguageModal()">
+                <div
+                  id="writing-instruction-tabs-left"
+                  class="char-def-tabs-left"
+                ></div>
+                <button
+                  id="writing-instruction-add-lang-btn"
+                  class="settings-tab-btn"
+                  type="button"
+                  onclick="openWritingInstructionLanguageModal()"
+                >
                   +
                 </button>
               </div>
@@ -1554,7 +1648,9 @@
                 rows="8"
                 maxlength="20480"
               ></textarea>
-              <span id="writing-instruction-text-count" class="muted">0/20480</span>
+              <span id="writing-instruction-text-count" class="muted"
+                >0/20480</span
+              >
             </div>
             <div class="modal-footer">
               <button
@@ -1588,7 +1684,9 @@
     >
       <div class="modal-card">
         <div class="modal-header">
-          <h3 id="writing-instruction-language-title" data-i18n="addLanguage">Add Language</h3>
+          <h3 id="writing-instruction-language-title" data-i18n="addLanguage">
+            Add Language
+          </h3>
           <button
             class="icon-btn modal-close"
             id="writing-instruction-language-cancel-x"
@@ -1648,7 +1746,10 @@
           </div>
           <div class="model-info-row">
             <span class="model-info-label">Temperature:</span>
-            <span id="message-model-info-temperature" class="model-info-value"></span>
+            <span
+              id="message-model-info-temperature"
+              class="model-info-value"
+            ></span>
           </div>
         </div>
       </div>
@@ -1663,10 +1764,17 @@
     >
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="message-system-prompt-title" data-i18n="msgSystemPromptModalTitle">
+          <h3
+            id="message-system-prompt-title"
+            data-i18n="msgSystemPromptModalTitle"
+          >
             System prompt
           </h3>
-          <button class="icon-btn modal-close" data-close-modal aria-label="Close">
+          <button
+            class="icon-btn modal-close"
+            data-close-modal
+            aria-label="Close"
+          >
             &times;
           </button>
         </div>
