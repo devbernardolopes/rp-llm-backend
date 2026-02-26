@@ -144,6 +144,7 @@ const KOKORO_VOICE_OPTIONS = [
   "bm_fable",
   "bm_george",
   "bm_lewis",
+  "if_sara",
   "pf_dora",
   "pm_alex",
   "pm_santa",
