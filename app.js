@@ -110,7 +110,7 @@ const DEFAULT_SETTINGS = {
 const DEFAULT_KOKORO_VOICE = "af_heart";
 const KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
 const KOKORO_MODULE_PATHS = [
-  "./node_modules/kokoro-js/dist/kokoro.web.js",
+  // "./node_modules/kokoro-js/dist/kokoro.web.js",
   "https://cdn.jsdelivr.net/npm/kokoro-js/dist/kokoro.web.js",
 ];
 const KOKORO_DEVICE_OPTIONS = ["wasm", "webgpu", "cpu"];
@@ -241,8 +241,7 @@ const CHARACTER_SORT_ICON_TEMPLATES = {
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="10" fill="%23f5f7ff" opacity="0.35"/><path d="M16 9v14M9 16h14" stroke="%231c2737" stroke-width="2" stroke-linecap="round"/></svg>',
   updated:
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M10 12a8 8 0 1 1 11.3 11.3L16 21" fill="none" stroke="%231c2737" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 9v-4h6" fill="none" stroke="%231c2737" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  name:
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text x="9" y="23" font-size="18" font-family="Segoe UI, system-ui" fill="%23f5f7ff">A</text><path d="M9 10l7 12l7-12" fill="none" stroke="%231c2737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  name: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text x="9" y="23" font-size="18" font-family="Segoe UI, system-ui" fill="%23f5f7ff">A</text><path d="M9 10l7 12l7-12" fill="none" stroke="%231c2737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   threads:
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="6" y="8" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.65"/><rect x="6" y="14" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.45"/><rect x="6" y="20" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.25"/><path d="M9 8v14" fill="none" stroke="%231c2737" stroke-width="2" stroke-linecap="round"/></svg>',
 };
@@ -358,7 +357,8 @@ const I18N = {
     editCurrentCharacter: "Edit current character",
     scrollToBottom: "Scroll to bottom",
     promptHistory: "Prompt history",
-    promptPlaceholder: "What do you say or do? Enter to send, Shift+Enter for newline",
+    promptPlaceholder:
+      "What do you say or do? Enter to send, Shift+Enter for newline",
     selectedPersonaAvatar: "Persona avatar",
     selectPersona: "Select persona",
     confirm: "Confirm",
@@ -418,7 +418,8 @@ const I18N = {
     ttsTestFailed: "TTS test failed: {error}",
     personaSwitched: "Persona switched to {name}.",
     personaDescriptionTitle: "Persona Description",
-    personaDescriptionLimit: "Persona description must be 100 characters or less.",
+    personaDescriptionLimit:
+      "Persona description must be 100 characters or less.",
     noPersonasYet: "No personas yet.",
     dragToReorder: "Drag to reorder",
     defaultSuffix: "Default",
@@ -502,15 +503,13 @@ const I18N = {
       "Metadata is not available for initial messages.",
     msgMetadataUnavailableInitialAria:
       "Metadata unavailable for initial message",
-    msgMetadataUnavailableGenerating:
-      "Metadata unavailable while generating.",
+    msgMetadataUnavailableGenerating: "Metadata unavailable while generating.",
     msgMetadataUnavailableGeneratingAria:
       "Metadata unavailable while generating",
     threadBudgetTooltip:
       "Estimated effective output budget for this thread.\nUser max: {userMax}\nModel context: {contextText}\nEstimated prompt tokens: {promptTokens}\nSafety margin: 256\nEffective max_tokens: {effectiveMax}",
     generationQueuedToast: "Generation queued (position {position}).",
-    generationQueuedNotice:
-      "Generation queued. Waiting for active generation.",
+    generationQueuedNotice: "Generation queued. Waiting for active generation.",
     generationQueuedNoticeWithPos:
       "Generation queued. Waiting for active generation (queue position {position}).",
     guideComingSoon: "Guide will be added soon.",
@@ -546,7 +545,8 @@ const I18N = {
     createdNewest: "Created Newest",
     createdOldest: "Created Oldest",
     reload: "Reload",
-    modelNotRecommendedRoleplay: "This model is NOT recommended for roleplaying.",
+    modelNotRecommendedRoleplay:
+      "This model is NOT recommended for roleplaying.",
     maxTokensLabel: "Max Tokens",
     temperatureLabel: "Temperature",
     toastDelayLabel: "Toast Delay",
@@ -602,7 +602,8 @@ const I18N = {
     tagInputPlaceholder: "New tag",
     removeTagTitle: "Remove Tag",
     removeTagConfirmSimple: "Remove this tag?",
-    removeTagAffectsChars: "Removing this tag will update these characters:\n\n{list}{extra}\n\nContinue?",
+    removeTagAffectsChars:
+      "Removing this tag will update these characters:\n\n{list}{extra}\n\nContinue?",
     createCharacterTitle: "Create Character",
     editCharacterTitle: "Edit Character",
     characterPrompt: "Character Prompt",
@@ -966,10 +967,7 @@ function preprocessForTTS(text) {
     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
     .replace(/[_~]/g, "")
     .replace(/\s+/g, " ")
-    .replace(
-      /([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu,
-      "",
-    )
+    .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
     .trim();
   const normalized = normalizeForTTS(sanitized);
   return normalizeNumbersForTTS(normalized);
@@ -1078,19 +1076,21 @@ function normalizeNumbersForTTS(text) {
   }
 
   let normalized = text;
-  normalized = normalized.replace(
-    /\b(1[1-9]\d{2}|20\d{2})\b/g,
-    (m) => yearToWords(m),
+  normalized = normalized.replace(/\b(1[1-9]\d{2}|20\d{2})\b/g, (m) =>
+    yearToWords(m),
   );
   normalized = normalized.replace(
     /\b(\d+)(st|nd|rd|th)\b/g,
     (_, n) => `${numToWords(n)} ${ordinalSuffix(n)}`,
   );
-  normalized = normalized.replace(/\b(\d+)%\b/g, (_, n) => `${numToWords(n)} percent`);
   normalized = normalized.replace(
-    /\$(\d+)(?:\.(\d+))?/g,
-    (_, d, c) =>
-      c ? `${numToWords(d)} dollars and ${numToWords(c)} cents` : `${numToWords(d)} dollars`,
+    /\b(\d+)%\b/g,
+    (_, n) => `${numToWords(n)} percent`,
+  );
+  normalized = normalized.replace(/\$(\d+)(?:\.(\d+))?/g, (_, d, c) =>
+    c
+      ? `${numToWords(d)} dollars and ${numToWords(c)} cents`
+      : `${numToWords(d)} dollars`,
   );
   normalized = normalized.replace(/\b\d+\.\d+\b/g, (m) =>
     m.split(".").map(numToWords).join(" point "),
@@ -1139,21 +1139,20 @@ document.addEventListener("visibilitychange", () => {
   const cards = grid.querySelectorAll(".character-card");
   const mainView = document.getElementById("main-view");
   const isMainViewActive = mainView && mainView.classList.contains("active");
-  
+
   if (document.hidden) {
-    cards.forEach(card => {
+    cards.forEach((card) => {
       if (card._saveVideoTimes) card._saveVideoTimes();
     });
   } else if (isMainViewActive) {
-    cards.forEach(card => {
+    cards.forEach((card) => {
       if (card._restoreVideoTimes) card._restoreVideoTimes();
       if (card._startCarousel) card._startCarousel();
     });
   }
 });
 
-function updateCarouselForPaneState() {
-}
+function updateCarouselForPaneState() {}
 
 async function init() {
   loadSettings();
@@ -1195,7 +1194,9 @@ async function init() {
 }
 
 async function hydrateGenerationQueue(threads = null) {
-  const list = Array.isArray(threads) ? [...threads] : await db.threads.toArray();
+  const list = Array.isArray(threads)
+    ? [...threads]
+    : await db.threads.toArray();
   const queued = list
     .filter((t) => String(t.pendingGenerationReason || "").trim())
     .sort(
@@ -1310,9 +1311,7 @@ async function applyInterfaceLanguage() {
   }
   const importBtn = document.getElementById("import-character-btn");
   if (importBtn) {
-    importBtn.textContent = paneCollapsed
-      ? "^"
-      : `^ ${t("importCharacter")}`;
+    importBtn.textContent = paneCollapsed ? "^" : `^ ${t("importCharacter")}`;
   }
 
   const bottomButtons = document.querySelectorAll(".pane-bottom .option-btn");
@@ -1345,7 +1344,10 @@ async function applyInterfaceLanguage() {
     bottomButtons[6].setAttribute("aria-label", t("guide"));
   }
 
-  if (homeBtn && !document.getElementById("left-pane")?.classList.contains("collapsed")) {
+  if (
+    homeBtn &&
+    !document.getElementById("left-pane")?.classList.contains("collapsed")
+  ) {
     homeBtn.textContent = getHomeButtonText();
   }
   const popTitle = document.querySelector(".popover-title");
@@ -1353,7 +1355,10 @@ async function applyInterfaceLanguage() {
   const sendBtn = document.getElementById("send-btn");
   if (sendBtn && !state.sending) sendBtn.textContent = t("send");
   const shortcutsToggle = document.getElementById("shortcuts-toggle-btn");
-  if (shortcutsToggle) shortcutsToggle.title = state.shortcutsVisible ? t("hideShortcuts") : t("showShortcuts");
+  if (shortcutsToggle)
+    shortcutsToggle.title = state.shortcutsVisible
+      ? t("hideShortcuts")
+      : t("showShortcuts");
   const autoReplyToggle = document.getElementById("auto-reply-enabled");
   if (autoReplyToggle) autoReplyToggle.title = t("autoReply");
   const enterToggle = document.getElementById("enter-to-send-enabled");
@@ -1402,10 +1407,14 @@ function setupEvents() {
     .addEventListener("change", importDatabaseBackupFromFile);
   document
     .getElementById("reset-db-btn")
-    ?.addEventListener("click", () => showToast(t("resetAppDataSoon"), "success"));
+    ?.addEventListener("click", () =>
+      showToast(t("resetAppDataSoon"), "success"),
+    );
   document
     .getElementById("guide-btn")
-    ?.addEventListener("click", () => showToast(t("guideComingSoon"), "success"));
+    ?.addEventListener("click", () =>
+      showToast(t("guideComingSoon"), "success"),
+    );
   document
     .getElementById("save-character-btn")
     .addEventListener("click", () => saveCharacterFromModal());
@@ -1420,9 +1429,7 @@ function setupEvents() {
   document
     .getElementById("shortcuts-toggle-btn")
     .addEventListener("click", toggleShortcutsVisibility);
-  document
-    .getElementById("home-btn")
-    .addEventListener("click", showMainView);
+  document.getElementById("home-btn").addEventListener("click", showMainView);
   document
     .getElementById("char-config-tab-btn")
     .addEventListener("click", () => {
@@ -1430,22 +1437,18 @@ function setupEvents() {
       setCharacterModalTab("config");
       renderCharacterDefinitionTabs();
     });
-  document
-    .getElementById("char-tags-tab-btn")
-    .addEventListener("click", () => {
-      saveActiveCharacterDefinitionFromForm();
-      setCharacterModalTab("tags");
-      renderCharacterDefinitionTabs();
-    });
-  document
-    .getElementById("char-add-lang-btn")
-    .addEventListener("click", () => {
-      saveActiveCharacterDefinitionFromForm();
-      populateCharacterLanguageSelectOptions();
-      const modal = document.getElementById("char-language-modal");
-      if (!modal) return;
-      modal.classList.remove("hidden");
-    });
+  document.getElementById("char-tags-tab-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    setCharacterModalTab("tags");
+    renderCharacterDefinitionTabs();
+  });
+  document.getElementById("char-add-lang-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    populateCharacterLanguageSelectOptions();
+    const modal = document.getElementById("char-language-modal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+  });
   document
     .getElementById("char-writing-instructions-select")
     .addEventListener("change", () => {
@@ -1462,27 +1465,29 @@ function setupEvents() {
     .addEventListener("click", () => {
       document.getElementById("char-language-modal")?.classList.add("hidden");
     });
+  document.getElementById("char-language-add").addEventListener("click", () => {
+    const select = document.getElementById("char-language-select");
+    const code = normalizeBotLanguageCode(select?.value || "");
+    if (!code) return;
+    if (state.charModalDefinitions.some((d) => d.language === code)) return;
+    const primaryName = String(
+      state.charModalDefinitions[0]?.name || "",
+    ).trim();
+    const newDefinition = createEmptyCharacterDefinition(code);
+    if (primaryName) {
+      newDefinition.name = primaryName;
+    }
+    state.charModalDefinitions.push(newDefinition);
+    state.charModalActiveLanguage = code;
+    setModalDirtyState("character-modal", true);
+    document.getElementById("char-language-modal")?.classList.add("hidden");
+    loadActiveCharacterDefinitionToForm();
+    setCharacterModalTab("lang");
+    renderCharacterDefinitionTabs();
+  });
   document
-    .getElementById("char-language-add")
-    .addEventListener("click", () => {
-      const select = document.getElementById("char-language-select");
-      const code = normalizeBotLanguageCode(select?.value || "");
-      if (!code) return;
-      if (state.charModalDefinitions.some((d) => d.language === code)) return;
-      const primaryName = String(state.charModalDefinitions[0]?.name || "").trim();
-      const newDefinition = createEmptyCharacterDefinition(code);
-      if (primaryName) {
-        newDefinition.name = primaryName;
-      }
-      state.charModalDefinitions.push(newDefinition);
-      state.charModalActiveLanguage = code;
-      setModalDirtyState("character-modal", true);
-      document.getElementById("char-language-modal")?.classList.add("hidden");
-      loadActiveCharacterDefinitionToForm();
-      setCharacterModalTab("lang");
-      renderCharacterDefinitionTabs();
-    });
-  document.getElementById("pane-toggle-chat")?.addEventListener("click", togglePane);
+    .getElementById("pane-toggle-chat")
+    ?.addEventListener("click", togglePane);
   document
     .getElementById("scroll-bottom-btn")
     .addEventListener("click", () => scrollChatToBottom(true));
@@ -1516,20 +1521,24 @@ function setupEvents() {
       e.preventDefault();
       resetImagePreviewZoom();
     });
-  document.getElementById("pane-overlay-toggle").addEventListener("click", togglePane);
+  document
+    .getElementById("pane-overlay-toggle")
+    .addEventListener("click", togglePane);
   document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
   document
     .getElementById("auto-tts-toggle-btn")
     .addEventListener("click", toggleThreadAutoTts);
   setupCharAvatarDropzone();
-  ["char-system-prompt", "char-one-time-extra-prompt", "char-initial-messages"].forEach(
-    (id) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener("dragover", onTextAreaFileDragOver);
-      el.addEventListener("drop", onTextAreaFileDrop);
-    },
-  );
+  [
+    "char-system-prompt",
+    "char-one-time-extra-prompt",
+    "char-initial-messages",
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("dragover", onTextAreaFileDragOver);
+    el.addEventListener("drop", onTextAreaFileDrop);
+  });
   document
     .getElementById("char-tags-input")
     .addEventListener("input", renderCharacterTagPresetButtons);
@@ -1571,8 +1580,7 @@ function setupEvents() {
   document
     .getElementById("persona-selected-avatar")
     .addEventListener("click", () => {
-      const src =
-        document.getElementById("persona-selected-avatar")?.src || "";
+      const src = document.getElementById("persona-selected-avatar")?.src || "";
       if (src) openImagePreview(src);
     });
   document.getElementById("char-name").addEventListener("input", () => {
@@ -1581,9 +1589,15 @@ function setupEvents() {
   document.getElementById("persona-name").addEventListener("input", () => {
     updateNameLengthCounter("persona-name", "persona-name-count", 64);
   });
-  document.getElementById("persona-description").addEventListener("input", () => {
-    updateNameLengthCounter("persona-description", "persona-description-count", 100);
-  });
+  document
+    .getElementById("persona-description")
+    .addEventListener("input", () => {
+      updateNameLengthCounter(
+        "persona-description",
+        "persona-description-count",
+        100,
+      );
+    });
   document
     .getElementById("character-tag-filter-clear")
     .addEventListener("click", async () => {
@@ -1627,15 +1641,21 @@ function setupEvents() {
   document
     .getElementById("apply-shortcuts-btn")
     ?.addEventListener("click", () => saveShortcutsFromModal({ close: false }));
-  document.getElementById("add-tag-btn").addEventListener("click", addTagFromManagerInput);
-  document.getElementById("tag-manager-input").addEventListener("input", updateTagManagerAddButtonState);
-  document.getElementById("tag-manager-input").addEventListener("keydown", (e) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-    if (!document.getElementById("add-tag-btn").disabled) {
-      addTagFromManagerInput().catch(() => {});
-    }
-  });
+  document
+    .getElementById("add-tag-btn")
+    .addEventListener("click", addTagFromManagerInput);
+  document
+    .getElementById("tag-manager-input")
+    .addEventListener("input", updateTagManagerAddButtonState);
+  document
+    .getElementById("tag-manager-input")
+    .addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      if (!document.getElementById("add-tag-btn").disabled) {
+        addTagFromManagerInput().catch(() => {});
+      }
+    });
   document
     .getElementById("create-lorebook-btn")
     .addEventListener("click", () => openLoreEditor());
@@ -1833,7 +1853,11 @@ function setupEvents() {
   updateModalActionButtons("character-modal");
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
-  updateNameLengthCounter("persona-description", "persona-description-count", 100);
+  updateNameLengthCounter(
+    "persona-description",
+    "persona-description-count",
+    100,
+  );
   updateToastDelayDisplay();
   setupSettingsTabsLayout();
 }
@@ -1843,8 +1867,8 @@ const textareaCollapseStates = new WeakMap();
 function setupModalTextareas(root = document) {
   const scope = root || document;
   const selector = scope === document ? ".modal textarea" : "textarea";
-  const textareas = Array.from(scope.querySelectorAll(selector)).filter((textarea) =>
-    textarea.closest(".modal"),
+  const textareas = Array.from(scope.querySelectorAll(selector)).filter(
+    (textarea) => textarea.closest(".modal"),
   );
   textareas.forEach((textarea) => {
     const baseRows = Number(textarea.getAttribute("rows") || 3);
@@ -1936,17 +1960,14 @@ function setupModalTextareas(root = document) {
   });
 }
 
-
 function resetModalTextareaCollapseStates(root = document) {
   if (!root) return;
-  root
-    .querySelectorAll(".textarea-collapse textarea")
-    .forEach((textarea) => {
-      const state = textareaCollapseStates.get(textarea);
-      if (!state) return;
-      const hasContent = String(textarea.value || "").trim().length > 0;
-      state.setExpanded(hasContent);
-    });
+  root.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const state = textareaCollapseStates.get(textarea);
+    if (!state) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    state.setExpanded(hasContent);
+  });
 }
 
 function captureTextareaLabel(textarea) {
@@ -2043,11 +2064,17 @@ function parseTagList(value) {
     .split(",")
     .map((v) => normalizeTagValue(v))
     .filter(Boolean)
-    .filter((v, i, arr) => arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i);
+    .filter(
+      (v, i, arr) =>
+        arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i,
+    );
 }
 
 function formatTagList(tags) {
-  return (Array.isArray(tags) ? tags : []).map((t) => normalizeTagValue(t)).filter(Boolean).join(", ");
+  return (Array.isArray(tags) ? tags : [])
+    .map((t) => normalizeTagValue(t))
+    .filter(Boolean)
+    .join(", ");
 }
 
 function normalizeInitialMessageRole(role) {
@@ -2128,7 +2155,9 @@ function serializeInitialMessages(messages) {
 }
 
 function parseTaggedInitialMessages(text) {
-  const lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+  const lines = String(text || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n");
   const roleLinePattern =
     /^\s*\[(AI|BOT|ASSISTANT|USER|SYSTEM)\]\s*:?\s*(.*)$/i;
   const messages = [];
@@ -2242,14 +2271,14 @@ function shouldAutoReplyFromInitialMessages(messages) {
 }
 
 function getAllAvailableTags() {
-  const tags = (Array.isArray(state.settings.customTags)
-    ? state.settings.customTags
-    : []
+  const tags = (
+    Array.isArray(state.settings.customTags) ? state.settings.customTags : []
   )
     .map((t) => normalizeTagValue(t))
     .filter(Boolean);
   return tags.filter(
-    (t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i,
+    (t, i, arr) =>
+      arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i,
   );
 }
 
@@ -2302,7 +2331,9 @@ function toggleModalTag(tag) {
   const tags = getCharacterTagsFromModal();
   const lower = tag.toLowerCase();
   const exists = tags.some((t) => t.toLowerCase() === lower);
-  const next = exists ? tags.filter((t) => t.toLowerCase() !== lower) : [...tags, tag];
+  const next = exists
+    ? tags.filter((t) => t.toLowerCase() !== lower)
+    : [...tags, tag];
   setCharacterTagsInputValue(next);
   renderCharacterTagPresetButtons();
   setModalDirtyState("character-modal", true);
@@ -2311,7 +2342,9 @@ function toggleModalTag(tag) {
 function renderCharacterTagPresetButtons() {
   const container = document.getElementById("char-tags-presets");
   if (!container) return;
-  const active = new Set(getCharacterTagsFromModal().map((t) => t.toLowerCase()));
+  const active = new Set(
+    getCharacterTagsFromModal().map((t) => t.toLowerCase()),
+  );
   container.innerHTML = "";
   getAllAvailableTags().forEach((tag) => {
     const btn = document.createElement("button");
@@ -2326,7 +2359,9 @@ function renderCharacterTagPresetButtons() {
 
 function removeCharacterTagFilter(tag) {
   const lower = String(tag || "").toLowerCase();
-  state.characterTagFilters = state.characterTagFilters.filter((t) => t.toLowerCase() !== lower);
+  state.characterTagFilters = state.characterTagFilters.filter(
+    (t) => t.toLowerCase() !== lower,
+  );
   saveUiState();
   renderCharacterTagFilterChips();
   updateCharacterCardsVisibility();
@@ -2336,7 +2371,9 @@ function toggleCharacterTagFilter(tag) {
   const normalized = normalizeTagValue(tag);
   if (!normalized) return;
   const lower = normalized.toLowerCase();
-  const exists = state.characterTagFilters.some((t) => t.toLowerCase() === lower);
+  const exists = state.characterTagFilters.some(
+    (t) => t.toLowerCase() === lower,
+  );
   if (exists) {
     state.characterTagFilters = state.characterTagFilters.filter(
       (t) => t.toLowerCase() !== lower,
@@ -2357,9 +2394,9 @@ async function updateCharacterCardsVisibility() {
     ? state.characterTagFilters.map((t) => t.toLowerCase())
     : [];
   const cards = grid.querySelectorAll(".character-card");
-  cards.forEach(card => {
+  cards.forEach((card) => {
     const charId = card.dataset.characterId;
-    const char = characters.find(c => Number(c.id) === Number(charId));
+    const char = characters.find((c) => Number(c.id) === Number(charId));
     if (!char) {
       card.style.display = "none";
       return;
@@ -2367,11 +2404,13 @@ async function updateCharacterCardsVisibility() {
     const tags = Array.isArray(char.tags)
       ? char.tags.map((t) => String(t || "").toLowerCase())
       : [];
-    const shouldShow = activeFilters.length === 0 || activeFilters.every((f) => tags.includes(f));
+    const shouldShow =
+      activeFilters.length === 0 ||
+      activeFilters.every((f) => tags.includes(f));
     card.style.display = shouldShow ? "" : "none";
 
     const tagChips = card.querySelectorAll(".character-tags .tag-chip");
-    tagChips.forEach(chip => {
+    tagChips.forEach((chip) => {
       const chipText = chip.textContent.toLowerCase();
       if (activeFilters.includes(chipText)) {
         chip.classList.add("active-filter");
@@ -2381,15 +2420,19 @@ async function updateCharacterCardsVisibility() {
     });
   });
   const empty = grid.querySelector(".muted");
-  const visibleCards = grid.querySelectorAll(".character-card:not([style*='display: none'])");
+  const visibleCards = grid.querySelectorAll(
+    ".character-card:not([style*='display: none'])",
+  );
   if (visibleCards.length === 0) {
     if (!empty) {
       const emptyMsg = document.createElement("p");
       emptyMsg.className = "muted";
-      emptyMsg.textContent = activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+      emptyMsg.textContent =
+        activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
       grid.appendChild(emptyMsg);
     } else {
-      empty.textContent = activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+      empty.textContent =
+        activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
     }
   } else if (empty) {
     empty.remove();
@@ -2412,7 +2455,9 @@ function updateCharacterFiltersToggleUi() {
 }
 
 function getCharacterSortIconUrl(base) {
-  const raw = CHARACTER_SORT_ICON_TEMPLATES[base] || CHARACTER_SORT_ICON_TEMPLATES.updated;
+  const raw =
+    CHARACTER_SORT_ICON_TEMPLATES[base] ||
+    CHARACTER_SORT_ICON_TEMPLATES.updated;
   return `data:image/svg+xml;utf8,${encodeURIComponent(raw)}`;
 }
 
@@ -2469,7 +2514,9 @@ function renderCharacterTagFilterChips() {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "tag-chip";
-    if (selectedFilters.some((f) => String(f).toLowerCase() === tag.toLowerCase())) {
+    if (
+      selectedFilters.some((f) => String(f).toLowerCase() === tag.toLowerCase())
+    ) {
       chip.classList.add("active-filter");
     }
     chip.textContent = tag;
@@ -2518,7 +2565,12 @@ function onInputKeyDown(e) {
         const selected = input.value.slice(start, end);
         e.preventDefault();
         if (selected) {
-          input.setRangeText(`${e.key}${selected}${closeChar}`, start, end, "end");
+          input.setRangeText(
+            `${e.key}${selected}${closeChar}`,
+            start,
+            end,
+            "end",
+          );
           input.setSelectionRange(start + 1, end + 1);
         } else {
           input.setRangeText(`${e.key}${closeChar}`, start, end, "end");
@@ -2667,8 +2719,9 @@ async function setupSettingsControls() {
       t("languageGerman");
     uiLanguageSelect.querySelector('option[value="es"]').textContent =
       t("languageSpanish");
-    uiLanguageSelect.querySelector('option[value="pt-BR"]').textContent =
-      t("languagePortugueseBr");
+    uiLanguageSelect.querySelector('option[value="pt-BR"]').textContent = t(
+      "languagePortugueseBr",
+    );
     uiLanguageSelect.value = state.settings.uiLanguage || "auto";
     if (!uiLanguageSelect.value) uiLanguageSelect.value = "auto";
   }
@@ -2748,7 +2801,9 @@ async function setupSettingsControls() {
   const personaInjectionTemplate = document.getElementById(
     "persona-injection-template",
   );
-  const personaInjectionWhen = document.getElementById("persona-injection-when");
+  const personaInjectionWhen = document.getElementById(
+    "persona-injection-when",
+  );
   const writingInstructionsInjectionWhen = document.getElementById(
     "writing-instructions-injection-when",
   );
@@ -2757,7 +2812,8 @@ async function setupSettingsControls() {
   allowMessageHtml.checked = state.settings.allowMessageHtml !== false;
   streamEnabled.checked = state.settings.streamEnabled !== false;
   autopairEnabled.checked = state.settings.autoPairEnabled !== false;
-  threadAutoTitleEnabled.checked = state.settings.threadAutoTitleEnabled !== false;
+  threadAutoTitleEnabled.checked =
+    state.settings.threadAutoTitleEnabled !== false;
   const minMessages = Math.max(
     5,
     Math.min(15, Number(state.settings.threadAutoTitleMinMessages) || 7),
@@ -2765,7 +2821,9 @@ async function setupSettingsControls() {
   state.settings.threadAutoTitleMinMessages = minMessages;
   threadAutoTitleMinMessages.value = String(minMessages);
   threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
-  const chatMessageAlignment = document.getElementById("chat-message-alignment");
+  const chatMessageAlignment = document.getElementById(
+    "chat-message-alignment",
+  );
   if (chatMessageAlignment) {
     chatMessageAlignment.value = state.settings.chatMessageAlignment || "left";
   }
@@ -2797,10 +2855,16 @@ async function setupSettingsControls() {
   temperatureValue.textContent = clampTemperature(
     state.settings.temperature,
   ).toFixed(2);
-  const completionCooldownSlider = document.getElementById("completion-cooldown-slider");
-  const completionCooldownValue = document.getElementById("completion-cooldown-value");
+  const completionCooldownSlider = document.getElementById(
+    "completion-cooldown-slider",
+  );
+  const completionCooldownValue = document.getElementById(
+    "completion-cooldown-value",
+  );
   if (completionCooldownSlider) {
-    completionCooldownSlider.value = String(state.settings.completionCooldown ?? 2);
+    completionCooldownSlider.value = String(
+      state.settings.completionCooldown ?? 2,
+    );
     if (completionCooldownValue) {
       completionCooldownValue.textContent = `${completionCooldownSlider.value}s`;
     }
@@ -2822,14 +2886,10 @@ async function setupSettingsControls() {
     warnBelow: 1024,
     dangerAbove: 4096,
   });
-  updateSettingsRangeTone(
-    temperatureSlider,
-    Number(temperatureSlider.value),
-    {
-      warnBelow: 0.7,
-      dangerAbove: 1.0,
-    },
-  );
+  updateSettingsRangeTone(temperatureSlider, Number(temperatureSlider.value), {
+    warnBelow: 0.7,
+    dangerAbove: 1.0,
+  });
   globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
   personaInjectionTemplate.value =
@@ -2940,14 +3000,18 @@ async function setupSettingsControls() {
     threadAutoTitleMinMessages.value = String(value);
     saveSettings();
   });
-  document.getElementById("chat-message-alignment")?.addEventListener("change", (e) => {
-    state.settings.chatMessageAlignment = e.target.value;
-    saveSettings();
-    applyChatMessageAlignment();
-  });
+  document
+    .getElementById("chat-message-alignment")
+    ?.addEventListener("change", (e) => {
+      state.settings.chatMessageAlignment = e.target.value;
+      saveSettings();
+      applyChatMessageAlignment();
+    });
 
   autoReplyEnabled?.addEventListener("click", () => {
-    state.settings.autoReplyEnabled = !(state.settings.autoReplyEnabled !== false);
+    state.settings.autoReplyEnabled = !(
+      state.settings.autoReplyEnabled !== false
+    );
     autoReplyEnabled.classList.toggle(
       "is-active",
       state.settings.autoReplyEnabled !== false,
@@ -2956,7 +3020,9 @@ async function setupSettingsControls() {
   });
 
   enterToSendEnabled?.addEventListener("click", () => {
-    state.settings.enterToSendEnabled = !(state.settings.enterToSendEnabled !== false);
+    state.settings.enterToSendEnabled = !(
+      state.settings.enterToSendEnabled !== false
+    );
     enterToSendEnabled.classList.toggle(
       "is-active",
       state.settings.enterToSendEnabled !== false,
@@ -3032,33 +3098,48 @@ async function setupSettingsControls() {
     refreshAllHoverMarquees();
   });
 
-  const botCardAvatarEffectSelect = document.getElementById("bot-card-avatar-effect");
-  const botCardAvatarTransitionDelaySlider = document.getElementById("bot-card-avatar-transition-delay-slider");
-  const botCardAvatarTransitionDelayValue = document.getElementById("bot-card-avatar-transition-delay-value");
+  const botCardAvatarEffectSelect = document.getElementById(
+    "bot-card-avatar-effect",
+  );
+  const botCardAvatarTransitionDelaySlider = document.getElementById(
+    "bot-card-avatar-transition-delay-slider",
+  );
+  const botCardAvatarTransitionDelayValue = document.getElementById(
+    "bot-card-avatar-transition-delay-value",
+  );
   if (botCardAvatarEffectSelect) {
-    botCardAvatarEffectSelect.value = state.settings.botCardAvatarEffect || "none";
+    botCardAvatarEffectSelect.value =
+      state.settings.botCardAvatarEffect || "none";
   }
   if (botCardAvatarTransitionDelaySlider) {
-    const delay = Math.max(4, Math.min(30, Number(state.settings.botCardAvatarTransitionDelay) || 4));
+    const delay = Math.max(
+      4,
+      Math.min(30, Number(state.settings.botCardAvatarTransitionDelay) || 4),
+    );
     state.settings.botCardAvatarTransitionDelay = delay;
     botCardAvatarTransitionDelaySlider.value = String(delay);
     if (botCardAvatarTransitionDelayValue) {
       botCardAvatarTransitionDelayValue.textContent = `${delay}s`;
     }
     if (botCardAvatarEffectSelect) {
-      botCardAvatarTransitionDelaySlider.disabled = botCardAvatarEffectSelect.value !== "carousel";
+      botCardAvatarTransitionDelaySlider.disabled =
+        botCardAvatarEffectSelect.value !== "carousel";
     }
   }
   botCardAvatarEffectSelect?.addEventListener("change", () => {
     state.settings.botCardAvatarEffect = botCardAvatarEffectSelect.value;
     saveSettings();
     if (botCardAvatarTransitionDelaySlider) {
-      botCardAvatarTransitionDelaySlider.disabled = botCardAvatarEffectSelect.value !== "carousel";
+      botCardAvatarTransitionDelaySlider.disabled =
+        botCardAvatarEffectSelect.value !== "carousel";
     }
     renderCharacters();
   });
   botCardAvatarTransitionDelaySlider?.addEventListener("input", () => {
-    const value = Math.max(4, Math.min(30, Number(botCardAvatarTransitionDelaySlider.value) || 4));
+    const value = Math.max(
+      4,
+      Math.min(30, Number(botCardAvatarTransitionDelaySlider.value) || 4),
+    );
     state.settings.botCardAvatarTransitionDelay = value;
     botCardAvatarTransitionDelaySlider.value = String(value);
     if (botCardAvatarTransitionDelayValue) {
@@ -3066,7 +3147,6 @@ async function setupSettingsControls() {
     }
     saveSettings();
   });
-
 
   globalPromptTemplate.addEventListener("input", () => {
     state.settings.globalPromptTemplate = globalPromptTemplate.value;
@@ -3092,7 +3172,9 @@ async function setupSettingsControls() {
   });
   writingInstructionsInjectionWhen?.addEventListener("change", () => {
     state.settings.writingInstructionsInjectionWhen =
-      normalizeWritingInstructionsTiming(writingInstructionsInjectionWhen.value);
+      normalizeWritingInstructionsTiming(
+        writingInstructionsInjectionWhen.value,
+      );
     writingInstructionsInjectionWhen.value =
       state.settings.writingInstructionsInjectionWhen;
     saveSettings();
@@ -3167,8 +3249,10 @@ function getSettingsGroupForNode(node) {
     has("#model-refresh-btn") ||
     has("#max-tokens-slider") ||
     has("#temperature-slider")
-  ) return "api";
-  if (has("#model-selected-meta") || has("#model-roleplay-warning")) return "api";
+  )
+    return "api";
+  if (has("#model-selected-meta") || has("#model-roleplay-warning"))
+    return "api";
   if (
     has("#markdown-enabled") ||
     has("#allow-message-html") ||
@@ -3179,20 +3263,28 @@ function getSettingsGroupForNode(node) {
     has("#markdown-custom-css") ||
     has("#postprocess-rules-json") ||
     has("#chat-message-alignment")
-  ) return "threads";
-  if (has("#cancel-shortcut") || has("#home-shortcut") || has("#new-character-shortcut")) return "shortcuts";
+  )
+    return "threads";
+  if (
+    has("#cancel-shortcut") ||
+    has("#home-shortcut") ||
+    has("#new-character-shortcut")
+  )
+    return "shortcuts";
   if (
     has("#global-prompt-template") ||
     has("#summary-system-prompt") ||
     has("#persona-injection-template") ||
     has("#persona-injection-when") ||
     has("#writing-instructions-injection-when")
-  ) return "prompting";
+  )
+    return "prompting";
   if (
     has("#ui-language-select") ||
     has("#toast-delay-slider") ||
     has("#marquee-behavior-select")
-  ) return "appearance";
+  )
+    return "appearance";
   const text = `${node.textContent || ""}`.toLowerCase();
   if (
     id === "openrouter-api-key" ||
@@ -3258,13 +3350,7 @@ function setupSettingsTabsLayout() {
   const tabs = document.querySelectorAll("[data-settings-tab-btn]");
   if (!body || tabs.length === 0 || body.dataset.tabsReady === "1") return;
 
-  const groups = [
-    "api",
-    "appearance",
-    "threads",
-    "prompting",
-    "shortcuts",
-  ];
+  const groups = ["api", "appearance", "threads", "prompting", "shortcuts"];
   const panels = new Map();
   groups.forEach((group) => {
     const panel = document.createElement("div");
@@ -3324,7 +3410,10 @@ function loadUiState() {
         .map((t) => normalizeTagValue(t))
         .filter(Boolean);
     }
-    if (typeof parsed.characterSortMode === "string" && parsed.characterSortMode) {
+    if (
+      typeof parsed.characterSortMode === "string" &&
+      parsed.characterSortMode
+    ) {
       const parts = getCharacterSortParts(parsed.characterSortMode);
       state.characterSortMode = `${parts.base}_${parts.dir}`;
     }
@@ -3724,7 +3813,9 @@ async function saveShortcutsFromModal({ close = true } = {}) {
 function isValidNewManagerTag(inputValue) {
   const tag = normalizeTagValue(inputValue);
   if (tag.length < 2) return false;
-  return !getAllAvailableTags().some((t) => t.toLowerCase() === tag.toLowerCase());
+  return !getAllAvailableTags().some(
+    (t) => t.toLowerCase() === tag.toLowerCase(),
+  );
 }
 
 function updateTagManagerAddButtonState() {
@@ -3807,13 +3898,15 @@ async function removeTagFromCatalog(tag) {
     );
     if (!ok) return;
   } else {
-    const ok = await openConfirmDialog(t("removeTagTitle"), t("removeTagConfirmSimple"));
+    const ok = await openConfirmDialog(
+      t("removeTagTitle"),
+      t("removeTagConfirmSimple"),
+    );
     if (!ok) return;
   }
 
-  const nextTags = (Array.isArray(state.settings.customTags)
-    ? state.settings.customTags
-    : []
+  const nextTags = (
+    Array.isArray(state.settings.customTags) ? state.settings.customTags : []
   ).filter((t) => String(t || "").toLowerCase() !== lower);
   state.settings.customTags = nextTags;
   state.settings.tagsInitialized = true;
@@ -3966,14 +4059,16 @@ async function renderCharacters() {
     if (mode === "created_asc") return createdA - createdB;
     if (mode === "created_desc") return createdB - createdA;
     if (mode === "updated_asc") return updatedA - updatedB;
-    if (mode === "threads_asc") return threadsA - threadsB || updatedB - updatedA;
-    if (mode === "threads_desc") return threadsB - threadsA || updatedB - updatedA;
+    if (mode === "threads_asc")
+      return threadsA - threadsB || updatedB - updatedA;
+    if (mode === "threads_desc")
+      return threadsB - threadsA || updatedB - updatedA;
     return updatedB - updatedA;
   });
 
   const existingCards = grid.querySelectorAll(".character-card");
   const carouselStates = new Map();
-  existingCards.forEach(card => {
+  existingCards.forEach((card) => {
     const charId = card.dataset.characterId;
     if (card._saveVideoTimes) card._saveVideoTimes();
     if (card._getCarouselState) {
@@ -3987,20 +4082,24 @@ async function renderCharacters() {
     const empty = document.createElement("p");
     empty.className = "muted";
     empty.textContent =
-      activeFilters.length > 0
-        ? t("noTagsMatched")
-        : t("noCharactersStart");
+      activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
     grid.appendChild(empty);
     return;
   }
 
   sortedCharacters.forEach((char) => {
-    const resolved = resolveCharacterForLanguage(char, char?.selectedCardLanguage);
+    const resolved = resolveCharacterForLanguage(
+      char,
+      char?.selectedCardLanguage,
+    );
     const threadCount = threadCountByCharId.get(Number(char.id)) || 0;
     const card = document.createElement("article");
     card.className = "character-card";
     card.dataset.characterId = String(char.id);
-    if (state.characterCardSlide && Number(state.characterCardSlide.charId) === Number(char.id)) {
+    if (
+      state.characterCardSlide &&
+      Number(state.characterCardSlide.charId) === Number(char.id)
+    ) {
       card.classList.add(
         state.characterCardSlide.direction === "prev"
           ? "card-slide-prev"
@@ -4014,7 +4113,8 @@ async function renderCharacters() {
     const avatars = resolved.avatars || [];
     const hasMultipleAvatars = avatars.length > 1;
     const avatarEffect = state.settings.botCardAvatarEffect || "none";
-    const avatarTransitionDelay = Number(state.settings.botCardAvatarTransitionDelay) || 4;
+    const avatarTransitionDelay =
+      Number(state.settings.botCardAvatarTransitionDelay) || 4;
     const transitionDelayMs = avatarTransitionDelay * 1000;
 
     if (hasMultipleAvatars && avatarEffect === "carousel") {
@@ -4073,7 +4173,10 @@ async function renderCharacters() {
               advanceCarousel();
             } else {
               const remainingDelay = avatarTransitionDelay - videoDuration;
-              carouselInterval = setTimeout(advanceCarousel, remainingDelay * 1000);
+              carouselInterval = setTimeout(
+                advanceCarousel,
+                remainingDelay * 1000,
+              );
             }
           });
         }
@@ -4105,7 +4208,10 @@ async function renderCharacters() {
 
       const advanceCarousel = () => {
         const currentEl = avatarElements[currentAvatarIndex];
-        if (currentEl.tagName === "VIDEO" && currentEl.dataset.videoEnded !== "true") {
+        if (
+          currentEl.tagName === "VIDEO" &&
+          currentEl.dataset.videoEnded !== "true"
+        ) {
           const videoDuration = Number(currentEl.dataset.duration) || 0;
           if (videoDuration > 0 && videoDuration > avatarTransitionDelay) {
             currentEl.currentTime = 0;
@@ -4150,7 +4256,7 @@ async function renderCharacters() {
           clearInterval(carouselInterval);
           carouselInterval = null;
         }
-        avatarElements.forEach(el => {
+        avatarElements.forEach((el) => {
           if (el.tagName === "VIDEO") {
             el.pause();
             el.currentTime = 0;
@@ -4162,17 +4268,17 @@ async function renderCharacters() {
       const getCarouselState = () => {
         return {
           currentIndex: currentAvatarIndex,
-          videoTimes: avatarElements.map(el => {
+          videoTimes: avatarElements.map((el) => {
             if (el.tagName === "VIDEO") {
               return el.currentTime;
             }
             return 0;
-          })
+          }),
         };
       };
 
       const saveVideoTimes = () => {
-        avatarElements.forEach(el => {
+        avatarElements.forEach((el) => {
           if (el.tagName === "VIDEO") {
             el.dataset.savedTime = String(el.currentTime);
           }
@@ -4180,7 +4286,7 @@ async function renderCharacters() {
       };
 
       const restoreVideoTimes = () => {
-        avatarElements.forEach(el => {
+        avatarElements.forEach((el) => {
           if (el.tagName === "VIDEO") {
             const savedTime = parseFloat(el.dataset.savedTime) || 0;
             if (savedTime > 0 && el.paused) {
@@ -4203,13 +4309,17 @@ async function renderCharacters() {
       const avatar = document.createElement("img");
       avatar.className = "character-avatar";
       avatar.alt = `${resolved.name || "Character"} avatar`;
-      setCharacterAvatarImage(avatar, resolved, resolved.name || "Character", 512);
+      setCharacterAvatarImage(
+        avatar,
+        resolved,
+        resolved.name || "Character",
+        512,
+      );
       avatar.addEventListener("click", () => {
         const lang = card.dataset.activeCardLanguage;
         openCharacterModal(char, lang);
       });
       avatarWrap.appendChild(avatar);
-
     }
 
     const idOverlay = document.createElement("span");
@@ -4239,9 +4349,10 @@ async function renderCharacters() {
     const langFlagsWrap = document.createElement("div");
     langFlagsWrap.className = "character-lang-flags";
     const definitions = resolved.definitions || [];
-    const activeLang = resolved.activeLanguage || definitions[0]?.language || "en";
+    const activeLang =
+      resolved.activeLanguage || definitions[0]?.language || "en";
     card.dataset.activeCardLanguage = activeLang;
-    definitions.forEach(def => {
+    definitions.forEach((def) => {
       const flag = createLanguageFlagRibbonElement(def.language);
       flag.classList.add("character-lang-flag");
       if (def.language === activeLang) {
@@ -4258,7 +4369,7 @@ async function renderCharacters() {
         if (card) {
           card.dataset.activeCardLanguage = def.language;
           const flags = card.querySelectorAll(".character-lang-flag");
-          flags.forEach(f => f.classList.remove("active"));
+          flags.forEach((f) => f.classList.remove("active"));
           e.target.classList.add("active");
           const targetDef =
             definitions.find((d) => d.language === def.language) || def;
@@ -4275,9 +4386,7 @@ async function renderCharacters() {
     const tags = (Array.isArray(char.tags) ? char.tags : [])
       .map((t) => normalizeTagValue(t))
       .filter(Boolean)
-      .sort((a, b) =>
-        a.localeCompare(b, undefined, { sensitivity: "base" }),
-      );
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
     const tagsWrap = document.createElement("div");
     tagsWrap.className = "character-tags";
     const expanded = state.expandedCharacterTagIds.has(Number(char.id));
@@ -4325,7 +4434,9 @@ async function renderCharacters() {
           if (tagsDiv) {
             tagsDiv.classList.toggle("tags-expanded");
           }
-          e.target.textContent = tagsDiv.classList.contains("tags-expanded") ? t("less") : t("more");
+          e.target.textContent = tagsDiv.classList.contains("tags-expanded")
+            ? t("less")
+            : t("more");
         }
       });
       tagsWrap.appendChild(more);
@@ -4339,7 +4450,10 @@ async function renderCharacters() {
     newChatBtn.type = "button";
     newChatBtn.className = "secondary-btn new-chat-btn";
     newChatBtn.textContent = t("newChat");
-    newChatBtn.setAttribute("aria-label", tf("newChatAria", { name: resolved.name || "character" }));
+    newChatBtn.setAttribute(
+      "aria-label",
+      tf("newChatAria", { name: resolved.name || "character" }),
+    );
     applyHoverMarquee(newChatBtn, t("newChat"));
     newChatBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -4360,10 +4474,14 @@ async function renderCharacters() {
       newChatBtn.classList.remove("card-hover-highlight");
     });
 
-    const deleteCharBtn = iconButton("delete", t("deleteCharacterAria"), async (e) => {
-      e.stopPropagation();
-      await deleteCharacter(char.id);
-    });
+    const deleteCharBtn = iconButton(
+      "delete",
+      t("deleteCharacterAria"),
+      async (e) => {
+        e.stopPropagation();
+        await deleteCharacter(char.id);
+      },
+    );
     deleteCharBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteCharBtn);
 
@@ -4388,7 +4506,9 @@ async function renderCharacters() {
   });
 
   carouselStates.forEach((state, charId) => {
-    const card = grid.querySelector(`.character-card[data-character-id="${charId}"]`);
+    const card = grid.querySelector(
+      `.character-card[data-character-id="${charId}"]`,
+    );
     if (card && card._startCarousel) {
       const savedTimes = state.videoTimes || [];
       if (card._restoreVideoTimes) {
@@ -4514,9 +4634,13 @@ async function renderThreads() {
     }
     updateThreadBulkBar();
   });
-  const deleteSelectedBtn = iconButton("delete", t("deleteSelectedThreads"), async () => {
-    await deleteSelectedThreads();
-  });
+  const deleteSelectedBtn = iconButton(
+    "delete",
+    t("deleteSelectedThreads"),
+    async () => {
+      await deleteSelectedThreads();
+    },
+  );
   deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
   bulkBar.append(selectAll, deleteSelectedBtn);
   list.appendChild(bulkBar);
@@ -4546,7 +4670,8 @@ async function renderThreads() {
       const chatViewActive = document
         .getElementById("chat-view")
         ?.classList.contains("active");
-      if (chatViewActive && Number(currentThread?.id) === Number(thread.id)) return;
+      if (chatViewActive && Number(currentThread?.id) === Number(thread.id))
+        return;
       openThread(thread.id);
     });
 
@@ -4582,7 +4707,10 @@ async function renderThreads() {
       String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
       isInCompletionCooldown();
     const unreadCount = getUnreadAssistantCount(thread.messages || []);
-    const queuePos = (isGenerating || isInCooldown) ? 0 : (queuePosByThreadId.get(Number(thread.id)) || 0);
+    const queuePos =
+      isGenerating || isInCooldown
+        ? 0
+        : queuePosByThreadId.get(Number(thread.id)) || 0;
     const statusBadges = document.createElement("div");
     statusBadges.className = "thread-status-badges";
     if (unreadCount > 0) {
@@ -4649,10 +4777,14 @@ async function renderThreads() {
     });
     const titleRow = document.createElement("div");
     titleRow.className = "thread-title-row";
-    const renameMiniBtn = iconButton("edit", t("renameThreadAria"), async (e) => {
-      e.stopPropagation();
-      await renameThread(thread.id);
-    });
+    const renameMiniBtn = iconButton(
+      "edit",
+      t("renameThreadAria"),
+      async (e) => {
+        e.stopPropagation();
+        await renameThread(thread.id);
+      },
+    );
     renameMiniBtn.classList.add("thread-rename-mini", "thread-rename-top");
     titleRow.append(titleBtn);
 
@@ -4661,10 +4793,14 @@ async function renderThreads() {
     const actions = document.createElement("div");
     actions.className = "actions";
 
-    const deleteThreadBtn = iconButton("delete", t("deleteThreadAria"), async (e) => {
-      e.stopPropagation();
-      await deleteThread(thread.id);
-    });
+    const deleteThreadBtn = iconButton(
+      "delete",
+      t("deleteThreadAria"),
+      async (e) => {
+        e.stopPropagation();
+        await deleteThread(thread.id);
+      },
+    );
     deleteThreadBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteThreadBtn);
 
@@ -4678,10 +4814,14 @@ async function renderThreads() {
       );
     }
 
-    const duplicateBtn = iconButton("duplicate", t("duplicateThreadAria"), async (e) => {
-      e.stopPropagation();
-      await duplicateThread(thread.id);
-    });
+    const duplicateBtn = iconButton(
+      "duplicate",
+      t("duplicateThreadAria"),
+      async (e) => {
+        e.stopPropagation();
+        await duplicateThread(thread.id);
+      },
+    );
     duplicateBtn.disabled = threadHasPendingBotActivity(thread);
     actions.appendChild(duplicateBtn);
     const favBtn = iconButton(
@@ -4763,7 +4903,10 @@ async function deleteSelectedThreads() {
   state.selectedThreadIds.clear();
   await renderThreads();
   await renderCharacters();
-  showToast(tf("deletedThreadsToast", { count: ids.length, suffix }), "success");
+  showToast(
+    tf("deletedThreadsToast", { count: ids.length, suffix }),
+    "success",
+  );
 }
 
 function iconButton(iconKey, ariaLabel, handler) {
@@ -4790,7 +4933,10 @@ function togglePane() {
     pane.classList.contains("collapsed"),
   );
   if (overlayToggle) {
-    overlayToggle.classList.toggle("collapsed", pane.classList.contains("collapsed"));
+    overlayToggle.classList.toggle(
+      "collapsed",
+      pane.classList.contains("collapsed"),
+    );
   }
   if (pane.classList.contains("collapsed")) {
     if (homeBtn) {
@@ -4851,7 +4997,7 @@ function stopAllCarousels() {
   const grid = document.getElementById("character-grid");
   if (!grid) return;
   const cards = grid.querySelectorAll(".character-card");
-  cards.forEach(card => {
+  cards.forEach((card) => {
     if (card._stopCarousel) card._stopCarousel();
   });
 }
@@ -4860,7 +5006,7 @@ function startAllCarousels() {
   const grid = document.getElementById("character-grid");
   if (!grid) return;
   const cards = grid.querySelectorAll(".character-card");
-  cards.forEach(card => {
+  cards.forEach((card) => {
     if (card._restoreVideoTimes) card._restoreVideoTimes();
     if (card._startCarousel) card._startCarousel();
   });
@@ -4880,7 +5026,9 @@ function openModal(modalId) {
     renderPersonaModalList();
   } else if (modalId === "settings-modal") {
     const lastTab = localStorage.getItem("rp-settings-last-tab") || "api";
-    const tabBtn = document.querySelector(`[data-settings-tab-btn="${lastTab}"]`);
+    const tabBtn = document.querySelector(
+      `[data-settings-tab-btn="${lastTab}"]`,
+    );
     if (tabBtn instanceof HTMLButtonElement) tabBtn.click();
     else {
       const firstTab = document.querySelector('[data-settings-tab-btn="api"]');
@@ -4967,7 +5115,10 @@ function getBotLanguageFlagIconCode(code) {
 }
 
 function getBotLanguageName(code) {
-  return BOT_LANGUAGE_NAMES[normalizeBotLanguageCode(code)] || normalizeBotLanguageCode(code);
+  return (
+    BOT_LANGUAGE_NAMES[normalizeBotLanguageCode(code)] ||
+    normalizeBotLanguageCode(code)
+  );
 }
 
 function createLanguageFlagIconElement(code, className = "") {
@@ -5021,7 +5172,8 @@ function getPrimaryAvatarInfo(character) {
 
 async function ensureVideoAvatarSnapshot(src) {
   if (!src) return null;
-  if (state.avatarSnapshotCache.has(src)) return state.avatarSnapshotCache.get(src);
+  if (state.avatarSnapshotCache.has(src))
+    return state.avatarSnapshotCache.get(src);
   const video = document.createElement("video");
   video.muted = true;
   video.playsInline = true;
@@ -5066,9 +5218,18 @@ async function ensureVideoAvatarSnapshot(src) {
   return null;
 }
 
-function setCharacterAvatarImage(img, character, fallbackName, fallbackSize = 512) {
+function setCharacterAvatarImage(
+  img,
+  character,
+  fallbackName,
+  fallbackSize = 512,
+) {
   const info = getPrimaryAvatarInfo(character);
-  const fallbackUrl = fallbackAvatar(fallbackName || t("threadWord"), fallbackSize, fallbackSize);
+  const fallbackUrl = fallbackAvatar(
+    fallbackName || t("threadWord"),
+    fallbackSize,
+    fallbackSize,
+  );
   img.dataset.avatarVideo = "";
   if (!info?.data) {
     img.src = fallbackUrl;
@@ -5101,13 +5262,13 @@ function createEmptyCharacterDefinition(language = "en") {
     personaInjectionPlacement: "end_system_prompt",
     ttsVoice: DEFAULT_TTS_VOICE,
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
-      ttsRate: DEFAULT_TTS_RATE,
+    ttsRate: DEFAULT_TTS_RATE,
     ttsPitch: 1.1,
     ttsProvider: "browser",
     kokoroDevice: "wasm",
     kokoroDtype: "q8",
     kokoroVoice: DEFAULT_KOKORO_VOICE,
-      kokoroSpeed: DEFAULT_TTS_RATE,
+    kokoroSpeed: DEFAULT_TTS_RATE,
     preferLoreBooksMatchingLanguage: true,
     lorebookIds: [],
   };
@@ -5123,7 +5284,9 @@ function normalizeCharacterDefinitions(character = null) {
   if (!character) {
     return [createEmptyCharacterDefinition(getInitialBotDefinitionLanguage())];
   }
-  const defsRaw = Array.isArray(character?.definitions) ? character.definitions : [];
+  const defsRaw = Array.isArray(character?.definitions)
+    ? character.definitions
+    : [];
   const defs = defsRaw
     .map((d) => {
       const def = {
@@ -5136,10 +5299,11 @@ function normalizeCharacterDefinitions(character = null) {
         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
         kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
           ? Number(d.kokoroSpeed)
-        : Number.isFinite(Number(d?.ttsRate))
-          ? Number(d.ttsRate)
-          : DEFAULT_TTS_RATE,
-        preferLoreBooksMatchingLanguage: d?.preferLoreBooksMatchingLanguage !== false,
+          : Number.isFinite(Number(d?.ttsRate))
+            ? Number(d.ttsRate)
+            : DEFAULT_TTS_RATE,
+        preferLoreBooksMatchingLanguage:
+          d?.preferLoreBooksMatchingLanguage !== false,
         lorebookIds: Array.isArray(d?.lorebookIds)
           ? d.lorebookIds.map(Number).filter(Number.isInteger)
           : [],
@@ -5148,7 +5312,9 @@ function normalizeCharacterDefinitions(character = null) {
       delete def.avatars;
       return def;
     })
-    .filter((d, i, arr) => arr.findIndex((x) => x.language === d.language) === i);
+    .filter(
+      (d, i, arr) => arr.findIndex((x) => x.language === d.language) === i,
+    );
   if (defs.length > 0) return defs;
   const fallbackLanguage = normalizeBotLanguageCode(
     character?.selectedCardLanguage || character?.language || "en",
@@ -5196,7 +5362,10 @@ function normalizeCharacterDefinitions(character = null) {
 function resolveCharacterLanguageDefinition(character, preferredLanguage = "") {
   const defs = normalizeCharacterDefinitions(character);
   const preferred = normalizeBotLanguageCode(
-    preferredLanguage || character?.selectedCardLanguage || defs[0]?.language || "en",
+    preferredLanguage ||
+      character?.selectedCardLanguage ||
+      defs[0]?.language ||
+      "en",
   );
   const def = defs.find((d) => d.language === preferred) || defs[0];
   return {
@@ -5253,12 +5422,18 @@ function renderCharacterDefinitionTabs() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "settings-tab-btn char-def-tab-btn";
-    if (def.language === state.charModalActiveLanguage && state.charModalActiveTab === "lang") {
+    if (
+      def.language === state.charModalActiveLanguage &&
+      state.charModalActiveTab === "lang"
+    ) {
       btn.classList.add("active");
     }
     const label = document.createElement("span");
     label.className = "char-def-tab-label";
-    const flag = createLanguageFlagIconElement(def.language, "char-def-tab-flag");
+    const flag = createLanguageFlagIconElement(
+      def.language,
+      "char-def-tab-flag",
+    );
     const text = document.createElement("span");
     text.textContent = def.language;
     label.append(flag, text);
@@ -5288,7 +5463,9 @@ function renderCharacterDefinitionTabs() {
           .equals(Number(state.editingCharacterId))
           .toArray();
         affectedThreads = threadsForChar.filter(
-          (th) => normalizeBotLanguageCode(th.characterLanguage || "") === def.language,
+          (th) =>
+            normalizeBotLanguageCode(th.characterLanguage || "") ===
+            def.language,
         );
       }
       const removeMsg =
@@ -5298,17 +5475,15 @@ function renderCharacterDefinitionTabs() {
               count: affectedThreads.length,
             })
           : tf("removeLanguageConfirm", { lang: def.language });
-      const ok = await openConfirmDialog(
-        t("removeLanguageTitle"),
-        removeMsg,
-      );
+      const ok = await openConfirmDialog(t("removeLanguageTitle"), removeMsg);
       if (!ok) return;
       saveActiveCharacterDefinitionFromForm();
       state.charModalDefinitions = state.charModalDefinitions.filter(
         (x) => x.language !== def.language,
       );
       if (state.charModalActiveLanguage === def.language) {
-        state.charModalActiveLanguage = state.charModalDefinitions[0]?.language || "";
+        state.charModalActiveLanguage =
+          state.charModalDefinitions[0]?.language || "";
       }
       if (affectedThreads.length > 0) {
         const idsToDelete = affectedThreads
@@ -5330,19 +5505,29 @@ function renderCharacterDefinitionTabs() {
     root.appendChild(btn);
   });
   const configBtn = document.getElementById("char-config-tab-btn");
-  if (configBtn) configBtn.classList.toggle("active", state.charModalActiveTab === "config");
+  if (configBtn)
+    configBtn.classList.toggle("active", state.charModalActiveTab === "config");
   const tagsBtn = document.getElementById("char-tags-tab-btn");
-  if (tagsBtn) tagsBtn.classList.toggle("active", state.charModalActiveTab === "tags");
+  if (tagsBtn)
+    tagsBtn.classList.toggle("active", state.charModalActiveTab === "tags");
 }
 
 function saveActiveCharacterDefinitionFromForm() {
   const def = getActiveCharacterDefinition();
   if (!def) return;
   def.name = String(document.getElementById("char-name")?.value || "").trim();
-  def.tagline = String(document.getElementById("char-tagline")?.value || "").trim();
-  def.systemPrompt = String(document.getElementById("char-system-prompt")?.value || "").trim();
-  def.oneTimeExtraPrompt = String(document.getElementById("char-one-time-extra-prompt")?.value || "").trim();
-  const writingInstructionsTextarea = document.getElementById("char-writing-instructions");
+  def.tagline = String(
+    document.getElementById("char-tagline")?.value || "",
+  ).trim();
+  def.systemPrompt = String(
+    document.getElementById("char-system-prompt")?.value || "",
+  ).trim();
+  def.oneTimeExtraPrompt = String(
+    document.getElementById("char-one-time-extra-prompt")?.value || "",
+  ).trim();
+  const writingInstructionsTextarea = document.getElementById(
+    "char-writing-instructions",
+  );
   const writingInstructionsSelect = document.getElementById(
     "char-writing-instructions-select",
   );
@@ -5354,21 +5539,29 @@ function saveActiveCharacterDefinitionFromForm() {
     selectedWritingInstructionId === ""
       ? String(writingInstructionsTextarea?.value || "").trim()
       : "";
-  def.initialMessagesRaw = String(document.getElementById("char-initial-messages")?.value || "");
-  def.personaInjectionPlacement =
-    String(document.getElementById("char-persona-injection-placement")?.value || "end_system_prompt");
+  def.initialMessagesRaw = String(
+    document.getElementById("char-initial-messages")?.value || "",
+  );
+  def.personaInjectionPlacement = String(
+    document.getElementById("char-persona-injection-placement")?.value ||
+      "end_system_prompt",
+  );
   const selectedTts = getResolvedCharTtsSelection();
   def.ttsVoice = selectedTts.voice;
   def.ttsLanguage = selectedTts.language;
   def.ttsRate = selectedTts.rate;
   def.ttsPitch = selectedTts.pitch;
   def.ttsProvider = getCharModalTtsProviderSelection();
-  def.kokoroDevice =
-    String(document.getElementById("char-tts-kokoro-device")?.value || "wasm");
-  def.kokoroDtype =
-    String(document.getElementById("char-tts-kokoro-dtype")?.value || "q8");
-  def.kokoroVoice =
-    String(document.getElementById("char-tts-kokoro-voice")?.value || DEFAULT_KOKORO_VOICE);
+  def.kokoroDevice = String(
+    document.getElementById("char-tts-kokoro-device")?.value || "wasm",
+  );
+  def.kokoroDtype = String(
+    document.getElementById("char-tts-kokoro-dtype")?.value || "q8",
+  );
+  def.kokoroVoice = String(
+    document.getElementById("char-tts-kokoro-voice")?.value ||
+      DEFAULT_KOKORO_VOICE,
+  );
   def.kokoroSpeed = selectedTts.rate;
   def.preferLoreBooksMatchingLanguage =
     document.getElementById("char-prefer-lore-language")?.checked !== false;
@@ -5383,8 +5576,10 @@ function loadActiveCharacterDefinitionToForm() {
   document.getElementById("char-tagline").value = def.tagline || "";
   updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
   document.getElementById("char-system-prompt").value = def.systemPrompt || "";
-  document.getElementById("char-one-time-extra-prompt").value = def.oneTimeExtraPrompt || "";
-  document.getElementById("char-writing-instructions").value = def.writingInstructions || "";
+  document.getElementById("char-one-time-extra-prompt").value =
+    def.oneTimeExtraPrompt || "";
+  document.getElementById("char-writing-instructions").value =
+    def.writingInstructions || "";
   populateCharWritingInstructionsSelect(def.writingInstructionId);
   updateCharWritingInstructionsVisibility();
   document.getElementById("char-initial-messages").value =
@@ -5396,12 +5591,9 @@ function loadActiveCharacterDefinitionToForm() {
     def.personaInjectionPlacement || "end_system_prompt";
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   populateCharTtsVoiceSelect(def.ttsVoice || DEFAULT_TTS_VOICE);
-    document.getElementById("char-tts-rate").value = String(
-      Math.max(
-        0.5,
-        Math.min(2, Number(def.ttsRate) || DEFAULT_TTS_RATE),
-      ),
-    );
+  document.getElementById("char-tts-rate").value = String(
+    Math.max(0.5, Math.min(2, Number(def.ttsRate) || DEFAULT_TTS_RATE)),
+  );
   document.getElementById("char-tts-pitch").value = String(
     Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1)),
   );
@@ -5411,10 +5603,10 @@ function loadActiveCharacterDefinitionToForm() {
   if (kokoroDevice) kokoroDevice.value = def.kokoroDevice || "wasm";
   const kokoroDtype = document.getElementById("char-tts-kokoro-dtype");
   if (kokoroDtype) kokoroDtype.value = def.kokoroDtype || "q8";
-    populateKokoroVoiceSelect(
-      def.kokoroVoice || DEFAULT_KOKORO_VOICE,
-      state.charModalActiveLanguage,
-    );
+  populateKokoroVoiceSelect(
+    def.kokoroVoice || DEFAULT_KOKORO_VOICE,
+    state.charModalActiveLanguage,
+  );
   document.getElementById("char-prefer-lore-language").checked =
     def.preferLoreBooksMatchingLanguage !== false;
   updateCharTtsRatePitchLabels();
@@ -5468,22 +5660,34 @@ function populateCharacterLanguageSelectOptions() {
   });
 }
 
-async function openCharacterModal(character = null, selectedCardLanguage = null) {
+async function openCharacterModal(
+  character = null,
+  selectedCardLanguage = null,
+) {
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
-  const hasAvatars = character?.avatars && Array.isArray(character.avatars) && character.avatars.length > 0;
+  const hasAvatars =
+    character?.avatars &&
+    Array.isArray(character.avatars) &&
+    character.avatars.length > 0;
   state.charModalAvatars = hasAvatars ? [...character.avatars] : [];
   if (state.charModalAvatars.length === 0 && character?.avatar) {
-    state.charModalAvatars = [{ type: "image", data: character.avatar, name: "" }];
+    state.charModalAvatars = [
+      { type: "image", data: character.avatar, name: "" },
+    ];
   }
   renderCharAvatars();
   state.charModalDefinitions = normalizeCharacterDefinitions(character);
-  const cardLanguage = selectedCardLanguage || character?.selectedCardLanguage || "";
-  const hasCardLanguage = cardLanguage && state.charModalDefinitions.some(d => d.language === cardLanguage);
+  const cardLanguage =
+    selectedCardLanguage || character?.selectedCardLanguage || "";
+  const hasCardLanguage =
+    cardLanguage &&
+    state.charModalDefinitions.some((d) => d.language === cardLanguage);
   state.charModalActiveLanguage = hasCardLanguage
     ? cardLanguage
-    : state.charModalDefinitions[0]?.language || getInitialBotDefinitionLanguage();
+    : state.charModalDefinitions[0]?.language ||
+      getInitialBotDefinitionLanguage();
   state.charModalActiveTab = "lang";
 
   await populateCharDefaultPersonaOverrideSelect(
@@ -5639,8 +5843,10 @@ async function saveCharacterFromModal({ close = true } = {}) {
     preferLoreBooksMatchingLanguage:
       primaryDef?.preferLoreBooksMatchingLanguage !== false,
     lorebookIds: selectedLorebookIds,
-    avatar: state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
-    avatars: state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [],
+    avatar:
+      state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
+    avatars:
+      state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [],
     updatedAt: Date.now(),
   };
 
@@ -5676,7 +5882,9 @@ async function saveCharacterFromModal({ close = true } = {}) {
     showToast(t("characterCreated"), "success");
   }
 
-  const pendingThreadDeleteIds = Array.isArray(state.charModalPendingThreadDeleteIds)
+  const pendingThreadDeleteIds = Array.isArray(
+    state.charModalPendingThreadDeleteIds,
+  )
     ? state.charModalPendingThreadDeleteIds
         .map((id) => Number(id))
         .filter(Number.isInteger)
@@ -5689,7 +5897,10 @@ async function saveCharacterFromModal({ close = true } = {}) {
     pendingThreadDeleteIds.forEach((id) =>
       state.selectedThreadIds.delete(Number(id)),
     );
-    if (currentThread && pendingThreadDeleteIds.includes(Number(currentThread.id))) {
+    if (
+      currentThread &&
+      pendingThreadDeleteIds.includes(Number(currentThread.id))
+    ) {
       currentThread = null;
       currentCharacter = null;
       conversationHistory = [];
@@ -5769,9 +5980,12 @@ async function populateCharWritingInstructionsSelect(preferredId = "") {
   const select = document.getElementById("char-writing-instructions-select");
   const textarea = document.getElementById("char-writing-instructions");
   if (!select || !textarea) return;
-  const currentLang = state.charModalActiveLanguage || state.settings.interfaceLanguage || "en";
+  const currentLang =
+    state.charModalActiveLanguage || state.settings.interfaceLanguage || "en";
   const allWi = await getAllWritingInstructions();
-  const matchingWi = allWi.filter((wi) => wi.instructions && wi.instructions[currentLang]);
+  const matchingWi = allWi.filter(
+    (wi) => wi.instructions && wi.instructions[currentLang],
+  );
   select.innerHTML = "";
   const noneOpt = document.createElement("option");
   noneOpt.value = "none";
@@ -5787,9 +6001,7 @@ async function populateCharWritingInstructionsSelect(preferredId = "") {
     opt.textContent = wi.name || `Writing Instruction #${wi.id}`;
     select.appendChild(opt);
   });
-  const hasPreferred = matchingWi.some(
-    (wi) => String(wi.id) === preferredId,
-  );
+  const hasPreferred = matchingWi.some((wi) => String(wi.id) === preferredId);
   const isCustomPreferred = preferredId === "";
   if (isCustomPreferred) {
     select.value = "";
@@ -5836,30 +6048,30 @@ function updateCharTtsRatePitchLabels() {
 }
 
 function getResolvedTtsSelection(
-    languageInput,
-    voiceInput,
-    rateInput,
-    pitchInput,
-  ) {
-    const language =
-      String(languageInput || DEFAULT_TTS_LANGUAGE).trim() ||
-      DEFAULT_TTS_LANGUAGE;
-    const voice =
-      String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
+  languageInput,
+  voiceInput,
+  rateInput,
+  pitchInput,
+) {
+  const language =
+    String(languageInput || DEFAULT_TTS_LANGUAGE).trim() ||
+    DEFAULT_TTS_LANGUAGE;
+  const voice =
+    String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
   const rate = Math.max(
     0.5,
     Math.min(2, Number(rateInput) || DEFAULT_TTS_RATE),
   );
-    const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1.1));
-    return {
-      language,
-      voice,
-      rate,
-      pitch,
-    };
-  }
+  const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1.1));
+  return {
+    language,
+    voice,
+    rate,
+    pitch,
+  };
+}
 
-  function getResolvedCharTtsSelection() {
+function getResolvedCharTtsSelection() {
   return getResolvedTtsSelection(
     document.getElementById("char-tts-language")?.value,
     document.getElementById("char-tts-voice")?.value,
@@ -5929,7 +6141,7 @@ function moveCharModalTtsTestButton(target = "tts") {
   if (slot) slot.appendChild(btn);
 }
 
-  async function renderPersonaSelector() {
+async function renderPersonaSelector() {
   await ensurePersonasInitialized();
   const select = document.getElementById("persona-select");
   const personas = await getOrderedPersonas();
@@ -6060,7 +6272,11 @@ async function savePersonaFromModal() {
   document.getElementById("persona-avatar-file").value = "";
   document.getElementById("persona-description").value = "";
   document.getElementById("persona-internal-description").value = "";
-  updateNameLengthCounter("persona-description", "persona-description-count", 100);
+  updateNameLengthCounter(
+    "persona-description",
+    "persona-description-count",
+    100,
+  );
   document.getElementById("persona-is-default").checked = false;
   state.editingPersonaId = null;
   document.getElementById("save-persona-btn").textContent = t("savePersona");
@@ -6141,9 +6357,13 @@ async function renderPersonaModalList() {
         loadPersonaForEditing(persona);
       }),
     );
-    const deleteBtn = iconButton("delete", t("deletePersonaTitle"), async () => {
-      await deletePersona(persona.id);
-    });
+    const deleteBtn = iconButton(
+      "delete",
+      t("deletePersonaTitle"),
+      async () => {
+        await deletePersona(persona.id);
+      },
+    );
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
 
@@ -6153,7 +6373,10 @@ async function renderPersonaModalList() {
 }
 
 async function deletePersona(personaId) {
-  const ok = await openConfirmDialog(t("deletePersonaTitle"), t("deletePersonaConfirm"));
+  const ok = await openConfirmDialog(
+    t("deletePersonaTitle"),
+    t("deletePersonaConfirm"),
+  );
   if (!ok) return;
   const persona = await db.personas.get(personaId);
   await db.personas.delete(personaId);
@@ -6197,7 +6420,11 @@ function loadPersonaForEditing(persona) {
     persona.description || "";
   document.getElementById("persona-internal-description").value =
     persona.internalDescription || "";
-  updateNameLengthCounter("persona-description", "persona-description-count", 100);
+  updateNameLengthCounter(
+    "persona-description",
+    "persona-description-count",
+    100,
+  );
   document.getElementById("persona-is-default").checked = !!persona.isDefault;
   document.getElementById("save-persona-btn").textContent = t("updatePersona");
 }
@@ -6384,7 +6611,8 @@ function parseCsvValues(value) {
     .map((v) => normalizeTagValue(v))
     .filter(Boolean)
     .filter(
-      (v, i, arr) => arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i,
+      (v, i, arr) =>
+        arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i,
     );
 }
 
@@ -6398,7 +6626,9 @@ function normalizeLorebookEntry(entry, fallbackIndex = 0) {
   return {
     id: Number(entry?.id) || Date.now() + fallbackIndex,
     keys: keys.map((k) => normalizeTagValue(k)).filter(Boolean),
-    secondaryKeys: secondaryKeys.map((k) => normalizeTagValue(k)).filter(Boolean),
+    secondaryKeys: secondaryKeys
+      .map((k) => normalizeTagValue(k))
+      .filter(Boolean),
     content: String(entry?.content || "").trim(),
   };
 }
@@ -6419,7 +6649,10 @@ function normalizeLorebookRecord(record) {
     avatar: String(record.avatar || "").trim(),
     description: String(record.description || "").slice(0, 512),
     scanDepth: Math.max(5, Math.min(100, Number(record.scanDepth) || 50)),
-    tokenBudget: Math.max(100, Math.min(1000, Number(record.tokenBudget) || 200)),
+    tokenBudget: Math.max(
+      100,
+      Math.min(1000, Number(record.tokenBudget) || 200),
+    ),
     recursiveScanning: record.recursiveScanning === true,
     entries,
     createdAt: Number(record.createdAt) || Date.now(),
@@ -6466,7 +6699,8 @@ function openLoreEditor(lorebook = null) {
 
   document.getElementById("lore-name").value = normalized?.name || "";
   document.getElementById("lore-avatar").value = normalized?.avatar || "";
-  document.getElementById("lore-description").value = normalized?.description || "";
+  document.getElementById("lore-description").value =
+    normalized?.description || "";
   document.getElementById("lore-scan-depth").value = String(
     normalized?.scanDepth || 50,
   );
@@ -6553,9 +6787,10 @@ async function renderLorebookManagementList() {
   }
 
   lorebooks.forEach((lorebook) => {
-    const users = characters.filter((char) =>
-      Array.isArray(char.lorebookIds) &&
-      char.lorebookIds.map(Number).includes(Number(lorebook.id)),
+    const users = characters.filter(
+      (char) =>
+        Array.isArray(char.lorebookIds) &&
+        char.lorebookIds.map(Number).includes(Number(lorebook.id)),
     );
 
     const row = document.createElement("div");
@@ -6604,7 +6839,10 @@ async function renderLorebookManagementList() {
           if (target) {
             target.scrollIntoView({ behavior: "smooth", block: "center" });
             target.classList.add("char-lore-focus");
-            window.setTimeout(() => target.classList.remove("char-lore-focus"), 1400);
+            window.setTimeout(
+              () => target.classList.remove("char-lore-focus"),
+              1400,
+            );
           }
         });
         usage.appendChild(chip);
@@ -6627,9 +6865,13 @@ async function renderLorebookManagementList() {
     });
     exportBtn.disabled = true;
     actions.appendChild(exportBtn);
-    const deleteBtn = iconButton("delete", t("deleteLoreBookAria"), async () => {
-      await deleteLorebook(lorebook.id);
-    });
+    const deleteBtn = iconButton(
+      "delete",
+      t("deleteLoreBookAria"),
+      async () => {
+        await deleteLorebook(lorebook.id);
+      },
+    );
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
 
@@ -6645,10 +6887,15 @@ async function collectLorebookFromEditor() {
   )
     .trim()
     .slice(0, 512);
-  const avatar = String(document.getElementById("lore-avatar")?.value || "").trim();
+  const avatar = String(
+    document.getElementById("lore-avatar")?.value || "",
+  ).trim();
   const scanDepth = Math.max(
     5,
-    Math.min(100, Number(document.getElementById("lore-scan-depth")?.value) || 50),
+    Math.min(
+      100,
+      Number(document.getElementById("lore-scan-depth")?.value) || 50,
+    ),
   );
   const tokenBudget = Math.max(
     100,
@@ -6690,7 +6937,11 @@ async function collectLorebookFromEditor() {
       );
       return null;
     }
-    if (!entry.content || entry.content.length < 1 || entry.content.length > 10480) {
+    if (
+      !entry.content ||
+      entry.content.length < 1 ||
+      entry.content.length > 10480
+    ) {
       await openInfoDialog(
         "Invalid Lore Entry",
         `Entry ${i + 1} content must be between 1 and 10480 characters.`,
@@ -6754,9 +7005,10 @@ async function deleteLorebook(lorebookId) {
   const lorebook = normalizeLorebookRecord(await db.lorebooks.get(lorebookId));
   if (!lorebook) return;
   const allCharacters = await db.characters.toArray();
-  const affected = allCharacters.filter((char) =>
-    Array.isArray(char.lorebookIds) &&
-    char.lorebookIds.map(Number).includes(Number(lorebookId)),
+  const affected = allCharacters.filter(
+    (char) =>
+      Array.isArray(char.lorebookIds) &&
+      char.lorebookIds.map(Number).includes(Number(lorebookId)),
   );
   let message = `Delete lore book "${lorebook.name}"?`;
   if (affected.length > 0) {
@@ -6808,7 +7060,10 @@ function normalizeWritingInstructionRecord(wi) {
   return {
     id: Number(wi.id) || null,
     name: String(wi.name || "").trim(),
-    instructions: typeof wi.instructions === "object" && wi.instructions !== null ? wi.instructions : {},
+    instructions:
+      typeof wi.instructions === "object" && wi.instructions !== null
+        ? wi.instructions
+        : {},
     createdAt: Number(wi.createdAt) || Date.now(),
     updatedAt: Number(wi.updatedAt) || Date.now(),
   };
@@ -6858,7 +7113,9 @@ async function renderWritingInstructionsList() {
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
     actions.appendChild(
-      iconButton("edit", t("editWritingInstructionAria"), () => openWritingInstructionEditor(wi)),
+      iconButton("edit", t("editWritingInstructionAria"), () =>
+        openWritingInstructionEditor(wi),
+      ),
     );
     actions.appendChild(
       iconButton("copy", t("duplicateWritingInstructionAria"), async () => {
@@ -6870,9 +7127,13 @@ async function renderWritingInstructionsList() {
         await exportWritingInstruction(wi.id);
       }),
     );
-    const deleteBtn = iconButton("delete", t("deleteWritingInstructionAria"), async () => {
-      await deleteWritingInstruction(wi.id);
-    });
+    const deleteBtn = iconButton(
+      "delete",
+      t("deleteWritingInstructionAria"),
+      async () => {
+        await deleteWritingInstruction(wi.id);
+      },
+    );
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
     row.append(avatar, main, actions);
@@ -6882,7 +7143,9 @@ async function renderWritingInstructionsList() {
 
 function switchWritingInstructionsView(view) {
   const listView = document.getElementById("writing-instructions-list-view");
-  const editorView = document.getElementById("writing-instructions-editor-view");
+  const editorView = document.getElementById(
+    "writing-instructions-editor-view",
+  );
   if (view === "list") {
     listView?.classList.remove("hidden");
     editorView?.classList.add("hidden");
@@ -6893,18 +7156,30 @@ function switchWritingInstructionsView(view) {
 }
 
 async function openWritingInstructionEditor(writingInstruction = null) {
-  const normalized = normalizeWritingInstructionRecord(writingInstruction || {});
+  const normalized = normalizeWritingInstructionRecord(
+    writingInstruction || {},
+  );
   state_writingInstructions.editingId = normalized.id || null;
   const interfaceLang = state.settings.interfaceLanguage || "en";
-  if (!normalized.instructions || Object.keys(normalized.instructions).length === 0) {
-    state_writingInstructions.definitions = [{ language: interfaceLang, instructions: "" }];
+  if (
+    !normalized.instructions ||
+    Object.keys(normalized.instructions).length === 0
+  ) {
+    state_writingInstructions.definitions = [
+      { language: interfaceLang, instructions: "" },
+    ];
   } else {
-    state_writingInstructions.definitions = Object.entries(normalized.instructions).map(
-      ([language, instructions]) => ({ language, instructions: instructions || "" }),
-    );
+    state_writingInstructions.definitions = Object.entries(
+      normalized.instructions,
+    ).map(([language, instructions]) => ({
+      language,
+      instructions: instructions || "",
+    }));
   }
-  state_writingInstructions.activeLanguage = state_writingInstructions.definitions[0]?.language || interfaceLang;
-  document.getElementById("writing-instruction-name").value = normalized.name || "";
+  state_writingInstructions.activeLanguage =
+    state_writingInstructions.definitions[0]?.language || interfaceLang;
+  document.getElementById("writing-instruction-name").value =
+    normalized.name || "";
   updateWritingInstructionNameCount();
   renderWritingInstructionTabs();
   loadActiveWritingInstructionToForm();
@@ -6915,7 +7190,11 @@ function renderWritingInstructionTabs() {
   const root = document.getElementById("writing-instruction-tabs-left");
   if (!root) return;
   root.innerHTML = "";
-  if (!state_writingInstructions.definitions || state_writingInstructions.definitions.length === 0) return;
+  if (
+    !state_writingInstructions.definitions ||
+    state_writingInstructions.definitions.length === 0
+  )
+    return;
   state_writingInstructions.definitions.forEach((def) => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -6925,7 +7204,10 @@ function renderWritingInstructionTabs() {
     }
     const label = document.createElement("span");
     label.className = "char-def-tab-label";
-    const flag = createLanguageFlagIconElement(def.language, "char-def-tab-flag");
+    const flag = createLanguageFlagIconElement(
+      def.language,
+      "char-def-tab-flag",
+    );
     const text = document.createElement("span");
     text.textContent = def.language;
     label.append(flag, text);
@@ -6947,14 +7229,19 @@ function renderWritingInstructionTabs() {
         await openInfoDialog(t("message"), t("languageRequired"));
         return;
       }
-      const ok = await openConfirmDialog(t("removeLanguageTitle"), t("removeLanguageConfirm", { lang: def.language }));
+      const ok = await openConfirmDialog(
+        t("removeLanguageTitle"),
+        t("removeLanguageConfirm", { lang: def.language }),
+      );
       if (!ok) return;
       saveActiveWritingInstructionFromForm();
-      state_writingInstructions.definitions = state_writingInstructions.definitions.filter(
-        (x) => x.language !== def.language,
-      );
+      state_writingInstructions.definitions =
+        state_writingInstructions.definitions.filter(
+          (x) => x.language !== def.language,
+        );
       if (state_writingInstructions.activeLanguage === def.language) {
-        state_writingInstructions.activeLanguage = state_writingInstructions.definitions[0]?.language || "";
+        state_writingInstructions.activeLanguage =
+          state_writingInstructions.definitions[0]?.language || "";
       }
       loadActiveWritingInstructionToForm();
       renderWritingInstructionTabs();
@@ -6973,7 +7260,9 @@ function getActiveWritingInstructionDefinition() {
 function saveActiveWritingInstructionFromForm() {
   const def = getActiveWritingInstructionDefinition();
   if (!def) return;
-  def.instructions = String(document.getElementById("writing-instruction-text")?.value || "").trim();
+  def.instructions = String(
+    document.getElementById("writing-instruction-text")?.value || "",
+  ).trim();
 }
 
 function loadActiveWritingInstructionToForm() {
@@ -7008,7 +7297,9 @@ function updateWritingInstructionTextCount() {
 function updateSaveWritingInstructionButton() {
   const saveBtn = document.getElementById("save-writing-instruction-btn");
   if (!saveBtn) return;
-  const name = String(document.getElementById("writing-instruction-name")?.value || "").trim();
+  const name = String(
+    document.getElementById("writing-instruction-name")?.value || "",
+  ).trim();
   const hasAllContent = state_writingInstructions.definitions.every(
     (d) => String(d.instructions || "").trim().length > 0,
   );
@@ -7017,7 +7308,9 @@ function updateSaveWritingInstructionButton() {
 
 async function saveWritingInstruction() {
   saveActiveWritingInstructionFromForm();
-  const name = String(document.getElementById("writing-instruction-name")?.value || "").trim();
+  const name = String(
+    document.getElementById("writing-instruction-name")?.value || "",
+  ).trim();
   if (!name) {
     await openInfoDialog(t("missingFieldTitle"), t("nameRequired"));
     return false;
@@ -7026,7 +7319,10 @@ async function saveWritingInstruction() {
     (d) => String(d.instructions || "").trim().length > 0,
   );
   if (!hasAllContent) {
-    await openInfoDialog(t("missingFieldTitle"), t("writingInstructionsRequired"));
+    await openInfoDialog(
+      t("missingFieldTitle"),
+      t("writingInstructionsRequired"),
+    );
     return false;
   }
   const instructions = {};
@@ -7039,7 +7335,10 @@ async function saveWritingInstruction() {
     updatedAt: Date.now(),
   };
   if (state_writingInstructions.editingId) {
-    await db.writingInstructions.update(state_writingInstructions.editingId, payload);
+    await db.writingInstructions.update(
+      state_writingInstructions.editingId,
+      payload,
+    );
     showToast(t("writingInstructionUpdated"), "success");
   } else {
     payload.createdAt = Date.now();
@@ -7066,7 +7365,9 @@ async function duplicateWritingInstruction(writingInstructionId) {
 }
 
 async function deleteWritingInstruction(writingInstructionId) {
-  const wi = normalizeWritingInstructionRecord(await db.writingInstructions.get(writingInstructionId));
+  const wi = normalizeWritingInstructionRecord(
+    await db.writingInstructions.get(writingInstructionId),
+  );
   if (!wi) return;
   const ok = await openConfirmDialog(
     t("deleteWritingInstructionTitle"),
@@ -7079,10 +7380,13 @@ async function deleteWritingInstruction(writingInstructionId) {
 }
 
 async function exportWritingInstruction(writingInstructionId) {
-  const wi = normalizeWritingInstructionRecord(await db.writingInstructions.get(writingInstructionId));
+  const wi = normalizeWritingInstructionRecord(
+    await db.writingInstructions.get(writingInstructionId),
+  );
   if (!wi) return;
   const interfaceLang = state.settings.interfaceLanguage || "en";
-  const content = wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
+  const content =
+    wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
   const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -7098,19 +7402,27 @@ async function exportWritingInstruction(writingInstructionId) {
 function openWritingInstructionLanguageModal() {
   const select = document.getElementById("writing-instruction-language-select");
   if (!select) return;
-  const usedLanguages = new Set(state_writingInstructions.definitions.map((d) => d.language));
+  const usedLanguages = new Set(
+    state_writingInstructions.definitions.map((d) => d.language),
+  );
   select.innerHTML = "";
-  BOT_LANGUAGE_OPTIONS.filter((code) => !usedLanguages.has(code)).forEach((code) => {
-    const opt = document.createElement("option");
-    opt.value = code;
-    opt.textContent = getBotLanguageName(code);
-    select.appendChild(opt);
-  });
-  document.getElementById("writing-instruction-language-modal")?.classList.remove("hidden");
+  BOT_LANGUAGE_OPTIONS.filter((code) => !usedLanguages.has(code)).forEach(
+    (code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = getBotLanguageName(code);
+      select.appendChild(opt);
+    },
+  );
+  document
+    .getElementById("writing-instruction-language-modal")
+    ?.classList.remove("hidden");
 }
 
 function closeWritingInstructionLanguageModal() {
-  document.getElementById("writing-instruction-language-modal")?.classList.add("hidden");
+  document
+    .getElementById("writing-instruction-language-modal")
+    ?.classList.add("hidden");
 }
 
 async function addWritingInstructionLanguage() {
@@ -7118,7 +7430,10 @@ async function addWritingInstructionLanguage() {
   const lang = select?.value;
   if (!lang) return;
   saveActiveWritingInstructionFromForm();
-  state_writingInstructions.definitions.push({ language: lang, instructions: "" });
+  state_writingInstructions.definitions.push({
+    language: lang,
+    instructions: "",
+  });
   state_writingInstructions.activeLanguage = lang;
   closeWritingInstructionLanguageModal();
   loadActiveWritingInstructionToForm();
@@ -7259,7 +7574,13 @@ async function onTextAreaFileDrop(e) {
 
 const MAX_AVATAR_SIZE_MB = 10;
 const MAX_AVATAR_SIZE_BYTES = MAX_AVATAR_SIZE_MB * 1024 * 1024;
-const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "video/mp4"];
+const ALLOWED_AVATAR_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+];
 
 function setupCharAvatarDropzone() {
   const dropzone = document.getElementById("char-avatar-dropzone");
@@ -7269,24 +7590,24 @@ function setupCharAvatarDropzone() {
   dropzone.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    const tempInput = document.createElement('input');
-    tempInput.type = 'file';
-    tempInput.accept = 'image/*,video/mp4';
+
+    const tempInput = document.createElement("input");
+    tempInput.type = "file";
+    tempInput.accept = "image/*,video/mp4";
     tempInput.multiple = true;
-    tempInput.style.position = 'fixed';
-    tempInput.style.top = '0';
-    tempInput.style.left = '0';
-    tempInput.style.opacity = '0';
+    tempInput.style.position = "fixed";
+    tempInput.style.top = "0";
+    tempInput.style.left = "0";
+    tempInput.style.opacity = "0";
     document.body.appendChild(tempInput);
-    
-    tempInput.addEventListener('change', (event) => {
+
+    tempInput.addEventListener("change", (event) => {
       if (event.target.files && event.target.files.length > 0) {
         handleAvatarFiles(event.target.files);
       }
       document.body.removeChild(tempInput);
     });
-    
+
     tempInput.click();
   });
 
@@ -7335,11 +7656,17 @@ window.triggerAvatarFileSelect = triggerAvatarFileSelect;
 async function handleAvatarFiles(files) {
   for (const file of files) {
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-      openInfoDialog(t("invalidFileTitle"), "Please choose an image or MP4 video file.");
+      openInfoDialog(
+        t("invalidFileTitle"),
+        "Please choose an image or MP4 video file.",
+      );
       continue;
     }
     if (file.size > MAX_AVATAR_SIZE_BYTES) {
-      openInfoDialog(t("invalidFileTitle"), `File must be less than ${MAX_AVATAR_SIZE_MB}MB.`);
+      openInfoDialog(
+        t("invalidFileTitle"),
+        `File must be less than ${MAX_AVATAR_SIZE_MB}MB.`,
+      );
       continue;
     }
     await addAvatarFromFile(file);
@@ -7422,7 +7749,10 @@ function renderCharAvatars() {
     removeBtn.onclick = async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const ok = await openConfirmDialog(t("removeAvatarTitle"), t("removeAvatarConfirm"));
+      const ok = await openConfirmDialog(
+        t("removeAvatarTitle"),
+        t("removeAvatarConfirm"),
+      );
       if (!ok) return;
       removeAvatar(index);
     };
@@ -7760,7 +8090,8 @@ async function startNewThread(characterId) {
     character,
     character?.selectedCardLanguage || "",
   );
-  const defaultPersonaForCharacter = await getCharacterDefaultPersona(character);
+  const defaultPersonaForCharacter =
+    await getCharacterDefaultPersona(character);
   const initialMessages = await buildThreadInitialMessages(resolvedCharacter);
 
   const newThread = {
@@ -7866,7 +8197,10 @@ async function toggleThreadFavorite(threadId) {
 }
 
 async function deleteThread(threadId) {
-  const ok = await openConfirmDialog(t("deleteThreadTitle"), t("deleteThreadConfirm"));
+  const ok = await openConfirmDialog(
+    t("deleteThreadTitle"),
+    t("deleteThreadConfirm"),
+  );
   if (!ok) return;
 
   if (
@@ -7953,9 +8287,7 @@ async function openThread(threadId) {
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
   state.unreadNeedsUserScrollThreadId =
-    getUnreadAssistantCount(conversationHistory) > 0
-      ? Number(thread.id)
-      : null;
+    getUnreadAssistantCount(conversationHistory) > 0 ? Number(thread.id) : null;
   renderChat();
   const input = document.getElementById("user-input");
   input.value = "";
@@ -7975,10 +8307,7 @@ async function openThread(threadId) {
 function threadHasPendingBotActivity(thread) {
   if (!thread) return false;
   const id = Number(thread.id);
-  if (
-    state.sending &&
-    Number(state.activeGenerationThreadId) === id
-  ) {
+  if (state.sending && Number(state.activeGenerationThreadId) === id) {
     return true;
   }
   if (String(thread.pendingGenerationReason || "").trim()) return true;
@@ -8021,7 +8350,10 @@ function updateAutoTtsToggleButton() {
   const enabled = !!(currentThread && currentThread.autoTtsEnabled === true);
   btn.classList.toggle("is-active", enabled);
   btn.disabled = !currentThread;
-  btn.setAttribute("title", enabled ? t("autoTtsTitleOn") : t("autoTtsTitleOff"));
+  btn.setAttribute(
+    "title",
+    enabled ? t("autoTtsTitleOn") : t("autoTtsTitleOff"),
+  );
   btn.setAttribute(
     "aria-label",
     enabled ? t("disableAutoTtsAria") : t("enableAutoTtsAria"),
@@ -8077,7 +8409,9 @@ async function renameThread(threadId) {
     maxLength: 128,
   });
   if (next === null) return;
-  const title = String(next || "").trim().slice(0, 128);
+  const title = String(next || "")
+    .trim()
+    .slice(0, 128);
   if (!title) {
     await openInfoDialog(t("missingFieldTitle"), t("threadTitleRequired"));
     return;
@@ -8122,7 +8456,11 @@ function applyHoverMarquee(element, fullText) {
   const text = String(fullText || "");
   const behavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
   if (behavior === "disabled") {
-    element.classList.remove("hover-marquee", "marquee-overflow", "marquee-always");
+    element.classList.remove(
+      "hover-marquee",
+      "marquee-overflow",
+      "marquee-always",
+    );
     element.style.removeProperty("--marquee-shift");
     element.style.removeProperty("--marquee-duration");
     element.textContent = text;
@@ -8184,13 +8522,17 @@ async function maybeGenerateThreadTitle() {
   const transcript = titleSlice
     .map((m, i) => {
       const role = m.role === "assistant" ? "Assistant" : "User";
-      const content = String(m.content || "").replace(/\s+/g, " ").trim();
+      const content = String(m.content || "")
+        .replace(/\s+/g, " ")
+        .trim();
       return `${i + 1}. ${role}: ${content.slice(0, 600)}`;
     })
     .join("\n");
   const languageCode =
     normalizeBotLanguageCode(
-      currentThread.characterLanguage || currentCharacter.activeLanguage || "en",
+      currentThread.characterLanguage ||
+        currentCharacter.activeLanguage ||
+        "en",
     ) || "en";
 
   const titlePrompt = [
@@ -8280,7 +8622,8 @@ function renderChat() {
       message?.role === "assistant" &&
       (status === "queued" ||
         status === "cooling_down" ||
-        (isActiveGenerationThread && (status === "generating" || status === "regenerating")));
+        (isActiveGenerationThread &&
+          (status === "generating" || status === "regenerating")));
     log.appendChild(buildMessageRow(message, idx, rowStreaming));
   });
 
@@ -8314,13 +8657,17 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
 
   for (let i = 0; i < conversationHistory.length; i += 1) {
     const message = conversationHistory[i];
-    if (!message || message.role !== "assistant" || Number(message.unreadAt) <= 0) continue;
+    if (
+      !message ||
+      message.role !== "assistant" ||
+      Number(message.unreadAt) <= 0
+    )
+      continue;
     const row = log.querySelector(`.chat-row[data-message-index="${i}"]`);
     if (!row) continue;
     const rowRect = row.getBoundingClientRect();
     const isVisible =
-      rowRect.bottom > logRect.top + 6 &&
-      rowRect.top < logRect.bottom - 6;
+      rowRect.bottom > logRect.top + 6 && rowRect.top < logRect.bottom - 6;
     if (!isVisible) continue;
     message.unreadAt = 0;
     changed = true;
@@ -8365,25 +8712,25 @@ function buildMessageRow(message, index, streaming) {
   const userName = message.senderName || fallbackSender;
   const userAvatar = message.senderAvatar || fallbackAvatar(userName, 512, 512);
   const botName = currentCharacter?.name || "Character";
-    const botAvatar =
-      currentCharacter?.avatar ||
-      fallbackAvatar(currentCharacter?.name || "Character", 512, 512);
-    const chatFsName =
-      message.role === "assistant" ? botName : userName || t("message");
-    if (message.role === "assistant") {
-      setCharacterAvatarImage(avatar, currentCharacter, botName, 256);
+  const botAvatar =
+    currentCharacter?.avatar ||
+    fallbackAvatar(currentCharacter?.name || "Character", 512, 512);
+  const chatFsName =
+    message.role === "assistant" ? botName : userName || t("message");
+  if (message.role === "assistant") {
+    setCharacterAvatarImage(avatar, currentCharacter, botName, 256);
+  } else {
+    setCharacterAvatarImage(avatar, { avatar: userAvatar }, chatFsName, 256);
+  }
+  avatar.classList.add("clickable-avatar");
+  avatar.addEventListener("click", () => {
+    const videoSrc = avatar.dataset.avatarVideo;
+    if (videoSrc) {
+      openVideoPreview(videoSrc);
     } else {
-      setCharacterAvatarImage(avatar, { avatar: userAvatar }, chatFsName, 256);
+      openImagePreview(avatar.src);
     }
-    avatar.classList.add("clickable-avatar");
-    avatar.addEventListener("click", () => {
-      const videoSrc = avatar.dataset.avatarVideo;
-      if (videoSrc) {
-        openVideoPreview(videoSrc);
-      } else {
-        openImagePreview(avatar.src);
-      }
-    });
+  });
   if (message.role === "assistant") {
     const mult = Math.max(
       1,
@@ -8420,16 +8767,20 @@ function buildMessageRow(message, index, streaming) {
   if (message.role === "assistant") {
     controls.appendChild(messageIndex);
     const delBtn = iconButton("delete", t("msgDeleteTitle"), async () => {
-        await deleteMessageAt(index);
-      });
+      await deleteMessageAt(index);
+    });
     delBtn.classList.add("msg-delete-btn");
     delBtn.classList.add("danger-icon-btn");
     delBtn.disabled = disableControlsForRow;
     controls.appendChild(delBtn);
 
-    const regenBtn = iconButton("regenerate", t("msgRegenerateTitle"), async () => {
-      await regenerateMessage(index);
-    });
+    const regenBtn = iconButton(
+      "regenerate",
+      t("msgRegenerateTitle"),
+      async () => {
+        await regenerateMessage(index);
+      },
+    );
     regenBtn.classList.add("msg-regen-btn");
     regenBtn.disabled = state.sending || disableControlsForRow;
     controls.appendChild(regenBtn);
@@ -8437,7 +8788,8 @@ function buildMessageRow(message, index, streaming) {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
-    editBtn.disabled = disableControlsForRow || isTruncated || hasGenerationError;
+    editBtn.disabled =
+      disableControlsForRow || isTruncated || hasGenerationError;
     controls.appendChild(editBtn);
 
     const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
@@ -8452,9 +8804,13 @@ function buildMessageRow(message, index, streaming) {
     infoBtn.classList.add("msg-info-btn");
     applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
     controls.appendChild(infoBtn);
-    const modelInfoBtn = iconButton("model", t("msgModelInfoTitle"), async () => {
-      await openMessageModelInfoModal(index);
-    });
+    const modelInfoBtn = iconButton(
+      "model",
+      t("msgModelInfoTitle"),
+      async () => {
+        await openMessageModelInfoModal(index);
+      },
+    );
     modelInfoBtn.classList.add("msg-model-info-btn");
     const isInitial = message?.isInitial === true;
     const isUserEdited = message?.userEdited === true;
@@ -8462,13 +8818,25 @@ function buildMessageRow(message, index, streaming) {
       modelInfoBtn.disabled = true;
       if (isUserEdited) {
         modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableEdited"));
-        modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+        modelInfoBtn.setAttribute(
+          "aria-label",
+          t("msgMetadataUnavailableEditedAria"),
+        );
       } else if (isInitial) {
         modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableInitial"));
-        modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
+        modelInfoBtn.setAttribute(
+          "aria-label",
+          t("msgMetadataUnavailableInitialAria"),
+        );
       } else if (disableControlsForRow) {
-        modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableGenerating"));
-        modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
+        modelInfoBtn.setAttribute(
+          "title",
+          t("msgMetadataUnavailableGenerating"),
+        );
+        modelInfoBtn.setAttribute(
+          "aria-label",
+          t("msgMetadataUnavailableGeneratingAria"),
+        );
       }
     } else {
       modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
@@ -8510,7 +8878,8 @@ function buildMessageRow(message, index, streaming) {
       await openMessageContextModal(index);
     });
     contextBtn.classList.add("msg-context-btn");
-    contextBtn.disabled = disableControlsForRow || !hasMessageContextData(message);
+    contextBtn.disabled =
+      disableControlsForRow || !hasMessageContextData(message);
     controls.appendChild(contextBtn);
 
     const speakerBtn = iconButton("speaker", t("msgSpeakTitle"), async (e) => {
@@ -8540,7 +8909,8 @@ function buildMessageRow(message, index, streaming) {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
-    editBtn.disabled = disableControlsForRow || isTruncated || hasGenerationError;
+    editBtn.disabled =
+      disableControlsForRow || isTruncated || hasGenerationError;
     controls.appendChild(editBtn);
     const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
       await openMessageMetadataModal(index);
@@ -8571,7 +8941,8 @@ function buildMessageRow(message, index, streaming) {
         String(message?.content || "").trim() ||
         tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() });
     } else if (isQueued) {
-      statusLabel = String(message?.content || "").trim() || t("generatingLabel");
+      statusLabel =
+        String(message?.content || "").trim() || t("generatingLabel");
     }
     if (!isQueued && !isCoolingDown && String(message?.content || "").trim()) {
       content.innerHTML = renderMessageHtml(message.content, message.role);
@@ -8618,9 +8989,7 @@ function hasSystemMessagesData(message) {
   if (!message) return false;
   return (
     Array.isArray(message.systemMessages) &&
-    message.systemMessages.some((entry) =>
-      String(entry?.content || "").trim(),
-    )
+    message.systemMessages.some((entry) => String(entry?.content || "").trim())
   );
 }
 
@@ -8641,7 +9010,10 @@ function applyInfoButtonAvailability(button, message, isStreaming) {
   }
   if (isStreaming) {
     button.setAttribute("title", t("msgMetadataUnavailableGenerating"));
-    button.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
+    button.setAttribute(
+      "aria-label",
+      t("msgMetadataUnavailableGeneratingAria"),
+    );
     return;
   }
   button.setAttribute("title", t("msgMetadataTitle"));
@@ -8725,7 +9097,9 @@ function beginInlineMessageEdit(index, contentEl) {
 
   const original = String(message.content || "");
   let cancelled = false;
-  editor.addEventListener("input", () => autoSizeMessageEditor(editor, contentHeight));
+  editor.addEventListener("input", () =>
+    autoSizeMessageEditor(editor, contentHeight),
+  );
   editor.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -8888,8 +9262,7 @@ function updateMessageSpeakerButton(button, index) {
   const isLoading = isTtsIndexMatch(state.tts.loadingMessageIndex, index);
   const isSpeaking = isTtsIndexMatch(state.tts.speakingMessageIndex, index);
   const ttsReady = isActiveTtsProviderReady();
-  button.disabled =
-    !isAssistant || streaming || !hasContent || !ttsReady;
+  button.disabled = !isAssistant || streaming || !hasContent || !ttsReady;
   button.classList.toggle("tts-loading", isLoading);
   button.classList.toggle("tts-speaking", isSpeaking);
   if (!ttsReady) {
@@ -9003,7 +9376,7 @@ function isInCompletionCooldown() {
   if (cooldown <= 0) return false;
   const now = Date.now();
   const timeSinceLastCompletion = now - (state.lastCompletionTime || 0);
-  return timeSinceLastCompletion < (cooldown * 1000);
+  return timeSinceLastCompletion < cooldown * 1000;
 }
 
 function getCooldownRemainingSeconds() {
@@ -9011,7 +9384,7 @@ function getCooldownRemainingSeconds() {
   if (cooldown <= 0) return 0;
   const now = Date.now();
   const timeSinceLastCompletion = now - (state.lastCompletionTime || 0);
-  const remaining = cooldown - (timeSinceLastCompletion / 1000);
+  const remaining = cooldown - timeSinceLastCompletion / 1000;
   return Math.max(0, Math.ceil(remaining));
 }
 
@@ -9025,7 +9398,8 @@ async function generateBotReply() {
     }
     const seconds = getCooldownRemainingSeconds();
     const cooldownLabel = tf("cooldownToastActive", { seconds });
-    const existingPendingIdx = findLatestPendingAssistantIndex(conversationHistory);
+    const existingPendingIdx =
+      findLatestPendingAssistantIndex(conversationHistory);
     if (existingPendingIdx >= 0) {
       const pending = conversationHistory[existingPendingIdx];
       pending.generationStatus = "cooling_down";
@@ -9052,8 +9426,9 @@ async function generateBotReply() {
     }
     const nowTs = Date.now();
     currentThread.pendingGenerationReason = "cooldown";
-    currentThread.pendingGenerationQueuedAt =
-      Number(currentThread.pendingGenerationQueuedAt || nowTs);
+    currentThread.pendingGenerationQueuedAt = Number(
+      currentThread.pendingGenerationQueuedAt || nowTs,
+    );
     await persistCurrentThread();
     const allFinished = conversationHistory.every(
       (m) => !m.generationStatus || m.generationStatus === "",
@@ -9073,7 +9448,8 @@ async function generateBotReply() {
     return;
   }
   const threadId = Number(currentThread.id);
-  const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(conversationHistory);
+  const includeOneTimeExtra =
+    shouldIncludeOneTimeExtraPrompt(conversationHistory);
   const generationCharacter = currentCharacter;
   const generationPersona = currentPersona;
   const generationThreadSnapshot = { ...currentThread };
@@ -9131,17 +9507,12 @@ async function generateBotReply() {
       `.chat-row[data-message-index="${pendingIndex}"]`,
     );
     if (!pendingRow) {
-      pendingRow = buildMessageRow(
-        pending,
-        pendingIndex,
-        true,
-      );
+      pendingRow = buildMessageRow(pending, pendingIndex, true);
       log.appendChild(pendingRow);
     }
     const pendingContent = pendingRow?.querySelector(".message-content");
     if (pendingContent) {
-      pendingContent.innerHTML =
-        `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
     }
     scrollChatToBottom();
   }
@@ -9155,7 +9526,8 @@ async function generateBotReply() {
   try {
     const promptContext = await buildSystemPrompt(generationCharacter, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
-      writingInstructionsTurnIndex: Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
+      writingInstructionsTurnIndex:
+        Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
       returnTrace: true,
       personaOverride: generationPersona,
       historyOverride: generationHistory,
@@ -9174,11 +9546,16 @@ async function generateBotReply() {
           );
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
-            liveContent.innerHTML = renderMessageHtml(pending.content, pending.role);
+            liveContent.innerHTML = renderMessageHtml(
+              pending.content,
+              pending.role,
+            );
           }
         }
         if (state.settings.streamEnabled) {
-          persistThreadMessagesById(threadId, generationHistory).catch(() => {});
+          persistThreadMessagesById(threadId, generationHistory).catch(
+            () => {},
+          );
         }
         if (isViewingThread(threadId)) scrollChatToBottom();
       },
@@ -9252,9 +9629,7 @@ async function generateBotReply() {
       writingInstructionsTurnCount: writingTurnCountForThread,
     });
     if (isViewingThread(threadId)) {
-      maybeAutoSpeakAssistantMessage(pendingIndex).catch(
-        () => {},
-      );
+      maybeAutoSpeakAssistantMessage(pendingIndex).catch(() => {});
       await maybeGenerateThreadTitle();
       scrollChatToBottom();
     }
@@ -9343,7 +9718,8 @@ async function deleteMessageAt(index) {
   stopTtsPlayback();
   const target = conversationHistory[index];
   const targetRole = normalizeApiRole(target?.apiRole || target?.role);
-  const latestCountedTurn = getThreadWritingInstructionsTurnCount(currentThread);
+  const latestCountedTurn =
+    getThreadWritingInstructionsTurnCount(currentThread);
   const targetTurn = Number(target?.writingInstructionsTurnIndex);
   const isLatestAssistant =
     targetRole === "assistant" &&
@@ -9355,7 +9731,10 @@ async function deleteMessageAt(index) {
     targetTurn === latestCountedTurn;
   conversationHistory.splice(index, 1);
   if (isLatestCountedAssistant && currentThread) {
-    currentThread.writingInstructionsTurnCount = Math.max(0, latestCountedTurn - 1);
+    currentThread.writingInstructionsTurnCount = Math.max(
+      0,
+      latestCountedTurn - 1,
+    );
   }
   await persistCurrentThread();
   renderChat();
@@ -9370,7 +9749,8 @@ async function regenerateMessage(index) {
 
   const prior = conversationHistory.slice(0, index);
   const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
-  const regenWritingTurnIndex = Number(target.writingInstructionsTurnIndex) || 0;
+  const regenWritingTurnIndex =
+    Number(target.writingInstructionsTurnIndex) || 0;
   const effectiveWritingTurnIndex =
     regenWritingTurnIndex > 0
       ? regenWritingTurnIndex
@@ -9403,8 +9783,7 @@ async function regenerateMessage(index) {
     if (row) row.dataset.streaming = "1";
     refreshMessageControlStates();
     if (contentEl)
-      contentEl.innerHTML =
-        `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
+      contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
     scrollChatToBottom();
 
     const result = await callOpenRouter(
@@ -9465,7 +9844,8 @@ async function regenerateMessage(index) {
     messagesToSave[index].usedMemorySummary = target.usedMemorySummary;
     if (!Number.isInteger(Number(target.writingInstructionsTurnIndex))) {
       target.writingInstructionsTurnIndex = effectiveWritingTurnIndex;
-      messagesToSave[index].writingInstructionsTurnIndex = target.writingInstructionsTurnIndex;
+      messagesToSave[index].writingInstructionsTurnIndex =
+        target.writingInstructionsTurnIndex;
     }
     if (!isViewingThread(threadId)) {
       target.unreadAt = Date.now();
@@ -9493,7 +9873,10 @@ async function regenerateMessage(index) {
       await persistThreadMessagesById(threadId, messagesToSave);
       renderChat();
       await renderThreads();
-      await openInfoDialog(t("regenerateFailedTitle"), String(e.message || t("unknownError")));
+      await openInfoDialog(
+        t("regenerateFailedTitle"),
+        String(e.message || t("unknownError")),
+      );
     }
   } finally {
     state.pendingPersonaInjectionPersonaId = null;
@@ -9521,43 +9904,45 @@ async function copyMessage(text) {
 }
 
 function getCurrentCharacterTtsOptions() {
-    const resolved = getResolvedTtsSelection(
-      currentCharacter?.ttsLanguage,
-      currentCharacter?.ttsVoice,
-      currentCharacter?.ttsRate,
-      currentCharacter?.ttsPitch,
-    );
-    const provider = String(currentCharacter?.ttsProvider || "browser").toLowerCase();
-    const options = {
-      voice: resolved.voice || DEFAULT_TTS_VOICE,
-      language: resolved.language || DEFAULT_TTS_LANGUAGE,
-      rate: resolved.rate,
-      pitch: resolved.pitch,
-      provider,
-      kokoro: buildKokoroOptions(currentCharacter, resolved.rate),
-    };
-    return options;
-  }
+  const resolved = getResolvedTtsSelection(
+    currentCharacter?.ttsLanguage,
+    currentCharacter?.ttsVoice,
+    currentCharacter?.ttsRate,
+    currentCharacter?.ttsPitch,
+  );
+  const provider = String(
+    currentCharacter?.ttsProvider || "browser",
+  ).toLowerCase();
+  const options = {
+    voice: resolved.voice || DEFAULT_TTS_VOICE,
+    language: resolved.language || DEFAULT_TTS_LANGUAGE,
+    rate: resolved.rate,
+    pitch: resolved.pitch,
+    provider,
+    kokoro: buildKokoroOptions(currentCharacter, resolved.rate),
+  };
+  return options;
+}
 
-  function getTtsOptionsFromCharacterModal() {
-    const resolved = getResolvedCharTtsSelection();
-    const provider = getCharModalTtsProviderSelection();
-    const kokoroSource = {
-      kokoroDevice: document.getElementById("char-tts-kokoro-device")?.value,
-      kokoroDtype: document.getElementById("char-tts-kokoro-dtype")?.value,
-      kokoroVoice: document.getElementById("char-tts-kokoro-voice")?.value,
-      kokoroSpeed: resolved.rate,
-    };
-    const options = {
-      voice: resolved.voice || DEFAULT_TTS_VOICE,
-      language: resolved.language || DEFAULT_TTS_LANGUAGE,
-      rate: resolved.rate,
-      pitch: resolved.pitch,
-      provider,
-      kokoro: buildKokoroOptions(kokoroSource, resolved.rate),
-    };
-    return options;
-  }
+function getTtsOptionsFromCharacterModal() {
+  const resolved = getResolvedCharTtsSelection();
+  const provider = getCharModalTtsProviderSelection();
+  const kokoroSource = {
+    kokoroDevice: document.getElementById("char-tts-kokoro-device")?.value,
+    kokoroDtype: document.getElementById("char-tts-kokoro-dtype")?.value,
+    kokoroVoice: document.getElementById("char-tts-kokoro-voice")?.value,
+    kokoroSpeed: resolved.rate,
+  };
+  const options = {
+    voice: resolved.voice || DEFAULT_TTS_VOICE,
+    language: resolved.language || DEFAULT_TTS_LANGUAGE,
+    rate: resolved.rate,
+    pitch: resolved.pitch,
+    provider,
+    kokoro: buildKokoroOptions(kokoroSource, resolved.rate),
+  };
+  return options;
+}
 
 function updateCharTtsTestButtonState() {
   const btn = document.getElementById("char-tts-test-btn");
@@ -9587,7 +9972,10 @@ async function playCharacterTtsTestFromModal() {
     await playTtsAudio(text, getTtsOptionsFromCharacterModal());
   } catch (err) {
     if (isTtsCancelledError(err)) return;
-    showToast(tf("ttsTestFailed", { error: err.message || t("unknownError") }), "error");
+    showToast(
+      tf("ttsTestFailed", { error: err.message || t("unknownError") }),
+      "error",
+    );
   } finally {
     state.charModalTtsTestPlaying = false;
     updateCharTtsTestButtonState();
@@ -9601,12 +9989,16 @@ async function playTtsAudio(text, options = {}, playback = {}) {
     throw new Error("Text is empty.");
   }
   const provider = String(
-    (options.provider || getActiveCharacterTtsProvider() || "browser").toLowerCase(),
+    (
+      options.provider ||
+      getActiveCharacterTtsProvider() ||
+      "browser"
+    ).toLowerCase(),
   );
-    const resolvedRate = Math.max(
-      0.5,
-      Math.min(2, Number(options?.rate || DEFAULT_TTS_RATE)),
-    );
+  const resolvedRate = Math.max(
+    0.5,
+    Math.min(2, Number(options?.rate || DEFAULT_TTS_RATE)),
+  );
   const resolvedPitch = Math.max(0, Math.min(2, Number(options?.pitch || 1.1)));
   const kokoroSettings = {
     device: String(options?.kokoro?.device || "wasm"),
@@ -9693,13 +10085,14 @@ async function playBrowserTts(normalizedText, options, playback = {}) {
       );
       if (byExactName) return byExactName;
       const byLangExact = voices.find(
-        (v) =>
-          String(v.lang || "").toLowerCase() === desiredLang.toLowerCase(),
+        (v) => String(v.lang || "").toLowerCase() === desiredLang.toLowerCase(),
       );
       if (byLangExact) return byLangExact;
       const baseLang = desiredLang.split("-")[0]?.toLowerCase() || "";
       const byLangPrefix = voices.find((v) =>
-        String(v.lang || "").toLowerCase().startsWith(baseLang),
+        String(v.lang || "")
+          .toLowerCase()
+          .startsWith(baseLang),
       );
       return byLangPrefix || voices[0] || null;
     };
@@ -9854,18 +10247,16 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
           }
           reject(new Error("Kokoro TTS playback failed."));
         };
-        audioEl
-          .play()
-          .catch((err) => {
-            if (state.tts.audio === audioEl) {
-              state.tts.audio = null;
-            }
-            if (state.tts.currentAudioUrl === url) {
-              URL.revokeObjectURL(url);
-              state.tts.currentAudioUrl = null;
-            }
-            reject(err);
-          });
+        audioEl.play().catch((err) => {
+          if (state.tts.audio === audioEl) {
+            state.tts.audio = null;
+          }
+          if (state.tts.currentAudioUrl === url) {
+            URL.revokeObjectURL(url);
+            state.tts.currentAudioUrl = null;
+          }
+          reject(err);
+        });
       });
     };
 
@@ -9956,8 +10347,8 @@ async function toggleMessageSpeech(index) {
   const audioIsPlaying = audioElement
     ? !audioElement.paused && !audioElement.ended
     : hasBrowserTtsSupport()
-    ? !!(window.speechSynthesis.speaking || window.speechSynthesis.pending)
-    : false;
+      ? !!(window.speechSynthesis.speaking || window.speechSynthesis.pending)
+      : false;
   if (!hasAudioObject && state.tts.speakingMessageIndex !== null) {
     ttsDebug("toggleMessageSpeech:clear-stale-speaking", {
       staleSpeakingIndex: state.tts.speakingMessageIndex,
@@ -10015,7 +10406,10 @@ async function toggleMessageSpeech(index) {
       state.tts.audio = null;
     }
     refreshAllSpeakerButtons();
-    showToast(tf("ttsFailed", { error: err.message || t("unknownError") }), "error");
+    showToast(
+      tf("ttsFailed", { error: err.message || t("unknownError") }),
+      "error",
+    );
   }
 }
 
@@ -10091,7 +10485,10 @@ function setSendingState(sending) {
     activeId > 0 &&
     currentId === activeId &&
     (hasGeneratingMarker || !!state.abortController);
-  const pendingState = getThreadPendingGenerationState(currentId, conversationHistory);
+  const pendingState = getThreadPendingGenerationState(
+    currentId,
+    conversationHistory,
+  );
   const isBlockedByQueueOrCooldown =
     pendingState === "queued" || pendingState === "cooling_down";
   sendBtn.disabled = isBlockedByQueueOrCooldown;
@@ -10104,7 +10501,8 @@ function setSendingState(sending) {
     currentThreadGenerating || isBlockedByQueueOrCooldown,
   );
   sendBtn.textContent = currentThreadGenerating ? t("cancel") : t("send");
-  personaSelect.disabled = currentThreadGenerating || isBlockedByQueueOrCooldown;
+  personaSelect.disabled =
+    currentThreadGenerating || isBlockedByQueueOrCooldown;
   refreshMessageControlStates();
   refreshAllSpeakerButtons();
   if (currentThreadGenerating) closePromptHistory();
@@ -10140,7 +10538,8 @@ function refreshMessageControlStates() {
     row.querySelectorAll(".msg-model-info-btn").forEach((btn) => {
       const isInitial = message?.isInitial === true;
       const isUserEdited = message?.userEdited === true;
-      btn.disabled = isStreaming || isInitial || isUserEdited || !message?.model;
+      btn.disabled =
+        isStreaming || isInitial || isUserEdited || !message?.model;
       if (isUserEdited) {
         btn.setAttribute("title", t("msgMetadataUnavailableEdited"));
         btn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
@@ -10149,7 +10548,10 @@ function refreshMessageControlStates() {
         btn.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
       } else if (isStreaming) {
         btn.setAttribute("title", t("msgMetadataUnavailableGenerating"));
-        btn.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
+        btn.setAttribute(
+          "aria-label",
+          t("msgMetadataUnavailableGeneratingAria"),
+        );
       } else if (!message?.model) {
         btn.setAttribute("title", t("msgMetadataUnavailableEdited"));
         btn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
@@ -10162,10 +10564,7 @@ function refreshMessageControlStates() {
       const hasSystem = hasSystemMessagesData(message);
       btn.disabled = isStreaming || !hasSystem;
       if (isStreaming) {
-        btn.setAttribute(
-          "title",
-          t("msgSystemPromptUnavailableGenerating"),
-        );
+        btn.setAttribute("title", t("msgSystemPromptUnavailableGenerating"));
         btn.setAttribute(
           "aria-label",
           t("msgSystemPromptUnavailableGenerating"),
@@ -10203,7 +10602,9 @@ async function populateSettingsModels(options = {}) {
 
   try {
     if (force || state.modelCatalog.length === 0) {
-      const remoteCatalog = await fetchOpenRouterModelCatalog(controller.signal);
+      const remoteCatalog = await fetchOpenRouterModelCatalog(
+        controller.signal,
+      );
       if (requestId !== state.modelLoad.requestId) return;
       state.modelCatalog = remoteCatalog;
     }
@@ -10231,7 +10632,9 @@ function renderSettingsModelOptions() {
   if (!modelSelect) return;
   const targetModel = String(state.settings.model || "").trim();
   const catalog =
-    state.modelCatalog.length > 0 ? state.modelCatalog : getFallbackModelCatalog();
+    state.modelCatalog.length > 0
+      ? state.modelCatalog
+      : getFallbackModelCatalog();
 
   const pricingFilter =
     state.settings.modelPricingFilter === "free" ||
@@ -10240,9 +10643,12 @@ function renderSettingsModelOptions() {
       : "all";
   const modalityFilter =
     state.settings.modelModalityFilter === "all" ? "all" : "text-only";
-  const sortOrder = ["name_asc", "name_desc", "created_asc", "created_desc"].includes(
-    state.settings.modelSortOrder,
-  )
+  const sortOrder = [
+    "name_asc",
+    "name_desc",
+    "created_asc",
+    "created_desc",
+  ].includes(state.settings.modelSortOrder)
     ? state.settings.modelSortOrder
     : "name_asc";
 
@@ -10321,7 +10727,9 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
   if (!dropdownOptions || !dropdown || !display) return;
 
   const favoriteModels = state.settings.favoriteModels || [];
-  const favoriteModelsList = models.filter((m) => favoriteModels.includes(m.id));
+  const favoriteModelsList = models.filter((m) =>
+    favoriteModels.includes(m.id),
+  );
   const otherModelsList = models.filter((m) => !favoriteModels.includes(m.id));
 
   dropdownOptions.innerHTML = "";
@@ -10405,10 +10813,15 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
     });
   }
 
-  const selectedModelData = models.find((m) => m.id === selectedModel) || catalog.find((m) => m.id === selectedModel);
+  const selectedModelData =
+    models.find((m) => m.id === selectedModel) ||
+    catalog.find((m) => m.id === selectedModel);
   if (selectedModelData) {
-    const lowContextMark = isLowContextRoleplayModel(selectedModelData) ? " | ! <=16k" : "";
-    const moderationMark = selectedModelData.isModerated === true ? " | Moderated" : "";
+    const lowContextMark = isLowContextRoleplayModel(selectedModelData)
+      ? " | ! <=16k"
+      : "";
+    const moderationMark =
+      selectedModelData.isModerated === true ? " | Moderated" : "";
     display.textContent = `${selectedModelData.name} (${selectedModelData.id})${lowContextMark}${moderationMark}`;
   } else if (selectedModel) {
     display.textContent = `${selectedModel} (custom)`;
@@ -10479,26 +10892,32 @@ async function fetchOpenRouterModelCatalog(signal) {
 
   const byId = new Map(normalized.map((m) => [m.id, m]));
   if (!byId.has("openrouter/auto")) {
-    byId.set("openrouter/auto", normalizeModelCatalogItem({
-      id: "openrouter/auto",
-      name: "Auto",
-      architecture: { modality: "text->text" },
-      top_provider: {},
-      pricing: {},
-      created: 0,
-      context_length: 16384,
-    }));
+    byId.set(
+      "openrouter/auto",
+      normalizeModelCatalogItem({
+        id: "openrouter/auto",
+        name: "Auto",
+        architecture: { modality: "text->text" },
+        top_provider: {},
+        pricing: {},
+        created: 0,
+        context_length: 16384,
+      }),
+    );
   }
   if (!byId.has("openrouter/free")) {
-    byId.set("openrouter/free", normalizeModelCatalogItem({
-      id: "openrouter/free",
-      name: "OpenRouter Free Router",
-      architecture: { modality: "text->text" },
-      top_provider: {},
-      pricing: { prompt: "0", completion: "0", request: "0", image: "0" },
-      created: 0,
-      context_length: 16384,
-    }));
+    byId.set(
+      "openrouter/free",
+      normalizeModelCatalogItem({
+        id: "openrouter/free",
+        name: "OpenRouter Free Router",
+        architecture: { modality: "text->text" },
+        top_provider: {},
+        pricing: { prompt: "0", completion: "0", request: "0", image: "0" },
+        created: 0,
+        context_length: 16384,
+      }),
+    );
   }
   return Array.from(byId.values());
 }
@@ -10559,7 +10978,9 @@ function getSelectedModelMeta(modelId) {
   const id = String(modelId || state.settings.model || "").trim();
   if (!id) return null;
   const catalog =
-    state.modelCatalog.length > 0 ? state.modelCatalog : getFallbackModelCatalog();
+    state.modelCatalog.length > 0
+      ? state.modelCatalog
+      : getFallbackModelCatalog();
   return catalog.find((m) => String(m.id || "") === id) || null;
 }
 
@@ -10687,7 +11108,7 @@ function openVideoPreview(src) {
   const modal = document.getElementById("image-preview-modal");
   const downloadBtn = document.getElementById("image-preview-download-btn");
   if (!video || !img || !modal) return;
-  
+
   img.classList.add("hidden");
   video.classList.remove("hidden");
   video.src = src;
@@ -10695,10 +11116,10 @@ function openVideoPreview(src) {
   state.imagePreview.isVideo = true;
   video.controls = true;
   video.play();
-  
+
   downloadBtn.title = "Download video";
   downloadBtn.setAttribute("aria-label", "Download video");
-  
+
   modal?.classList.remove("hidden");
 }
 
@@ -10727,7 +11148,10 @@ function applyImagePreviewZoom() {
   if (!img) return;
   const scale = Math.max(
     state.imagePreview.minScale,
-    Math.min(state.imagePreview.maxScale, Number(state.imagePreview.scale) || 1),
+    Math.min(
+      state.imagePreview.maxScale,
+      Number(state.imagePreview.scale) || 1,
+    ),
   );
   state.imagePreview.scale = scale;
   img.style.transform = `translate3d(${Number(state.imagePreview.panX) || 0}px, ${Number(state.imagePreview.panY) || 0}px, 0) scale(${scale})`;
@@ -10793,7 +11217,11 @@ function onImagePreviewPointerEnd(e) {
 function endImagePreviewPanning(pointerId = null) {
   if (!state.imagePreview.panning && pointerId === null) return;
   const img = document.getElementById("image-preview-img");
-  if (img && pointerId != null && typeof img.releasePointerCapture === "function") {
+  if (
+    img &&
+    pointerId != null &&
+    typeof img.releasePointerCapture === "function"
+  ) {
     try {
       img.releasePointerCapture(pointerId);
     } catch {
@@ -11086,7 +11514,8 @@ async function processNextQueuedThread() {
   const existingPendingIdx = findLatestPendingAssistantIndex(tempConversation);
   let pending = null;
   let pendingIndex = existingPendingIdx;
-  const writingTurnCountForThread = getThreadWritingInstructionsTurnCount(tempThread);
+  const writingTurnCountForThread =
+    getThreadWritingInstructionsTurnCount(tempThread);
   const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
   if (existingPendingIdx >= 0) {
     pending = tempConversation[existingPendingIdx];
@@ -11125,10 +11554,12 @@ async function processNextQueuedThread() {
   state.abortController = new AbortController();
   setSendingState(true);
   try {
-    const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(tempConversation);
+    const includeOneTimeExtra =
+      shouldIncludeOneTimeExtraPrompt(tempConversation);
     const promptContext = await buildSystemPrompt(character, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
-      writingInstructionsTurnIndex: Number(pending.writingInstructionsTurnIndex) || 1,
+      writingInstructionsTurnIndex:
+        Number(pending.writingInstructionsTurnIndex) || 1,
       returnTrace: true,
     });
     const systemPrompt = promptContext.prompt;
@@ -11157,8 +11588,12 @@ async function processNextQueuedThread() {
       ? promptContext.usedLoreEntries
       : [];
     pending.usedMemorySummary = promptContext.usedMemorySummary || "";
-    if (pending.writingInstructionsTurnIndex && !pending.writingInstructionsCounted) {
-      tempThread.writingInstructionsTurnCount = (tempThread.writingInstructionsTurnCount || 0) + 1;
+    if (
+      pending.writingInstructionsTurnIndex &&
+      !pending.writingInstructionsCounted
+    ) {
+      tempThread.writingInstructionsTurnCount =
+        (tempThread.writingInstructionsTurnCount || 0) + 1;
     }
     pending.truncatedByFilter = result.truncatedByFilter === true;
     await db.threads.update(nextThreadId, {
@@ -11199,10 +11634,7 @@ async function requestBotReplyForCurrentThread(trigger = "manual_send") {
 function getThreadPendingGenerationState(threadId, messages = []) {
   const id = Number(threadId);
   if (!Number.isInteger(id)) return "";
-  if (
-    state.sending &&
-    Number(state.activeGenerationThreadId) === id
-  ) {
+  if (state.sending && Number(state.activeGenerationThreadId) === id) {
     return "generating";
   }
   const list = Array.isArray(messages) ? messages : [];
@@ -11233,10 +11665,13 @@ function refreshCurrentThreadCooldownBubble(secondsOverride = null) {
   const idx = findLatestPendingAssistantIndex(conversationHistory);
   if (idx < 0) return;
   const msg = conversationHistory[idx];
-  if (!msg || String(msg.generationStatus || "").trim() !== "cooling_down") return;
+  if (!msg || String(msg.generationStatus || "").trim() !== "cooling_down")
+    return;
   if (String(msg.content || "") === label) return;
   msg.content = label;
-  const row = document.querySelector(`#chat-log .chat-row[data-message-index="${idx}"]`);
+  const row = document.querySelector(
+    `#chat-log .chat-row[data-message-index="${idx}"]`,
+  );
   const content = row?.querySelector(".message-content");
   if (content) {
     content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(label)}`;
@@ -11280,7 +11715,8 @@ async function ensureQueuedThreadCoolingDown(threadId) {
     messages[idx].truncatedByFilter = false;
   }
 
-  const needsReason = String(thread.pendingGenerationReason || "").trim() !== "cooldown";
+  const needsReason =
+    String(thread.pendingGenerationReason || "").trim() !== "cooldown";
   const hasChanges =
     !hadPendingBefore ||
     needsReason ||
@@ -11292,7 +11728,9 @@ async function ensureQueuedThreadCoolingDown(threadId) {
   await db.threads.update(id, {
     messages,
     pendingGenerationReason: "cooldown",
-    pendingGenerationQueuedAt: Number(thread.pendingGenerationQueuedAt || updatedAt),
+    pendingGenerationQueuedAt: Number(
+      thread.pendingGenerationQueuedAt || updatedAt,
+    ),
     updatedAt,
   });
   if (currentThread && Number(currentThread.id) === id) {
@@ -11380,7 +11818,8 @@ async function persistCurrentThread(forceUpdate = false) {
     selectedPersonaId: currentThread.selectedPersonaId || null,
     lastPersonaInjectionPersonaId:
       currentThread.lastPersonaInjectionPersonaId || null,
-    writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(currentThread),
+    writingInstructionsTurnCount:
+      getThreadWritingInstructionsTurnCount(currentThread),
   };
 
   if (shouldUpdateTimestamp) {
@@ -11399,8 +11838,10 @@ async function persistCurrentThread(forceUpdate = false) {
   } else {
     currentThread.messages = updated.messages;
     currentThread.selectedPersonaId = updated.selectedPersonaId;
-    currentThread.lastPersonaInjectionPersonaId = updated.lastPersonaInjectionPersonaId;
-    currentThread.writingInstructionsTurnCount = updated.writingInstructionsTurnCount;
+    currentThread.lastPersonaInjectionPersonaId =
+      updated.lastPersonaInjectionPersonaId;
+    currentThread.writingInstructionsTurnCount =
+      updated.writingInstructionsTurnCount;
   }
 }
 
@@ -11421,7 +11862,9 @@ function scrollChatToBottom(force = false) {
 
 function updateScrollBottomButtonVisibility() {
   const btn = document.getElementById("scroll-bottom-btn");
-  const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
+  const chatViewActive = document
+    .getElementById("chat-view")
+    ?.classList.contains("active");
   if (!btn) return;
   positionScrollBottomButton();
   if (!chatViewActive || !currentThread) {
@@ -11507,9 +11950,7 @@ async function refreshCurrentThreadFromDb() {
     role: m.role === "ai" ? "assistant" : m.role,
   }));
   state.unreadNeedsUserScrollThreadId =
-    getUnreadAssistantCount(conversationHistory) > 0
-      ? Number(thread.id)
-      : null;
+    getUnreadAssistantCount(conversationHistory) > 0 ? Number(thread.id) : null;
   currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
     : currentPersona;
@@ -11541,28 +11982,33 @@ async function migrateLegacySessions() {
 
 async function buildSystemPrompt(character, options = {}) {
   const defaultPersona = await getCharacterDefaultPersona(character);
-  const personaForContext = options?.personaOverride || currentPersona || defaultPersona;
+  const personaForContext =
+    options?.personaOverride || currentPersona || defaultPersona;
   const charName = String(character?.name || "Character");
   const personaName = String(defaultPersona?.name || "You");
   const basePromptRaw = (
     character.systemPrompt ||
     state.settings.globalPromptTemplate ||
-  ""
+    ""
   ).trim();
-  const basePrompt = replaceUserPlaceholders(
-    basePromptRaw,
-    personaName,
-  );
+  const basePrompt = replaceUserPlaceholders(basePromptRaw, personaName);
   let writingInstructionsRaw = "";
   const wiId = character?.writingInstructionId;
   if (wiId && wiId !== "none") {
     const wi = await db.writingInstructions.get(Number(wiId));
     if (wi && wi.instructions) {
-      const threadLanguage = character?.activeLanguage || options?.characterLanguage || "en";
-      writingInstructionsRaw = String(wi.instructions[threadLanguage] || Object.values(wi.instructions)[0] || "").trim();
+      const threadLanguage =
+        character?.activeLanguage || options?.characterLanguage || "en";
+      writingInstructionsRaw = String(
+        wi.instructions[threadLanguage] ||
+          Object.values(wi.instructions)[0] ||
+          "",
+      ).trim();
     }
   } else {
-    writingInstructionsRaw = String(character?.writingInstructions || "").trim();
+    writingInstructionsRaw = String(
+      character?.writingInstructions || "",
+    ).trim();
   }
   const writingTurnIndex = Math.max(
     1,
@@ -11578,10 +12024,7 @@ async function buildSystemPrompt(character, options = {}) {
     options?.includeOneTimeExtraPrompt === true
       ? String(character?.oneTimeExtraPrompt || "").trim()
       : "";
-  const oneTimeExtra = replaceUserPlaceholders(
-    oneTimeExtraRaw,
-    personaName,
-  );
+  const oneTimeExtra = replaceUserPlaceholders(oneTimeExtraRaw, personaName);
   const promptBeforePersona = [basePrompt, writingInstructions, oneTimeExtra]
     .filter((part) => String(part || "").trim())
     .join("\n\n")
@@ -11597,7 +12040,10 @@ async function buildSystemPrompt(character, options = {}) {
   let systemPromptWithPersona = promptBeforePersona;
   if (
     personaForContext &&
-    shouldInjectPersonaContext(personaForContext, options?.threadOverride || null)
+    shouldInjectPersonaContext(
+      personaForContext,
+      options?.threadOverride || null,
+    )
   ) {
     const personaInjected = renderPersonaInjectionContent(personaForContext);
     systemPromptWithPersona = applyPersonaInjectionPlacement(
@@ -11609,9 +12055,11 @@ async function buildSystemPrompt(character, options = {}) {
   }
 
   if (loreEntries.length > 0) {
-    contextSections.push(`## Lore Context\n${loreEntries
-      .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
-      .join("\n")}`);
+    contextSections.push(
+      `## Lore Context\n${loreEntries
+        .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
+        .join("\n")}`,
+    );
   }
   if (memory) {
     contextSections.push(`## Memory Context\n${memory}`);
@@ -11654,12 +12102,15 @@ async function openMessageModelInfoModal(index) {
   if (!message.model && !message.temperature) return;
   openModal("message-model-info-modal");
   const modelEl = document.getElementById("message-model-info-model");
-  const temperatureEl = document.getElementById("message-model-info-temperature");
+  const temperatureEl = document.getElementById(
+    "message-model-info-temperature",
+  );
   if (modelEl) {
     modelEl.textContent = message.model || "-";
   }
   if (temperatureEl) {
-    temperatureEl.textContent = message.temperature != null ? message.temperature : "-";
+    temperatureEl.textContent =
+      message.temperature != null ? message.temperature : "-";
   }
 }
 
@@ -11711,10 +12162,7 @@ function renderPersonaInjectionContent(persona) {
     DEFAULT_SETTINGS.personaInjectionTemplate;
   return String(template || "")
     .replace(/\{\{\s*name\s*\}\}/gi, persona?.name || "You")
-    .replace(
-      /\{\{\s*description\s*\}\}/gi,
-      persona?.description || "(none)",
-    );
+    .replace(/\{\{\s*description\s*\}\}/gi, persona?.description || "(none)");
 }
 
 function applyPersonaInjectionPlacement(basePrompt, injection, placement) {
@@ -11746,7 +12194,9 @@ function replaceLorePlaceholders(text, personaName, charName) {
 
 function doesLoreEntryMatch(entry, sourceText) {
   const hay = String(sourceText || "").toLowerCase();
-  const keys = (entry?.keys || []).map((k) => String(k || "").toLowerCase()).filter(Boolean);
+  const keys = (entry?.keys || [])
+    .map((k) => String(k || "").toLowerCase())
+    .filter(Boolean);
   const secondary = (entry?.secondaryKeys || [])
     .map((k) => String(k || "").toLowerCase())
     .filter(Boolean);
@@ -11778,7 +12228,9 @@ async function getCharacterLoreEntries(character, options = {}) {
     : [];
   if (loreIds.length === 0) return [];
   const lorebooksRaw = await db.lorebooks.where("id").anyOf(loreIds).toArray();
-  const lorebooks = lorebooksRaw.map((lb) => normalizeLorebookRecord(lb)).filter(Boolean);
+  const lorebooks = lorebooksRaw
+    .map((lb) => normalizeLorebookRecord(lb))
+    .filter(Boolean);
   if (lorebooks.length === 0) return [];
 
   const scanWindow = Math.max(
@@ -11789,10 +12241,16 @@ async function getCharacterLoreEntries(character, options = {}) {
     ? options.historyOverride
     : conversationHistory;
   const recent = historySource.slice(-scanWindow);
-  const baseSource = recent.map((m) => String(m.content || "")).join("\n").toLowerCase();
+  const baseSource = recent
+    .map((m) => String(m.content || ""))
+    .join("\n")
+    .toLowerCase();
   const defaultPersona = await getCharacterDefaultPersona(character);
   const personaName =
-    options?.personaOverride?.name || currentPersona?.name || defaultPersona?.name || "You";
+    options?.personaOverride?.name ||
+    currentPersona?.name ||
+    defaultPersona?.name ||
+    "You";
   const charName = character?.name || "Character";
   const results = [];
 
@@ -11813,7 +12271,10 @@ async function getCharacterLoreEntries(character, options = {}) {
       });
       if (addedThisPass === 0) break;
       if (lb.recursiveScanning) {
-        source += `\n${matched.slice(-addedThisPass).map((e) => e.content).join("\n")}`.toLowerCase();
+        source += `\n${matched
+          .slice(-addedThisPass)
+          .map((e) => e.content)
+          .join("\n")}`.toLowerCase();
       }
     }
 
@@ -12317,7 +12778,8 @@ async function updateThreadBudgetIndicator() {
   const seq = Number(state.budgetIndicator.seq || 0) + 1;
   state.budgetIndicator.seq = seq;
 
-  const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(conversationHistory);
+  const includeOneTimeExtra =
+    shouldIncludeOneTimeExtraPrompt(conversationHistory);
   const previousPendingPersonaInjection =
     state.pendingPersonaInjectionPersonaId;
   let systemPrompt = "";
@@ -12536,4 +12998,3 @@ function fallbackAvatar(seed, width, height) {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'><rect width='100%' height='100%' fill='#253147'/><text x='50%' y='53%' text-anchor='middle' font-size='${Math.floor(width * 0.48)}' fill='#c2cee4' font-family='Segoe UI'>${initial}</text></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
-
