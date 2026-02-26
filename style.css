@@ -107,9 +107,9 @@ body {
 
 .pane-overlay-toggle {
   position: absolute;
-  left: var(--left-pane-width);
+  right: -14px;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
   width: 28px;
   height: 64px;
   background: var(--panel);
@@ -139,16 +139,9 @@ body {
   transform: rotate(180deg);
 }
 
-#left-pane.collapsed + .pane-overlay-toggle .pane-toggle-icon {
-  transform: rotate(180deg);
-}
-
 @media (max-width: 768px) {
   .pane-overlay-toggle {
-    left: calc(100% - 14px);
-  }
-  #app-shell.pane-collapsed .pane-overlay-toggle {
-    left: 84px;
+    right: -14px;
   }
 }
 

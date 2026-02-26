@@ -22,6 +22,16 @@
   <body>
     <div id="app-shell">
       <aside id="left-pane" class="expanded">
+        <button
+          id="pane-overlay-toggle"
+          class="pane-overlay-toggle"
+          title="Toggle panel"
+          aria-label="Toggle panel"
+        >
+          <svg class="pane-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
         <div class="pane-top">
           <div class="pane-top-header">
             <button id="home-btn" class="secondary-btn pane-home-btn">
@@ -125,17 +135,6 @@
           </button>
         </div>
       </aside>
-
-      <button
-        id="pane-overlay-toggle"
-        class="pane-overlay-toggle"
-        title="Toggle panel"
-        aria-label="Toggle panel"
-      >
-        <svg class="pane-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
 
       <main id="main-view" class="view active">
         <header class="main-header">
