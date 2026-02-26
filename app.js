@@ -1331,17 +1331,19 @@ async function init() {
   }, 250);
 }
 
-async function hydrateGenerationQueue() {
-  const threads = await db.threads.toArray();
-  state.generationQueue = threads
+async function hydrateGenerationQueue(threads = null) {
+  const list = Array.isArray(threads) ? [...threads] : await db.threads.toArray();
+  const queued = list
     .filter((t) => String(t.pendingGenerationReason || "").trim())
     .sort(
       (a, b) =>
         Number(a.pendingGenerationQueuedAt || 0) -
         Number(b.pendingGenerationQueuedAt || 0),
-    )
+    );
+  state.generationQueue = queued
     .map((t) => Number(t.id))
     .filter(Number.isInteger);
+  return list;
 }
 
 function ensureTagCatalogInitialized() {
@@ -4555,7 +4557,7 @@ async function renderThreads() {
   if (!list) return;
   const renderSeq = ++state.renderThreadsSeq;
   const previousScrollTop = Number(list?.scrollTop || 0);
-  const threads = await db.threads.toArray();
+  const threads = await hydrateGenerationQueue();
   if (renderSeq !== state.renderThreadsSeq) return;
   threads.sort((a, b) => {
     const af = a.favorite ? 1 : 0;
@@ -4667,9 +4669,11 @@ async function renderThreads() {
     }
     avatar.alt = `${threadFallback} avatar`;
 
+    const hasGeneratingMessage = threadHasActiveGeneratingMessage(thread);
     const isGenerating =
-      state.sending &&
-      Number(state.activeGenerationThreadId) === Number(thread.id);
+      hasGeneratingMessage ||
+      (state.sending &&
+        Number(state.activeGenerationThreadId) === Number(thread.id));
     const isInCooldown =
       !isGenerating &&
       String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
@@ -8150,6 +8154,18 @@ function threadHasPendingBotActivity(thread) {
   });
 }
 
+function threadHasActiveGeneratingMessage(thread) {
+  if (!thread) return false;
+  const messages = Array.isArray(thread.messages) ? thread.messages : [];
+  return messages.some((m) => {
+    if (!m) return false;
+    const role = normalizeApiRole(m?.apiRole || m?.role);
+    if (role !== "assistant") return false;
+    const status = String(m.generationStatus || "").trim();
+    return status === "generating" || status === "regenerating";
+  });
+}
+
 function updateThreadRenameButtonState() {
   const btn = document.getElementById("rename-thread-btn");
   if (!btn) return;
@@ -11010,11 +11026,24 @@ function cancelOngoingGeneration() {
 }
 
 function isViewingThread(threadId) {
-  return (
-    !!currentThread &&
-    Number(currentThread.id) === Number(threadId) &&
-    document.getElementById("chat-view")?.classList.contains("active")
-  );
+  if (
+    !currentThread ||
+    Number(currentThread.id) !== Number(threadId) ||
+    !document.getElementById("chat-view")?.classList.contains("active")
+  ) {
+    return false;
+  }
+  const visibilityState =
+    typeof document !== "undefined" ? document.visibilityState : "visible";
+  if (visibilityState !== "visible") return false;
+  if (
+    typeof document !== "undefined" &&
+    typeof document.hasFocus === "function" &&
+    !document.hasFocus()
+  ) {
+    return false;
+  }
+  return true;
 }
 
 async function persistThreadMessagesById(threadId, messages, extra = {}) {
@@ -11635,6 +11664,10 @@ async function refreshCurrentThreadFromDb() {
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
   }));
+  state.unreadNeedsUserScrollThreadId =
+    getUnreadAssistantCount(conversationHistory) > 0
+      ? Number(thread.id)
+      : null;
   currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
     : currentPersona;
