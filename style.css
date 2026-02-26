@@ -711,6 +711,10 @@ textarea {
   display: none;
 }
 
+.character-filters.collapsed .filters-toggle-btn {
+  margin-left: auto;
+}
+
 .filters-toggle-btn {
   display: inline-flex;
   align-self: flex-start;
@@ -740,10 +744,10 @@ textarea {
 }
 
 .character-sort-btn {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   padding: 0;
   border-radius: 8px;
   border: 1px solid var(--line);
@@ -754,8 +758,8 @@ textarea {
 }
 
 .character-sort-btn img {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   display: block;
 }
 
