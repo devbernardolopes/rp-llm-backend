@@ -2008,6 +2008,8 @@ function setupModalTextareas(root = document) {
 
 function resetModalTextareaCollapseStates(root = document) {
   if (!root) return;
+  const modal = root.matches?.(".modal") ? root : root.closest?.(".modal");
+  if (modal?.id === "character-modal") return;
   root.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
     const state = textareaCollapseStates.get(textarea);
     if (!state) return;
@@ -5531,6 +5533,7 @@ function renderCharacterDefinitionTabs() {
       loadActiveCharacterDefinitionToForm();
       setCharacterModalTab("lang");
       renderCharacterDefinitionTabs();
+      restoreCharModalTextareaCollapseStates();
     });
     const del = document.createElement("button");
     del.type = "button";
