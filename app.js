@@ -5156,6 +5156,12 @@ async function closeActiveModal() {
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
   if (closingId === "character-modal") {
+    if (state.editingCharacterId) {
+      localStorage.setItem(
+        `rp-char-modal-last-lang-${state.editingCharacterId}`,
+        state.charModalActiveLanguage,
+      );
+    }
     saveCharModalTextareaCollapseStates();
     state.charModalPendingThreadDeleteIds = [];
   }
@@ -5773,10 +5779,22 @@ async function openCharacterModal(
   const hasCardLanguage =
     cardLanguage &&
     state.charModalDefinitions.some((d) => d.language === cardLanguage);
-  state.charModalActiveLanguage = hasCardLanguage
+  let activeLanguage = hasCardLanguage
     ? cardLanguage
     : state.charModalDefinitions[0]?.language ||
       getInitialBotDefinitionLanguage();
+  if (character?.id) {
+    const savedLang = localStorage.getItem(
+      `rp-char-modal-last-lang-${character.id}`,
+    );
+    if (
+      savedLang &&
+      state.charModalDefinitions.some((d) => d.language === savedLang)
+    ) {
+      activeLanguage = savedLang;
+    }
+  }
+  state.charModalActiveLanguage = activeLanguage;
   state.charModalActiveTab = "lang";
 
   document.getElementById("char-use-memory").checked =
@@ -5993,6 +6011,12 @@ async function saveCharacterFromModal({ close = true } = {}) {
   setModalDirtyState("character-modal", false);
   await renderAll();
   if (close) {
+    if (state.editingCharacterId) {
+      localStorage.setItem(
+        `rp-char-modal-last-lang-${state.editingCharacterId}`,
+        state.charModalActiveLanguage,
+      );
+    }
     closeActiveModal();
   }
   return true;
