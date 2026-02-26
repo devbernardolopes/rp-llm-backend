@@ -1821,6 +1821,9 @@ function setupEvents() {
     }
     maybeProcessUnreadMessagesSeen(true).catch(() => {});
     updateScrollBottomButtonVisibility();
+    if (currentThread) {
+      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, chatLog.scrollTop);
+    }
   });
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
@@ -4990,6 +4993,7 @@ async function deleteSelectedThreads() {
     (id) => !ids.includes(Number(id)),
   );
   for (const id of ids) {
+    localStorage.removeItem(`rp-thread-scroll-${id}`);
     try {
       await db.threads.update(id, {
         pendingGenerationReason: "",
@@ -5079,6 +5083,12 @@ function togglePane() {
 }
 
 function showMainView() {
+  if (currentThread) {
+    const log = document.getElementById("chat-log");
+    if (log) {
+      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
+    }
+  }
   stopTtsPlayback();
   state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
@@ -8344,6 +8354,8 @@ async function deleteThread(threadId) {
   );
   if (!ok) return;
 
+  localStorage.removeItem(`rp-thread-scroll-${threadId}`);
+
   if (
     state.sending &&
     Number(state.activeGenerationThreadId) === Number(threadId) &&
@@ -8388,6 +8400,12 @@ async function openThread(threadId) {
   if (chatViewActive && Number(currentThread?.id) === Number(threadId)) {
     return;
   }
+  if (chatViewActive && currentThread) {
+    const log = document.getElementById("chat-log");
+    if (log) {
+      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
+    }
+  }
   const thread = await db.threads.get(threadId);
   if (!thread) return;
 
@@ -8430,6 +8448,13 @@ async function openThread(threadId) {
   state.unreadNeedsUserScrollThreadId =
     getUnreadAssistantCount(conversationHistory) > 0 ? Number(thread.id) : null;
   renderChat();
+  const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
+  const log = document.getElementById("chat-log");
+  if (log && savedScroll) {
+    log.scrollTop = Number(savedScroll);
+  } else if (log) {
+    log.scrollTop = log.scrollHeight;
+  }
   const input = document.getElementById("user-input");
   input.value = "";
   state.activeShortcut = null;
