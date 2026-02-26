@@ -105,7 +105,25 @@ const DEFAULT_SETTINGS = {
   threadAutoTitleMinMessages: 7,
   favoriteModels: [],
   chatMessageAlignment: "left",
+  unreadSoundEnabled: true,
 };
+
+let playedUnreadSoundForThread = new Set();
+
+function playUnreadMessageSound() {
+  if (state.settings.unreadSoundEnabled === false) return;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  oscillator.frequency.value = 800;
+  oscillator.type = "sine";
+  gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+  oscillator.start(audioCtx.currentTime);
+  oscillator.stop(audioCtx.currentTime + 0.3);
+}
 
 const DEFAULT_KOKORO_VOICE = "af_heart";
 // const KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-ONNX";
@@ -2915,7 +2933,9 @@ async function setupSettingsControls() {
     "writing-instructions-injection-when",
   );
   const shortcutsRaw = document.getElementById("shortcuts-raw");
+  const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
   markdownCheck.checked = !!state.settings.markdownEnabled;
+  unreadSoundEnabled.checked = state.settings.unreadSoundEnabled !== false;
   allowMessageHtml.checked = state.settings.allowMessageHtml !== false;
   streamEnabled.checked = state.settings.streamEnabled !== false;
   autopairEnabled.checked = state.settings.autoPairEnabled !== false;
@@ -3074,6 +3094,11 @@ async function setupSettingsControls() {
     state.settings.markdownEnabled = markdownCheck.checked;
     saveSettings();
     if (currentThread) renderChat();
+  });
+
+  unreadSoundEnabled.addEventListener("change", () => {
+    state.settings.unreadSoundEnabled = unreadSoundEnabled.checked;
+    saveSettings();
   });
 
   allowMessageHtml.addEventListener("change", () => {
@@ -4824,6 +4849,10 @@ async function renderThreads() {
       String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
       isInCompletionCooldown();
     const unreadCount = getUnreadAssistantCount(thread.messages || []);
+    if (unreadCount > 0 && !playedUnreadSoundForThread.has(Number(thread.id))) {
+      playUnreadMessageSound();
+      playedUnreadSoundForThread.add(Number(thread.id));
+    }
     const queuePos =
       isGenerating || isInCooldown
         ? 0
@@ -5089,6 +5118,7 @@ function showMainView() {
       localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
     }
   }
+  playedUnreadSoundForThread.clear();
   stopTtsPlayback();
   state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
@@ -8406,6 +8436,7 @@ async function openThread(threadId) {
       localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
     }
   }
+  playedUnreadSoundForThread.delete(Number(threadId));
   const thread = await db.threads.get(threadId);
   if (!thread) return;
 

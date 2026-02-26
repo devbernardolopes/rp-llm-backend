@@ -302,6 +302,7 @@
   "tabShortcuts": "Atajos",
   "tabPrompting": "Prompting",
   "toastDelayLabel": "Retraso del toast",
+  "unreadSoundEnabled": "Reproducir sonido para mensajes no leídos",
   "writingInstructionsInjectionTiming": "Momento de inyección de instrucciones de escritura",
   "everyOther": "Cada otra",
   "everySecond": "Cada segundo",
