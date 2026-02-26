@@ -121,14 +121,25 @@ const KOKORO_MODULE_PATHS = [
 ];
 
 const KOKORO_DEVICE_OPTIONS = ["wasm", "webgpu"];
-const KOKORO_DTYPE_OPTIONS = ["fp32", "fp16", "q8", "q4", "q4f16", "q8f16"];
+const KOKORO_DTYPE_OPTIONS = [
+  "fp32",
+  "fp16",
+  "q8",
+  "q4",
+  "q4f16",
+  "auto",
+  "uint8",
+  "int8",
+];
 const KOKORO_DTYPE_LABELS = {
   fp32: "FP32",
   fp16: "FP16",
   q8: "Q8",
   q4: "Q4",
   q4f16: "Q4f16",
-  q8f16: "Q8f16",
+  auto: "auto",
+  uint8: "UINT8",
+  int8: "INT8",
 };
 const KOKORO_VOICE_OPTIONS = [
   "af_alloy",
@@ -2032,11 +2043,13 @@ function restoreCharModalTextareaCollapseStates() {
     const states = JSON.parse(raw);
     const modal = document.getElementById("character-modal");
     if (!modal) return;
-    modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
-      const entry = textareaCollapseStates.get(textarea);
-      if (!entry || states[textarea.id] === undefined) return;
-      entry.setExpanded(states[textarea.id]);
-    });
+    modal
+      .querySelectorAll(".textarea-collapse textarea")
+      .forEach((textarea) => {
+        const entry = textareaCollapseStates.get(textarea);
+        if (!entry || states[textarea.id] === undefined) return;
+        entry.setExpanded(states[textarea.id]);
+      });
   } catch (e) {
     localStorage.removeItem(key);
   }
