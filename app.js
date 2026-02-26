@@ -1188,6 +1188,10 @@ document.addEventListener("visibilitychange", () => {
       if (card._startCarousel) card._startCarousel();
     });
   }
+
+  if (!document.hidden && currentThread && document.getElementById("chat-view")?.classList.contains("active")) {
+    renderChat();
+  }
 });
 
 function updateCarouselForPaneState() {}
