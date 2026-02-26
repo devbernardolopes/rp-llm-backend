@@ -16,6 +16,7 @@
           typeof input === "string" ? override : new Request(override, input);
         return originalFetch(newInput, init);
       }
+      console.log("kokoro:voice-fetch-override", voice, url);
     }
     return originalFetch(input, init);
   };
