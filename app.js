@@ -1191,6 +1191,20 @@ document.addEventListener("visibilitychange", () => {
 
   if (!document.hidden && currentThread && document.getElementById("chat-view")?.classList.contains("active")) {
     renderChat();
+    if (state.unreadNeedsUserScrollThreadId === Number(currentThread.id)) {
+      let changed = false;
+      for (const msg of conversationHistory) {
+        if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+          msg.unreadAt = 0;
+          changed = true;
+        }
+      }
+      if (changed) {
+        state.unreadNeedsUserScrollThreadId = null;
+        persistThreadMessagesById(Number(currentThread.id), conversationHistory).catch(() => {});
+        renderThreads();
+      }
+    }
   }
 });
 
