@@ -190,15 +190,6 @@ const KOKORO_LANGUAGE_VOICE_PREFIXES = {
   pt: ["pf", "pm"],
 };
 
-const CUSTOM_KOKORO_VOICE_URLS = {
-  pf_dora:
-    "https://rp-llm-backend.vercel.app/assets/kokoro-extra-voices/pf_dora.pt",
-  pm_alex:
-    "https://rp-llm-backend.vercel.app/assets/kokoro-extra-voices/pm_alex.pt",
-  pm_santa:
-    "https://rp-llm-backend.vercel.app/assets/kokoro-extra-voices/pm_santa.pt",
-};
-
 const UI_LANG_OPTIONS = ["en", "fr", "it", "de", "es", "pt-BR"];
 const LOCALES_BASE_PATH = "locales";
 const BOT_LANGUAGE_OPTIONS = [
