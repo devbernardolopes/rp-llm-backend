@@ -5641,9 +5641,10 @@ function loadActiveCharacterDefinitionToForm() {
     kokoroDeviceValue,
     def.kokoroDtype || "fp32",
   );
+  const activeModalLanguage = getCharModalActiveLanguage();
   populateKokoroVoiceSelect(
     def.kokoroVoice || DEFAULT_KOKORO_VOICE,
-    state.charModalActiveLanguage,
+    activeModalLanguage,
   );
   document.getElementById("char-prefer-lore-language").checked =
     def.preferLoreBooksMatchingLanguage !== false;
@@ -6118,13 +6119,18 @@ function getResolvedCharTtsSelection() {
   );
 }
 
-function refreshCharTtsProviderFields() {
-  const providerSelect = document.getElementById("char-tts-provider");
-  const kokoroConfig = document.getElementById("char-tts-kokoro-config");
-  const modalLanguage =
+function getCharModalActiveLanguage() {
+  const rawLanguage =
     state.charModalActiveLanguage ||
     getActiveCharacterDefinition()?.language ||
     DEFAULT_TTS_LANGUAGE;
+  return normalizeBotLanguageCode(rawLanguage || "") || DEFAULT_TTS_LANGUAGE;
+}
+
+function refreshCharTtsProviderFields() {
+  const providerSelect = document.getElementById("char-tts-provider");
+  const kokoroConfig = document.getElementById("char-tts-kokoro-config");
+  const modalLanguage = getCharModalActiveLanguage();
   const kokoroSupport = isKokoroSupportedForLanguage(modalLanguage);
   const kokoroOption = providerSelect?.querySelector("option[value=\"kokoro\"]");
   if (kokoroOption) kokoroOption.disabled = !kokoroSupport;
