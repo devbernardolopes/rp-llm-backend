@@ -122,24 +122,26 @@ const KOKORO_MODULE_PATHS = [
 
 const KOKORO_DEVICE_OPTIONS = ["wasm", "webgpu"];
 const KOKORO_DTYPE_OPTIONS = [
-  "fp32",
+  // "fp32",
   "fp16",
   "q8",
   "q4",
   "q4f16",
+  "q8f16",
   "auto",
   "uint8",
-  "int8",
+  "uint8f16",
 ];
 const KOKORO_DTYPE_LABELS = {
-  fp32: "FP32",
+  // fp32: "FP32",
   fp16: "FP16",
   q8: "Q8",
   q4: "Q4",
   q4f16: "Q4f16",
-  auto: "auto",
+  q8f16: "Q8f16",
+  auto: "AUTO",
   uint8: "UINT8",
-  int8: "INT8",
+  uint8f16: "UINT8F16",
 };
 const KOKORO_VOICE_OPTIONS = [
   "af_alloy",
