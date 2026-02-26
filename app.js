@@ -1695,6 +1695,7 @@ function setupEvents() {
     .addEventListener("click", () => {
       const filters = document.getElementById("character-filters");
       filters.classList.toggle("collapsed");
+      localStorage.setItem("rp-filters-collapsed", filters.classList.contains("collapsed"));
       updateCharacterFiltersToggleUi();
     });
   document
@@ -3519,6 +3520,16 @@ function loadUiState() {
     ) {
       const parts = getCharacterSortParts(parsed.characterSortMode);
       state.characterSortMode = `${parts.base}_${parts.dir}`;
+    }
+    const filters = document.getElementById("character-filters");
+    if (filters) {
+      const isCollapsed = localStorage.getItem("rp-filters-collapsed") === "true";
+      if (isCollapsed) {
+        filters.classList.add("collapsed");
+      } else {
+        filters.classList.remove("collapsed");
+      }
+      updateCharacterFiltersToggleUi();
     }
   } catch {
     state.shortcutsVisible = true;
