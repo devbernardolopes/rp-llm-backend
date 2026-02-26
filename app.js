@@ -121,13 +121,14 @@ const KOKORO_MODULE_PATHS = [
 ];
 
 const KOKORO_DEVICE_OPTIONS = ["wasm", "webgpu"];
-const KOKORO_DTYPE_OPTIONS = ["fp32", "fp16", "q8", "q4", "q4f16"];
+const KOKORO_DTYPE_OPTIONS = ["fp32", "fp16", "q8", "q4", "q4f16", "q8f16"];
 const KOKORO_DTYPE_LABELS = {
   fp32: "FP32",
   fp16: "FP16",
   q8: "Q8",
   q4: "Q4",
   q4f16: "Q4f16",
+  q8f16: "Q8f16",
 };
 const KOKORO_VOICE_OPTIONS = [
   "af_alloy",
@@ -1588,9 +1589,7 @@ function setupEvents() {
   const kokoroDeviceSelect = document.getElementById("char-tts-kokoro-device");
   if (kokoroDeviceSelect) {
     kokoroDeviceSelect.addEventListener("change", () => {
-      updateKokoroDtypeOptionsForDevice(
-        kokoroDeviceSelect.value || "webgpu",
-      );
+      updateKokoroDtypeOptionsForDevice(kokoroDeviceSelect.value || "webgpu");
     });
   }
   const kokoroVoiceSelect = document.getElementById("char-tts-kokoro-voice");
@@ -5299,9 +5298,9 @@ function createEmptyCharacterDefinition(language = "en") {
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
     ttsRate: DEFAULT_TTS_RATE,
     ttsPitch: 1.1,
-      ttsProvider: "kokoro",
-      kokoroDevice: "webgpu",
-      kokoroDtype: "fp32",
+    ttsProvider: "kokoro",
+    kokoroDevice: "webgpu",
+    kokoroDtype: "fp32",
     kokoroVoice: DEFAULT_KOKORO_VOICE,
     kokoroSpeed: DEFAULT_TTS_RATE,
     preferLoreBooksMatchingLanguage: true,
@@ -5328,9 +5327,9 @@ function normalizeCharacterDefinitions(character = null) {
         ...createEmptyCharacterDefinition(d?.language || "en"),
         ...d,
         language: normalizeBotLanguageCode(d?.language || "en"),
-          ttsProvider: d?.ttsProvider || "kokoro",
-          kokoroDevice: d?.kokoroDevice || "webgpu",
-          kokoroDtype: d?.kokoroDtype || "fp32",
+        ttsProvider: d?.ttsProvider || "kokoro",
+        kokoroDevice: d?.kokoroDevice || "webgpu",
+        kokoroDtype: d?.kokoroDtype || "fp32",
         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
         kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
           ? Number(d.kokoroSpeed)
@@ -5377,9 +5376,9 @@ function normalizeCharacterDefinitions(character = null) {
   fallback.ttsPitch = Number.isFinite(Number(character?.ttsPitch))
     ? Number(character.ttsPitch)
     : 1.1;
-    fallback.ttsProvider = character?.ttsProvider || "kokoro";
-    fallback.kokoroDevice = character?.kokoroDevice || "webgpu";
-    fallback.kokoroDtype = character?.kokoroDtype || "fp32";
+  fallback.ttsProvider = character?.ttsProvider || "kokoro";
+  fallback.kokoroDevice = character?.kokoroDevice || "webgpu";
+  fallback.kokoroDtype = character?.kokoroDtype || "fp32";
   fallback.kokoroVoice = String(character?.kokoroVoice || DEFAULT_KOKORO_VOICE);
   fallback.kokoroSpeed = Number.isFinite(Number(character?.kokoroSpeed))
     ? Number(character.kokoroSpeed)
@@ -6132,7 +6131,7 @@ function refreshCharTtsProviderFields() {
   const kokoroConfig = document.getElementById("char-tts-kokoro-config");
   const modalLanguage = getCharModalActiveLanguage();
   const kokoroSupport = isKokoroSupportedForLanguage(modalLanguage);
-  const kokoroOption = providerSelect?.querySelector("option[value=\"kokoro\"]");
+  const kokoroOption = providerSelect?.querySelector('option[value="kokoro"]');
   if (kokoroOption) kokoroOption.disabled = !kokoroSupport;
   const kokoroDevice = document.getElementById("char-tts-kokoro-device");
   const kokoroDeviceValue = kokoroDevice?.value || "webgpu";
@@ -6177,14 +6176,19 @@ function refreshCharTtsProviderFields() {
 }
 
 function getAvailableKokoroDtypeOptions(device = "webgpu") {
-  const normalized = String(device || "webgpu").trim().toLowerCase();
+  const normalized = String(device || "webgpu")
+    .trim()
+    .toLowerCase();
   return KOKORO_DTYPE_OPTIONS.filter((dtype) => {
     if (normalized === "webgpu" && dtype === "fp16") return false;
     return true;
   });
 }
 
-function updateKokoroDtypeOptionsForDevice(device = "webgpu", preferred = null) {
+function updateKokoroDtypeOptionsForDevice(
+  device = "webgpu",
+  preferred = null,
+) {
   const select = document.getElementById("char-tts-kokoro-dtype");
   if (!select) return;
   const allowed = getAvailableKokoroDtypeOptions(device);
@@ -9981,9 +9985,9 @@ function getCurrentCharacterTtsOptions() {
     currentCharacter?.ttsRate,
     currentCharacter?.ttsPitch,
   );
-    const provider = String(
-      currentCharacter?.ttsProvider || "kokoro",
-    ).toLowerCase();
+  const provider = String(
+    currentCharacter?.ttsProvider || "kokoro",
+  ).toLowerCase();
   const options = {
     voice: resolved.voice || DEFAULT_TTS_VOICE,
     language: resolved.language || DEFAULT_TTS_LANGUAGE,
