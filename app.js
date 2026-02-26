@@ -1765,13 +1765,30 @@ function setupEvents() {
     .addEventListener("click", () => openWritingInstructionEditor());
   document
     .getElementById("writing-instructions-editor-back-btn")
-    .addEventListener("click", () => switchWritingInstructionsView("list"));
   document
     .getElementById("cancel-writing-instruction-btn")
-    .addEventListener("click", () => switchWritingInstructionsView("list"));
+    .addEventListener("click", async () => {
+      if (state.modalDirty["writing-instructions-modal"]) {
+        const action = await openUnsavedChangesDialog();
+        if (action === "back") return;
+        if (action === "close") {
+          setModalDirtyState("writing-instructions-modal", false);
+          closeActiveModal();
+          return;
+        }
+        if (action === "save") {
+          const saved = await saveWritingInstruction({ close: true });
+          if (!saved) return;
+        }
+      }
+      switchWritingInstructionsView("list");
+    });
   document
-    .getElementById("save-writing-instruction-btn")
-    .addEventListener("click", saveWritingInstruction);
+    .getElementById("apply-writing-instructions-btn")
+    .addEventListener("click", () => saveWritingInstruction({ close: false }));
+  document
+    .getElementById("save-writing-instructions-btn")
+    .addEventListener("click", () => saveWritingInstruction({ close: true }));
   document
     .getElementById("writing-instruction-add-lang-btn")
     .addEventListener("click", openWritingInstructionLanguageModal);
@@ -1786,7 +1803,11 @@ function setupEvents() {
     .addEventListener("click", addWritingInstructionLanguage);
   document
     .getElementById("writing-instruction-name")
-    .addEventListener("input", updateWritingInstructionNameCount);
+    .addEventListener("input", () => {
+      updateWritingInstructionNameCount();
+      saveActiveWritingInstructionFromForm();
+      updateSaveWritingInstructionButton();
+    });
   document
     .getElementById("writing-instruction-text")
     .addEventListener("input", () => {
@@ -1924,6 +1945,10 @@ function setupEvents() {
     "#persona-is-default",
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
+  markModalDirtyOnInput("writing-instructions-modal", [
+    "#writing-instruction-name",
+    "#writing-instruction-text",
+  ]);
   markModalDirtyOnInput("lore-modal", [
     "#lore-name",
     "#lore-avatar",
@@ -7338,6 +7363,7 @@ function switchWritingInstructionsView(view) {
 }
 
 async function openWritingInstructionEditor(writingInstruction = null) {
+  setModalDirtyState("writing-instructions-modal", false);
   const normalized = normalizeWritingInstructionRecord(
     writingInstruction || {},
   );
@@ -7477,7 +7503,7 @@ function updateWritingInstructionTextCount() {
 }
 
 function updateSaveWritingInstructionButton() {
-  const saveBtn = document.getElementById("save-writing-instruction-btn");
+  const saveBtn = document.getElementById("save-writing-instructions-btn");
   if (!saveBtn) return;
   const name = String(
     document.getElementById("writing-instruction-name")?.value || "",
@@ -7485,10 +7511,11 @@ function updateSaveWritingInstructionButton() {
   const hasAllContent = state_writingInstructions.definitions.every(
     (d) => String(d.instructions || "").trim().length > 0,
   );
-  saveBtn.disabled = !name || !hasAllContent;
+  const isDirty = !!state.modalDirty["writing-instructions-modal"];
+  saveBtn.disabled = !name || !hasAllContent || !isDirty;
 }
 
-async function saveWritingInstruction() {
+async function saveWritingInstruction({ close = true } = {}) {
   saveActiveWritingInstructionFromForm();
   const name = String(
     document.getElementById("writing-instruction-name")?.value || "",
@@ -7527,8 +7554,11 @@ async function saveWritingInstruction() {
     await db.writingInstructions.add(payload);
     showToast(t("writingInstructionCreated"), "success");
   }
+  setModalDirtyState("writing-instructions-modal", false);
   await renderWritingInstructionsList();
-  switchWritingInstructionsView("list");
+  if (close) {
+    switchWritingInstructionsView("list");
+  }
   return true;
 }
 
