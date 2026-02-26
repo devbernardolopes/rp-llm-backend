@@ -108,9 +108,9 @@ const DEFAULT_SETTINGS = {
 };
 
 const DEFAULT_KOKORO_VOICE = "af_heart";
-const KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
+const KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-ONNX";
+// const KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
 const KOKORO_MODULE_PATHS = [
-  // "./node_modules/kokoro-js/dist/kokoro.web.js",
   "https://cdn.jsdelivr.net/npm/kokoro-js/dist/kokoro.web.js",
 ];
 const KOKORO_DEVICE_OPTIONS = ["wasm", "webgpu", "cpu"];
