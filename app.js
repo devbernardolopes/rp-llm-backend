@@ -1208,7 +1208,6 @@ document.addEventListener("visibilitychange", () => {
   }
 
   if (!document.hidden && currentThread && document.getElementById("chat-view")?.classList.contains("active")) {
-    renderChat();
     if (state.unreadNeedsUserScrollThreadId === Number(currentThread.id)) {
       let changed = false;
       for (const msg of conversationHistory) {
@@ -1223,6 +1222,7 @@ document.addEventListener("visibilitychange", () => {
         renderThreads();
       }
     }
+    renderChat();
   }
 });
 
