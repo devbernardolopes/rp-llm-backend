@@ -112,9 +112,14 @@ const DEFAULT_KOKORO_VOICE = "af_heart";
 const KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
 // const KOKORO_MODEL_ID = "hexgrad/Kokoro-82M";
 
+// const KOKORO_MODULE_PATHS = [
+//   "https://cdn.jsdelivr.net/npm/kokoro-js/dist/kokoro.web.js",
+// ];
+
 const KOKORO_MODULE_PATHS = [
-  "https://cdn.jsdelivr.net/npm/kokoro-js/dist/kokoro.web.js",
+  "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js",
 ];
+
 const KOKORO_DEVICE_OPTIONS = ["wasm", "webgpu", "cpu"];
 const KOKORO_DTYPE_OPTIONS = ["fp32", "fp16", "q8", "q4", "q4f16"];
 const KOKORO_VOICE_OPTIONS = [
