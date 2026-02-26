@@ -364,5 +364,14 @@
   "msgSystemPromptModalTitle": "System prompt",
   "msgSystemPromptEntryLabel": "System message {index}",
   "msgSystemPromptUnavailable": "System prompt unavailable",
-  "msgSystemPromptUnavailableGenerating": "System prompt is not ready yet"
+  "msgSystemPromptUnavailableGenerating": "System prompt is not ready yet",
+  "sortAscending": "Ascending",
+  "sortDescending": "Descending",
+  "characterSortCreationDate": "Creation Date",
+  "characterSortUpdateDate": "Update Date",
+  "characterSortName": "Name",
+  "characterSortChats": "# Chats",
+  "modelFavorite": "Favorite",
+  "modelUnfavorite": "Unfavorite",
+  "favoriteModels": "Favorites"
 }
