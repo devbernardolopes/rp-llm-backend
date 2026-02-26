@@ -10201,77 +10201,88 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       return null;
     }
 
-    const playChunk = async (chunk) => {
+    const voice = options.kokoro.voice || DEFAULT_KOKORO_VOICE;
+    const speed = Number.isFinite(Number(options.kokoro.speed))
+      ? Number(options.kokoro.speed)
+      : options.rate || 1;
+
+    // Generates a single chunk into a BufferSource (or null on failure).
+    // Yields to the browser first via setTimeout so the main thread
+    // doesn't freeze during WASM inference.
+    const generateBufferSource = async (chunk) => {
+      await new Promise((r) => setTimeout(r, 0));
       if (requestId !== state.tts.activeRequestId) {
-        ttsDebug("playKokoroTts:stale-request", {
-          requestId,
-          active: state.tts.activeRequestId,
-        });
         throw makeTtsCancelledError();
       }
-      const raw = await kokoro.generate(chunk, {
-        voice: options.kokoro.voice || DEFAULT_KOKORO_VOICE,
-        speed: Number.isFinite(Number(options.kokoro.speed))
-          ? Number(options.kokoro.speed)
-          : options.rate || 1,
-      });
+      ttsDebug("playKokoroTts:generate", { chunk });
+      const raw = await kokoro.generate(chunk, { voice, speed });
       const blob = await raw.toBlob();
       const arrayBuffer = await blob.arrayBuffer();
       const bufferSource = await createKokoroBufferSource(arrayBuffer);
-      if (bufferSource) {
-        state.tts.audio = bufferSource;
+      if (bufferSource) return bufferSource;
+
+      // Fallback: AudioContext not available, use HTMLAudioElement
+      const url = URL.createObjectURL(blob);
+      return { _fallbackUrl: url, _fallbackBlob: blob };
+    };
+
+    // Plays a resolved bufferSource (or fallback Audio element).
+    // Returns a Promise that resolves when the chunk finishes playing.
+    const playResolved = (resolved) => {
+      if (requestId !== state.tts.activeRequestId) {
+        throw makeTtsCancelledError();
+      }
+
+      // HTMLAudioElement fallback path
+      if (resolved?._fallbackUrl) {
+        const { _fallbackUrl: url } = resolved;
+        const audioEl = new Audio(url);
+        state.tts.audio = audioEl;
         return new Promise((resolve, reject) => {
-          bufferSource.onended = () => {
-            ttsDebug("playKokoroTts:chunk-ended", { chunk });
-            if (state.tts.audio === bufferSource) {
-              state.tts.audio = null;
-            }
-            try {
-              bufferSource.disconnect();
-            } catch {
-              // ignore
-            }
+          audioEl.onended = () => {
+            ttsDebug("playKokoroTts:chunk-ended-fallback");
+            if (state.tts.audio === audioEl) state.tts.audio = null;
+            URL.revokeObjectURL(url);
             resolve();
           };
-          try {
-            bufferSource.start();
-          } catch (err) {
-            try {
-              bufferSource.disconnect();
-            } catch {
-              // ignore
-            }
+          audioEl.onerror = () => {
+            ttsDebug("playKokoroTts:error-fallback");
+            if (state.tts.audio === audioEl) state.tts.audio = null;
+            URL.revokeObjectURL(url);
+            reject(new Error("Kokoro TTS playback failed."));
+          };
+          audioEl.play().catch((err) => {
+            if (state.tts.audio === audioEl) state.tts.audio = null;
+            URL.revokeObjectURL(url);
             reject(err);
-          }
+          });
         });
       }
-      const url = URL.createObjectURL(blob);
-      const audioEl = new Audio(url);
-      state.tts.audio = audioEl;
+
+      // Normal AudioBufferSourceNode path
+      const bufferSource = resolved;
+      state.tts.audio = bufferSource;
       return new Promise((resolve, reject) => {
-        audioEl.onended = () => {
-          ttsDebug("playKokoroTts:chunk-ended", { chunk });
-          if (state.tts.audio === audioEl) {
-            state.tts.audio = null;
+        bufferSource.onended = () => {
+          ttsDebug("playKokoroTts:chunk-ended", { voice });
+          if (state.tts.audio === bufferSource) state.tts.audio = null;
+          try {
+            bufferSource.disconnect();
+          } catch {
+            /* ignore */
           }
-          URL.revokeObjectURL(url);
           resolve();
         };
-        audioEl.onerror = () => {
-          ttsDebug("playKokoroTts:error");
-          if (state.tts.audio === audioEl) {
-            state.tts.audio = null;
+        try {
+          bufferSource.start();
+        } catch (err) {
+          try {
+            bufferSource.disconnect();
+          } catch {
+            /* ignore */
           }
-          URL.revokeObjectURL(url);
-          reject(new Error("Kokoro TTS playback failed."));
-        };
-        audioEl.play().catch((err) => {
-          if (state.tts.audio === audioEl) {
-            state.tts.audio = null;
-          }
-          URL.revokeObjectURL(url);
           reject(err);
-        });
+        }
       });
     };
 
@@ -10282,15 +10293,50 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       });
       throw makeTtsCancelledError();
     }
+
+    // Transition from loading → speaking state before first chunk starts
     state.tts.loadingMessageIndex = null;
     finalized = true;
     if (messageIndex !== null) {
       state.tts.speakingMessageIndex = messageIndex;
     }
     refreshAllSpeakerButtons();
-    for (const chunk of chunks) {
-      await playChunk(chunk);
+
+    // Pipeline: begin generating chunk[i+1] while chunk[i] is playing,
+    // so there is minimal silence between chunks and no cumulative freeze.
+    let nextGenPromise = generateBufferSource(chunks[0]);
+
+    for (let i = 0; i < chunks.length; i++) {
+      // Kick off the next generation in parallel, chained off the current
+      // generation completing (not off playback finishing) so we don't
+      // start a second heavy WASM call while the first is still running.
+      let followingGenPromise = null;
+      if (i + 1 < chunks.length) {
+        followingGenPromise = nextGenPromise.then(
+          () => generateBufferSource(chunks[i + 1]),
+          () => null, // if current gen failed/cancelled, don't chain
+        );
+      }
+
+      const resolved = await nextGenPromise;
+      nextGenPromise = followingGenPromise;
+
+      if (resolved === null) {
+        // Cancelled or failed during generation — stop pipeline
+        break;
+      }
+
+      await playResolved(resolved);
+
+      if (requestId !== state.tts.activeRequestId) {
+        ttsDebug("playKokoroTts:stale-after-chunk", {
+          requestId,
+          active: state.tts.activeRequestId,
+        });
+        break;
+      }
     }
+
     return null;
   } finally {
     finalizeLoadingState();
