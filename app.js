@@ -2004,6 +2004,44 @@ function resetModalTextareaCollapseStates(root = document) {
   });
 }
 
+function getCharModalCollapseStorageKey() {
+  const botId = state.editingCharacterId || "new";
+  const lang = state.charModalActiveLanguage || "en";
+  return `rp-char-collapse-${botId}-${lang}`;
+}
+
+function saveCharModalTextareaCollapseStates() {
+  const key = getCharModalCollapseStorageKey();
+  const states = {};
+  const modal = document.getElementById("character-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    states[textarea.id] = expanded;
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+}
+
+function restoreCharModalTextareaCollapseStates() {
+  const key = getCharModalCollapseStorageKey();
+  const raw = localStorage.getItem(key);
+  if (!raw) return;
+  try {
+    const states = JSON.parse(raw);
+    const modal = document.getElementById("character-modal");
+    if (!modal) return;
+    modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+      const entry = textareaCollapseStates.get(textarea);
+      if (!entry || states[textarea.id] === undefined) return;
+      entry.setExpanded(states[textarea.id]);
+    });
+  } catch (e) {
+    localStorage.removeItem(key);
+  }
+}
+
 function captureTextareaLabel(textarea) {
   const parent = textarea.parentElement;
   if (!parent) return null;
@@ -5107,6 +5145,7 @@ async function closeActiveModal() {
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
   if (closingId === "character-modal") {
+    saveCharModalTextareaCollapseStates();
     state.charModalPendingThreadDeleteIds = [];
   }
   state.activeModalId = null;
@@ -5757,6 +5796,7 @@ async function openCharacterModal(
   document.getElementById("char-language-modal")?.classList.add("hidden");
 
   openModal("character-modal");
+  restoreCharModalTextareaCollapseStates();
 }
 
 async function saveCharacterFromModal({ close = true } = {}) {
