@@ -8631,6 +8631,7 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     titleManual: false,
     messages: initialMessages,
     selectedPersonaId: selectedPersona?.id || null,
+    initialUserName: selectedPersona?.name || "You",
     autoTtsEnabled: false,
     lastPersonaInjectionPersonaId: null,
     writingInstructionsTurnCount: 0,
@@ -12678,17 +12679,19 @@ async function migrateLegacySessions() {
 }
 
 async function buildSystemPrompt(character, options = {}) {
+  const threadOverride = options?.threadOverride || currentThread;
   const defaultPersona = await getCharacterDefaultPersona();
   const personaForContext =
     options?.personaOverride || currentPersona || defaultPersona;
   const charName = String(character?.name || "Character");
-  const personaName = String(defaultPersona?.name || "You");
+  const initialUserName = threadOverride?.initialUserName;
+  const personaName = initialUserName || String(defaultPersona?.name || "You");
   const basePromptRaw = (
     character.systemPrompt ||
     state.settings.globalPromptTemplate ||
     ""
   ).trim();
-  const basePrompt = replaceUserPlaceholders(basePromptRaw, personaName);
+  const basePrompt = replaceLorePlaceholders(basePromptRaw, personaName, charName);
   let writingInstructionsRaw = "";
   const wiId = character?.writingInstructionId;
   if (wiId && wiId !== "none") {
@@ -12721,7 +12724,7 @@ async function buildSystemPrompt(character, options = {}) {
     options?.includeOneTimeExtraPrompt === true
       ? String(character?.oneTimeExtraPrompt || "").trim()
       : "";
-  const oneTimeExtra = replaceUserPlaceholders(oneTimeExtraRaw, personaName);
+  const oneTimeExtra = replaceLorePlaceholders(oneTimeExtraRaw, personaName, charName);
   const promptBeforePersona = [basePrompt, writingInstructions, oneTimeExtra]
     .filter((part) => String(part || "").trim())
     .join("\n\n")
