@@ -9579,15 +9579,6 @@ function beginInlineMessageEdit(index, contentEl) {
   if (!message) return;
   if (message.truncatedByFilter === true) return;
   if (String(message.generationError || "").trim()) return;
-  const activeTtsIndex = Number.isInteger(state.tts.speakingMessageIndex)
-    ? state.tts.speakingMessageIndex
-    : Number.isInteger(state.tts.loadingMessageIndex)
-      ? state.tts.loadingMessageIndex
-      : null;
-  // Keep playback when editing a message that appears before the currently spoken/loading one.
-  if (!(Number.isInteger(activeTtsIndex) && index < activeTtsIndex)) {
-    stopTtsPlayback();
-  }
 
   if (
     state.editingMessageIndex !== null &&
@@ -9655,6 +9646,7 @@ function beginInlineMessageEdit(index, contentEl) {
     }
     message.content = next;
     message.userEdited = true;
+    stopTtsPlayback();
     renderMessageContent(contentEl, message);
     refreshMessageControlStates();
     await persistCurrentThread();
