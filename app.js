@@ -108,7 +108,20 @@ const DEFAULT_SETTINGS = {
   unreadSoundEnabled: true,
 };
 
-let playedUnreadSoundForThread = new Set();
+let playedUnreadSoundForThread = new Set(
+  JSON.parse(localStorage.getItem("rp-played-unread-sound-threads") || "[]"),
+);
+
+function savePlayedUnreadSoundThreads() {
+  try {
+    localStorage.setItem(
+      "rp-played-unread-sound-threads",
+      JSON.stringify([...playedUnreadSoundForThread]),
+    );
+  } catch {
+    // ignore storage errors
+  }
+}
 
 function playUnreadMessageSound() {
   if (state.settings.unreadSoundEnabled === false) return;
@@ -1224,6 +1237,31 @@ document.addEventListener("visibilitychange", () => {
     }
     renderChat();
   }
+});
+
+let lastFocusTime = 0;
+window.addEventListener("focus", () => {
+  const now = Date.now();
+  if (now - lastFocusTime < 200) return;
+  lastFocusTime = now;
+  if (!currentThread || !document.getElementById("chat-view")?.classList.contains("active")) {
+    return;
+  }
+  if (state.unreadNeedsUserScrollThreadId === Number(currentThread.id)) {
+    let changed = false;
+    for (const msg of conversationHistory) {
+      if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+        msg.unreadAt = 0;
+        changed = true;
+      }
+    }
+    if (changed) {
+      state.unreadNeedsUserScrollThreadId = null;
+      persistThreadMessagesById(Number(currentThread.id), conversationHistory).catch(() => {});
+      renderThreads();
+    }
+  }
+  renderChat();
 });
 
 function updateCarouselForPaneState() {}
@@ -4984,6 +5022,7 @@ async function renderThreads() {
     if (unreadCount > 0 && !playedUnreadSoundForThread.has(Number(thread.id))) {
       playUnreadMessageSound();
       playedUnreadSoundForThread.add(Number(thread.id));
+      savePlayedUnreadSoundThreads();
     }
     const queuePos =
       isGenerating || isInCooldown
@@ -5250,7 +5289,6 @@ function showMainView() {
       localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
     }
   }
-  playedUnreadSoundForThread.clear();
   stopTtsPlayback();
   state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
@@ -8580,6 +8618,7 @@ async function openThread(threadId) {
     }
   }
   playedUnreadSoundForThread.delete(Number(threadId));
+  savePlayedUnreadSoundThreads();
   const thread = await db.threads.get(threadId);
   if (!thread) return;
 
@@ -8619,8 +8658,27 @@ async function openThread(threadId) {
   updateModelPill();
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
-  state.unreadNeedsUserScrollThreadId =
-    getUnreadAssistantCount(conversationHistory) > 0 ? Number(thread.id) : null;
+  for (const msg of conversationHistory) {
+    if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+      msg.unreadAt = 0;
+    }
+  }
+  if (thread.messages) {
+    for (const msg of thread.messages) {
+      if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+        msg.unreadAt = 0;
+      }
+    }
+  }
+  if (currentThread?.messages) {
+    for (const msg of currentThread.messages) {
+      if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+        msg.unreadAt = 0;
+      }
+    }
+  }
+  state.unreadNeedsUserScrollThreadId = null;
+  persistThreadMessagesById(Number(threadId), thread.messages || []).catch(() => {});
   renderChat();
   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
   const log = document.getElementById("chat-log");
