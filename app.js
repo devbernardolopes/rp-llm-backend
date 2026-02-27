@@ -1224,16 +1224,26 @@ document.addEventListener("visibilitychange", () => {
 
   if (!document.hidden && currentThread && document.getElementById("chat-view")?.classList.contains("active")) {
     let changed = false;
-    for (const msg of conversationHistory) {
+    let lastUnreadAssistantIndex = -1;
+    for (let i = 0; i < conversationHistory.length; i++) {
+      const msg = conversationHistory[i];
       if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
         msg.unreadAt = 0;
         changed = true;
+        lastUnreadAssistantIndex = i;
       }
     }
     if (changed) {
       state.unreadNeedsUserScrollThreadId = null;
       persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
       renderThreads();
+      if (
+        lastUnreadAssistantIndex >= 0 &&
+        currentThread.autoTtsEnabled === true &&
+        state.tts.voiceSupportReady
+      ) {
+        toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
+      }
     }
     renderChat();
   }
@@ -1248,16 +1258,26 @@ window.addEventListener("focus", () => {
     return;
   }
   let changed = false;
-  for (const msg of conversationHistory) {
+  let lastUnreadAssistantIndex = -1;
+  for (let i = 0; i < conversationHistory.length; i++) {
+    const msg = conversationHistory[i];
     if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
       msg.unreadAt = 0;
       changed = true;
+      lastUnreadAssistantIndex = i;
     }
   }
   if (changed) {
     state.unreadNeedsUserScrollThreadId = null;
     persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
     renderThreads();
+    if (
+      lastUnreadAssistantIndex >= 0 &&
+      currentThread.autoTtsEnabled === true &&
+      state.tts.voiceSupportReady
+    ) {
+      toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
+    }
   }
   renderChat();
 });
