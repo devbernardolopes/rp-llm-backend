@@ -932,6 +932,7 @@ const state = {
   unsavedResolver: null,
   activeShortcut: null,
   abortController: null,
+  marqueeRefreshTimer: null,
   tts: {
     audio: null,
     speakingMessageIndex: null,
@@ -1901,7 +1902,10 @@ function setupEvents() {
   });
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
-    refreshAllHoverMarquees();
+    clearTimeout(state.marqueeRefreshTimer);
+    state.marqueeRefreshTimer = setTimeout(() => {
+      refreshAllHoverMarquees();
+    }, 100);
   });
   if (typeof ResizeObserver !== "undefined") {
     const ro = new ResizeObserver(() => {
