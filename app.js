@@ -102,7 +102,7 @@ const DEFAULT_SETTINGS = {
   botCardAvatarTransitionDelay: 4,
   completionCooldown: 2,
   threadAutoTitleEnabled: true,
-  threadAutoTitleMinMessages: 7,
+  threadAutoTitleMinMessages: 5,
   favoriteModels: [],
   chatMessageAlignment: "left",
   unreadSoundEnabled: true,
@@ -3046,7 +3046,7 @@ async function setupSettingsControls() {
     state.settings.threadAutoTitleEnabled !== false;
   const minMessages = Math.max(
     5,
-    Math.min(15, Number(state.settings.threadAutoTitleMinMessages) || 7),
+    Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
   );
   state.settings.threadAutoTitleMinMessages = minMessages;
   threadAutoTitleMinMessages.value = String(minMessages);
@@ -3229,7 +3229,7 @@ async function setupSettingsControls() {
   threadAutoTitleMinMessages?.addEventListener("change", () => {
     const value = Math.max(
       5,
-      Math.min(15, Number(threadAutoTitleMinMessages.value) || 7),
+      Math.min(10, Number(threadAutoTitleMinMessages.value) || 5),
     );
     state.settings.threadAutoTitleMinMessages = value;
     threadAutoTitleMinMessages.value = String(value);
@@ -9080,7 +9080,7 @@ async function maybeGenerateThreadTitle() {
   if (currentThread.titleManual === true) return;
   const minMessages = Math.max(
     5,
-    Math.min(15, Number(state.settings.threadAutoTitleMinMessages) || 7),
+    Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
   );
   if (conversationHistory.length < minMessages) return;
 

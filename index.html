@@ -604,21 +604,6 @@
               <input type="checkbox" id="stream-enabled" checked />
               <span data-i18n="streamMessages">Stream Messages</span>
             </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="autopair-enabled" checked />
-              <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
-            </span>
-            <div class="form-field">
-              <span data-i18n="threadAutoTitleMinMessages">Min. Messages</span>
-              <input
-                id="thread-autotitle-min-messages"
-                type="number"
-                min="5"
-                max="15"
-                step="1"
-                value="7"
-              />
-            </div>
           </div>
           <div data-settings-group="appearance" class="settings-group">
             <div class="form-field">
@@ -704,6 +689,10 @@
           </div>
           <div data-settings-group="threads" class="settings-group">
             <span class="checkbox-line">
+              <input type="checkbox" id="autopair-enabled" checked />
+              <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
+            </span>
+            <span class="checkbox-line">
               <input type="checkbox" id="markdown-enabled" />
               <span data-i18n="renderMarkdown"
                 >Render Markdown in messages</span
@@ -718,6 +707,15 @@
               <span data-i18n="threadAutoTitleEnabled">
                 Enable Auto-titling for Threads
               </span>
+              <input
+                id="thread-autotitle-min-messages"
+                type="number"
+                min="5"
+                max="10"
+                step="1"
+                value="5"
+                style="width: 50px; margin-left: 8px;"
+              />
             </span>
             <div class="form-field">
               <span data-i18n="chatMessageAlignment">Message Alignment</span>
