@@ -4663,6 +4663,23 @@ async function renderCharacters() {
           state.characterTagFilters.push(tag);
         }
         saveUiState();
+        const filters = document.getElementById("character-filters");
+        if (filters?.classList.contains("collapsed")) {
+          filters.classList.remove("collapsed");
+          localStorage.setItem("rp-filters-collapsed", "false");
+          updateCharacterFiltersToggleUi();
+          requestAnimationFrame(() => {
+            renderCharacterTagFilterChips();
+          });
+        }
+        if (idx >= 3 && !state.expandedCharacterTagIds.has(Number(char.id))) {
+          state.expandedCharacterTagIds.add(Number(char.id));
+          const card = e.target.closest(".character-card");
+          if (card) {
+            const tagsDiv = card.querySelector(".character-tags");
+            if (tagsDiv) tagsDiv.classList.add("tags-expanded");
+          }
+        }
         renderCharacterTagFilterChips();
         updateCharacterCardsVisibility();
       });
