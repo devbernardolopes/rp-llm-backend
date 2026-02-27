@@ -1778,9 +1778,21 @@ function setupEvents() {
       renderCharacterTagFilterChips();
       await renderCharacters();
     });
+  const filters = document.getElementById("character-filters");
+  filters?.addEventListener("click", (e) => {
+    if (filters.classList.contains("collapsed")) {
+      filters.classList.remove("collapsed");
+      localStorage.setItem("rp-filters-collapsed", "false");
+      updateCharacterFiltersToggleUi();
+      requestAnimationFrame(() => {
+        renderCharacterTagFilterChips();
+      });
+    }
+  });
   document
     .getElementById("character-filters-toggle")
-    .addEventListener("click", () => {
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
       const filters = document.getElementById("character-filters");
       filters.classList.toggle("collapsed");
       localStorage.setItem(
