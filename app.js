@@ -6832,6 +6832,7 @@ async function getDefaultPersona() {
 async function getCharacterDefaultPersona() {
   return getDefaultPersona();
 }
+window.getCharacterDefaultPersona = getCharacterDefaultPersona;
 
 async function ensurePersonasInitialized() {
   const personas = await getOrderedPersonas();
@@ -12899,112 +12900,6 @@ function replaceUserPlaceholders(text, replacement) {
   return value
     .replace(/\{\{\s*user\s*\}\}/gi, name)
     .replace(/\[\[\s*user\s*\]\]/gi, name);
-}
-
-function replaceLorePlaceholders(text, personaName, charName) {
-  return String(text || "")
-    .replace(/\{\{\s*user\s*\}\}/gi, personaName || "You")
-    .replace(/\[\[\s*user\s*\]\]/gi, personaName || "You")
-    .replace(/\{\{\s*char\s*\}\}/gi, charName || "Character")
-    .replace(/\[\[\s*char\s*\]\]/gi, charName || "Character");
-}
-
-function doesLoreEntryMatch(entry, sourceText) {
-  const hay = String(sourceText || "").toLowerCase();
-  const keys = (entry?.keys || [])
-    .map((k) => String(k || "").toLowerCase())
-    .filter(Boolean);
-  const secondary = (entry?.secondaryKeys || [])
-    .map((k) => String(k || "").toLowerCase())
-    .filter(Boolean);
-  if (keys.length === 0) return false;
-  const primaryMatch = keys.some((k) => hay.includes(k));
-  if (!primaryMatch) return false;
-  if (secondary.length === 0) return true;
-  return secondary.every((k) => hay.includes(k));
-}
-
-function takeLoreEntriesByTokenBudget(entries, tokenBudget) {
-  const budget = Math.max(100, Math.min(1000, Number(tokenBudget) || 200));
-  let used = 0;
-  const picked = [];
-  for (const entry of entries) {
-    const content = String(entry?.content || "").trim();
-    if (!content) continue;
-    const estimatedTokens = Math.ceil(content.length / 4);
-    if (picked.length > 0 && used + estimatedTokens > budget) break;
-    picked.push(entry);
-    used += estimatedTokens;
-  }
-  return picked;
-}
-
-async function getCharacterLoreEntries(character, options = {}) {
-  const loreIds = Array.isArray(character.lorebookIds)
-    ? character.lorebookIds.map(Number).filter(Number.isInteger)
-    : [];
-  if (loreIds.length === 0) return [];
-  const lorebooksRaw = await db.lorebooks.where("id").anyOf(loreIds).toArray();
-  const lorebooks = lorebooksRaw
-    .map((lb) => normalizeLorebookRecord(lb))
-    .filter(Boolean);
-  if (lorebooks.length === 0) return [];
-
-  const scanWindow = Math.max(
-    5,
-    ...lorebooks.map((lb) => Math.max(5, Number(lb.scanDepth) || 50)),
-  );
-  const historySource = Array.isArray(options?.historyOverride)
-    ? options.historyOverride
-    : conversationHistory;
-  const recent = historySource.slice(-scanWindow);
-  const baseSource = recent
-    .map((m) => String(m.content || ""))
-    .join("\n")
-    .toLowerCase();
-  const defaultPersona = await getCharacterDefaultPersona();
-  const personaName =
-    options?.personaOverride?.name ||
-    currentPersona?.name ||
-    defaultPersona?.name ||
-    "You";
-  const charName = character?.name || "Character";
-  const results = [];
-
-  lorebooks.forEach((lb) => {
-    if (!Array.isArray(lb.entries) || lb.entries.length === 0) return;
-    let source = baseSource;
-    const matched = [];
-    const matchedIds = new Set();
-    const maxPasses = lb.recursiveScanning ? 4 : 1;
-    for (let pass = 0; pass < maxPasses; pass += 1) {
-      let addedThisPass = 0;
-      lb.entries.forEach((entry) => {
-        if (matchedIds.has(entry.id)) return;
-        if (!doesLoreEntryMatch(entry, source)) return;
-        matched.push(entry);
-        matchedIds.add(entry.id);
-        addedThisPass += 1;
-      });
-      if (addedThisPass === 0) break;
-      if (lb.recursiveScanning) {
-        source += `\n${matched
-          .slice(-addedThisPass)
-          .map((e) => e.content)
-          .join("\n")}`.toLowerCase();
-      }
-    }
-
-    const budgeted = takeLoreEntriesByTokenBudget(matched, lb.tokenBudget);
-    budgeted.forEach((entry) => {
-      results.push({
-        lorebookName: lb.name || "Lore Book",
-        entryId: entry.id,
-        content: replaceLorePlaceholders(entry.content, personaName, charName),
-      });
-    });
-  });
-  return results;
 }
 
 async function callOpenRouter(
