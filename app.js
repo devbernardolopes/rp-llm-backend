@@ -13421,7 +13421,8 @@ function renderMessageHtml(content, role = "assistant") {
     const md = window.markdownit("default", {
       html: state.settings.allowMessageHtml,
       linkify: true,
-      typographer: true,
+      typographer: false,
+      breaks: true,
     });
     return md.render(raw);
   }

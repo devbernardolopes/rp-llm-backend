@@ -1723,11 +1723,44 @@ textarea {
 }
 
 .message-content p {
-  margin: 0 0 14px;
+  margin: 0 0 8px;
+}
+
+.message-content p:empty {
+  display: none;
 }
 
 .message-content p:last-child {
   margin-bottom: 0;
+}
+
+.message-content pre,
+.message-content pre code {
+  overflow-x: auto;
+  white-space: pre;
+  max-width: 100%;
+  display: block;
+}
+
+.message-content code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.message-content pre {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.message-content pre,
+.message-content blockquote {
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .input-row {
