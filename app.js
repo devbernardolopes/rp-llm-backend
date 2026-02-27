@@ -9861,6 +9861,12 @@ async function generateBotReply() {
       content: m.content,
     })),
   ];
+  if (promptContext.personaInjectionForEndMessages) {
+    promptMessages.push({
+      role: "system",
+      content: promptContext.personaInjectionForEndMessages,
+    });
+  }
   state.currentRequestMessages = promptMessages;
 
   const log = document.getElementById("chat-log");
@@ -10174,6 +10180,12 @@ async function regenerateMessage(index) {
         content: m.content,
       })),
     ];
+    if (promptContext.personaInjectionForEndMessages) {
+      regenMessages.push({
+        role: "system",
+        content: promptContext.personaInjectionForEndMessages,
+      });
+    }
     target.requestMessages = regenMessages;
     target.content = "";
     target.generationStatus = "regenerating";
@@ -12038,6 +12050,12 @@ async function processNextQueuedThread() {
       content: m.content,
     })),
   ];
+  if (promptContext.personaInjectionForEndMessages) {
+    promptMessages.push({
+      role: "system",
+      content: promptContext.personaInjectionForEndMessages,
+    });
+  }
   state.currentRequestMessages = promptMessages;
 
   const existingPendingIdx = findLatestPendingAssistantIndex(tempConversation);
@@ -12552,6 +12570,7 @@ async function buildSystemPrompt(character, options = {}) {
   const contextSections = [];
   state.pendingPersonaInjectionPersonaId = null;
   let systemPromptWithPersona = promptBeforePersona;
+  let personaInjectionForEndMessages = null;
   if (
     personaForContext &&
     shouldInjectPersonaContext(
@@ -12559,12 +12578,22 @@ async function buildSystemPrompt(character, options = {}) {
       options?.threadOverride || null,
     )
   ) {
+    const placement = character?.personaInjectionPlacement || "end_system_prompt";
     const personaInjected = renderPersonaInjectionContent(personaForContext);
-    systemPromptWithPersona = applyPersonaInjectionPlacement(
-      promptBeforePersona,
-      personaInjected,
-      character?.personaInjectionPlacement || "end_system_prompt",
-    );
+    const templateNotEmpty = String(
+      state.settings.personaInjectionTemplate ||
+        DEFAULT_SETTINGS.personaInjectionTemplate ||
+        "",
+    ).trim();
+    if (placement === "end_messages" && templateNotEmpty) {
+      personaInjectionForEndMessages = personaInjected;
+    } else if (placement !== "end_messages") {
+      systemPromptWithPersona = applyPersonaInjectionPlacement(
+        promptBeforePersona,
+        personaInjected,
+        placement,
+      );
+    }
     state.pendingPersonaInjectionPersonaId = personaForContext.id || null;
   }
 
@@ -12588,9 +12617,10 @@ async function buildSystemPrompt(character, options = {}) {
       prompt,
       loreEntries: Array.isArray(loreEntries) ? loreEntries : [],
       memory: memory || "",
+      personaInjectionForEndMessages,
     };
   }
-  return prompt;
+  return { prompt, personaInjectionForEndMessages };
 }
 
 async function openMessageContextModal(index) {
@@ -12716,9 +12746,19 @@ function renderPersonaInjectionContent(persona) {
   const template =
     state.settings.personaInjectionTemplate ||
     DEFAULT_SETTINGS.personaInjectionTemplate;
-  return String(template || "")
-    .replace(/\{\{\s*name\s*\}\}/gi, persona?.name || "You")
-    .replace(/\{\{\s*description\s*\}\}/gi, persona?.description || "(none)");
+  const name = String(persona?.name || "").trim() || "Anon";
+  const description = String(persona?.description || "").trim();
+  let result = String(template || "");
+  if (description) {
+    result = result
+      .replace(/\{\{\s*name\s*\}\}/gi, name)
+      .replace(/\{\{\s*description\s*\}\}/gi, description);
+  } else {
+    result = result
+      .replace(/\{\{\s*name\s*\}\}/gi, name)
+      .replace(/\{\{\s*description\s*\}\}/gi, "");
+  }
+  return result;
 }
 
 function applyPersonaInjectionPlacement(basePrompt, injection, placement) {
@@ -13341,11 +13381,14 @@ async function updateThreadBudgetIndicator() {
   const previousPendingPersonaInjection =
     state.pendingPersonaInjectionPersonaId;
   let systemPrompt = "";
+  let personaInjectionForEndMessages = null;
   try {
-    systemPrompt = await buildSystemPrompt(currentCharacter, {
+    const result = await buildSystemPrompt(currentCharacter, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
       returnTrace: false,
     });
+    systemPrompt = result.prompt || "";
+    personaInjectionForEndMessages = result.personaInjectionForEndMessages;
   } finally {
     state.pendingPersonaInjectionPersonaId = previousPendingPersonaInjection;
   }
@@ -13358,6 +13401,12 @@ async function updateThreadBudgetIndicator() {
       content: m.content,
     })),
   ];
+  if (personaInjectionForEndMessages) {
+    messages.push({
+      role: "system",
+      content: personaInjectionForEndMessages,
+    });
+  }
 
   const pendingInput = String(
     document.getElementById("user-input")?.value || "",

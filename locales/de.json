@@ -235,6 +235,7 @@
   "tagsCommaSeparated": "Tags (kommagetrennt)",
   "personaInjectionPlacement": "Position der Persona-Injektion",
   "atEndCharacterPrompt": "Am Ende des Charakter-Prompts",
+  "atEndOfMessages": "Am Ende der Nachrichten",
   "enableMemory": "Gedächtnis aktivieren",
   "enablePostprocess": "Nachbearbeitungsregeln aktivieren",
   "autoTriggerAiFirst": "KI-Erstnachricht automatisch auslösen",

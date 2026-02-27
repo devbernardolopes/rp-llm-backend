@@ -235,6 +235,7 @@
   "tagsCommaSeparated": "Tags (séparées par des virgules)",
   "personaInjectionPlacement": "Position d'injection de la Persona",
   "atEndCharacterPrompt": "À la fin du prompt du personnage",
+  "atEndOfMessages": "À la fin des messages",
   "enableMemory": "Activer la mémoire",
   "enablePostprocess": "Activer les règles de post-traitement",
   "autoTriggerAiFirst": "Déclencher automatiquement le premier message de l'IA",

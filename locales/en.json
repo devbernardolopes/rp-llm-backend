@@ -235,6 +235,7 @@
   "tagsCommaSeparated": "Tags (comma-separated)",
   "personaInjectionPlacement": "Persona Injection Placement",
   "atEndCharacterPrompt": "At End of Character Prompt",
+  "atEndOfMessages": "At End of Messages",
   "enableMemory": "Enable Memory",
   "enablePostprocess": "Enable Post-processing Rules",
   "autoTriggerAiFirst": "Auto-trigger AI first message",
