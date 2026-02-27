@@ -85,7 +85,6 @@ const DEFAULT_SETTINGS = {
   summarySystemPrompt: "You are a helpful summarization assistant.",
   personaInjectionTemplate:
     "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
-  personaInjectionWhen: "always",
   writingInstructionsInjectionWhen: "always",
   markdownCustomCss:
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
@@ -641,10 +640,8 @@ const I18N = {
     defaultCharacterPrompt: "Default Character Prompt",
     memorySummarizerPrompt: "Memory Summarizer System Prompt",
     personaInjectionTemplate: "Persona Injection Template",
-    personaInjectionTiming: "Persona Injection Timing",
     writingInstructionsInjectionTiming: "Writing Instructions Injection Timing",
     always: "Always",
-    onPersonaChange: "On Persona Change (first message always injects)",
     everyOther: "Every Other",
     everySecond: "Every Second",
     everyThird: "Every Third",
@@ -3046,9 +3043,6 @@ async function setupSettingsControls() {
   const personaInjectionTemplate = document.getElementById(
     "persona-injection-template",
   );
-  const personaInjectionWhen = document.getElementById(
-    "persona-injection-when",
-  );
   const writingInstructionsInjectionWhen = document.getElementById(
     "writing-instructions-injection-when",
   );
@@ -3142,10 +3136,6 @@ async function setupSettingsControls() {
   personaInjectionTemplate.value =
     state.settings.personaInjectionTemplate ||
     DEFAULT_SETTINGS.personaInjectionTemplate;
-  personaInjectionWhen.value =
-    state.settings.personaInjectionWhen === "on_change"
-      ? "on_change"
-      : "always";
   const writingWhen = normalizeWritingInstructionsTiming(
     state.settings.writingInstructionsInjectionWhen,
   );
@@ -3417,11 +3407,6 @@ async function setupSettingsControls() {
     saveSettings();
   });
 
-  personaInjectionWhen.addEventListener("change", () => {
-    state.settings.personaInjectionWhen =
-      personaInjectionWhen.value === "on_change" ? "on_change" : "always";
-    saveSettings();
-  });
   writingInstructionsInjectionWhen?.addEventListener("change", () => {
     state.settings.writingInstructionsInjectionWhen =
       normalizeWritingInstructionsTiming(
@@ -3527,7 +3512,6 @@ function getSettingsGroupForNode(node) {
     has("#global-prompt-template") ||
     has("#summary-system-prompt") ||
     has("#persona-injection-template") ||
-    has("#persona-injection-when") ||
     has("#writing-instructions-injection-when")
   )
     return "prompting";
@@ -3579,7 +3563,6 @@ function getSettingsGroupForNode(node) {
     id === "global-prompt-template" ||
     id === "summary-system-prompt" ||
     id === "persona-injection-template" ||
-    id === "persona-injection-when" ||
     id === "writing-instructions-injection-when"
   ) {
     return "prompting";
@@ -12913,16 +12896,11 @@ async function openMessageSystemPromptModal(index) {
 
 function shouldInjectPersonaContext(persona, threadOverride = null) {
   if (!persona) return false;
-  const mode =
-    state.settings.personaInjectionWhen === "on_change"
-      ? "on_change"
-      : "always";
-  if (mode === "always") return true;
-  const currentPersonaId = Number(persona.id);
-  const sourceThread = threadOverride || currentThread;
-  const lastInjected = Number(sourceThread?.lastPersonaInjectionPersonaId);
-  if (!Number.isInteger(lastInjected)) return true;
-  return lastInjected !== currentPersonaId;
+  const template =
+    state.settings.personaInjectionTemplate ||
+    DEFAULT_SETTINGS.personaInjectionTemplate;
+  if (!String(template || "").trim()) return false;
+  return true;
 }
 
 function renderPersonaInjectionContent(persona) {
