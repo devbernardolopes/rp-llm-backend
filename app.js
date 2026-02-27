@@ -9264,9 +9264,8 @@ function buildMessageRow(message, index, streaming) {
       },
     );
     systemPromptBtn.classList.add("msg-system-prompt-btn");
-    const hasSystemContent = hasSystemMessagesData(message);
-    const systemDisabled = disableControlsForRow || !hasSystemContent;
-    systemPromptBtn.disabled = systemDisabled;
+    const hasContent = message && index >= 0 && index < conversationHistory.length;
+    systemPromptBtn.disabled = disableControlsForRow || !hasContent;
     if (disableControlsForRow) {
       systemPromptBtn.setAttribute(
         "title",
@@ -9276,13 +9275,8 @@ function buildMessageRow(message, index, streaming) {
         "aria-label",
         t("msgSystemPromptUnavailableGenerating"),
       );
-    } else if (!hasSystemContent) {
-      systemPromptBtn.setAttribute("title", t("msgSystemPromptUnavailable"));
-      systemPromptBtn.setAttribute(
-        "aria-label",
-        t("msgSystemPromptUnavailable"),
-      );
-    } else {
+    }
+    if (!disableControlsForRow && hasContent) {
       systemPromptBtn.setAttribute("title", t("msgSystemPromptTitle"));
       systemPromptBtn.setAttribute("aria-label", t("msgSystemPromptTitle"));
     }
@@ -11084,15 +11078,15 @@ function refreshMessageControlStates() {
       }
     });
     row.querySelectorAll(".msg-system-prompt-btn").forEach((btn) => {
-      const hasSystem = hasSystemMessagesData(message);
-      btn.disabled = isStreaming || !hasSystem;
+      const hasMsg = message && Number.isInteger(index) && index >= 0;
+      btn.disabled = isStreaming || !hasMsg;
       if (isStreaming) {
         btn.setAttribute("title", t("msgSystemPromptUnavailableGenerating"));
         btn.setAttribute(
           "aria-label",
           t("msgSystemPromptUnavailableGenerating"),
         );
-      } else if (!hasSystem) {
+      } else if (!hasMsg) {
         btn.setAttribute("title", t("msgSystemPromptUnavailable"));
         btn.setAttribute("aria-label", t("msgSystemPromptUnavailable"));
       } else {
@@ -12638,30 +12632,56 @@ async function openMessageModelInfoModal(index) {
 }
 
 async function openMessageSystemPromptModal(index) {
-  const message = conversationHistory[index];
-  if (!message || !hasSystemMessagesData(message)) return;
   const container = document.getElementById("message-system-prompt-list");
   if (!container) return;
   container.innerHTML = "";
-  message.systemMessages.forEach((entry, idx) => {
-    if (!entry || !String(entry.content || "").trim()) return;
-    const entryWrapper = document.createElement("div");
-    entryWrapper.className = "system-prompt-entry";
-    const label = document.createElement("div");
-    label.className = "system-prompt-label";
-    label.textContent = tf("msgSystemPromptEntryLabel", { index: idx + 1 });
-    const pre = document.createElement("pre");
-    pre.className = "metadata-json";
-    pre.textContent = String(entry.content || "");
-    entryWrapper.append(label, pre);
-    container.appendChild(entryWrapper);
-  });
-  if (!container.hasChildNodes()) {
+
+  const messagesToShow = conversationHistory.slice(0, index + 1);
+
+  if (messagesToShow.length === 0) {
     const notice = document.createElement("p");
     notice.className = "muted";
     notice.textContent = t("msgSystemPromptUnavailable");
     container.appendChild(notice);
+    openModal("message-system-prompt-modal");
+    return;
   }
+
+  messagesToShow.forEach((msg, idx) => {
+    const entryWrapper = document.createElement("div");
+    entryWrapper.className = "system-prompt-entry";
+
+    const header = document.createElement("div");
+    header.className = "system-prompt-header";
+    const roleLabel = document.createElement("span");
+    roleLabel.className = "system-prompt-role";
+    roleLabel.textContent = msg?.role || "unknown";
+    const toggleIcon = document.createElement("span");
+    toggleIcon.className = "system-prompt-toggle";
+    toggleIcon.textContent = "▼";
+    header.appendChild(roleLabel);
+    header.appendChild(toggleIcon);
+
+    const contentPre = document.createElement("pre");
+    contentPre.className = "metadata-json system-prompt-content";
+    contentPre.style.display = "none";
+    contentPre.textContent = msg?.content ?? "";
+
+    header.addEventListener("click", () => {
+      if (contentPre.style.display === "none") {
+        contentPre.style.display = "block";
+        toggleIcon.textContent = "▲";
+      } else {
+        contentPre.style.display = "none";
+        toggleIcon.textContent = "▼";
+      }
+    });
+
+    entryWrapper.appendChild(header);
+    entryWrapper.appendChild(contentPre);
+    container.appendChild(entryWrapper);
+  });
+
   openModal("message-system-prompt-modal");
 }
 

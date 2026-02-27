@@ -2720,10 +2720,31 @@ textarea {
   flex-direction: column;
   gap: 12px;
 }
-.system-prompt-label {
+.system-prompt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.system-prompt-role {
+  font-weight: 600;
   font-size: 13px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.system-prompt-toggle {
+  font-size: 10px;
   color: var(--muted);
-  margin-bottom: 4px;
+  transition: transform 0.2s ease;
+}
+.system-prompt-content {
+  margin-top: 8px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .model-info-row {
