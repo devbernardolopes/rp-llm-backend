@@ -69,7 +69,7 @@ const DEFAULT_SETTINGS = {
   openRouterApiKey: "",
   model: "openrouter/auto",
   markdownEnabled: true,
-  allowMessageHtml: true,
+  allowMessageHtml: false,
   streamEnabled: true,
   autoReplyEnabled: true,
   enterToSendEnabled: true,
@@ -3094,7 +3094,7 @@ async function setupSettingsControls() {
   const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
   markdownCheck.checked = !!state.settings.markdownEnabled;
   unreadSoundEnabled.checked = state.settings.unreadSoundEnabled !== false;
-  allowMessageHtml.checked = state.settings.allowMessageHtml !== false;
+  allowMessageHtml.checked = state.settings.allowMessageHtml === true;
   streamEnabled.checked = state.settings.streamEnabled !== false;
   autopairEnabled.checked = state.settings.autoPairEnabled !== false;
   threadAutoTitleEnabled.checked =
@@ -13581,12 +13581,12 @@ function renderMessageHtml(content, role = "assistant") {
   }
   if (!state.settings.markdownEnabled) {
     return state.settings.allowMessageHtml
-      ? raw.replace(/\n/g, "<br>")
-      : escapeHtml(raw).replace(/\n/g, "<br>");
+      ? escapeHtml(raw).replace(/\n/g, "<br>")
+      : raw.replace(/\n/g, "<br>");
   }
   if (typeof window.markdownit === "function") {
     const md = window.markdownit("default", {
-      html: state.settings.allowMessageHtml,
+      html: !state.settings.allowMessageHtml,
       linkify: true,
       typographer: false,
       breaks: true,
@@ -13598,8 +13598,8 @@ function renderMessageHtml(content, role = "assistant") {
 
 function markdownToHtml(input) {
   let html = state.settings.allowMessageHtml
-    ? String(input)
-    : escapeHtml(input);
+    ? escapeHtml(input)
+    : String(input);
 
   html = html.replace(
     /```([\s\S]*?)```/g,
