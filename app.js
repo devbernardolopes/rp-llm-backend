@@ -1222,19 +1222,17 @@ document.addEventListener("visibilitychange", () => {
   }
 
   if (!document.hidden && currentThread && document.getElementById("chat-view")?.classList.contains("active")) {
-    if (state.unreadNeedsUserScrollThreadId === Number(currentThread.id)) {
-      let changed = false;
-      for (const msg of conversationHistory) {
-        if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
-          msg.unreadAt = 0;
-          changed = true;
-        }
+    let changed = false;
+    for (const msg of conversationHistory) {
+      if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+        msg.unreadAt = 0;
+        changed = true;
       }
-      if (changed) {
-        state.unreadNeedsUserScrollThreadId = null;
-        persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
-        renderThreads();
-      }
+    }
+    if (changed) {
+      state.unreadNeedsUserScrollThreadId = null;
+      persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
+      renderThreads();
     }
     renderChat();
   }
@@ -1248,19 +1246,17 @@ window.addEventListener("focus", () => {
   if (!currentThread || !document.getElementById("chat-view")?.classList.contains("active")) {
     return;
   }
-  if (state.unreadNeedsUserScrollThreadId === Number(currentThread.id)) {
-    let changed = false;
-    for (const msg of conversationHistory) {
-      if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
-        msg.unreadAt = 0;
-        changed = true;
-      }
+  let changed = false;
+  for (const msg of conversationHistory) {
+    if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+      msg.unreadAt = 0;
+      changed = true;
     }
-    if (changed) {
-      state.unreadNeedsUserScrollThreadId = null;
-      persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
-      renderThreads();
-    }
+  }
+  if (changed) {
+    state.unreadNeedsUserScrollThreadId = null;
+    persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
+    renderThreads();
   }
   renderChat();
 });
