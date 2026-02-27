@@ -3014,6 +3014,14 @@ async function setupSettingsControls() {
     uiLanguageSelect.value = state.settings.uiLanguage || "auto";
     if (!uiLanguageSelect.value) uiLanguageSelect.value = "auto";
   }
+
+  const themeSelect = document.getElementById("theme-select");
+  if (themeSelect) {
+    const savedTheme = localStorage.getItem("rp-theme") || "dark";
+    themeSelect.value = savedTheme;
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }
+
   if (modelPricingFilter) {
     modelPricingFilter.value =
       state.settings.modelPricingFilter === "free" ||
@@ -3493,6 +3501,13 @@ async function setupSettingsControls() {
       await renderCharacters();
     });
   }
+  if (themeSelect) {
+    themeSelect.addEventListener("change", () => {
+      const theme = themeSelect.value;
+      localStorage.setItem("rp-theme", theme);
+      document.documentElement.setAttribute("data-theme", theme);
+    });
+  }
 }
 
 function clampToastDuration(value) {
@@ -3616,6 +3631,7 @@ function getSettingsGroupForNode(node) {
   }
   if (
     id === "ui-language-select" ||
+    id === "theme-select" ||
     id === "toast-delay-slider" ||
     id === "marquee-behavior-select" ||
     id === "bot-card-avatar-effect" ||
