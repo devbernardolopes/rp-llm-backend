@@ -10446,6 +10446,11 @@ async function playBrowserTts(normalizedText, options, playback = {}) {
         utterance.rate = desiredRate;
         utterance.pitch = desiredPitch;
         utterance.onend = () => {
+          if (requestId !== state.tts.activeRequestId) {
+            ttsDebug("playBrowserTts:cancelled-on-end", { chunk });
+            reject(makeTtsCancelledError());
+            return;
+          }
           ttsDebug("playBrowserTts:chunk-ended", { chunk });
           if (state.tts.audio === utterance) {
             state.tts.audio = null;
@@ -10581,6 +10586,12 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
         state.tts.audio = audioEl;
         return new Promise((resolve, reject) => {
           audioEl.onended = () => {
+            if (requestId !== state.tts.activeRequestId) {
+              ttsDebug("playKokoroTts:cancelled-on-ended-fallback");
+              URL.revokeObjectURL(url);
+              reject(makeTtsCancelledError());
+              return;
+            }
             ttsDebug("playKokoroTts:chunk-ended-fallback");
             if (state.tts.audio === audioEl) state.tts.audio = null;
             URL.revokeObjectURL(url);
@@ -10590,11 +10601,19 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
             ttsDebug("playKokoroTts:error-fallback");
             if (state.tts.audio === audioEl) state.tts.audio = null;
             URL.revokeObjectURL(url);
+            if (requestId !== state.tts.activeRequestId) {
+              reject(makeTtsCancelledError());
+              return;
+            }
             reject(new Error("Kokoro TTS playback failed."));
           };
           audioEl.play().catch((err) => {
             if (state.tts.audio === audioEl) state.tts.audio = null;
             URL.revokeObjectURL(url);
+            if (requestId !== state.tts.activeRequestId) {
+              reject(makeTtsCancelledError());
+              return;
+            }
             reject(err);
           });
         });
@@ -10605,6 +10624,16 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       state.tts.audio = bufferSource;
       return new Promise((resolve, reject) => {
         bufferSource.onended = () => {
+          if (requestId !== state.tts.activeRequestId) {
+            ttsDebug("playKokoroTts:cancelled-on-ended");
+            try {
+              bufferSource.disconnect();
+            } catch {
+              /* ignore */
+            }
+            reject(makeTtsCancelledError());
+            return;
+          }
           ttsDebug("playKokoroTts:chunk-ended", { voice });
           if (state.tts.audio === bufferSource) state.tts.audio = null;
           try {
@@ -10727,8 +10756,10 @@ function stopTtsPlayback(options = {}) {
   state.tts.speakingMessageIndex = null;
   state.tts.loadingMessageIndex = null;
   state.charModalTtsTestPlaying = false;
-  if (!options?.silent) updateCharTtsTestButtonState();
-  refreshAllSpeakerButtons();
+  if (!options?.silent) {
+    updateCharTtsTestButtonState();
+    refreshAllSpeakerButtons();
+  }
 }
 
 async function toggleMessageSpeech(index) {
