@@ -2920,8 +2920,8 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  max-height: 46vh;
-  overflow-y: auto;
+  align-content: flex-start;
+  margin-top: 12px;
   padding-right: 2px;
 }
 
