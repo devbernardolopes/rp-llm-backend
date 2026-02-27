@@ -956,6 +956,7 @@ const state = {
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
   activeGenerationThreadId: null,
+  currentRequestMessages: null,
   generationQueue: [],
   selectedThreadIds: new Set(),
   characterTagFilters: [],
@@ -9256,18 +9257,8 @@ function buildMessageRow(message, index, streaming) {
     );
     systemPromptBtn.classList.add("msg-system-prompt-btn");
     const hasContent = message && index >= 0 && index < conversationHistory.length;
-    systemPromptBtn.disabled = disableControlsForRow || !hasContent;
-    if (disableControlsForRow) {
-      systemPromptBtn.setAttribute(
-        "title",
-        t("msgSystemPromptUnavailableGenerating"),
-      );
-      systemPromptBtn.setAttribute(
-        "aria-label",
-        t("msgSystemPromptUnavailableGenerating"),
-      );
-    }
-    if (!disableControlsForRow && hasContent) {
+    systemPromptBtn.disabled = !hasContent;
+    if (hasContent) {
       systemPromptBtn.setAttribute("title", t("msgSystemPromptTitle"));
       systemPromptBtn.setAttribute("aria-label", t("msgSystemPromptTitle"));
     }
@@ -9858,6 +9849,23 @@ async function generateBotReply() {
   const writingTurnIndex = getNextWritingInstructionsTurnIndex(
     generationThreadSnapshot,
   );
+  const promptContext = await buildSystemPrompt(generationCharacter, {
+    includeOneTimeExtraPrompt: includeOneTimeExtra,
+    writingInstructionsTurnIndex: writingTurnIndex,
+    returnTrace: true,
+    personaOverride: generationPersona,
+    historyOverride: generationHistory,
+    threadOverride: generationThreadSnapshot,
+  });
+  const systemPrompt = promptContext.prompt;
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...generationHistory.map((m) => ({
+      role: m.role === "ai" ? "assistant" : m.role,
+      content: m.content,
+    })),
+  ];
+  state.currentRequestMessages = promptMessages;
 
   const log = document.getElementById("chat-log");
   const existingPendingIdx = findLatestPendingAssistantIndex(generationHistory);
@@ -9871,6 +9879,7 @@ async function generateBotReply() {
     pending.truncatedByFilter = false;
     pending.model = state.settings.model || "";
     pending.temperature = Number(state.settings.temperature) || 0;
+    pending.requestMessages = state.currentRequestMessages || null;
     if (!Number.isInteger(Number(pending.writingInstructionsTurnIndex))) {
       pending.writingInstructionsTurnIndex = writingTurnIndex;
       pending.writingInstructionsCounted = false;
@@ -9893,6 +9902,7 @@ async function generateBotReply() {
       writingInstructionsCounted: false,
       model: state.settings.model || "",
       temperature: Number(state.settings.temperature) || 0,
+      requestMessages: state.currentRequestMessages || null,
     };
     generationHistory.push(pending);
     pendingIndex = generationHistory.length - 1;
@@ -9922,16 +9932,6 @@ async function generateBotReply() {
   setSendingState(true);
 
   try {
-    const promptContext = await buildSystemPrompt(generationCharacter, {
-      includeOneTimeExtraPrompt: includeOneTimeExtra,
-      writingInstructionsTurnIndex:
-        Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
-      returnTrace: true,
-      personaOverride: generationPersona,
-      historyOverride: generationHistory,
-      threadOverride: generationThreadSnapshot,
-    });
-    const systemPrompt = promptContext.prompt;
     const result = await callOpenRouter(
       systemPrompt,
       generationHistory,
@@ -10171,6 +10171,14 @@ async function regenerateMessage(index) {
       returnTrace: true,
     });
     const systemPrompt = promptContext.prompt;
+    const regenMessages = [
+      { role: "system", content: systemPrompt },
+      ...prior.map((m) => ({
+        role: m.role === "ai" ? "assistant" : m.role,
+        content: m.content,
+      })),
+    ];
+    target.requestMessages = regenMessages;
     target.content = "";
     target.generationStatus = "regenerating";
     messagesToSave[index].content = target.content;
@@ -11070,19 +11078,13 @@ function refreshMessageControlStates() {
     });
     row.querySelectorAll(".msg-system-prompt-btn").forEach((btn) => {
       const hasMsg = message && Number.isInteger(index) && index >= 0;
-      btn.disabled = isStreaming || !hasMsg;
-      if (isStreaming) {
-        btn.setAttribute("title", t("msgSystemPromptUnavailableGenerating"));
-        btn.setAttribute(
-          "aria-label",
-          t("msgSystemPromptUnavailableGenerating"),
-        );
-      } else if (!hasMsg) {
-        btn.setAttribute("title", t("msgSystemPromptUnavailable"));
-        btn.setAttribute("aria-label", t("msgSystemPromptUnavailable"));
-      } else {
+      btn.disabled = !hasMsg;
+      if (hasMsg) {
         btn.setAttribute("title", t("msgSystemPromptTitle"));
         btn.setAttribute("aria-label", t("msgSystemPromptTitle"));
+      } else {
+        btn.setAttribute("title", t("msgSystemPromptUnavailable"));
+        btn.setAttribute("aria-label", t("msgSystemPromptUnavailable"));
       }
     });
   });
@@ -12016,12 +12018,30 @@ async function processNextQueuedThread() {
   const tempPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
     : null;
-  const existingPendingIdx = findLatestPendingAssistantIndex(tempConversation);
-  let pending = null;
-  let pendingIndex = existingPendingIdx;
   const writingTurnCountForThread =
     getThreadWritingInstructionsTurnCount(tempThread);
   const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
+  const promptContext = await buildSystemPrompt(character, {
+    includeOneTimeExtraPrompt: shouldIncludeOneTimeExtraPrompt(tempConversation),
+    writingInstructionsTurnIndex: writingTurnIndex,
+    returnTrace: true,
+    personaOverride: tempPersona,
+    historyOverride: tempConversation,
+    threadOverride: tempThread,
+  });
+  const systemPrompt = promptContext.prompt;
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...tempConversation.map((m) => ({
+      role: m.role === "ai" ? "assistant" : m.role,
+      content: m.content,
+    })),
+  ];
+  state.currentRequestMessages = promptMessages;
+
+  const existingPendingIdx = findLatestPendingAssistantIndex(tempConversation);
+  let pending = null;
+  let pendingIndex = existingPendingIdx;
   if (existingPendingIdx >= 0) {
     pending = tempConversation[existingPendingIdx];
     pending.content = "";
@@ -12052,6 +12072,7 @@ async function processNextQueuedThread() {
     tempConversation.push(pending);
     pendingIndex = tempConversation.length - 1;
   }
+  pending.requestMessages = state.currentRequestMessages || null;
   await persistThreadMessagesById(nextThreadId, tempConversation);
   state.sending = true;
   state.activeGenerationThreadId = nextThreadId;
@@ -12059,15 +12080,6 @@ async function processNextQueuedThread() {
   state.abortController = new AbortController();
   setSendingState(true);
   try {
-    const includeOneTimeExtra =
-      shouldIncludeOneTimeExtraPrompt(tempConversation);
-    const promptContext = await buildSystemPrompt(character, {
-      includeOneTimeExtraPrompt: includeOneTimeExtra,
-      writingInstructionsTurnIndex:
-        Number(pending.writingInstructionsTurnIndex) || 1,
-      returnTrace: true,
-    });
-    const systemPrompt = promptContext.prompt;
     const result = await callOpenRouter(
       systemPrompt,
       tempConversation,
@@ -12620,7 +12632,23 @@ async function openMessageSystemPromptModal(index) {
   if (!container) return;
   container.innerHTML = "";
 
-  const messagesToShow = conversationHistory.slice(0, index + 1);
+  const message = conversationHistory[index];
+  if (!message) {
+    const notice = document.createElement("p");
+    notice.className = "muted";
+    notice.textContent = t("msgSystemPromptUnavailable");
+    container.appendChild(notice);
+    openModal("message-system-prompt-modal");
+    return;
+  }
+
+  let messagesToShow = [];
+
+  if (message.requestMessages && Array.isArray(message.requestMessages)) {
+    messagesToShow = message.requestMessages;
+  } else if (index >= 0 && index < conversationHistory.length) {
+    messagesToShow = conversationHistory.slice(0, index + 1);
+  }
 
   if (messagesToShow.length === 0) {
     const notice = document.createElement("p");
@@ -12888,6 +12916,8 @@ async function callOpenRouter(
     temperature: clampTemperature(state.settings.temperature),
     stream: !!state.settings.streamEnabled,
   };
+
+  state.currentRequestMessages = body.messages;
 
   try {
     const attempts = body.stream ? 1 : 3;
