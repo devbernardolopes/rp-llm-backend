@@ -6000,6 +6000,7 @@ function populateCharacterLanguageSelectOptions() {
 async function openCharacterModal(
   character = null,
   selectedCardLanguage = null,
+  startDirty = false,
 ) {
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
@@ -6059,7 +6060,8 @@ async function openCharacterModal(
   updateCharTtsRatePitchLabels();
   updateCharTtsTestButtonState();
   updateCharacterPromptPlaceholder();
-  state.modalDirty["character-modal"] = false;
+  state.modalDirty["character-modal"] = startDirty;
+  updateModalActionButtons("character-modal");
   document.getElementById("char-language-modal")?.classList.add("hidden");
 
   openModal("character-modal");
@@ -8398,7 +8400,7 @@ async function importCharacterFromFile(e) {
     if (!character.name) throw new Error("Character name is required in file");
     renderCharacters();
     showToast(t("characterImported"), "success");
-    openCharacterModal(character);
+    openCharacterModal(character, null, true);
   } catch (err) {
     await openInfoDialog(t("importFailedTitle"), err.message);
   }
