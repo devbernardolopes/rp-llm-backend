@@ -1231,7 +1231,7 @@ document.addEventListener("visibilitychange", () => {
       }
       if (changed) {
         state.unreadNeedsUserScrollThreadId = null;
-        persistThreadMessagesById(Number(currentThread.id), conversationHistory).catch(() => {});
+        persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
         renderThreads();
       }
     }
@@ -1257,7 +1257,7 @@ window.addEventListener("focus", () => {
     }
     if (changed) {
       state.unreadNeedsUserScrollThreadId = null;
-      persistThreadMessagesById(Number(currentThread.id), conversationHistory).catch(() => {});
+      persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
       renderThreads();
     }
   }
@@ -8678,7 +8678,7 @@ async function openThread(threadId) {
     }
   }
   state.unreadNeedsUserScrollThreadId = null;
-  persistThreadMessagesById(Number(threadId), thread.messages || []).catch(() => {});
+  persistThreadMessagesById(Number(threadId), thread.messages || [], { _skipUpdatedAt: true }).catch(() => {});
   renderChat();
   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
   const log = document.getElementById("chat-log");
@@ -8761,18 +8761,14 @@ function updateAutoTtsToggleButton() {
 async function toggleThreadAutoTts() {
   if (!currentThread) return;
   const next = !(currentThread.autoTtsEnabled === true);
-  const updatedAt = Date.now();
   currentThread.autoTtsEnabled = next;
-  state.lastSyncSeenUpdatedAt = updatedAt;
   await db.threads.update(currentThread.id, {
     autoTtsEnabled: next,
-    updatedAt,
   });
   updateAutoTtsToggleButton();
   broadcastSyncEvent({
     type: "thread-updated",
     threadId: currentThread.id,
-    updatedAt,
   });
   showToast(next ? t("autoTtsEnabled") : t("autoTtsDisabled"), "success");
 }
@@ -9101,13 +9097,8 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
     state.unreadNeedsUserScrollThreadId = null;
   }
 
-  await persistCurrentThread(true);
+  await persistCurrentThread();
   await renderThreads();
-  broadcastSyncEvent({
-    type: "thread-updated",
-    threadId: currentId,
-    updatedAt: now,
-  });
 }
 
 function buildMessageRow(message, index, streaming) {
@@ -11844,7 +11835,7 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
     ...extra,
   };
 
-  if (allMessagesFinished) {
+  if (allMessagesFinished && !extra._skipUpdatedAt) {
     updated.updatedAt = Date.now();
   }
 
@@ -11908,19 +11899,16 @@ async function enqueueThreadGeneration(threadId, reason = "busy") {
     messages: threadMessages,
     pendingGenerationReason: reason,
     pendingGenerationQueuedAt: queuedAt,
-    updatedAt: queuedAt,
   });
   if (currentThread && Number(currentThread.id) === id) {
     conversationHistory = threadMessages;
     currentThread.pendingGenerationReason = reason;
     currentThread.pendingGenerationQueuedAt = queuedAt;
-    currentThread.updatedAt = queuedAt;
     renderChat();
   }
   broadcastSyncEvent({
     type: "thread-updated",
     threadId: id,
-    updatedAt: queuedAt,
   });
   await renderThreads();
   if (queuePos > 0) {
@@ -12241,28 +12229,24 @@ async function ensureQueuedThreadCoolingDown(threadId) {
     prevStatus !== "cooling_down";
   if (!hasChanges) return;
 
-  const updatedAt = Date.now();
   await db.threads.update(id, {
     messages,
     pendingGenerationReason: "cooldown",
     pendingGenerationQueuedAt: Number(
-      thread.pendingGenerationQueuedAt || updatedAt,
+      thread.pendingGenerationQueuedAt || Date.now(),
     ),
-    updatedAt,
   });
   if (currentThread && Number(currentThread.id) === id) {
     conversationHistory = messages;
     currentThread.pendingGenerationReason = "cooldown";
     currentThread.pendingGenerationQueuedAt = Number(
-      thread.pendingGenerationQueuedAt || updatedAt,
+      thread.pendingGenerationQueuedAt || Date.now(),
     );
-    currentThread.updatedAt = updatedAt;
     renderChat();
   }
   broadcastSyncEvent({
     type: "thread-updated",
     threadId: id,
-    updatedAt,
   });
   await renderThreads();
 }
