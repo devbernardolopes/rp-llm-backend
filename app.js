@@ -10888,8 +10888,10 @@ async function toggleMessageSpeech(index) {
     hasAudioObject,
     audioIsPlaying,
   });
-  if (isActuallyActive) {
-    ttsDebug("toggleMessageSpeech:stop-active", { index });
+  const isCurrentlySpeaking = state.tts.speakingMessageIndex !== null;
+  const isCurrentlyLoading = state.tts.loadingMessageIndex !== null;
+  if (isCurrentlySpeaking || isCurrentlyLoading) {
+    ttsDebug("toggleMessageSpeech:stop-active", { index, isCurrentlySpeaking, isCurrentlyLoading });
     stopTtsPlayback();
     return;
   }
