@@ -1999,6 +1999,7 @@ textarea {
 #shortcuts-modal .modal-card,
 #tags-modal .modal-card,
 #writing-instructions-modal .modal-card,
+#writing-instruction-editor-modal .modal-card,
 #database-modal .modal-card {
   height: min(90vh, 720px);
   max-height: min(90vh, 720px);
