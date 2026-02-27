@@ -1047,6 +1047,7 @@ function preprocessForTTS(text) {
 function normalizeForTTS(text) {
   return text
     .replace(/’/g, "'")
+    .replace(/(\w)'m\b/g, "$1 am")
     .replace(/(\w)'s\b/g, "$1 is")
     .replace(/(\w)'re\b/g, "$1 are")
     .replace(/(\w)'ve\b/g, "$1 have")
@@ -1222,7 +1223,11 @@ document.addEventListener("visibilitychange", () => {
     });
   }
 
-  if (!document.hidden && currentThread && document.getElementById("chat-view")?.classList.contains("active")) {
+  if (
+    !document.hidden &&
+    currentThread &&
+    document.getElementById("chat-view")?.classList.contains("active")
+  ) {
     let changed = false;
     let lastUnreadAssistantIndex = -1;
     for (let i = 0; i < conversationHistory.length; i++) {
@@ -1235,7 +1240,9 @@ document.addEventListener("visibilitychange", () => {
     }
     if (changed) {
       state.unreadNeedsUserScrollThreadId = null;
-      persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
+      persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
+        _skipUpdatedAt: true,
+      }).catch(() => {});
       renderThreads();
       if (
         lastUnreadAssistantIndex >= 0 &&
@@ -1254,7 +1261,10 @@ window.addEventListener("focus", () => {
   const now = Date.now();
   if (now - lastFocusTime < 200) return;
   lastFocusTime = now;
-  if (!currentThread || !document.getElementById("chat-view")?.classList.contains("active")) {
+  if (
+    !currentThread ||
+    !document.getElementById("chat-view")?.classList.contains("active")
+  ) {
     return;
   }
   let changed = false;
@@ -1269,7 +1279,9 @@ window.addEventListener("focus", () => {
   }
   if (changed) {
     state.unreadNeedsUserScrollThreadId = null;
-    persistThreadMessagesById(Number(currentThread.id), conversationHistory, { _skipUpdatedAt: true }).catch(() => {});
+    persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
+      _skipUpdatedAt: true,
+    }).catch(() => {});
     renderThreads();
     if (
       lastUnreadAssistantIndex >= 0 &&
@@ -1595,26 +1607,28 @@ function setupEvents() {
     .addEventListener("click", () => {
       document.getElementById("char-language-modal")?.classList.add("hidden");
     });
-  document.getElementById("char-language-add").addEventListener("click", async () => {
-    const select = document.getElementById("char-language-select");
-    const code = normalizeBotLanguageCode(select?.value || "");
-    if (!code) return;
-    if (state.charModalDefinitions.some((d) => d.language === code)) return;
-    const primaryName = String(
-      state.charModalDefinitions[0]?.name || "",
-    ).trim();
-    const newDefinition = createEmptyCharacterDefinition(code);
-    if (primaryName) {
-      newDefinition.name = primaryName;
-    }
-    state.charModalDefinitions.push(newDefinition);
-    state.charModalActiveLanguage = code;
-    setModalDirtyState("character-modal", true);
-    document.getElementById("char-language-modal")?.classList.add("hidden");
-    await loadActiveCharacterDefinitionToForm();
-    setCharacterModalTab("lang");
-    renderCharacterDefinitionTabs();
-  });
+  document
+    .getElementById("char-language-add")
+    .addEventListener("click", async () => {
+      const select = document.getElementById("char-language-select");
+      const code = normalizeBotLanguageCode(select?.value || "");
+      if (!code) return;
+      if (state.charModalDefinitions.some((d) => d.language === code)) return;
+      const primaryName = String(
+        state.charModalDefinitions[0]?.name || "",
+      ).trim();
+      const newDefinition = createEmptyCharacterDefinition(code);
+      if (primaryName) {
+        newDefinition.name = primaryName;
+      }
+      state.charModalDefinitions.push(newDefinition);
+      state.charModalActiveLanguage = code;
+      setModalDirtyState("character-modal", true);
+      document.getElementById("char-language-modal")?.classList.add("hidden");
+      await loadActiveCharacterDefinitionToForm();
+      setCharacterModalTab("lang");
+      renderCharacterDefinitionTabs();
+    });
   document
     .getElementById("pane-toggle-chat")
     ?.addEventListener("click", togglePane);
@@ -1769,7 +1783,10 @@ function setupEvents() {
     .addEventListener("click", () => {
       const filters = document.getElementById("character-filters");
       filters.classList.toggle("collapsed");
-      localStorage.setItem("rp-filters-collapsed", filters.classList.contains("collapsed"));
+      localStorage.setItem(
+        "rp-filters-collapsed",
+        filters.classList.contains("collapsed"),
+      );
       updateCharacterFiltersToggleUi();
     });
   document
@@ -1819,8 +1836,7 @@ function setupEvents() {
   document
     .getElementById("create-writing-instruction-btn")
     .addEventListener("click", () => openWritingInstructionEditor());
-  document
-    .getElementById("writing-instructions-editor-back-btn")
+  document.getElementById("writing-instructions-editor-back-btn");
   document
     .getElementById("cancel-writing-instruction-btn")
     .addEventListener("click", async () => {
@@ -1917,7 +1933,10 @@ function setupEvents() {
     maybeProcessUnreadMessagesSeen(true).catch(() => {});
     updateScrollBottomButtonVisibility();
     if (currentThread) {
-      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, chatLog.scrollTop);
+      localStorage.setItem(
+        `rp-thread-scroll-${currentThread.id}`,
+        chatLog.scrollTop,
+      );
     }
   });
   window.addEventListener("resize", () => {
@@ -3635,7 +3654,8 @@ function loadUiState() {
     }
     const filters = document.getElementById("character-filters");
     if (filters) {
-      const isCollapsed = localStorage.getItem("rp-filters-collapsed") === "true";
+      const isCollapsed =
+        localStorage.getItem("rp-filters-collapsed") === "true";
       if (isCollapsed) {
         filters.classList.add("collapsed");
       } else {
@@ -4767,7 +4787,11 @@ async function renderCharacters() {
       document.body.appendChild(personaDropdown);
 
       const closeDropdown = (e) => {
-        if (personaDropdown && !personaDropdown.contains(e.target) && e.target !== newChatBtnDropdown) {
+        if (
+          personaDropdown &&
+          !personaDropdown.contains(e.target) &&
+          e.target !== newChatBtnDropdown
+        ) {
           personaDropdownOpen = false;
           if (personaDropdown && personaDropdown.parentNode) {
             personaDropdown.parentNode.removeChild(personaDropdown);
@@ -5307,7 +5331,10 @@ function showMainView() {
   if (currentThread) {
     const log = document.getElementById("chat-log");
     if (log) {
-      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
+      localStorage.setItem(
+        `rp-thread-scroll-${currentThread.id}`,
+        log.scrollTop,
+      );
     }
   }
   stopTtsPlayback();
@@ -8412,7 +8439,8 @@ async function importCharacterFromFile(e) {
       if (character.definitions && character.definitions.length > 0) {
         character.definitions = character.definitions.map((def) => ({
           ...def,
-          personaInjectionPlacement: def.personaInjectionPlacement || "end_messages",
+          personaInjectionPlacement:
+            def.personaInjectionPlacement || "end_messages",
           kokoroDtype: def.kokoroDtype || "auto",
         }));
       }
@@ -8753,7 +8781,10 @@ async function openThread(threadId) {
   if (chatViewActive && currentThread) {
     const log = document.getElementById("chat-log");
     if (log) {
-      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
+      localStorage.setItem(
+        `rp-thread-scroll-${currentThread.id}`,
+        log.scrollTop,
+      );
     }
   }
   playedUnreadSoundForThread.delete(Number(threadId));
@@ -8817,7 +8848,9 @@ async function openThread(threadId) {
     }
   }
   state.unreadNeedsUserScrollThreadId = null;
-  persistThreadMessagesById(Number(threadId), thread.messages || [], { _skipUpdatedAt: true }).catch(() => {});
+  persistThreadMessagesById(Number(threadId), thread.messages || [], {
+    _skipUpdatedAt: true,
+  }).catch(() => {});
   renderChat();
   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
   const log = document.getElementById("chat-log");
@@ -9123,7 +9156,8 @@ function renderChat() {
   const log = document.getElementById("chat-log");
   const previousScrollTop = log.scrollTop;
   const previousScrollHeight = log.scrollHeight;
-  const isAtBottom = previousScrollHeight - previousScrollTop - log.clientHeight <= 50;
+  const isAtBottom =
+    previousScrollHeight - previousScrollTop - log.clientHeight <= 50;
   const savedScroll = currentThread
     ? localStorage.getItem(`rp-thread-scroll-${currentThread.id}`)
     : null;
@@ -9394,7 +9428,8 @@ function buildMessageRow(message, index, streaming) {
       },
     );
     systemPromptBtn.classList.add("msg-system-prompt-btn");
-    const hasContent = message && index >= 0 && index < conversationHistory.length;
+    const hasContent =
+      message && index >= 0 && index < conversationHistory.length;
     systemPromptBtn.disabled = !hasContent;
     if (hasContent) {
       systemPromptBtn.setAttribute("title", t("msgSystemPromptTitle"));
@@ -11027,7 +11062,11 @@ async function toggleMessageSpeech(index) {
   const isCurrentlySpeaking = state.tts.speakingMessageIndex !== null;
   const isCurrentlyLoading = state.tts.loadingMessageIndex !== null;
   if (isCurrentlySpeaking || isCurrentlyLoading) {
-    ttsDebug("toggleMessageSpeech:stop-active", { index, isCurrentlySpeaking, isCurrentlyLoading });
+    ttsDebug("toggleMessageSpeech:stop-active", {
+      index,
+      isCurrentlySpeaking,
+      isCurrentlyLoading,
+    });
     stopTtsPlayback();
     return;
   }
@@ -12160,7 +12199,8 @@ async function processNextQueuedThread() {
     getThreadWritingInstructionsTurnCount(tempThread);
   const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
   const promptContext = await buildSystemPrompt(character, {
-    includeOneTimeExtraPrompt: shouldIncludeOneTimeExtraPrompt(tempConversation),
+    includeOneTimeExtraPrompt:
+      shouldIncludeOneTimeExtraPrompt(tempConversation),
     writingInstructionsTurnIndex: writingTurnIndex,
     returnTrace: true,
     personaOverride: tempPersona,
@@ -12703,7 +12743,8 @@ async function buildSystemPrompt(character, options = {}) {
       options?.threadOverride || null,
     )
   ) {
-    const placement = character?.personaInjectionPlacement || "end_system_prompt";
+    const placement =
+      character?.personaInjectionPlacement || "end_system_prompt";
     const personaInjected = renderPersonaInjectionContent(personaForContext);
     const templateNotEmpty = String(
       state.settings.personaInjectionTemplate ||

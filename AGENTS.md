@@ -8,7 +8,16 @@
 - It connects to AI models via OpenRouter with the use of an API Key.
 - It makes requests via OpenRouter API following OpenAI-compatible format.
 - The main request is `completion` because it generates a BOT message (endpoint: `/api/v1/chat/completions`).
-- The main files are `index.html` and `app.js`. Almost all logic lives in `app.js`.
+- The main files are `index.html` and `app.js`, with supporting modules: `lore.js` (lorebooks), `memory.js` (conversation summarization), and `db.js` (Dexie.js database).
+
+### Module Files
+
+- `lore.js` - Lorebooks: keyword-based fact lookup during chat (not API calls)
+- `memory.js` - Conversation memory: summarizes old messages to preserve context
+- `db.js` - Database schema using Dexie.js (characters, threads, lorebooks, memories, personas, sessions)
+
+### UI Features
+
 - The UI supports multiple languages as JSON files at `/locales`.
 - New text in UI must have a respective JSON entry **appended** at the end of every `/locales` file, translated respectively.
 - The home screen shows BOT cards.
