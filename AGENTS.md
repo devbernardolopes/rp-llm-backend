@@ -15,6 +15,7 @@
 - `lore.js` - Lorebooks: keyword-based fact lookup during chat (not API calls)
 - `memory.js` - Conversation memory: summarizes old messages to preserve context
 - `db.js` - Database schema using Dexie.js (characters, threads, lorebooks, memories, personas, sessions)
+- `tts/kokoro.js` - TTS functions using Kokoro.js for text-to-speech
 
 ### UI Features
 
@@ -22,7 +23,7 @@
 - New text in UI must have a respective JSON entry **appended** at the end of every `/locales` file, translated respectively.
 - The home screen shows BOT cards.
 - The left panel shows thread cards in the middle (when there are threads), system options in the bottom (buttons), and some main buttons at the top.
-- The system supports TTS (using Kokoro.js as well as native browser TTS). The functions for Kokoro.js are at `/tts/kokoro.js`.
+- The system supports TTS (using Kokoro.js as well as native browser TTS).
 - The `<div>` with id = `character-modal` is the interface/UI that allows users to create and edit BOT definitions (may be reffered to as "BOT modal").
 - The BOTs have avatars, that is, images and/or videos representing them visually.
 - The `<section>` with id = `chat-view` is the window/screen that allows users to chat with a BOT (may be referred to as "chat or thread window/screen").
