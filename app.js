@@ -10268,17 +10268,20 @@ async function regenerateMessage(index) {
       await renderThreads();
       showToast(t("regenerationCancelled"), "success");
     } else {
-      target.content = originalContent;
-      messagesToSave[index].content = originalContent;
+      target.generationError = String(e?.message || "Unknown error");
       target.generationStatus = "";
+      messagesToSave[index].generationError = target.generationError;
       messagesToSave[index].generationStatus = "";
+      if (!isViewingThread(threadId)) {
+        target.unreadAt = Date.now();
+        messagesToSave[index].unreadAt = target.unreadAt;
+      }
       await persistThreadMessagesById(threadId, messagesToSave);
       renderChat();
+      refreshAllSpeakerButtons();
+      refreshMessageControlStates();
       await renderThreads();
-      await openInfoDialog(
-        t("regenerateFailedTitle"),
-        String(e.message || t("unknownError")),
-      );
+      showToast(t("generationFailed"), "error");
     }
   } finally {
     state.pendingPersonaInjectionPersonaId = null;
