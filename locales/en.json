@@ -44,6 +44,7 @@
   "save": "Save",
   "unknownError": "unknown error",
   "importFailed": "Import failed: {error}",
+  "importFailedTitle": "Import Failed",
   "databaseImportConfirm": "This will overwrite current local data completely. Continue?",
   "databaseExportFailed": "Database export failed: {error}",
   "databaseImportFailed": "Database import failed: {error}",

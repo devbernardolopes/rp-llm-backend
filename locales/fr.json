@@ -44,6 +44,7 @@
   "save": "Enregistrer",
   "unknownError": "erreur inconnue",
   "importFailed": "Importation échouée : {error}",
+  "importFailedTitle": "Échec de l'Importation",
   "databaseImportConfirm": "Cela écrasera toutes les données locales actuelles. Continuer ?",
   "databaseExportFailed": "Exportation de la base de données échouée : {error}",
   "databaseImportFailed": "Importation de la base de données échouée : {error}",

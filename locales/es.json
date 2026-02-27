@@ -44,6 +44,7 @@
   "save": "Guardar",
   "unknownError": "error desconocido",
   "importFailed": "Importación fallida: {error}",
+  "importFailedTitle": "Importación Fallida",
   "databaseImportConfirm": "Esto sobrescribirá todos los datos locales actuales. ¿Continuar?",
   "databaseExportFailed": "Exportación de base de datos fallida: {error}",
   "databaseImportFailed": "Importación de base de datos fallida: {error}",

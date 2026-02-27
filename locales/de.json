@@ -44,6 +44,7 @@
   "save": "Speichern",
   "unknownError": "unbekannter Fehler",
   "importFailed": "Import fehlgeschlagen: {error}",
+  "importFailedTitle": "Import Fehlgeschlagen",
   "databaseImportConfirm": "Dadurch werden alle aktuellen lokalen Daten vollständig überschrieben. Fortfahren?",
   "databaseExportFailed": "Datenbankexport fehlgeschlagen: {error}",
   "databaseImportFailed": "Datenbankimport fehlgeschlagen: {error}",

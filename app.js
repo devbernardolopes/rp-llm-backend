@@ -8275,26 +8275,72 @@ async function importCharacterFromFile(e) {
   try {
     const text = await file.text();
     const parsed = JSON.parse(text);
-    const imported = parsed?.character || parsed;
-    if (!imported || typeof imported !== "object") {
-      throw new Error("Invalid character file");
+    let imported = null;
+    let character = null;
+
+    if (parsed?.spec === "chara_card_v2") {
+      const data = parsed?.data;
+      if (!data || typeof data !== "object") {
+        throw new Error("Invalid character card format: missing data object");
+      }
+      const name = String(data.name || "").trim();
+      if (!name) {
+        throw new Error("Character card missing required field: name");
+      }
+      const description = String(data.description || "").trim();
+      const personality = String(data.personality || "").trim();
+      const firstMes = String(data.first_mes || "").trim();
+      const avatar = String(data.avatar || "").trim();
+      const scenario = String(data.scenario || "").trim();
+      const postHistory = String(data.post_history_instructions || "").trim();
+      let tags = [];
+      if (Array.isArray(data.tags)) {
+        const normalizedTags = data.tags.map((t) => normalizeTagValue(t));
+        const seen = new Set();
+        normalizedTags.forEach((t) => {
+          if (t && !seen.has(t.toLowerCase())) {
+            seen.add(t.toLowerCase());
+            tags.push(t);
+          }
+        });
+      }
+      const prompt = [description, personality].filter(Boolean).join("\n\n");
+      character = {
+        name,
+        systemPrompt: prompt,
+        initialMessages: firstMes,
+        avatarUrl: avatar,
+        oneTimeExtraPrompt: scenario,
+        tags,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+    } else {
+      imported = parsed?.character || parsed;
+      if (!imported || typeof imported !== "object") {
+        throw new Error("Invalid character file");
+      }
+      character = {
+        ...imported,
+        name: String(imported.name || "").trim(),
+        tags: Array.isArray(imported.tags)
+          ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
+          : parseTagList(imported.tags || ""),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
     }
-    const character = {
-      ...imported,
-      name: String(imported.name || "").trim(),
-      tags: Array.isArray(imported.tags)
-        ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
-        : parseTagList(imported.tags || ""),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    delete character.id;
+
     if (!character.name) throw new Error("Character name is required in file");
-    await db.characters.add(character);
+    const id = await db.characters.add(character);
     await renderCharacters();
+    const newChar = await db.characters.get(id);
     showToast(t("characterImported"), "success");
+    if (newChar) {
+      openCharacterModal(newChar);
+    }
   } catch (err) {
-    showToast(tf("importFailed", { error: err.message }), "error");
+    await openInfoDialog(t("importFailedTitle"), err.message);
   }
 }
 
