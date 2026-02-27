@@ -1788,6 +1788,11 @@ function setupEvents() {
         filters.classList.contains("collapsed"),
       );
       updateCharacterFiltersToggleUi();
+      if (!filters.classList.contains("collapsed")) {
+        requestAnimationFrame(() => {
+          renderCharacterTagFilterChips();
+        });
+      }
     });
   document
     .getElementById("save-shortcuts-btn")
