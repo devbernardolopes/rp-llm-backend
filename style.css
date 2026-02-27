@@ -1972,6 +1972,16 @@ textarea {
   z-index: 230;
 }
 
+#writing-instruction-editor-modal {
+  z-index: 220;
+}
+
+#writing-instruction-editor-modal .modal-footer {
+  position: sticky;
+  bottom: 0;
+  background: #151d2a;
+}
+
 .modal-card {
   background: #151d2a;
   border: 1px solid var(--line);

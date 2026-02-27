@@ -968,6 +968,7 @@ const state = {
     "tags-modal": false,
     "lore-modal": false,
     "writing-instructions-modal": false,
+    "writing-instruction-editor-modal": false,
   },
   charModalTtsTestPlaying: false,
   imagePreview: {
@@ -1850,16 +1851,20 @@ function setupEvents() {
   document
     .getElementById("create-writing-instruction-btn")
     .addEventListener("click", () => openWritingInstructionEditor());
-  document.getElementById("writing-instructions-editor-back-btn");
   document
     .getElementById("cancel-writing-instruction-btn")
     .addEventListener("click", async () => {
-      if (state.modalDirty["writing-instructions-modal"]) {
+      if (state.modalDirty["writing-instruction-editor-modal"]) {
         const action = await openUnsavedChangesDialog();
         if (action === "back") return;
         if (action === "close") {
-          setModalDirtyState("writing-instructions-modal", false);
+          setModalDirtyState("writing-instruction-editor-modal", false);
           closeActiveModal();
+          const parentModal = document.getElementById("writing-instructions-modal");
+          if (parentModal) {
+            parentModal.classList.remove("hidden");
+            state.activeModalId = "writing-instructions-modal";
+          }
           return;
         }
         if (action === "save") {
@@ -1867,7 +1872,12 @@ function setupEvents() {
           if (!saved) return;
         }
       }
-      switchWritingInstructionsView("list");
+      closeActiveModal();
+      const parentModal = document.getElementById("writing-instructions-modal");
+      if (parentModal) {
+        parentModal.classList.remove("hidden");
+        state.activeModalId = "writing-instructions-modal";
+      }
     });
   document
     .getElementById("apply-writing-instructions-btn")
@@ -1975,7 +1985,37 @@ function setupEvents() {
   });
 
   document.querySelectorAll("[data-close-modal]").forEach((btn) => {
-    btn.addEventListener("click", closeActiveModal);
+    btn.addEventListener("click", (e) => {
+      const modal = e.target.closest(".modal");
+      if (modal?.id === "writing-instruction-editor-modal") {
+        if (state.modalDirty["writing-instruction-editor-modal"]) {
+          openUnsavedChangesDialog().then((action) => {
+            if (action === "back") return;
+            if (action === "close") {
+              setModalDirtyState("writing-instruction-editor-modal", false);
+              closeActiveModal();
+              const parentModal = document.getElementById("writing-instructions-modal");
+              if (parentModal) {
+                parentModal.classList.remove("hidden");
+                state.activeModalId = "writing-instructions-modal";
+              }
+            }
+            if (action === "save") {
+              saveWritingInstruction({ close: true });
+            }
+          });
+        } else {
+          closeActiveModal();
+          const parentModal = document.getElementById("writing-instructions-modal");
+          if (parentModal) {
+            parentModal.classList.remove("hidden");
+            state.activeModalId = "writing-instructions-modal";
+          }
+        }
+      } else {
+        closeActiveModal();
+      }
+    });
   });
 
   document.querySelectorAll(".modal").forEach((modal) => {
@@ -2038,6 +2078,10 @@ function setupEvents() {
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
   markModalDirtyOnInput("writing-instructions-modal", [
+    "#writing-instruction-name",
+    "#writing-instruction-text",
+  ]);
+  markModalDirtyOnInput("writing-instruction-editor-modal", [
     "#writing-instruction-name",
     "#writing-instruction-text",
   ]);
@@ -5461,6 +5505,14 @@ async function closeActiveModal() {
   }
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
+  if (closingId === "writing-instruction-editor-modal") {
+    const parentModal = document.getElementById("writing-instructions-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "writing-instructions-modal";
+      return;
+    }
+  }
   if (closingId === "character-modal") {
     if (state.editingCharacterId) {
       localStorage.setItem(
@@ -7491,7 +7543,6 @@ function normalizeWritingInstructionRecord(wi) {
 
 async function openWritingInstructionsManager() {
   await renderWritingInstructionsList();
-  switchWritingInstructionsView("list");
 }
 
 async function renderWritingInstructionsList() {
@@ -7561,22 +7612,8 @@ async function renderWritingInstructionsList() {
   }
 }
 
-function switchWritingInstructionsView(view) {
-  const listView = document.getElementById("writing-instructions-list-view");
-  const editorView = document.getElementById(
-    "writing-instructions-editor-view",
-  );
-  if (view === "list") {
-    listView?.classList.remove("hidden");
-    editorView?.classList.add("hidden");
-  } else {
-    listView?.classList.add("hidden");
-    editorView?.classList.remove("hidden");
-  }
-}
-
 async function openWritingInstructionEditor(writingInstruction = null) {
-  setModalDirtyState("writing-instructions-modal", false);
+  setModalDirtyState("writing-instruction-editor-modal", false);
   const normalized = normalizeWritingInstructionRecord(
     writingInstruction || {},
   );
@@ -7604,7 +7641,11 @@ async function openWritingInstructionEditor(writingInstruction = null) {
   updateWritingInstructionNameCount();
   renderWritingInstructionTabs();
   loadActiveWritingInstructionToForm();
-  switchWritingInstructionsView("editor");
+  const editorModal = document.getElementById("writing-instruction-editor-modal");
+  if (editorModal) {
+    editorModal.classList.remove("hidden");
+    state.activeModalId = "writing-instruction-editor-modal";
+  }
 }
 
 function renderWritingInstructionTabs() {
@@ -7767,10 +7808,15 @@ async function saveWritingInstruction({ close = true } = {}) {
     await db.writingInstructions.add(payload);
     showToast(t("writingInstructionCreated"), "success");
   }
-  setModalDirtyState("writing-instructions-modal", false);
+  setModalDirtyState("writing-instruction-editor-modal", false);
   await renderWritingInstructionsList();
   if (close) {
-    switchWritingInstructionsView("list");
+    closeActiveModal();
+    const parentModal = document.getElementById("writing-instructions-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "writing-instructions-modal";
+    }
   }
   return true;
 }

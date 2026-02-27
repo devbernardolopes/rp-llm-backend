@@ -1579,105 +1579,112 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
-          <div id="writing-instructions-list-view">
-            <div class="lore-toolbar">
-              <button
-                id="create-writing-instruction-btn"
-                class="primary-btn"
-                type="button"
-                data-i18n="addWritingInstruction"
-              >
-                + Add Writing Instruction
-              </button>
-            </div>
-            <div id="writing-instructions-list" class="lorebook-list"></div>
+          <div class="lore-toolbar">
+            <button
+              id="create-writing-instruction-btn"
+              class="primary-btn"
+              type="button"
+              data-i18n="addWritingInstruction"
+            >
+              + Add Writing Instruction
+            </button>
           </div>
+          <div id="writing-instructions-list" class="lorebook-list"></div>
+        </div>
+      </div>
+    </div>
 
-          <div id="writing-instructions-editor-view" class="hidden">
-            <div class="lore-toolbar">
-              <button
-                id="writing-instructions-editor-back-btn"
-                class="secondary-btn"
-                type="button"
-                data-i18n="backToList"
-              >
-                < Back to List
-              </button>
-            </div>
-            <div class="two-col lore-editor-grid">
-              <div class="form-field full">
-                <div class="label-inline">
-                  <span data-i18n="nameLabel">Name</span>
-                  <span
-                    id="writing-instruction-name-count"
-                    class="muted label-count"
-                    >0/64</span
-                  >
-                </div>
-                <input
-                  id="writing-instruction-name"
-                  type="text"
-                  minlength="1"
-                  maxlength="64"
-                />
-              </div>
-            </div>
-            <div id="writing-instruction-tabs" class="settings-tabs">
-              <div class="char-def-tabs-row">
-                <div
-                  id="writing-instruction-tabs-left"
-                  class="char-def-tabs-left"
-                ></div>
-                <button
-                  id="writing-instruction-add-lang-btn"
-                  class="settings-tab-btn"
-                  type="button"
-                  onclick="openWritingInstructionLanguageModal()"
+    <div
+      id="writing-instruction-editor-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="writing-instruction-editor-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3
+            id="writing-instruction-editor-title"
+            data-i18n="writingInstructionEditor"
+          >
+            Writing Instruction Editor
+          </h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="two-col lore-editor-grid">
+            <div class="form-field full">
+              <div class="label-inline">
+                <span data-i18n="nameLabel">Name</span>
+                <span
+                  id="writing-instruction-name-count"
+                  class="muted label-count"
+                  >0/64</span
                 >
-                  +
-                </button>
               </div>
+              <input
+                id="writing-instruction-name"
+                type="text"
+                minlength="1"
+                maxlength="64"
+              />
             </div>
-            <div id="writing-instruction-content-area" class="full lang-field">
-              <span data-i18n="writingInstructions">Writing Instructions</span>
-              <textarea
-                id="writing-instruction-text"
-                rows="8"
-                maxlength="20480"
-              ></textarea>
-              <span id="writing-instruction-text-count" class="muted"
-                >0/20480</span
-              >
-            </div>
-            <div class="modal-footer">
+          </div>
+          <div id="writing-instruction-tabs" class="settings-tabs">
+            <div class="char-def-tabs-row">
+              <div
+                id="writing-instruction-tabs-left"
+                class="char-def-tabs-left"
+              ></div>
               <button
-                id="cancel-writing-instruction-btn"
-                class="secondary-btn"
+                id="writing-instruction-add-lang-btn"
+                class="settings-tab-btn"
                 type="button"
-                data-i18n="cancel"
+                onclick="openWritingInstructionLanguageModal()"
               >
-                Cancel
-              </button>
-              <button
-                id="apply-writing-instructions-btn"
-                class="secondary-btn"
-                type="button"
-                data-i18n="apply"
-                disabled
-              >
-                Apply
-              </button>
-              <button
-                id="save-writing-instructions-btn"
-                class="primary-btn"
-                type="button"
-                data-i18n="save"
-                disabled
-              >
-                Save
+                +
               </button>
             </div>
           </div>
+          <div id="writing-instruction-content-area" class="full lang-field">
+            <span data-i18n="writingInstructions">Writing Instructions</span>
+            <textarea
+              id="writing-instruction-text"
+              rows="8"
+              maxlength="20480"
+            ></textarea>
+            <span id="writing-instruction-text-count" class="muted"
+              >0/20480</span
+            >
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="cancel-writing-instruction-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="cancel"
+          >
+            Cancel
+          </button>
+          <button
+            id="apply-writing-instructions-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="apply"
+            disabled
+          >
+            Apply
+          </button>
+          <button
+            id="save-writing-instructions-btn"
+            class="primary-btn"
+            type="button"
+            data-i18n="save"
+            disabled
+          >
+            Save
+          </button>
         </div>
       </div>
     </div>
