@@ -3726,6 +3726,9 @@ function showToast(message, type = "success") {
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
   toast.textContent = message;
+  toast.style.cursor = "pointer";
+  toast.addEventListener("click", () => toast.remove());
+  toast.addEventListener("touchstart", () => toast.remove(), { passive: true });
   container.appendChild(toast);
   const delay = clampToastDuration(state.settings.toastDurationMs);
   window.setTimeout(() => {
@@ -4634,6 +4637,13 @@ async function renderCharacters() {
     applyHoverMarquee(newChatBtnMain, t("newChat"));
     newChatBtnMain.addEventListener("click", (e) => {
       e.stopPropagation();
+      if (personaDropdownOpen && personaDropdown) {
+        personaDropdownOpen = false;
+        if (personaDropdown.parentNode) {
+          personaDropdown.parentNode.removeChild(personaDropdown);
+        }
+        personaDropdown = null;
+      }
       startNewThread(char.id);
     });
 
