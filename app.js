@@ -5665,7 +5665,7 @@ function normalizeCharacterDefinitions(character = null) {
     ? character.initialMessages
     : [];
   fallback.personaInjectionPlacement =
-    character?.personaInjectionPlacement || "end_system_prompt";
+    character?.personaInjectionPlacement || "end_messages";
   fallback.ttsVoice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
   fallback.ttsLanguage = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   fallback.ttsRate = Number.isFinite(Number(character?.ttsRate))
@@ -5676,7 +5676,7 @@ function normalizeCharacterDefinitions(character = null) {
     : 1.1;
   fallback.ttsProvider = character?.ttsProvider || "kokoro";
   fallback.kokoroDevice = character?.kokoroDevice || "webgpu";
-  fallback.kokoroDtype = character?.kokoroDtype || "fp32";
+  fallback.kokoroDtype = character?.kokoroDtype || "auto";
   fallback.kokoroVoice = String(character?.kokoroVoice || DEFAULT_KOKORO_VOICE);
   fallback.kokoroSpeed = Number.isFinite(Number(character?.kokoroSpeed))
     ? Number(character.kokoroSpeed)
@@ -5877,7 +5877,7 @@ function saveActiveCharacterDefinitionFromForm() {
   );
   def.personaInjectionPlacement = String(
     document.getElementById("char-persona-injection-placement")?.value ||
-      "end_system_prompt",
+      "end_messages",
   );
   const selectedTts = getResolvedCharTtsSelection();
   def.ttsVoice = selectedTts.voice;
@@ -5921,7 +5921,7 @@ async function loadActiveCharacterDefinitionToForm() {
       ? formatInitialMessagesForEditor(def.initialMessages || [])
       : "");
   document.getElementById("char-persona-injection-placement").value =
-    def.personaInjectionPlacement || "end_system_prompt";
+    def.personaInjectionPlacement || "end_messages";
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   populateCharTtsVoiceSelect(def.ttsVoice || DEFAULT_TTS_VOICE);
   document.getElementById("char-tts-rate").value = String(
@@ -6046,7 +6046,7 @@ async function openCharacterModal(
   document.getElementById("char-auto-trigger-first-ai").checked =
     character?.autoTriggerAiFirstMessage !== false;
   document.getElementById("char-avatar-scale").value = String(
-    Number(character?.avatarScale) || 1,
+    Number(character?.avatarScale) || 4,
   );
   setCharacterTagsInputValue(character?.tags || []);
   renderCharacterTagPresetButtons();
@@ -8275,7 +8275,6 @@ async function importCharacterFromFile(e) {
   try {
     const text = await file.text();
     const parsed = JSON.parse(text);
-    let imported = null;
     let character = null;
 
     if (parsed?.spec === "chara_card_v2") {
@@ -8290,7 +8289,19 @@ async function importCharacterFromFile(e) {
       const description = String(data.description || "").trim();
       const personality = String(data.personality || "").trim();
       const firstMes = String(data.first_mes || "").trim();
-      const avatar = String(data.avatar || "").trim();
+      let avatarUrl = String(data.avatar || "").trim();
+      let avatarData = "";
+      if (avatarUrl) {
+        try {
+          showToast("Downloading avatar...", "success");
+          const response = await fetch(avatarUrl);
+          if (!response.ok) throw new Error("Failed to download avatar");
+          const blob = await response.blob();
+          avatarData = await blobToBase64(blob);
+        } catch {
+          avatarUrl = "";
+        }
+      }
       const scenario = String(data.scenario || "").trim();
       const postHistory = String(data.post_history_instructions || "").trim();
       let tags = [];
@@ -8304,44 +8315,102 @@ async function importCharacterFromFile(e) {
           }
         });
       }
+      let writingInstructionId = "";
+      if (postHistory) {
+        const wiPayload = {
+          name: `${name} - Custom`,
+          instructions: { en: postHistory },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        writingInstructionId = await db.writingInstructions.add(wiPayload);
+      }
+      mergeTagsIntoCatalog(tags);
       const prompt = [description, personality].filter(Boolean).join("\n\n");
+      const language = "en";
       character = {
         name,
-        systemPrompt: prompt,
-        initialMessages: firstMes,
-        avatarUrl: avatar,
-        oneTimeExtraPrompt: scenario,
+        selectedCardLanguage: language,
         tags,
+        avatarScale: 4,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        definitions: [
+          {
+            language,
+            name,
+            tagline: "",
+            systemPrompt: prompt,
+            oneTimeExtraPrompt: scenario,
+            writingInstructions: postHistory || "",
+            writingInstructionId: String(writingInstructionId || ""),
+            initialMessagesRaw: firstMes,
+            initialMessages: firstMes ? [firstMes] : [],
+            personaInjectionPlacement: "end_messages",
+            ttsVoice: DEFAULT_TTS_VOICE,
+            ttsLanguage: DEFAULT_TTS_LANGUAGE,
+            ttsRate: DEFAULT_TTS_RATE,
+            ttsPitch: 1.1,
+            ttsProvider: "kokoro",
+            kokoroDevice: "webgpu",
+            kokoroDtype: "auto",
+            kokoroVoice: DEFAULT_KOKORO_VOICE,
+            preferLoreBooksMatchingLanguage: true,
+            lorebookIds: [],
+          },
+        ],
       };
+      if (avatarData) {
+        character.definitions[0].avatar = avatarData;
+        character.avatar = avatarData;
+        character.avatars = [{ type: "image", data: avatarData, name: "" }];
+      }
     } else {
-      imported = parsed?.character || parsed;
+      const imported = parsed?.character || parsed;
       if (!imported || typeof imported !== "object") {
         throw new Error("Invalid character file");
       }
+      mergeTagsIntoCatalog(
+        Array.isArray(imported.tags)
+          ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
+          : parseTagList(imported.tags || ""),
+      );
       character = {
         ...imported,
         name: String(imported.name || "").trim(),
         tags: Array.isArray(imported.tags)
           ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
           : parseTagList(imported.tags || ""),
+        avatarScale: 4,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        personaInjectionPlacement: "end_messages",
       };
+      if (character.definitions && character.definitions.length > 0) {
+        character.definitions = character.definitions.map((def) => ({
+          ...def,
+          personaInjectionPlacement: def.personaInjectionPlacement || "end_messages",
+          kokoroDtype: def.kokoroDtype || "auto",
+        }));
+      }
     }
 
     if (!character.name) throw new Error("Character name is required in file");
-    const id = await db.characters.add(character);
-    await renderCharacters();
-    const newChar = await db.characters.get(id);
+    renderCharacters();
     showToast(t("characterImported"), "success");
-    if (newChar) {
-      openCharacterModal(newChar);
-    }
+    openCharacterModal(character);
   } catch (err) {
     await openInfoDialog(t("importFailedTitle"), err.message);
   }
+}
+
+async function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 async function exportDatabaseBackup() {
