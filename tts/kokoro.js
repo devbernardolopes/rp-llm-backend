@@ -1,7 +1,7 @@
-﻿const CUSTOM_KOKORO_VOICE_URLS = {
-  pf_dora: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pf_dora.bin",
-  pm_santa: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pm_santa.bin",
-};
+﻿// const CUSTOM_KOKORO_VOICE_URLS = {
+//   pf_dora: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pf_dora.bin",
+//   pm_santa: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pm_santa.bin",
+// };
 
 function patchKokoroVoiceFetch() {
   if (state.tts.kokoro.fetchPatched) return;
@@ -13,14 +13,14 @@ function patchKokoroVoiceFetch() {
     if (typeof url === "string") {
       const match = url.match(/\/voices\/([^/]+)\.bin$/);
       const voice = match?.[1];
-      if (voice && CUSTOM_KOKORO_VOICE_URLS[voice]) {
-        const override = CUSTOM_KOKORO_VOICE_URLS[voice];
-        console.log("kokoro:voice-fetch-override", voice, override); // add this
+      // if (voice && CUSTOM_KOKORO_VOICE_URLS[voice]) {
+      //   const override = CUSTOM_KOKORO_VOICE_URLS[voice];
+      //   console.log("kokoro:voice-fetch-override", voice, override); // add this
 
-        const newInput =
-          typeof input === "string" ? override : new Request(override, input);
-        return originalFetch(newInput, init);
-      }
+      //   const newInput =
+      //     typeof input === "string" ? override : new Request(override, input);
+      //   return originalFetch(newInput, init);
+      // }
     }
     return originalFetch(input, init);
   };
