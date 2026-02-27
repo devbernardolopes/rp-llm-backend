@@ -8986,6 +8986,15 @@ async function maybeGenerateThreadTitle() {
 
 function renderChat() {
   const log = document.getElementById("chat-log");
+  const previousScrollTop = log.scrollTop;
+  const previousScrollHeight = log.scrollHeight;
+  const isAtBottom = previousScrollHeight - previousScrollTop - log.clientHeight <= 50;
+  const savedScroll = currentThread
+    ? localStorage.getItem(`rp-thread-scroll-${currentThread.id}`)
+    : null;
+  const hasSavedScroll = savedScroll !== null;
+  const savedScrollTop = hasSavedScroll ? Number(savedScroll) : null;
+
   log.innerHTML = "";
   state.editingMessageIndex = null;
 
@@ -9025,7 +9034,13 @@ function renderChat() {
     log.appendChild(buildMessageRow(message, idx, rowStreaming));
   });
 
-  scrollChatToBottom();
+  if (hasSavedScroll && !state.sending) {
+    log.scrollTop = savedScrollTop;
+  } else if (state.sending && isAtBottom) {
+    scrollChatToBottom();
+  } else if (!state.sending && isAtBottom) {
+    log.scrollTop = log.scrollHeight;
+  }
   updateScrollBottomButtonVisibility();
   scheduleThreadBudgetIndicatorUpdate();
   maybeProcessUnreadMessagesSeen(false).catch(() => {});
