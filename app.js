@@ -5540,6 +5540,8 @@ function openModal(modalId) {
     updateTagManagerAddButtonState();
   } else if (modalId === "writing-instructions-modal") {
     openWritingInstructionsManager().catch(() => {});
+  } else if (modalId === "assets-modal") {
+    openAssetsManager().catch(() => {});
   }
 }
 
@@ -5600,6 +5602,9 @@ async function handleModalSaveAction(modalId) {
   }
   if (modalId === "writing-instructions-modal") {
     return saveWritingInstruction();
+  }
+  if (modalId === "asset-editor-modal") {
+    return saveAssetFromEditor();
   }
   return true;
 }
@@ -7997,6 +8002,365 @@ function normalizeWritingInstructionsTiming(value) {
     return v;
   }
   return "always";
+}
+
+let state_assets = {
+  editingId: null,
+  currentFile: null,
+  currentFileData: null,
+  currentFileType: null,
+  currentFileName: null,
+  audioElement: null,
+};
+
+function getAssetTypeFromMime(mime) {
+  if (!mime) return "sound";
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("video/")) return "video";
+  if (mime.startsWith("audio/")) return "sound";
+  return "sound";
+}
+
+function getAssetTypeLabel(type) {
+  switch (type) {
+    case "image":
+      return "Image";
+    case "video":
+      return "Video";
+    case "sound":
+      return "Sound";
+    default:
+      return "Unknown";
+  }
+}
+
+function getAssetTypeIcon(type) {
+  switch (type) {
+    case "image":
+      return "&#128444;";
+    case "video":
+      return "&#127909;";
+    case "sound":
+      return "&#127925;";
+    default:
+      return "&#128190;";
+  }
+}
+
+async function getAllAssets() {
+  return db.assets.toArray();
+}
+
+async function getAssetById(id) {
+  return db.assets.get(Number(id));
+}
+
+async function deleteAsset(id) {
+  await db.assets.delete(Number(id));
+}
+
+async function saveAsset(asset) {
+  if (asset.id) {
+    await db.assets.put(asset);
+  } else {
+    await db.assets.add(asset);
+  }
+}
+
+async function openAssetsManager() {
+  setModalDirtyState("assets-modal", false);
+  renderAssetsList();
+  setupAssetsDropzone();
+}
+
+async function renderAssetsList() {
+  const list = document.getElementById("assets-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const assets = await getAllAssets();
+  
+  if (assets.length === 0) {
+    list.innerHTML = `<p class="muted" data-i18n="noAssetsYet">No assets yet.</p>`;
+    return;
+  }
+  
+  for (const asset of assets) {
+    const row = document.createElement("div");
+    row.className = "lorebook-row asset-row";
+    
+    const avatar = document.createElement("div");
+    avatar.className = "lorebook-avatar";
+    
+    if (asset.type === "image" && asset.data) {
+      const img = document.createElement("img");
+      img.src = asset.data;
+      img.alt = asset.name || "Asset";
+      avatar.appendChild(img);
+    } else if (asset.type === "video" && asset.data) {
+      const video = document.createElement("video");
+      video.src = asset.data;
+      video.muted = true;
+      const thumb = document.createElement("img");
+      thumb.src = asset.thumbnail || "";
+      thumb.alt = asset.name || "Asset";
+      if (!asset.thumbnail) {
+        avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+      } else {
+        avatar.appendChild(thumb);
+      }
+    } else if (asset.type === "sound" && asset.data) {
+      avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+    } else {
+      avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+    }
+    
+    const main = document.createElement("div");
+    main.className = "lorebook-main";
+    
+    const title = document.createElement("div");
+    title.className = "lorebook-title";
+    title.textContent = asset.name || asset.originalName || "Untitled";
+    
+    const meta = document.createElement("div");
+    meta.className = "lorebook-meta";
+    const typeSpan = document.createElement("span");
+    typeSpan.textContent = getAssetTypeLabel(asset.type);
+    typeSpan.style.fontSize = "11px";
+    meta.appendChild(typeSpan);
+    
+    main.appendChild(title);
+    main.appendChild(meta);
+    
+    const actions = document.createElement("div");
+    actions.className = "lorebook-actions";
+    
+    const editBtn = iconButton("edit", t("editAssetAria") || "Edit", () => {
+      openAssetEditor(asset);
+    });
+    actions.appendChild(editBtn);
+    
+    const downloadBtn = iconButton("download", t("downloadAssetAria") || "Download", () => {
+      downloadAsset(asset);
+    });
+    actions.appendChild(downloadBtn);
+    
+    const deleteBtn = iconButton("delete", t("deleteAssetAria") || "Delete", async () => {
+      if (confirm(t("confirmDeleteAsset") || "Delete this asset?")) {
+        await deleteAsset(asset.id);
+        await renderAssetsList();
+      }
+    });
+    deleteBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteBtn);
+    
+    row.append(avatar, main, actions);
+    list.appendChild(row);
+  }
+}
+
+function setupAssetsDropzone() {
+  const dropzone = document.getElementById("assets-dropzone");
+  const fileInput = document.getElementById("assets-file-input");
+  
+  if (!dropzone || !fileInput) return;
+  
+  dropzone.onclick = () => fileInput.click();
+  
+  dropzone.ondragover = (e) => {
+    e.preventDefault();
+    dropzone.classList.add("drag-over");
+  };
+  
+  dropzone.ondragleave = () => {
+    dropzone.classList.remove("drag-over");
+  };
+  
+  dropzone.ondrop = (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("drag-over");
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      handleAssetFiles(files);
+    }
+  };
+  
+  fileInput.onchange = () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      handleAssetFiles(fileInput.files);
+    }
+    fileInput.value = "";
+  };
+}
+
+async function handleAssetFiles(files) {
+  for (const file of files) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = e.target?.result;
+      if (typeof data !== "string") return;
+      
+      state_assets.currentFile = file;
+      state_assets.currentFileData = data;
+      state_assets.currentFileType = getAssetTypeFromMime(file.type);
+      state_assets.currentFileName = file.name;
+      state_assets.editingId = null;
+      
+      openAssetEditor(null);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+async function openAssetEditor(asset = null) {
+  setModalDirtyState("asset-editor-modal", false);
+  
+  const nameInput = document.getElementById("asset-name");
+  const originalNameInput = document.getElementById("asset-original-name");
+  const typeInput = document.getElementById("asset-type");
+  const previewContainer = document.getElementById("asset-preview-container");
+  const audioControls = document.getElementById("asset-audio-controls");
+  const nameCount = document.getElementById("asset-name-count");
+  
+  if (state_assets.audioElement) {
+    state_assets.audioElement.pause();
+    state_assets.audioElement = null;
+  }
+  
+  if (asset) {
+    state_assets.editingId = asset.id;
+    state_assets.currentFileData = asset.data;
+    state_assets.currentFileType = asset.type;
+    state_assets.currentFileName = asset.originalName;
+    
+    nameInput.value = asset.name || "";
+    originalNameInput.value = asset.originalName || "";
+    typeInput.value = getAssetTypeLabel(asset.type);
+  } else {
+    state_assets.editingId = null;
+    nameInput.value = "";
+    originalNameInput.value = state_assets.currentFileName || "";
+    typeInput.value = getAssetTypeLabel(state_assets.currentFileType || "sound");
+  }
+  
+  if (nameCount) {
+    nameCount.textContent = `${(nameInput.value || "").length}/128`;
+  }
+  
+  previewContainer.innerHTML = "";
+  audioControls.classList.add("hidden");
+  
+  if (state_assets.currentFileType === "image" && state_assets.currentFileData) {
+    const img = document.createElement("img");
+    img.src = state_assets.currentFileData;
+    previewContainer.appendChild(img);
+  } else if (state_assets.currentFileType === "video" && state_assets.currentFileData) {
+    const video = document.createElement("video");
+    video.src = state_assets.currentFileData;
+    video.controls = true;
+    video.muted = true;
+    previewContainer.appendChild(video);
+  } else if (state_assets.currentFileType === "sound" && state_assets.currentFileData) {
+    audioControls.classList.remove("hidden");
+    const audio = document.createElement("audio");
+    audio.src = state_assets.currentFileData;
+    state_assets.audioElement = audio;
+    
+    const audioPlayer = document.createElement("div");
+    audioPlayer.className = "asset-preview-container";
+    audioPlayer.style.width = "100%";
+    const audioInfo = document.createElement("span");
+    audioInfo.className = "muted";
+    audioInfo.textContent = state_assets.currentFileName || "Audio file";
+    audioPlayer.appendChild(audioInfo);
+    previewContainer.appendChild(audioPlayer);
+  }
+  
+  nameInput.oninput = () => {
+    if (nameCount) {
+      nameCount.textContent = `${(nameInput.value || "").length}/128`;
+    }
+    setModalDirtyState("asset-editor-modal", true);
+  };
+  
+  const applyBtn = document.getElementById("apply-asset-btn");
+  const saveBtn = document.getElementById("save-asset-btn");
+  if (applyBtn) applyBtn.disabled = true;
+  if (saveBtn) saveBtn.disabled = true;
+  
+  const cancelBtn = document.getElementById("cancel-asset-btn");
+  const handleCancel = () => {
+    if (state_assets.audioElement) {
+      state_assets.audioElement.pause();
+      state_assets.audioElement = null;
+    }
+    closeModal("asset-editor-modal");
+  };
+  
+  cancelBtn.onclick = handleCancel;
+  
+  const playBtn = document.getElementById("asset-play-btn");
+  const pauseBtn = document.getElementById("asset-pause-btn");
+  const stopBtn = document.getElementById("asset-stop-btn");
+  
+  playBtn.onclick = () => {
+    if (state_assets.audioElement) {
+      state_assets.audioElement.play();
+    }
+  };
+  
+  pauseBtn.onclick = () => {
+    if (state_assets.audioElement) {
+      state_assets.audioElement.pause();
+    }
+  };
+  
+  stopBtn.onclick = () => {
+    if (state_assets.audioElement) {
+      state_assets.audioElement.pause();
+      state_assets.audioElement.currentTime = 0;
+    }
+  };
+  
+  openModal("asset-editor-modal");
+}
+
+async function saveAssetFromEditor() {
+  const nameInput = document.getElementById("asset-name");
+  const originalNameInput = document.getElementById("asset-original-name");
+  const typeInput = document.getElementById("asset-type");
+  
+  const asset = {
+    id: state_assets.editingId || undefined,
+    name: nameInput.value.trim() || null,
+    originalName: originalNameInput.value,
+    type: state_assets.currentFileType,
+    data: state_assets.currentFileData,
+    createdAt: state_assets.editingId ? undefined : Date.now(),
+    updatedAt: Date.now(),
+  };
+  
+  await saveAsset(asset);
+  
+  if (state_assets.audioElement) {
+    state_assets.audioElement.pause();
+    state_assets.audioElement = null;
+  }
+  
+  closeModal("asset-editor-modal");
+  await renderAssetsList();
+  
+  return true;
+}
+
+function downloadAsset(asset) {
+  if (!asset.data) return;
+  
+  const link = document.createElement("a");
+  link.href = asset.data;
+  link.download = asset.name || asset.originalName || "asset";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function getThreadWritingInstructionsTurnCount(thread = currentThread) {

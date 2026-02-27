@@ -8,6 +8,7 @@
   "loreBooks": "Lore Books",
   "shortcuts": "Atalhos",
   "tags": "Tags",
+  "assets": "Recursos",
   "databaseManagement": "Gerenciar Banco de Dados",
   "exportDatabase": "Exportar Banco de Dados",
   "importDatabase": "Importar Banco de Dados",
@@ -379,5 +380,15 @@
   "msgSystemPromptModalTitle": "Prompt do sistema",
   "msgSystemPromptEntryLabel": "Mensagem do sistema {index}",
   "msgSystemPromptUnavailable": "Prompt do sistema indisponível",
-  "msgSystemPromptUnavailableGenerating": "O prompt do sistema ainda não está pronto"
+  "msgSystemPromptUnavailableGenerating": "O prompt do sistema ainda não está pronto",
+  "assetsManager": "Gerenciador de Recursos",
+  "assetsDropzoneHint": "Arraste arquivos aqui ou clique para adicionar recursos",
+  "noAssetsYet": "Nenhum recurso ainda.",
+  "assetEditor": "Editor de Recurso",
+  "assetOriginalName": "Nome do arquivo original",
+  "assetType": "Tipo",
+  "editAssetAria": "Editar recurso",
+  "downloadAssetAria": "Baixar recurso",
+  "deleteAssetAria": "Excluir recurso",
+  "confirmDeleteAsset": "Excluir este recurso?"
 }

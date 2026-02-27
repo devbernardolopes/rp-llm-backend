@@ -8,6 +8,7 @@
   "loreBooks": "Lore Books",
   "shortcuts": "Raccourcis",
   "tags": "Tags",
+  "assets": "Ressources",
   "databaseManagement": "Gestion de la base de données",
   "exportDatabase": "Exporter la base de données",
   "importDatabase": "Importer la base de données",
@@ -379,5 +380,15 @@
   "msgSystemPromptModalTitle": "Invite système",
   "msgSystemPromptEntryLabel": "Message système {index}",
   "msgSystemPromptUnavailable": "Invite système indisponible",
-  "msgSystemPromptUnavailableGenerating": "L'invite système n'est pas encore prête"
+  "msgSystemPromptUnavailableGenerating": "L'invite système n'est pas encore prête",
+  "assetsManager": "Gestionnaire de ressources",
+  "assetsDropzoneHint": "Glissez-déposez ou cliquez pour ajouter des ressources",
+  "noAssetsYet": "Aucune ressource.",
+  "assetEditor": "Éditeur de ressource",
+  "assetOriginalName": "Nom de fichier d'origine",
+  "assetType": "Type",
+  "editAssetAria": "Modifier la ressource",
+  "downloadAssetAria": "Télécharger la ressource",
+  "deleteAssetAria": "Supprimer la ressource",
+  "confirmDeleteAsset": "Supprimer cette ressource ?"
 }

@@ -2677,6 +2677,111 @@ textarea {
   line-height: 1;
 }
 
+#assets-dropzone-section {
+  margin-bottom: 16px;
+}
+
+.assets-dropzone {
+  width: 100%;
+  height: 150px;
+  border: 2px dashed var(--line);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  gap: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+}
+
+.assets-dropzone:hover {
+  border-color: #4a9eff;
+  background: rgba(74, 158, 255, 0.1);
+}
+
+.assets-dropzone.drag-over {
+  border-color: #4a9eff;
+  background: rgba(74, 158, 255, 0.2);
+}
+
+.assets-dropzone .dropzone-plus {
+  font-size: 40px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.assets-dropzone .dropzone-hint {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.asset-preview-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.asset-preview-container img,
+.asset-preview-container video {
+  max-width: 100%;
+  max-height: 276px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.asset-audio-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-top: 12px;
+}
+
+.asset-audio-controls .icon-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+}
+
+.asset-row .lorebook-avatar {
+  width: 60px;
+  height: 60px;
+  overflow: hidden;
+}
+
+.asset-row .lorebook-avatar img,
+.asset-row .lorebook-avatar video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.asset-row .lorebook-avatar .asset-type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 24px;
+  background: var(--panel-2);
+}
+
 .tag-presets-list {
   display: flex;
   flex-wrap: wrap;

@@ -134,6 +134,15 @@
             &#128451;
           </button>
           <button
+            class="option-btn"
+            data-open-modal="assets-modal"
+            data-i18n-title="assets"
+            title="Assets"
+            aria-label="Assets"
+          >
+            &#128190;
+          </button>
+          <button
             id="guide-btn"
             class="option-btn"
             data-i18n-title="guide"
@@ -864,6 +873,117 @@
         </div>
       </div>
     </div>
+
+    <div
+      id="assets-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="assets-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="assets-title" data-i18n="assetsManager">Assets Manager</h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="assets-dropzone-section">
+            <button
+              type="button"
+              id="assets-dropzone"
+              class="assets-dropzone"
+              tabindex="0"
+              aria-label="Upload asset"
+            >
+              <span class="dropzone-plus">+</span>
+              <span class="dropzone-hint" data-i18n="assetsDropzoneHint">Drag & drop or click to add assets</span>
+            </button>
+            <input
+              type="file"
+              id="assets-file-input"
+              accept="image/*,video/*,audio/*"
+              multiple
+              class="visually-hidden"
+            />
+          </div>
+          <div id="assets-list" class="lorebook-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="asset-editor-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="asset-editor-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="asset-editor-title" data-i18n="assetEditor">Asset Editor</h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="nameLabel">Name</span>
+              <span id="asset-name-count" class="muted">0/128</span>
+            </div>
+            <input id="asset-name" type="text" maxlength="128" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="assetOriginalName">Original Filename</span>
+            <input id="asset-original-name" type="text" disabled />
+          </div>
+          <div class="form-field">
+            <span data-i18n="assetType">Type</span>
+            <input id="asset-type" type="text" disabled />
+          </div>
+          <div id="asset-preview-container" class="asset-preview-container">
+          </div>
+          <div id="asset-audio-controls" class="asset-audio-controls hidden">
+            <button id="asset-play-btn" class="icon-btn" type="button" title="Play">
+              &#9654;
+            </button>
+            <button id="asset-pause-btn" class="icon-btn" type="button" title="Pause">
+              &#10074;&#10074;
+            </button>
+            <button id="asset-stop-btn" class="icon-btn" type="button" title="Stop">
+              &#9632;
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="cancel-asset-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="cancel"
+          >
+            Cancel
+          </button>
+          <button
+            id="apply-asset-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="apply"
+            disabled
+          >
+            Apply
+          </button>
+          <button
+            id="save-asset-btn"
+            class="primary-btn"
+            type="button"
+            data-i18n="save"
+            disabled
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div
       id="personas-modal"
       class="modal hidden"

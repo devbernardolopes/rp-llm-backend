@@ -8,6 +8,7 @@
   "loreBooks": "Lore Books",
   "shortcuts": "Shortcuts",
   "tags": "Tags",
+  "assets": "Assets",
   "databaseManagement": "Database Management",
   "exportDatabase": "Export Database",
   "importDatabase": "Import Database",
@@ -379,5 +380,15 @@
   "characterSortChats": "# Chats",
   "modelFavorite": "Favorite",
   "modelUnfavorite": "Unfavorite",
-  "favoriteModels": "Favorites"
+  "favoriteModels": "Favorites",
+  "assetsManager": "Assets Manager",
+  "assetsDropzoneHint": "Drag & drop or click to add assets",
+  "noAssetsYet": "No assets yet.",
+  "assetEditor": "Asset Editor",
+  "assetOriginalName": "Original Filename",
+  "assetType": "Type",
+  "editAssetAria": "Edit asset",
+  "downloadAssetAria": "Download asset",
+  "deleteAssetAria": "Delete asset",
+  "confirmDeleteAsset": "Delete this asset?"
 }

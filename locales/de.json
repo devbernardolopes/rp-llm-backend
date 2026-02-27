@@ -8,6 +8,7 @@
   "loreBooks": "Lore Books",
   "shortcuts": "Tastenkürzel",
   "tags": "Tags",
+  "assets": "Assets",
   "databaseManagement": "Datenbankverwaltung",
   "exportDatabase": "Datenbank exportieren",
   "importDatabase": "Datenbank importieren",
@@ -379,5 +380,15 @@
   "msgSystemPromptModalTitle": "Systemeingabe",
   "msgSystemPromptEntryLabel": "Systemnachricht {index}",
   "msgSystemPromptUnavailable": "Systemeingabe nicht verfügbar",
-  "msgSystemPromptUnavailableGenerating": "Die Systemeingabe ist noch nicht bereit"
+  "msgSystemPromptUnavailableGenerating": "Die Systemeingabe ist noch nicht bereit",
+  "assetsManager": "Asset-Manager",
+  "assetsDropzoneHint": "Ziehen Sie Dateien hierher oder klicken Sie zum Hinzufügen",
+  "noAssetsYet": "Noch keine Assets.",
+  "assetEditor": "Asset-Editor",
+  "assetOriginalName": "Originaldateiname",
+  "assetType": "Typ",
+  "editAssetAria": "Asset bearbeiten",
+  "downloadAssetAria": "Asset herunterladen",
+  "deleteAssetAria": "Asset löschen",
+  "confirmDeleteAsset": "Dieses Asset löschen?"
 }

@@ -8,6 +8,7 @@
   "loreBooks": "Lore Books",
   "shortcuts": "Atajos",
   "tags": "Tags",
+  "assets": "Recursos",
   "databaseManagement": "Gestión de base de datos",
   "exportDatabase": "Exportar base de datos",
   "importDatabase": "Importar base de datos",
@@ -379,5 +380,15 @@
   "msgSystemPromptModalTitle": "Instrucción del sistema",
   "msgSystemPromptEntryLabel": "Mensaje del sistema {index}",
   "msgSystemPromptUnavailable": "Instrucción del sistema no disponible",
-  "msgSystemPromptUnavailableGenerating": "La instrucción del sistema aún no está lista"
+  "msgSystemPromptUnavailableGenerating": "La instrucción del sistema aún no está lista",
+  "assetsManager": "Gestor de Recursos",
+  "assetsDropzoneHint": "Arrastra archivos aquí o haz clic para añadir recursos",
+  "noAssetsYet": "Sin recursos.",
+  "assetEditor": "Editor de Recurso",
+  "assetOriginalName": "Nombre de archivo original",
+  "assetType": "Tipo",
+  "editAssetAria": "Editar recurso",
+  "downloadAssetAria": "Descargar recurso",
+  "deleteAssetAria": "Eliminar recurso",
+  "confirmDeleteAsset": "¿Eliminar este recurso?"
 }
