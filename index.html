@@ -563,7 +563,7 @@
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="maxTokensLabel">Max Tokens</span>
+                <span data-i18n="maxTokensLabel">Max Completion Tokens</span>
                 <span id="max-tokens-value" class="muted"></span>
               </div>
               <input
@@ -585,6 +585,45 @@
                 min="0"
                 max="2"
                 step="0.05"
+              />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="topPLabel">Top P</span>
+                <span id="top-p-value" class="muted"></span>
+              </div>
+              <input
+                id="top-p-slider"
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+              />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span>
+                <span id="frequency-penalty-value" class="muted"></span>
+              </div>
+              <input
+                id="frequency-penalty-slider"
+                type="range"
+                min="-2"
+                max="2"
+                step="0.1"
+              />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="presencePenaltyLabel">Presence Penalty</span>
+                <span id="presence-penalty-value" class="muted"></span>
+              </div>
+              <input
+                id="presence-penalty-slider"
+                type="range"
+                min="-2"
+                max="2"
+                step="0.1"
               />
             </div>
             <div class="form-field">

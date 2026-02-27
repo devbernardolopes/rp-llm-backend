@@ -78,6 +78,9 @@ const DEFAULT_SETTINGS = {
   temperature: Number.isFinite(Number(CONFIG.temperature))
     ? Number(CONFIG.temperature)
     : 0.8,
+  topP: 1,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
   cancelShortcut: "Ctrl+.",
   homeShortcut: "Alt+H",
   newCharacterShortcut: "Alt+N",
@@ -2984,6 +2987,12 @@ async function setupSettingsControls() {
   const maxTokensValue = document.getElementById("max-tokens-value");
   const temperatureSlider = document.getElementById("temperature-slider");
   const temperatureValue = document.getElementById("temperature-value");
+  const topPSlider = document.getElementById("top-p-slider");
+  const topPValue = document.getElementById("top-p-value");
+  const frequencyPenaltySlider = document.getElementById("frequency-penalty-slider");
+  const frequencyPenaltyValue = document.getElementById("frequency-penalty-value");
+  const presencePenaltySlider = document.getElementById("presence-penalty-slider");
+  const presencePenaltyValue = document.getElementById("presence-penalty-value");
   const toastDelaySlider = document.getElementById("toast-delay-slider");
   const toastDelayValue = document.getElementById("toast-delay-value");
   const marqueeBehaviorSelect = document.getElementById(
@@ -3151,6 +3160,18 @@ async function setupSettingsControls() {
   temperatureValue.textContent = clampTemperature(
     state.settings.temperature,
   ).toFixed(2);
+  if (topPSlider) {
+    topPSlider.value = String(Number(state.settings.topP) || 1);
+    topPValue.textContent = topPSlider.value;
+  }
+  if (frequencyPenaltySlider) {
+    frequencyPenaltySlider.value = String(Number(state.settings.frequencyPenalty) || 0);
+    frequencyPenaltyValue.textContent = frequencyPenaltySlider.value;
+  }
+  if (presencePenaltySlider) {
+    presencePenaltySlider.value = String(Number(state.settings.presencePenalty) || 0);
+    presencePenaltyValue.textContent = presencePenaltySlider.value;
+  }
   const completionCooldownSlider = document.getElementById(
     "completion-cooldown-slider",
   );
@@ -3365,6 +3386,24 @@ async function setupSettingsControls() {
       warnBelow: 0.7,
       dangerAbove: 1.0,
     });
+    saveSettings();
+  });
+  topPSlider?.addEventListener("input", () => {
+    const value = Number(topPSlider.value);
+    state.settings.topP = value;
+    topPValue.textContent = value.toFixed(2);
+    saveSettings();
+  });
+  frequencyPenaltySlider?.addEventListener("input", () => {
+    const value = Number(frequencyPenaltySlider.value);
+    state.settings.frequencyPenalty = value;
+    frequencyPenaltyValue.textContent = value.toFixed(1);
+    saveSettings();
+  });
+  presencePenaltySlider?.addEventListener("input", () => {
+    const value = Number(presencePenaltySlider.value);
+    state.settings.presencePenalty = value;
+    presencePenaltyValue.textContent = value.toFixed(1);
     saveSettings();
   });
   completionCooldownSlider?.addEventListener("input", () => {
@@ -13059,8 +13098,11 @@ async function callOpenRouter(
   const body = {
     model: resolvedModel,
     messages: promptMessages,
-    max_tokens: effectiveMaxTokens,
+    max_completion_tokens: effectiveMaxTokens,
     temperature: clampTemperature(state.settings.temperature),
+    top_p: Number(state.settings.topP) || 1,
+    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: Number(state.settings.presencePenalty) || 0,
     stream: !!state.settings.streamEnabled,
   };
 
