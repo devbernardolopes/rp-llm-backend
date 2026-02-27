@@ -10092,22 +10092,13 @@ async function generateBotReply() {
     pending.finishReason = String(result.finishReason || "");
     pending.nativeFinishReason = String(result.nativeFinishReason || "");
     pending.truncatedByFilter = result.truncatedByFilter === true;
-    pending.generationId = String(result.generationId || "");
-    pending.completionMeta = result.completionMeta || null;
-    pending.generationInfo = result.generationInfo || null;
-    pending.generationFetchDebug = result.generationFetchDebug || [];
-    pending.model = result.model || state.settings.model || "";
-    pending.temperature = Number(state.settings.temperature) || 0;
-    pending.systemMessages = Array.isArray(result.systemMessages)
-      ? result.systemMessages.filter(
-          (entry) => entry && String(entry.content || "").trim(),
-        )
-      : [];
-    pending.usedLoreEntries = Array.isArray(promptContext.loreEntries)
-      ? promptContext.loreEntries
-      : [];
-    pending.usedMemorySummary = String(promptContext.memory || "");
-    pending.generationError = "";
+    const finishReasonValue = result.finishReason;
+    const isOkFinish = finishReasonValue === "stop";
+    if (!isOkFinish && !pending.truncatedByFilter) {
+      pending.generationError = `finish_reason: ${finishReasonValue ?? "null"}`;
+    } else {
+      pending.generationError = "";
+    }
     pending.generationStatus = "";
     if (!isViewingThread(threadId)) {
       pending.unreadAt = Date.now();
