@@ -13007,44 +13007,6 @@ async function getCharacterLoreEntries(character, options = {}) {
   return results;
 }
 
-async function getMemorySummary(characterId) {
-  const entries = await db.memories
-    .where("characterId")
-    .equals(characterId)
-    .sortBy("createdAt");
-  if (entries.length === 0) return null;
-  return entries.map((e) => e.summary).join("\n");
-}
-
-async function summarizeMemory(character) {
-  if (character.useMemory === false) return;
-
-  const toSummarize = conversationHistory.slice(0, 20);
-  const prompt = `Summarize the following roleplay conversation in 3-5 sentences, focusing on key events, decisions, and relationship developments.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
-
-  try {
-    const summaryResult = await callOpenRouter(
-      state.settings.summarySystemPrompt ||
-        DEFAULT_SETTINGS.summarySystemPrompt,
-      [{ role: "user", content: prompt }],
-      state.settings.model,
-    );
-    const summary = summaryResult.content;
-
-    await db.memories.add({
-      characterId: character.id,
-      summary,
-      createdAt: Date.now(),
-    });
-
-    conversationHistory = conversationHistory.slice(20);
-    await persistCurrentThread();
-    renderChat();
-  } catch (e) {
-    console.warn("Memory summarization failed:", e.message);
-  }
-}
-
 async function callOpenRouter(
   systemPrompt,
   history,
