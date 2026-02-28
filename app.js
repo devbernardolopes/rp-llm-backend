@@ -8290,10 +8290,8 @@ async function openAssetEditor(asset = null) {
     setModalDirtyState("asset-editor-modal", true);
   };
   
-  const applyBtn = document.getElementById("apply-asset-btn");
-  const saveBtn = document.getElementById("save-asset-btn");
-  if (applyBtn) applyBtn.disabled = true;
-  if (saveBtn) saveBtn.disabled = true;
+  const applyBtn = document.getElementById("apply-asset-editor-btn");
+  const saveBtn = document.getElementById("save-asset-editor-btn");
   
   const cancelBtn = document.getElementById("cancel-asset-btn");
   const handleCancel = () => {
@@ -8305,6 +8303,14 @@ async function openAssetEditor(asset = null) {
   };
   
   cancelBtn.onclick = handleCancel;
+  
+  applyBtn.onclick = async () => {
+    await saveAssetFromEditor();
+  };
+  
+  saveBtn.onclick = async () => {
+    await saveAssetFromEditor();
+  };
   
   const playBtn = document.getElementById("asset-play-btn");
   const pauseBtn = document.getElementById("asset-pause-btn");
