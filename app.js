@@ -13943,7 +13943,7 @@ function updateModelPill() {
     String(state.lastUsedModel) === String(model)
       ? ` (${state.lastUsedProvider})`
       : "";
-  const text = `Model: ${model}${provider}`;
+  const text = tf("modelPill", { model: `${model}${provider}` });
   if (chatPill) chatPill.textContent = text;
   if (homePill) homePill.textContent = text;
   scheduleThreadBudgetIndicatorUpdate();

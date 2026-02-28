@@ -157,7 +157,7 @@
       <main id="main-view" class="view active">
         <header class="main-header">
           <h1>SCENARA</h1>
-          <div id="home-model-pill" class="model-pill">Model: -</div>
+          <div id="home-model-pill" class="model-pill" data-i18n="modelPill">Model: -</div>
         </header>
         <section id="character-filters" class="character-filters">
           <div class="character-filters-head">
@@ -197,6 +197,7 @@
               id="character-filters-toggle"
               class="icon-btn filters-toggle-btn"
               type="button"
+              data-i18n-title="toggleFilters"
               aria-label="Toggle filters"
             >
               &#9650;
@@ -225,7 +226,7 @@
             title="Auto TTS: Off"
             aria-label="Toggle auto TTS"
           ></button>
-          <div id="chat-model-pill" class="model-pill">Model: -</div>
+          <div id="chat-model-pill" class="model-pill" data-i18n="modelPill">Model: -</div>
           <div id="chat-budget-pill" class="model-pill">Max out: -</div>
         </header>
 
@@ -762,7 +763,7 @@
             <span class="checkbox-line">
               <input type="checkbox" id="thread-autotitle-enabled" checked />
               <span data-i18n="threadAutoTitleEnabled">
-                Enable Auto-titling for Threads
+                Auto-titling
               </span>
               <input
                 id="thread-autotitle-min-messages"

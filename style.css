@@ -225,6 +225,15 @@ body {
   width: 100%;
 }
 
+.thread-list .muted:only-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 100px;
+  text-align: center;
+}
+
 .thread-bulk-bar {
   border: 1px solid var(--line);
   border-radius: 8px;
