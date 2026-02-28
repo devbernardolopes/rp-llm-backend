@@ -1479,12 +1479,20 @@ async function applyInterfaceLanguage() {
     bottomButtons[4].setAttribute("aria-label", t("tags"));
   }
   if (bottomButtons[5]) {
-    bottomButtons[5].title = t("database");
-    bottomButtons[5].setAttribute("aria-label", t("database"));
+    bottomButtons[5].title = t("writingInstructions");
+    bottomButtons[5].setAttribute("aria-label", t("writingInstructions"));
   }
   if (bottomButtons[6]) {
-    bottomButtons[6].title = t("guide");
-    bottomButtons[6].setAttribute("aria-label", t("guide"));
+    bottomButtons[6].title = t("database");
+    bottomButtons[6].setAttribute("aria-label", t("database"));
+  }
+  if (bottomButtons[7]) {
+    bottomButtons[7].title = t("assets");
+    bottomButtons[7].setAttribute("aria-label", t("assets"));
+  }
+  if (bottomButtons[8]) {
+    bottomButtons[8].title = t("guide");
+    bottomButtons[8].setAttribute("aria-label", t("guide"));
   }
 
   if (

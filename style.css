@@ -2032,6 +2032,15 @@ textarea {
   min-height: 0;
 }
 
+#database-modal .modal-body button {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+#database-modal .modal-body button:last-child {
+  margin-bottom: 0;
+}
+
 .modal textarea {
   resize: none;
 }
