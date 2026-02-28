@@ -2354,6 +2354,12 @@ textarea {
   align-items: center;
 }
 
+.kokoro-config {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .tts-test-btn {
   width: 38px;
   height: 38px;
