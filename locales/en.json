@@ -9,6 +9,8 @@
   "shortcuts": "Shortcuts",
   "tags": "Tags",
   "assets": "Assets",
+  "removeAvatarTitle": "Remove Avatar",
+  "removeAvatarConfirm": "Remove this avatar?",
   "databaseManagement": "Database Management",
   "exportDatabase": "Export Database",
   "importDatabase": "Import Database",
@@ -397,5 +399,6 @@
   "editAssetAria": "Edit asset",
   "downloadAssetAria": "Download asset",
   "deleteAssetAria": "Delete asset",
-  "confirmDeleteAsset": "Delete this asset?"
+  "deleteAssetTitle": "Delete Asset",
+  "deleteAssetConfirm": "Delete asset \"{name}\"?"
 }

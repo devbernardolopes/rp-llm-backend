@@ -9,6 +9,8 @@
   "shortcuts": "Raccourcis",
   "tags": "Tags",
   "assets": "Ressources",
+  "removeAvatarTitle": "Supprimer l'avatar",
+  "removeAvatarConfirm": "Supprimer cet avatar ?",
   "databaseManagement": "Gestion de la base de données",
   "exportDatabase": "Exporter la base de données",
   "importDatabase": "Importer la base de données",
@@ -396,5 +398,6 @@
   "editAssetAria": "Modifier la ressource",
   "downloadAssetAria": "Télécharger la ressource",
   "deleteAssetAria": "Supprimer la ressource",
-  "confirmDeleteAsset": "Supprimer cette ressource ?"
+  "deleteAssetTitle": "Supprimer la ressource",
+  "deleteAssetConfirm": "Supprimer la ressource \"{name}\" ?"
 }

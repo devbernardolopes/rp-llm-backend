@@ -9,6 +9,8 @@
   "shortcuts": "Atalhos",
   "tags": "Tags",
   "assets": "Recursos",
+  "removeAvatarTitle": "Remover Avatar",
+  "removeAvatarConfirm": "Remover este avatar?",
   "databaseManagement": "Gerenciar Banco de Dados",
   "exportDatabase": "Exportar Banco de Dados",
   "importDatabase": "Importar Banco de Dados",
@@ -396,5 +398,6 @@
   "editAssetAria": "Editar recurso",
   "downloadAssetAria": "Baixar recurso",
   "deleteAssetAria": "Excluir recurso",
-  "confirmDeleteAsset": "Excluir este recurso?"
+  "deleteAssetTitle": "Excluir recurso",
+  "deleteAssetConfirm": "Excluir o recurso \"{name}\"?"
 }

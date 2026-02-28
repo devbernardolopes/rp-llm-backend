@@ -2026,6 +2026,31 @@ function setupEvents() {
             state.activeModalId = "writing-instructions-modal";
           }
         }
+      } else if (modal?.id === "asset-editor-modal") {
+        if (state.modalDirty["asset-editor-modal"]) {
+          openUnsavedChangesDialog().then((action) => {
+            if (action === "back") return;
+            if (action === "close") {
+              setModalDirtyState("asset-editor-modal", false);
+              closeActiveModal();
+              const parentModal = document.getElementById("assets-modal");
+              if (parentModal) {
+                parentModal.classList.remove("hidden");
+                state.activeModalId = "assets-modal";
+              }
+            }
+            if (action === "save") {
+              saveAssetFromEditor();
+            }
+          });
+        } else {
+          closeActiveModal();
+          const parentModal = document.getElementById("assets-modal");
+          if (parentModal) {
+            parentModal.classList.remove("hidden");
+            state.activeModalId = "assets-modal";
+          }
+        }
       } else {
         closeActiveModal();
       }
@@ -8149,16 +8174,19 @@ async function renderAssetsList() {
     });
     actions.appendChild(editBtn);
     
-    const downloadBtn = iconButton("download", t("downloadAssetAria") || "Download", () => {
+    const downloadBtn = iconButton("export", t("downloadAssetAria") || "Download", () => {
       downloadAsset(asset);
     });
     actions.appendChild(downloadBtn);
     
     const deleteBtn = iconButton("delete", t("deleteAssetAria") || "Delete", async () => {
-      if (confirm(t("confirmDeleteAsset") || "Delete this asset?")) {
-        await deleteAsset(asset.id);
-        await renderAssetsList();
-      }
+      const ok = await openConfirmDialog(
+        t("deleteAssetTitle"),
+        tf("deleteAssetConfirm", { name: asset.name || asset.originalName || "Untitled" }),
+      );
+      if (!ok) return;
+      await deleteAsset(asset.id);
+      await renderAssetsList();
     });
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);

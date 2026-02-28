@@ -9,6 +9,8 @@
   "shortcuts": "Scorciatoie",
   "tags": "Tags",
   "assets": "Risorse",
+  "removeAvatarTitle": "Rimuovi avatar",
+  "removeAvatarConfirm": "Rimuovere questo avatar?",
   "databaseManagement": "Gestione database",
   "exportDatabase": "Esporta database",
   "importDatabase": "Importa database",
@@ -396,5 +398,6 @@
   "editAssetAria": "Modifica risorsa",
   "downloadAssetAria": "Scarica risorsa",
   "deleteAssetAria": "Elimina risorsa",
-  "confirmDeleteAsset": "Eliminare questa risorsa?"
+  "deleteAssetTitle": "Elimina risorsa",
+  "deleteAssetConfirm": "Eliminare la risorsa \"{name}\" ?"
 }

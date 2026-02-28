@@ -9,6 +9,8 @@
   "shortcuts": "Tastenkürzel",
   "tags": "Tags",
   "assets": "Assets",
+  "removeAvatarTitle": "Avatar entfernen",
+  "removeAvatarConfirm": "Dieses Avatar entfernen?",
   "databaseManagement": "Datenbankverwaltung",
   "exportDatabase": "Datenbank exportieren",
   "importDatabase": "Datenbank importieren",
@@ -396,5 +398,6 @@
   "editAssetAria": "Asset bearbeiten",
   "downloadAssetAria": "Asset herunterladen",
   "deleteAssetAria": "Asset löschen",
-  "confirmDeleteAsset": "Dieses Asset löschen?"
+  "deleteAssetTitle": "Asset löschen",
+  "deleteAssetConfirm": "Asset \"{name}\" löschen?"
 }
