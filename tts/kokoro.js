@@ -1,9 +1,4 @@
-﻿// const CUSTOM_KOKORO_VOICE_URLS = {
-//   pf_dora: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pf_dora.bin",
-//   pm_santa: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pm_santa.bin",
-// };
-
-let kokoroVoiceDownloadAbortController = null;
+﻿let kokoroVoiceDownloadAbortController = null;
 let kokoroVoiceDownloadProgress = { loaded: 0, total: 0, percent: 0 };
 const kokoroDownloadedVoices = new Set();
 
@@ -48,32 +43,33 @@ function patchKokoroVoiceFetch() {
           const total = contentLength ? parseInt(contentLength, 10) : 0;
           kokoroVoiceDownloadProgress.total = total;
           kokoroVoiceDownloadProgress.loaded = 0;
-          
+
           if (!response.body) {
             return response;
           }
           const reader = response.body.getReader();
           const chunks = [];
-          
+
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             chunks.push(value);
             kokoroVoiceDownloadProgress.loaded += value.length;
-            kokoroVoiceDownloadProgress.percent = total > 0 
-              ? Math.round((kokoroVoiceDownloadProgress.loaded / total) * 100) 
-              : 0;
+            kokoroVoiceDownloadProgress.percent =
+              total > 0
+                ? Math.round((kokoroVoiceDownloadProgress.loaded / total) * 100)
+                : 0;
           }
-          
+
           const allChunks = new Uint8Array(kokoroVoiceDownloadProgress.loaded);
           let position = 0;
           for (const chunk of chunks) {
             allChunks.set(chunk, position);
             position += chunk.length;
           }
-          
+
           markVoiceDownloaded(voice);
-          
+
           return new Response(allChunks, {
             status: response.status,
             statusText: response.statusText,
@@ -88,14 +84,6 @@ function patchKokoroVoiceFetch() {
           kokoroVoiceDownloadAbortController = null;
         }
       }
-      // if (voice && CUSTOM_KOKORO_VOICE_URLS[voice]) {
-      //   const override = CUSTOM_KOKORO_VOICE_URLS[voice];
-      //   console.log("kokoro:voice-fetch-override", voice, override); // add this
-
-      //   const newInput =
-      //     typeof input === "string" ? override : new Request(override, input);
-      //   return originalFetch(newInput, init);
-      // }
     }
     return originalFetch(input, init);
   };
