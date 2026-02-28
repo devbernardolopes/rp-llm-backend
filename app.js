@@ -4407,13 +4407,7 @@ async function removeTagFromCatalog(tag) {
   showToast(t("tagsUpdated"), "success");
 }
 
-function initializeClickTimer() {
-  let lastClickTime = 0;
-  return lastClickTime;
-}
-
 async function renderShortcutsBar() {
-  const lastClickTime = initializeClickTimer();
   const bar = document.getElementById("shortcuts-bar");
   const toggleBtn = document.getElementById("shortcuts-toggle-btn");
   if (!bar) return;
@@ -4435,16 +4429,7 @@ async function renderShortcutsBar() {
     btn.type = "button";
     btn.textContent = entry.name || `Shortcut ${index + 1}`;
     btn.addEventListener("click", async () => {
-      const clickTime = Date.now();
-      if (clickTime - lastClickTime < 300) {
-        // 300ms is the typical double-click interval
-        // This is a double-click
-        await applyShortcutEntry(entry);
-        await sendMessage({ preserveInput: !entry.clearAfterSend });
-      } else {
-        await applyShortcutEntry(entry);
-      }
-      lastClickTime = clickTime;
+      await applyShortcutEntry(entry);
     });
     bar.appendChild(btn);
   });
