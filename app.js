@@ -11340,17 +11340,10 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
   };
 
   try {
-    showKokoroDownloadProgress();
-    setupKokoroDownloadCancel();
-    startKokoroDownloadProgressMonitor();
-    
     const kokoro = await ensureKokoroInstance(
       options.kokoro.device,
       options.kokoro.dtype,
     );
-    
-    stopKokoroDownloadProgressMonitor();
-    hideKokoroDownloadProgress();
     
     const chunks = chunkForTTS(normalizedText);
     if (chunks.length === 0) {
@@ -11482,6 +11475,10 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
     }
     refreshAllSpeakerButtons();
 
+    showKokoroDownloadProgress();
+    setupKokoroDownloadCancel();
+    startKokoroDownloadProgressMonitor();
+
     // Pipeline: begin generating chunk[i+1] while chunk[i] is playing,
     // so there is minimal silence between chunks and no cumulative freeze.
     let nextGenPromise = generateBufferSource(chunks[0]);
@@ -11500,6 +11497,11 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
 
       const resolved = await nextGenPromise;
       nextGenPromise = followingGenPromise;
+
+      if (i === 0) {
+        stopKokoroDownloadProgressMonitor();
+        hideKokoroDownloadProgress();
+      }
 
       if (resolved === null) {
         // Cancelled or failed during generation — stop pipeline

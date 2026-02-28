@@ -56,7 +56,7 @@ function patchKokoroVoiceFetch() {
               : 0;
           }
           
-          const allChunks = new Uint8Array(kokoroDownloadProgress.loaded);
+          const allChunks = new Uint8Array(kokoroVoiceDownloadProgress.loaded);
           let position = 0;
           for (const chunk of chunks) {
             allChunks.set(chunk, position);
@@ -323,4 +323,10 @@ async function createKokoroBufferSource(arrayBuffer) {
   source.buffer = buffer;
   source.connect(context.destination);
   return source;
+}
+
+if (typeof window !== "undefined") {
+  window.getKokoroVoiceDownloadProgress = getKokoroVoiceDownloadProgress;
+  window.resetKokoroVoiceDownloadProgress = resetKokoroVoiceDownloadProgress;
+  window.cancelKokoroVoiceDownload = cancelKokoroVoiceDownload;
 }
