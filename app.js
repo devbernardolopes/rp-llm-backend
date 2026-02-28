@@ -9754,7 +9754,8 @@ async function maybeGenerateThreadTitle() {
     const result = await callOpenRouter(
       "You create concise, descriptive chat thread titles.",
       [{ role: "user", content: titlePrompt }],
-      "openrouter/free",
+      // "openrouter/free",
+      state.settings.model,
     );
     const raw = String(result?.content || "").trim();
     if (!raw) return;
