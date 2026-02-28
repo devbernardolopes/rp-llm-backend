@@ -5,9 +5,18 @@
 
 let kokoroVoiceDownloadAbortController = null;
 let kokoroVoiceDownloadProgress = { loaded: 0, total: 0, percent: 0 };
+const kokoroDownloadedVoices = new Set();
 
 function getKokoroVoiceDownloadProgress() {
   return kokoroVoiceDownloadProgress;
+}
+
+function isVoiceDownloaded(voiceName) {
+  return kokoroDownloadedVoices.has(voiceName);
+}
+
+function markVoiceDownloaded(voiceName) {
+  kokoroDownloadedVoices.add(voiceName);
 }
 
 function resetKokoroVoiceDownloadProgress() {
@@ -62,6 +71,8 @@ function patchKokoroVoiceFetch() {
             allChunks.set(chunk, position);
             position += chunk.length;
           }
+          
+          markVoiceDownloaded(voice);
           
           return new Response(allChunks, {
             status: response.status,
@@ -329,4 +340,5 @@ if (typeof window !== "undefined") {
   window.getKokoroVoiceDownloadProgress = getKokoroVoiceDownloadProgress;
   window.resetKokoroVoiceDownloadProgress = resetKokoroVoiceDownloadProgress;
   window.cancelKokoroVoiceDownload = cancelKokoroVoiceDownload;
+  window.isVoiceDownloaded = isVoiceDownloaded;
 }

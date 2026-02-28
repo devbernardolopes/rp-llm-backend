@@ -11503,9 +11503,18 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
     }
     refreshAllSpeakerButtons();
 
-    showKokoroDownloadProgress();
-    setupKokoroDownloadCancel();
-    startKokoroDownloadProgressMonitor();
+    const voiceName = options.kokoro.voice || DEFAULT_KOKORO_VOICE;
+    const needsDownload = typeof window.isVoiceDownloaded === "function" 
+      ? !window.isVoiceDownloaded(voiceName) 
+      : true;
+    let showedDownloadProgress = false;
+    
+    if (needsDownload) {
+      showKokoroDownloadProgress();
+      setupKokoroDownloadCancel();
+      startKokoroDownloadProgressMonitor();
+      showedDownloadProgress = true;
+    }
 
     // Pipeline: begin generating chunk[i+1] while chunk[i] is playing,
     // so there is minimal silence between chunks and no cumulative freeze.
@@ -11526,7 +11535,7 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       const resolved = await nextGenPromise;
       nextGenPromise = followingGenPromise;
 
-      if (i === 0) {
+      if (i === 0 && showedDownloadProgress) {
         stopKokoroDownloadProgressMonitor();
         hideKokoroDownloadProgress();
       }
