@@ -1031,6 +1031,20 @@ function isTtsCancelledError(error) {
   return error?.name === "TtsCancelledError";
 }
 
+// function preprocessForTTS(text) {
+//   const sanitized = String(text || "")
+//     .replace(/\*+/g, "")
+//     .replace(/`+/g, "")
+//     .replace(/#+\s?/g, "")
+//     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+//     .replace(/[_~]/g, "")
+//     .replace(/\s+/g, " ")
+//     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
+//     .trim();
+//   const normalized = normalizeForTTS(sanitized);
+//   return normalizeNumbersForTTS(normalized);
+// }
+
 function preprocessForTTS(text) {
   const sanitized = String(text || "")
     .replace(/\*+/g, "")
@@ -1038,10 +1052,13 @@ function preprocessForTTS(text) {
     .replace(/#+\s?/g, "")
     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
     .replace(/[_~]/g, "")
-    .replace(/\s+/g, " ")
     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
+    .replace(/\s+/g, " ")
     .trim();
-  const normalized = normalizeForTTS(sanitized);
+
+  const noLabel = sanitized.replace(/^[A-Z][\w\s'-]{1,32}:\s*/u, "");
+
+  const normalized = normalizeForTTS(noLabel);
   return normalizeNumbersForTTS(normalized);
 }
 
@@ -1871,7 +1888,9 @@ function setupEvents() {
         if (action === "close") {
           setModalDirtyState("writing-instruction-editor-modal", false);
           closeActiveModal();
-          const parentModal = document.getElementById("writing-instructions-modal");
+          const parentModal = document.getElementById(
+            "writing-instructions-modal",
+          );
           if (parentModal) {
             parentModal.classList.remove("hidden");
             state.activeModalId = "writing-instructions-modal";
@@ -2008,7 +2027,9 @@ function setupEvents() {
             if (action === "close") {
               setModalDirtyState("writing-instruction-editor-modal", false);
               closeActiveModal();
-              const parentModal = document.getElementById("writing-instructions-modal");
+              const parentModal = document.getElementById(
+                "writing-instructions-modal",
+              );
               if (parentModal) {
                 parentModal.classList.remove("hidden");
                 state.activeModalId = "writing-instructions-modal";
@@ -2020,7 +2041,9 @@ function setupEvents() {
           });
         } else {
           closeActiveModal();
-          const parentModal = document.getElementById("writing-instructions-modal");
+          const parentModal = document.getElementById(
+            "writing-instructions-modal",
+          );
           if (parentModal) {
             parentModal.classList.remove("hidden");
             state.activeModalId = "writing-instructions-modal";
@@ -3022,10 +3045,18 @@ async function setupSettingsControls() {
   const temperatureValue = document.getElementById("temperature-value");
   const topPSlider = document.getElementById("top-p-slider");
   const topPValue = document.getElementById("top-p-value");
-  const frequencyPenaltySlider = document.getElementById("frequency-penalty-slider");
-  const frequencyPenaltyValue = document.getElementById("frequency-penalty-value");
-  const presencePenaltySlider = document.getElementById("presence-penalty-slider");
-  const presencePenaltyValue = document.getElementById("presence-penalty-value");
+  const frequencyPenaltySlider = document.getElementById(
+    "frequency-penalty-slider",
+  );
+  const frequencyPenaltyValue = document.getElementById(
+    "frequency-penalty-value",
+  );
+  const presencePenaltySlider = document.getElementById(
+    "presence-penalty-slider",
+  );
+  const presencePenaltyValue = document.getElementById(
+    "presence-penalty-value",
+  );
   const toastDelaySlider = document.getElementById("toast-delay-slider");
   const toastDelayValue = document.getElementById("toast-delay-value");
   const marqueeBehaviorSelect = document.getElementById(
@@ -3198,11 +3229,15 @@ async function setupSettingsControls() {
     topPValue.textContent = topPSlider.value;
   }
   if (frequencyPenaltySlider) {
-    frequencyPenaltySlider.value = String(Number(state.settings.frequencyPenalty) || 0);
+    frequencyPenaltySlider.value = String(
+      Number(state.settings.frequencyPenalty) || 0,
+    );
     frequencyPenaltyValue.textContent = frequencyPenaltySlider.value;
   }
   if (presencePenaltySlider) {
-    presencePenaltySlider.value = String(Number(state.settings.presencePenalty) || 0);
+    presencePenaltySlider.value = String(
+      Number(state.settings.presencePenalty) || 0,
+    );
     presencePenaltyValue.textContent = presencePenaltySlider.value;
   }
   const completionCooldownSlider = document.getElementById(
@@ -6218,7 +6253,7 @@ async function openCharacterModal(
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
   setupKokoroDownloadCancel();
-  
+
   const hasAvatars =
     character?.avatars &&
     Array.isArray(character.avatars) &&
@@ -7739,7 +7774,9 @@ async function openWritingInstructionEditor(writingInstruction = null) {
   updateWritingInstructionNameCount();
   renderWritingInstructionTabs();
   loadActiveWritingInstructionToForm();
-  const editorModal = document.getElementById("writing-instruction-editor-modal");
+  const editorModal = document.getElementById(
+    "writing-instruction-editor-modal",
+  );
   if (editorModal) {
     editorModal.classList.remove("hidden");
     state.activeModalId = "writing-instruction-editor-modal";
@@ -8113,19 +8150,19 @@ async function renderAssetsList() {
   if (!list) return;
   list.innerHTML = "";
   const assets = await getAllAssets();
-  
+
   if (assets.length === 0) {
     list.innerHTML = `<p class="muted" data-i18n="noAssetsYet">No assets yet.</p>`;
     return;
   }
-  
+
   for (const asset of assets) {
     const row = document.createElement("div");
     row.className = "lorebook-row asset-row";
-    
+
     const avatar = document.createElement("div");
     avatar.className = "lorebook-avatar";
-    
+
     if (asset.type === "image" && asset.data) {
       const img = document.createElement("img");
       img.src = asset.data;
@@ -8148,49 +8185,59 @@ async function renderAssetsList() {
     } else {
       avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
     }
-    
+
     const main = document.createElement("div");
     main.className = "lorebook-main";
-    
+
     const title = document.createElement("div");
     title.className = "lorebook-title";
     title.textContent = asset.name || asset.originalName || "Untitled";
-    
+
     const meta = document.createElement("div");
     meta.className = "lorebook-meta";
     const typeSpan = document.createElement("span");
     typeSpan.textContent = getAssetTypeLabel(asset.type);
     typeSpan.style.fontSize = "11px";
     meta.appendChild(typeSpan);
-    
+
     main.appendChild(title);
     main.appendChild(meta);
-    
+
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
-    
+
     const editBtn = iconButton("edit", t("editAssetAria") || "Edit", () => {
       openAssetEditor(asset);
     });
     actions.appendChild(editBtn);
-    
-    const downloadBtn = iconButton("export", t("downloadAssetAria") || "Download", () => {
-      downloadAsset(asset);
-    });
+
+    const downloadBtn = iconButton(
+      "export",
+      t("downloadAssetAria") || "Download",
+      () => {
+        downloadAsset(asset);
+      },
+    );
     actions.appendChild(downloadBtn);
-    
-    const deleteBtn = iconButton("delete", t("deleteAssetAria") || "Delete", async () => {
-      const ok = await openConfirmDialog(
-        t("deleteAssetTitle"),
-        tf("deleteAssetConfirm", { name: asset.name || asset.originalName || "Untitled" }),
-      );
-      if (!ok) return;
-      await deleteAsset(asset.id);
-      await renderAssetsList();
-    });
+
+    const deleteBtn = iconButton(
+      "delete",
+      t("deleteAssetAria") || "Delete",
+      async () => {
+        const ok = await openConfirmDialog(
+          t("deleteAssetTitle"),
+          tf("deleteAssetConfirm", {
+            name: asset.name || asset.originalName || "Untitled",
+          }),
+        );
+        if (!ok) return;
+        await deleteAsset(asset.id);
+        await renderAssetsList();
+      },
+    );
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
-    
+
     row.append(avatar, main, actions);
     list.appendChild(row);
   }
@@ -8199,20 +8246,20 @@ async function renderAssetsList() {
 function setupAssetsDropzone() {
   const dropzone = document.getElementById("assets-dropzone");
   const fileInput = document.getElementById("assets-file-input");
-  
+
   if (!dropzone || !fileInput) return;
-  
+
   dropzone.onclick = () => fileInput.click();
-  
+
   dropzone.ondragover = (e) => {
     e.preventDefault();
     dropzone.classList.add("drag-over");
   };
-  
+
   dropzone.ondragleave = () => {
     dropzone.classList.remove("drag-over");
   };
-  
+
   dropzone.ondrop = (e) => {
     e.preventDefault();
     dropzone.classList.remove("drag-over");
@@ -8221,7 +8268,7 @@ function setupAssetsDropzone() {
       handleAssetFiles(files);
     }
   };
-  
+
   fileInput.onchange = () => {
     if (fileInput.files && fileInput.files.length > 0) {
       handleAssetFiles(fileInput.files);
@@ -8236,13 +8283,13 @@ async function handleAssetFiles(files) {
     reader.onload = async (e) => {
       const data = e.target?.result;
       if (typeof data !== "string") return;
-      
+
       state_assets.currentFile = file;
       state_assets.currentFileData = data;
       state_assets.currentFileType = getAssetTypeFromMime(file.type);
       state_assets.currentFileName = file.name;
       state_assets.editingId = null;
-      
+
       openAssetEditor(null);
     };
     reader.readAsDataURL(file);
@@ -8251,25 +8298,25 @@ async function handleAssetFiles(files) {
 
 async function openAssetEditor(asset = null) {
   setModalDirtyState("asset-editor-modal", false);
-  
+
   const nameInput = document.getElementById("asset-name");
   const originalNameInput = document.getElementById("asset-original-name");
   const typeInput = document.getElementById("asset-type");
   const previewContainer = document.getElementById("asset-preview-container");
   const audioControls = document.getElementById("asset-audio-controls");
   const nameCount = document.getElementById("asset-name-count");
-  
+
   if (state_assets.audioElement) {
     state_assets.audioElement.pause();
     state_assets.audioElement = null;
   }
-  
+
   if (asset) {
     state_assets.editingId = asset.id;
     state_assets.currentFileData = asset.data;
     state_assets.currentFileType = asset.type;
     state_assets.currentFileName = asset.originalName;
-    
+
     nameInput.value = asset.name || "";
     originalNameInput.value = asset.originalName || "";
     typeInput.value = getAssetTypeLabel(asset.type);
@@ -8277,32 +8324,43 @@ async function openAssetEditor(asset = null) {
     state_assets.editingId = null;
     nameInput.value = "";
     originalNameInput.value = state_assets.currentFileName || "";
-    typeInput.value = getAssetTypeLabel(state_assets.currentFileType || "sound");
+    typeInput.value = getAssetTypeLabel(
+      state_assets.currentFileType || "sound",
+    );
   }
-  
+
   if (nameCount) {
     nameCount.textContent = `${(nameInput.value || "").length}/128`;
   }
-  
+
   previewContainer.innerHTML = "";
   audioControls.classList.add("hidden");
-  
-  if (state_assets.currentFileType === "image" && state_assets.currentFileData) {
+
+  if (
+    state_assets.currentFileType === "image" &&
+    state_assets.currentFileData
+  ) {
     const img = document.createElement("img");
     img.src = state_assets.currentFileData;
     previewContainer.appendChild(img);
-  } else if (state_assets.currentFileType === "video" && state_assets.currentFileData) {
+  } else if (
+    state_assets.currentFileType === "video" &&
+    state_assets.currentFileData
+  ) {
     const video = document.createElement("video");
     video.src = state_assets.currentFileData;
     video.controls = true;
     video.muted = true;
     previewContainer.appendChild(video);
-  } else if (state_assets.currentFileType === "sound" && state_assets.currentFileData) {
+  } else if (
+    state_assets.currentFileType === "sound" &&
+    state_assets.currentFileData
+  ) {
     audioControls.classList.remove("hidden");
     const audio = document.createElement("audio");
     audio.src = state_assets.currentFileData;
     state_assets.audioElement = audio;
-    
+
     const audioPlayer = document.createElement("div");
     audioPlayer.className = "asset-preview-container";
     audioPlayer.style.width = "100%";
@@ -8312,17 +8370,17 @@ async function openAssetEditor(asset = null) {
     audioPlayer.appendChild(audioInfo);
     previewContainer.appendChild(audioPlayer);
   }
-  
+
   nameInput.oninput = () => {
     if (nameCount) {
       nameCount.textContent = `${(nameInput.value || "").length}/128`;
     }
     setModalDirtyState("asset-editor-modal", true);
   };
-  
+
   const applyBtn = document.getElementById("apply-asset-editor-btn");
   const saveBtn = document.getElementById("save-asset-editor-btn");
-  
+
   const cancelBtn = document.getElementById("cancel-asset-btn");
   const handleCancel = () => {
     if (state_assets.audioElement) {
@@ -8331,40 +8389,40 @@ async function openAssetEditor(asset = null) {
     }
     closeModal("asset-editor-modal");
   };
-  
+
   cancelBtn.onclick = handleCancel;
-  
+
   applyBtn.onclick = async () => {
     await saveAssetFromEditor();
   };
-  
+
   saveBtn.onclick = async () => {
     await saveAssetFromEditor();
   };
-  
+
   const playBtn = document.getElementById("asset-play-btn");
   const pauseBtn = document.getElementById("asset-pause-btn");
   const stopBtn = document.getElementById("asset-stop-btn");
-  
+
   playBtn.onclick = () => {
     if (state_assets.audioElement) {
       state_assets.audioElement.play();
     }
   };
-  
+
   pauseBtn.onclick = () => {
     if (state_assets.audioElement) {
       state_assets.audioElement.pause();
     }
   };
-  
+
   stopBtn.onclick = () => {
     if (state_assets.audioElement) {
       state_assets.audioElement.pause();
       state_assets.audioElement.currentTime = 0;
     }
   };
-  
+
   openModal("asset-editor-modal");
 }
 
@@ -8372,7 +8430,7 @@ async function saveAssetFromEditor() {
   const nameInput = document.getElementById("asset-name");
   const originalNameInput = document.getElementById("asset-original-name");
   const typeInput = document.getElementById("asset-type");
-  
+
   const asset = {
     id: state_assets.editingId || undefined,
     name: nameInput.value.trim() || null,
@@ -8382,23 +8440,23 @@ async function saveAssetFromEditor() {
     createdAt: state_assets.editingId ? undefined : Date.now(),
     updatedAt: Date.now(),
   };
-  
+
   await saveAsset(asset);
-  
+
   if (state_assets.audioElement) {
     state_assets.audioElement.pause();
     state_assets.audioElement = null;
   }
-  
+
   closeModal("asset-editor-modal");
   await renderAssetsList();
-  
+
   return true;
 }
 
 function downloadAsset(asset) {
   if (!asset.data) return;
-  
+
   const link = document.createElement("a");
   link.href = asset.data;
   link.download = asset.name || asset.originalName || "asset";
@@ -11372,7 +11430,7 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       options.kokoro.device,
       options.kokoro.dtype,
     );
-    
+
     const chunks = chunkForTTS(normalizedText);
     if (chunks.length === 0) {
       return null;
@@ -11504,11 +11562,12 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
     refreshAllSpeakerButtons();
 
     const voiceName = options.kokoro.voice || DEFAULT_KOKORO_VOICE;
-    const needsDownload = typeof window.isVoiceDownloaded === "function" 
-      ? !window.isVoiceDownloaded(voiceName) 
-      : true;
+    const needsDownload =
+      typeof window.isVoiceDownloaded === "function"
+        ? !window.isVoiceDownloaded(voiceName)
+        : true;
     let showedDownloadProgress = false;
-    
+
     if (needsDownload) {
       showKokoroDownloadProgress();
       setupKokoroDownloadCancel();
@@ -11554,7 +11613,7 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
         });
         break;
       }
-      }
+    }
 
     return null;
   } catch (err) {
@@ -13306,7 +13365,11 @@ async function buildSystemPrompt(character, options = {}) {
     state.settings.globalPromptTemplate ||
     ""
   ).trim();
-  const basePrompt = replaceLorePlaceholders(basePromptRaw, personaName, charName);
+  const basePrompt = replaceLorePlaceholders(
+    basePromptRaw,
+    personaName,
+    charName,
+  );
   let writingInstructionsRaw = "";
   const wiId = character?.writingInstructionId;
   if (wiId && wiId !== "none") {
@@ -13339,7 +13402,11 @@ async function buildSystemPrompt(character, options = {}) {
     options?.includeOneTimeExtraPrompt === true
       ? String(character?.oneTimeExtraPrompt || "").trim()
       : "";
-  const oneTimeExtra = replaceLorePlaceholders(oneTimeExtraRaw, personaName, charName);
+  const oneTimeExtra = replaceLorePlaceholders(
+    oneTimeExtraRaw,
+    personaName,
+    charName,
+  );
   const promptBeforePersona = [basePrompt, writingInstructions, oneTimeExtra]
     .filter((part) => String(part || "").trim())
     .join("\n\n")
