@@ -4431,6 +4431,7 @@ async function renderShortcutsBar() {
     btn.addEventListener("click", async () => {
       await applyShortcutEntry(entry);
     });
+    btn.addEventListener("dblclick", () => applyShortcutEntry(entry, true));
     bar.appendChild(btn);
   });
 }
@@ -4441,7 +4442,7 @@ function toggleShortcutsVisibility() {
   renderShortcutsBar();
 }
 
-async function applyShortcutEntry(entry) {
+async function applyShortcutEntry(entry, forceSend = false) {
   const input = document.getElementById("user-input");
   const current = input.value;
   if (entry.insertionType === "append") {
@@ -4461,7 +4462,7 @@ async function applyShortcutEntry(entry) {
     clearAfterSend: !!entry.clearAfterSend,
   };
 
-  if (entry.autoSend) {
+  if (entry.autoSend || forceSend) {
     await sendMessage({ preserveInput: !entry.clearAfterSend });
   }
 }
