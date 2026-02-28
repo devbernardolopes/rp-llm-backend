@@ -1045,17 +1045,40 @@ function isTtsCancelledError(error) {
 //   return normalizeNumbersForTTS(normalized);
 // }
 
+// function preprocessForTTS(text) {
+//   const sanitized = String(text || "")
+//     .replace(/\*+/g, "")
+//     .replace(/`+/g, "")
+//     .replace(/#+\s?/g, "")
+//     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+//     .replace(/[_~]/g, "")
+//     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
+//     .replace(/\s+/g, " ")
+//     .trim();
+
+//   const noLabel = sanitized.replace(/^[A-Z][\w\s'-]{1,32}:\s*/u, "");
+
+//   const normalized = normalizeForTTS(noLabel);
+//   return normalizeNumbersForTTS(normalized);
+// }
+
 function preprocessForTTS(text) {
   const sanitized = String(text || "")
+    // remove status block lines
+    .replace(/(^|\n)\s*>\s*\|\|.*$/gm, "")
+    // markdown cleanup
     .replace(/\*+/g, "")
     .replace(/`+/g, "")
     .replace(/#+\s?/g, "")
     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
     .replace(/[_~]/g, "")
+    // emoji removal
     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
+    // whitespace normalize
     .replace(/\s+/g, " ")
     .trim();
 
+  // remove speaker label
   const noLabel = sanitized.replace(/^[A-Z][\w\s'-]{1,32}:\s*/u, "");
 
   const normalized = normalizeForTTS(noLabel);
