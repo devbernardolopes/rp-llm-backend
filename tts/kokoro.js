@@ -3,6 +3,17 @@
 //   pm_santa: "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/voices/pm_santa.bin",
 // };
 
+let kokoroVoiceDownloadAbortController = null;
+let kokoroVoiceDownloadProgress = { loaded: 0, total: 0, percent: 0 };
+
+function getKokoroVoiceDownloadProgress() {
+  return kokoroVoiceDownloadProgress;
+}
+
+function resetKokoroVoiceDownloadProgress() {
+  kokoroVoiceDownloadProgress = { loaded: 0, total: 0, percent: 0 };
+}
+
 function patchKokoroVoiceFetch() {
   if (state.tts.kokoro.fetchPatched) return;
   if (typeof window === "undefined" || typeof window.fetch !== "function")
@@ -13,6 +24,59 @@ function patchKokoroVoiceFetch() {
     if (typeof url === "string") {
       const match = url.match(/\/voices\/([^/]+)\.bin$/);
       const voice = match?.[1];
+      if (voice) {
+        kokoroVoiceDownloadAbortController = new AbortController();
+        const options = {
+          ...init,
+          signal: kokoroVoiceDownloadAbortController.signal,
+        };
+        try {
+          const response = await originalFetch(url, options);
+          if (!response.ok) {
+            return response;
+          }
+          const contentLength = response.headers.get("content-length");
+          const total = contentLength ? parseInt(contentLength, 10) : 0;
+          kokoroVoiceDownloadProgress.total = total;
+          kokoroVoiceDownloadProgress.loaded = 0;
+          
+          if (!response.body) {
+            return response;
+          }
+          const reader = response.body.getReader();
+          const chunks = [];
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            kokoroVoiceDownloadProgress.loaded += value.length;
+            kokoroVoiceDownloadProgress.percent = total > 0 
+              ? Math.round((kokoroVoiceDownloadProgress.loaded / total) * 100) 
+              : 0;
+          }
+          
+          const allChunks = new Uint8Array(kokoroDownloadProgress.loaded);
+          let position = 0;
+          for (const chunk of chunks) {
+            allChunks.set(chunk, position);
+            position += chunk.length;
+          }
+          
+          return new Response(allChunks, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          });
+        } catch (err) {
+          if (err.name === "AbortError") {
+            kokoroVoiceDownloadProgress = { loaded: 0, total: 0, percent: 0 };
+          }
+          throw err;
+        } finally {
+          kokoroVoiceDownloadAbortController = null;
+        }
+      }
       // if (voice && CUSTOM_KOKORO_VOICE_URLS[voice]) {
       //   const override = CUSTOM_KOKORO_VOICE_URLS[voice];
       //   console.log("kokoro:voice-fetch-override", voice, override); // add this
@@ -25,6 +89,13 @@ function patchKokoroVoiceFetch() {
     return originalFetch(input, init);
   };
   state.tts.kokoro.fetchPatched = true;
+}
+
+function cancelKokoroVoiceDownload() {
+  if (kokoroVoiceDownloadAbortController) {
+    kokoroVoiceDownloadAbortController.abort();
+    kokoroVoiceDownloadAbortController = null;
+  }
 }
 
 function getKokoroLanguageKey(language = "") {

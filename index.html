@@ -1492,7 +1492,7 @@
               </option>
             </select>
           </div>
-          <div id="char-tts-kokoro-config" class="kokoro-config hidden">
+            <div id="char-tts-kokoro-config" class="kokoro-config hidden">
             <div class="lang-field">
               <span data-i18n="kokoroDevice">Kokoro Device</span>
               <select id="char-tts-kokoro-device">
@@ -1524,6 +1524,15 @@
                   </option>
                 </select>
                 <div class="tts-test-slot" data-slot="kokoro"></div>
+              </div>
+            </div>
+            <div id="char-tts-kokoro-download" class="lang-field hidden">
+              <div class="kokoro-download-row">
+                <span id="kokoro-download-label" data-i18n="kokoroDownloadingVoice">Downloading voice...</span>
+                <span id="kokoro-download-percent">0%</span>
+                <button id="kokoro-download-cancel" class="icon-btn" type="button" title="Cancel download">
+                  &times;
+                </button>
               </div>
             </div>
           </div>

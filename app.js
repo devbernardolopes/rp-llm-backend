@@ -6192,6 +6192,8 @@ async function openCharacterModal(
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
+  setupKokoroDownloadCancel();
+  
   const hasAvatars =
     character?.avatars &&
     Array.isArray(character.avatars) &&
@@ -11063,6 +11065,65 @@ async function playCharacterTtsTestFromModal() {
   }
 }
 
+function showKokoroDownloadProgress() {
+  const container = document.getElementById("char-tts-kokoro-download");
+  if (container) {
+    container.classList.remove("hidden");
+  }
+}
+
+function hideKokoroDownloadProgress() {
+  const container = document.getElementById("char-tts-kokoro-download");
+  if (container) {
+    container.classList.add("hidden");
+  }
+  const percentEl = document.getElementById("kokoro-download-percent");
+  if (percentEl) {
+    percentEl.textContent = "0%";
+  }
+}
+
+function updateKokoroDownloadProgress(percent) {
+  const percentEl = document.getElementById("kokoro-download-percent");
+  if (percentEl) {
+    percentEl.textContent = `${percent}%`;
+  }
+}
+
+let kokoroDownloadProgressInterval = null;
+
+function startKokoroDownloadProgressMonitor() {
+  stopKokoroDownloadProgressMonitor();
+  kokoroDownloadProgressInterval = setInterval(() => {
+    if (typeof getKokoroVoiceDownloadProgress === "function") {
+      const progress = getKokoroVoiceDownloadProgress();
+      if (progress && progress.total > 0) {
+        updateKokoroDownloadProgress(progress.percent);
+      }
+    }
+  }, 200);
+}
+
+function stopKokoroDownloadProgressMonitor() {
+  if (kokoroDownloadProgressInterval) {
+    clearInterval(kokoroDownloadProgressInterval);
+    kokoroDownloadProgressInterval = null;
+  }
+}
+
+function setupKokoroDownloadCancel() {
+  const cancelBtn = document.getElementById("kokoro-download-cancel");
+  if (cancelBtn) {
+    cancelBtn.onclick = () => {
+      if (typeof cancelKokoroVoiceDownload === "function") {
+        cancelKokoroVoiceDownload();
+      }
+      stopKokoroDownloadProgressMonitor();
+      hideKokoroDownloadProgress();
+    };
+  }
+}
+
 async function playTtsAudio(text, options = {}, playback = {}) {
   const normalizedText = preprocessForTTS(text);
   if (!normalizedText) {
@@ -11279,10 +11340,18 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
   };
 
   try {
+    showKokoroDownloadProgress();
+    setupKokoroDownloadCancel();
+    startKokoroDownloadProgressMonitor();
+    
     const kokoro = await ensureKokoroInstance(
       options.kokoro.device,
       options.kokoro.dtype,
     );
+    
+    stopKokoroDownloadProgressMonitor();
+    hideKokoroDownloadProgress();
+    
     const chunks = chunkForTTS(normalizedText);
     if (chunks.length === 0) {
       return null;
@@ -11446,9 +11515,13 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
         });
         break;
       }
-    }
+      }
 
     return null;
+  } catch (err) {
+    stopKokoroDownloadProgressMonitor();
+    hideKokoroDownloadProgress();
+    throw err;
   } finally {
     finalizeLoadingState();
   }

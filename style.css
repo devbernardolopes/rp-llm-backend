@@ -3264,3 +3264,32 @@ textarea {
     font-size: 11px;
   }
 }
+
+.kokoro-download-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.kokoro-download-row #kokoro-download-label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.kokoro-download-row #kokoro-download-percent {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kokoro-download-row #kokoro-download-cancel {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  margin-left: auto;
+}
