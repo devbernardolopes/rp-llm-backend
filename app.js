@@ -1593,6 +1593,26 @@ async function applyInterfaceLanguage() {
   }
 }
 
+function updateLanguageSelectOptions() {
+  const uiLanguageSelect = document.getElementById("ui-language-select");
+  if (!uiLanguageSelect) return;
+  uiLanguageSelect.querySelector('option[value="auto"]').textContent =
+    t("languageAuto");
+  uiLanguageSelect.querySelector('option[value="en"]').textContent =
+    t("languageEnglish");
+  uiLanguageSelect.querySelector('option[value="fr"]').textContent =
+    t("languageFrench");
+  uiLanguageSelect.querySelector('option[value="it"]').textContent =
+    t("languageItalian");
+  uiLanguageSelect.querySelector('option[value="de"]').textContent =
+    t("languageGerman");
+  uiLanguageSelect.querySelector('option[value="es"]').textContent =
+    t("languageSpanish");
+  uiLanguageSelect.querySelector('option[value="pt-BR"]').textContent = t(
+    "languagePortugueseBr",
+  );
+}
+
 function setupEvents() {
   document
     .getElementById("create-character-btn")
@@ -3649,9 +3669,11 @@ async function setupSettingsControls() {
       state.settings.uiLanguage = uiLanguageSelect.value || "auto";
       saveSettings();
       await applyInterfaceLanguage();
+      updateLanguageSelectOptions();
       updateToastDelayDisplay();
       await renderShortcutsBar();
       await renderCharacters();
+      updateModelPill();
     });
   }
   if (themeSelect) {
