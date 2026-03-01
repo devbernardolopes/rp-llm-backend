@@ -94,7 +94,7 @@ db.version(8).stores({
   writingInstructions: "++id, name, createdAt, updatedAt",
 });
 
-db.version(10).stores({
+db.version(11).stores({
   characters: "++id, name",
   lorebooks: "++id, name, createdAt, updatedAt",
   memories: "++id, characterId, summary, createdAt",

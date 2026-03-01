@@ -3478,25 +3478,25 @@ async function setupSettingsControls() {
       applyChatMessageAlignment();
     });
 
-  autoReplyEnabled?.addEventListener("click", () => {
-    state.settings.autoReplyEnabled = !(
-      state.settings.autoReplyEnabled !== false
-    );
-    autoReplyEnabled.classList.toggle(
-      "is-active",
-      state.settings.autoReplyEnabled !== false,
-    );
+  autoReplyEnabled?.addEventListener("click", async () => {
+    const newValue = !(currentThread?.autoReplyEnabled !== false);
+    if (currentThread) {
+      currentThread.autoReplyEnabled = newValue;
+      await db.threads.update(currentThread.id, { autoReplyEnabled: newValue });
+    }
+    state.settings.autoReplyEnabled = newValue;
+    autoReplyEnabled.classList.toggle("is-active", newValue);
     saveSettings();
   });
 
-  enterToSendEnabled?.addEventListener("click", () => {
-    state.settings.enterToSendEnabled = !(
-      state.settings.enterToSendEnabled !== false
-    );
-    enterToSendEnabled.classList.toggle(
-      "is-active",
-      state.settings.enterToSendEnabled !== false,
-    );
+  enterToSendEnabled?.addEventListener("click", async () => {
+    const newValue = !(currentThread?.enterToSendEnabled !== false);
+    if (currentThread) {
+      currentThread.enterToSendEnabled = newValue;
+      await db.threads.update(currentThread.id, { enterToSendEnabled: newValue });
+    }
+    state.settings.enterToSendEnabled = newValue;
+    enterToSendEnabled.classList.toggle("is-active", newValue);
     saveSettings();
   });
 
@@ -5629,6 +5629,7 @@ function showMainView() {
   document.getElementById("chat-view").classList.remove("active");
   updateThreadRenameButtonState();
   updateAutoTtsToggleButton();
+  updateChatInputToggles();
   renderThreads().catch(() => {});
   updateScrollBottomButtonVisibility();
   scheduleThreadBudgetIndicatorUpdate();
@@ -5640,6 +5641,7 @@ function showChatView() {
   document.getElementById("main-view").classList.remove("active");
   updateThreadRenameButtonState();
   updateAutoTtsToggleButton();
+  updateChatInputToggles();
   setSendingState(state.sending);
   renderThreads().catch(() => {});
   updateScrollBottomButtonVisibility();
@@ -9550,6 +9552,7 @@ async function openThread(threadId) {
   updateChatTitle();
   updateThreadRenameButtonState();
   updateAutoTtsToggleButton();
+  updateChatInputToggles();
   updateModelPill();
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
@@ -9654,6 +9657,26 @@ function updateAutoTtsToggleButton() {
     "aria-label",
     enabled ? t("disableAutoTtsAria") : t("enableAutoTtsAria"),
   );
+}
+
+function updateChatInputToggles() {
+  const autoReplyEnabled = document.getElementById("auto-reply-enabled");
+  const enterToSendEnabled = document.getElementById("enter-to-send-enabled");
+  if (!autoReplyEnabled && !enterToSendEnabled) return;
+  const threadAutoReply = currentThread?.autoReplyEnabled;
+  const threadEnterToSend = currentThread?.enterToSendEnabled;
+  const globalAutoReply = state.settings.autoReplyEnabled;
+  const globalEnterToSend = state.settings.enterToSendEnabled;
+  if (autoReplyEnabled) {
+    const isActive = threadAutoReply !== undefined ? threadAutoReply : (globalAutoReply !== false);
+    autoReplyEnabled.classList.toggle("is-active", isActive);
+    autoReplyEnabled.disabled = !currentThread;
+  }
+  if (enterToSendEnabled) {
+    const isActive = threadEnterToSend !== undefined ? threadEnterToSend : (globalEnterToSend !== false);
+    enterToSendEnabled.classList.toggle("is-active", isActive);
+    enterToSendEnabled.disabled = !currentThread;
+  }
 }
 
 async function toggleThreadAutoTts() {
