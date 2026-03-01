@@ -4436,15 +4436,16 @@ async function renderShortcutsBar() {
   if (!bar) return;
   const entries = parseShortcutEntries(state.settings.shortcutsRaw);
   bar.innerHTML = "";
-  bar.classList.toggle("hidden", !state.shortcutsVisible);
+  const isVisible = currentThread?.shortcutsVisible !== false;
+  bar.classList.toggle("hidden", !isVisible);
   if (toggleBtn) {
-    toggleBtn.classList.toggle("is-active", state.shortcutsVisible);
-    toggleBtn.title = state.shortcutsVisible
+    toggleBtn.classList.toggle("is-active", isVisible);
+    toggleBtn.title = isVisible
       ? t("hideShortcuts")
       : t("showShortcuts");
     toggleBtn.disabled = entries.length === 0;
   }
-  if (!state.shortcutsVisible || entries.length === 0) return;
+  if (!isVisible || entries.length === 0) return;
 
   entries.forEach((entry, index) => {
     const btn = document.createElement("button");
@@ -4459,9 +4460,23 @@ async function renderShortcutsBar() {
   });
 }
 
-function toggleShortcutsVisibility() {
-  state.shortcutsVisible = !state.shortcutsVisible;
-  saveUiState();
+async function toggleShortcutsVisibility() {
+  if (currentThread) {
+    const newValue = currentThread.shortcutsVisible === false;
+    currentThread.shortcutsVisible = newValue;
+    await db.threads.update(currentThread.id, {
+      shortcutsVisible: newValue,
+      updatedAt: Date.now(),
+    });
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: currentThread.id,
+      updatedAt: Date.now(),
+    });
+  } else {
+    state.shortcutsVisible = !state.shortcutsVisible;
+    saveUiState();
+  }
   renderShortcutsBar();
 }
 
