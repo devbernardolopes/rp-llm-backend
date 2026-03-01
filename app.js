@@ -9531,6 +9531,7 @@ async function openThread(threadId) {
   await renderThreads();
   updateScrollBottomButtonVisibility();
   showChatView();
+  broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
   if (thread.pendingGenerationReason) {
     const id = Number(thread.id);
     if (!state.generationQueue.includes(id)) state.generationQueue.push(id);
@@ -13446,6 +13447,10 @@ function setupCrossWindowSync() {
         ) {
           await refreshCurrentThreadFromDb();
         }
+      }
+      if (data.type === "thread-viewed") {
+        delete state.threadUnreadCounts[Number(data.threadId)];
+        await renderThreads();
       }
       if (data.type === "personas-updated") {
         await renderPersonaSelector();
