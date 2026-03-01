@@ -5933,7 +5933,7 @@ function createEmptyCharacterDefinition(language = "en") {
     ttsPitch: 1.1,
     ttsProvider: "kokoro",
     kokoroDevice: "webgpu",
-    kokoroDtype: "fp32",
+    kokoroDtype: "auto",
     kokoroVoice: DEFAULT_KOKORO_VOICE,
     kokoroSpeed: DEFAULT_TTS_RATE,
     preferLoreBooksMatchingLanguage: true,
@@ -5962,7 +5962,7 @@ function normalizeCharacterDefinitions(character = null) {
         language: normalizeBotLanguageCode(d?.language || "en"),
         ttsProvider: d?.ttsProvider || "kokoro",
         kokoroDevice: d?.kokoroDevice || "webgpu",
-        kokoroDtype: d?.kokoroDtype || "fp32",
+        kokoroDtype: d?.kokoroDtype || "auto",
         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
         kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
           ? Number(d.kokoroSpeed)
@@ -6272,7 +6272,7 @@ async function loadActiveCharacterDefinitionToForm() {
   if (kokoroDevice) kokoroDevice.value = kokoroDeviceValue;
   updateKokoroDtypeOptionsForDevice(
     kokoroDeviceValue,
-    def.kokoroDtype || "fp32",
+    def.kokoroDtype || "auto",
   );
   const activeModalLanguage = getCharModalActiveLanguage();
   populateKokoroVoiceSelect(
