@@ -4461,10 +4461,10 @@ async function renderShortcutsBar() {
   const bar = document.getElementById("shortcuts-bar");
   const toggleBtn = document.getElementById("shortcuts-toggle-btn");
   if (!bar) return;
-  const entries = parseShortcutEntries(state.settings.shortcutsRaw);
-  bar.innerHTML = "";
-  const isVisible = currentThread?.shortcutsVisible !== false;
-  bar.classList.toggle("hidden", !isVisible);
+   const entries = parseShortcutEntries(state.settings.shortcutsRaw);
+   bar.innerHTML = "";
+   const isVisible = currentThread?.shortcutsVisible === true;
+   bar.classList.toggle("hidden", !isVisible);
   if (toggleBtn) {
     toggleBtn.classList.toggle("is-active", isVisible);
     toggleBtn.title = isVisible
@@ -9391,14 +9391,15 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     messages: initialMessages,
     selectedPersonaId: selectedPersona?.id || null,
     initialUserName: selectedPersona?.name || "You",
-    autoTtsEnabled: false,
-    lastPersonaInjectionPersonaId: null,
-    writingInstructionsTurnCount: 0,
-    pendingGenerationReason: "",
-    pendingGenerationQueuedAt: 0,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
+     autoTtsEnabled: false,
+     lastPersonaInjectionPersonaId: null,
+     writingInstructionsTurnCount: 0,
+     pendingGenerationReason: "",
+     pendingGenerationQueuedAt: 0,
+     shortcutsVisible: false,
+     createdAt: Date.now(),
+     updatedAt: Date.now(),
+   };
 
   const threadId = await db.threads.add(newThread);
   broadcastSyncEvent({
@@ -9446,16 +9447,17 @@ async function duplicateThread(threadId) {
     titleManual: false,
     messages: clonedMessages,
     selectedPersonaId: source.selectedPersonaId || null,
-    autoTtsEnabled: source.autoTtsEnabled === true,
-    lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
-    writingInstructionsTurnCount:
-      Number(source.writingInstructionsTurnCount) >= 0
-        ? Number(source.writingInstructionsTurnCount)
-        : 0,
-    favorite: !!source.favorite,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
+     autoTtsEnabled: source.autoTtsEnabled === true,
+     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
+     writingInstructionsTurnCount:
+       Number(source.writingInstructionsTurnCount) >= 0
+         ? Number(source.writingInstructionsTurnCount)
+         : 0,
+     shortcutsVisible: source.shortcutsVisible === true,
+     favorite: !!source.favorite,
+     createdAt: Date.now(),
+     updatedAt: Date.now(),
+   };
 
   const newThreadId = await db.threads.add(copy);
   broadcastSyncEvent({
