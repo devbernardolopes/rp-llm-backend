@@ -157,7 +157,9 @@
       <main id="main-view" class="view active">
         <header class="main-header">
           <h1>SCENARA</h1>
-          <div id="home-model-pill" class="model-pill" data-i18n="modelPill">Model: -</div>
+          <div id="home-model-pill" class="model-pill" data-i18n="modelPill">
+            Model: -
+          </div>
         </header>
         <section id="character-filters" class="character-filters">
           <div class="character-filters-head">
@@ -226,7 +228,9 @@
             title="Auto TTS: Off"
             aria-label="Toggle auto TTS"
           ></button>
-          <div id="chat-model-pill" class="model-pill" data-i18n="modelPill">Model: -</div>
+          <div id="chat-model-pill" class="model-pill" data-i18n="modelPill">
+            Model: -
+          </div>
           <div id="chat-budget-pill" class="model-pill">Max out: -</div>
         </header>
 
@@ -762,9 +766,7 @@
             </span>
             <span class="checkbox-line">
               <input type="checkbox" id="thread-autotitle-enabled" checked />
-              <span data-i18n="threadAutoTitleEnabled">
-                Auto-titling
-              </span>
+              <span data-i18n="threadAutoTitleEnabled"> Auto-titling </span>
               <input
                 id="thread-autotitle-min-messages"
                 type="number"
@@ -772,7 +774,7 @@
                 max="10"
                 step="1"
                 value="5"
-                style="width: 50px; margin-left: 8px;"
+                style="width: 50px; margin-left: 8px"
               />
             </span>
             <div class="form-field">
@@ -897,7 +899,9 @@
               aria-label="Upload asset"
             >
               <span class="dropzone-plus">+</span>
-              <span class="dropzone-hint" data-i18n="assetsDropzoneHint">Drag & drop or click to add assets</span>
+              <span class="dropzone-hint" data-i18n="assetsDropzoneHint"
+                >Drag & drop or click to add assets</span
+              >
             </button>
             <input
               type="file"
@@ -940,16 +944,33 @@
             <span data-i18n="assetType">Type</span>
             <input id="asset-type" type="text" disabled />
           </div>
-          <div id="asset-preview-container" class="asset-preview-container">
-          </div>
+          <div
+            id="asset-preview-container"
+            class="asset-preview-container"
+          ></div>
           <div id="asset-audio-controls" class="asset-audio-controls hidden">
-            <button id="asset-play-btn" class="icon-btn" type="button" title="Play">
+            <button
+              id="asset-play-btn"
+              class="icon-btn"
+              type="button"
+              title="Play"
+            >
               &#9654;
             </button>
-            <button id="asset-pause-btn" class="icon-btn" type="button" title="Pause">
+            <button
+              id="asset-pause-btn"
+              class="icon-btn"
+              type="button"
+              title="Pause"
+            >
               &#10074;&#10074;
             </button>
-            <button id="asset-stop-btn" class="icon-btn" type="button" title="Stop">
+            <button
+              id="asset-stop-btn"
+              class="icon-btn"
+              type="button"
+              title="Stop"
+            >
               &#9632;
             </button>
           </div>
@@ -1093,7 +1114,7 @@
                 type="button"
                 data-i18n="backToList"
               >
-                < Back to List
+                Back to List
               </button>
             </div>
             <div class="two-col lore-editor-grid">
@@ -1443,10 +1464,7 @@
               >
                 At End of Character Prompt
               </option>
-              <option
-                value="end_messages"
-                data-i18n="atEndOfMessages"
-              >
+              <option value="end_messages" data-i18n="atEndOfMessages">
                 At End of Messages
               </option>
             </select>
@@ -1493,7 +1511,7 @@
               </option>
             </select>
           </div>
-            <div id="char-tts-kokoro-config" class="kokoro-config hidden">
+          <div id="char-tts-kokoro-config" class="kokoro-config hidden">
             <div class="full lang-field">
               <span data-i18n="kokoroDevice">Kokoro Device</span>
               <select id="char-tts-kokoro-device">
@@ -1529,9 +1547,18 @@
             </div>
             <div class="full lang-field hidden" id="char-tts-kokoro-download">
               <div class="kokoro-download-row">
-                <span id="kokoro-download-label" data-i18n="kokoroDownloadingVoice">Downloading voice...</span>
+                <span
+                  id="kokoro-download-label"
+                  data-i18n="kokoroDownloadingVoice"
+                  >Downloading voice...</span
+                >
                 <span id="kokoro-download-percent">0%</span>
-                <button id="kokoro-download-cancel" class="icon-btn" type="button" title="Cancel download">
+                <button
+                  id="kokoro-download-cancel"
+                  class="icon-btn"
+                  type="button"
+                  title="Cancel download"
+                >
                   &times;
                 </button>
               </div>
@@ -1551,11 +1578,17 @@
               value="1"
             />
           </div>
-          <div class="full lang-field tts-extra-field" id="char-tts-language-field">
+          <div
+            class="full lang-field tts-extra-field"
+            id="char-tts-language-field"
+          >
             <span data-i18n="ttsLanguage">TTS Language</span>
             <select id="char-tts-language"></select>
           </div>
-          <div class="full lang-field tts-extra-field" id="char-tts-voice-field">
+          <div
+            class="full lang-field tts-extra-field"
+            id="char-tts-voice-field"
+          >
             <span data-i18n="ttsVoice">TTS Voice</span>
             <div class="tts-control-row">
               <select id="char-tts-voice"></select>
@@ -1569,7 +1602,10 @@
               </div>
             </div>
           </div>
-          <div class="full lang-field tts-extra-field" id="char-tts-pitch-field">
+          <div
+            class="full lang-field tts-extra-field"
+            id="char-tts-pitch-field"
+          >
             <div class="label-inline">
               <span data-i18n="ttsPitch">TTS Pitch</span>
               <span id="char-tts-pitch-value" class="muted"></span>
