@@ -2363,6 +2363,11 @@ function saveCharModalTextareaCollapseStates() {
   });
   localStorage.setItem(key, JSON.stringify(states));
   localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
+  // Save modal body scroll position
+  const modalBody = modal.querySelector(".modal-body");
+  if (modalBody) {
+    localStorage.setItem(`${key}-modal-scroll`, String(modalBody.scrollTop));
+  }
 }
 
 function restoreCharModalTextareaCollapseStates() {
@@ -2396,8 +2401,16 @@ function restoreCharModalTextareaCollapseStates() {
         textarea.scrollTop = scrollStates[textarea.id];
       }
     });
+  // Restore modal body scroll position
+  const modalScrollKey = `${key}-modal-scroll`;
+  const savedModalScroll = localStorage.getItem(modalScrollKey);
+  if (savedModalScroll !== null) {
+    const modalBody = modal.querySelector(".modal-body");
+    if (modalBody) {
+      modalBody.scrollTop = Number(savedModalScroll);
+    }
+  }
 }
-
 function captureTextareaLabel(textarea) {
   const parent = textarea.parentElement;
   if (!parent) return null;
@@ -6419,9 +6432,14 @@ async function openCharacterModal(
   updateModalActionButtons("character-modal");
   document.getElementById("char-language-modal")?.classList.add("hidden");
 
-  openModal("character-modal");
-  restoreCharModalTextareaCollapseStates();
-}
+   openModal("character-modal");
+   restoreCharModalTextareaCollapseStates();
+   // For new characters, reset modal scroll to top
+   if (!character?.id) {
+     const modalBody = document.querySelector("#character-modal .modal-body");
+     if (modalBody) modalBody.scrollTop = 0;
+   }
+ }
 
 async function saveCharacterFromModal({ close = true } = {}) {
   saveActiveCharacterDefinitionFromForm();
@@ -9311,21 +9329,33 @@ async function deleteCharacter(characterId) {
   );
   if (!ok) return;
 
-  await db.transaction(
-    "rw",
-    db.characters,
-    db.threads,
-    db.memories,
-    db.sessions,
-    async () => {
-      await db.characters.delete(characterId);
-      await db.threads.where("characterId").equals(characterId).delete();
-      await db.memories.where("characterId").equals(characterId).delete();
-      await db.sessions.where("characterId").equals(characterId).delete();
-    },
-  );
+   await db.transaction(
+     "rw",
+     db.characters,
+     db.threads,
+     db.memories,
+     db.sessions,
+     async () => {
+       await db.characters.delete(characterId);
+       await db.threads.where("characterId").equals(characterId).delete();
+       await db.memories.where("characterId").equals(characterId).delete();
+       await db.sessions.where("characterId").equals(characterId).delete();
+     },
+   );
 
-  if (currentCharacter?.id === characterId) {
+   // Clean up stored modal scroll and collapse states for this character
+   const prefix = `rp-char-collapse-${characterId}-`;
+   const lastLangKey = `rp-char-modal-last-lang-${characterId}`;
+   const keysToDelete = [lastLangKey];
+   for (let i = 0; i < localStorage.length; i++) {
+     const key = localStorage.key(i);
+     if (key && key.startsWith(prefix)) {
+       keysToDelete.push(key);
+     }
+   }
+   keysToDelete.forEach((k) => localStorage.removeItem(k));
+
+   if (currentCharacter?.id === characterId) {
     currentCharacter = null;
     currentThread = null;
     conversationHistory = [];
