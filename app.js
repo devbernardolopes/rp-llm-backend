@@ -952,6 +952,7 @@ const state = {
     },
   },
   avatarSnapshotCache: new Map(),
+  avatarBlobUrlCache: new Map(),
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
   activeGenerationThreadId: null,
@@ -4647,7 +4648,7 @@ async function renderCharacters() {
           el = document.createElement("img");
         }
         el.className = "character-avatar";
-        el.src = avatarData.data instanceof Blob ? URL.createObjectURL(avatarData.data) : avatarData.data;
+        el.src = avatarData.data instanceof Blob ? getCachedAvatarBlobUrl(avatarData.data) : avatarData.data;
         el.alt = `${resolved.name || "Character"} avatar`;
         el.style.position = "absolute";
         el.style.top = "0";
@@ -5028,7 +5029,7 @@ async function renderCharacters() {
         if (persona.avatar) {
           const img = document.createElement("img");
           img.src = persona.avatar instanceof Blob
-            ? URL.createObjectURL(persona.avatar)
+            ? getCachedAvatarBlobUrl(persona.avatar)
             : persona.avatar;
           item.appendChild(img);
         }
@@ -5912,7 +5913,7 @@ function setCharacterAvatarImage(
     img.src = fallbackUrl;
     return;
   }
-  const dataSrc = info.data instanceof Blob ? URL.createObjectURL(info.data) : info.data;
+  const dataSrc = info.data instanceof Blob ? getCachedAvatarBlobUrl(info.data) : info.data;
   if (info.type === "video") {
     img.dataset.avatarVideo = dataSrc;
     img.src = fallbackUrl;
@@ -6945,7 +6946,7 @@ function updatePersonaPickerDisplay() {
   if (!img) return;
   const name = currentPersona?.name || "You";
   const avatarSrc = currentPersona?.avatar instanceof Blob
-    ? URL.createObjectURL(currentPersona.avatar)
+    ? getCachedAvatarBlobUrl(currentPersona.avatar)
     : currentPersona?.avatar || fallbackAvatar(name, 512, 512);
   img.src = avatarSrc;
   img.alt = `${name} avatar`;
@@ -7065,7 +7066,7 @@ async function renderPersonaModalList() {
     const avatar = document.createElement("img");
     avatar.className = "persona-avatar";
     avatar.src = persona.avatar instanceof Blob
-      ? URL.createObjectURL(persona.avatar)
+      ? getCachedAvatarBlobUrl(persona.avatar)
       : persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
     avatar.alt = "persona avatar";
     avatar.classList.add("clickable-avatar");
@@ -7157,7 +7158,7 @@ function loadPersonaForEditing(persona) {
   document.getElementById("persona-name").value = persona.name || "";
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
   if (persona.avatar instanceof Blob) {
-    document.getElementById("persona-avatar").value = URL.createObjectURL(persona.avatar);
+    document.getElementById("persona-avatar").value = getCachedAvatarBlobUrl(persona.avatar);
   } else {
     document.getElementById("persona-avatar").value = persona.avatar || "";
   }
@@ -8198,6 +8199,16 @@ function createBlobUrl(blob) {
   return blob ? URL.createObjectURL(blob) : "";
 }
 
+function getCachedAvatarBlobUrl(blob) {
+  if (!blob) return "";
+  if (state.avatarBlobUrlCache.has(blob)) {
+    return state.avatarBlobUrlCache.get(blob);
+  }
+  const url = URL.createObjectURL(blob);
+  state.avatarBlobUrlCache.set(blob, url);
+  return url;
+}
+
 function revokeBlobUrl(url) {
   if (url && url.startsWith("blob:")) {
     URL.revokeObjectURL(url);
@@ -8831,7 +8842,7 @@ function renderCharAvatars() {
       e.stopPropagation();
     });
 
-    const avatarSrc = avatar.data instanceof Blob ? URL.createObjectURL(avatar.data) : avatar.data;
+    const avatarSrc = avatar.data instanceof Blob ? getCachedAvatarBlobUrl(avatar.data) : avatar.data;
     if (avatar.type === "video") {
       const video = document.createElement("video");
       video.src = avatarSrc;
