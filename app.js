@@ -5918,6 +5918,12 @@ function setCharacterAvatarImage(
   const dataSrc = info.data instanceof Blob ? getCachedAvatarBlobUrl(info.data) : info.data;
   if (info.type === "video") {
     img.dataset.avatarVideo = dataSrc;
+    // Check snapshot cache synchronously first
+    const cachedSnapshot = state.avatarSnapshotCache.get(dataSrc);
+    if (cachedSnapshot) {
+      img.src = cachedSnapshot;
+      return;
+    }
     img.src = fallbackUrl;
     ensureVideoAvatarSnapshot(dataSrc)
       .then((preview) => {
