@@ -6893,7 +6893,10 @@ function updatePersonaPickerDisplay() {
   const img = document.getElementById("persona-selected-avatar");
   if (!img) return;
   const name = currentPersona?.name || "You";
-  img.src = currentPersona?.avatar || fallbackAvatar(name, 512, 512);
+  const avatarSrc = currentPersona?.avatar instanceof Blob
+    ? URL.createObjectURL(currentPersona.avatar)
+    : currentPersona?.avatar || fallbackAvatar(name, 512, 512);
+  img.src = avatarSrc;
   img.alt = `${name} avatar`;
 }
 
