@@ -302,6 +302,7 @@
   "generationQueuedNotice": "Generazione in coda. In attesa della generazione attiva.",
   "generationQueuedNoticeWithPos": "Generazione in coda. In attesa della generazione attiva (posizione in coda {position}).",
   "generatingLabel": "Generazione in corso...",
+  "generatingTitleLabel": "Generazione titolo in corso...",
   "regeneratingLabel": "Rigenerazione in corso...",
   "truncatedMessageLine1": "Questo messaggio è stato troncato dal modello attualmente attivo.",
   "truncatedMessageLine2": "Puoi eliminare o rigenerare questo messaggio. Puoi anche attivare un'altra risposta del modello o inviare un nuovo messaggio.",

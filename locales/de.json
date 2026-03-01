@@ -302,6 +302,7 @@
   "generationQueuedNotice": "Generierung eingereiht. Warte auf aktive Generierung.",
   "generationQueuedNoticeWithPos": "Generierung eingereiht. Warte auf aktive Generierung (Warteschlangenposition {position}).",
   "generatingLabel": "Generiere...",
+  "generatingTitleLabel": "Titel wird generiert...",
   "regeneratingLabel": "Regeneriere...",
   "truncatedMessageLine1": "Diese Nachricht wurde vom aktuell aktiven Modell abgeschnitten.",
   "truncatedMessageLine2": "Sie können diese Nachricht löschen oder regenerieren. Sie können auch eine andere Modellantwort auslösen oder eine neue Nachricht senden.",

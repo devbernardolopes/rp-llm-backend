@@ -302,6 +302,7 @@
   "generationQueuedNotice": "Generation queued. Waiting for active generation.",
   "generationQueuedNoticeWithPos": "Generation queued. Waiting for active generation (queue position {position}).",
   "generatingLabel": "Generating...",
+  "generatingTitleLabel": "Generating title...",
   "regeneratingLabel": "Regenerating...",
   "truncatedMessageLine1": "This message has been truncated by the currently active model.",
   "truncatedMessageLine2": "You can delete or regenerate this message. You can also trigger another model response, or send a new message.",

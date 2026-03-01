@@ -9745,6 +9745,59 @@ async function maybeGenerateThreadTitle() {
   );
   if (conversationHistory.length < minMessages) return;
 
+  const existingTitleMessage = conversationHistory.find(
+    (m) => m.role === "assistant" && m.generationStatus === "title_generating",
+  );
+  if (existingTitleMessage) return;
+
+  const hasExistingPendingMessage = conversationHistory.some(
+    (m) =>
+      m.role === "assistant" &&
+      (m.generationStatus === "generating" ||
+        m.generationStatus === "regenerating" ||
+        m.generationStatus === "queued" ||
+        m.generationStatus === "cooling_down"),
+  );
+  if (hasExistingPendingMessage) return;
+
+  const pendingTitleMessage = {
+    role: "assistant",
+    content: "",
+    generationStatus: "title_generating",
+    createdAt: Date.now(),
+    finishReason: "",
+    nativeFinishReason: "",
+    truncatedByFilter: false,
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    model: state.settings.model || "",
+    temperature: Number(state.settings.temperature) || 0,
+  };
+  conversationHistory.push(pendingTitleMessage);
+  const pendingIndex = conversationHistory.length - 1;
+
+  await persistCurrentThread();
+
+  const log = document.getElementById("chat-log");
+  if (log && isViewingThread(currentThread.id)) {
+    const pendingRow = buildMessageRow(
+      pendingTitleMessage,
+      pendingIndex,
+      true,
+    );
+    log.appendChild(pendingRow);
+    const pendingContent = pendingRow?.querySelector(".message-content");
+    if (pendingContent) {
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingTitleLabel") || t("generatingLabel"))}`;
+    }
+    scrollChatToBottom();
+  }
+
+  setSendingState();
+
   const titleSlice = conversationHistory.slice(0, minMessages);
   const transcript = titleSlice
     .map((m, i) => {
@@ -9782,13 +9835,23 @@ async function maybeGenerateThreadTitle() {
       state.settings.model,
     );
     const raw = String(result?.content || "").trim();
-    if (!raw) return;
+    if (!raw) {
+      conversationHistory.pop();
+      await persistCurrentThread();
+      setSendingState();
+      return;
+    }
     const cleaned = raw
       .replace(/^["'`]+|["'`]+$/g, "")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 128);
-    if (!cleaned) return;
+    if (!cleaned) {
+      conversationHistory.pop();
+      await persistCurrentThread();
+      setSendingState();
+      return;
+    }
 
     const updatedAt = Date.now();
     await db.threads.update(currentThread.id, {
@@ -9804,13 +9867,36 @@ async function maybeGenerateThreadTitle() {
     state.lastSyncSeenUpdatedAt = updatedAt;
     updateChatTitle();
     await renderThreads();
+
+    pendingTitleMessage.generationStatus = "generating";
+    await persistCurrentThread();
+
+    if (log && isViewingThread(currentThread.id)) {
+      const pendingRow = log.querySelector(
+        `.chat-row[data-message-index="${pendingIndex}"]`,
+      );
+      if (pendingRow) {
+        const pendingContent = pendingRow?.querySelector(".message-content");
+        if (pendingContent) {
+          pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
+        }
+      }
+    }
+
+    setSendingState();
+
     broadcastSyncEvent({
       type: "thread-updated",
       threadId: currentThread.id,
       updatedAt,
     });
   } catch {
-    // keep existing fallback title
+    const idx = conversationHistory.indexOf(pendingTitleMessage);
+    if (idx >= 0) {
+      conversationHistory.splice(idx, 1);
+    }
+    await persistCurrentThread();
+    setSendingState();
   }
 }
 
@@ -10158,8 +10244,11 @@ function buildMessageRow(message, index, streaming) {
     let statusLabel = t("generatingLabel");
     const isQueued = message?.generationStatus === "queued";
     const isCoolingDown = message?.generationStatus === "cooling_down";
+    const isTitleGenerating = message?.generationStatus === "title_generating";
     if (message?.generationStatus === "regenerating") {
       statusLabel = t("regeneratingLabel");
+    } else if (isTitleGenerating) {
+      statusLabel = t("generatingTitleLabel") || t("generatingLabel");
     } else if (isCoolingDown) {
       statusLabel =
         String(message?.content || "").trim() ||
@@ -11913,7 +12002,13 @@ function setSendingState(sending) {
     ? conversationHistory.some((m) => {
         if (!m || m.role !== "assistant") return false;
         const st = String(m.generationStatus || "").trim();
-        return st === "generating" || st === "regenerating";
+        return st === "generating" || st === "regenerating" || st === "title_generating";
+      })
+    : false;
+  const hasTitleGeneratingMarker = Array.isArray(conversationHistory)
+    ? conversationHistory.some((m) => {
+        if (!m || m.role !== "assistant") return false;
+        return String(m.generationStatus || "").trim() === "title_generating";
       })
     : false;
   const currentThreadGenerating =
@@ -11932,15 +12027,19 @@ function setSendingState(sending) {
   sendBtn.disabled = isBlockedByQueueOrCooldown;
   sendBtn.classList.toggle(
     "is-generating",
-    currentThreadGenerating || isBlockedByQueueOrCooldown,
+    currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker,
   );
   sendBtn.classList.toggle(
     "danger-btn",
-    currentThreadGenerating || isBlockedByQueueOrCooldown,
+    currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker,
   );
-  sendBtn.textContent = currentThreadGenerating ? t("cancel") : t("send");
+  if (hasTitleGeneratingMarker) {
+    sendBtn.textContent = t("generatingLabel");
+  } else {
+    sendBtn.textContent = currentThreadGenerating ? t("cancel") : t("send");
+  }
   personaSelect.disabled =
-    currentThreadGenerating || isBlockedByQueueOrCooldown;
+    currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker;
   refreshMessageControlStates();
   refreshAllSpeakerButtons();
   if (currentThreadGenerating) closePromptHistory();
@@ -13213,7 +13312,8 @@ function findLatestPendingAssistantIndex(messages) {
       status === "queued" ||
       status === "cooling_down" ||
       status === "generating" ||
-      status === "regenerating"
+      status === "regenerating" ||
+      status === "title_generating"
     ) {
       return i;
     }

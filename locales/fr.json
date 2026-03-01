@@ -302,6 +302,7 @@
   "generationQueuedNotice": "Génération en attente. En attente de la génération active.",
   "generationQueuedNoticeWithPos": "Génération en attente. En attente de la génération active (position {position}).",
   "generatingLabel": "Génération en cours...",
+  "generatingTitleLabel": "Génération du titre en cours...",
   "regeneratingLabel": "Régénération en cours...",
   "truncatedMessageLine1": "Ce message a été tronqué par le modèle actuellement actif.",
   "truncatedMessageLine2": "Vous pouvez supprimer ou régénérer ce message. Vous pouvez également déclencher une autre réponse du modèle ou envoyer un nouveau message.",
