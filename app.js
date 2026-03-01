@@ -1717,6 +1717,7 @@ function setupEvents() {
       await loadActiveCharacterDefinitionToForm();
       setCharacterModalTab("lang");
       renderCharacterDefinitionTabs();
+      restoreCharModalTextareaCollapseStates();
     });
   document
     .getElementById("pane-toggle-chat")
@@ -2353,6 +2354,7 @@ function getCharModalCollapseStorageKey() {
 function saveCharModalTextareaCollapseStates() {
   const key = getCharModalCollapseStorageKey();
   const states = {};
+  const scrollStates = {};
   const modal = document.getElementById("character-modal");
   if (!modal) return;
   modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
@@ -2360,28 +2362,43 @@ function saveCharModalTextareaCollapseStates() {
     if (!entry) return;
     const expanded = entry.header.getAttribute("aria-expanded") === "true";
     states[textarea.id] = expanded;
+    scrollStates[textarea.id] = textarea.scrollTop;
   });
   localStorage.setItem(key, JSON.stringify(states));
+  localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
 }
 
 function restoreCharModalTextareaCollapseStates() {
   const key = getCharModalCollapseStorageKey();
   const raw = localStorage.getItem(key);
-  if (!raw) return;
-  try {
-    const states = JSON.parse(raw);
-    const modal = document.getElementById("character-modal");
-    if (!modal) return;
-    modal
-      .querySelectorAll(".textarea-collapse textarea")
-      .forEach((textarea) => {
-        const entry = textareaCollapseStates.get(textarea);
-        if (!entry || states[textarea.id] === undefined) return;
-        entry.setExpanded(states[textarea.id]);
-      });
-  } catch (e) {
-    localStorage.removeItem(key);
-  }
+  const scrollRaw = localStorage.getItem(`${key}-scroll`);
+  const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
+  const modal = document.getElementById("character-modal");
+  if (!modal) return;
+  modal
+    .querySelectorAll(".textarea-collapse textarea")
+    .forEach((textarea) => {
+      const entry = textareaCollapseStates.get(textarea);
+      if (!entry) return;
+      const hasContent = String(textarea.value || "").trim().length > 0;
+      if (raw) {
+        try {
+          const states = JSON.parse(raw);
+          if (states[textarea.id] !== undefined) {
+            entry.setExpanded(states[textarea.id]);
+          } else {
+            entry.setExpanded(hasContent);
+          }
+        } catch {
+          entry.setExpanded(hasContent);
+        }
+      } else {
+        entry.setExpanded(hasContent);
+      }
+      if (scrollStates[textarea.id] !== undefined) {
+        textarea.scrollTop = scrollStates[textarea.id];
+      }
+    });
 }
 
 function captureTextareaLabel(textarea) {
@@ -6107,6 +6124,7 @@ function renderCharacterDefinitionTabs() {
     btn.appendChild(label);
     btn.addEventListener("click", async () => {
       saveActiveCharacterDefinitionFromForm();
+      saveCharModalTextareaCollapseStates();
       state.charModalActiveLanguage = def.language;
       await loadActiveCharacterDefinitionToForm();
       setCharacterModalTab("lang");
@@ -6183,6 +6201,7 @@ function renderCharacterDefinitionTabs() {
 function saveActiveCharacterDefinitionFromForm() {
   const def = getActiveCharacterDefinition();
   if (!def) return;
+  saveCharModalTextareaCollapseStates();
   def.name = String(document.getElementById("char-name")?.value || "").trim();
   def.tagline = String(
     document.getElementById("char-tagline")?.value || "",
