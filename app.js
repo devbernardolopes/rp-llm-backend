@@ -908,7 +908,7 @@ const state = {
   settings: { ...DEFAULT_SETTINGS },
   localeBundles: {},
   i18nLang: "en",
-  shortcutsVisible: true,
+  shortcutsVisible: false,
   editingCharacterId: null,
   editingPersonaId: null,
   currentPersonaAvatarBlob: null,
@@ -3919,7 +3919,7 @@ function loadUiState() {
       updateCharacterFiltersToggleUi();
     }
   } catch {
-    state.shortcutsVisible = true;
+    state.shortcutsVisible = false;
     state.characterTagFilters = [];
     state.characterSortMode = "updated_desc";
   }
@@ -4483,12 +4483,6 @@ async function toggleShortcutsVisibility() {
     currentThread.shortcutsVisible = newValue;
     await db.threads.update(currentThread.id, {
       shortcutsVisible: newValue,
-      updatedAt: Date.now(),
-    });
-    broadcastSyncEvent({
-      type: "thread-updated",
-      threadId: currentThread.id,
-      updatedAt: Date.now(),
     });
   } else {
     state.shortcutsVisible = !state.shortcutsVisible;
