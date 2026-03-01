@@ -4979,7 +4979,9 @@ async function renderCharacters() {
 
         if (persona.avatar) {
           const img = document.createElement("img");
-          img.src = persona.avatar;
+          img.src = persona.avatar instanceof Blob
+            ? URL.createObjectURL(persona.avatar)
+            : persona.avatar;
           item.appendChild(img);
         }
 
@@ -7008,8 +7010,9 @@ async function renderPersonaModalList() {
 
     const avatar = document.createElement("img");
     avatar.className = "persona-avatar";
-    avatar.src =
-      persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
+    avatar.src = persona.avatar instanceof Blob
+      ? URL.createObjectURL(persona.avatar)
+      : persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
     avatar.alt = "persona avatar";
     avatar.classList.add("clickable-avatar");
     avatar.addEventListener("click", (e) => {
