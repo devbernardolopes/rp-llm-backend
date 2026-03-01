@@ -6517,7 +6517,8 @@ async function saveCharacterFromModal({ close = true } = {}) {
     showToast(t("characterUpdated"), "success");
   } else {
     payload.createdAt = Date.now();
-    await db.characters.add(payload);
+    const newId = await db.characters.add(payload);
+    state.editingCharacterId = newId;
     showToast(t("characterCreated"), "success");
   }
 
