@@ -2206,12 +2206,8 @@ function setupEvents() {
     "#persona-internal-description",
     "#persona-is-default",
   ]);
-  markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
-  markModalDirtyOnInput("writing-instructions-modal", [
-    "#writing-instruction-name",
-    "#writing-instruction-text",
-  ]);
-  markModalDirtyOnInput("writing-instruction-editor-modal", [
+   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
+   markModalDirtyOnInput("writing-instruction-editor-modal", [
     "#writing-instruction-name",
     "#writing-instruction-text",
   ]);
