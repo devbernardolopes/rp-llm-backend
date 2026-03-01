@@ -5955,7 +5955,7 @@ function createEmptyCharacterDefinition(language = "en") {
     writingInstructionId: "none",
     initialMessagesRaw: "",
     initialMessages: [],
-    personaInjectionPlacement: "end_system_prompt",
+    personaInjectionPlacement: "end_messages",
     ttsVoice: DEFAULT_TTS_VOICE,
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
     ttsRate: DEFAULT_TTS_RATE,
