@@ -8199,8 +8199,9 @@ async function deleteAsset(id) {
 async function saveAsset(asset) {
   if (asset.id) {
     await db.assets.put(asset);
+    return asset.id;
   } else {
-    await db.assets.add(asset);
+    return await db.assets.add(asset);
   }
 }
 
@@ -8451,6 +8452,7 @@ async function openAssetEditor(asset = null) {
       state_assets.audioElement.pause();
       state_assets.audioElement = null;
     }
+    setModalDirtyState("asset-editor-modal", false);
     closeModal("asset-editor-modal");
   };
 
@@ -8505,13 +8507,18 @@ async function saveAssetFromEditor() {
     updatedAt: Date.now(),
   };
 
-  await saveAsset(asset);
+  const savedId = await saveAsset(asset);
+
+  if (!state_assets.editingId && savedId) {
+    state_assets.editingId = savedId;
+  }
 
   if (state_assets.audioElement) {
     state_assets.audioElement.pause();
     state_assets.audioElement = null;
   }
 
+  setModalDirtyState("asset-editor-modal", false);
   closeModal("asset-editor-modal");
   await renderAssetsList();
 
