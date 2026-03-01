@@ -915,6 +915,7 @@ const state = {
   shortcutsVisible: true,
   editingCharacterId: null,
   editingPersonaId: null,
+  currentPersonaAvatarBlob: null,
   activeModalId: null,
   promptHistoryOpen: false,
   chatAutoScroll: true,
@@ -4598,7 +4599,7 @@ async function renderCharacters() {
           el = document.createElement("img");
         }
         el.className = "character-avatar";
-        el.src = avatarData.data;
+        el.src = avatarData.data instanceof Blob ? URL.createObjectURL(avatarData.data) : avatarData.data;
         el.alt = `${resolved.name || "Character"} avatar`;
         el.style.position = "absolute";
         el.style.top = "0";
@@ -5860,17 +5861,18 @@ function setCharacterAvatarImage(
     img.src = fallbackUrl;
     return;
   }
+  const dataSrc = info.data instanceof Blob ? URL.createObjectURL(info.data) : info.data;
   if (info.type === "video") {
-    img.dataset.avatarVideo = info.data;
+    img.dataset.avatarVideo = dataSrc;
     img.src = fallbackUrl;
-    ensureVideoAvatarSnapshot(info.data)
+    ensureVideoAvatarSnapshot(dataSrc)
       .then((preview) => {
         if (preview) img.src = preview;
       })
       .catch(() => {});
     return;
   }
-  img.src = info.data;
+  img.src = dataSrc;
 }
 
 function createEmptyCharacterDefinition(language = "en") {
@@ -6895,7 +6897,7 @@ function updatePersonaPickerDisplay() {
 async function savePersonaFromModal() {
   const personas = await getOrderedPersonas();
   const name = document.getElementById("persona-name").value.trim();
-  const avatar = document.getElementById("persona-avatar").value.trim();
+  const avatar = state.currentPersonaAvatarBlob || document.getElementById("persona-avatar").value.trim();
   const description = document
     .getElementById("persona-description")
     .value.trim();
@@ -6959,6 +6961,7 @@ async function savePersonaFromModal() {
   );
   document.getElementById("persona-is-default").checked = false;
   state.editingPersonaId = null;
+  state.currentPersonaAvatarBlob = null;
   document.getElementById("save-persona-btn").textContent = t("savePersona");
   state.modalDirty["personas-modal"] = false;
 
@@ -7092,9 +7095,14 @@ async function deletePersona(personaId) {
 
 function loadPersonaForEditing(persona) {
   state.editingPersonaId = persona.id;
+  state.currentPersonaAvatarBlob = null;
   document.getElementById("persona-name").value = persona.name || "";
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
-  document.getElementById("persona-avatar").value = persona.avatar || "";
+  if (persona.avatar instanceof Blob) {
+    document.getElementById("persona-avatar").value = URL.createObjectURL(persona.avatar);
+  } else {
+    document.getElementById("persona-avatar").value = persona.avatar || "";
+  }
   document.getElementById("persona-avatar-file").value = "";
   document.getElementById("persona-description").value =
     persona.description || "";
@@ -7231,12 +7239,9 @@ function onPersonaAvatarFileChange(e) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    const result = typeof reader.result === "string" ? reader.result : "";
-    document.getElementById("persona-avatar").value = result;
-  };
-  reader.readAsDataURL(file);
+  state.currentPersonaAvatarBlob = file;
+  const previewUrl = URL.createObjectURL(file);
+  document.getElementById("persona-avatar").value = previewUrl;
 }
 
 function countWords(text) {
@@ -8131,6 +8136,16 @@ let state_assets = {
   audioElement: null,
 };
 
+function createBlobUrl(blob) {
+  return blob ? URL.createObjectURL(blob) : "";
+}
+
+function revokeBlobUrl(url) {
+  if (url && url.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
+
 function getAssetTypeFromMime(mime) {
   if (!mime) return "sound";
   if (mime.startsWith("image/")) return "image";
@@ -8211,12 +8226,12 @@ async function renderAssetsList() {
 
     if (asset.type === "image" && asset.data) {
       const img = document.createElement("img");
-      img.src = asset.data;
+      img.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
       img.alt = asset.name || "Asset";
       avatar.appendChild(img);
     } else if (asset.type === "video" && asset.data) {
       const video = document.createElement("video");
-      video.src = asset.data;
+      video.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
       video.muted = true;
       const thumb = document.createElement("img");
       thumb.src = asset.thumbnail || "";
@@ -8325,20 +8340,13 @@ function setupAssetsDropzone() {
 
 async function handleAssetFiles(files) {
   for (const file of files) {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const data = e.target?.result;
-      if (typeof data !== "string") return;
+    state_assets.currentFile = file;
+    state_assets.currentFileData = file;
+    state_assets.currentFileType = getAssetTypeFromMime(file.type);
+    state_assets.currentFileName = file.name;
+    state_assets.editingId = null;
 
-      state_assets.currentFile = file;
-      state_assets.currentFileData = data;
-      state_assets.currentFileType = getAssetTypeFromMime(file.type);
-      state_assets.currentFileName = file.name;
-      state_assets.editingId = null;
-
-      openAssetEditor(null);
-    };
-    reader.readAsDataURL(file);
+    openAssetEditor(null);
   }
 }
 
@@ -8387,14 +8395,18 @@ async function openAssetEditor(asset = null) {
     state_assets.currentFileData
   ) {
     const img = document.createElement("img");
-    img.src = state_assets.currentFileData;
+    img.src = state_assets.currentFileData instanceof Blob
+      ? URL.createObjectURL(state_assets.currentFileData)
+      : state_assets.currentFileData;
     previewContainer.appendChild(img);
   } else if (
     state_assets.currentFileType === "video" &&
     state_assets.currentFileData
   ) {
     const video = document.createElement("video");
-    video.src = state_assets.currentFileData;
+    video.src = state_assets.currentFileData instanceof Blob
+      ? URL.createObjectURL(state_assets.currentFileData)
+      : state_assets.currentFileData;
     video.controls = true;
     video.muted = true;
     previewContainer.appendChild(video);
@@ -8404,7 +8416,9 @@ async function openAssetEditor(asset = null) {
   ) {
     audioControls.classList.remove("hidden");
     const audio = document.createElement("audio");
-    audio.src = state_assets.currentFileData;
+    audio.src = state_assets.currentFileData instanceof Blob
+      ? URL.createObjectURL(state_assets.currentFileData)
+      : state_assets.currentFileData;
     state_assets.audioElement = audio;
 
     const audioPlayer = document.createElement("div");
@@ -8504,7 +8518,9 @@ function downloadAsset(asset) {
   if (!asset.data) return;
 
   const link = document.createElement("a");
-  link.href = asset.data;
+  link.href = asset.data instanceof Blob
+    ? URL.createObjectURL(asset.data)
+    : asset.data;
   link.download = asset.name || asset.originalName || "asset";
   document.body.appendChild(link);
   link.click();
@@ -8720,20 +8736,15 @@ async function handleAvatarFiles(files) {
 
 function addAvatarFromFile(file) {
   return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      const avatarType = file.type.startsWith("video") ? "video" : "image";
-      state.charModalAvatars.push({
-        type: avatarType,
-        data: result,
-        name: file.name,
-      });
-      setModalDirtyState("character-modal", true);
-      renderCharAvatars();
-      resolve();
-    };
-    reader.readAsDataURL(file);
+    const avatarType = file.type.startsWith("video") ? "video" : "image";
+    state.charModalAvatars.push({
+      type: avatarType,
+      data: file,
+      name: file.name,
+    });
+    setModalDirtyState("character-modal", true);
+    renderCharAvatars();
+    resolve();
   });
 }
 
@@ -8755,16 +8766,17 @@ function renderCharAvatars() {
       e.stopPropagation();
     });
 
+    const avatarSrc = avatar.data instanceof Blob ? URL.createObjectURL(avatar.data) : avatar.data;
     if (avatar.type === "video") {
       const video = document.createElement("video");
-      video.src = avatar.data;
+      video.src = avatarSrc;
       video.muted = true;
       video.loop = true;
       video.preload = "metadata";
       video.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        openVideoPreview(avatar.data);
+        openVideoPreview(avatarSrc);
       });
       video.addEventListener("mousedown", (e) => e.preventDefault());
       item.addEventListener("mouseenter", () => {
@@ -8777,11 +8789,11 @@ function renderCharAvatars() {
       item.appendChild(video);
     } else {
       const img = document.createElement("img");
-      img.src = avatar.data;
+      img.src = avatarSrc;
       img.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        openImagePreview(avatar.data);
+        openImagePreview(avatarSrc);
       });
       img.addEventListener("mousedown", (e) => e.preventDefault());
       item.appendChild(img);
