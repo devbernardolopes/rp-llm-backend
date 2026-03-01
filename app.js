@@ -9549,9 +9549,9 @@ async function openThread(threadId) {
     }
   }
   state.unreadNeedsUserScrollThreadId = null;
-  persistThreadMessagesById(Number(threadId), thread.messages || [], {
+  await persistThreadMessagesById(Number(threadId), thread.messages || [], {
     _skipUpdatedAt: true,
-  }).catch(() => {});
+  });
   renderChat();
   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
   const log = document.getElementById("chat-log");
