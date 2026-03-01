@@ -1808,6 +1808,9 @@ function setupEvents() {
   document.getElementById("char-name").addEventListener("input", () => {
     updateNameLengthCounter("char-name", "char-name-count", 128);
   });
+  document.getElementById("char-tagline").addEventListener("input", () => {
+    updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
+  });
   document.getElementById("persona-name").addEventListener("input", () => {
     updateNameLengthCounter("persona-name", "persona-name-count", 64);
   });
