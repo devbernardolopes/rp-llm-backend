@@ -110,34 +110,30 @@ const DEFAULT_SETTINGS = {
   unreadSoundEnabled: true,
 };
 
-let playedUnreadSoundForThread = new Set(
-  JSON.parse(localStorage.getItem("rp-played-unread-sound-threads") || "[]"),
-);
-
-function savePlayedUnreadSoundThreads() {
-  try {
-    localStorage.setItem(
-      "rp-played-unread-sound-threads",
-      JSON.stringify([...playedUnreadSoundForThread]),
-    );
-  } catch {
-    // ignore storage errors
-  }
-}
+let unreadSoundAudioCtx = null;
 
 function playUnreadMessageSound() {
   if (state.settings.unreadSoundEnabled === false) return;
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  oscillator.frequency.value = 800;
-  oscillator.type = "sine";
-  gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-  oscillator.start(audioCtx.currentTime);
-  oscillator.stop(audioCtx.currentTime + 0.3);
+  try {
+    if (!unreadSoundAudioCtx) {
+      unreadSoundAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (unreadSoundAudioCtx.state === "suspended") {
+      unreadSoundAudioCtx.resume();
+    }
+    const oscillator = unreadSoundAudioCtx.createOscillator();
+    const gainNode = unreadSoundAudioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(unreadSoundAudioCtx.destination);
+    oscillator.frequency.value = 800;
+    oscillator.type = "sine";
+    gainNode.gain.setValueAtTime(0.3, unreadSoundAudioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, unreadSoundAudioCtx.currentTime + 0.3);
+    oscillator.start(unreadSoundAudioCtx.currentTime);
+    oscillator.stop(unreadSoundAudioCtx.currentTime + 0.3);
+  } catch {
+    // ignore audio errors
+  }
 }
 
 const DEFAULT_KOKORO_VOICE = "af_heart";
@@ -923,6 +919,7 @@ const state = {
   lastUsedProvider: "",
   lastCompletionTime: 0,
   draggingPersonaId: null,
+  threadUnreadCounts: {},
   tabId: `tab-${Math.random().toString(36).slice(2)}`,
   syncChannel: null,
   syncTimerId: null,
@@ -5303,11 +5300,12 @@ async function renderThreads() {
       String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
       isInCompletionCooldown();
     const unreadCount = getUnreadAssistantCount(thread.messages || []);
-    if (unreadCount > 0 && !playedUnreadSoundForThread.has(Number(thread.id))) {
+    const threadId = Number(thread.id);
+    const previousUnreadCount = state.threadUnreadCounts[threadId] || 0;
+    if (unreadCount > previousUnreadCount) {
       playUnreadMessageSound();
-      playedUnreadSoundForThread.add(Number(thread.id));
-      savePlayedUnreadSoundThreads();
     }
+    state.threadUnreadCounts[threadId] = unreadCount;
     const queuePos =
       isGenerating || isInCooldown
         ? 0
@@ -9454,8 +9452,7 @@ async function openThread(threadId) {
       );
     }
   }
-  playedUnreadSoundForThread.delete(Number(threadId));
-  savePlayedUnreadSoundThreads();
+  delete state.threadUnreadCounts[Number(threadId)];
   const thread = await db.threads.get(threadId);
   if (!thread) return;
 
