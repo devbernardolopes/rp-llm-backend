@@ -401,5 +401,11 @@
   "deleteAssetAria": "Asset löschen",
   "deleteAssetTitle": "Asset löschen",
   "deleteAssetConfirm": "Asset \"{name}\" löschen?",
-  "attachFile": "Datei anhängen (demnächst)"
+  "attachFile": "Datei anhängen (demnächst)",
+  "newPersona": "+ Neue Persona",
+  "personaEditor": "Persona-Editor",
+  "editPersona": "Persona bearbeiten",
+  "duplicatePersonaAria": "Persona duplizieren",
+  "personaSaved": "Persona gespeichert.",
+  "personaDuplicated": "Persona dupliziert."
 }

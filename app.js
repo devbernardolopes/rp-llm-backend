@@ -1811,10 +1811,59 @@ function setupEvents() {
   refreshCharTtsProviderFields();
   document
     .getElementById("save-persona-btn")
-    .addEventListener("click", savePersonaFromModal);
+    .addEventListener("click", savePersonaFromEditor);
   document
-    .getElementById("persona-avatar-file")
+    .getElementById("cancel-persona-btn")
+    .addEventListener("click", () => closeModal("persona-editor-modal"));
+  document
+    .getElementById("create-persona-btn")
+    .addEventListener("click", () => openPersonaEditor(null));
+  document
+    .getElementById("persona-avatar-file-input")
     .addEventListener("change", onPersonaAvatarFileChange);
+  document
+    .getElementById("persona-remove-avatar")
+    .addEventListener("click", () => {
+      state.currentPersonaAvatarBlob = null;
+      const dropzone = document.getElementById("persona-avatar-dropzone");
+      const preview = document.getElementById("persona-avatar-preview");
+      const removeBtn = document.getElementById("persona-remove-avatar");
+      preview.classList.add("hidden");
+      dropzone.classList.remove("has-avatar");
+      removeBtn.classList.add("hidden");
+    });
+  document
+    .getElementById("persona-avatar-dropzone")
+    .addEventListener("click", () => {
+      document.getElementById("persona-avatar-file-input").click();
+    });
+  document
+    .getElementById("persona-avatar-dropzone")
+    .addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  document
+    .getElementById("persona-avatar-dropzone")
+    .addEventListener("drop", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith("image/")) {
+          const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+          state.currentPersonaAvatarBlob = blob;
+          const preview = document.getElementById("persona-avatar-preview");
+          const dropzone = document.getElementById("persona-avatar-dropzone");
+          const removeBtn = document.getElementById("persona-remove-avatar");
+          preview.src = URL.createObjectURL(blob);
+          preview.classList.remove("hidden");
+          dropzone.classList.add("has-avatar");
+          removeBtn.classList.remove("hidden");
+        }
+      }
+    });
   document
     .getElementById("persona-select")
     .addEventListener("change", onPersonaSelectChange);
@@ -7176,21 +7225,14 @@ async function renderPersonaModalList() {
   const list = document.getElementById("persona-list");
   if (!list) return;
   const personas = await getOrderedPersonas();
-  const defaultCheck = document.getElementById("persona-is-default");
-  if (defaultCheck) {
-    defaultCheck.checked = personas.length === 0;
-  }
   list.innerHTML = "";
 
   if (personas.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "muted";
-    empty.textContent = t("noPersonasYet");
-    list.appendChild(empty);
+    list.innerHTML = `<p class="muted" data-i18n="noPersonasYet">${t("noPersonasYet")}</p>`;
     return;
   }
 
-  personas.forEach((persona) => {
+  for (const persona of personas) {
     const row = document.createElement("div");
     row.className = "persona-row";
     row.draggable = true;
@@ -7200,7 +7242,7 @@ async function renderPersonaModalList() {
     row.addEventListener("drop", onPersonaDrop);
     row.addEventListener("dragend", onPersonaDragEnd);
 
-    const drag = document.createElement("span");
+    const drag = document.createElement("div");
     drag.className = "persona-drag";
     drag.textContent = ":::";
     drag.title = t("dragToReorder");
@@ -7228,17 +7270,15 @@ async function renderPersonaModalList() {
     info.append(title, desc);
 
     const actions = document.createElement("div");
-    actions.className = "actions";
-    if (!persona.isDefault) {
-      actions.appendChild(
-        iconButton("badge", t("setDefaultPersona"), async () => {
-          await setDefaultPersona(persona.id);
-        }),
-      );
-    }
+    actions.className = "lorebook-actions";
     actions.appendChild(
-      iconButton("edit", t("editPersonaAria"), async () => {
-        loadPersonaForEditing(persona);
+      iconButton("edit", t("editPersonaAria"), () => {
+        openPersonaEditor(persona);
+      }),
+    );
+    actions.appendChild(
+      iconButton("copy", t("duplicatePersonaAria"), async () => {
+        await duplicatePersona(persona.id);
       }),
     );
     const deleteBtn = iconButton(
@@ -7253,7 +7293,7 @@ async function renderPersonaModalList() {
 
     row.append(drag, avatar, info, actions);
     list.appendChild(row);
-  });
+  }
 }
 
 async function deletePersona(personaId) {
@@ -7316,6 +7356,132 @@ function loadPersonaForEditing(persona) {
   );
   document.getElementById("persona-is-default").checked = !!persona.isDefault;
   document.getElementById("save-persona-btn").textContent = t("updatePersona");
+}
+
+let state_editingPersonaId = null;
+
+function openPersonaEditor(persona = null) {
+  setModalDirtyState("persona-editor-modal", false);
+  state_editingPersonaId = persona?.id || null;
+  state.currentPersonaAvatarBlob = null;
+  
+  const nameInput = document.getElementById("persona-editor-name");
+  nameInput.value = persona?.name || "";
+  updateNameLengthCounter("persona-editor-name", "persona-editor-name-count", 64);
+  
+  const descInput = document.getElementById("persona-editor-description");
+  descInput.value = persona?.description || "";
+  updateNameLengthCounter("persona-editor-description", "persona-editor-description-count", 100);
+  
+  document.getElementById("persona-editor-internal-description").value = 
+    persona?.internalDescription || "";
+  
+  document.getElementById("persona-editor-is-default").checked = !!persona?.isDefault;
+  
+  const dropzone = document.getElementById("persona-avatar-dropzone");
+  const preview = document.getElementById("persona-avatar-preview");
+  const removeBtn = document.getElementById("persona-remove-avatar");
+  
+  if (persona?.avatar) {
+    const avatarSrc = persona.avatar instanceof Blob
+      ? getCachedAvatarBlobUrl(persona.avatar)
+      : persona.avatar;
+    preview.src = avatarSrc;
+    preview.classList.remove("hidden");
+    dropzone.classList.add("has-avatar");
+    removeBtn.classList.remove("hidden");
+  } else {
+    preview.classList.add("hidden");
+    dropzone.classList.remove("has-avatar");
+    removeBtn.classList.add("hidden");
+  }
+  
+  document.getElementById("persona-avatar-file-input").value = "";
+  
+  const title = document.getElementById("persona-editor-title");
+  title.textContent = persona ? t("editPersona") : t("newPersona");
+  
+  openModal("persona-editor-modal");
+}
+
+async function savePersonaFromEditor() {
+  const name = document.getElementById("persona-editor-name").value.trim();
+  if (!name) {
+    showToast(t("personaNameRequired"), "error");
+    return;
+  }
+  
+  const description = document.getElementById("persona-editor-description").value.trim();
+  const internalDescription = document.getElementById("persona-editor-internal-description").value.trim();
+  const isDefault = document.getElementById("persona-editor-is-default").checked;
+  
+  let avatar = null;
+  if (state.currentPersonaAvatarBlob) {
+    avatar = state.currentPersonaAvatarBlob;
+  } else if (state_editingPersonaId) {
+    const existing = await db.personas.get(state_editingPersonaId);
+    avatar = existing?.avatar || null;
+  }
+  
+  const personaData = {
+    name,
+    description,
+    internalDescription,
+    avatar,
+    isDefault: isDefault ? true : false,
+    updatedAt: Date.now(),
+  };
+  
+  if (isDefault) {
+    const allPersonas = await db.personas.toArray();
+    for (const p of allPersonas) {
+      if (p.id !== state_editingPersonaId && p.isDefault) {
+        await db.personas.update(p.id, { isDefault: false });
+      }
+    }
+  }
+  
+  let savedId;
+  if (state_editingPersonaId) {
+    await db.personas.update(state_editingPersonaId, personaData);
+    savedId = state_editingPersonaId;
+  } else {
+    const personas = await getOrderedPersonas();
+    const maxOrder = personas.reduce((max, p) => Math.max(max, p.order || 0), 0);
+    personaData.order = maxOrder + 1;
+    savedId = await db.personas.add(personaData);
+  }
+  
+  closeModal("persona-editor-modal");
+  await renderPersonaModalList();
+  await renderPersonaSelector();
+  updatePersonaPickerDisplay();
+  broadcastSyncEvent({ type: "personas-updated" });
+  showToast(t("personaSaved"), "success");
+}
+
+async function duplicatePersona(personaId) {
+  const source = await db.personas.get(personaId);
+  if (!source) return;
+  
+  const personas = await getOrderedPersonas();
+  const maxOrder = personas.reduce((max, p) => Math.max(max, p.order || 0), 0);
+  
+  const copy = {
+    name: `${source.name || "Persona"} Copy`,
+    description: source.description || "",
+    internalDescription: source.internalDescription || "",
+    avatar: source.avatar || null,
+    isDefault: false,
+    order: maxOrder + 1,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  
+  await db.personas.add(copy);
+  await renderPersonaModalList();
+  broadcastSyncEvent({ type: "personas-updated" });
+  showToast(t("personaDuplicated"), "success");
 }
 
 async function getOrderedPersonas() {
@@ -7442,7 +7608,19 @@ function onPersonaAvatarFileChange(e) {
 
   state.currentPersonaAvatarBlob = file;
   const previewUrl = URL.createObjectURL(file);
-  document.getElementById("persona-avatar").value = previewUrl;
+  const preview = document.getElementById("persona-avatar-preview");
+  const dropzone = document.getElementById("persona-avatar-dropzone");
+  const removeBtn = document.getElementById("persona-remove-avatar");
+  if (preview) {
+    preview.src = previewUrl;
+    preview.classList.remove("hidden");
+  }
+  if (dropzone) {
+    dropzone.classList.add("has-avatar");
+  }
+  if (removeBtn) {
+    removeBtn.classList.remove("hidden");
+  }
 }
 
 function countWords(text) {

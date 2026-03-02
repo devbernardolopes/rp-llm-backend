@@ -401,5 +401,11 @@
   "deleteAssetAria": "Supprimer la ressource",
   "deleteAssetTitle": "Supprimer la ressource",
   "deleteAssetConfirm": "Supprimer la ressource \"{name}\" ?",
-  "attachFile": "Joindre un fichier (bientôt disponible)"
+  "attachFile": "Joindre un fichier (bientôt disponible)",
+  "newPersona": "+ Nouvelle Persona",
+  "personaEditor": "Éditeur de Persona",
+  "editPersona": "Modifier Persona",
+  "duplicatePersonaAria": "Dupliquer la persona",
+  "personaSaved": "Persona enregistrée.",
+  "personaDuplicated": "Persona dupliquée."
 }

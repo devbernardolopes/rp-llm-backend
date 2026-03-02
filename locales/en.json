@@ -402,5 +402,11 @@
   "deleteAssetAria": "Delete asset",
   "deleteAssetTitle": "Delete Asset",
   "deleteAssetConfirm": "Delete asset \"{name}\"?",
-  "attachFile": "Attach file (coming soon)"
+  "attachFile": "Attach file (coming soon)",
+  "newPersona": "+ New Persona",
+  "personaEditor": "Persona Editor",
+  "editPersona": "Edit Persona",
+  "duplicatePersonaAria": "Duplicate persona",
+  "personaSaved": "Persona saved.",
+  "personaDuplicated": "Persona duplicated."
 }

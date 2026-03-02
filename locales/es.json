@@ -401,5 +401,11 @@
   "deleteAssetAria": "Eliminar recurso",
   "deleteAssetTitle": "Eliminar recurso",
   "deleteAssetConfirm": "¿Eliminar el recurso \"{name}\"?",
-  "attachFile": "Adjuntar archivo (próximamente)"
+  "attachFile": "Adjuntar archivo (próximamente)",
+  "newPersona": "+ Nueva Persona",
+  "personaEditor": "Editor de Persona",
+  "editPersona": "Editar Persona",
+  "duplicatePersonaAria": "Duplicar persona",
+  "personaSaved": "Persona guardada.",
+  "personaDuplicated": "Persona duplicada."
 }
