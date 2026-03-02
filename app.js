@@ -8864,8 +8864,30 @@ async function openAssetEditor(asset = null) {
       state_assets.audioElement.pause();
       state_assets.audioElement = null;
     }
-    setModalDirtyState("asset-editor-modal", false);
-    closeModal("asset-editor-modal");
+    if (state.modalDirty["asset-editor-modal"]) {
+      openUnsavedChangesDialog().then((action) => {
+        if (action === "back") return;
+        if (action === "close") {
+          setModalDirtyState("asset-editor-modal", false);
+          closeActiveModal();
+          const parentModal = document.getElementById("assets-modal");
+          if (parentModal) {
+            parentModal.classList.remove("hidden");
+            state.activeModalId = "assets-modal";
+          }
+        }
+        if (action === "save") {
+          saveAssetFromEditor();
+        }
+      });
+    } else {
+      closeActiveModal();
+      const parentModal = document.getElementById("assets-modal");
+      if (parentModal) {
+        parentModal.classList.remove("hidden");
+        state.activeModalId = "assets-modal";
+      }
+    }
   };
 
   cancelBtn.onclick = handleCancel;
@@ -8931,7 +8953,12 @@ async function saveAssetFromEditor() {
   }
 
   setModalDirtyState("asset-editor-modal", false);
-  closeModal("asset-editor-modal");
+  await closeActiveModal();
+  const parentModal = document.getElementById("assets-modal");
+  if (parentModal) {
+    parentModal.classList.remove("hidden");
+    state.activeModalId = "assets-modal";
+  }
   await renderAssetsList();
 
   return true;
