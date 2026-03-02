@@ -5631,6 +5631,12 @@ function showMainView() {
         log.scrollTop,
       );
     }
+    const input = document.getElementById("user-input");
+    const draftValue = input?.value?.trim() || "";
+    if (draftValue) {
+      currentThread.draftInput = draftValue;
+      db.threads.update(currentThread.id, { draftInput: draftValue });
+    }
   }
   stopTtsPlayback();
   state.unreadNeedsUserScrollThreadId = null;
@@ -9662,6 +9668,12 @@ async function openThread(threadId) {
         log.scrollTop,
       );
     }
+    const input = document.getElementById("user-input");
+    const draftValue = input?.value?.trim() || "";
+    if (draftValue) {
+      currentThread.draftInput = draftValue;
+      db.threads.update(currentThread.id, { draftInput: draftValue });
+    }
   }
   delete state.threadUnreadCounts[Number(threadId)];
   const thread = await db.threads.get(threadId);
@@ -9736,7 +9748,7 @@ async function openThread(threadId) {
     log.scrollTop = log.scrollHeight;
   }
   const input = document.getElementById("user-input");
-  input.value = "";
+  input.value = thread.draftInput || "";
   state.activeShortcut = null;
   closePromptHistory();
   await renderShortcutsBar();
@@ -10877,6 +10889,10 @@ async function sendMessage(options = {}) {
     if (!preserveInput) {
       input.value = "";
       state.activeShortcut = null;
+      if (currentThread) {
+        currentThread.draftInput = null;
+        db.threads.update(currentThread.id, { draftInput: null });
+      }
     }
     await requestBotReplyForCurrentThread("manual_send_ai_only");
     return;
@@ -10884,6 +10900,10 @@ async function sendMessage(options = {}) {
   if (!preserveInput) {
     input.value = "";
     state.activeShortcut = null;
+    if (currentThread) {
+      currentThread.draftInput = null;
+      db.threads.update(currentThread.id, { draftInput: null });
+    }
   }
 
   const userMsg = {
