@@ -14461,10 +14461,18 @@ async function callOpenRouter(
   const fallbackModel = getFallbackModel(resolvedModel, model);
   const promptMessages = [
     { role: "system", content: systemPrompt },
-    ...history.map((m) => ({
-      role: normalizeApiRole(m.apiRole || m.role),
-      content: m.content,
-    })),
+    ...history
+      .filter((m) => {
+        // Filter out empty assistant messages
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: m.content,
+      })),
   ];
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
