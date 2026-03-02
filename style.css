@@ -223,6 +223,11 @@ body {
   gap: 8px;
   padding-right: 0;
   width: 100%;
+  scrollbar-width: none;
+}
+
+.thread-list::-webkit-scrollbar {
+  display: none;
 }
 
 .thread-list .muted:only-child {
