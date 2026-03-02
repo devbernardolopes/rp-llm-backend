@@ -2090,10 +2090,26 @@ textarea {
   z-index: 220;
 }
 
+#persona-editor-modal {
+  z-index: 220;
+}
+
 #writing-instruction-editor-modal .modal-footer {
   position: sticky;
   bottom: 0;
   background: #151d2a;
+}
+
+#persona-editor-modal .modal-footer {
+  position: sticky;
+  bottom: 0;
+  background: #151d2a;
+}
+
+#persona-editor-modal .modal-body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .modal-card {
@@ -2114,6 +2130,7 @@ textarea {
 #tags-modal .modal-card,
 #writing-instructions-modal .modal-card,
 #writing-instruction-editor-modal .modal-card,
+#persona-editor-modal .modal-card,
 #database-modal .modal-card {
   height: min(90vh, 720px);
   max-height: min(90vh, 720px);
@@ -3190,9 +3207,14 @@ textarea {
   background: #182233;
   padding: 8px;
   display: grid;
-  grid-template-columns: 40px 54px minmax(0, 1fr) auto;
+  grid-template-columns: 40px 54px 1fr auto;
   gap: 10px;
-  align-items: start;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.persona-row > * {
+  box-sizing: border-box;
 }
 
 .persona-row.dragging {
@@ -3283,7 +3305,8 @@ textarea {
   display: none;
 }
 
-.persona-row .actions {
+.persona-row .actions,
+.persona-row .lorebook-actions {
   display: flex;
   gap: 4px;
   align-items: center;

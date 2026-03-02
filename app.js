@@ -2255,7 +2255,13 @@ function setupEvents() {
     "#persona-internal-description",
     "#persona-is-default",
   ]);
-   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
+  markModalDirtyOnInput("persona-editor-modal", [
+    "#persona-editor-name",
+    "#persona-editor-description",
+    "#persona-editor-internal-description",
+    "#persona-editor-is-default",
+  ]);
+  markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
    markModalDirtyOnInput("writing-instruction-editor-modal", [
     "#writing-instruction-name",
     "#writing-instruction-text",
@@ -5806,6 +5812,14 @@ async function closeActiveModal() {
       return;
     }
   }
+  if (closingId === "persona-editor-modal") {
+    const parentModal = document.getElementById("personas-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "personas-modal";
+      return;
+    }
+  }
   if (closingId === "character-modal") {
     if (state.editingCharacterId) {
       localStorage.setItem(
@@ -5829,6 +5843,10 @@ async function handleModalSaveAction(modalId) {
   }
   if (modalId === "personas-modal") {
     return savePersonaFromModal();
+  }
+  if (modalId === "persona-editor-modal") {
+    await savePersonaFromEditor();
+    return true;
   }
   if (modalId === "lore-modal") {
     return saveLorebookFromEditor();
@@ -7401,7 +7419,11 @@ function openPersonaEditor(persona = null) {
   const title = document.getElementById("persona-editor-title");
   title.textContent = persona ? t("editPersona") : t("newPersona");
   
-  openModal("persona-editor-modal");
+  const editorModal = document.getElementById("persona-editor-modal");
+  if (editorModal) {
+    editorModal.classList.remove("hidden");
+    state.activeModalId = "persona-editor-modal";
+  }
 }
 
 async function savePersonaFromEditor() {
