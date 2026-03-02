@@ -228,10 +228,6 @@
             title="Auto TTS: Off"
             aria-label="Toggle auto TTS"
           ></button>
-          <div id="chat-model-pill" class="model-pill" data-i18n="modelPill">
-            Model: -
-          </div>
-          <div id="chat-budget-pill" class="model-pill">Max out: -</div>
         </header>
 
         <div id="chat-log" class="chat-log"></div>
@@ -261,64 +257,65 @@
         <div id="shortcuts-bar" class="shortcuts-bar"></div>
 
         <div class="input-row">
-          <div class="prompt-col">
+          <div id="user-input-container">
             <textarea
               id="user-input"
               rows="3"
               data-i18n-placeholder="promptPlaceholder"
               placeholder="What do you say or do? Enter to send, Shift+Enter for newline"
             ></textarea>
-          </div>
-          <div class="send-col">
-            <label class="persona-picker in-send-col">
-              <div class="persona-inline">
+            <div class="input-footer">
+              <button
+                id="attach-btn"
+                class="icon-btn small"
+                disabled
+                data-i18n-title="attachFile"
+                title="Attach file (coming soon)"
+                aria-label="Attach file"
+              >+</button>
+              <div class="input-footer-right">
+                <div id="chat-model-pill" class="model-pill small" data-i18n="modelPill">
+                  Model: -
+                </div>
+                <div id="chat-budget-pill" class="model-pill small">Max out: -</div>
+                <button
+                  id="auto-reply-enabled"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="autoReply"
+                  title="Auto-reply"
+                  aria-label="Auto-reply"
+                >
+                  🤖
+                </button>
+                <button
+                  id="enter-to-send-enabled"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="enterToSend"
+                  title="ENTER to send"
+                  aria-label="ENTER to send"
+                >
+                  ⏎
+                </button>
+                <button
+                  id="shortcuts-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="showShortcuts"
+                  title="Show shortcuts"
+                  aria-label="Show shortcuts"
+                >
+                  ⌨
+                </button>
                 <img
                   id="persona-selected-avatar"
-                  class="persona-selected-avatar"
+                  class="persona-selected-avatar small"
                   data-i18n-title="selectedPersonaAvatar"
                   alt="Persona avatar"
                 />
-                <select
-                  id="persona-select"
-                  data-i18n-title="selectPersona"
-                  aria-label="Select persona"
-                ></select>
+                <button id="send-btn" class="primary-btn"></button>
               </div>
-            </label>
-            <button id="send-btn" class="primary-btn" data-i18n="send">
-              Send
-            </button>
-            <div class="send-toggle-row">
-              <button
-                id="auto-reply-enabled"
-                class="option-btn send-toggle-btn"
-                type="button"
-                data-i18n-title="autoReply"
-                title="Auto-reply"
-                aria-label="Auto-reply"
-              >
-                🤖
-              </button>
-              <button
-                id="enter-to-send-enabled"
-                class="option-btn send-toggle-btn"
-                type="button"
-                data-i18n-title="enterToSend"
-                title="ENTER to send"
-                aria-label="ENTER to send"
-              >
-                ⏎
-              </button>
-              <button
-                id="shortcuts-toggle-btn"
-                class="option-btn send-toggle-btn"
-                type="button"
-                data-i18n-title="showShortcuts"
-                title="Show shortcuts"
-                aria-label="Show shortcuts"
-              >
-                ⌨
-              </button>
             </div>
           </div>
         </div>

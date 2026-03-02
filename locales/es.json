@@ -400,5 +400,6 @@
   "downloadAssetAria": "Descargar recurso",
   "deleteAssetAria": "Eliminar recurso",
   "deleteAssetTitle": "Eliminar recurso",
-  "deleteAssetConfirm": "¿Eliminar el recurso \"{name}\"?"
+  "deleteAssetConfirm": "¿Eliminar el recurso \"{name}\"?",
+  "attachFile": "Adjuntar archivo (próximamente)"
 }

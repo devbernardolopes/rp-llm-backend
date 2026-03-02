@@ -588,6 +588,12 @@ body {
   background: #4a262b;
 }
 
+.icon-btn.small {
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+
 .icon-btn svg {
   width: 15px;
   height: 15px;
@@ -1796,6 +1802,87 @@ textarea {
   align-items: stretch;
 }
 
+#user-input-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.input-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  gap: 8px;
+}
+
+.input-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+#user-input {
+  flex: 1;
+  padding: 10px;
+  padding-bottom: 44px;
+  resize: none;
+  min-height: 72px;
+  max-height: 50vh;
+  width: 100%;
+}
+
+#attach-btn {
+  flex-shrink: 0;
+}
+
+.model-pill.small {
+  font-size: 11px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.persona-selected-avatar.small {
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.send-toggle-btn.small {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 12px;
+}
+
+#send-btn {
+  flex-shrink: 0;
+}
+
+#send-btn::before {
+  content: "↑";
+}
+
+#send-btn.is-generating::before {
+  content: "✕";
+}
+
+#send-btn.is-generating {
+  background: #3d2226;
+  color: #ffd7db;
+  border-color: #8b3a42;
+}
+
 .prompt-col {
   flex: 1;
   min-width: 0;
@@ -1827,6 +1914,7 @@ textarea {
   min-height: 42px;
   font-size: 14px;
   width: 100%;
+  display: none;
 }
 
 .persona-display {

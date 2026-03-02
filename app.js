@@ -1820,9 +1820,9 @@ function setupEvents() {
     .addEventListener("change", onPersonaSelectChange);
   document
     .getElementById("persona-selected-avatar")
-    .addEventListener("click", () => {
-      const src = document.getElementById("persona-selected-avatar")?.src || "";
-      if (src) openImagePreview(src);
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      showChatPersonaDropdown();
     });
   document.getElementById("char-name").addEventListener("input", () => {
     updateNameLengthCounter("char-name", "char-name-count", 128);
@@ -6961,6 +6961,107 @@ async function onPersonaSelectChange() {
     tf("personaSwitched", { name: currentPersona?.name || "You" }),
     "success",
   );
+}
+
+let chatPersonaDropdownOpen = false;
+let chatPersonaDropdown = null;
+
+async function showChatPersonaDropdown() {
+  if (chatPersonaDropdownOpen) return;
+  chatPersonaDropdownOpen = true;
+  const personas = await getOrderedPersonas();
+  if (personas.length === 0) return;
+
+  const avatarEl = document.getElementById("persona-selected-avatar");
+  if (!avatarEl) return;
+
+  chatPersonaDropdown = document.createElement("div");
+  chatPersonaDropdown.className = "new-chat-persona-dropdown";
+
+  for (const persona of personas) {
+    const item = document.createElement("button");
+    item.className = "new-chat-persona-dropdown-item";
+    item.type = "button";
+
+    if (persona.avatar) {
+      const img = document.createElement("img");
+      img.src = persona.avatar instanceof Blob
+        ? getCachedAvatarBlobUrl(persona.avatar)
+        : persona.avatar;
+      item.appendChild(img);
+    }
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "persona-name";
+    nameSpan.textContent = persona.name || t("personaDefaultName");
+    item.appendChild(nameSpan);
+
+    if (persona.isDefault) {
+      const badge = document.createElement("span");
+      badge.className = "default-badge";
+      badge.textContent = t("defaultSuffix");
+      item.appendChild(badge);
+    }
+
+    item.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      chatPersonaDropdownOpen = false;
+      if (chatPersonaDropdown && chatPersonaDropdown.parentNode) {
+        chatPersonaDropdown.parentNode.removeChild(chatPersonaDropdown);
+      }
+      chatPersonaDropdown = null;
+      
+      currentPersona = persona;
+      updatePersonaPickerDisplay();
+      if (!currentThread) return;
+      const updatedAt = Date.now();
+      currentThread.selectedPersonaId = currentPersona?.id || null;
+      state.lastSyncSeenUpdatedAt = updatedAt;
+      await db.threads.update(currentThread.id, {
+        selectedPersonaId: currentThread.selectedPersonaId,
+        updatedAt,
+      });
+      broadcastSyncEvent({
+        type: "thread-updated",
+        threadId: currentThread.id,
+        updatedAt,
+      });
+      showToast(
+        tf("personaSwitched", { name: currentPersona?.name || "You" }),
+        "success",
+      );
+    });
+
+    chatPersonaDropdown.appendChild(item);
+  }
+
+  const rect = avatarEl.getBoundingClientRect();
+  chatPersonaDropdown.style.left = `${rect.left}px`;
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+    chatPersonaDropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+  } else {
+    chatPersonaDropdown.style.top = `${rect.bottom + 4}px`;
+  }
+
+  document.body.appendChild(chatPersonaDropdown);
+
+  const closeDropdown = (e) => {
+    if (
+      chatPersonaDropdown &&
+      !chatPersonaDropdown.contains(e.target) &&
+      e.target !== avatarEl
+    ) {
+      chatPersonaDropdownOpen = false;
+      if (chatPersonaDropdown && chatPersonaDropdown.parentNode) {
+        chatPersonaDropdown.parentNode.removeChild(chatPersonaDropdown);
+      }
+      chatPersonaDropdown = null;
+      document.removeEventListener("click", closeDropdown);
+    }
+  };
+  setTimeout(() => document.addEventListener("click", closeDropdown), 0);
 }
 
 function updatePersonaPickerDisplay() {
@@ -12156,9 +12257,9 @@ function setSendingState(sending) {
     currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker,
   );
   if (hasTitleGeneratingMarker) {
-    sendBtn.textContent = t("generatingLabel");
+    sendBtn.textContent = "";
   } else {
-    sendBtn.textContent = currentThreadGenerating ? t("cancel") : t("send");
+    sendBtn.textContent = "";
   }
   personaSelect.disabled =
     currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker;

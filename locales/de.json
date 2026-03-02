@@ -400,5 +400,6 @@
   "downloadAssetAria": "Asset herunterladen",
   "deleteAssetAria": "Asset löschen",
   "deleteAssetTitle": "Asset löschen",
-  "deleteAssetConfirm": "Asset \"{name}\" löschen?"
+  "deleteAssetConfirm": "Asset \"{name}\" löschen?",
+  "attachFile": "Datei anhängen (demnächst)"
 }

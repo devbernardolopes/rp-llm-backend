@@ -401,5 +401,6 @@
   "downloadAssetAria": "Download asset",
   "deleteAssetAria": "Delete asset",
   "deleteAssetTitle": "Delete Asset",
-  "deleteAssetConfirm": "Delete asset \"{name}\"?"
+  "deleteAssetConfirm": "Delete asset \"{name}\"?",
+  "attachFile": "Attach file (coming soon)"
 }

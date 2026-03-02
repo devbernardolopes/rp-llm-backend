@@ -400,5 +400,6 @@
   "downloadAssetAria": "Télécharger la ressource",
   "deleteAssetAria": "Supprimer la ressource",
   "deleteAssetTitle": "Supprimer la ressource",
-  "deleteAssetConfirm": "Supprimer la ressource \"{name}\" ?"
+  "deleteAssetConfirm": "Supprimer la ressource \"{name}\" ?",
+  "attachFile": "Joindre un fichier (bientôt disponible)"
 }
