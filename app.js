@@ -6967,13 +6967,21 @@ let chatPersonaDropdownOpen = false;
 let chatPersonaDropdown = null;
 
 async function showChatPersonaDropdown() {
-  if (chatPersonaDropdownOpen) return;
+  const avatarEl = document.getElementById("persona-selected-avatar");
+  if (!avatarEl) return;
+
+  if (chatPersonaDropdownOpen && chatPersonaDropdown) {
+    chatPersonaDropdownOpen = false;
+    if (chatPersonaDropdown.parentNode) {
+      chatPersonaDropdown.parentNode.removeChild(chatPersonaDropdown);
+    }
+    chatPersonaDropdown = null;
+    return;
+  }
+
   chatPersonaDropdownOpen = true;
   const personas = await getOrderedPersonas();
   if (personas.length === 0) return;
-
-  const avatarEl = document.getElementById("persona-selected-avatar");
-  if (!avatarEl) return;
 
   chatPersonaDropdown = document.createElement("div");
   chatPersonaDropdown.className = "new-chat-persona-dropdown";
@@ -7036,7 +7044,12 @@ async function showChatPersonaDropdown() {
   }
 
   const rect = avatarEl.getBoundingClientRect();
-  chatPersonaDropdown.style.left = `${rect.left}px`;
+  const dropdownWidth = 280;
+  let leftPos = rect.left;
+  if (leftPos + dropdownWidth > window.innerWidth - 10) {
+    leftPos = window.innerWidth - dropdownWidth - 10;
+  }
+  chatPersonaDropdown.style.left = `${leftPos}px`;
   const spaceBelow = window.innerHeight - rect.bottom;
   const spaceAbove = rect.top;
   if (spaceBelow < 300 && spaceAbove > spaceBelow) {
