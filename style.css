@@ -1838,6 +1838,13 @@ textarea {
   min-height: 72px;
   max-height: 50vh;
   width: 100%;
+  outline: none;
+}
+
+#user-input-container:focus-within {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+  border-radius: 10px;
 }
 
 #attach-btn {
