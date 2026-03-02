@@ -3190,7 +3190,7 @@ textarea {
   background: #182233;
   padding: 8px;
   display: grid;
-  grid-template-columns: 54px minmax(0, 1fr) auto;
+  grid-template-columns: 40px 54px minmax(0, 1fr) auto;
   gap: 10px;
   align-items: start;
 }
@@ -3206,6 +3206,7 @@ textarea {
   object-fit: cover;
   border: 1px solid var(--line);
   background: #253147;
+  flex-shrink: 0;
 }
 
 .persona-info {
@@ -3241,8 +3242,8 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 54px;
-  height: 54px;
+  width: 40px;
+  height: 40px;
   background: transparent;
 }
 
