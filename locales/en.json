@@ -246,6 +246,7 @@
   "initialMessages": "Initial Messages",
   "tagsCommaSeparated": "Tags (comma-separated)",
   "personaInjectionPlacement": "Persona Injection Placement",
+  "personaInjectionNone": "None",
   "atEndCharacterPrompt": "At End of Character Prompt",
   "atEndOfMessages": "At End of Messages",
   "enableMemory": "Enable Memory",

@@ -14254,22 +14254,27 @@ async function buildSystemPrompt(character, options = {}) {
   ) {
     const placement =
       character?.personaInjectionPlacement || "end_system_prompt";
-    const personaInjected = renderPersonaInjectionContent(personaForContext);
-    const templateNotEmpty = String(
-      state.settings.personaInjectionTemplate ||
-        DEFAULT_SETTINGS.personaInjectionTemplate ||
-        "",
-    ).trim();
-    if (placement === "end_messages" && templateNotEmpty) {
-      personaInjectionForEndMessages = personaInjected;
-    } else if (placement !== "end_messages") {
-      systemPromptWithPersona = applyPersonaInjectionPlacement(
-        promptBeforePersona,
-        personaInjected,
-        placement,
-      );
+    // Skip persona injection if placement is "none"
+    if (placement === "none") {
+      // Do not inject persona
+    } else {
+      const personaInjected = renderPersonaInjectionContent(personaForContext);
+      const templateNotEmpty = String(
+        state.settings.personaInjectionTemplate ||
+          DEFAULT_SETTINGS.personaInjectionTemplate ||
+          "",
+      ).trim();
+      if (placement === "end_messages" && templateNotEmpty) {
+        personaInjectionForEndMessages = personaInjected;
+      } else if (placement !== "end_messages") {
+        systemPromptWithPersona = applyPersonaInjectionPlacement(
+          promptBeforePersona,
+          personaInjected,
+          placement,
+        );
+      }
+      state.pendingPersonaInjectionPersonaId = personaForContext.id || null;
     }
-    state.pendingPersonaInjectionPersonaId = personaForContext.id || null;
   }
 
   if (loreEntries.length > 0) {

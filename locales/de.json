@@ -246,6 +246,7 @@
   "initialMessages": "Startnachrichten",
   "tagsCommaSeparated": "Tags (kommagetrennt)",
   "personaInjectionPlacement": "Position der Persona-Injektion",
+  "personaInjectionNone": "Keine",
   "atEndCharacterPrompt": "Am Ende des Charakter-Prompts",
   "atEndOfMessages": "Am Ende der Nachrichten",
   "enableMemory": "Gedächtnis aktivieren",

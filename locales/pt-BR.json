@@ -246,6 +246,7 @@
   "initialMessages": "Mensagens Iniciais",
   "tagsCommaSeparated": "Tags (separadas por vírgula)",
   "personaInjectionPlacement": "Posição de Injeção de Persona",
+  "personaInjectionNone": "Nenhuma",
   "atEndCharacterPrompt": "Ao Final do Prompt do Personagem",
   "atEndOfMessages": "Ao Final das Mensagens",
   "enableMemory": "Ativar Memória",
