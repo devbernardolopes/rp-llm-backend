@@ -1814,7 +1814,10 @@ function setupEvents() {
     .addEventListener("click", savePersonaFromEditor);
   document
     .getElementById("cancel-persona-btn")
-    .addEventListener("click", () => closeModal("persona-editor-modal"));
+    .addEventListener("click", () => {
+      state.activeModalId = "persona-editor-modal";
+      closeActiveModal();
+    });
   document
     .getElementById("create-persona-btn")
     .addEventListener("click", () => openPersonaEditor(null));
@@ -2292,7 +2295,7 @@ function setupModalTextareas(root = document) {
   const scope = root || document;
   const selector = scope === document ? ".modal textarea" : "textarea";
   const textareas = Array.from(scope.querySelectorAll(selector)).filter(
-    (textarea) => textarea.closest(".modal"),
+    (textarea) => textarea.closest(".modal") && !textarea.classList.contains("hidden"),
   );
   textareas.forEach((textarea) => {
     const baseRows = Number(textarea.getAttribute("rows") || 3);
@@ -7474,7 +7477,9 @@ async function savePersonaFromEditor() {
     savedId = await db.personas.add(personaData);
   }
   
-  closeModal("persona-editor-modal");
+  state.activeModalId = "persona-editor-modal";
+  setModalDirtyState("persona-editor-modal", false);
+  await closeActiveModal();
   await renderPersonaModalList();
   await renderPersonaSelector();
   updatePersonaPickerDisplay();
