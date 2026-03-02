@@ -1814,10 +1814,7 @@ textarea {
 }
 
 .input-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1825,7 +1822,6 @@ textarea {
   background: #1e2736;
   border-top: 1px solid var(--line);
   gap: 8px;
-  z-index: 1;
 }
 
 .input-footer-right {
@@ -1838,7 +1834,6 @@ textarea {
 #user-input {
   flex: 1;
   padding: 10px;
-  padding-bottom: 44px;
   resize: none;
   min-height: 72px;
   max-height: 50vh;
