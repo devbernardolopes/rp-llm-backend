@@ -10187,6 +10187,192 @@ function refreshAllHoverMarquees() {
   });
 }
 
+async function maybeGenerateTitleBeforeBotReply() {
+  if (!currentThread || !currentCharacter) return;
+  if (state.settings.threadAutoTitleEnabled === false) return;
+  if (currentThread.titleGenerated === true) return;
+  if (currentThread.titleManual === true) return;
+  const minMessages = Math.max(
+    5,
+    Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
+  );
+  if (conversationHistory.length < minMessages) return;
+
+  const existingTitleMessage = conversationHistory.find(
+    (m) => m.role === "assistant" && m.generationStatus === "title_generating",
+  );
+  if (existingTitleMessage) return;
+
+  const hasExistingPendingMessage = conversationHistory.some(
+    (m) =>
+      m.role === "assistant" &&
+      (m.generationStatus === "generating" ||
+        m.generationStatus === "regenerating" ||
+        m.generationStatus === "queued" ||
+        m.generationStatus === "cooling_down"),
+  );
+  if (hasExistingPendingMessage) return;
+
+  // Create pending message for title generation (will be used for bot reply too)
+  const pendingTitleMessage = {
+    role: "assistant",
+    content: "",
+    generationStatus: "title_generating",
+    createdAt: Date.now(),
+    finishReason: "",
+    nativeFinishReason: "",
+    truncatedByFilter: false,
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    model: state.settings.model || "",
+    temperature: Number(state.settings.temperature) || 0,
+  };
+  conversationHistory.push(pendingTitleMessage);
+  const pendingIndex = conversationHistory.length - 1;
+
+  await persistCurrentThread();
+
+  const log = document.getElementById("chat-log");
+  if (log && isViewingThread(currentThread.id)) {
+    const pendingRow = buildMessageRow(
+      pendingTitleMessage,
+      pendingIndex,
+      true,
+    );
+    log.appendChild(pendingRow);
+    const pendingContent = pendingRow?.querySelector(".message-content");
+    if (pendingContent) {
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingTitleLabel") || t("generatingLabel"))}`;
+    }
+    scrollChatToBottom();
+  }
+
+  setSendingState();
+
+  const titleSlice = conversationHistory.slice(0, minMessages);
+  const transcript = titleSlice
+    .map((m, i) => {
+      const role = m.role === "assistant" ? "Assistant" : "User";
+      const content = String(m.content || "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return `${i + 1}. ${role}: ${content.slice(0, 600)}`;
+    })
+    .join("\n");
+  const languageCode =
+    normalizeBotLanguageCode(
+      currentThread.characterLanguage ||
+        currentCharacter.activeLanguage ||
+        "en",
+    ) || "en";
+
+  const titlePrompt = [
+    "Generate a concise roleplay thread title.",
+    `Generate the title in language code: ${languageCode}.`,
+    "Requirements:",
+    "- Maximum 128 characters.",
+    "- Plain text only.",
+    "- No surrounding quotes.",
+    "- Reflect main topic or scene from these messages.",
+    "",
+    transcript,
+  ].join("\n");
+
+  try {
+    const result = await callOpenRouter(
+      "You create concise, descriptive chat thread titles.",
+      [{ role: "user", content: titlePrompt }],
+      state.settings.model,
+    );
+    const raw = String(result?.content || "").trim();
+    if (!raw) {
+      // Title generation failed, remove the pending message
+      conversationHistory.pop();
+      await persistCurrentThread();
+      if (log && isViewingThread(currentThread.id)) {
+        const pendingRow = log.querySelector(
+          `.chat-row[data-message-index="${pendingIndex}"]`,
+        );
+        if (pendingRow) pendingRow.remove();
+      }
+      setSendingState();
+      return;
+    }
+    const cleaned = raw
+      .replace(/^["'`]+|["'`]+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 128);
+    if (!cleaned) {
+      conversationHistory.pop();
+      await persistCurrentThread();
+      if (log && isViewingThread(currentThread.id)) {
+        const pendingRow = log.querySelector(
+          `.chat-row[data-message-index="${pendingIndex}"]`,
+        );
+        if (pendingRow) pendingRow.remove();
+      }
+      setSendingState();
+      return;
+    }
+
+    const updatedAt = Date.now();
+    await db.threads.update(currentThread.id, {
+      title: cleaned,
+      titleGenerated: true,
+      titleManual: false,
+      updatedAt,
+    });
+    currentThread.title = cleaned;
+    currentThread.titleGenerated = true;
+    currentThread.titleManual = false;
+    currentThread.updatedAt = updatedAt;
+    state.lastSyncSeenUpdatedAt = updatedAt;
+    updateChatTitle();
+    await renderThreads();
+
+    // Change status to "generating" - this same message bubble will be used for bot reply
+    pendingTitleMessage.generationStatus = "generating";
+    await persistCurrentThread();
+
+    if (log && isViewingThread(currentThread.id)) {
+      const pendingRow = log.querySelector(
+        `.chat-row[data-message-index="${pendingIndex}"]`,
+      );
+      if (pendingRow) {
+        const pendingContent = pendingRow?.querySelector(".message-content");
+        if (pendingContent) {
+          pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
+        }
+      }
+    }
+
+    setSendingState();
+
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: currentThread.id,
+      updatedAt,
+    });
+  } catch {
+    const idx = conversationHistory.indexOf(pendingTitleMessage);
+    if (idx >= 0) {
+      conversationHistory.splice(idx, 1);
+    }
+    await persistCurrentThread();
+    if (log && isViewingThread(currentThread.id)) {
+      const pendingRow = log.querySelector(
+        `.chat-row[data-message-index="${pendingIndex}"]`,
+      );
+      if (pendingRow) pendingRow.remove();
+    }
+    setSendingState();
+  }
+}
+
 async function maybeGenerateThreadTitle() {
   if (!currentThread || !currentCharacter) return;
   if (state.settings.threadAutoTitleEnabled === false) return;
@@ -11121,7 +11307,6 @@ async function sendMessage(options = {}) {
   };
   conversationHistory.push(userMsg);
   await persistCurrentThread();
-  await maybeGenerateThreadTitle();
 
   const log = document.getElementById("chat-log");
   log.appendChild(
@@ -11156,6 +11341,10 @@ function getCooldownRemainingSeconds() {
 
 async function generateBotReply() {
   if (!currentThread || !currentCharacter || state.sending) return;
+
+  // Check if we need to generate title before bot reply
+  await maybeGenerateTitleBeforeBotReply();
+
   const cooldown = Number(state.settings.completionCooldown) || 0;
   if (cooldown > 0 && isInCompletionCooldown()) {
     const threadId = Number(currentThread.id);
