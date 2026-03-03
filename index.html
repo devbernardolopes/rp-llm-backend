@@ -221,13 +221,6 @@
       <section id="chat-view" class="view">
         <header class="chat-header">
           <div id="chat-title">Thread</div>
-          <button
-            id="auto-tts-toggle-btn"
-            class="icon-btn"
-            data-i18n-title="autoTtsTitleOff"
-            title="Auto TTS: Off"
-            aria-label="Toggle auto TTS"
-          ></button>
         </header>
 
         <div id="chat-log" class="chat-log"></div>
@@ -273,21 +266,29 @@
                 title="Attach file (coming soon)"
                 aria-label="Attach file"
               >+</button>
-              <div class="input-footer-right">
-                <div id="chat-model-pill" class="model-pill small" data-i18n="modelPill">
-                  Model: -
-                </div>
-                <div id="chat-budget-pill" class="model-pill small">Max out: -</div>
-                <button
-                  id="auto-reply-enabled"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="autoReply"
-                  title="Auto-reply"
-                  aria-label="Auto-reply"
-                >
-                  🤖
-                </button>
+               <div class="input-footer-right">
+                 <div id="chat-model-pill" class="model-pill small" data-i18n="modelPill">
+                   Model: -
+                 </div>
+                 <div id="chat-budget-pill" class="model-pill small">Max out: -</div>
+                 <button
+                   id="auto-tts-toggle-btn"
+                   class="option-btn send-toggle-btn small"
+                   type="button"
+                   data-i18n-title="autoTtsTitleOff"
+                   title="Auto TTS: Off"
+                   aria-label="Toggle auto TTS"
+                 ></button>
+                 <button
+                   id="auto-reply-enabled"
+                   class="option-btn send-toggle-btn small"
+                   type="button"
+                   data-i18n-title="autoReply"
+                   title="Auto-reply"
+                   aria-label="Auto-reply"
+                 >
+                   🤖
+                 </button>
                 <button
                   id="enter-to-send-enabled"
                   class="option-btn send-toggle-btn small"
