@@ -211,6 +211,18 @@ async function summarizeMemory(character) {
       ) {
         conversationHistory[idx].summarized = true;
         conversationHistory[idx].summaryId = memoryId;
+        conversationHistory[idx].summaryProtected = false;
+      }
+    }
+    for (let i = markCount; i < unsMessages.length; i += 1) {
+      const entry = unsMessages[i];
+      const idx = entry?.idx;
+      if (
+        Number.isInteger(idx) &&
+        conversationHistory[idx] &&
+        conversationHistory[idx].summarized !== true
+      ) {
+        conversationHistory[idx].summaryProtected = memoryId;
       }
     }
 

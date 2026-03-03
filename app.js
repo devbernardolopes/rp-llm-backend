@@ -11202,7 +11202,8 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
 
 function isMessageLockedByMemory(message) {
   return (
-    state.settings.lockMemoryMessages === true && message?.summarized === true
+    state.settings.lockMemoryMessages === true &&
+    (message?.summarized === true || message?.summaryProtected)
   );
 }
 
