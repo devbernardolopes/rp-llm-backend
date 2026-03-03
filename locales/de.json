@@ -333,7 +333,7 @@
   "removeTagAffectsChars": "Das Entfernen dieses Tags wird diese Charaktere aktualisieren:\n\n{list}{extra}\n\nFortfahren?",
   "tagInputPlaceholder": "Neuer Tag",
   "botConfiguration": "Konfig",
-  "bgTab": "BG",
+  "sfxTab": "SFX",
   "tagsTab": "Tags",
   "addLanguage": "Sprache hinzufügen",
   "add": "Hinzufügen",

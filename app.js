@@ -1016,6 +1016,10 @@ const state = {
   charModalActiveTab: "lang",
   charModalPendingThreadDeleteIds: [],
   charModalAvatars: [],
+  sfx: {
+    currentAudio: null,
+    playingAssetId: null,
+  },
 };
 
 const TTS_DEBUG = true;
@@ -5736,8 +5740,9 @@ function showMainView() {
       db.threads.update(currentThread.id, { draftInput: draftValue });
     }
   }
-  stopTtsPlayback();
-  state.unreadNeedsUserScrollThreadId = null;
+   stopTtsPlayback();
+   stopAllSfx();
+   state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
   document.getElementById("chat-view").classList.remove("active");
   updateThreadRenameButtonState();
@@ -10396,6 +10401,7 @@ async function openThread(threadId) {
   if (!thread) return;
 
   stopTtsPlayback();
+  stopAllSfx();
   const characterBase = await db.characters.get(thread.characterId);
   const character = characterBase
     ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
@@ -10410,9 +10416,10 @@ async function openThread(threadId) {
       characterLanguage: character.activeLanguage,
     });
   }
-  currentCharacter = character || null;
-  preloadKokoroForActiveCharacter();
-  conversationHistory = (thread.messages || []).map((m) => ({
+   currentCharacter = character || null;
+   preloadKokoroForActiveCharacter();
+   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
+   conversationHistory = (thread.messages || []).map((m) => ({
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
   }));
@@ -15666,4 +15673,57 @@ function fallbackAvatar(seed, width, height) {
   );
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'><rect width='100%' height='100%' fill='#253147'/><text x='50%' y='53%' text-anchor='middle' font-size='${Math.floor(width * 0.48)}' fill='#c2cee4' font-family='Segoe UI'>${initial}</text></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+function stopAllSfx() {
+  if (state.sfx?.currentAudio) {
+    try {
+      state.sfx.currentAudio.pause();
+      state.sfx.currentAudio.currentTime = 0;
+      if (state.sfx.currentAudio.src?.startsWith("blob:")) {
+        URL.revokeObjectURL(state.sfx.currentAudio.src);
+      }
+    } catch (e) {
+      console.warn("Error stopping SFX:", e);
+    }
+    state.sfx.currentAudio = null;
+    state.sfx.playingAssetId = null;
+  }
+}
+
+async function playStartSfxForCharacter(character, thread) {
+  if (!character || !thread) return;
+  stopAllSfx();
+
+  const lang = String(thread.language || "en");
+  const defs = Array.isArray(character.definitions)
+    ? character.definitions
+    : [character].filter(Boolean);
+  const def = defs.find((d) => String(d?.language || "").toLowerCase() === lang.toLowerCase()) || defs[0];
+  const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
+
+  if (sfxList.length === 0) return;
+  if (conversationHistory.length > 1) return;
+
+  const sfx = sfxList[0];
+  if (!sfx || sfx.trigger !== "Start") return;
+
+  try {
+    const asset = await db.assets.get(sfx.assetId);
+    if (!asset || !asset.fileBlob) return;
+
+    const url = URL.createObjectURL(asset.fileBlob);
+    const audio = new Audio(url);
+    audio.loop = sfx.loop === true;
+    state.sfx.currentAudio = audio;
+    state.sfx.playingAssetId = sfx.assetId;
+
+    audio.play().catch((err) => {
+      console.warn("SFX playback failed:", err);
+      stopAllSfx();
+    });
+  } catch (err) {
+    console.warn("Error playing start SFX:", err);
+    stopAllSfx();
+  }
 }
