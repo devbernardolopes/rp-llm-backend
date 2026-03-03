@@ -15788,12 +15788,14 @@ async function playStartSfxForCharacter(character, thread) {
   try {
     const asset = await db.assets.get(sfx.assetId);
     console.log("[SFX] Asset:", asset);
-    if (!asset || !asset.fileBlob) {
-      console.log("[SFX] No asset or fileBlob, returning");
+    if (!asset || !asset.data) {
+      console.log("[SFX] No asset or data, returning");
       return;
     }
 
-    const url = URL.createObjectURL(asset.fileBlob);
+    const url = asset.data instanceof Blob
+      ? URL.createObjectURL(asset.data)
+      : asset.data;
     console.log("[SFX] Created blob URL:", url);
     const audio = new Audio(url);
     audio.loop = sfx.loop === true;
