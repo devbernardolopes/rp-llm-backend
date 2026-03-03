@@ -8800,7 +8800,20 @@ async function addWritingInstructionLanguage() {
 }
 
 function isInSimulationMessage(message) {
-  return !!message && message.ooc !== true;
+  return !!message && message.ooc !== true && !isPlaceholderMessage(message);
+}
+
+const PLACEHOLDER_STATUSES = new Set([
+  "queued",
+  "cooling_down",
+  "title_generating",
+  "summarizing",
+]);
+
+function isPlaceholderMessage(message) {
+  if (!message) return false;
+  const status = String(message.generationStatus || "").trim();
+  return PLACEHOLDER_STATUSES.has(status);
 }
 
 function getInSimulationMessages(history = conversationHistory) {
