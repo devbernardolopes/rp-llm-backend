@@ -9366,16 +9366,6 @@ function getAssetTypeIcon(type) {
   return icons[type] || "📄";
 }
 
-// Initialize event listeners for SFX editor modal
-document.addEventListener("DOMContentLoaded", () => {
-  // ... existing listeners
-  // We'll add these after other initializations.
-});
-  const raw = Number(thread?.writingInstructionsTurnCount);
-  if (Number.isInteger(raw) && raw >= 0) return raw;
-  return 0;
-}
-
 function getNextWritingInstructionsTurnIndex(thread = currentThread) {
   return getThreadWritingInstructionsTurnCount(thread) + 1;
 }
