@@ -1862,19 +1862,19 @@ function setupEvents() {
   document
     .getElementById("persona-avatar-file-input")
     .addEventListener("change", onPersonaAvatarFileChange);
-   document
-     .getElementById("persona-remove-avatar")
-     .addEventListener("click", (e) => {
-       e.preventDefault();
-       e.stopPropagation();
-       state.currentPersonaAvatarBlob = null;
-       const dropzone = document.getElementById("persona-avatar-dropzone");
-       const preview = document.getElementById("persona-avatar-preview");
-       const removeBtn = document.getElementById("persona-remove-avatar");
-       preview.classList.add("hidden");
-       dropzone.classList.remove("has-avatar");
-       removeBtn.classList.add("hidden");
-     });
+  document
+    .getElementById("persona-remove-avatar")
+    .addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      state.currentPersonaAvatarBlob = null;
+      const dropzone = document.getElementById("persona-avatar-dropzone");
+      const preview = document.getElementById("persona-avatar-preview");
+      const removeBtn = document.getElementById("persona-remove-avatar");
+      preview.classList.add("hidden");
+      dropzone.classList.remove("has-avatar");
+      removeBtn.classList.add("hidden");
+    });
   document
     .getElementById("persona-avatar-dropzone")
     .addEventListener("click", () => {
@@ -2332,24 +2332,24 @@ function setupEvents() {
     "persona-description-count",
     100,
   );
-   updateToastDelayDisplay();
-   setupSettingsTabsLayout();
+  updateToastDelayDisplay();
+  setupSettingsTabsLayout();
 
-   // Writing Instruction Editor: update Save button on input
-   const wiNameInput = document.getElementById("writing-instruction-name");
-   if (wiNameInput) {
-     wiNameInput.addEventListener("input", () => {
-       updateWritingInstructionNameCount();
-       updateSaveWritingInstructionButton();
-     });
-   }
-   const wiTextInput = document.getElementById("writing-instruction-text");
-   if (wiTextInput) {
-     wiTextInput.addEventListener("input", () => {
-       updateSaveWritingInstructionButton();
-     });
-   }
- }
+  // Writing Instruction Editor: update Save button on input
+  const wiNameInput = document.getElementById("writing-instruction-name");
+  if (wiNameInput) {
+    wiNameInput.addEventListener("input", () => {
+      updateWritingInstructionNameCount();
+      updateSaveWritingInstructionButton();
+    });
+  }
+  const wiTextInput = document.getElementById("writing-instruction-text");
+  if (wiTextInput) {
+    wiTextInput.addEventListener("input", () => {
+      updateSaveWritingInstructionButton();
+    });
+  }
+}
 
 const textareaCollapseStates = new WeakMap();
 
@@ -2427,27 +2427,27 @@ function setupModalTextareas(root = document) {
       if (next) autoExpandTextarea(textarea);
       entry.refresh();
     };
-     textareaCollapseStates.set(textarea, entry);
-     const hasContent = String(textarea.value || "").trim().length > 0;
-     entry.setExpanded(hasContent);
+    textareaCollapseStates.set(textarea, entry);
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    entry.setExpanded(hasContent);
 
-     // Determine appropriate save function based on modal
-     const modal = textarea.closest(".modal");
-     let saveFn = () => {};
-     if (modal) {
-       if (modal.id === "character-modal") {
-         saveFn = saveCharModalTextareaCollapseStates;
-       } else if (modal.id === "writing-instruction-editor-modal") {
-         saveFn = saveWiEditorTextareaCollapseStates;
-       }
-     }
+    // Determine appropriate save function based on modal
+    const modal = textarea.closest(".modal");
+    let saveFn = () => {};
+    if (modal) {
+      if (modal.id === "character-modal") {
+        saveFn = saveCharModalTextareaCollapseStates;
+      } else if (modal.id === "writing-instruction-editor-modal") {
+        saveFn = saveWiEditorTextareaCollapseStates;
+      }
+    }
 
-     const toggle = () => {
-       const expanded = header.getAttribute("aria-expanded") === "true";
-       entry.setExpanded(!expanded);
-       saveFn();
-     };
-     header.addEventListener("click", toggle);
+    const toggle = () => {
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      entry.setExpanded(!expanded);
+      saveFn();
+    };
+    header.addEventListener("click", toggle);
     textarea.addEventListener("input", () => {
       const expanded = header.getAttribute("aria-expanded") === "true";
       if (expanded) {
@@ -2539,65 +2539,65 @@ function restoreCharModalTextareaCollapseStates() {
     const modalBody = modal.querySelector(".modal-body");
     if (modalBody) {
       modalBody.scrollTop = Number(savedModalScroll);
-   }
-   }
- }
+    }
+  }
+}
 
- function getWiEditorCollapseStorageKey() {
-   const wiId = state_writingInstructions.editingId || "new";
-   const lang = state_writingInstructions.activeLanguage || "en";
-   return `rp-wi-collapse-${wiId}-${lang}`;
- }
+function getWiEditorCollapseStorageKey() {
+  const wiId = state_writingInstructions.editingId || "new";
+  const lang = state_writingInstructions.activeLanguage || "en";
+  return `rp-wi-collapse-${wiId}-${lang}`;
+}
 
- function saveWiEditorTextareaCollapseStates() {
-   const key = getWiEditorCollapseStorageKey();
-   const states = {};
-   const scrollStates = {};
-   const modal = document.getElementById("writing-instruction-editor-modal");
-   if (!modal) return;
-   modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
-     const entry = textareaCollapseStates.get(textarea);
-     if (!entry) return;
-     const expanded = entry.header.getAttribute("aria-expanded") === "true";
-     states[textarea.id] = expanded;
-     scrollStates[textarea.id] = textarea.scrollTop;
-   });
-   localStorage.setItem(key, JSON.stringify(states));
-   localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
- }
+function saveWiEditorTextareaCollapseStates() {
+  const key = getWiEditorCollapseStorageKey();
+  const states = {};
+  const scrollStates = {};
+  const modal = document.getElementById("writing-instruction-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    states[textarea.id] = expanded;
+    scrollStates[textarea.id] = textarea.scrollTop;
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+  localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
+}
 
- function restoreWiEditorTextareaCollapseStates() {
-   const key = getWiEditorCollapseStorageKey();
-   const raw = localStorage.getItem(key);
-   const scrollRaw = localStorage.getItem(`${key}-scroll`);
-   const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
-   const modal = document.getElementById("writing-instruction-editor-modal");
-   if (!modal) return;
-   modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
-     const entry = textareaCollapseStates.get(textarea);
-     if (!entry) return;
-     const hasContent = String(textarea.value || "").trim().length > 0;
-     if (raw) {
-       try {
-         const states = JSON.parse(raw);
-         if (states[textarea.id] !== undefined) {
-           entry.setExpanded(states[textarea.id]);
-         } else {
-           entry.setExpanded(hasContent);
-         }
-       } catch {
-         entry.setExpanded(hasContent);
-       }
-     } else {
-       entry.setExpanded(hasContent);
-     }
-     if (scrollStates[textarea.id] !== undefined) {
-       textarea.scrollTop = scrollStates[textarea.id];
-     }
-   });
- }
+function restoreWiEditorTextareaCollapseStates() {
+  const key = getWiEditorCollapseStorageKey();
+  const raw = localStorage.getItem(key);
+  const scrollRaw = localStorage.getItem(`${key}-scroll`);
+  const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
+  const modal = document.getElementById("writing-instruction-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (raw) {
+      try {
+        const states = JSON.parse(raw);
+        if (states[textarea.id] !== undefined) {
+          entry.setExpanded(states[textarea.id]);
+        } else {
+          entry.setExpanded(hasContent);
+        }
+      } catch {
+        entry.setExpanded(hasContent);
+      }
+    } else {
+      entry.setExpanded(hasContent);
+    }
+    if (scrollStates[textarea.id] !== undefined) {
+      textarea.scrollTop = scrollStates[textarea.id];
+    }
+  });
+}
 
- function captureTextareaLabel(textarea) {
+function captureTextareaLabel(textarea) {
   const parent = textarea.parentElement;
   if (!parent) return null;
   const children = Array.from(parent.children);
@@ -4664,7 +4664,11 @@ async function removeTagFromCatalog(tag) {
     const refreshed = await db.characters.get(currentCharacter.id);
     if (refreshed) {
       currentCharacter = refreshed;
-      state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+      state.cachedChatBotAvatar = {
+        url: null,
+        characterId: null,
+        personaId: null,
+      };
     }
   }
   renderTagManagerList();
@@ -6870,7 +6874,11 @@ async function saveCharacterFromModal({ close = true } = {}) {
         merged,
         currentThread?.characterLanguage || "",
       );
-      state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+      state.cachedChatBotAvatar = {
+        url: null,
+        characterId: null,
+        personaId: null,
+      };
       renderChat();
     }
     showToast(t("characterUpdated"), "success");
@@ -7305,7 +7313,11 @@ async function showChatPersonaDropdown() {
       chatPersonaDropdown = null;
 
       currentPersona = persona;
-      state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+      state.cachedChatBotAvatar = {
+        url: null,
+        characterId: null,
+        personaId: null,
+      };
       updatePersonaPickerDisplay();
       if (!currentThread) return;
       const updatedAt = Date.now();
@@ -7526,21 +7538,21 @@ async function renderPersonaModalList() {
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
 
-     row.append(drag, avatar, info, actions);
+    row.append(drag, avatar, info, actions);
 
-     row.addEventListener("click", (e) => {
-       // Exclude clicks on drag handle, avatar, and action buttons
-       if (
-         e.target.closest(".persona-drag") ||
-         e.target.closest(".persona-avatar") ||
-         e.target.closest(".lorebook-actions")
-       ) {
-         return;
-       }
-       openPersonaEditor(persona);
-     });
+    row.addEventListener("click", (e) => {
+      // Exclude clicks on drag handle, avatar, and action buttons
+      if (
+        e.target.closest(".persona-drag") ||
+        e.target.closest(".persona-avatar") ||
+        e.target.closest(".lorebook-actions")
+      ) {
+        return;
+      }
+      openPersonaEditor(persona);
+    });
 
-     list.appendChild(row);
+    list.appendChild(row);
   }
 }
 
@@ -8349,7 +8361,11 @@ async function deleteLorebook(lorebookId) {
     const refreshed = await db.characters.get(currentCharacter.id);
     if (refreshed) {
       currentCharacter = refreshed;
-      state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+      state.cachedChatBotAvatar = {
+        url: null,
+        characterId: null,
+        personaId: null,
+      };
     }
   }
   await renderLorebookManagementList();
@@ -8479,13 +8495,13 @@ async function openWritingInstructionEditor(writingInstruction = null) {
     state_writingInstructions.definitions[0]?.language || interfaceLang;
   document.getElementById("writing-instruction-name").value =
     normalized.name || "";
-   updateWritingInstructionNameCount();
-   renderWritingInstructionTabs();
-   loadActiveWritingInstructionToForm();
-   restoreWiEditorTextareaCollapseStates();
-   const editorModal = document.getElementById(
-     "writing-instruction-editor-modal",
-   );
+  updateWritingInstructionNameCount();
+  renderWritingInstructionTabs();
+  loadActiveWritingInstructionToForm();
+  restoreWiEditorTextareaCollapseStates();
+  const editorModal = document.getElementById(
+    "writing-instruction-editor-modal",
+  );
   if (editorModal) {
     editorModal.classList.remove("hidden");
     state.activeModalId = "writing-instruction-editor-modal";
@@ -8518,14 +8534,14 @@ function renderWritingInstructionTabs() {
     text.textContent = def.language;
     label.append(flag, text);
     btn.appendChild(label);
-     btn.addEventListener("click", () => {
-       saveActiveWritingInstructionFromForm();
-       saveWiEditorTextareaCollapseStates();
-       state_writingInstructions.activeLanguage = def.language;
-       loadActiveWritingInstructionToForm();
-       restoreWiEditorTextareaCollapseStates();
-       renderWritingInstructionTabs();
-     });
+    btn.addEventListener("click", () => {
+      saveActiveWritingInstructionFromForm();
+      saveWiEditorTextareaCollapseStates();
+      state_writingInstructions.activeLanguage = def.language;
+      loadActiveWritingInstructionToForm();
+      restoreWiEditorTextareaCollapseStates();
+      renderWritingInstructionTabs();
+    });
     const del = document.createElement("button");
     del.type = "button";
     del.className = "char-def-tab-delete";
@@ -10607,23 +10623,23 @@ async function openThread(threadId) {
   await persistThreadMessagesById(Number(threadId), thread.messages || [], {
     _skipUpdatedAt: true,
   });
-   renderChat();
-   const input = document.getElementById("user-input");
-   input.value = thread.draftInput || "";
-   state.activeShortcut = null;
-   closePromptHistory();
-   await renderShortcutsBar();
-   await renderThreads();
-   showChatView();
-   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
-   const log = document.getElementById("chat-log");
-   if (log && savedScroll) {
-     log.scrollTop = Number(savedScroll);
-   } else if (log) {
-     log.scrollTop = log.scrollHeight;
-   }
-   updateScrollBottomButtonVisibility();
-   broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
+  renderChat();
+  const input = document.getElementById("user-input");
+  input.value = thread.draftInput || "";
+  state.activeShortcut = null;
+  closePromptHistory();
+  await renderShortcutsBar();
+  await renderThreads();
+  showChatView();
+  const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
+  const log = document.getElementById("chat-log");
+  if (log && savedScroll) {
+    log.scrollTop = Number(savedScroll);
+  } else if (log) {
+    log.scrollTop = log.scrollHeight;
+  }
+  updateScrollBottomButtonVisibility();
+  broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
   if (thread.pendingGenerationReason) {
     const id = Number(thread.id);
     if (!state.generationQueue.includes(id)) state.generationQueue.push(id);
@@ -10869,7 +10885,8 @@ async function maybeGenerateTitleBeforeBotReply() {
     Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
   );
   // Generate title if either we have enough messages OR pending flag is set
-  if (conversationHistory.length < minMessages && !state.pendingTitleGeneration) return;
+  if (conversationHistory.length < minMessages && !state.pendingTitleGeneration)
+    return;
 
   const existingTitleMessage = conversationHistory.find(
     (m) => m.role === "assistant" && m.generationStatus === "title_generating",
@@ -11185,8 +11202,7 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
 
 function isMessageLockedByMemory(message) {
   return (
-    state.settings.lockMemoryMessages === true &&
-    message?.summarized === true
+    state.settings.lockMemoryMessages === true && message?.summarized === true
   );
 }
 
@@ -11871,9 +11887,9 @@ async function sendMessage(options = {}) {
   scrollChatToBottom();
 
   // Trigger memory summarization if threshold reached (including when user sends the 20th/40th/60th... message)
-    if (shouldTriggerMemorySummaries(currentCharacter)) {
-      await summarizeMemory(currentCharacter);
-    }
+  if (shouldTriggerMemorySummaries(currentCharacter)) {
+    await summarizeMemory(currentCharacter);
+  }
 
   if (state.settings.autoReplyEnabled === false) {
     await renderThreads();
@@ -11905,7 +11921,9 @@ function getActiveSummaryThreshold() {
     return window.getSummaryThresholdValue(state.settings.summaryThreshold);
   }
   const fallback = Number(state.settings.summaryThreshold);
-  return Number.isFinite(fallback) ? fallback : DEFAULT_SETTINGS.summaryThreshold;
+  return Number.isFinite(fallback)
+    ? fallback
+    : DEFAULT_SETTINGS.summaryThreshold;
 }
 
 function getUnsummarizedMessageCount() {
@@ -13360,8 +13378,7 @@ function refreshMessageControlStates() {
       btn.disabled = isStreaming;
     });
     row.querySelectorAll(".msg-regen-btn").forEach((btn) => {
-      btn.disabled =
-        state.sending || isStreaming || isLockedMemoryMessage;
+      btn.disabled = state.sending || isStreaming || isLockedMemoryMessage;
     });
     row.querySelectorAll(".msg-edit-btn").forEach((btn) => {
       btn.disabled =
@@ -14108,23 +14125,25 @@ async function openMessageMetadataModal(index) {
     const snapshot = cloneForMetadata(message);
     const createdAt = Number(message.createdAt) || 0;
     snapshot.index = index + 1;
-    snapshot.createdAt = createdAt
-      ? new Date(createdAt).toISOString()
-      : null;
+    snapshot.createdAt = createdAt ? new Date(createdAt).toISOString() : null;
     snapshot.role = message.role || snapshot.role || "";
-    snapshot.requestMessages = message.requestMessages || snapshot.requestMessages || null;
-    snapshot.systemMessages = message.systemMessages || snapshot.systemMessages || null;
-    snapshot.usedLoreEntries = message.usedLoreEntries || snapshot.usedLoreEntries || null;
+    snapshot.requestMessages =
+      message.requestMessages || snapshot.requestMessages || null;
+    snapshot.systemMessages =
+      message.systemMessages || snapshot.systemMessages || null;
+    snapshot.usedLoreEntries =
+      message.usedLoreEntries || snapshot.usedLoreEntries || null;
     snapshot.usedMemorySummary =
       message.usedMemorySummary || snapshot.usedMemorySummary || null;
     snapshot.senderName = message.senderName || snapshot.senderName || null;
     snapshot.senderPersonaId =
       message.senderPersonaId || snapshot.senderPersonaId || null;
     snapshot.truncatedByFilter =
-      message.truncatedByFilter === true ||
-      snapshot.truncatedByFilter === true;
-    snapshot.generationId = message.generationId || snapshot.generationId || null;
-    snapshot.finishReason = message.finishReason || snapshot.finishReason || null;
+      message.truncatedByFilter === true || snapshot.truncatedByFilter === true;
+    snapshot.generationId =
+      message.generationId || snapshot.generationId || null;
+    snapshot.finishReason =
+      message.finishReason || snapshot.finishReason || null;
     snapshot.nativeFinishReason =
       message.nativeFinishReason || snapshot.nativeFinishReason || null;
     snapshot.model = message.model || snapshot.model || null;
@@ -14833,7 +14852,11 @@ async function refreshCurrentThreadFromDb() {
     ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
     : currentCharacter;
   if (characterBase) {
-    state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+    state.cachedChatBotAvatar = {
+      url: null,
+      characterId: null,
+      personaId: null,
+    };
   }
   conversationHistory = (thread.messages || []).map((m) => ({
     ...m,
@@ -14845,7 +14868,11 @@ async function refreshCurrentThreadFromDb() {
     ? await db.personas.get(thread.selectedPersonaId)
     : currentPersona;
   if (thread.selectedPersonaId) {
-    state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+    state.cachedChatBotAvatar = {
+      url: null,
+      characterId: null,
+      personaId: null,
+    };
   }
   updatePersonaPickerDisplay();
   renderChat();
@@ -14979,13 +15006,13 @@ async function buildSystemPrompt(character, options = {}) {
 
   if (loreEntries.length > 0) {
     contextSections.push(
-      `## Lore Context\n${loreEntries
+      `***LORE CONTEXT***\n\n${loreEntries
         .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
-        .join("\n")}`,
+        .join("\n\n")}`,
     );
   }
   if (memory) {
-    contextSections.push(`## Memory Context\n${memory}`);
+    contextSections.push(`***MEMORY CONTEXT***\n\n${memory}`);
   }
 
   const prompt = [systemPromptWithPersona, ...contextSections]
@@ -15934,9 +15961,8 @@ async function playStartSfxForCharacter(character, thread) {
       return;
     }
 
-    const url = asset.data instanceof Blob
-      ? URL.createObjectURL(asset.data)
-      : asset.data;
+    const url =
+      asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
     console.log("[SFX] Created blob URL:", url);
     const audio = new Audio(url);
     audio.loop = sfx.loop === true;

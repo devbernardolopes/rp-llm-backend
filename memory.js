@@ -177,9 +177,7 @@ async function summarizeMemory(character) {
     }
   }
 
-  const prompt = `Summarize the following roleplay conversation in 3-5 sentences, 
-focusing on key events, decisions, and relationship developments.
-Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
+  const prompt = `Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).join("\n\n")}`;
 
   try {
     const summarySystemPrompt =
