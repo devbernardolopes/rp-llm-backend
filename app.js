@@ -960,6 +960,7 @@ const state = {
   },
   avatarSnapshotCache: new Map(),
   avatarBlobUrlCache: new Map(),
+  assetBlobUrlCache: new Map(),
   cachedChatBotAvatar: { url: null, characterId: null, personaId: null },
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
@@ -8910,6 +8911,56 @@ function revokeBlobUrl(url) {
   }
 }
 
+function resolveBlobSourceToUrl(source) {
+  if (!source) return "";
+  return source instanceof Blob ? URL.createObjectURL(source) : source;
+}
+
+function getCachedAssetBlobUrl(cacheKey, source) {
+  if (!source) return "";
+  if (!cacheKey) return resolveBlobSourceToUrl(source);
+  const cached = state.assetBlobUrlCache.get(cacheKey);
+  if (cached) return cached;
+  const url = resolveBlobSourceToUrl(source);
+  if (!url) return "";
+  state.assetBlobUrlCache.set(cacheKey, url);
+  return url;
+}
+
+const ASSET_EDITOR_CACHE_KEY = "asset-editor-current";
+
+function releaseAssetBlobUrl(cacheKey) {
+  if (!cacheKey) return;
+  const url = state.assetBlobUrlCache.get(cacheKey);
+  if (!url) return;
+  state.assetBlobUrlCache.delete(cacheKey);
+  revokeBlobUrl(url);
+}
+
+function getAssetDataUrl(asset, options = {}) {
+  if (!asset) return "";
+  const data = asset.data;
+  if (!data) return "";
+  const key =
+    options.cacheKey ||
+    (asset.id ? `asset-${asset.id}` : null) ||
+    null;
+  return getCachedAssetBlobUrl(key, data);
+}
+
+function clearAssetDataUrl(assetId) {
+  if (!assetId) return;
+  releaseAssetBlobUrl(`asset-${assetId}`);
+}
+
+function getTemporaryBlobUrl(cacheKey, source) {
+  return getCachedAssetBlobUrl(cacheKey, source);
+}
+
+function clearTemporaryBlobUrl(cacheKey) {
+  releaseAssetBlobUrl(cacheKey);
+}
+
 function getAssetTypeFromMime(mime) {
   if (!mime) return "sound";
   if (mime.startsWith("image/")) return "image";
@@ -8954,10 +9005,12 @@ async function getAssetById(id) {
 
 async function deleteAsset(id) {
   await db.assets.delete(Number(id));
+  clearAssetDataUrl(Number(id));
 }
 
 async function saveAsset(asset) {
   if (asset.id) {
+    clearAssetDataUrl(asset.id);
     await db.assets.put(asset);
     return asset.id;
   } else {
@@ -8991,18 +9044,12 @@ async function renderAssetsList() {
 
     if (asset.type === "image" && asset.data) {
       const img = document.createElement("img");
-      img.src =
-        asset.data instanceof Blob
-          ? URL.createObjectURL(asset.data)
-          : asset.data;
+      img.src = getAssetDataUrl(asset);
       img.alt = asset.name || "Asset";
       avatar.appendChild(img);
     } else if (asset.type === "video" && asset.data) {
       const video = document.createElement("video");
-      video.src =
-        asset.data instanceof Blob
-          ? URL.createObjectURL(asset.data)
-          : asset.data;
+      video.src = getAssetDataUrl(asset);
       video.muted = true;
       const thumb = document.createElement("img");
       thumb.src = asset.thumbnail || "";
@@ -9111,6 +9158,7 @@ function setupAssetsDropzone() {
 
 async function handleAssetFiles(files) {
   for (const file of files) {
+    clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
     state_assets.currentFile = file;
     state_assets.currentFileData = file;
     state_assets.currentFileType = getAssetTypeFromMime(file.type);
@@ -9138,6 +9186,7 @@ async function openAssetEditor(asset = null) {
 
   if (asset) {
     state_assets.editingId = asset.id;
+    clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
     state_assets.currentFileData = asset.data;
     state_assets.currentFileType = asset.type;
     state_assets.currentFileName = asset.originalName;
@@ -9165,34 +9214,43 @@ async function openAssetEditor(asset = null) {
     state_assets.currentFileType === "image" &&
     state_assets.currentFileData
   ) {
-    const img = document.createElement("img");
-    img.src =
-      state_assets.currentFileData instanceof Blob
-        ? URL.createObjectURL(state_assets.currentFileData)
-        : state_assets.currentFileData;
-    previewContainer.appendChild(img);
+    const url = getTemporaryBlobUrl(
+      ASSET_EDITOR_CACHE_KEY,
+      state_assets.currentFileData,
+    );
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      previewContainer.appendChild(img);
+    }
   } else if (
     state_assets.currentFileType === "video" &&
     state_assets.currentFileData
   ) {
-    const video = document.createElement("video");
-    video.src =
-      state_assets.currentFileData instanceof Blob
-        ? URL.createObjectURL(state_assets.currentFileData)
-        : state_assets.currentFileData;
-    video.controls = true;
-    video.muted = true;
-    previewContainer.appendChild(video);
+    const url = getTemporaryBlobUrl(
+      ASSET_EDITOR_CACHE_KEY,
+      state_assets.currentFileData,
+    );
+    if (url) {
+      const video = document.createElement("video");
+      video.src = url;
+      video.controls = true;
+      video.muted = true;
+      previewContainer.appendChild(video);
+    }
   } else if (
     state_assets.currentFileType === "sound" &&
     state_assets.currentFileData
   ) {
     audioControls.classList.remove("hidden");
+    const url = getTemporaryBlobUrl(
+      ASSET_EDITOR_CACHE_KEY,
+      state_assets.currentFileData,
+    );
     const audio = document.createElement("audio");
-    audio.src =
-      state_assets.currentFileData instanceof Blob
-        ? URL.createObjectURL(state_assets.currentFileData)
-        : state_assets.currentFileData;
+    if (url) {
+      audio.src = url;
+    }
     state_assets.audioElement = audio;
 
     const audioPlayer = document.createElement("div");
@@ -9227,6 +9285,7 @@ async function openAssetEditor(asset = null) {
         if (action === "close") {
           setModalDirtyState("asset-editor-modal", false);
           closeActiveModal();
+          clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
           const parentModal = document.getElementById("assets-modal");
           if (parentModal) {
             parentModal.classList.remove("hidden");
@@ -9239,6 +9298,7 @@ async function openAssetEditor(asset = null) {
       });
     } else {
       closeActiveModal();
+      clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
       const parentModal = document.getElementById("assets-modal");
       if (parentModal) {
         parentModal.classList.remove("hidden");
@@ -9318,15 +9378,18 @@ async function saveAssetFromEditor() {
   }
   await renderAssetsList();
 
+  clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
+
   return true;
 }
 
 function downloadAsset(asset) {
   if (!asset.data) return;
 
+  const url = getAssetDataUrl(asset);
+  if (!url) return;
   const link = document.createElement("a");
-  link.href =
-    asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+  link.href = url;
   link.download = asset.name || asset.originalName || "asset";
   document.body.appendChild(link);
   link.click();
@@ -9367,18 +9430,12 @@ async function renderAssetSelectorList() {
 
     if (asset.type === "image" && asset.data) {
       const img = document.createElement("img");
-      img.src =
-        asset.data instanceof Blob
-          ? URL.createObjectURL(asset.data)
-          : asset.data;
+      img.src = getAssetDataUrl(asset);
       img.alt = asset.name || "Asset";
       avatar.appendChild(img);
     } else if (asset.type === "video" && asset.data) {
       const video = document.createElement("video");
-      video.src =
-        asset.data instanceof Blob
-          ? URL.createObjectURL(asset.data)
-          : asset.data;
+      video.src = getAssetDataUrl(asset);
       video.muted = true;
       const thumb = document.createElement("img");
       thumb.src = asset.thumbnail || "";
@@ -9457,24 +9514,30 @@ async function openSfxEditor(asset, sfxEntry = null, index = -1) {
   previewContainer.innerHTML = "";
 
   if (asset.type === "image" && asset.data) {
-    const img = document.createElement("img");
-    img.src =
-      asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
-    img.alt = asset.name || "Asset";
-    previewContainer.appendChild(img);
+    const url = getAssetDataUrl(asset);
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = asset.name || "Asset";
+      previewContainer.appendChild(img);
+    }
   } else if (asset.type === "video" && asset.data) {
-    const video = document.createElement("video");
-    video.src =
-      asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
-    video.controls = true;
-    video.muted = true;
-    previewContainer.appendChild(video);
+    const url = getAssetDataUrl(asset);
+    if (url) {
+      const video = document.createElement("video");
+      video.src = url;
+      video.controls = true;
+      video.muted = true;
+      previewContainer.appendChild(video);
+    }
   } else if (asset.type === "sound" && asset.data) {
-    const audio = document.createElement("audio");
-    audio.src =
-      asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
-    audio.controls = true;
-    previewContainer.appendChild(audio);
+    const url = getAssetDataUrl(asset);
+    if (url) {
+      const audio = document.createElement("audio");
+      audio.src = url;
+      audio.controls = true;
+      previewContainer.appendChild(audio);
+    }
   } else {
     const icon = document.createElement("span");
     icon.className = "asset-type-icon";
@@ -9538,13 +9601,13 @@ function renderSfxList() {
 
         if (asset) {
           if (asset.type === "image" && asset.data) {
-            const img = document.createElement("img");
-            img.src =
-              asset.data instanceof Blob
-                ? URL.createObjectURL(asset.data)
-                : asset.data;
-            img.alt = asset.name || "Asset";
-            avatar.appendChild(img);
+            const url = getAssetDataUrl(asset);
+            if (url) {
+              const img = document.createElement("img");
+              img.src = url;
+              img.alt = asset.name || "Asset";
+              avatar.appendChild(img);
+            }
           } else if (asset.type === "video" && asset.data) {
             const thumb = document.createElement("img");
             thumb.src = asset.thumbnail || "";
@@ -16252,8 +16315,7 @@ async function playStartSfxForCharacter(character, thread) {
       return;
     }
 
-    const url =
-      asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+    const url = getAssetDataUrl(asset);
     console.log("[SFX] Created blob URL:", url);
     const audio = new Audio(url);
     audio.loop = sfx.loop === true;
