@@ -8812,8 +8812,14 @@ const PLACEHOLDER_STATUSES = new Set([
 
 function isPlaceholderMessage(message) {
   if (!message) return false;
+  if (message.placeholder === true) return true;
   const status = String(message.generationStatus || "").trim();
   return PLACEHOLDER_STATUSES.has(status);
+}
+
+if (typeof window !== "undefined") {
+  window.isPlaceholderMessage = isPlaceholderMessage;
+  window.PLACEHOLDER_STATUSES = PLACEHOLDER_STATUSES;
 }
 
 function getInSimulationMessages(history = conversationHistory) {
@@ -11027,6 +11033,7 @@ async function maybeGenerateTitleBeforeBotReply() {
     usedMemorySummary: "",
     model: state.settings.model || "",
     temperature: Number(state.settings.temperature) || 0,
+    placeholder: true,
   };
   conversationHistory.push(pendingTitleMessage);
   const pendingIndex = conversationHistory.length - 1;
@@ -12033,6 +12040,7 @@ async function queueThreadForCooldown(threadId) {
     pending.content = cooldownLabel;
     pending.generationError = "";
     pending.truncatedByFilter = false;
+    pending.placeholder = true;
   } else {
     conversationHistory.push({
       role: "assistant",
@@ -12049,6 +12057,7 @@ async function queueThreadForCooldown(threadId) {
       usedMemorySummary: "",
       writingInstructionsTurnIndex: 0,
       writingInstructionsCounted: false,
+      placeholder: true,
     });
   }
   const nowTs = Date.now();
@@ -12249,6 +12258,7 @@ function getUnsummarizedMessageCount() {
   return conversationHistory.reduce((count, message) => {
     if (!message) return count;
     if (message.ooc === true) return count;
+    if (isPlaceholderMessage(message)) return count;
     const role = message.role;
     if (role !== "assistant" && role !== "user") return count;
     if (message.summarized === true) return count;
@@ -12322,6 +12332,7 @@ async function generateBotReply() {
   let pendingIndex = existingPendingIdx;
   if (existingPendingIdx >= 0) {
     pending = generationHistory[existingPendingIdx];
+    pending.placeholder = false;
     pending.content = "";
     pending.generationStatus = "generating";
     pending.generationError = "";
@@ -12604,6 +12615,7 @@ async function regenerateMessage(index) {
 
   const target = conversationHistory[index];
   if (!target || target.role !== "assistant") return;
+  target.placeholder = false;
   if (state.settings.lockMemoryMessages && target?.summarized) {
     showToast(t("memoryMessageLockedNotice"), "warning");
     return;
@@ -14532,6 +14544,7 @@ async function enqueueThreadGeneration(threadId, reason = "busy") {
       });
       threadMessages[pendingIdx].generationError = "";
       threadMessages[pendingIdx].truncatedByFilter = false;
+      threadMessages[pendingIdx].placeholder = true;
     } else {
       threadMessages.push({
         role: "assistant",
@@ -14542,6 +14555,7 @@ async function enqueueThreadGeneration(threadId, reason = "busy") {
         truncatedByFilter: false,
         usedLoreEntries: [],
         usedMemorySummary: "",
+        placeholder: true,
       });
     }
   }
@@ -14877,6 +14891,7 @@ async function ensureQueuedThreadCoolingDown(threadId) {
       truncatedByFilter: false,
       usedLoreEntries: [],
       usedMemorySummary: "",
+      placeholder: true,
     });
     prevContent = "";
     prevStatus = "";
@@ -14887,6 +14902,7 @@ async function ensureQueuedThreadCoolingDown(threadId) {
     messages[idx].content = label;
     messages[idx].generationError = "";
     messages[idx].truncatedByFilter = false;
+    messages[idx].placeholder = true;
   }
 
   const needsReason =
@@ -14968,9 +14984,11 @@ function updateQueuedPlaceholdersInMessages(threadId, messages) {
         position: queueIndex + 1,
         size: queueSize,
       });
+      m.placeholder = true;
     } else {
       m.content = "";
       m.generationStatus = "";
+      m.placeholder = false;
     }
   });
   return list;

@@ -100,6 +100,26 @@ function getSummaryThresholdValue(raw) {
 
 window.getSummaryThresholdValue = getSummaryThresholdValue;
 
+const MEMORY_PLACEHOLDER_STATUSES = new Set([
+  "queued",
+  "cooling_down",
+  "title_generating",
+  "summarizing",
+]);
+
+function memoryIsPlaceholderMessage(message) {
+  if (!message) return false;
+  if (message.placeholder === true) return true;
+  if (
+    typeof window !== "undefined" &&
+    typeof window.isPlaceholderMessage === "function"
+  ) {
+    return window.isPlaceholderMessage(message);
+  }
+  const status = String(message.generationStatus || "").trim();
+  return MEMORY_PLACEHOLDER_STATUSES.has(status);
+}
+
 function getCurrentSummaryThreshold() {
   const raw = state?.settings?.summaryThreshold;
   return getSummaryThresholdValue(raw ?? 20);
@@ -130,6 +150,8 @@ async function summarizeMemory(character) {
     .filter(
       (entry) =>
         entry.message &&
+        entry.message.ooc !== true &&
+        !memoryIsPlaceholderMessage(entry.message) &&
         entry.message.summarized !== true &&
         (entry.message.role === "assistant" || entry.message.role === "user"),
     );
@@ -158,6 +180,7 @@ async function summarizeMemory(character) {
     usedMemorySummary: "",
     model: state.settings.model || "",
     temperature: Number(state.settings.temperature) || 0,
+    placeholder: true,
   };
   conversationHistory.push(pendingMessage);
   const pendingIndex = conversationHistory.length - 1;
