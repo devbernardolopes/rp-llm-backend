@@ -14051,24 +14051,62 @@ async function openMessageMetadataModal(index) {
   const pre = document.getElementById("message-metadata-json");
   if (!pre) return;
 
+  const cloneForMetadata = (input) => {
+    try {
+      if (typeof structuredClone === "function") {
+        return structuredClone(input || {});
+      }
+    } catch {
+      // fall back to JSON
+    }
+    try {
+      return JSON.parse(JSON.stringify(input || {}));
+    } catch {
+      return { ...input };
+    }
+  };
+
   const renderMetadata = () => {
-    const view = {
-      index: index + 1,
-      role: message.role || "",
-      createdAt: message.createdAt
-        ? new Date(Number(message.createdAt)).toISOString()
-        : null,
-      senderName: message.senderName || null,
-      senderPersonaId: message.senderPersonaId || null,
-      finishReason: message.finishReason || null,
-      nativeFinishReason: message.nativeFinishReason || null,
-      truncatedByFilter: message.truncatedByFilter === true,
-      generationId: message.generationId || null,
-      completionMeta: message.completionMeta || null,
-      generationInfo: message.generationInfo || null,
-      generationFetchDebug: message.generationFetchDebug || null,
-    };
-    pre.textContent = JSON.stringify(view, null, 2);
+    const snapshot = cloneForMetadata(message);
+    const createdAt = Number(message.createdAt) || 0;
+    snapshot.index = index + 1;
+    snapshot.createdAt = createdAt
+      ? new Date(createdAt).toISOString()
+      : null;
+    snapshot.role = message.role || snapshot.role || "";
+    snapshot.requestMessages = message.requestMessages || snapshot.requestMessages || null;
+    snapshot.systemMessages = message.systemMessages || snapshot.systemMessages || null;
+    snapshot.usedLoreEntries = message.usedLoreEntries || snapshot.usedLoreEntries || null;
+    snapshot.usedMemorySummary =
+      message.usedMemorySummary || snapshot.usedMemorySummary || null;
+    snapshot.senderName = message.senderName || snapshot.senderName || null;
+    snapshot.senderPersonaId =
+      message.senderPersonaId || snapshot.senderPersonaId || null;
+    snapshot.truncatedByFilter =
+      message.truncatedByFilter === true ||
+      snapshot.truncatedByFilter === true;
+    snapshot.generationId = message.generationId || snapshot.generationId || null;
+    snapshot.finishReason = message.finishReason || snapshot.finishReason || null;
+    snapshot.nativeFinishReason =
+      message.nativeFinishReason || snapshot.nativeFinishReason || null;
+    snapshot.model = message.model || snapshot.model || null;
+    snapshot.temperature =
+      Number(message.temperature) || snapshot.temperature || null;
+    snapshot.writingInstructionsTurnIndex =
+      Number(message.writingInstructionsTurnIndex) ||
+      snapshot.writingInstructionsTurnIndex ||
+      null;
+    snapshot.generationStatus =
+      message.generationStatus || snapshot.generationStatus || null;
+    snapshot.generationError =
+      message.generationError || snapshot.generationError || null;
+    snapshot.completionMeta =
+      message.completionMeta || snapshot.completionMeta || null;
+    snapshot.generationInfo =
+      message.generationInfo || snapshot.generationInfo || null;
+    snapshot.generationFetchDebug =
+      message.generationFetchDebug || snapshot.generationFetchDebug || null;
+    pre.textContent = JSON.stringify(snapshot, null, 2);
   };
 
   renderMetadata();
