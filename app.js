@@ -116,7 +116,9 @@ function playUnreadMessageSound() {
   if (state.settings.unreadSoundEnabled === false) return;
   try {
     if (!unreadSoundAudioCtx) {
-      unreadSoundAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      unreadSoundAudioCtx = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
     }
     if (unreadSoundAudioCtx.state === "suspended") {
       unreadSoundAudioCtx.resume();
@@ -128,7 +130,10 @@ function playUnreadMessageSound() {
     oscillator.frequency.value = 800;
     oscillator.type = "sine";
     gainNode.gain.setValueAtTime(0.3, unreadSoundAudioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, unreadSoundAudioCtx.currentTime + 0.3);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      unreadSoundAudioCtx.currentTime + 0.3,
+    );
     oscillator.start(unreadSoundAudioCtx.currentTime);
     oscillator.stop(unreadSoundAudioCtx.currentTime + 0.3);
   } catch {
@@ -1098,6 +1103,11 @@ function preprocessForTTS(text) {
     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
     // remove speaker labels (ALL lines)
     .replace(/(^|\n)[A-Z][\w\s'-]{1,32}:\s*/gu, "$1")
+    // phonetic normalization for common TTS mispronunciations (e.g. "hmm" and "mmm" are often mispronounced as individual letters)
+    .replace(/\b[HhMm]{2,}([.,!?…]*)/g, (match, p1) => {
+      if (/h/i.test(match[0])) return "hmm" + p1;
+      return "mmm" + p1;
+    })
     // whitespace normalize
     .replace(/\s+/g, " ")
     .trim();
@@ -1674,25 +1684,25 @@ function setupEvents() {
     setCharacterModalTab("tags");
     renderCharacterDefinitionTabs();
   });
-   document.getElementById("char-sfx-tab-btn").addEventListener("click", () => {
-     saveActiveCharacterDefinitionFromForm();
-     setCharacterModalTab("sfx");
-     renderCharacterDefinitionTabs();
-     renderSfxList();
-   });
-   document.getElementById("char-add-lang-btn").addEventListener("click", () => {
-     saveActiveCharacterDefinitionFromForm();
-     populateCharacterLanguageSelectOptions();
-     const modal = document.getElementById("char-language-modal");
-     if (!modal) return;
-     modal.classList.remove("hidden");
-   });
-   document.getElementById("add-sfx-btn").addEventListener("click", () => {
-     saveActiveCharacterDefinitionFromForm();
-     openAssetSelectorForSfx();
-   });
-   document
-     .getElementById("char-writing-instructions-select")
+  document.getElementById("char-sfx-tab-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    setCharacterModalTab("sfx");
+    renderCharacterDefinitionTabs();
+    renderSfxList();
+  });
+  document.getElementById("char-add-lang-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    populateCharacterLanguageSelectOptions();
+    const modal = document.getElementById("char-language-modal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+  });
+  document.getElementById("add-sfx-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    openAssetSelectorForSfx();
+  });
+  document
+    .getElementById("char-writing-instructions-select")
     .addEventListener("change", () => {
       setModalDirtyState("character-modal", true);
       updateCharWritingInstructionsVisibility();
@@ -1728,20 +1738,20 @@ function setupEvents() {
       await loadActiveCharacterDefinitionToForm();
       setCharacterModalTab("lang");
       renderCharacterDefinitionTabs();
-       restoreCharModalTextareaCollapseStates();
-     });
-   document
-     .getElementById("cancel-sfx-editor-btn")
-     ?.addEventListener("click", () => {
-       closeActiveModal();
-     });
-   document
-     .getElementById("save-sfx-editor-btn")
-     ?.addEventListener("click", async () => {
-       await saveSfxEntryFromEditor();
-     });
-   document
-     .getElementById("pane-toggle-chat")
+      restoreCharModalTextareaCollapseStates();
+    });
+  document
+    .getElementById("cancel-sfx-editor-btn")
+    ?.addEventListener("click", () => {
+      closeActiveModal();
+    });
+  document
+    .getElementById("save-sfx-editor-btn")
+    ?.addEventListener("click", async () => {
+      await saveSfxEntryFromEditor();
+    });
+  document
+    .getElementById("pane-toggle-chat")
     ?.addEventListener("click", togglePane);
   document
     .getElementById("scroll-bottom-btn")
@@ -1875,7 +1885,9 @@ function setupEvents() {
       if (files && files.length > 0) {
         const file = files[0];
         if (file.type.startsWith("image/")) {
-          const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+          const blob = new Blob([await file.arrayBuffer()], {
+            type: file.type,
+          });
           state.currentPersonaAvatarBlob = blob;
           const preview = document.getElementById("persona-avatar-preview");
           const dropzone = document.getElementById("persona-avatar-dropzone");
@@ -2285,23 +2297,23 @@ function setupEvents() {
     "#persona-editor-is-default",
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
-   markModalDirtyOnInput("writing-instruction-editor-modal", [
+  markModalDirtyOnInput("writing-instruction-editor-modal", [
     "#writing-instruction-name",
     "#writing-instruction-text",
   ]);
-   markModalDirtyOnInput("lore-modal", [
-     "#lore-name",
-     "#lore-avatar",
-     "#lore-description",
-     "#lore-scan-depth",
-     "#lore-token-budget",
-     "#lore-recursive-scanning",
-   ]);
-   markModalDirtyOnInput("sfx-editor-modal", [
-     "#sfx-trigger",
-     "#sfx-eviction",
-     "#sfx-loop",
-   ]);
+  markModalDirtyOnInput("lore-modal", [
+    "#lore-name",
+    "#lore-avatar",
+    "#lore-description",
+    "#lore-scan-depth",
+    "#lore-token-budget",
+    "#lore-recursive-scanning",
+  ]);
+  markModalDirtyOnInput("sfx-editor-modal", [
+    "#sfx-trigger",
+    "#sfx-eviction",
+    "#sfx-loop",
+  ]);
   updateModalActionButtons("character-modal");
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
@@ -2320,7 +2332,8 @@ function setupModalTextareas(root = document) {
   const scope = root || document;
   const selector = scope === document ? ".modal textarea" : "textarea";
   const textareas = Array.from(scope.querySelectorAll(selector)).filter(
-    (textarea) => textarea.closest(".modal") && !textarea.classList.contains("hidden"),
+    (textarea) =>
+      textarea.closest(".modal") && !textarea.classList.contains("hidden"),
   );
   textareas.forEach((textarea) => {
     const baseRows = Number(textarea.getAttribute("rows") || 3);
@@ -2460,30 +2473,28 @@ function restoreCharModalTextareaCollapseStates() {
   const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
   const modal = document.getElementById("character-modal");
   if (!modal) return;
-  modal
-    .querySelectorAll(".textarea-collapse textarea")
-    .forEach((textarea) => {
-      const entry = textareaCollapseStates.get(textarea);
-      if (!entry) return;
-      const hasContent = String(textarea.value || "").trim().length > 0;
-      if (raw) {
-        try {
-          const states = JSON.parse(raw);
-          if (states[textarea.id] !== undefined) {
-            entry.setExpanded(states[textarea.id]);
-          } else {
-            entry.setExpanded(hasContent);
-          }
-        } catch {
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (raw) {
+      try {
+        const states = JSON.parse(raw);
+        if (states[textarea.id] !== undefined) {
+          entry.setExpanded(states[textarea.id]);
+        } else {
           entry.setExpanded(hasContent);
         }
-      } else {
+      } catch {
         entry.setExpanded(hasContent);
       }
-      if (scrollStates[textarea.id] !== undefined) {
-        textarea.scrollTop = scrollStates[textarea.id];
-      }
-    });
+    } else {
+      entry.setExpanded(hasContent);
+    }
+    if (scrollStates[textarea.id] !== undefined) {
+      textarea.scrollTop = scrollStates[textarea.id];
+    }
+  });
   // Restore modal body scroll position
   const modalScrollKey = `${key}-modal-scroll`;
   const savedModalScroll = localStorage.getItem(modalScrollKey);
@@ -3585,7 +3596,9 @@ async function setupSettingsControls() {
     const newValue = !(currentThread?.enterToSendEnabled !== false);
     if (currentThread) {
       currentThread.enterToSendEnabled = newValue;
-      await db.threads.update(currentThread.id, { enterToSendEnabled: newValue });
+      await db.threads.update(currentThread.id, {
+        enterToSendEnabled: newValue,
+      });
     }
     state.settings.enterToSendEnabled = newValue;
     enterToSendEnabled.classList.toggle("is-active", newValue);
@@ -4544,15 +4557,13 @@ async function renderShortcutsBar() {
   const bar = document.getElementById("shortcuts-bar");
   const toggleBtn = document.getElementById("shortcuts-toggle-btn");
   if (!bar) return;
-   const entries = parseShortcutEntries(state.settings.shortcutsRaw);
-   bar.innerHTML = "";
-   const isVisible = currentThread?.shortcutsVisible === true;
-   bar.classList.toggle("hidden", !isVisible);
+  const entries = parseShortcutEntries(state.settings.shortcutsRaw);
+  bar.innerHTML = "";
+  const isVisible = currentThread?.shortcutsVisible === true;
+  bar.classList.toggle("hidden", !isVisible);
   if (toggleBtn) {
     toggleBtn.classList.toggle("is-active", isVisible);
-    toggleBtn.title = isVisible
-      ? t("hideShortcuts")
-      : t("showShortcuts");
+    toggleBtn.title = isVisible ? t("hideShortcuts") : t("showShortcuts");
     toggleBtn.disabled = entries.length === 0;
   }
   if (!isVisible || entries.length === 0) return;
@@ -4740,7 +4751,10 @@ async function renderCharacters() {
           el = document.createElement("img");
         }
         el.className = "character-avatar";
-        el.src = avatarData.data instanceof Blob ? getCachedAvatarBlobUrl(avatarData.data) : avatarData.data;
+        el.src =
+          avatarData.data instanceof Blob
+            ? getCachedAvatarBlobUrl(avatarData.data)
+            : avatarData.data;
         el.alt = `${resolved.name || "Character"} avatar`;
         el.style.position = "absolute";
         el.style.top = "0";
@@ -5120,9 +5134,10 @@ async function renderCharacters() {
 
         if (persona.avatar) {
           const img = document.createElement("img");
-          img.src = persona.avatar instanceof Blob
-            ? getCachedAvatarBlobUrl(persona.avatar)
-            : persona.avatar;
+          img.src =
+            persona.avatar instanceof Blob
+              ? getCachedAvatarBlobUrl(persona.avatar)
+              : persona.avatar;
           item.appendChild(img);
         }
 
@@ -5861,7 +5876,14 @@ async function closeActiveModal() {
     if (parentModal) {
       parentModal.classList.remove("hidden");
       state.activeModalId = "character-modal";
-      state_sfx_editing = { editingDef: null, index: -1, asset: null, trigger: "start", eviction: "never", loop: false };
+      state_sfx_editing = {
+        editingDef: null,
+        index: -1,
+        asset: null,
+        trigger: "start",
+        eviction: "never",
+        loop: false,
+      };
       return;
     }
   }
@@ -6042,7 +6064,8 @@ function setCharacterAvatarImage(
     img.src = fallbackUrl;
     return;
   }
-  const dataSrc = info.data instanceof Blob ? getCachedAvatarBlobUrl(info.data) : info.data;
+  const dataSrc =
+    info.data instanceof Blob ? getCachedAvatarBlobUrl(info.data) : info.data;
   if (info.type === "video") {
     img.dataset.avatarVideo = dataSrc;
     // Check snapshot cache synchronously first
@@ -6104,26 +6127,26 @@ function normalizeCharacterDefinitions(character = null) {
     : [];
   const defs = defsRaw
     .map((d) => {
-       const def = {
-         ...createEmptyCharacterDefinition(d?.language || "en"),
-         ...d,
-         language: normalizeBotLanguageCode(d?.language || "en"),
-         ttsProvider: d?.ttsProvider || "kokoro",
-         kokoroDevice: d?.kokoroDevice || "webgpu",
-         kokoroDtype: d?.kokoroDtype || "auto",
-         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
-         kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
-           ? Number(d.kokoroSpeed)
-           : Number.isFinite(Number(d?.ttsRate))
-             ? Number(d.ttsRate)
-             : DEFAULT_TTS_RATE,
-         preferLoreBooksMatchingLanguage:
-           d?.preferLoreBooksMatchingLanguage !== false,
-         lorebookIds: Array.isArray(d?.lorebookIds)
-           ? d.lorebookIds.map(Number).filter(Number.isInteger)
-           : [],
-         sfx: Array.isArray(d?.sfx) ? d.sfx : [],
-       };
+      const def = {
+        ...createEmptyCharacterDefinition(d?.language || "en"),
+        ...d,
+        language: normalizeBotLanguageCode(d?.language || "en"),
+        ttsProvider: d?.ttsProvider || "kokoro",
+        kokoroDevice: d?.kokoroDevice || "webgpu",
+        kokoroDtype: d?.kokoroDtype || "auto",
+        kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
+        kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
+          ? Number(d.kokoroSpeed)
+          : Number.isFinite(Number(d?.ttsRate))
+            ? Number(d.ttsRate)
+            : DEFAULT_TTS_RATE,
+        preferLoreBooksMatchingLanguage:
+          d?.preferLoreBooksMatchingLanguage !== false,
+        lorebookIds: Array.isArray(d?.lorebookIds)
+          ? d.lorebookIds.map(Number).filter(Number.isInteger)
+          : [],
+        sfx: Array.isArray(d?.sfx) ? d.sfx : [],
+      };
       delete def.avatar;
       delete def.avatars;
       return def;
@@ -6210,7 +6233,13 @@ function getActiveCharacterDefinition() {
 
 function setCharacterModalTab(tab = "lang") {
   const normalized =
-    tab === "config" ? "config" : tab === "tags" ? "tags" : tab === "sfx" ? "sfx" : "lang";
+    tab === "config"
+      ? "config"
+      : tab === "tags"
+        ? "tags"
+        : tab === "sfx"
+          ? "sfx"
+          : "lang";
   state.charModalActiveTab = normalized;
   const showLang = normalized === "lang";
   const showConfig = normalized === "config";
@@ -6561,14 +6590,14 @@ async function openCharacterModal(
   updateModalActionButtons("character-modal");
   document.getElementById("char-language-modal")?.classList.add("hidden");
 
-   openModal("character-modal");
-   restoreCharModalTextareaCollapseStates();
-   // For new characters, reset modal scroll to top
-   if (!character?.id) {
-     const modalBody = document.querySelector("#character-modal .modal-body");
-     if (modalBody) modalBody.scrollTop = 0;
-   }
- }
+  openModal("character-modal");
+  restoreCharModalTextareaCollapseStates();
+  // For new characters, reset modal scroll to top
+  if (!character?.id) {
+    const modalBody = document.querySelector("#character-modal .modal-body");
+    if (modalBody) modalBody.scrollTop = 0;
+  }
+}
 
 async function saveCharacterFromModal({ close = true } = {}) {
   saveActiveCharacterDefinitionFromForm();
@@ -7122,9 +7151,10 @@ async function showChatPersonaDropdown() {
 
     if (persona.avatar) {
       const img = document.createElement("img");
-      img.src = persona.avatar instanceof Blob
-        ? getCachedAvatarBlobUrl(persona.avatar)
-        : persona.avatar;
+      img.src =
+        persona.avatar instanceof Blob
+          ? getCachedAvatarBlobUrl(persona.avatar)
+          : persona.avatar;
       item.appendChild(img);
     }
 
@@ -7147,7 +7177,7 @@ async function showChatPersonaDropdown() {
         chatPersonaDropdown.parentNode.removeChild(chatPersonaDropdown);
       }
       chatPersonaDropdown = null;
-      
+
       currentPersona = persona;
       updatePersonaPickerDisplay();
       if (!currentThread) return;
@@ -7210,9 +7240,10 @@ function updatePersonaPickerDisplay() {
   const img = document.getElementById("persona-selected-avatar");
   if (!img) return;
   const name = currentPersona?.name || "You";
-  const avatarSrc = currentPersona?.avatar instanceof Blob
-    ? getCachedAvatarBlobUrl(currentPersona.avatar)
-    : currentPersona?.avatar || fallbackAvatar(name, 512, 512);
+  const avatarSrc =
+    currentPersona?.avatar instanceof Blob
+      ? getCachedAvatarBlobUrl(currentPersona.avatar)
+      : currentPersona?.avatar || fallbackAvatar(name, 512, 512);
   img.src = avatarSrc;
   img.alt = `${name} avatar`;
 }
@@ -7220,7 +7251,9 @@ function updatePersonaPickerDisplay() {
 async function savePersonaFromModal() {
   const personas = await getOrderedPersonas();
   const name = document.getElementById("persona-name").value.trim();
-  const avatar = state.currentPersonaAvatarBlob || document.getElementById("persona-avatar").value.trim();
+  const avatar =
+    state.currentPersonaAvatarBlob ||
+    document.getElementById("persona-avatar").value.trim();
   const description = document
     .getElementById("persona-description")
     .value.trim();
@@ -7323,9 +7356,10 @@ async function renderPersonaModalList() {
 
     const avatar = document.createElement("img");
     avatar.className = "persona-avatar";
-    avatar.src = persona.avatar instanceof Blob
-      ? getCachedAvatarBlobUrl(persona.avatar)
-      : persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
+    avatar.src =
+      persona.avatar instanceof Blob
+        ? getCachedAvatarBlobUrl(persona.avatar)
+        : persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
     avatar.alt = "persona avatar";
     avatar.classList.add("clickable-avatar");
     avatar.addEventListener("click", (e) => {
@@ -7414,7 +7448,9 @@ function loadPersonaForEditing(persona) {
   document.getElementById("persona-name").value = persona.name || "";
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
   if (persona.avatar instanceof Blob) {
-    document.getElementById("persona-avatar").value = getCachedAvatarBlobUrl(persona.avatar);
+    document.getElementById("persona-avatar").value = getCachedAvatarBlobUrl(
+      persona.avatar,
+    );
   } else {
     document.getElementById("persona-avatar").value = persona.avatar || "";
   }
@@ -7438,28 +7474,38 @@ function openPersonaEditor(persona = null) {
   setModalDirtyState("persona-editor-modal", false);
   state_editingPersonaId = persona?.id || null;
   state.currentPersonaAvatarBlob = null;
-  
+
   const nameInput = document.getElementById("persona-editor-name");
   nameInput.value = persona?.name || "";
-  updateNameLengthCounter("persona-editor-name", "persona-editor-name-count", 64);
-  
+  updateNameLengthCounter(
+    "persona-editor-name",
+    "persona-editor-name-count",
+    64,
+  );
+
   const descInput = document.getElementById("persona-editor-description");
   descInput.value = persona?.description || "";
-  updateNameLengthCounter("persona-editor-description", "persona-editor-description-count", 100);
-  
-  document.getElementById("persona-editor-internal-description").value = 
+  updateNameLengthCounter(
+    "persona-editor-description",
+    "persona-editor-description-count",
+    100,
+  );
+
+  document.getElementById("persona-editor-internal-description").value =
     persona?.internalDescription || "";
-  
-  document.getElementById("persona-editor-is-default").checked = !!persona?.isDefault;
-  
+
+  document.getElementById("persona-editor-is-default").checked =
+    !!persona?.isDefault;
+
   const dropzone = document.getElementById("persona-avatar-dropzone");
   const preview = document.getElementById("persona-avatar-preview");
   const removeBtn = document.getElementById("persona-remove-avatar");
-  
+
   if (persona?.avatar) {
-    const avatarSrc = persona.avatar instanceof Blob
-      ? getCachedAvatarBlobUrl(persona.avatar)
-      : persona.avatar;
+    const avatarSrc =
+      persona.avatar instanceof Blob
+        ? getCachedAvatarBlobUrl(persona.avatar)
+        : persona.avatar;
     preview.src = avatarSrc;
     preview.classList.remove("hidden");
     dropzone.classList.add("has-avatar");
@@ -7469,12 +7515,12 @@ function openPersonaEditor(persona = null) {
     dropzone.classList.remove("has-avatar");
     removeBtn.classList.add("hidden");
   }
-  
+
   document.getElementById("persona-avatar-file-input").value = "";
-  
+
   const title = document.getElementById("persona-editor-title");
   title.textContent = persona ? t("editPersona") : t("newPersona");
-  
+
   const editorModal = document.getElementById("persona-editor-modal");
   if (editorModal) {
     editorModal.classList.remove("hidden");
@@ -7488,11 +7534,17 @@ async function savePersonaFromEditor() {
     showToast(t("personaNameRequired"), "error");
     return;
   }
-  
-  const description = document.getElementById("persona-editor-description").value.trim();
-  const internalDescription = document.getElementById("persona-editor-internal-description").value.trim();
-  const isDefault = document.getElementById("persona-editor-is-default").checked;
-  
+
+  const description = document
+    .getElementById("persona-editor-description")
+    .value.trim();
+  const internalDescription = document
+    .getElementById("persona-editor-internal-description")
+    .value.trim();
+  const isDefault = document.getElementById(
+    "persona-editor-is-default",
+  ).checked;
+
   let avatar = null;
   if (state.currentPersonaAvatarBlob) {
     avatar = state.currentPersonaAvatarBlob;
@@ -7500,7 +7552,7 @@ async function savePersonaFromEditor() {
     const existing = await db.personas.get(state_editingPersonaId);
     avatar = existing?.avatar || null;
   }
-  
+
   const personaData = {
     name,
     description,
@@ -7509,7 +7561,7 @@ async function savePersonaFromEditor() {
     isDefault: isDefault ? true : false,
     updatedAt: Date.now(),
   };
-  
+
   if (isDefault) {
     const allPersonas = await db.personas.toArray();
     for (const p of allPersonas) {
@@ -7518,18 +7570,21 @@ async function savePersonaFromEditor() {
       }
     }
   }
-  
+
   let savedId;
   if (state_editingPersonaId) {
     await db.personas.update(state_editingPersonaId, personaData);
     savedId = state_editingPersonaId;
   } else {
     const personas = await getOrderedPersonas();
-    const maxOrder = personas.reduce((max, p) => Math.max(max, p.order || 0), 0);
+    const maxOrder = personas.reduce(
+      (max, p) => Math.max(max, p.order || 0),
+      0,
+    );
     personaData.order = maxOrder + 1;
     savedId = await db.personas.add(personaData);
   }
-  
+
   state.activeModalId = "persona-editor-modal";
   setModalDirtyState("persona-editor-modal", false);
   await closeActiveModal();
@@ -7543,10 +7598,10 @@ async function savePersonaFromEditor() {
 async function duplicatePersona(personaId) {
   const source = await db.personas.get(personaId);
   if (!source) return;
-  
+
   const personas = await getOrderedPersonas();
   const maxOrder = personas.reduce((max, p) => Math.max(max, p.order || 0), 0);
-  
+
   const copy = {
     name: `${source.name || "Persona"} Copy`,
     description: source.description || "",
@@ -7557,7 +7612,7 @@ async function duplicatePersona(personaId) {
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
-  
+
   await db.personas.add(copy);
   await renderPersonaModalList();
   broadcastSyncEvent({ type: "personas-updated" });
@@ -8696,12 +8751,18 @@ async function renderAssetsList() {
 
     if (asset.type === "image" && asset.data) {
       const img = document.createElement("img");
-      img.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+      img.src =
+        asset.data instanceof Blob
+          ? URL.createObjectURL(asset.data)
+          : asset.data;
       img.alt = asset.name || "Asset";
       avatar.appendChild(img);
     } else if (asset.type === "video" && asset.data) {
       const video = document.createElement("video");
-      video.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+      video.src =
+        asset.data instanceof Blob
+          ? URL.createObjectURL(asset.data)
+          : asset.data;
       video.muted = true;
       const thumb = document.createElement("img");
       thumb.src = asset.thumbnail || "";
@@ -8865,18 +8926,20 @@ async function openAssetEditor(asset = null) {
     state_assets.currentFileData
   ) {
     const img = document.createElement("img");
-    img.src = state_assets.currentFileData instanceof Blob
-      ? URL.createObjectURL(state_assets.currentFileData)
-      : state_assets.currentFileData;
+    img.src =
+      state_assets.currentFileData instanceof Blob
+        ? URL.createObjectURL(state_assets.currentFileData)
+        : state_assets.currentFileData;
     previewContainer.appendChild(img);
   } else if (
     state_assets.currentFileType === "video" &&
     state_assets.currentFileData
   ) {
     const video = document.createElement("video");
-    video.src = state_assets.currentFileData instanceof Blob
-      ? URL.createObjectURL(state_assets.currentFileData)
-      : state_assets.currentFileData;
+    video.src =
+      state_assets.currentFileData instanceof Blob
+        ? URL.createObjectURL(state_assets.currentFileData)
+        : state_assets.currentFileData;
     video.controls = true;
     video.muted = true;
     previewContainer.appendChild(video);
@@ -8886,9 +8949,10 @@ async function openAssetEditor(asset = null) {
   ) {
     audioControls.classList.remove("hidden");
     const audio = document.createElement("audio");
-    audio.src = state_assets.currentFileData instanceof Blob
-      ? URL.createObjectURL(state_assets.currentFileData)
-      : state_assets.currentFileData;
+    audio.src =
+      state_assets.currentFileData instanceof Blob
+        ? URL.createObjectURL(state_assets.currentFileData)
+        : state_assets.currentFileData;
     state_assets.audioElement = audio;
 
     const audioPlayer = document.createElement("div");
@@ -9021,9 +9085,8 @@ function downloadAsset(asset) {
   if (!asset.data) return;
 
   const link = document.createElement("a");
-  link.href = asset.data instanceof Blob
-    ? URL.createObjectURL(asset.data)
-    : asset.data;
+  link.href =
+    asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
   link.download = asset.name || asset.originalName || "asset";
   document.body.appendChild(link);
   link.click();
@@ -9064,12 +9127,18 @@ async function renderAssetSelectorList() {
 
     if (asset.type === "image" && asset.data) {
       const img = document.createElement("img");
-      img.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+      img.src =
+        asset.data instanceof Blob
+          ? URL.createObjectURL(asset.data)
+          : asset.data;
       img.alt = asset.name || "Asset";
       avatar.appendChild(img);
     } else if (asset.type === "video" && asset.data) {
       const video = document.createElement("video");
-      video.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+      video.src =
+        asset.data instanceof Blob
+          ? URL.createObjectURL(asset.data)
+          : asset.data;
       video.muted = true;
       const thumb = document.createElement("img");
       thumb.src = asset.thumbnail || "";
@@ -9142,23 +9211,28 @@ async function openSfxEditor(asset, sfxEntry = null, index = -1) {
   }
 
   // Populate preview container
-  const previewContainer = document.getElementById("sfx-asset-preview-container");
+  const previewContainer = document.getElementById(
+    "sfx-asset-preview-container",
+  );
   previewContainer.innerHTML = "";
 
   if (asset.type === "image" && asset.data) {
     const img = document.createElement("img");
-    img.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+    img.src =
+      asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
     img.alt = asset.name || "Asset";
     previewContainer.appendChild(img);
   } else if (asset.type === "video" && asset.data) {
     const video = document.createElement("video");
-    video.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+    video.src =
+      asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
     video.controls = true;
     video.muted = true;
     previewContainer.appendChild(video);
   } else if (asset.type === "sound" && asset.data) {
     const audio = document.createElement("audio");
-    audio.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+    audio.src =
+      asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
     audio.controls = true;
     previewContainer.appendChild(audio);
   } else {
@@ -9204,110 +9278,129 @@ function renderSfxList() {
 
   // We need to fetch asset details for each sfx entry
   // Since assets are async, we'll gather promises
-  Promise.all(sfxArray.map(async (entry, idx) => {
-    const asset = await getAssetById(entry.assetId);
-    return { entry, idx, asset };
-  })).then((items) => {
-    // Re-sort by original order
-    items.sort((a, b) => a.idx - b.idx);
-    for (const { entry, idx, asset } of items) {
-      const row = document.createElement("div");
-      row.className = "lorebook-row asset-row";
+  Promise.all(
+    sfxArray.map(async (entry, idx) => {
+      const asset = await getAssetById(entry.assetId);
+      return { entry, idx, asset };
+    }),
+  )
+    .then((items) => {
+      // Re-sort by original order
+      items.sort((a, b) => a.idx - b.idx);
+      for (const { entry, idx, asset } of items) {
+        const row = document.createElement("div");
+        row.className = "lorebook-row asset-row";
 
-      // Avatar
-      const avatar = document.createElement("div");
-      avatar.className = "lorebook-avatar";
+        // Avatar
+        const avatar = document.createElement("div");
+        avatar.className = "lorebook-avatar";
 
-      if (asset) {
-        if (asset.type === "image" && asset.data) {
-          const img = document.createElement("img");
-          img.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
-          img.alt = asset.name || "Asset";
-          avatar.appendChild(img);
-        } else if (asset.type === "video" && asset.data) {
-          const thumb = document.createElement("img");
-          thumb.src = asset.thumbnail || "";
-          thumb.alt = asset.name || "Asset";
-          if (!asset.thumbnail) {
+        if (asset) {
+          if (asset.type === "image" && asset.data) {
+            const img = document.createElement("img");
+            img.src =
+              asset.data instanceof Blob
+                ? URL.createObjectURL(asset.data)
+                : asset.data;
+            img.alt = asset.name || "Asset";
+            avatar.appendChild(img);
+          } else if (asset.type === "video" && asset.data) {
+            const thumb = document.createElement("img");
+            thumb.src = asset.thumbnail || "";
+            thumb.alt = asset.name || "Asset";
+            if (!asset.thumbnail) {
+              avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+            } else {
+              avatar.appendChild(thumb);
+            }
+          } else if (asset.type === "sound" && asset.data) {
             avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
           } else {
-            avatar.appendChild(thumb);
+            avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
           }
-        } else if (asset.type === "sound" && asset.data) {
-          avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
         } else {
-          avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+          avatar.innerHTML = `<span class="asset-type-icon missing">?</span>`;
         }
-      } else {
-        avatar.innerHTML = `<span class="asset-type-icon missing">?</span>`;
-      }
 
-      // Main info
-      const main = document.createElement("div");
-      main.className = "lorebook-main";
+        // Main info
+        const main = document.createElement("div");
+        main.className = "lorebook-main";
 
-      const title = document.createElement("div");
-      title.className = "lorebook-title";
-      title.textContent = asset ? (asset.name || asset.originalName || "Untitled") : `Missing asset (ID: ${entry.assetId})`;
+        const title = document.createElement("div");
+        title.className = "lorebook-title";
+        title.textContent = asset
+          ? asset.name || asset.originalName || "Untitled"
+          : `Missing asset (ID: ${entry.assetId})`;
 
-      const meta = document.createElement("div");
-      meta.className = "lorebook-meta";
-      const typeSpan = document.createElement("span");
-      typeSpan.textContent = asset ? getAssetTypeLabel(asset.type) : "Unknown";
-      typeSpan.style.fontSize = "11px";
-      meta.appendChild(typeSpan);
-      const triggerSpan = document.createElement("span");
-      triggerSpan.textContent = t(`trigger${entry.trigger.charAt(0).toUpperCase() + entry.trigger.slice(1)}`) || entry.trigger;
-      triggerSpan.style.fontSize = "11px";
-      triggerSpan.style.marginLeft = "8px";
-      meta.appendChild(triggerSpan);
-      const evictionSpan = document.createElement("span");
-      evictionSpan.textContent = t(`eviction${entry.eviction.charAt(0).toUpperCase() + entry.eviction.slice(1)}`) || entry.eviction;
-      evictionSpan.style.fontSize = "11px";
-      evictionSpan.style.marginLeft = "8px";
-      meta.appendChild(evictionSpan);
-      if (entry.loop) {
-        const loopSpan = document.createElement("span");
-        loopSpan.textContent = "Loop";
-        loopSpan.style.fontSize = "11px";
-        loopSpan.style.marginLeft = "8px";
-        meta.appendChild(loopSpan);
-      }
-
-      main.appendChild(title);
-      main.appendChild(meta);
-
-      // Actions
-      const actions = document.createElement("div");
-      actions.className = "lorebook-actions";
-
-      const editBtn = iconButton("edit", t("editAssetAria") || "Edit", () => {
-        openSfxEditor(asset, entry, idx);
-      });
-      actions.appendChild(editBtn);
-
-      const deleteBtn = iconButton(
-        "delete",
-        t("deleteAssetAria") || "Delete",
-        async () => {
-          const ok = await openConfirmDialog(
-            t("deleteAssetTitle"),
-            tf("deleteAssetConfirm", { name: asset ? (asset.name || asset.originalName) : entry.assetId })
-          );
-          if (!ok) return;
-          const def = getActiveCharacterDefinition();
-          def.sfx.splice(idx, 1);
-          setModalDirtyState("character-modal", true);
-          renderSfxList();
+        const meta = document.createElement("div");
+        meta.className = "lorebook-meta";
+        const typeSpan = document.createElement("span");
+        typeSpan.textContent = asset
+          ? getAssetTypeLabel(asset.type)
+          : "Unknown";
+        typeSpan.style.fontSize = "11px";
+        meta.appendChild(typeSpan);
+        const triggerSpan = document.createElement("span");
+        triggerSpan.textContent =
+          t(
+            `trigger${entry.trigger.charAt(0).toUpperCase() + entry.trigger.slice(1)}`,
+          ) || entry.trigger;
+        triggerSpan.style.fontSize = "11px";
+        triggerSpan.style.marginLeft = "8px";
+        meta.appendChild(triggerSpan);
+        const evictionSpan = document.createElement("span");
+        evictionSpan.textContent =
+          t(
+            `eviction${entry.eviction.charAt(0).toUpperCase() + entry.eviction.slice(1)}`,
+          ) || entry.eviction;
+        evictionSpan.style.fontSize = "11px";
+        evictionSpan.style.marginLeft = "8px";
+        meta.appendChild(evictionSpan);
+        if (entry.loop) {
+          const loopSpan = document.createElement("span");
+          loopSpan.textContent = "Loop";
+          loopSpan.style.fontSize = "11px";
+          loopSpan.style.marginLeft = "8px";
+          meta.appendChild(loopSpan);
         }
-      );
-      deleteBtn.classList.add("danger-icon-btn");
-      actions.appendChild(deleteBtn);
 
-      row.append(avatar, main, actions);
-      list.appendChild(row);
-    }
-  }).catch(console.error);
+        main.appendChild(title);
+        main.appendChild(meta);
+
+        // Actions
+        const actions = document.createElement("div");
+        actions.className = "lorebook-actions";
+
+        const editBtn = iconButton("edit", t("editAssetAria") || "Edit", () => {
+          openSfxEditor(asset, entry, idx);
+        });
+        actions.appendChild(editBtn);
+
+        const deleteBtn = iconButton(
+          "delete",
+          t("deleteAssetAria") || "Delete",
+          async () => {
+            const ok = await openConfirmDialog(
+              t("deleteAssetTitle"),
+              tf("deleteAssetConfirm", {
+                name: asset ? asset.name || asset.originalName : entry.assetId,
+              }),
+            );
+            if (!ok) return;
+            const def = getActiveCharacterDefinition();
+            def.sfx.splice(idx, 1);
+            setModalDirtyState("character-modal", true);
+            renderSfxList();
+          },
+        );
+        deleteBtn.classList.add("danger-icon-btn");
+        actions.appendChild(deleteBtn);
+
+        row.append(avatar, main, actions);
+        list.appendChild(row);
+      }
+    })
+    .catch(console.error);
 }
 
 async function saveSfxEntry({ close = true } = {}) {
@@ -9346,7 +9439,6 @@ async function saveSfxEntry({ close = true } = {}) {
 async function saveSfxEntryFromEditor() {
   return await saveSfxEntry({ close: true });
 }
-
 
 function getAssetTypeLabel(type) {
   const types = {
@@ -9605,7 +9697,10 @@ function renderCharAvatars() {
       e.stopPropagation();
     });
 
-    const avatarSrc = avatar.data instanceof Blob ? getCachedAvatarBlobUrl(avatar.data) : avatar.data;
+    const avatarSrc =
+      avatar.data instanceof Blob
+        ? getCachedAvatarBlobUrl(avatar.data)
+        : avatar.data;
     if (avatar.type === "video") {
       const video = document.createElement("video");
       video.src = avatarSrc;
@@ -10070,33 +10165,33 @@ async function deleteCharacter(characterId) {
   );
   if (!ok) return;
 
-   await db.transaction(
-     "rw",
-     db.characters,
-     db.threads,
-     db.memories,
-     db.sessions,
-     async () => {
-       await db.characters.delete(characterId);
-       await db.threads.where("characterId").equals(characterId).delete();
-       await db.memories.where("characterId").equals(characterId).delete();
-       await db.sessions.where("characterId").equals(characterId).delete();
-     },
-   );
+  await db.transaction(
+    "rw",
+    db.characters,
+    db.threads,
+    db.memories,
+    db.sessions,
+    async () => {
+      await db.characters.delete(characterId);
+      await db.threads.where("characterId").equals(characterId).delete();
+      await db.memories.where("characterId").equals(characterId).delete();
+      await db.sessions.where("characterId").equals(characterId).delete();
+    },
+  );
 
-   // Clean up stored modal scroll and collapse states for this character
-   const prefix = `rp-char-collapse-${characterId}-`;
-   const lastLangKey = `rp-char-modal-last-lang-${characterId}`;
-   const keysToDelete = [lastLangKey];
-   for (let i = 0; i < localStorage.length; i++) {
-     const key = localStorage.key(i);
-     if (key && key.startsWith(prefix)) {
-       keysToDelete.push(key);
-     }
-   }
-   keysToDelete.forEach((k) => localStorage.removeItem(k));
+  // Clean up stored modal scroll and collapse states for this character
+  const prefix = `rp-char-collapse-${characterId}-`;
+  const lastLangKey = `rp-char-modal-last-lang-${characterId}`;
+  const keysToDelete = [lastLangKey];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) {
+      keysToDelete.push(key);
+    }
+  }
+  keysToDelete.forEach((k) => localStorage.removeItem(k));
 
-   if (currentCharacter?.id === characterId) {
+  if (currentCharacter?.id === characterId) {
     currentCharacter = null;
     currentThread = null;
     conversationHistory = [];
@@ -10132,15 +10227,15 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     messages: initialMessages,
     selectedPersonaId: selectedPersona?.id || null,
     initialUserName: selectedPersona?.name || "You",
-     autoTtsEnabled: false,
-     lastPersonaInjectionPersonaId: null,
-     writingInstructionsTurnCount: 0,
-     pendingGenerationReason: "",
-     pendingGenerationQueuedAt: 0,
-     shortcutsVisible: false,
-     createdAt: Date.now(),
-     updatedAt: Date.now(),
-   };
+    autoTtsEnabled: false,
+    lastPersonaInjectionPersonaId: null,
+    writingInstructionsTurnCount: 0,
+    pendingGenerationReason: "",
+    pendingGenerationQueuedAt: 0,
+    shortcutsVisible: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
 
   const threadId = await db.threads.add(newThread);
   broadcastSyncEvent({
@@ -10188,17 +10283,17 @@ async function duplicateThread(threadId) {
     titleManual: false,
     messages: clonedMessages,
     selectedPersonaId: source.selectedPersonaId || null,
-     autoTtsEnabled: source.autoTtsEnabled === true,
-     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
-     writingInstructionsTurnCount:
-       Number(source.writingInstructionsTurnCount) >= 0
-         ? Number(source.writingInstructionsTurnCount)
-         : 0,
-     shortcutsVisible: source.shortcutsVisible === true,
-     favorite: !!source.favorite,
-     createdAt: Date.now(),
-     updatedAt: Date.now(),
-   };
+    autoTtsEnabled: source.autoTtsEnabled === true,
+    lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
+    writingInstructionsTurnCount:
+      Number(source.writingInstructionsTurnCount) >= 0
+        ? Number(source.writingInstructionsTurnCount)
+        : 0,
+    shortcutsVisible: source.shortcutsVisible === true,
+    favorite: !!source.favorite,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
 
   const newThreadId = await db.threads.add(copy);
   broadcastSyncEvent({
@@ -10449,12 +10544,18 @@ function updateChatInputToggles() {
   const globalAutoReply = state.settings.autoReplyEnabled;
   const globalEnterToSend = state.settings.enterToSendEnabled;
   if (autoReplyEnabled) {
-    const isActive = threadAutoReply !== undefined ? threadAutoReply : (globalAutoReply !== false);
+    const isActive =
+      threadAutoReply !== undefined
+        ? threadAutoReply
+        : globalAutoReply !== false;
     autoReplyEnabled.classList.toggle("is-active", isActive);
     autoReplyEnabled.disabled = !currentThread;
   }
   if (enterToSendEnabled) {
-    const isActive = threadEnterToSend !== undefined ? threadEnterToSend : (globalEnterToSend !== false);
+    const isActive =
+      threadEnterToSend !== undefined
+        ? threadEnterToSend
+        : globalEnterToSend !== false;
     enterToSendEnabled.classList.toggle("is-active", isActive);
     enterToSendEnabled.disabled = !currentThread;
   }
@@ -10653,11 +10754,7 @@ async function maybeGenerateTitleBeforeBotReply() {
 
   const log = document.getElementById("chat-log");
   if (log && isViewingThread(currentThread.id)) {
-    const pendingRow = buildMessageRow(
-      pendingTitleMessage,
-      pendingIndex,
-      true,
-    );
+    const pendingRow = buildMessageRow(pendingTitleMessage, pendingIndex, true);
     log.appendChild(pendingRow);
     const pendingContent = pendingRow?.querySelector(".message-content");
     if (pendingContent) {
@@ -10838,11 +10935,7 @@ async function maybeGenerateThreadTitle() {
 
   const log = document.getElementById("chat-log");
   if (log && isViewingThread(currentThread.id)) {
-    const pendingRow = buildMessageRow(
-      pendingTitleMessage,
-      pendingIndex,
-      true,
-    );
+    const pendingRow = buildMessageRow(pendingTitleMessage, pendingIndex, true);
     log.appendChild(pendingRow);
     const pendingContent = pendingRow?.querySelector(".message-content");
     if (pendingContent) {
@@ -13068,7 +13161,11 @@ function setSendingState(sending) {
     ? conversationHistory.some((m) => {
         if (!m || m.role !== "assistant") return false;
         const st = String(m.generationStatus || "").trim();
-        return st === "generating" || st === "regenerating" || st === "title_generating";
+        return (
+          st === "generating" ||
+          st === "regenerating" ||
+          st === "title_generating"
+        );
       })
     : false;
   const hasTitleGeneratingMarker = Array.isArray(conversationHistory)
@@ -13093,11 +13190,15 @@ function setSendingState(sending) {
   sendBtn.disabled = isBlockedByQueueOrCooldown;
   sendBtn.classList.toggle(
     "is-generating",
-    currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker,
+    currentThreadGenerating ||
+      isBlockedByQueueOrCooldown ||
+      hasTitleGeneratingMarker,
   );
   sendBtn.classList.toggle(
     "danger-btn",
-    currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker,
+    currentThreadGenerating ||
+      isBlockedByQueueOrCooldown ||
+      hasTitleGeneratingMarker,
   );
   if (hasTitleGeneratingMarker) {
     sendBtn.textContent = "";
@@ -13105,7 +13206,9 @@ function setSendingState(sending) {
     sendBtn.textContent = "";
   }
   personaSelect.disabled =
-    currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker;
+    currentThreadGenerating ||
+    isBlockedByQueueOrCooldown ||
+    hasTitleGeneratingMarker;
   refreshMessageControlStates();
   refreshAllSpeakerButtons();
   if (currentThreadGenerating) closePromptHistory();
