@@ -1008,6 +1008,7 @@ const state = {
   },
   characterCardSlide: null,
   renderThreadsSeq: 0,
+  renderThreadsDataHash: null,
   cooldownToastTimerId: null,
   cooldownQueueTickInFlight: false,
   unreadNeedsUserScrollThreadId: null,
@@ -5342,6 +5343,21 @@ async function renderThreads() {
     return Number(b.updatedAt || 0) - Number(a.updatedAt || 0);
   });
 
+  const threadsHash = JSON.stringify(
+    threads.map((t) => ({
+      id: t.id,
+      title: t.title,
+      favorite: t.favorite,
+      updatedAt: t.updatedAt,
+      characterId: t.characterId,
+      pendingGenerationReason: t.pendingGenerationReason,
+    })),
+  );
+  if (state.renderThreadsDataHash === threadsHash) {
+    return;
+  }
+  state.renderThreadsDataHash = threadsHash;
+
   const existingIds = new Set(threads.map((t) => Number(t.id)));
   state.selectedThreadIds = new Set(
     Array.from(state.selectedThreadIds).filter((id) =>
@@ -5350,6 +5366,7 @@ async function renderThreads() {
   );
 
   if (threads.length === 0) {
+    state.renderThreadsDataHash = threadsHash;
     list.innerHTML = "";
     const empty = document.createElement("p");
     empty.className = "muted";
