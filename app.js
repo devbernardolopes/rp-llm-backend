@@ -12223,7 +12223,30 @@ async function deleteMessageAt(index) {
 
 async function regenerateMessage(index) {
   if (!currentThread || !currentCharacter || state.sending) return;
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return;
   if (index < 0 || index >= conversationHistory.length) return;
+  const cooldown = Number(state.settings.completionCooldown) || 0;
+  if (cooldown > 0 && isInCompletionCooldown()) {
+    const seconds = getCooldownRemainingSeconds();
+    const label = tf("cooldownToastActive", { seconds });
+    showToast(label, "warning");
+    updateCooldownPinnedToast(seconds);
+    return;
+  }
+  if (state.generationQueue.length > 0) {
+    const headId = Number(state.generationQueue[0]);
+    if (headId !== threadId) {
+      const queuedIdx = state.generationQueue.indexOf(threadId);
+      const queueNotice =
+        queuedIdx >= 0
+          ? tf("generationQueuedNoticeWithPos", { position: queuedIdx + 1 })
+          : t("generationQueuedNotice");
+      showToast(queueNotice, "warning");
+      return;
+    }
+    await clearThreadGenerationQueueFlag(threadId);
+  }
 
   const target = conversationHistory[index];
   if (!target || target.role !== "assistant") return;
@@ -12237,7 +12260,6 @@ async function regenerateMessage(index) {
       ? regenWritingTurnIndex
       : Math.max(1, getThreadWritingInstructionsTurnCount(currentThread));
   const originalContent = String(target.content || "");
-  const threadId = Number(currentThread.id);
   const messagesToSave = conversationHistory.map((m) => ({ ...m }));
 
   stopTtsPlayback();
