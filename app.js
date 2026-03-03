@@ -11725,8 +11725,7 @@ async function sendMessage(options = {}) {
   if (
     currentCharacter.useMemory !== false &&
     conversationHistory.length >= 20 &&
-    conversationHistory.length % 20 === 0 &&
-    isViewingThread(currentThread.id)
+    conversationHistory.length % 20 === 0
   ) {
     await summarizeMemory(currentCharacter);
   }

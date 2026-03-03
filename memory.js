@@ -105,6 +105,9 @@ async function getMemorySummary(characterId, threadId) {
 async function summarizeMemory(character) {
   if (character.useMemory === false) return;
 
+  const threadId = currentThread?.id;
+  const isViewing = threadId && isViewingThread(threadId);
+
   const firstUnsummarizedIdx = conversationHistory.findIndex(
     (m) => !m.summarized,
   );
@@ -116,8 +119,9 @@ async function summarizeMemory(character) {
   );
   if (toSummarize.length === 0) return;
 
-  const threadId = currentThread?.id;
-  const isViewing = threadId && isViewingThread(threadId);
+  if (isViewing) {
+    showToast("Memory summarization triggered", "info");
+  }
 
   const pendingMessage = {
     role: "assistant",
@@ -201,6 +205,7 @@ Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).j
       renderChat();
     }
     console.warn("Memory summarization failed:", e.message);
+    showToast(`Memory summarization failed: ${e.message}`, "error");
   }
 }
 
