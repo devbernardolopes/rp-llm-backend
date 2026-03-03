@@ -10809,14 +10809,10 @@ async function maybeGenerateTitleBeforeBotReply() {
     );
     const raw = String(result?.content || "").trim();
     if (!raw) {
-      // Title generation failed, remove the pending message
       conversationHistory.pop();
       await persistCurrentThread();
-      if (log && isViewingThread(currentThread.id)) {
-        const pendingRow = log.querySelector(
-          `.chat-row[data-message-index="${pendingIndex}"]`,
-        );
-        if (pendingRow) pendingRow.remove();
+      if (isViewingThread(currentThread.id)) {
+        renderChat();
       }
       setSendingState();
       return;
@@ -10829,11 +10825,8 @@ async function maybeGenerateTitleBeforeBotReply() {
     if (!cleaned) {
       conversationHistory.pop();
       await persistCurrentThread();
-      if (log && isViewingThread(currentThread.id)) {
-        const pendingRow = log.querySelector(
-          `.chat-row[data-message-index="${pendingIndex}"]`,
-        );
-        if (pendingRow) pendingRow.remove();
+      if (isViewingThread(currentThread.id)) {
+        renderChat();
       }
       setSendingState();
       return;
@@ -10854,20 +10847,11 @@ async function maybeGenerateTitleBeforeBotReply() {
     updateChatTitle();
     await renderThreads();
 
-    // Change status to "generating" - this same message bubble will be used for bot reply
     pendingTitleMessage.generationStatus = "generating";
     await persistCurrentThread();
 
-    if (log && isViewingThread(currentThread.id)) {
-      const pendingRow = log.querySelector(
-        `.chat-row[data-message-index="${pendingIndex}"]`,
-      );
-      if (pendingRow) {
-        const pendingContent = pendingRow?.querySelector(".message-content");
-        if (pendingContent) {
-          pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
-        }
-      }
+    if (isViewingThread(currentThread.id)) {
+      renderChat();
     }
 
     setSendingState();
@@ -10883,11 +10867,8 @@ async function maybeGenerateTitleBeforeBotReply() {
       conversationHistory.splice(idx, 1);
     }
     await persistCurrentThread();
-    if (log && isViewingThread(currentThread.id)) {
-      const pendingRow = log.querySelector(
-        `.chat-row[data-message-index="${pendingIndex}"]`,
-      );
-      if (pendingRow) pendingRow.remove();
+    if (isViewingThread(currentThread.id)) {
+      renderChat();
     }
     setSendingState();
   }
@@ -10993,6 +10974,9 @@ async function maybeGenerateThreadTitle() {
     if (!raw) {
       conversationHistory.pop();
       await persistCurrentThread();
+      if (isViewingThread(currentThread.id)) {
+        renderChat();
+      }
       setSendingState();
       return;
     }
@@ -11004,6 +10988,9 @@ async function maybeGenerateThreadTitle() {
     if (!cleaned) {
       conversationHistory.pop();
       await persistCurrentThread();
+      if (isViewingThread(currentThread.id)) {
+        renderChat();
+      }
       setSendingState();
       return;
     }
@@ -11026,16 +11013,8 @@ async function maybeGenerateThreadTitle() {
     pendingTitleMessage.generationStatus = "generating";
     await persistCurrentThread();
 
-    if (log && isViewingThread(currentThread.id)) {
-      const pendingRow = log.querySelector(
-        `.chat-row[data-message-index="${pendingIndex}"]`,
-      );
-      if (pendingRow) {
-        const pendingContent = pendingRow?.querySelector(".message-content");
-        if (pendingContent) {
-          pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
-        }
-      }
+    if (isViewingThread(currentThread.id)) {
+      renderChat();
     }
 
     setSendingState();
@@ -11051,6 +11030,9 @@ async function maybeGenerateThreadTitle() {
       conversationHistory.splice(idx, 1);
     }
     await persistCurrentThread();
+    if (isViewingThread(currentThread.id)) {
+      renderChat();
+    }
     setSendingState();
   }
 }
