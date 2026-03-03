@@ -11721,6 +11721,16 @@ async function sendMessage(options = {}) {
   );
   scrollChatToBottom();
 
+  // Trigger memory summarization if threshold reached (including when user sends the 20th/40th/60th... message)
+  if (
+    currentCharacter.useMemory !== false &&
+    conversationHistory.length >= 20 &&
+    conversationHistory.length % 20 === 0 &&
+    isViewingThread(currentThread.id)
+  ) {
+    await summarizeMemory(currentCharacter);
+  }
+
   if (state.settings.autoReplyEnabled === false) {
     await renderThreads();
     return;
