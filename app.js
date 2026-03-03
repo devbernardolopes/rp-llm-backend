@@ -12711,6 +12711,10 @@ async function playBrowserTts(normalizedText, options, playback = {}) {
       }
       await speakChunk(chunk);
     }
+    if (messageIndex !== null && isTtsIndexMatch(state.tts.speakingMessageIndex, messageIndex)) {
+      state.tts.speakingMessageIndex = null;
+      refreshAllSpeakerButtons();
+    }
     return null;
   } finally {
     finalizeLoadingState();
@@ -12940,6 +12944,10 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       }
     }
 
+    if (messageIndex !== null && isTtsIndexMatch(state.tts.speakingMessageIndex, messageIndex)) {
+      state.tts.speakingMessageIndex = null;
+      refreshAllSpeakerButtons();
+    }
     return null;
   } catch (err) {
     stopKokoroDownloadProgressMonitor();
