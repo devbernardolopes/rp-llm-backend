@@ -2188,4 +2188,22 @@
     <script src="app.js"></script>
     <script src="tts/kokoro.js"></script>
   </body>
+<style>
+#assets-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#assets-modal #assets-dropzone-section {
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-main, #fff);
+}
+#assets-modal #assets-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+</style>
 </html>
