@@ -12036,7 +12036,7 @@ async function sendOocInquiry(text) {
   const userIndex = conversationHistory.length;
   const userMsg = {
     role: "user",
-    content: text,
+    content: `((OOC: SYSTEM, reply in OOC manner. ${text}))`,
     createdAt: Date.now(),
     senderName: currentPersona?.name || "You",
     senderAvatar: currentPersona?.avatar || "",
@@ -12086,7 +12086,7 @@ async function sendOocInquiry(text) {
   try {
     const result = await callOpenRouter(
       systemPrompt,
-      [{ role: "user", content: text }],
+      [{ role: "user", content: userMsg.content }],
       state.settings.model,
       (chunk) => {
         pendingAssistant.content += chunk;
