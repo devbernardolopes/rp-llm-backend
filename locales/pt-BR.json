@@ -422,5 +422,6 @@
   "evictionEOF": "EOF",
   "sfxEditor": "Editor de SFX",
   "selectAssetForSfx": "Selecione um recurso para SFX",
-  "sfxAlreadyAdded": "Este recurso já foi adicionado como SFX."
+  "sfxAlreadyAdded": "Este recurso já foi adicionado como SFX.",
+  "summarizingMemoryLabel": "Resumindo conversa..."
 }

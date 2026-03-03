@@ -18,11 +18,14 @@
  *    - Calls: window.summarizeMemory(character)
  *
  * 2. SUMMARIZATION (summarizeMemory function below)
- *    - Takes the oldest 20 messages from conversationHistory (global)
+ *    - Finds the oldest unsummarized messages in conversationHistory
+ *    - Takes up to 20 messages to summarize
+ *    - Creates a pending chat bubble (same UI as bot message)
  *    - Sends them to AI with a summarization prompt
  *    - Stores the summary in db.memories table
- *    - TRUNCATES conversationHistory to remove those 20 messages
- *    - Persists the trimmed history
+ *    - Marks the messages with summarized: true and summaryId
+ *    - Removes the pending bubble
+ *    - Messages remain visible in chat and DB
  *
  * 3. RETRIEVAL (getMemorySummary function below)
  *    - Called in buildSystemPrompt() before each completion request
@@ -32,35 +35,8 @@
  * 4. PROMPT INCLUSION (in app.js: buildSystemPrompt)
  *    - If memory exists, it's added to the prompt as:
  *      "## Memory Context\n{memory}"
- *    - This happens on EVERY request, not just when needed
- *
- * ============================================================================
- * KNOWN ISSUES / IMPROVEMENTS NEEDED
- * ============================================================================
- *
- * 1. NO AGING MECHANISM
- *    - Memory summaries accumulate forever with no pruning
- *    - Old summaries remain even when no longer relevant
- *
- * 2. NO SIZE LIMITS
- *    - All summaries are joined with newlines on every request
- *    - Prompt can grow extremely large over time
- *    - No token budget or max memory size enforcement
- *
- * 3. EVERY REQUEST PENALTY
- *    - Memory is included in EVERY completion request
- *    - Not just when the history gets long
- *    - Increases latency and token usage unnecessarily
- *
- * 4. SUMMARIZATION THRESHOLD
- *    - Hard-coded to trigger every 20 messages
- *    - Not configurable per character
- *    - 20 may be too aggressive or too conservative
- *
- * 5. NO SELECTIVE SUMMARIZATION
- *    - Always summarizes oldest 20
- *    - Could be smarter about what to summarize
- *    - Could keep recent messages intact
+ *    - Summarized messages are filtered out from generationHistory
+ *    - Only unsummarized messages are sent to the API
  *
  * ============================================================================
  * DATABASE SCHEMA
@@ -72,6 +48,10 @@
  *   - characterId (indexed)
  *   - summary (string)
  *   - createdAt (timestamp)
+ *
+ * Message flags (in conversationHistory):
+ *   - summarized: true/false
+ *   - summaryId: links to db.memories id
  *
  * ============================================================================
  * USAGE
@@ -108,7 +88,8 @@ async function getMemorySummary(characterId) {
 
 /**
  * Summarizes the oldest 20 messages in the conversation history and stores
- * the summary in the database. Then truncates the conversation history.
+ * the summary in the database. The messages remain visible in the chat but
+ * are marked as summarized (not sent to API anymore).
  *
  * This function is called automatically after every 20th bot message when
  * the character has memory enabled.
@@ -117,21 +98,61 @@ async function getMemorySummary(characterId) {
  * @returns {Promise<void>}
  */
 async function summarizeMemory(character) {
-  // Skip if memory is disabled for this character
   if (character.useMemory === false) return;
 
-  // Get the oldest 20 messages to summarize
-  const toSummarize = conversationHistory.slice(0, 20);
+  const firstUnsummarizedIdx = conversationHistory.findIndex(
+    (m) => !m.summarized,
+  );
+  if (firstUnsummarizedIdx === -1) return;
 
+  const toSummarize = conversationHistory.slice(
+    firstUnsummarizedIdx,
+    firstUnsummarizedIdx + 20,
+  );
   if (toSummarize.length === 0) return;
 
-  // Build the summarization prompt
+  const threadId = currentThread?.id;
+  const isViewing = threadId && isViewingThread(threadId);
+
+  const pendingMessage = {
+    role: "assistant",
+    content: "",
+    generationStatus: "summarizing",
+    createdAt: Date.now(),
+    finishReason: "",
+    nativeFinishReason: "",
+    truncatedByFilter: false,
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    model: state.settings.model || "",
+    temperature: Number(state.settings.temperature) || 0,
+  };
+  conversationHistory.push(pendingMessage);
+  const pendingIndex = conversationHistory.length - 1;
+
+  await persistCurrentThread();
+
+  if (isViewing) {
+    const log = document.getElementById("chat-log");
+    if (log) {
+      const pendingRow = buildMessageRow(pendingMessage, pendingIndex, true);
+      log.appendChild(pendingRow);
+      const pendingContent = pendingRow?.querySelector(".message-content");
+      if (pendingContent) {
+        pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("summarizingMemoryLabel"))}`;
+      }
+      scrollChatToBottom();
+    }
+  }
+
   const prompt = `Summarize the following roleplay conversation in 3-5 sentences, 
 focusing on key events, decisions, and relationship developments.
 Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
 
   try {
-    // Use the summary system prompt from settings, or default
     const summarySystemPrompt =
       state.settings.summarySystemPrompt ||
       "You are a helpful summarization assistant.";
@@ -144,22 +165,35 @@ Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).j
 
     const summary = summaryResult.content;
 
-    // Store the summary in the database
-    await db.memories.add({
+    const memoryId = await db.memories.add({
       characterId: character.id,
       summary,
       createdAt: Date.now(),
     });
 
-    // TRUNCATE: Keep only the most recent messages (remove the 20 we just summarized)
-    conversationHistory = conversationHistory.slice(20);
+    for (let i = firstUnsummarizedIdx; i < firstUnsummarizedIdx + 20; i += 1) {
+      if (conversationHistory[i]) {
+        conversationHistory[i].summarized = true;
+        conversationHistory[i].summaryId = memoryId;
+      }
+    }
 
-    // Persist the trimmed conversation history
+    conversationHistory.pop();
+
     await persistCurrentThread();
 
-    // Re-render the chat to reflect the changes
-    renderChat();
+    if (isViewing) {
+      renderChat();
+    }
   } catch (e) {
+    const idx = conversationHistory.indexOf(pendingMessage);
+    if (idx >= 0) {
+      conversationHistory.splice(idx, 1);
+    }
+    await persistCurrentThread();
+    if (isViewing) {
+      renderChat();
+    }
     console.warn("Memory summarization failed:", e.message);
   }
 }

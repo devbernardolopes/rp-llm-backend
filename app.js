@@ -11958,10 +11958,12 @@ async function generateBotReply() {
   const systemPrompt = promptContext.prompt;
   const promptMessages = [
     { role: "system", content: systemPrompt },
-    ...generationHistory.map((m) => ({
-      role: m.role === "ai" ? "assistant" : m.role,
-      content: m.content,
-    })),
+    ...generationHistory
+      .filter((m) => !m.summarized)
+      .map((m) => ({
+        role: m.role === "ai" ? "assistant" : m.role,
+        content: m.content,
+      })),
   ];
   if (promptContext.personaInjectionForEndMessages) {
     promptMessages.push({

@@ -423,5 +423,6 @@
   "evictionEOF": "EOF",
   "sfxEditor": "SFX Editor",
   "selectAssetForSfx": "Select an asset for SFX",
-  "sfxAlreadyAdded": "This asset is already added as an SFX."
+  "sfxAlreadyAdded": "This asset is already added as an SFX.",
+  "summarizingMemoryLabel": "Summarizing conversation..."
 }
