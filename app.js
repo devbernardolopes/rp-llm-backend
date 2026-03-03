@@ -10418,12 +10418,12 @@ async function openThread(threadId) {
   }
    currentCharacter = character || null;
    preloadKokoroForActiveCharacter();
-   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
    conversationHistory = (thread.messages || []).map((m) => ({
-    ...m,
-    role: m.role === "ai" ? "assistant" : m.role,
-  }));
-  currentPersona = thread.selectedPersonaId
+     ...m,
+     role: m.role === "ai" ? "assistant" : m.role,
+   }));
+   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
+   currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
     : null;
   try {
@@ -15692,33 +15692,57 @@ function stopAllSfx() {
 }
 
 async function playStartSfxForCharacter(character, thread) {
-  if (!character || !thread) return;
+  console.log("[SFX] playStartSfxForCharacter called", { characterName: character?.name, threadId: thread?.id, messageCount: conversationHistory.length });
+  if (!character || !thread) {
+    console.log("[SFX] No character or thread, returning");
+    return;
+  }
   stopAllSfx();
 
-  const lang = String(thread.language || "en");
+  const lang = String(thread.characterLanguage || thread.language || "en");
+  console.log("[SFX] Thread language:", lang);
   const defs = Array.isArray(character.definitions)
     ? character.definitions
     : [character].filter(Boolean);
   const def = defs.find((d) => String(d?.language || "").toLowerCase() === lang.toLowerCase()) || defs[0];
   const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
+  console.log("[SFX] SFX list:", sfxList);
 
-  if (sfxList.length === 0) return;
-  if (conversationHistory.length > 1) return;
+  if (sfxList.length === 0) {
+    console.log("[SFX] No SFX entries, returning");
+    return;
+  }
+  if (conversationHistory.length > 1) {
+    console.log("[SFX] More than 1 message, not playing");
+    return;
+  }
 
   const sfx = sfxList[0];
-  if (!sfx || sfx.trigger !== "Start") return;
+  console.log("[SFX] First SFX entry:", sfx);
+  if (!sfx || String(sfx.trigger || "").toLowerCase() !== "start") {
+    console.log("[SFX] No SFX or trigger is not Start, returning");
+    return;
+  }
 
   try {
     const asset = await db.assets.get(sfx.assetId);
-    if (!asset || !asset.fileBlob) return;
+    console.log("[SFX] Asset:", asset);
+    if (!asset || !asset.fileBlob) {
+      console.log("[SFX] No asset or fileBlob, returning");
+      return;
+    }
 
     const url = URL.createObjectURL(asset.fileBlob);
+    console.log("[SFX] Created blob URL:", url);
     const audio = new Audio(url);
     audio.loop = sfx.loop === true;
+    console.log("[SFX] Audio loop:", audio.loop);
     state.sfx.currentAudio = audio;
     state.sfx.playingAssetId = sfx.assetId;
 
-    audio.play().catch((err) => {
+    audio.play().then(() => {
+      console.log("[SFX] Audio started playing");
+    }).catch((err) => {
       console.warn("SFX playback failed:", err);
       stopAllSfx();
     });
