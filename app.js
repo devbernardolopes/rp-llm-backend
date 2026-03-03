@@ -1109,10 +1109,11 @@ function preprocessForTTS(text) {
     // remove speaker labels (ALL lines)
     .replace(/(^|\n)[A-Z][\w\s'-]{1,32}:\s*/gu, "$1")
     // phonetic normalization for common TTS mispronunciations (e.g. "hmm" and "mmm" are often mispronounced as individual letters)
-    .replace(/\b[HhMm]{2,}([.,!?…]*)/g, (match, p1) => {
-      if (/h/i.test(match[0])) return "hmm" + p1;
-      return "mmm" + p1;
-    })
+    // .replace(/\b[HhMm]{2,}([.,!?…]*)/g, (match, p1) => {
+    //   if (/h/i.test(match[0])) return "hmm" + p1;
+    //   return "mmm" + p1;
+    // })
+    .replace(/\b[Mm]{2,}([.,!?…]*)/g, "mmm$1")
     // whitespace normalize
     .replace(/\s+/g, " ")
     .trim();
@@ -5757,9 +5758,9 @@ function showMainView() {
       db.threads.update(currentThread.id, { draftInput: draftValue });
     }
   }
-   stopTtsPlayback();
-   stopAllSfx();
-   state.unreadNeedsUserScrollThreadId = null;
+  stopTtsPlayback();
+  stopAllSfx();
+  state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
   document.getElementById("chat-view").classList.remove("active");
   updateThreadRenameButtonState();
@@ -10434,14 +10435,14 @@ async function openThread(threadId) {
       characterLanguage: character.activeLanguage,
     });
   }
-   currentCharacter = character || null;
-   preloadKokoroForActiveCharacter();
-   conversationHistory = (thread.messages || []).map((m) => ({
-     ...m,
-     role: m.role === "ai" ? "assistant" : m.role,
-   }));
-   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
-   currentPersona = thread.selectedPersonaId
+  currentCharacter = character || null;
+  preloadKokoroForActiveCharacter();
+  conversationHistory = (thread.messages || []).map((m) => ({
+    ...m,
+    role: m.role === "ai" ? "assistant" : m.role,
+  }));
+  playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
+  currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
     : null;
   try {
@@ -12711,7 +12712,10 @@ async function playBrowserTts(normalizedText, options, playback = {}) {
       }
       await speakChunk(chunk);
     }
-    if (messageIndex !== null && isTtsIndexMatch(state.tts.speakingMessageIndex, messageIndex)) {
+    if (
+      messageIndex !== null &&
+      isTtsIndexMatch(state.tts.speakingMessageIndex, messageIndex)
+    ) {
       state.tts.speakingMessageIndex = null;
       refreshAllSpeakerButtons();
     }
@@ -12944,7 +12948,10 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       }
     }
 
-    if (messageIndex !== null && isTtsIndexMatch(state.tts.speakingMessageIndex, messageIndex)) {
+    if (
+      messageIndex !== null &&
+      isTtsIndexMatch(state.tts.speakingMessageIndex, messageIndex)
+    ) {
       state.tts.speakingMessageIndex = null;
       refreshAllSpeakerButtons();
     }
@@ -13120,7 +13127,9 @@ function openPromptHistory() {
   const list = document.getElementById("prompt-history-list");
   list.innerHTML = "";
 
-  const prompts = conversationHistory.filter((m) => m.role === "user").reverse();
+  const prompts = conversationHistory
+    .filter((m) => m.role === "user")
+    .reverse();
   if (prompts.length === 0) {
     const msg = document.createElement("p");
     msg.className = "muted";
@@ -15700,7 +15709,11 @@ function stopAllSfx() {
 }
 
 async function playStartSfxForCharacter(character, thread) {
-  console.log("[SFX] playStartSfxForCharacter called", { characterName: character?.name, threadId: thread?.id, messageCount: conversationHistory.length });
+  console.log("[SFX] playStartSfxForCharacter called", {
+    characterName: character?.name,
+    threadId: thread?.id,
+    messageCount: conversationHistory.length,
+  });
   if (!character || !thread) {
     console.log("[SFX] No character or thread, returning");
     return;
@@ -15712,7 +15725,10 @@ async function playStartSfxForCharacter(character, thread) {
   const defs = Array.isArray(character.definitions)
     ? character.definitions
     : [character].filter(Boolean);
-  const def = defs.find((d) => String(d?.language || "").toLowerCase() === lang.toLowerCase()) || defs[0];
+  const def =
+    defs.find(
+      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
+    ) || defs[0];
   const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
   console.log("[SFX] SFX list:", sfxList);
 
@@ -15748,12 +15764,15 @@ async function playStartSfxForCharacter(character, thread) {
     state.sfx.currentAudio = audio;
     state.sfx.playingAssetId = sfx.assetId;
 
-    audio.play().then(() => {
-      console.log("[SFX] Audio started playing");
-    }).catch((err) => {
-      console.warn("SFX playback failed:", err);
-      stopAllSfx();
-    });
+    audio
+      .play()
+      .then(() => {
+        console.log("[SFX] Audio started playing");
+      })
+      .catch((err) => {
+        console.warn("SFX playback failed:", err);
+        stopAllSfx();
+      });
   } catch (err) {
     console.warn("Error playing start SFX:", err);
     stopAllSfx();
