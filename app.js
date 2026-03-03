@@ -10284,8 +10284,8 @@ async function duplicateThread(threadId) {
     characterId: source.characterId,
     characterLanguage: source.characterLanguage || "",
     title: `${source.title || tf("threadTitleDefault", { id: source.id })} Copy`,
-    titleGenerated: false,
-    titleManual: false,
+    titleGenerated: !!source.titleGenerated,
+    titleManual: !!source.titleManual,
     messages: clonedMessages,
     selectedPersonaId: source.selectedPersonaId || null,
     autoTtsEnabled: source.autoTtsEnabled === true,
@@ -10295,7 +10295,7 @@ async function duplicateThread(threadId) {
         ? Number(source.writingInstructionsTurnCount)
         : 0,
     shortcutsVisible: source.shortcutsVisible === true,
-    favorite: !!source.favorite,
+    favorite: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
