@@ -12597,6 +12597,7 @@ async function regenerateMessage(index) {
   }
 
   const prior = conversationHistory.slice(0, index);
+  const regenHistory = getInSimulationMessages(prior);
   const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
   const regenWritingTurnIndex =
     Number(target.writingInstructionsTurnIndex) || 0;
@@ -12621,7 +12622,7 @@ async function regenerateMessage(index) {
       returnTrace: true,
     });
     const systemPrompt = promptContext.prompt;
-    const regenMessagesWithoutSystem = prior
+    const regenMessagesWithoutSystem = regenHistory
       .filter((m) => !m.summarized)
       .map((m) => ({
         role: m.role === "ai" ? "assistant" : m.role,
@@ -14656,17 +14657,18 @@ async function processNextQueuedThread() {
   const writingTurnCountForThread =
     getThreadWritingInstructionsTurnCount(tempThread);
   const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
+  const filteredTempConversation = getInSimulationMessages(tempConversation);
   const promptContext = await buildSystemPrompt(character, {
     includeOneTimeExtraPrompt:
-      shouldIncludeOneTimeExtraPrompt(tempConversation),
+      shouldIncludeOneTimeExtraPrompt(filteredTempConversation),
     writingInstructionsTurnIndex: writingTurnIndex,
     returnTrace: true,
     personaOverride: tempPersona,
-    historyOverride: tempConversation,
+    historyOverride: filteredTempConversation,
     threadOverride: tempThread,
   });
   const systemPrompt = promptContext.prompt;
-  const messagesWithoutSystem = tempConversation
+  const messagesWithoutSystem = filteredTempConversation
     .filter((m) => !m.summarized)
     .map((m) => ({
       role: m.role === "ai" ? "assistant" : m.role,
@@ -15906,8 +15908,9 @@ async function updateThreadBudgetIndicator() {
   const seq = Number(state.budgetIndicator.seq || 0) + 1;
   state.budgetIndicator.seq = seq;
 
+  const inSimulationHistory = getInSimulationMessages(conversationHistory);
   const includeOneTimeExtra =
-    shouldIncludeOneTimeExtraPrompt(conversationHistory);
+    shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
   const previousPendingPersonaInjection =
     state.pendingPersonaInjectionPersonaId;
   let systemPrompt = "";
@@ -15916,6 +15919,7 @@ async function updateThreadBudgetIndicator() {
     const result = await buildSystemPrompt(currentCharacter, {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
       returnTrace: false,
+      historyOverride: inSimulationHistory,
     });
     systemPrompt = result.prompt || "";
     personaInjectionForEndMessages = result.personaInjectionForEndMessages;
