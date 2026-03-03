@@ -2722,6 +2722,7 @@ textarea {
   justify-content: center;
   font-size: 14px;
   padding: 0;
+  z-index: 11;
 }
 
 .char-avatar-item .avatar-set-main-btn:hover {
