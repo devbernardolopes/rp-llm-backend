@@ -9277,8 +9277,9 @@ async function openSfxEditor(asset, sfxEntry = null, index = -1) {
     loopField.classList.add("hidden");
   }
 
-  // Set modal state
-  setModalDirtyState("sfx-editor-modal", false);
+  // Set modal state - enable save button for new entries with asset selected
+  const isNewEntry = index === -1 && asset;
+  setModalDirtyState("sfx-editor-modal", isNewEntry);
   state.activeModalId = "sfx-editor-modal";
 
   modal.dataset.editingIndex = index;
