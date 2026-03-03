@@ -2004,8 +2004,7 @@
             </div>
           </div>
           <div id="persona-avatar-dropzone-container" class="form-field">
-            <button
-              type="button"
+            <div
               id="persona-avatar-dropzone"
               class="char-avatar-dropzone"
               tabindex="0"
@@ -2014,21 +2013,19 @@
               <img id="persona-avatar-preview" class="hidden" />
               <span class="dropzone-plus">+</span>
               <span class="dropzone-hint">Drag & drop or click</span>
-            </button>
+              <button
+                type="button"
+                id="persona-remove-avatar"
+                class="avatar-remove-btn hidden"
+                title="Remove"
+              >&times;</button>
+            </div>
             <input
               type="file"
               id="persona-avatar-file-input"
               accept="image/*"
               class="hidden"
             />
-            <button
-              type="button"
-              id="persona-remove-avatar"
-              class="secondary-btn hidden"
-              data-i18n="removeAvatar"
-            >
-              Remove
-            </button>
           </div>
           <div class="form-field">
             <div class="label-inline">

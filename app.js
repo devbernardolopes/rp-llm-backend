@@ -1860,17 +1860,19 @@ function setupEvents() {
   document
     .getElementById("persona-avatar-file-input")
     .addEventListener("change", onPersonaAvatarFileChange);
-  document
-    .getElementById("persona-remove-avatar")
-    .addEventListener("click", () => {
-      state.currentPersonaAvatarBlob = null;
-      const dropzone = document.getElementById("persona-avatar-dropzone");
-      const preview = document.getElementById("persona-avatar-preview");
-      const removeBtn = document.getElementById("persona-remove-avatar");
-      preview.classList.add("hidden");
-      dropzone.classList.remove("has-avatar");
-      removeBtn.classList.add("hidden");
-    });
+   document
+     .getElementById("persona-remove-avatar")
+     .addEventListener("click", (e) => {
+       e.preventDefault();
+       e.stopPropagation();
+       state.currentPersonaAvatarBlob = null;
+       const dropzone = document.getElementById("persona-avatar-dropzone");
+       const preview = document.getElementById("persona-avatar-preview");
+       const removeBtn = document.getElementById("persona-remove-avatar");
+       preview.classList.add("hidden");
+       dropzone.classList.remove("has-avatar");
+       removeBtn.classList.add("hidden");
+     });
   document
     .getElementById("persona-avatar-dropzone")
     .addEventListener("click", () => {
