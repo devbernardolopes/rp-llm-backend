@@ -2330,9 +2330,24 @@ function setupEvents() {
     "persona-description-count",
     100,
   );
-  updateToastDelayDisplay();
-  setupSettingsTabsLayout();
-}
+   updateToastDelayDisplay();
+   setupSettingsTabsLayout();
+
+   // Writing Instruction Editor: update Save button on input
+   const wiNameInput = document.getElementById("writing-instruction-name");
+   if (wiNameInput) {
+     wiNameInput.addEventListener("input", () => {
+       updateWritingInstructionNameCount();
+       updateSaveWritingInstructionButton();
+     });
+   }
+   const wiTextInput = document.getElementById("writing-instruction-text");
+   if (wiTextInput) {
+     wiTextInput.addEventListener("input", () => {
+       updateSaveWritingInstructionButton();
+     });
+   }
+ }
 
 const textareaCollapseStates = new WeakMap();
 
@@ -2410,15 +2425,27 @@ function setupModalTextareas(root = document) {
       if (next) autoExpandTextarea(textarea);
       entry.refresh();
     };
-    textareaCollapseStates.set(textarea, entry);
-    const hasContent = String(textarea.value || "").trim().length > 0;
-    entry.setExpanded(hasContent);
-    const toggle = () => {
-      const expanded = header.getAttribute("aria-expanded") === "true";
-      entry.setExpanded(!expanded);
-      saveCharModalTextareaCollapseStates();
-    };
-    header.addEventListener("click", toggle);
+     textareaCollapseStates.set(textarea, entry);
+     const hasContent = String(textarea.value || "").trim().length > 0;
+     entry.setExpanded(hasContent);
+
+     // Determine appropriate save function based on modal
+     const modal = textarea.closest(".modal");
+     let saveFn = () => {};
+     if (modal) {
+       if (modal.id === "character-modal") {
+         saveFn = saveCharModalTextareaCollapseStates;
+       } else if (modal.id === "writing-instruction-editor-modal") {
+         saveFn = saveWiEditorTextareaCollapseStates;
+       }
+     }
+
+     const toggle = () => {
+       const expanded = header.getAttribute("aria-expanded") === "true";
+       entry.setExpanded(!expanded);
+       saveFn();
+     };
+     header.addEventListener("click", toggle);
     textarea.addEventListener("input", () => {
       const expanded = header.getAttribute("aria-expanded") === "true";
       if (expanded) {
@@ -2510,10 +2537,65 @@ function restoreCharModalTextareaCollapseStates() {
     const modalBody = modal.querySelector(".modal-body");
     if (modalBody) {
       modalBody.scrollTop = Number(savedModalScroll);
-    }
-  }
-}
-function captureTextareaLabel(textarea) {
+   }
+   }
+ }
+
+ function getWiEditorCollapseStorageKey() {
+   const wiId = state_writingInstructions.editingId || "new";
+   const lang = state_writingInstructions.activeLanguage || "en";
+   return `rp-wi-collapse-${wiId}-${lang}`;
+ }
+
+ function saveWiEditorTextareaCollapseStates() {
+   const key = getWiEditorCollapseStorageKey();
+   const states = {};
+   const scrollStates = {};
+   const modal = document.getElementById("writing-instruction-editor-modal");
+   if (!modal) return;
+   modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+     const entry = textareaCollapseStates.get(textarea);
+     if (!entry) return;
+     const expanded = entry.header.getAttribute("aria-expanded") === "true";
+     states[textarea.id] = expanded;
+     scrollStates[textarea.id] = textarea.scrollTop;
+   });
+   localStorage.setItem(key, JSON.stringify(states));
+   localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
+ }
+
+ function restoreWiEditorTextareaCollapseStates() {
+   const key = getWiEditorCollapseStorageKey();
+   const raw = localStorage.getItem(key);
+   const scrollRaw = localStorage.getItem(`${key}-scroll`);
+   const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
+   const modal = document.getElementById("writing-instruction-editor-modal");
+   if (!modal) return;
+   modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+     const entry = textareaCollapseStates.get(textarea);
+     if (!entry) return;
+     const hasContent = String(textarea.value || "").trim().length > 0;
+     if (raw) {
+       try {
+         const states = JSON.parse(raw);
+         if (states[textarea.id] !== undefined) {
+           entry.setExpanded(states[textarea.id]);
+         } else {
+           entry.setExpanded(hasContent);
+         }
+       } catch {
+         entry.setExpanded(hasContent);
+       }
+     } else {
+       entry.setExpanded(hasContent);
+     }
+     if (scrollStates[textarea.id] !== undefined) {
+       textarea.scrollTop = scrollStates[textarea.id];
+     }
+   });
+ }
+
+ function captureTextareaLabel(textarea) {
   const parent = textarea.parentElement;
   if (!parent) return null;
   const children = Array.from(parent.children);
@@ -8367,12 +8449,13 @@ async function openWritingInstructionEditor(writingInstruction = null) {
     state_writingInstructions.definitions[0]?.language || interfaceLang;
   document.getElementById("writing-instruction-name").value =
     normalized.name || "";
-  updateWritingInstructionNameCount();
-  renderWritingInstructionTabs();
-  loadActiveWritingInstructionToForm();
-  const editorModal = document.getElementById(
-    "writing-instruction-editor-modal",
-  );
+   updateWritingInstructionNameCount();
+   renderWritingInstructionTabs();
+   loadActiveWritingInstructionToForm();
+   restoreWiEditorTextareaCollapseStates();
+   const editorModal = document.getElementById(
+     "writing-instruction-editor-modal",
+   );
   if (editorModal) {
     editorModal.classList.remove("hidden");
     state.activeModalId = "writing-instruction-editor-modal";
@@ -8405,12 +8488,14 @@ function renderWritingInstructionTabs() {
     text.textContent = def.language;
     label.append(flag, text);
     btn.appendChild(label);
-    btn.addEventListener("click", () => {
-      saveActiveWritingInstructionFromForm();
-      state_writingInstructions.activeLanguage = def.language;
-      loadActiveWritingInstructionToForm();
-      renderWritingInstructionTabs();
-    });
+     btn.addEventListener("click", () => {
+       saveActiveWritingInstructionFromForm();
+       saveWiEditorTextareaCollapseStates();
+       state_writingInstructions.activeLanguage = def.language;
+       loadActiveWritingInstructionToForm();
+       restoreWiEditorTextareaCollapseStates();
+       renderWritingInstructionTabs();
+     });
     const del = document.createElement("button");
     del.type = "button";
     del.className = "char-def-tab-delete";
@@ -8492,6 +8577,8 @@ function updateWritingInstructionTextCount() {
 }
 
 function updateSaveWritingInstructionButton() {
+  // Sync current form values to state_writingInstructions.definitions
+  saveActiveWritingInstructionFromForm();
   const saveBtn = document.getElementById("save-writing-instructions-btn");
   if (!saveBtn) return;
   const name = String(
