@@ -424,5 +424,7 @@
   "sfxEditor": "SFX Editor",
   "selectAssetForSfx": "Select an asset for SFX",
   "sfxAlreadyAdded": "This asset is already added as an SFX.",
-  "summarizingMemoryLabel": "Summarizing conversation..."
+  "summarizingMemoryLabel": "Summarizing conversation...",
+  "lockMemoryMessages": "Lock Memory Messages",
+  "memoryMessageLockedNotice": "This message was used in a memory summary and cannot be changed."
 }

@@ -423,5 +423,7 @@
   "sfxEditor": "Editor de SFX",
   "selectAssetForSfx": "Selecciona un recurso para SFX",
   "sfxAlreadyAdded": "Este recurso ya ha sido añadido como SFX.",
-  "summarizingMemoryLabel": "Resumiendo conversación..."
+  "summarizingMemoryLabel": "Resumiendo conversación...",
+  "lockMemoryMessages": "Bloquear mensajes de memoria",
+  "memoryMessageLockedNotice": "Este mensaje se usó en un resumen de memoria y no se puede modificar."
 }

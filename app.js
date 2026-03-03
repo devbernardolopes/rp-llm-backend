@@ -105,6 +105,7 @@ const DEFAULT_SETTINGS = {
   completionCooldown: 2,
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 5,
+  lockMemoryMessages: false,
   favoriteModels: [],
   chatMessageAlignment: "left",
   unreadSoundEnabled: true,
@@ -3345,6 +3346,7 @@ async function setupSettingsControls() {
   const threadAutoTitleMinMessages = document.getElementById(
     "thread-autotitle-min-messages",
   );
+  const lockMemoryMessages = document.getElementById("lock-memory-messages");
   if (uiLanguageSelect) {
     uiLanguageSelect.querySelector('option[value="auto"]').textContent =
       t("languageAuto");
@@ -3467,6 +3469,9 @@ async function setupSettingsControls() {
   state.settings.threadAutoTitleMinMessages = minMessages;
   threadAutoTitleMinMessages.value = String(minMessages);
   threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
+  if (lockMemoryMessages) {
+    lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
+  }
   const chatMessageAlignment = document.getElementById(
     "chat-message-alignment",
   );
@@ -3661,6 +3666,10 @@ async function setupSettingsControls() {
     );
     state.settings.threadAutoTitleMinMessages = value;
     threadAutoTitleMinMessages.value = String(value);
+    saveSettings();
+  });
+  lockMemoryMessages?.addEventListener("change", () => {
+    state.settings.lockMemoryMessages = lockMemoryMessages.checked;
     saveSettings();
   });
   document
@@ -3947,6 +3956,7 @@ function getSettingsGroupForNode(node) {
     has("#autopair-enabled") ||
     has("#thread-autotitle-enabled") ||
     has("#thread-autotitle-min-messages") ||
+    has("#lock-memory-messages") ||
     has("#markdown-custom-css") ||
     has("#postprocess-rules-json") ||
     has("#chat-message-alignment")
@@ -3996,6 +4006,7 @@ function getSettingsGroupForNode(node) {
     id === "autopair-enabled" ||
     id === "thread-autotitle-enabled" ||
     id === "thread-autotitle-min-messages" ||
+    id === "lock-memory-messages" ||
     id === "markdown-custom-css" ||
     id === "postprocess-rules-json" ||
     id === "chat-message-alignment"
@@ -11153,6 +11164,13 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
   await renderThreads();
 }
 
+function isMessageLockedByMemory(message) {
+  return (
+    state.settings.lockMemoryMessages === true &&
+    message?.summarized === true
+  );
+}
+
 function buildMessageRow(message, index, streaming) {
   const row = document.createElement("div");
   row.className = "chat-row";
@@ -11235,6 +11253,7 @@ function buildMessageRow(message, index, streaming) {
   messageIndex.textContent = `#${index + 1}`;
   const isTruncated = message.truncatedByFilter === true;
   const hasGenerationError = !!String(message.generationError || "").trim();
+  const isLockedMemoryMessage = isMessageLockedByMemory(message);
   const disableControlsForRow = streaming;
 
   if (message.role === "assistant") {
@@ -11244,7 +11263,7 @@ function buildMessageRow(message, index, streaming) {
     });
     delBtn.classList.add("msg-delete-btn");
     delBtn.classList.add("danger-icon-btn");
-    delBtn.disabled = disableControlsForRow;
+    delBtn.disabled = disableControlsForRow || isLockedMemoryMessage;
     controls.appendChild(delBtn);
 
     const regenBtn = iconButton(
@@ -11255,14 +11274,18 @@ function buildMessageRow(message, index, streaming) {
       },
     );
     regenBtn.classList.add("msg-regen-btn");
-    regenBtn.disabled = state.sending || disableControlsForRow;
+    regenBtn.disabled =
+      state.sending || disableControlsForRow || isLockedMemoryMessage;
     controls.appendChild(regenBtn);
     const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
     editBtn.disabled =
-      disableControlsForRow || isTruncated || hasGenerationError;
+      disableControlsForRow ||
+      isTruncated ||
+      hasGenerationError ||
+      isLockedMemoryMessage;
     controls.appendChild(editBtn);
 
     const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
@@ -11361,14 +11384,17 @@ function buildMessageRow(message, index, streaming) {
     });
     delBtn.classList.add("msg-delete-btn");
     delBtn.classList.add("danger-icon-btn");
-    delBtn.disabled = disableControlsForRow;
+    delBtn.disabled = disableControlsForRow || isLockedMemoryMessage;
     controls.appendChild(delBtn);
     const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
     editBtn.disabled =
-      disableControlsForRow || isTruncated || hasGenerationError;
+      disableControlsForRow ||
+      isTruncated ||
+      hasGenerationError ||
+      isLockedMemoryMessage;
     controls.appendChild(editBtn);
     const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
       await openMessageMetadataModal(index);
@@ -11386,6 +11412,7 @@ function buildMessageRow(message, index, streaming) {
     const rowEl = content.closest(".chat-row");
     if (rowEl?.dataset?.streaming === "1") return;
     if (String(message?.generationError || "").trim()) return;
+    if (isLockedMemoryMessage) return;
     beginInlineMessageEdit(index, content);
   });
   if (streaming) {
@@ -11511,6 +11538,7 @@ function beginInlineMessageEdit(index, contentEl) {
   if (rowEl?.dataset?.streaming === "1") return;
   const message = conversationHistory[index];
   if (!message) return;
+  if (isMessageLockedByMemory(message)) return;
   if (message.truncatedByFilter === true) return;
   if (String(message.generationError || "").trim()) return;
 
@@ -12199,6 +12227,10 @@ async function deleteMessageAt(index) {
   stopTtsPlayback();
   const target = conversationHistory[index];
   const targetRole = normalizeApiRole(target?.apiRole || target?.role);
+  if (state.settings.lockMemoryMessages && target?.summarized) {
+    showToast(t("memoryMessageLockedNotice"), "warning");
+    return;
+  }
   const latestCountedTurn =
     getThreadWritingInstructionsTurnCount(currentThread);
   const targetTurn = Number(target?.writingInstructionsTurnIndex);
@@ -12250,6 +12282,10 @@ async function regenerateMessage(index) {
 
   const target = conversationHistory[index];
   if (!target || target.role !== "assistant") return;
+  if (state.settings.lockMemoryMessages && target?.summarized) {
+    showToast(t("memoryMessageLockedNotice"), "warning");
+    return;
+  }
 
   const prior = conversationHistory.slice(0, index);
   const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
@@ -13278,14 +13314,23 @@ function refreshMessageControlStates() {
     const isTruncated = message?.truncatedByFilter === true;
     const hasGenerationError = !!String(message?.generationError || "").trim();
 
-    row.querySelectorAll(".msg-delete-btn,.msg-copy-btn").forEach((btn) => {
+    const isLockedMemoryMessage = isMessageLockedByMemory(message);
+    row.querySelectorAll(".msg-delete-btn").forEach((btn) => {
+      btn.disabled = isStreaming || isLockedMemoryMessage;
+    });
+    row.querySelectorAll(".msg-copy-btn").forEach((btn) => {
       btn.disabled = isStreaming;
     });
     row.querySelectorAll(".msg-regen-btn").forEach((btn) => {
-      btn.disabled = state.sending || isStreaming;
+      btn.disabled =
+        state.sending || isStreaming || isLockedMemoryMessage;
     });
     row.querySelectorAll(".msg-edit-btn").forEach((btn) => {
-      btn.disabled = isStreaming || isTruncated || hasGenerationError;
+      btn.disabled =
+        isStreaming ||
+        isTruncated ||
+        hasGenerationError ||
+        isLockedMemoryMessage;
     });
     row.querySelectorAll(".msg-info-btn").forEach((btn) => {
       applyInfoButtonAvailability(btn, message, isStreaming);
