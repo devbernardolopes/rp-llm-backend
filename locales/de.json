@@ -408,5 +408,19 @@
   "editPersona": "Persona bearbeiten",
   "duplicatePersonaAria": "Persona duplizieren",
   "personaSaved": "Persona gespeichert.",
-  "personaDuplicated": "Persona dupliziert."
+  "personaDuplicated": "Persona dupliziert.",
+  "addSfx": "+ SFX hinzufügen",
+  "triggerLabel": "Auslöser",
+  "evictionLabel": "Verwerfung",
+  "loopLabel": "Schleife",
+  "triggerStart": "Start",
+  "triggerTone": "Ton",
+  "triggerDepth": "Tiefe",
+  "evictionNever": "Nie",
+  "evictionToneChange": "Tonwechsel",
+  "evictionDepthThreshold": "Tiefenschwelle",
+  "evictionEOF": "EOF",
+  "sfxEditor": "SFX-Editor",
+  "selectAssetForSfx": "Wählen Sie eine Ressource für SFX aus",
+  "sfxAlreadyAdded": "Diese Ressource wurde bereits als SFX hinzugefügt."
 }

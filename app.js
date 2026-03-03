@@ -1674,15 +1674,25 @@ function setupEvents() {
     setCharacterModalTab("tags");
     renderCharacterDefinitionTabs();
   });
-  document.getElementById("char-add-lang-btn").addEventListener("click", () => {
-    saveActiveCharacterDefinitionFromForm();
-    populateCharacterLanguageSelectOptions();
-    const modal = document.getElementById("char-language-modal");
-    if (!modal) return;
-    modal.classList.remove("hidden");
-  });
-  document
-    .getElementById("char-writing-instructions-select")
+   document.getElementById("char-sfx-tab-btn").addEventListener("click", () => {
+     saveActiveCharacterDefinitionFromForm();
+     setCharacterModalTab("sfx");
+     renderCharacterDefinitionTabs();
+     renderSfxList();
+   });
+   document.getElementById("char-add-lang-btn").addEventListener("click", () => {
+     saveActiveCharacterDefinitionFromForm();
+     populateCharacterLanguageSelectOptions();
+     const modal = document.getElementById("char-language-modal");
+     if (!modal) return;
+     modal.classList.remove("hidden");
+   });
+   document.getElementById("add-sfx-btn").addEventListener("click", () => {
+     saveActiveCharacterDefinitionFromForm();
+     openAssetSelectorForSfx();
+   });
+   document
+     .getElementById("char-writing-instructions-select")
     .addEventListener("change", () => {
       setModalDirtyState("character-modal", true);
       updateCharWritingInstructionsVisibility();
@@ -1718,10 +1728,20 @@ function setupEvents() {
       await loadActiveCharacterDefinitionToForm();
       setCharacterModalTab("lang");
       renderCharacterDefinitionTabs();
-      restoreCharModalTextareaCollapseStates();
-    });
-  document
-    .getElementById("pane-toggle-chat")
+       restoreCharModalTextareaCollapseStates();
+     });
+   document
+     .getElementById("cancel-sfx-editor-btn")
+     ?.addEventListener("click", () => {
+       closeActiveModal();
+     });
+   document
+     .getElementById("save-sfx-editor-btn")
+     ?.addEventListener("click", async () => {
+       await saveSfxEntryFromEditor();
+     });
+   document
+     .getElementById("pane-toggle-chat")
     ?.addEventListener("click", togglePane);
   document
     .getElementById("scroll-bottom-btn")
@@ -2269,14 +2289,19 @@ function setupEvents() {
     "#writing-instruction-name",
     "#writing-instruction-text",
   ]);
-  markModalDirtyOnInput("lore-modal", [
-    "#lore-name",
-    "#lore-avatar",
-    "#lore-description",
-    "#lore-scan-depth",
-    "#lore-token-budget",
-    "#lore-recursive-scanning",
-  ]);
+   markModalDirtyOnInput("lore-modal", [
+     "#lore-name",
+     "#lore-avatar",
+     "#lore-description",
+     "#lore-scan-depth",
+     "#lore-token-budget",
+     "#lore-recursive-scanning",
+   ]);
+   markModalDirtyOnInput("sfx-editor-modal", [
+     "#sfx-trigger",
+     "#sfx-eviction",
+     "#sfx-loop",
+   ]);
   updateModalActionButtons("character-modal");
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
@@ -5823,6 +5848,23 @@ async function closeActiveModal() {
       return;
     }
   }
+  if (closingId === "select-asset-modal") {
+    const parentModal = document.getElementById("character-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "character-modal";
+      return;
+    }
+  }
+  if (closingId === "sfx-editor-modal") {
+    const parentModal = document.getElementById("character-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "character-modal";
+      state_sfx_editing = { editingDef: null, index: -1, asset: null, trigger: "start", eviction: "never", loop: false };
+      return;
+    }
+  }
   if (closingId === "character-modal") {
     if (state.editingCharacterId) {
       localStorage.setItem(
@@ -6043,6 +6085,7 @@ function createEmptyCharacterDefinition(language = "en") {
     kokoroSpeed: DEFAULT_TTS_RATE,
     preferLoreBooksMatchingLanguage: true,
     lorebookIds: [],
+    sfx: [],
   };
 }
 
@@ -6061,25 +6104,26 @@ function normalizeCharacterDefinitions(character = null) {
     : [];
   const defs = defsRaw
     .map((d) => {
-      const def = {
-        ...createEmptyCharacterDefinition(d?.language || "en"),
-        ...d,
-        language: normalizeBotLanguageCode(d?.language || "en"),
-        ttsProvider: d?.ttsProvider || "kokoro",
-        kokoroDevice: d?.kokoroDevice || "webgpu",
-        kokoroDtype: d?.kokoroDtype || "auto",
-        kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
-        kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
-          ? Number(d.kokoroSpeed)
-          : Number.isFinite(Number(d?.ttsRate))
-            ? Number(d.ttsRate)
-            : DEFAULT_TTS_RATE,
-        preferLoreBooksMatchingLanguage:
-          d?.preferLoreBooksMatchingLanguage !== false,
-        lorebookIds: Array.isArray(d?.lorebookIds)
-          ? d.lorebookIds.map(Number).filter(Number.isInteger)
-          : [],
-      };
+       const def = {
+         ...createEmptyCharacterDefinition(d?.language || "en"),
+         ...d,
+         language: normalizeBotLanguageCode(d?.language || "en"),
+         ttsProvider: d?.ttsProvider || "kokoro",
+         kokoroDevice: d?.kokoroDevice || "webgpu",
+         kokoroDtype: d?.kokoroDtype || "auto",
+         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
+         kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
+           ? Number(d.kokoroSpeed)
+           : Number.isFinite(Number(d?.ttsRate))
+             ? Number(d.ttsRate)
+             : DEFAULT_TTS_RATE,
+         preferLoreBooksMatchingLanguage:
+           d?.preferLoreBooksMatchingLanguage !== false,
+         lorebookIds: Array.isArray(d?.lorebookIds)
+           ? d.lorebookIds.map(Number).filter(Number.isInteger)
+           : [],
+         sfx: Array.isArray(d?.sfx) ? d.sfx : [],
+       };
       delete def.avatar;
       delete def.avatars;
       return def;
@@ -6166,11 +6210,12 @@ function getActiveCharacterDefinition() {
 
 function setCharacterModalTab(tab = "lang") {
   const normalized =
-    tab === "config" ? "config" : tab === "tags" ? "tags" : "lang";
+    tab === "config" ? "config" : tab === "tags" ? "tags" : tab === "sfx" ? "sfx" : "lang";
   state.charModalActiveTab = normalized;
   const showLang = normalized === "lang";
   const showConfig = normalized === "config";
   const showTags = normalized === "tags";
+  const showSfx = normalized === "sfx";
   document
     .querySelectorAll(".lang-field")
     .forEach((el) => el.classList.toggle("hidden", !showLang));
@@ -6180,10 +6225,15 @@ function setCharacterModalTab(tab = "lang") {
   document
     .querySelectorAll(".tags-field")
     .forEach((el) => el.classList.toggle("hidden", !showTags));
+  document
+    .querySelectorAll(".sfx-field")
+    .forEach((el) => el.classList.toggle("hidden", !showSfx));
   const configBtn = document.getElementById("char-config-tab-btn");
   if (configBtn) configBtn.classList.toggle("active", showConfig);
   const tagsBtn = document.getElementById("char-tags-tab-btn");
   if (tagsBtn) tagsBtn.classList.toggle("active", showTags);
+  const sfxBtn = document.getElementById("char-sfx-tab-btn");
+  if (sfxBtn) sfxBtn.classList.toggle("active", showSfx);
 }
 
 function renderCharacterDefinitionTabs() {
@@ -6284,6 +6334,9 @@ function renderCharacterDefinitionTabs() {
   const tagsBtn = document.getElementById("char-tags-tab-btn");
   if (tagsBtn)
     tagsBtn.classList.toggle("active", state.charModalActiveTab === "tags");
+  const sfxBtn = document.getElementById("char-sfx-tab-btn");
+  if (sfxBtn)
+    sfxBtn.classList.toggle("active", state.charModalActiveTab === "sfx");
 }
 
 function saveActiveCharacterDefinitionFromForm() {
@@ -8977,7 +9030,359 @@ function downloadAsset(asset) {
   document.body.removeChild(link);
 }
 
-function getThreadWritingInstructionsTurnCount(thread = currentThread) {
+async function openAssetSelectorForSfx() {
+  const modal = document.getElementById("select-asset-modal");
+  if (!modal) return;
+  await renderAssetSelectorList();
+  state.activeModalId = "select-asset-modal";
+  modal.classList.remove("hidden");
+}
+
+async function renderAssetSelectorList() {
+  const list = document.getElementById("select-asset-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const assets = await getAllAssets();
+  const activeDef = getActiveCharacterDefinition();
+  const existingAssetIds = activeDef?.sfx?.map((e) => e.assetId) || [];
+
+  if (assets.length === 0) {
+    list.innerHTML = `<p class="muted" data-i18n="noAssetsYet">No assets yet.</p>`;
+    return;
+  }
+
+  for (const asset of assets) {
+    // Skip assets already in SFX list
+    if (existingAssetIds.includes(asset.id)) continue;
+
+    const row = document.createElement("div");
+    row.className = "lorebook-row asset-row";
+    row.style.cursor = "pointer";
+
+    const avatar = document.createElement("div");
+    avatar.className = "lorebook-avatar";
+
+    if (asset.type === "image" && asset.data) {
+      const img = document.createElement("img");
+      img.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+      img.alt = asset.name || "Asset";
+      avatar.appendChild(img);
+    } else if (asset.type === "video" && asset.data) {
+      const video = document.createElement("video");
+      video.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+      video.muted = true;
+      const thumb = document.createElement("img");
+      thumb.src = asset.thumbnail || "";
+      thumb.alt = asset.name || "Asset";
+      if (!asset.thumbnail) {
+        avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+      } else {
+        avatar.appendChild(thumb);
+      }
+    } else if (asset.type === "sound" && asset.data) {
+      avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+    } else {
+      avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+    }
+
+    const main = document.createElement("div");
+    main.className = "lorebook-main";
+
+    const title = document.createElement("div");
+    title.className = "lorebook-title";
+    title.textContent = asset.name || asset.originalName || "Untitled";
+
+    const meta = document.createElement("div");
+    meta.className = "lorebook-meta";
+    const typeSpan = document.createElement("span");
+    typeSpan.textContent = getAssetTypeLabel(asset.type);
+    typeSpan.style.fontSize = "11px";
+    meta.appendChild(typeSpan);
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    row.append(avatar, main);
+
+    row.addEventListener("click", async () => {
+      await closeActiveModal();
+      openSfxEditor(asset);
+    });
+
+    list.appendChild(row);
+  }
+}
+
+// SFX Management
+let state_sfx_editing = {
+  editingDef: null, // character definition reference
+  index: -1, // index in sfx array, -1 for new
+  asset: null, // selected asset object
+  trigger: "start",
+  eviction: "never",
+  loop: false,
+};
+
+async function openSfxEditor(asset, sfxEntry = null, index = -1) {
+  const modal = document.getElementById("sfx-editor-modal");
+  if (!modal) return;
+
+  state_sfx_editing.asset = asset;
+  state_sfx_editing.index = index;
+  state_sfx_editing.editingDef = getActiveCharacterDefinition();
+
+  if (sfxEntry) {
+    state_sfx_editing.trigger = sfxEntry.trigger || "start";
+    state_sfx_editing.eviction = sfxEntry.eviction || "never";
+    state_sfx_editing.loop = !!sfxEntry.loop;
+  } else {
+    state_sfx_editing.trigger = "start";
+    state_sfx_editing.eviction = "never";
+    state_sfx_editing.loop = false;
+  }
+
+  // Populate preview container
+  const previewContainer = document.getElementById("sfx-asset-preview-container");
+  previewContainer.innerHTML = "";
+
+  if (asset.type === "image" && asset.data) {
+    const img = document.createElement("img");
+    img.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+    img.alt = asset.name || "Asset";
+    previewContainer.appendChild(img);
+  } else if (asset.type === "video" && asset.data) {
+    const video = document.createElement("video");
+    video.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+    video.controls = true;
+    video.muted = true;
+    previewContainer.appendChild(video);
+  } else if (asset.type === "sound" && asset.data) {
+    const audio = document.createElement("audio");
+    audio.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+    audio.controls = true;
+    previewContainer.appendChild(audio);
+  } else {
+    const icon = document.createElement("span");
+    icon.className = "asset-type-icon";
+    icon.textContent = getAssetTypeIcon(asset.type);
+    previewContainer.appendChild(icon);
+  }
+
+  // Set form fields
+  document.getElementById("sfx-trigger").value = state_sfx_editing.trigger;
+  document.getElementById("sfx-eviction").value = state_sfx_editing.eviction;
+  document.getElementById("sfx-loop").checked = state_sfx_editing.loop;
+
+  // Show/hide loop field based on asset type
+  const loopField = document.getElementById("sfx-loop-field");
+  if (asset.type === "video" || asset.type === "sound") {
+    loopField.classList.remove("hidden");
+  } else {
+    loopField.classList.add("hidden");
+  }
+
+  // Set modal state
+  setModalDirtyState("sfx-editor-modal", false);
+  state.activeModalId = "sfx-editor-modal";
+
+  modal.dataset.editingIndex = index;
+
+  modal.classList.remove("hidden");
+}
+
+function renderSfxList() {
+  const list = document.getElementById("char-sfx-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const def = getActiveCharacterDefinition();
+  const sfxArray = def?.sfx || [];
+
+  if (sfxArray.length === 0) {
+    list.innerHTML = `<p class="muted">No SFX added.</p>`;
+    return;
+  }
+
+  // We need to fetch asset details for each sfx entry
+  // Since assets are async, we'll gather promises
+  Promise.all(sfxArray.map(async (entry, idx) => {
+    const asset = await getAssetById(entry.assetId);
+    return { entry, idx, asset };
+  })).then((items) => {
+    // Re-sort by original order
+    items.sort((a, b) => a.idx - b.idx);
+    for (const { entry, idx, asset } of items) {
+      const row = document.createElement("div");
+      row.className = "lorebook-row asset-row";
+
+      // Avatar
+      const avatar = document.createElement("div");
+      avatar.className = "lorebook-avatar";
+
+      if (asset) {
+        if (asset.type === "image" && asset.data) {
+          const img = document.createElement("img");
+          img.src = asset.data instanceof Blob ? URL.createObjectURL(asset.data) : asset.data;
+          img.alt = asset.name || "Asset";
+          avatar.appendChild(img);
+        } else if (asset.type === "video" && asset.data) {
+          const thumb = document.createElement("img");
+          thumb.src = asset.thumbnail || "";
+          thumb.alt = asset.name || "Asset";
+          if (!asset.thumbnail) {
+            avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+          } else {
+            avatar.appendChild(thumb);
+          }
+        } else if (asset.type === "sound" && asset.data) {
+          avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+        } else {
+          avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+        }
+      } else {
+        avatar.innerHTML = `<span class="asset-type-icon missing">?</span>`;
+      }
+
+      // Main info
+      const main = document.createElement("div");
+      main.className = "lorebook-main";
+
+      const title = document.createElement("div");
+      title.className = "lorebook-title";
+      title.textContent = asset ? (asset.name || asset.originalName || "Untitled") : `Missing asset (ID: ${entry.assetId})`;
+
+      const meta = document.createElement("div");
+      meta.className = "lorebook-meta";
+      const typeSpan = document.createElement("span");
+      typeSpan.textContent = asset ? getAssetTypeLabel(asset.type) : "Unknown";
+      typeSpan.style.fontSize = "11px";
+      meta.appendChild(typeSpan);
+      const triggerSpan = document.createElement("span");
+      triggerSpan.textContent = t(`trigger${entry.trigger.charAt(0).toUpperCase() + entry.trigger.slice(1)}`) || entry.trigger;
+      triggerSpan.style.fontSize = "11px";
+      triggerSpan.style.marginLeft = "8px";
+      meta.appendChild(triggerSpan);
+      const evictionSpan = document.createElement("span");
+      evictionSpan.textContent = t(`eviction${entry.eviction.charAt(0).toUpperCase() + entry.eviction.slice(1)}`) || entry.eviction;
+      evictionSpan.style.fontSize = "11px";
+      evictionSpan.style.marginLeft = "8px";
+      meta.appendChild(evictionSpan);
+      if (entry.loop) {
+        const loopSpan = document.createElement("span");
+        loopSpan.textContent = "Loop";
+        loopSpan.style.fontSize = "11px";
+        loopSpan.style.marginLeft = "8px";
+        meta.appendChild(loopSpan);
+      }
+
+      main.appendChild(title);
+      main.appendChild(meta);
+
+      // Actions
+      const actions = document.createElement("div");
+      actions.className = "lorebook-actions";
+
+      const editBtn = iconButton("edit", t("editAssetAria") || "Edit", () => {
+        openSfxEditor(asset, entry, idx);
+      });
+      actions.appendChild(editBtn);
+
+      const deleteBtn = iconButton(
+        "delete",
+        t("deleteAssetAria") || "Delete",
+        async () => {
+          const ok = await openConfirmDialog(
+            t("deleteAssetTitle"),
+            tf("deleteAssetConfirm", { name: asset ? (asset.name || asset.originalName) : entry.assetId })
+          );
+          if (!ok) return;
+          const def = getActiveCharacterDefinition();
+          def.sfx.splice(idx, 1);
+          setModalDirtyState("character-modal", true);
+          renderSfxList();
+        }
+      );
+      deleteBtn.classList.add("danger-icon-btn");
+      actions.appendChild(deleteBtn);
+
+      row.append(avatar, main, actions);
+      list.appendChild(row);
+    }
+  }).catch(console.error);
+}
+
+async function saveSfxEntry({ close = true } = {}) {
+  const trigger = document.getElementById("sfx-trigger").value;
+  const eviction = document.getElementById("sfx-eviction").value;
+  const loop = document.getElementById("sfx-loop").checked;
+  const asset = state_sfx_editing.asset;
+  const def = state_sfx_editing.editingDef;
+  const index = state_sfx_editing.index;
+
+  if (!def || !asset) return false;
+
+  const newEntry = {
+    assetId: asset.id,
+    trigger,
+    eviction,
+    loop,
+  };
+
+  if (index >= 0) {
+    def.sfx[index] = newEntry;
+  } else {
+    def.sfx.push(newEntry);
+  }
+
+  setModalDirtyState("character-modal", true);
+  renderSfxList();
+
+  if (close) {
+    setModalDirtyState("sfx-editor-modal", false);
+    await closeActiveModal();
+  }
+  return true;
+}
+
+async function saveSfxEntryFromEditor() {
+  return await saveSfxEntry({ close: true });
+}
+
+function getAssetById(id) {
+  // This function retrieves an asset by ID from the assets store synchronously if cached.
+  // The assets are usually cached in state_assets.assetsCache or we can query.
+  // For simplicity, we'll query the DB.
+  return db.assets.get(id);
+}
+
+// Helper functions for asset utils used above
+function getAllAssets() {
+  // Returns a promise that resolves to all assets
+  return db.assets.toArray();
+}
+
+function getAssetTypeLabel(type) {
+  const types = {
+    image: "Image",
+    video: "Video",
+    sound: "Sound",
+  };
+  return types[type] || type;
+}
+
+function getAssetTypeIcon(type) {
+  const icons = {
+    image: "🖼",
+    video: "🎬",
+    sound: "🔊",
+  };
+  return icons[type] || "📄";
+}
+
+// Initialize event listeners for SFX editor modal
+document.addEventListener("DOMContentLoaded", () => {
+  // ... existing listeners
+  // We'll add these after other initializations.
+});
   const raw = Number(thread?.writingInstructionsTurnCount);
   if (Number.isInteger(raw) && raw >= 0) return raw;
   return 0;

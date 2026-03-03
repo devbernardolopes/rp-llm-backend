@@ -1342,12 +1342,12 @@
               Config
             </button>
             <button
-              id="char-bg-tab-btn"
+              id="char-sfx-tab-btn"
               class="settings-tab-btn"
               type="button"
-              data-i18n="bgTab"
+              data-i18n="sfxTab"
             >
-              BG
+              SFX
             </button>
             <button
               id="char-tags-tab-btn"
@@ -1608,12 +1608,25 @@
               >
             </span>
           </div>
-          <div class="full lang-field">
-            <span data-i18n="loreBooksForCharacter"
-              >Lore Books for this character</span
-            >
-            <div id="char-lorebooks-list" class="check-list"></div>
-          </div>
+           <div class="full lang-field">
+             <span data-i18n="loreBooksForCharacter"
+               >Lore Books for this character</span
+             >
+             <div id="char-lorebooks-list" class="check-list"></div>
+           </div>
+           <div class="full sfx-field hidden">
+             <div class="sfx-toolbar">
+               <button
+                 id="add-sfx-btn"
+                 class="primary-btn"
+                 type="button"
+                 data-i18n="addSfx"
+               >
+                 + Add SFX
+               </button>
+             </div>
+             <div id="char-sfx-list" class="asset-list"></div>
+           </div>
         </div>
         <div class="modal-footer">
           <button class="secondary-btn" data-close-modal data-i18n="cancel">
@@ -1706,6 +1719,88 @@
         </button>
         <img id="image-preview-img" alt="Preview" />
         <video id="image-preview-video" controls class="hidden"></video>
+      </div>
+    </div>
+
+    <!-- SFX Asset Selector Modal -->
+    <div
+      id="select-asset-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="select-asset-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="select-asset-title" data-i18n="selectAssetForSfx">Select Asset for SFX</h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="select-asset-list" class="lorebook-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SFX Editor Modal -->
+    <div
+      id="sfx-editor-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sfx-editor-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="sfx-editor-title" data-i18n="sfxEditor">SFX Editor</h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-field full">
+            <div id="sfx-asset-preview-container" class="asset-preview-container"></div>
+          </div>
+          <div class="form-field full">
+            <span data-i18n="triggerLabel">Trigger</span>
+            <select id="sfx-trigger">
+              <option value="start" data-i18n="triggerStart">Start</option>
+              <option value="tone" data-i18n="triggerTone">Tone</option>
+              <option value="depth" data-i18n="triggerDepth">Depth</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <span data-i18n="evictionLabel">Eviction</span>
+            <select id="sfx-eviction">
+              <option value="never" data-i18n="evictionNever">Never</option>
+              <option value="tone_change" data-i18n="evictionToneChange">Tone Change</option>
+              <option value="depth_threshold" data-i18n="evictionDepthThreshold">Depth Threshold</option>
+              <option value="eof" data-i18n="evictionEOF">EOF</option>
+            </select>
+          </div>
+          <div class="form-field full hidden" id="sfx-loop-field">
+            <span class="checkbox-line">
+              <input id="sfx-loop" type="checkbox" />
+              <span data-i18n="loopLabel">Loop</span>
+            </span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="cancel-sfx-editor-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="cancel"
+          >
+            Cancel
+          </button>
+          <button
+            id="save-sfx-editor-btn"
+            class="primary-btn"
+            type="button"
+            data-i18n="save"
+            disabled
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
 
