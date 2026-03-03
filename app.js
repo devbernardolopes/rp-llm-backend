@@ -15762,12 +15762,28 @@ async function playStartSfxForCharacter(character, thread) {
     return;
   }
 
-  const sfx = sfxList[0];
-  console.log("[SFX] First SFX entry:", sfx);
-  if (!sfx || String(sfx.trigger || "").toLowerCase() !== "start") {
-    console.log("[SFX] No SFX or trigger is not Start, returning");
+  // Find the first SFX with trigger = "start"
+  const sfx = sfxList.find(
+    (s) => s && String(s.trigger || "").toLowerCase() === "start",
+  );
+  console.log("[SFX] First SFX with trigger=start:", sfx);
+  if (!sfx) {
+    console.log("[SFX] No SFX with trigger Start, returning");
     return;
   }
+
+  // Don't restart if the same asset is already playing
+  if (
+    state.sfx.playingAssetId === sfx.assetId &&
+    state.sfx.currentAudio &&
+    !state.sfx.currentAudio.paused
+  ) {
+    console.log("[SFX] Same asset already playing, skipping");
+    return;
+  }
+
+  // Stop any currently playing SFX before starting new one
+  stopAllSfx();
 
   try {
     const asset = await db.assets.get(sfx.assetId);
