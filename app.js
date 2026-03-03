@@ -958,6 +958,7 @@ const state = {
   },
   avatarSnapshotCache: new Map(),
   avatarBlobUrlCache: new Map(),
+  cachedChatBotAvatar: { url: null, characterId: null, personaId: null },
   editingMessageIndex: null,
   pendingPersonaInjectionPersonaId: null,
   activeGenerationThreadId: null,
@@ -1008,7 +1009,6 @@ const state = {
   },
   characterCardSlide: null,
   renderThreadsSeq: 0,
-  renderThreadsDataHash: null,
   cooldownToastTimerId: null,
   cooldownQueueTickInFlight: false,
   unreadNeedsUserScrollThreadId: null,
@@ -4548,7 +4548,10 @@ async function removeTagFromCatalog(tag) {
   saveUiState();
   if (currentCharacter) {
     const refreshed = await db.characters.get(currentCharacter.id);
-    if (refreshed) currentCharacter = refreshed;
+    if (refreshed) {
+      currentCharacter = refreshed;
+      state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+    }
   }
   renderTagManagerList();
   updateTagManagerAddButtonState();
@@ -5344,27 +5347,6 @@ async function renderThreads() {
     return Number(b.updatedAt || 0) - Number(a.updatedAt || 0);
   });
 
-  // Skip hash-based optimization during active generation to ensure badge updates
-  const isGenerating = state.sending && Number.isInteger(state.activeGenerationThreadId);
-  const threadsHash = isGenerating
-    ? null
-    : JSON.stringify(
-        threads.map((t) => ({
-          id: t.id,
-          title: t.title,
-          favorite: t.favorite,
-          updatedAt: t.updatedAt,
-          characterId: t.characterId,
-          pendingGenerationReason: t.pendingGenerationReason,
-        })),
-      );
-  if (!isGenerating && state.renderThreadsDataHash === threadsHash) {
-    return;
-  }
-  if (!isGenerating) {
-    state.renderThreadsDataHash = threadsHash;
-  }
-
   const existingIds = new Set(threads.map((t) => Number(t.id)));
   state.selectedThreadIds = new Set(
     Array.from(state.selectedThreadIds).filter((id) =>
@@ -5373,7 +5355,6 @@ async function renderThreads() {
   );
 
   if (threads.length === 0) {
-    state.renderThreadsDataHash = threadsHash;
     list.innerHTML = "";
     const empty = document.createElement("p");
     empty.className = "muted";
@@ -6775,6 +6756,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
         merged,
         currentThread?.characterLanguage || "",
       );
+      state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
       renderChat();
     }
     showToast(t("characterUpdated"), "success");
@@ -7108,6 +7090,7 @@ async function renderPersonaSelector() {
   const effective = existing || defaultPersona || personas[0] || null;
 
   currentPersona = effective || null;
+  state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
   select.value = effective ? String(effective.id) : "";
   updatePersonaPickerDisplay();
 
@@ -7208,6 +7191,7 @@ async function showChatPersonaDropdown() {
       chatPersonaDropdown = null;
 
       currentPersona = persona;
+      state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
       updatePersonaPickerDisplay();
       if (!currentThread) return;
       const updatedAt = Date.now();
@@ -8236,7 +8220,10 @@ async function deleteLorebook(lorebookId) {
   });
   if (currentCharacter && Number(currentCharacter.id) > 0) {
     const refreshed = await db.characters.get(currentCharacter.id);
-    if (refreshed) currentCharacter = refreshed;
+    if (refreshed) {
+      currentCharacter = refreshed;
+      state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+    }
   }
   await renderLorebookManagementList();
   await renderCharacters();
@@ -10442,6 +10429,7 @@ async function openThread(threadId) {
     });
   }
   currentCharacter = character || null;
+  state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
   preloadKokoroForActiveCharacter();
   conversationHistory = (thread.messages || []).map((m) => ({
     ...m,
@@ -11184,7 +11172,6 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
     state.unreadNeedsUserScrollThreadId = null;
   }
 
-  state.renderThreadsDataHash = null; // Force re-render to update unread badge
   await persistCurrentThread();
   await renderThreads();
 }
@@ -11204,13 +11191,30 @@ function buildMessageRow(message, index, streaming) {
   const userName = message.senderName || fallbackSender;
   const userAvatar = message.senderAvatar || fallbackAvatar(userName, 512, 512);
   const botName = currentCharacter?.name || "Character";
-  const botAvatar =
-    currentCharacter?.avatar ||
-    fallbackAvatar(currentCharacter?.name || "Character", 512, 512);
   const chatFsName =
     message.role === "assistant" ? botName : userName || t("message");
   if (message.role === "assistant") {
-    setCharacterAvatarImage(avatar, currentCharacter, botName, 256);
+    const cache = state.cachedChatBotAvatar;
+    const charId = currentCharacter?.id;
+    const personaId = currentPersona?.id;
+    if (
+      cache.url &&
+      cache.characterId === charId &&
+      cache.personaId === personaId
+    ) {
+      avatar.src = cache.url;
+      avatar.alt = `${botName} avatar`;
+    } else {
+      setCharacterAvatarImage(avatar, currentCharacter, botName, 256);
+      state.cachedChatBotAvatar = {
+        url: avatar.src,
+        characterId: charId,
+        personaId,
+      };
+    }
+    if (avatar.dataset.avatarVideo) {
+      // Video avatar - ensure we have the snapshot cached for reuse
+    }
   } else {
     setCharacterAvatarImage(avatar, { avatar: userAvatar }, chatFsName, 256);
   }
@@ -12194,7 +12198,6 @@ async function generateBotReply() {
     state.abortController = null;
     state.sending = false;
     state.activeGenerationThreadId = null;
-    state.renderThreadsDataHash = null;
     setSendingState(false);
     await renderThreads();
     await processNextQueuedThread();
@@ -14696,6 +14699,9 @@ async function refreshCurrentThreadFromDb() {
   currentCharacter = characterBase
     ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
     : currentCharacter;
+  if (characterBase) {
+    state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+  }
   conversationHistory = (thread.messages || []).map((m) => ({
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
@@ -14705,6 +14711,9 @@ async function refreshCurrentThreadFromDb() {
   currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
     : currentPersona;
+  if (thread.selectedPersonaId) {
+    state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+  }
   updatePersonaPickerDisplay();
   renderChat();
 }
