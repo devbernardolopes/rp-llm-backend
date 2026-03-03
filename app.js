@@ -7414,8 +7414,21 @@ async function renderPersonaModalList() {
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
 
-    row.append(drag, avatar, info, actions);
-    list.appendChild(row);
+     row.append(drag, avatar, info, actions);
+
+     row.addEventListener("click", (e) => {
+       // Exclude clicks on drag handle, avatar, and action buttons
+       if (
+         e.target.closest(".persona-drag") ||
+         e.target.closest(".persona-avatar") ||
+         e.target.closest(".lorebook-actions")
+       ) {
+         return;
+       }
+       openPersonaEditor(persona);
+     });
+
+     list.appendChild(row);
   }
 }
 
