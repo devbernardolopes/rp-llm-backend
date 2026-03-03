@@ -1852,6 +1852,19 @@ textarea {
   border-radius: 10px;
 }
 
+#user-input-container.ooc-active {
+  background: #2b0d0d;
+  border-color: #9c1c1c;
+}
+
+#user-input-container.ooc-active .input-footer {
+  background: #2b0d0d;
+}
+
+#user-input-container.ooc-active textarea {
+  background: #2f1414;
+}
+
 #attach-btn {
   flex-shrink: 0;
 }

@@ -426,5 +426,10 @@
   "summarizingMemoryLabel": "Gespräch wird zusammengefasst...",
   "lockMemoryMessages": "Speichermeldungen sperren",
   "memoryMessageLockedNotice": "Diese Nachricht wurde bereits in einer Speicherzusammenfassung verwendet und kann nicht verändert werden.",
-  "summaryThresholdLabel": "Zusammenfassungsgrenze"
+  "summaryThresholdLabel": "Zusammenfassungsgrenze",
+  "oocModeLabel": "OOC",
+  "oocModeTitleOn": "OOC-Modus: Ein",
+  "oocModeTitleOff": "OOC-Modus: Aus",
+  "enableOocModeAria": "OOC-Modus aktivieren",
+  "disableOocModeAria": "OOC-Modus deaktivieren"
 }

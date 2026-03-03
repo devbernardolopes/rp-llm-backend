@@ -3436,6 +3436,7 @@ async function setupSettingsControls() {
   const autopairEnabled = document.getElementById("autopair-enabled");
   const autoReplyEnabled = document.getElementById("auto-reply-enabled");
   const enterToSendEnabled = document.getElementById("enter-to-send-enabled");
+  const oocModeToggle = document.getElementById("ooc-mode-toggle");
   const cancelShortcut = document.getElementById("cancel-shortcut");
   const homeShortcut = document.getElementById("home-shortcut");
   const newCharacterShortcut = document.getElementById(
@@ -3721,6 +3722,25 @@ async function setupSettingsControls() {
     state.settings.enterToSendEnabled = newValue;
     enterToSendEnabled.classList.toggle("is-active", newValue);
     saveSettings();
+  });
+
+  oocModeToggle?.addEventListener("click", async () => {
+    if (!currentThread) return;
+    const next = !(currentThread.oocModeEnabled === true);
+    currentThread.oocModeEnabled = next;
+    const updatedAt = Date.now();
+    await db.threads.update(currentThread.id, {
+      oocModeEnabled: next,
+      updatedAt,
+    });
+    state.lastSyncSeenUpdatedAt = updatedAt;
+    updateOocModeUi();
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: currentThread.id,
+      updatedAt,
+    });
+    await renderThreads();
   });
 
   /*
@@ -8779,8 +8799,45 @@ async function addWritingInstructionLanguage() {
   renderWritingInstructionTabs();
 }
 
+function isInSimulationMessage(message) {
+  return !!message && message.ooc !== true;
+}
+
+function getInSimulationMessages(history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  return list.filter((m) => isInSimulationMessage(m));
+}
+
+function getMessageDisplayIndex(index, history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  const max = Math.min(index, list.length - 1);
+  let count = 0;
+  for (let i = 0; i <= max; i += 1) {
+    const msg = list[i];
+    if (!msg || !isInSimulationMessage(msg)) continue;
+    const role = normalizeApiRole(msg?.apiRole || msg?.role);
+    if (role !== "assistant" && role !== "user") continue;
+    count += 1;
+  }
+  return count;
+}
+
+function formatOocContextEntry(message) {
+  if (!message) return "";
+  if (!isInSimulationMessage(message)) return "";
+  const role = normalizeApiRole(message?.apiRole || message?.role) || "user";
+  const fallbackSender =
+    role === "assistant"
+      ? currentCharacter?.name || "Assistant"
+      : message.senderName || "You";
+  const content = String(message.content || "").trim();
+  if (!content) return "";
+  return `${role}: ${fallbackSender}: ${content}`;
+}
+
 function hasMeaningfulAssistantMessage(history) {
   return (Array.isArray(history) ? history : []).some((m) => {
+    if (!isInSimulationMessage(m)) return false;
     if (normalizeApiRole(m?.apiRole || m?.role) !== "assistant") return false;
     if (m?.pending === true) return false;
     return String(m?.content || "").trim().length > 0;
@@ -9650,7 +9707,11 @@ function isLatestAssistantMessageIndex(index, history = conversationHistory) {
   const list = Array.isArray(history) ? history : [];
   const latest = list
     .map((m, i) => ({ m, i }))
-    .filter(({ m }) => normalizeApiRole(m?.apiRole || m?.role) === "assistant")
+    .filter(
+      ({ m }) =>
+        isInSimulationMessage(m) &&
+        normalizeApiRole(m?.apiRole || m?.role) === "assistant",
+    )
     .pop();
   return latest ? latest.i === index : false;
 }
@@ -9658,7 +9719,9 @@ function isLatestAssistantMessageIndex(index, history = conversationHistory) {
 function isFirstAssistantMessageIndex(index, history = conversationHistory) {
   const list = Array.isArray(history) ? history : [];
   const first = list.findIndex(
-    (m) => normalizeApiRole(m?.apiRole || m?.role) === "assistant",
+    (m) =>
+      isInSimulationMessage(m) &&
+      normalizeApiRole(m?.apiRole || m?.role) === "assistant",
   );
   return first === index;
 }
@@ -10398,6 +10461,7 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     pendingGenerationReason: "",
     pendingGenerationQueuedAt: 0,
     shortcutsVisible: false,
+    oocModeEnabled: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -10455,6 +10519,7 @@ async function duplicateThread(threadId) {
         ? Number(source.writingInstructionsTurnCount)
         : 0,
     shortcutsVisible: source.shortcutsVisible === true,
+    oocModeEnabled: source.oocModeEnabled === true,
     favorite: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -10727,6 +10792,28 @@ function updateChatInputToggles() {
     enterToSendEnabled.classList.toggle("is-active", isActive);
     enterToSendEnabled.disabled = !currentThread;
   }
+  updateOocModeUi();
+}
+
+function updateOocModeUi() {
+  const btn = document.getElementById("ooc-mode-toggle");
+  const container = document.getElementById("user-input-container");
+  const isActive = currentThread?.oocModeEnabled === true;
+  if (btn) {
+    btn.classList.toggle("is-active", isActive);
+    btn.disabled = !currentThread;
+    btn.setAttribute(
+      "title",
+      isActive ? t("oocModeTitleOn") : t("oocModeTitleOff"),
+    );
+    btn.setAttribute(
+      "aria-label",
+      isActive ? t("disableOocModeAria") : t("enableOocModeAria"),
+    );
+  }
+  if (container) {
+    container.classList.toggle("ooc-active", isActive);
+  }
 }
 
 async function toggleThreadAutoTts() {
@@ -10884,17 +10971,22 @@ async function maybeGenerateTitleBeforeBotReply() {
     5,
     Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
   );
+  const inSimulationHistory = getInSimulationMessages(conversationHistory);
   // Generate title if either we have enough messages OR pending flag is set
-  if (conversationHistory.length < minMessages && !state.pendingTitleGeneration)
+  if (inSimulationHistory.length < minMessages && !state.pendingTitleGeneration)
     return;
 
   const existingTitleMessage = conversationHistory.find(
-    (m) => m.role === "assistant" && m.generationStatus === "title_generating",
+    (m) =>
+      m.ooc !== true &&
+      m.role === "assistant" &&
+      m.generationStatus === "title_generating",
   );
   if (existingTitleMessage) return;
 
   const hasExistingPendingMessage = conversationHistory.some(
     (m) =>
+      m.ooc !== true &&
       m.role === "assistant" &&
       (m.generationStatus === "generating" ||
         m.generationStatus === "regenerating" ||
@@ -10941,7 +11033,7 @@ async function maybeGenerateTitleBeforeBotReply() {
 
   setSendingState();
 
-  const titleSlice = conversationHistory.slice(0, minMessages);
+  const titleSlice = inSimulationHistory.slice(0, minMessages);
   const transcript = titleSlice
     .map((m, i) => {
       const role = m.role === "assistant" ? "Assistant" : "User";
@@ -11052,15 +11144,20 @@ async function maybeGenerateThreadTitle() {
     5,
     Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
   );
-  if (conversationHistory.length < minMessages) return;
+  const inSimulationHistory = getInSimulationMessages(conversationHistory);
+  if (inSimulationHistory.length < minMessages) return;
 
   const existingTitleMessage = conversationHistory.find(
-    (m) => m.role === "assistant" && m.generationStatus === "title_generating",
+    (m) =>
+      m.ooc !== true &&
+      m.role === "assistant" &&
+      m.generationStatus === "title_generating",
   );
   if (existingTitleMessage) return;
 
   const hasExistingPendingMessage = conversationHistory.some(
     (m) =>
+      m.ooc !== true &&
       m.role === "assistant" &&
       (m.generationStatus === "generating" ||
         m.generationStatus === "regenerating" ||
@@ -11212,6 +11309,7 @@ function buildMessageRow(message, index, streaming) {
   row.className = "chat-row";
   row.dataset.streaming = streaming ? "1" : "0";
   row.dataset.messageIndex = String(index);
+  const isOocMessage = message?.ooc === true;
 
   const avatar = document.createElement("img");
   avatar.className = "chat-avatar";
@@ -11286,7 +11384,9 @@ function buildMessageRow(message, index, streaming) {
   controls.className = "message-controls";
   const messageIndex = document.createElement("span");
   messageIndex.className = "message-index";
-  messageIndex.textContent = `#${index + 1}`;
+  messageIndex.textContent = isOocMessage
+    ? "OOC"
+    : `#${getMessageDisplayIndex(index)}`;
   const isTruncated = message.truncatedByFilter === true;
   const hasGenerationError = !!String(message.generationError || "").trim();
   const isLockedMemoryMessage = isMessageLockedByMemory(message);
@@ -11321,7 +11421,8 @@ function buildMessageRow(message, index, streaming) {
       disableControlsForRow ||
       isTruncated ||
       hasGenerationError ||
-      isLockedMemoryMessage;
+      isLockedMemoryMessage ||
+      isOocMessage;
     controls.appendChild(editBtn);
 
     const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
@@ -11870,6 +11971,11 @@ async function sendMessage(options = {}) {
     }
   }
 
+  if (currentThread?.oocModeEnabled === true) {
+    await sendOocInquiry(text);
+    return;
+  }
+
   const userMsg = {
     role: "user",
     content: text,
@@ -11898,6 +12004,150 @@ async function sendMessage(options = {}) {
   }
 
   await requestBotReplyForCurrentThread("manual_send_auto_reply");
+}
+
+async function sendOocInquiry(text) {
+  if (!currentThread || !currentCharacter) return;
+
+  const contextMessages = getInSimulationMessages(conversationHistory)
+    .filter((msg) => !isMessageLockedByMemory(msg))
+    .map(formatOocContextEntry)
+    .filter(Boolean);
+  const memoryContext = await getMemorySummary(
+    currentCharacter.id,
+    currentThread.id,
+  );
+  const memorySection = memoryContext
+    ? `***MEMORY CONTEXT***\n\n${String(memoryContext || "").trim()}`
+    : "";
+  const messageSection = `***MESSAGES SO FAR***\n\n${contextMessages.join(
+    "\n\n",
+  )}`;
+  const systemPromptParts = [
+    "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
+    memorySection,
+    messageSection,
+  ].filter((part) => Boolean(part));
+  const systemPrompt = systemPromptParts.join("\n\n").trim();
+
+  const log = document.getElementById("chat-log");
+  const isViewing = isViewingThread(currentThread.id);
+
+  const userIndex = conversationHistory.length;
+  const userMsg = {
+    role: "user",
+    content: text,
+    createdAt: Date.now(),
+    senderName: currentPersona?.name || "You",
+    senderAvatar: currentPersona?.avatar || "",
+    senderPersonaId: currentPersona?.id || null,
+    ooc: true,
+  };
+  conversationHistory.push(userMsg);
+  if (log && isViewing) {
+    log.appendChild(buildMessageRow(userMsg, userIndex, false));
+    scrollChatToBottom();
+  }
+
+  const pendingAssistant = {
+    role: "assistant",
+    ooc: true,
+    content: "",
+    generationStatus: "generating",
+    createdAt: Date.now(),
+    finishReason: "",
+    nativeFinishReason: "",
+    truncatedByFilter: false,
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    model: state.settings.model || "",
+    temperature: Number(state.settings.temperature) || 0,
+  };
+  const pendingIndex = conversationHistory.length;
+  conversationHistory.push(pendingAssistant);
+  let pendingRow = null;
+  if (log && isViewing) {
+    pendingRow = buildMessageRow(pendingAssistant, pendingIndex, true);
+    log.appendChild(pendingRow);
+    const pendingContent = pendingRow?.querySelector(".message-content");
+    if (pendingContent) {
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+        t("generatingLabel"),
+      )}`;
+    }
+    scrollChatToBottom();
+  }
+
+  await persistCurrentThread();
+
+  try {
+    const result = await callOpenRouter(
+      systemPrompt,
+      [{ role: "user", content: text }],
+      state.settings.model,
+      (chunk) => {
+        pendingAssistant.content += chunk;
+        if (state.settings.streamEnabled) {
+          const liveRow = document.querySelector(
+            `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+          );
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(
+              pendingAssistant.content,
+              pendingAssistant.role,
+            );
+          }
+        }
+        if (isViewing) scrollChatToBottom();
+      },
+    );
+    state.lastUsedModel = result.model || "";
+    state.lastUsedProvider = result.provider || "";
+    updateModelPill();
+    const assistantText = result.content || pendingAssistant.content || "";
+    pendingAssistant.content = assistantText || "(No content returned)";
+    pendingAssistant.finishReason = String(result.finishReason || "");
+    pendingAssistant.nativeFinishReason = String(result.nativeFinishReason || "");
+    pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
+    const finishReasonValue = result.finishReason;
+    const isOkFinish = finishReasonValue === "stop";
+    if (!isOkFinish && !pendingAssistant.truncatedByFilter) {
+      pendingAssistant.generationError = `finish_reason: ${
+        finishReasonValue ?? "null"
+      }`;
+    } else {
+      pendingAssistant.generationError = "";
+    }
+    pendingAssistant.generationStatus = "";
+  } catch (err) {
+    pendingAssistant.generationStatus = "";
+    const errorMessage = String(err?.message || err || "OOC request failed");
+    pendingAssistant.generationError = errorMessage;
+    pendingAssistant.content =
+      pendingAssistant.content || `OOC request failed: ${errorMessage}`;
+    showToast(`OOC request failed: ${errorMessage}`, "error");
+  } finally {
+    const liveRow = document.querySelector(
+      `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+    );
+    if (liveRow) {
+      liveRow.dataset.streaming = "0";
+      const liveContent = liveRow.querySelector(".message-content");
+      if (liveContent) {
+        renderMessageContent(liveContent, pendingAssistant);
+      }
+    }
+    await persistCurrentThread();
+    if (isViewing) {
+      renderChat();
+      scrollChatToBottom();
+    }
+    await renderThreads();
+  }
 }
 
 function isInCompletionCooldown() {
@@ -11930,6 +12180,7 @@ function getActiveSummaryThreshold() {
 function getUnsummarizedMessageCount() {
   return conversationHistory.reduce((count, message) => {
     if (!message) return count;
+    if (message.ooc === true) return count;
     const role = message.role;
     if (role !== "assistant" && role !== "user") return count;
     if (message.summarized === true) return count;
@@ -12008,8 +12259,9 @@ async function generateBotReply() {
     return;
   }
   const threadId = Number(currentThread.id);
+  const inSimulationHistory = getInSimulationMessages(conversationHistory);
   const includeOneTimeExtra =
-    shouldIncludeOneTimeExtraPrompt(conversationHistory);
+    shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
   const generationCharacter = currentCharacter;
   const generationPersona = currentPersona;
   const generationThreadSnapshot = { ...currentThread };
@@ -12025,11 +12277,11 @@ async function generateBotReply() {
     writingInstructionsTurnIndex: writingTurnIndex,
     returnTrace: true,
     personaOverride: generationPersona,
-    historyOverride: generationHistory,
+    historyOverride: inSimulationHistory,
     threadOverride: generationThreadSnapshot,
   });
   const systemPrompt = promptContext.prompt;
-  const messagesWithoutSystem = generationHistory
+  const messagesWithoutSystem = inSimulationHistory
     .filter((m) => !m.summarized)
     .map((m) => ({
       role: m.role === "ai" ? "assistant" : m.role,
@@ -14547,6 +14799,7 @@ function getThreadPendingGenerationState(threadId, messages = []) {
   for (let i = list.length - 1; i >= 0; i -= 1) {
     const m = list[i];
     if (!m || m.role !== "assistant") continue;
+    if (m.ooc === true) continue;
     const status = String(m.generationStatus || "").trim();
     if (
       status === "queued" ||
@@ -14723,6 +14976,7 @@ async function persistCurrentThread(forceUpdate = false) {
       currentThread.lastPersonaInjectionPersonaId || null,
     writingInstructionsTurnCount:
       getThreadWritingInstructionsTurnCount(currentThread),
+    oocModeEnabled: currentThread.oocModeEnabled === true,
   };
 
   if (shouldUpdateTimestamp) {
@@ -14895,6 +15149,7 @@ async function migrateLegacySessions() {
       messages: session.messages || [],
       lastPersonaInjectionPersonaId: null,
       writingInstructionsTurnCount: 0,
+      oocModeEnabled: false,
       createdAt: session.updatedAt || Date.now(),
       updatedAt: session.updatedAt || Date.now(),
     });
@@ -15671,7 +15926,7 @@ async function updateThreadBudgetIndicator() {
 
   const messages = [
     { role: "system", content: systemPrompt },
-    ...conversationHistory.map((m) => ({
+    ...inSimulationHistory.map((m) => ({
       role: normalizeApiRole(m.apiRole || m.role),
       content: m.content,
     })),

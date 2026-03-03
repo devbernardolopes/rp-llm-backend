@@ -428,4 +428,10 @@
   "lockMemoryMessages": "Lock Memory Messages",
   "memoryMessageLockedNotice": "This message was used in a memory summary and cannot be changed.",
   "summaryThresholdLabel": "Summary Threshold"
+,
+  "oocModeLabel": "OOC",
+  "oocModeTitleOn": "OOC mode: On",
+  "oocModeTitleOff": "OOC mode: Off",
+  "enableOocModeAria": "Enable OOC mode",
+  "disableOocModeAria": "Disable OOC mode"
 }

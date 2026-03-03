@@ -426,5 +426,10 @@
   "summarizingMemoryLabel": "Riepilogo della conversazione...",
   "lockMemoryMessages": "Bloccare messaggi di memoria",
   "memoryMessageLockedNotice": "Questo messaggio è stato usato in un riepilogo della memoria e non può essere modificato.",
-  "summaryThresholdLabel": "Soglia del riepilogo"
+  "summaryThresholdLabel": "Soglia del riepilogo",
+  "oocModeLabel": "OOC",
+  "oocModeTitleOn": "Modalit? OOC: Attiva",
+  "oocModeTitleOff": "Modalit? OOC: Disattiva",
+  "enableOocModeAria": "Abilita modalit? OOC",
+  "disableOocModeAria": "Disabilita modalit? OOC"
 }

@@ -426,5 +426,10 @@
   "summarizingMemoryLabel": "Résumation de la conversation...",
   "lockMemoryMessages": "Verrouiller les messages de mémoire",
   "memoryMessageLockedNotice": "Ce message a été utilisé dans un résumé de mémoire et ne peut pas être modifié.",
-  "summaryThresholdLabel": "Seuil de résumé"
+  "summaryThresholdLabel": "Seuil de résumé",
+  "oocModeLabel": "OOC",
+  "oocModeTitleOn": "Mode OOC : Activ?",
+  "oocModeTitleOff": "Mode OOC : D?sactiv?",
+  "enableOocModeAria": "Activer le mode OOC",
+  "disableOocModeAria": "D?sactiver le mode OOC"
 }
