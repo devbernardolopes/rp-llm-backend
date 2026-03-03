@@ -12040,7 +12040,7 @@ async function generateBotReply() {
   try {
     const result = await callOpenRouter(
       systemPrompt,
-      generationHistory,
+      promptMessages,
       state.settings.model,
       (chunk) => {
         pending.content += chunk;
@@ -12270,10 +12270,12 @@ async function regenerateMessage(index) {
     const systemPrompt = promptContext.prompt;
     const regenMessages = [
       { role: "system", content: systemPrompt },
-      ...prior.map((m) => ({
-        role: m.role === "ai" ? "assistant" : m.role,
-        content: m.content,
-      })),
+      ...prior
+        .filter((m) => !m.summarized)
+        .map((m) => ({
+          role: m.role === "ai" ? "assistant" : m.role,
+          content: m.content,
+        })),
     ];
     if (promptContext.personaInjectionForEndMessages) {
       regenMessages.push({
@@ -12297,7 +12299,7 @@ async function regenerateMessage(index) {
 
     const result = await callOpenRouter(
       systemPrompt,
-      prior,
+      regenMessages,
       state.settings.model,
       (chunk) => {
         target.content += chunk;
@@ -14264,10 +14266,12 @@ async function processNextQueuedThread() {
   const systemPrompt = promptContext.prompt;
   const promptMessages = [
     { role: "system", content: systemPrompt },
-    ...tempConversation.map((m) => ({
-      role: m.role === "ai" ? "assistant" : m.role,
-      content: m.content,
-    })),
+    ...tempConversation
+      .filter((m) => !m.summarized)
+      .map((m) => ({
+        role: m.role === "ai" ? "assistant" : m.role,
+        content: m.content,
+      })),
   ];
   if (promptContext.personaInjectionForEndMessages) {
     promptMessages.push({
@@ -14320,7 +14324,7 @@ async function processNextQueuedThread() {
   try {
     const result = await callOpenRouter(
       systemPrompt,
-      tempConversation,
+      promptMessages,
       state.settings.model,
       null,
       state.abortController.signal,
