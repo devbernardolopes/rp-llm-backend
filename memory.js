@@ -171,7 +171,7 @@ Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).j
       createdAt: Date.now(),
     });
 
-    for (let i = firstUnsummarizedIdx; i < firstUnsummarizedIdx + 20; i += 1) {
+    for (let i = firstUnsummarizedIdx; i < firstUnsummarizedIdx + 15; i += 1) {
       if (conversationHistory[i]) {
         conversationHistory[i].summarized = true;
         conversationHistory[i].summaryId = memoryId;
