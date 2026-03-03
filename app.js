@@ -12019,6 +12019,61 @@ async function sendMessage(options = {}) {
   await requestBotReplyForCurrentThread("manual_send_auto_reply");
 }
 
+async function queueThreadForCooldown(threadId) {
+  if (!currentThread || Number(currentThread.id) !== threadId) return;
+  const seconds = getCooldownRemainingSeconds();
+  const cooldownLabel = tf("cooldownToastActive", { seconds });
+  if (!state.generationQueue.includes(threadId)) {
+    state.generationQueue.push(threadId);
+  }
+  const existingPendingIdx = findLatestPendingAssistantIndex(conversationHistory);
+  if (existingPendingIdx >= 0) {
+    const pending = conversationHistory[existingPendingIdx];
+    pending.generationStatus = "cooling_down";
+    pending.content = cooldownLabel;
+    pending.generationError = "";
+    pending.truncatedByFilter = false;
+  } else {
+    conversationHistory.push({
+      role: "assistant",
+      content: cooldownLabel,
+      generationStatus: "cooling_down",
+      createdAt: Date.now(),
+      finishReason: "",
+      nativeFinishReason: "",
+      truncatedByFilter: false,
+      generationId: "",
+      completionMeta: null,
+      generationInfo: null,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+      writingInstructionsTurnIndex: 0,
+      writingInstructionsCounted: false,
+    });
+  }
+  const nowTs = Date.now();
+  currentThread.pendingGenerationReason = "cooldown";
+  currentThread.pendingGenerationQueuedAt = Number(
+    currentThread.pendingGenerationQueuedAt || nowTs,
+  );
+  await persistCurrentThread();
+  const allFinished = conversationHistory.every(
+    (m) => !m.generationStatus || m.generationStatus === "",
+  );
+  const updateData = {
+    pendingGenerationReason: "cooldown",
+    pendingGenerationQueuedAt: currentThread.pendingGenerationQueuedAt,
+  };
+  if (allFinished) {
+    updateData.updatedAt = Date.now();
+  }
+  await db.threads.update(threadId, updateData);
+  renderChat();
+  setSendingState(state.sending);
+  updateCooldownPinnedToast(seconds);
+  await renderThreads();
+}
+
 async function sendOocInquiry(text) {
   if (!currentThread || !currentCharacter) return;
 
@@ -12215,63 +12270,11 @@ async function generateBotReply() {
   await maybeGenerateTitleBeforeBotReply();
 
   const cooldown = Number(state.settings.completionCooldown) || 0;
+  const threadId = Number(currentThread.id);
   if (cooldown > 0 && isInCompletionCooldown()) {
-    const threadId = Number(currentThread.id);
-    if (!state.generationQueue.includes(threadId)) {
-      state.generationQueue.push(threadId);
-    }
-    const seconds = getCooldownRemainingSeconds();
-    const cooldownLabel = tf("cooldownToastActive", { seconds });
-    const existingPendingIdx =
-      findLatestPendingAssistantIndex(conversationHistory);
-    if (existingPendingIdx >= 0) {
-      const pending = conversationHistory[existingPendingIdx];
-      pending.generationStatus = "cooling_down";
-      pending.content = cooldownLabel;
-      pending.generationError = "";
-      pending.truncatedByFilter = false;
-    } else {
-      conversationHistory.push({
-        role: "assistant",
-        content: cooldownLabel,
-        generationStatus: "cooling_down",
-        createdAt: Date.now(),
-        finishReason: "",
-        nativeFinishReason: "",
-        truncatedByFilter: false,
-        generationId: "",
-        completionMeta: null,
-        generationInfo: null,
-        usedLoreEntries: [],
-        usedMemorySummary: "",
-        writingInstructionsTurnIndex: 0,
-        writingInstructionsCounted: false,
-      });
-    }
-    const nowTs = Date.now();
-    currentThread.pendingGenerationReason = "cooldown";
-    currentThread.pendingGenerationQueuedAt = Number(
-      currentThread.pendingGenerationQueuedAt || nowTs,
-    );
-    await persistCurrentThread();
-    const allFinished = conversationHistory.every(
-      (m) => !m.generationStatus || m.generationStatus === "",
-    );
-    const updateData = {
-      pendingGenerationReason: "cooldown",
-      pendingGenerationQueuedAt: currentThread.pendingGenerationQueuedAt,
-    };
-    if (allFinished) {
-      updateData.updatedAt = Date.now();
-    }
-    await db.threads.update(threadId, updateData);
-    renderChat();
-    setSendingState(state.sending);
-    updateCooldownPinnedToast(seconds);
-    await renderThreads();
+    await queueThreadForCooldown(threadId);
     return;
   }
-  const threadId = Number(currentThread.id);
   const inSimulationHistory = getInSimulationMessages(conversationHistory);
   const includeOneTimeExtra =
     shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
@@ -12582,10 +12585,7 @@ async function regenerateMessage(index) {
   if (index < 0 || index >= conversationHistory.length) return;
   const cooldown = Number(state.settings.completionCooldown) || 0;
   if (cooldown > 0 && isInCompletionCooldown()) {
-    const seconds = getCooldownRemainingSeconds();
-    const label = tf("cooldownToastActive", { seconds });
-    showToast(label, "warning");
-    updateCooldownPinnedToast(seconds);
+    await queueThreadForCooldown(threadId);
     return;
   }
   if (state.generationQueue.length > 0) {
