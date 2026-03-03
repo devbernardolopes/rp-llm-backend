@@ -12071,10 +12071,6 @@ async function generateBotReply() {
     if (!isViewingThread(threadId)) {
       pending.unreadAt = Date.now();
     }
-    if (Number(state.settings.completionCooldown) > 0) {
-      state.lastCompletionTime = Date.now();
-      updateCooldownPinnedToast();
-    }
     if (pending.writingInstructionsCounted !== true) {
       pending.writingInstructionsCounted = true;
       writingTurnCountForThread = Math.max(
@@ -14326,10 +14322,6 @@ async function processNextQueuedThread() {
     pending.nativeFinishReason = result.nativeFinishReason || "";
     pending.generationStatus = "";
     pending.unreadAt = Date.now();
-    if (Number(state.settings.completionCooldown) > 0) {
-      state.lastCompletionTime = Date.now();
-      updateCooldownPinnedToast();
-    }
     pending.generationId = String(result.generationId || "");
     pending.completionMeta = result.completionMeta || null;
     pending.generationInfo = result.generationInfo || null;
@@ -15101,6 +15093,11 @@ function getFallbackModel(resolvedModel, originalModel) {
 
 async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
   let lastError = null;
+  const cooldownEnabled = Number(state.settings.completionCooldown) > 0;
+  if (cooldownEnabled) {
+    state.lastCompletionTime = Date.now();
+    updateCooldownPinnedToast();
+  }
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
