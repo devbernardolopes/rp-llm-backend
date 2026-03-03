@@ -181,12 +181,15 @@ Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).j
       createdAt: Date.now(),
     });
 
-    for (let i = firstUnsummarizedIdx; i < firstUnsummarizedIdx + 15; i += 1) {
-      if (conversationHistory[i]) {
-        conversationHistory[i].summarized = true;
-        conversationHistory[i].summaryId = memoryId;
-      }
-    }
+     const batchEndIdx = firstUnsummarizedIdx + toSummarize.length;
+     const hasRemaining = conversationHistory.slice(batchEndIdx).some(m => !m.summarized);
+     const markEndIdx = hasRemaining ? batchEndIdx : batchEndIdx - 5;
+     for (let i = firstUnsummarizedIdx; i < markEndIdx; i += 1) {
+       if (conversationHistory[i]) {
+         conversationHistory[i].summarized = true;
+         conversationHistory[i].summaryId = memoryId;
+       }
+     }
 
     conversationHistory.pop();
 
