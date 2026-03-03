@@ -13112,7 +13112,7 @@ function openPromptHistory() {
   const list = document.getElementById("prompt-history-list");
   list.innerHTML = "";
 
-  const prompts = conversationHistory.filter((m) => m.role === "user");
+  const prompts = conversationHistory.filter((m) => m.role === "user").reverse();
   if (prompts.length === 0) {
     const msg = document.createElement("p");
     msg.className = "muted";
