@@ -12032,21 +12032,19 @@ async function generateBotReply() {
       state.settings.model,
       (chunk) => {
         pending.content += chunk;
-        if (isViewingThread(threadId)) {
-          const liveRow = document.querySelector(
-            `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-          );
-          const liveContent = liveRow?.querySelector(".message-content");
-          if (liveContent) {
-            liveContent.innerHTML = renderMessageHtml(
-              pending.content,
-              pending.role,
-            );
-          }
-        }
         if (state.settings.streamEnabled) {
           persistThreadMessagesById(threadId, generationHistory).catch(
             () => {},
+          );
+        }
+        const liveRow = document.querySelector(
+          `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+        );
+        const liveContent = liveRow?.querySelector(".message-content");
+        if (liveContent) {
+          liveContent.innerHTML = renderMessageHtml(
+            pending.content,
+            pending.role,
           );
         }
         if (isViewingThread(threadId)) scrollChatToBottom();
@@ -12084,24 +12082,26 @@ async function generateBotReply() {
         Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
       );
     }
-    if (isViewingThread(threadId)) {
-      const liveRow = document.querySelector(
-        `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-      );
-      const liveContent = liveRow?.querySelector(".message-content");
-      if (liveContent) {
-        renderMessageContent(liveContent, pending);
-      } else {
-        renderChat();
-      }
-      if (liveRow) liveRow.dataset.streaming = "0";
-      refreshAllSpeakerButtons();
-      const modelInfoBtn = liveRow?.querySelector(".msg-model-info-btn");
+    const liveRow = document.querySelector(
+      `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+    );
+    const liveContent = liveRow?.querySelector(".message-content");
+    if (liveContent) {
+      renderMessageContent(liveContent, pending);
+    } else if (isViewingThread(threadId)) {
+      renderChat();
+    }
+    if (liveRow) {
+      liveRow.dataset.streaming = "0";
+      const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
       if (modelInfoBtn && pending.model) {
         modelInfoBtn.disabled = false;
         modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
         modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
       }
+    }
+    if (isViewingThread(threadId)) {
+      refreshAllSpeakerButtons();
     }
     if (currentThread && Number(currentThread.id) === threadId) {
       commitPendingPersonaInjectionMarker();
@@ -12136,24 +12136,26 @@ async function generateBotReply() {
         if (pendingRow) pendingRow.remove();
       } else {
         pending.generationStatus = "";
-        if (isViewingThread(threadId)) {
-          const liveRow = document.querySelector(
-            `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-          );
-          const liveContent = liveRow?.querySelector(".message-content");
-          if (liveContent) {
-            renderMessageContent(liveContent, pending);
-          } else {
-            renderChat();
-          }
-          if (liveRow) liveRow.dataset.streaming = "0";
-          refreshAllSpeakerButtons();
-          const modelInfoBtn = liveRow?.querySelector(".msg-model-info-btn");
+        const liveRow = document.querySelector(
+          `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+        );
+        const liveContent = liveRow?.querySelector(".message-content");
+        if (liveContent) {
+          renderMessageContent(liveContent, pending);
+        } else if (isViewingThread(threadId)) {
+          renderChat();
+        }
+        if (liveRow) {
+          liveRow.dataset.streaming = "0";
+          const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
           if (modelInfoBtn && pending.model) {
             modelInfoBtn.disabled = false;
             modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
             modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
           }
+        }
+        if (isViewingThread(threadId)) {
+          refreshAllSpeakerButtons();
         }
       }
       await persistThreadMessagesById(threadId, generationHistory);
@@ -12165,17 +12167,17 @@ async function generateBotReply() {
       if (!String(pending.content || "").trim()) {
         pending.content = "";
       }
+      const liveRow = document.querySelector(
+        `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+      );
+      const liveContent = liveRow?.querySelector(".message-content");
+      if (liveContent) {
+        renderMessageContent(liveContent, pending);
+      } else if (isViewingThread(threadId)) {
+        renderChat();
+      }
+      if (liveRow) liveRow.dataset.streaming = "0";
       if (isViewingThread(threadId)) {
-        const liveRow = document.querySelector(
-          `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-        );
-        const liveContent = liveRow?.querySelector(".message-content");
-        if (liveRow) liveRow.dataset.streaming = "0";
-        if (liveContent) {
-          renderMessageContent(liveContent, pending);
-        } else {
-          renderChat();
-        }
         refreshAllSpeakerButtons();
         refreshMessageControlStates();
       }
