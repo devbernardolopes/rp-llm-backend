@@ -10475,23 +10475,23 @@ async function openThread(threadId) {
   await persistThreadMessagesById(Number(threadId), thread.messages || [], {
     _skipUpdatedAt: true,
   });
-  renderChat();
-  const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
-  const log = document.getElementById("chat-log");
-  if (log && savedScroll) {
-    log.scrollTop = Number(savedScroll);
-  } else if (log) {
-    log.scrollTop = log.scrollHeight;
-  }
-  const input = document.getElementById("user-input");
-  input.value = thread.draftInput || "";
-  state.activeShortcut = null;
-  closePromptHistory();
-  await renderShortcutsBar();
-  await renderThreads();
-  updateScrollBottomButtonVisibility();
-  showChatView();
-  broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
+   renderChat();
+   const input = document.getElementById("user-input");
+   input.value = thread.draftInput || "";
+   state.activeShortcut = null;
+   closePromptHistory();
+   await renderShortcutsBar();
+   await renderThreads();
+   showChatView();
+   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
+   const log = document.getElementById("chat-log");
+   if (log && savedScroll) {
+     log.scrollTop = Number(savedScroll);
+   } else if (log) {
+     log.scrollTop = log.scrollHeight;
+   }
+   updateScrollBottomButtonVisibility();
+   broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
   if (thread.pendingGenerationReason) {
     const id = Number(thread.id);
     if (!state.generationQueue.includes(id)) state.generationQueue.push(id);
