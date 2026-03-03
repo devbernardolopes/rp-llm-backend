@@ -5344,20 +5344,26 @@ async function renderThreads() {
     return Number(b.updatedAt || 0) - Number(a.updatedAt || 0);
   });
 
-  const threadsHash = JSON.stringify(
-    threads.map((t) => ({
-      id: t.id,
-      title: t.title,
-      favorite: t.favorite,
-      updatedAt: t.updatedAt,
-      characterId: t.characterId,
-      pendingGenerationReason: t.pendingGenerationReason,
-    })),
-  );
-  if (state.renderThreadsDataHash === threadsHash) {
+  // Skip hash-based optimization during active generation to ensure badge updates
+  const isGenerating = state.sending && Number.isInteger(state.activeGenerationThreadId);
+  const threadsHash = isGenerating
+    ? null
+    : JSON.stringify(
+        threads.map((t) => ({
+          id: t.id,
+          title: t.title,
+          favorite: t.favorite,
+          updatedAt: t.updatedAt,
+          characterId: t.characterId,
+          pendingGenerationReason: t.pendingGenerationReason,
+        })),
+      );
+  if (!isGenerating && state.renderThreadsDataHash === threadsHash) {
     return;
   }
-  state.renderThreadsDataHash = threadsHash;
+  if (!isGenerating) {
+    state.renderThreadsDataHash = threadsHash;
+  }
 
   const existingIds = new Set(threads.map((t) => Number(t.id)));
   state.selectedThreadIds = new Set(
