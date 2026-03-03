@@ -9347,18 +9347,6 @@ async function saveSfxEntryFromEditor() {
   return await saveSfxEntry({ close: true });
 }
 
-function getAssetById(id) {
-  // This function retrieves an asset by ID from the assets store synchronously if cached.
-  // The assets are usually cached in state_assets.assetsCache or we can query.
-  // For simplicity, we'll query the DB.
-  return db.assets.get(id);
-}
-
-// Helper functions for asset utils used above
-function getAllAssets() {
-  // Returns a promise that resolves to all assets
-  return db.assets.toArray();
-}
 
 function getAssetTypeLabel(type) {
   const types = {
