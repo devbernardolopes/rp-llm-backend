@@ -9366,6 +9366,12 @@ function getAssetTypeIcon(type) {
   return icons[type] || "📄";
 }
 
+function getThreadWritingInstructionsTurnCount(thread = currentThread) {
+  const raw = Number(thread?.writingInstructionsTurnCount);
+  if (Number.isInteger(raw) && raw >= 0) return raw;
+  return 0;
+}
+
 function getNextWritingInstructionsTurnIndex(thread = currentThread) {
   return getThreadWritingInstructionsTurnCount(thread) + 1;
 }
