@@ -61,7 +61,7 @@
  * It exposes two global functions:
  *
  * // Get all memory summaries for a character
- * const memory = await getMemorySummary(characterId);
+ * const memory = await getMemorySummary(characterId, threadId);
  *
  * // Trigger memory summarization (called automatically in app.js)
  * await summarizeMemory(character);
@@ -70,16 +70,21 @@
  */
 
 /**
- * Retrieves all memory summaries for a character from the database.
+ * Retrieves all memory summaries for a character and thread from the database.
  *
  * @param {number} characterId - The ID of the character
+ * @param {number} [threadId] - The ID of the thread (optional, for filtering)
  * @returns {Promise<string|null>} - All summaries joined with newlines, or null if none exist
  */
-async function getMemorySummary(characterId) {
-  const entries = await db.memories
+async function getMemorySummary(characterId, threadId) {
+  let entries = await db.memories
     .where("characterId")
     .equals(characterId)
     .sortBy("createdAt");
+
+  if (threadId) {
+    entries = entries.filter((e) => e.threadId === threadId);
+  }
 
   if (entries.length === 0) return null;
 
@@ -167,6 +172,7 @@ Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).j
 
     const memoryId = await db.memories.add({
       characterId: character.id,
+      threadId,
       summary,
       createdAt: Date.now(),
     });

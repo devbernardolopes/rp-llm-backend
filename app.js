@@ -14813,8 +14813,11 @@ async function buildSystemPrompt(character, options = {}) {
     historyOverride: options?.historyOverride,
     personaOverride: personaForContext,
   });
+  const threadIdForMemory = threadOverride?.id;
   const memory =
-    character.useMemory === false ? null : await getMemorySummary(character.id);
+    character.useMemory === false
+      ? null
+      : await getMemorySummary(character.id, threadIdForMemory);
   const contextSections = [];
   state.pendingPersonaInjectionPersonaId = null;
   let systemPromptWithPersona = promptBeforePersona;
