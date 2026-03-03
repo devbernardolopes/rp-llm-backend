@@ -426,5 +426,6 @@
   "sfxAlreadyAdded": "This asset is already added as an SFX.",
   "summarizingMemoryLabel": "Summarizing conversation...",
   "lockMemoryMessages": "Lock Memory Messages",
-  "memoryMessageLockedNotice": "This message was used in a memory summary and cannot be changed."
+  "memoryMessageLockedNotice": "This message was used in a memory summary and cannot be changed.",
+  "summaryThresholdLabel": "Summary Threshold"
 }

@@ -425,5 +425,6 @@
   "sfxAlreadyAdded": "Diese Ressource wurde bereits als SFX hinzugefügt.",
   "summarizingMemoryLabel": "Gespräch wird zusammengefasst...",
   "lockMemoryMessages": "Speichermeldungen sperren",
-  "memoryMessageLockedNotice": "Diese Nachricht wurde bereits in einer Speicherzusammenfassung verwendet und kann nicht verändert werden."
+  "memoryMessageLockedNotice": "Diese Nachricht wurde bereits in einer Speicherzusammenfassung verwendet und kann nicht verändert werden.",
+  "summaryThresholdLabel": "Zusammenfassungsgrenze"
 }

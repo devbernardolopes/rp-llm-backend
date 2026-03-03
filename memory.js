@@ -91,13 +91,30 @@ async function getMemorySummary(characterId, threadId) {
   return entries.map((e) => e.summary).join("\n");
 }
 
+function getSummaryThresholdValue(raw) {
+  const num = Number(raw);
+  if (!Number.isFinite(num)) return 20;
+  const stepped = Math.round(num / 5) * 5;
+  return Math.min(50, Math.max(10, stepped));
+}
+
+window.getSummaryThresholdValue = getSummaryThresholdValue;
+
+function getCurrentSummaryThreshold() {
+  const raw = state?.settings?.summaryThreshold;
+  return getSummaryThresholdValue(raw ?? 20);
+}
+
 /**
- * Summarizes the oldest 20 messages in the conversation history and stores
- * the summary in the database. The messages remain visible in the chat but
- * are marked as summarized (not sent to API anymore).
+ * Summarizes the unslaunched messages in the conversation history once the
+ * configured threshold is reached and stores the summary in the database.
+ * Messages remain visible in chat but are flagged as summarized (so they
+ * no longer contribute to the prompt), except for the five most recent entries
+ * which are kept as working context.
  *
- * This function is called automatically after every 20th bot message when
- * the character has memory enabled.
+ * This function is triggered automatically when the conversation has
+ * accumulated at least the summary threshold of unsummarized assistant/user
+ * messages and the character has memory enabled.
  *
  * @param {Object} character - The character object (must have id property)
  * @returns {Promise<void>}
@@ -108,15 +125,18 @@ async function summarizeMemory(character) {
   const threadId = currentThread?.id;
   const isViewing = threadId && isViewingThread(threadId);
 
-  const firstUnsummarizedIdx = conversationHistory.findIndex(
-    (m) => !m.summarized,
-  );
-  if (firstUnsummarizedIdx === -1) return;
+  const unsMessages = conversationHistory
+    .map((message, idx) => ({ message, idx }))
+    .filter(
+      (entry) =>
+        entry.message &&
+        entry.message.summarized !== true &&
+        (entry.message.role === "assistant" || entry.message.role === "user"),
+    );
+  const threshold = getCurrentSummaryThreshold();
+  if (threshold <= 0 || unsMessages.length < threshold) return;
 
-  const toSummarize = conversationHistory.slice(
-    firstUnsummarizedIdx,
-    firstUnsummarizedIdx + 20,
-  );
+  const toSummarize = unsMessages.map((entry) => entry.message);
   if (toSummarize.length === 0) return;
 
   if (isViewing) {
@@ -181,15 +201,18 @@ Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).j
       createdAt: Date.now(),
     });
 
-    const batchEndIdx = firstUnsummarizedIdx + toSummarize.length;
-    const hasRemaining = conversationHistory
-      .slice(batchEndIdx)
-      .some((m) => !m.summarized);
-    const markEndIdx = hasRemaining ? batchEndIdx : batchEndIdx - 5;
-    for (let i = firstUnsummarizedIdx; i < markEndIdx; i += 1) {
-      if (conversationHistory[i]) {
-        conversationHistory[i].summarized = true;
-        conversationHistory[i].summaryId = memoryId;
+    const keepCount = Math.min(5, unsMessages.length);
+    const markCount = Math.max(0, unsMessages.length - keepCount);
+    for (let i = 0; i < markCount; i += 1) {
+      const entry = unsMessages[i];
+      const idx = entry?.idx;
+      if (
+        Number.isInteger(idx) &&
+        conversationHistory[idx] &&
+        conversationHistory[idx].summarized !== true
+      ) {
+        conversationHistory[idx].summarized = true;
+        conversationHistory[idx].summaryId = memoryId;
       }
     }
 

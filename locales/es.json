@@ -425,5 +425,6 @@
   "sfxAlreadyAdded": "Este recurso ya ha sido añadido como SFX.",
   "summarizingMemoryLabel": "Resumiendo conversación...",
   "lockMemoryMessages": "Bloquear mensajes de memoria",
-  "memoryMessageLockedNotice": "Este mensaje se usó en un resumen de memoria y no se puede modificar."
+  "memoryMessageLockedNotice": "Este mensaje se usó en un resumen de memoria y no se puede modificar.",
+  "summaryThresholdLabel": "Umbral de resumen"
 }

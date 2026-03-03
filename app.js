@@ -106,6 +106,7 @@ const DEFAULT_SETTINGS = {
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 5,
   lockMemoryMessages: false,
+  summaryThreshold: 20,
   favoriteModels: [],
   chatMessageAlignment: "left",
   unreadSoundEnabled: true,
@@ -3347,6 +3348,7 @@ async function setupSettingsControls() {
     "thread-autotitle-min-messages",
   );
   const lockMemoryMessages = document.getElementById("lock-memory-messages");
+  const summaryThresholdInput = document.getElementById("summary-threshold");
   if (uiLanguageSelect) {
     uiLanguageSelect.querySelector('option[value="auto"]').textContent =
       t("languageAuto");
@@ -3471,6 +3473,14 @@ async function setupSettingsControls() {
   threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
   if (lockMemoryMessages) {
     lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
+  }
+  if (summaryThresholdInput) {
+    const threshold =
+      typeof window.getSummaryThresholdValue === "function"
+        ? window.getSummaryThresholdValue(state.settings.summaryThreshold)
+        : Number(state.settings.summaryThreshold || 20);
+    state.settings.summaryThreshold = threshold;
+    summaryThresholdInput.value = String(threshold);
   }
   const chatMessageAlignment = document.getElementById(
     "chat-message-alignment",
@@ -3670,6 +3680,15 @@ async function setupSettingsControls() {
   });
   lockMemoryMessages?.addEventListener("change", () => {
     state.settings.lockMemoryMessages = lockMemoryMessages.checked;
+    saveSettings();
+  });
+  summaryThresholdInput?.addEventListener("change", () => {
+    const threshold =
+      typeof window.getSummaryThresholdValue === "function"
+        ? window.getSummaryThresholdValue(summaryThresholdInput.value)
+        : Number(summaryThresholdInput.value) || 20;
+    summaryThresholdInput.value = String(threshold);
+    state.settings.summaryThreshold = threshold;
     saveSettings();
   });
   document
@@ -11852,13 +11871,9 @@ async function sendMessage(options = {}) {
   scrollChatToBottom();
 
   // Trigger memory summarization if threshold reached (including when user sends the 20th/40th/60th... message)
-  if (
-    currentCharacter.useMemory !== false &&
-    conversationHistory.length >= 20 &&
-    conversationHistory.length % 20 === 0
-  ) {
-    await summarizeMemory(currentCharacter);
-  }
+    if (shouldTriggerMemorySummaries(currentCharacter)) {
+      await summarizeMemory(currentCharacter);
+    }
 
   if (state.settings.autoReplyEnabled === false) {
     await renderThreads();
@@ -11883,6 +11898,31 @@ function getCooldownRemainingSeconds() {
   const timeSinceLastCompletion = now - (state.lastCompletionTime || 0);
   const remaining = cooldown - timeSinceLastCompletion / 1000;
   return Math.max(0, Math.ceil(remaining));
+}
+
+function getActiveSummaryThreshold() {
+  if (typeof window.getSummaryThresholdValue === "function") {
+    return window.getSummaryThresholdValue(state.settings.summaryThreshold);
+  }
+  const fallback = Number(state.settings.summaryThreshold);
+  return Number.isFinite(fallback) ? fallback : DEFAULT_SETTINGS.summaryThreshold;
+}
+
+function getUnsummarizedMessageCount() {
+  return conversationHistory.reduce((count, message) => {
+    if (!message) return count;
+    const role = message.role;
+    if (role !== "assistant" && role !== "user") return count;
+    if (message.summarized === true) return count;
+    return count + 1;
+  }, 0);
+}
+
+function shouldTriggerMemorySummaries(character) {
+  if (!character || character.useMemory === false) return false;
+  const threshold = getActiveSummaryThreshold();
+  if (threshold <= 0) return false;
+  return getUnsummarizedMessageCount() >= threshold;
 }
 
 async function generateBotReply() {
@@ -12142,9 +12182,7 @@ async function generateBotReply() {
     }
 
     if (
-      generationCharacter.useMemory !== false &&
-      generationHistory.length > 0 &&
-      generationHistory.length % 20 === 0 &&
+      shouldTriggerMemorySummaries(generationCharacter) &&
       isViewingThread(threadId)
     ) {
       await summarizeMemory(generationCharacter);
