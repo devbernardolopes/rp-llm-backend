@@ -3530,3 +3530,12 @@ textarea {
   min-width: 24px;
   margin-left: auto;
 }
+
+#auto-tts-toggle-btn {
+  color: white;
+}
+
+#chat-model-pill,
+#chat-budget-pill {
+  display: none;
+}
