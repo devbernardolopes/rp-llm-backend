@@ -3221,6 +3221,7 @@ function renderCharacterTagFilterChips() {
 }
 
 function onInputKeyDown(e) {
+  const input = e.currentTarget;
   if (state.settings.autoPairEnabled !== false) {
     if (!e.ctrlKey && !e.metaKey && !e.altKey) {
       const pairs = {
@@ -3234,7 +3235,6 @@ function onInputKeyDown(e) {
       };
       const closeChar = pairs[e.key];
       if (closeChar) {
-        const input = e.currentTarget;
         const start = input.selectionStart ?? 0;
         const end = input.selectionEnd ?? 0;
         const selected = input.value.slice(start, end);
