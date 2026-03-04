@@ -9740,6 +9740,15 @@ async function saveSfxEntry({ close = true } = {}) {
     setModalDirtyState("sfx-editor-modal", false);
     await closeActiveModal();
   }
+  const currentCharId = Number(currentThread?.characterId);
+  const editingCharId = Number(state.editingCharacterId);
+  if (
+    Number.isInteger(currentCharId) &&
+    Number.isInteger(editingCharId) &&
+    currentCharId === editingCharId
+  ) {
+    await applyChatViewBackgroundFromSfx(currentCharacter, currentThread);
+  }
   return true;
 }
 
