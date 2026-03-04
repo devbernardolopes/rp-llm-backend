@@ -116,6 +116,31 @@ const DEFAULT_SETTINGS = {
   unreadSoundEnabled: true,
 };
 
+const USER_INPUT_AUTO_EXPAND_MAX_HEIGHT = 280; // keep the text box tall enough for longer prompts without taking over the UI
+
+function resetUserInputElementHeight(input) {
+  if (!input) return;
+  input.style.height = "";
+  input.style.overflowY = "";
+}
+
+function adjustUserInputElementHeight(input) {
+  if (!input) return;
+  const hasMeaningfulContent = String(input.value || "").trim().length > 0;
+  if (document.activeElement !== input || !hasMeaningfulContent) {
+    resetUserInputElementHeight(input);
+    return;
+  }
+  input.style.height = "auto";
+  const targetHeight = Math.min(
+    input.scrollHeight,
+    USER_INPUT_AUTO_EXPAND_MAX_HEIGHT,
+  );
+  input.style.height = `${targetHeight}px`;
+  input.style.overflowY =
+    input.scrollHeight > USER_INPUT_AUTO_EXPAND_MAX_HEIGHT ? "auto" : "hidden";
+}
+
 let unreadSoundAudioCtx = null;
 
 function playUnreadMessageSound() {
@@ -2138,11 +2163,6 @@ function setupEvents() {
   const input = document.getElementById("user-input");
   const chatLog = document.getElementById("chat-log");
   input.addEventListener("keydown", onInputKeyDown);
-  const autoResize = () => {
-    input.style.height = "auto";
-    const newHeight = input.scrollHeight;
-    input.style.height = newHeight + "px";
-  };
   input.addEventListener("input", () => {
     if (state.promptHistoryOpen) closePromptHistory();
     if (
@@ -2152,21 +2172,14 @@ function setupEvents() {
       state.activeShortcut = null;
     }
     scheduleThreadBudgetIndicatorUpdate();
-    requestAnimationFrame(autoResize);
+    requestAnimationFrame(() => adjustUserInputElementHeight(input));
   });
   input.addEventListener("blur", () => {
-    input.style.height = "";
+    resetUserInputElementHeight(input);
   });
   input.addEventListener("focus", () => {
-    const defaultHeight = parseInt(getComputedStyle(input).minHeight) || 72;
-    if (input.scrollHeight > defaultHeight) {
-      requestAnimationFrame(autoResize);
-    }
+    requestAnimationFrame(() => adjustUserInputElementHeight(input));
   });
-  input.addEventListener("blur", () => {
-    input.style.height = "";
-  });
-  input.addEventListener("focus", autoResize);
   input.addEventListener("click", () => {
     if (state.promptHistoryOpen) closePromptHistory();
   });
@@ -13939,7 +13952,13 @@ function openPromptHistory() {
       btn.className = "prompt-history-item";
       btn.textContent = entry.content;
       btn.addEventListener("click", () => {
-        document.getElementById("user-input").value = entry.content;
+        const promptInput = document.getElementById("user-input");
+        if (promptInput) {
+          promptInput.value = entry.content;
+          requestAnimationFrame(() => {
+            adjustUserInputElementHeight(promptInput);
+          });
+        }
         closePromptHistory();
       });
       list.appendChild(btn);
