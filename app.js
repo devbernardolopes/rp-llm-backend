@@ -922,6 +922,8 @@ const state = {
   activeModalId: null,
   promptHistoryOpen: false,
   chatAutoScroll: true,
+  chatBackgroundAssetId: null,
+  chatBackgroundAssetUrl: "",
   lastUsedModel: "",
   lastUsedProvider: "",
   lastCompletionTime: 0,
@@ -5869,6 +5871,7 @@ function togglePane() {
 }
 
 function showMainView() {
+  clearChatViewBackground();
   if (currentThread) {
     const log = document.getElementById("chat-log");
     if (log) {
@@ -10730,6 +10733,7 @@ async function openThread(threadId) {
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
   }));
+  await applyChatViewBackgroundFromSfx(currentCharacter, currentThread);
   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
   currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
@@ -16405,6 +16409,82 @@ function fallbackAvatar(seed, width, height) {
   );
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'><rect width='100%' height='100%' fill='#253147'/><text x='50%' y='53%' text-anchor='middle' font-size='${Math.floor(width * 0.48)}' fill='#c2cee4' font-family='Segoe UI'>${initial}</text></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+function clearChatViewBackground() {
+  const chatView = document.getElementById("chat-view");
+  if (chatView) {
+    chatView.style.removeProperty("background-image");
+    chatView.style.removeProperty("background-size");
+    chatView.style.removeProperty("background-position");
+    chatView.style.removeProperty("background-repeat");
+    chatView.style.removeProperty("background-attachment");
+    chatView.style.removeProperty("background-color");
+  }
+  state.chatBackgroundAssetId = null;
+  state.chatBackgroundAssetUrl = "";
+}
+
+async function getThreadStartImageSfxAsset(character, thread) {
+  if (!character || !thread) return null;
+  const lang = String(thread.characterLanguage || thread.language || "en");
+  const defs = Array.isArray(character.definitions)
+    ? character.definitions
+    : [character].filter(Boolean);
+  const def =
+    defs.find(
+      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
+    ) || defs[0];
+  const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
+  for (const entry of sfxList) {
+    if (!entry) continue;
+    const trigger = String(entry.trigger || "").toLowerCase();
+    if (trigger !== "start") continue;
+    const eviction = String(entry.eviction || "").toLowerCase();
+    if (eviction !== "never") continue;
+    const assetId = Number(entry.assetId);
+    if (!Number.isInteger(assetId)) continue;
+    const asset = await db.assets.get(assetId);
+    if (!asset || asset.type !== "image" || !asset.data) continue;
+    const url = getAssetDataUrl(asset);
+    if (!url) continue;
+    return { assetId: Number(asset.id), url };
+  }
+  return null;
+}
+
+async function applyChatViewBackgroundFromSfx(character, thread) {
+  const chatView = document.getElementById("chat-view");
+  if (!chatView) {
+    state.chatBackgroundAssetId = null;
+    state.chatBackgroundAssetUrl = "";
+    return;
+  }
+  try {
+    const assetInfo = await getThreadStartImageSfxAsset(character, thread);
+    if (!assetInfo) {
+      if (state.chatBackgroundAssetId || state.chatBackgroundAssetUrl) {
+        clearChatViewBackground();
+      }
+      return;
+    }
+    if (
+      state.chatBackgroundAssetId === assetInfo.assetId &&
+      state.chatBackgroundAssetUrl === assetInfo.url
+    ) {
+      return;
+    }
+    chatView.style.backgroundImage = `url("${assetInfo.url}")`;
+    chatView.style.backgroundSize = "cover";
+    chatView.style.backgroundPosition = "center center";
+    chatView.style.backgroundRepeat = "no-repeat";
+    chatView.style.backgroundAttachment = "fixed";
+    chatView.style.backgroundColor = "transparent";
+    state.chatBackgroundAssetId = assetInfo.assetId;
+    state.chatBackgroundAssetUrl = assetInfo.url;
+  } catch (err) {
+    console.warn("Failed to update chat background from SFX:", err);
+  }
 }
 
 function stopAllSfx() {
