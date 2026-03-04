@@ -9,34 +9,58 @@
  * MEMORY PIPELINE
  * ============================================================================
  *
- * 1. TRIGGER (in app.js: requestBotReplyForCurrentThread)
- *    - After each bot message is generated
+ * 1. TRIGGER (in app.js)
+ *    - Called in two places:
+ *      a) After user sends a message (handleUserMessage)
+ *      b) After bot message generation completes (generateBotReply)
  *    - Conditions:
  *      a) Character has memory enabled (character.useMemory !== false)
- *      b) History length is a multiple of 20 (generationHistory.length % 20 === 0)
- *      c) User is viewing the thread (isViewingThread(threadId))
+ *      b) Unsummarized message count >= summaryThreshold setting (default: 20)
+ *      c) For bot reply trigger only: user is viewing the thread (isViewingThread)
  *    - Calls: window.summarizeMemory(character)
  *
- * 2. SUMMARIZATION (summarizeMemory function below)
- *    - Finds the oldest unsummarized messages in conversationHistory
- *    - Takes up to 20 messages to summarize
- *    - Creates a pending chat bubble (same UI as bot message)
- *    - Sends them to AI with a summarization prompt
- *    - Stores the summary in db.memories table
- *    - Marks the messages with summarized: true and summaryId
- *    - Removes the pending bubble
- *    - Messages remain visible in chat and DB
+ * 2. SUMMARIZATION (summarizeMemory function)
+ *    - Finds oldest unsummarized assistant/user messages in conversationHistory
+ *    - Takes all eligible messages up to threshold
+ *    - Creates a pending chat bubble (generationStatus: "summarizing")
+ *    - If entering new level (slot wraps to 1), includes previous level's summaries
+ *    - Sends to AI with summarization prompt
+ *    - Stores the summary in db.memories table with slotNumber and levelNumber
+ *    - Marks oldest messages as summarized (summarized=true, summaryId=memoryId)
+ *    - Protects recent messages: up to memoryMessagesToKeep (default: 3) remain unsummarized
+ *    - Removes pending bubble, updates conversationHistory and DB
  *
- * 3. RETRIEVAL (getMemorySummary function below)
+ * 3. RETRIEVAL (getMemorySummary function)
  *    - Called in buildSystemPrompt() before each completion request
- *    - Fetches all stored summaries for the character from db.memories
+ *    - Fetches all stored summaries for character from db.memories
+ *    - Returns only entries from the highest level for that character
  *    - If character has memory disabled, returns null
  *
- * 4. PROMPT INCLUSION (in app.js: buildSystemPrompt)
+ * 4. PROMPT INCLUSION (in buildSystemPrompt)
  *    - If memory exists, it's added to the prompt as:
  *      "## Memory Context\n{memory}"
- *    - Summarized messages are filtered out from generationHistory
- *    - Only unsummarized messages are sent to the API
+ *    - Summarized messages (summarized=true) are filtered out from generationHistory
+ *    - Only unsummarized messages + memory context are sent to the API
+ *
+ * ============================================================================
+ * MEMORY ORGANIZATION (SLOT/LEVEL SYSTEM)
+ * ============================================================================
+ *
+ * Each character+thread combination has its own independent sequence of memory slots.
+ * - memorySlots setting (default: 5) controls slots per level
+ * - slotNumber: sequential position within current level (1 to memorySlots)
+ * - levelNumber: increments when slotNumber wraps from memorySlots back to 1
+ *
+ * Example with memorySlots=5:
+ *   Entry 1: slot=1, level=1
+ *   Entry 2: slot=2, level=1
+ *   ...
+ *   Entry 5: slot=5, level=1
+ *   Entry 6: slot=1, level=2  (level increments)
+ *
+ * Only entries from the highest level are included in the prompt.
+ * When a new level begins (slot wraps to 1), previous level summaries
+ * are provided as context to the summarizer for continuity.
  *
  * ============================================================================
  * DATABASE SCHEMA
@@ -46,31 +70,51 @@
  * Fields:
  *   - id (auto-increment primary key)
  *   - characterId (indexed)
- *   - threadId (optional thread reference)
- *   - summary (string)
- *   - slotNumber (int, sequential slot within a level)
+ *   - threadId (optional, null for thread-independent memories)
+ *   - summary (string, the summarized text)
+ *   - slotNumber (int, sequential within level, 1 to memorySlots)
  *   - levelNumber (int, increments when slots wrap)
- *   - createdAt (timestamp)
+ *   - createdAt (timestamp, used for ordering)
  *
  * Message flags (in conversationHistory):
- *   - summarized: true/false
- *   - summaryId: links to db.memories id
+ *   - summarized: true (message replaced by summary) / false (still in context)
+ *   - summaryId: links to db.memories.id if message was summarized
+ *   - summaryProtected: memoryId if message is protected (working context)
+ *
+ * ============================================================================
+ * SETTINGS
+ * ============================================================================
+ *
+ * All settings are stored in state.settings:
+ *
+ * - summaryThreshold (number, default: 20)
+ *   Minimum unsummarized messages before triggering summarization.
+ *   Rounded to nearest 5, clamped to 5-50 range.
+ *
+ * - memorySlots (number, default: 5)
+ *   Number of summaries per level before level increments.
+ *   Range: 3-10.
+ *
+ * - memoryMessagesToKeep (number, default: 3)
+ *   Number of most recent unsummarized messages to keep as working context.
+ *   These messages remain in the prompt even after summarization.
+ *   Range: 0-4.
  *
  * ============================================================================
  * USAGE
  * ============================================================================
-*
-* This module is loaded as a regular script in index.html.
-* It exposes two global functions:
  *
- * // Get all memory summaries for a character
-* const memory = await getMemorySummary(characterId, threadId);
-*
-* // Trigger memory summarization (called automatically in app.js)
-* await summarizeMemory(character);
-*
-* ============================================================================
-*/
+ * This module is loaded as a regular script in index.html.
+ * It exposes two global functions:
+ *
+ * // Get all memory summaries for a character (highest level only)
+ * const memory = await getMemorySummary(characterId, threadId);
+ *
+ * // Trigger memory summarization (called automatically in app.js)
+ * await summarizeMemory(character);
+ *
+ * ============================================================================
+ */
 
 const DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT =
   "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.";
@@ -105,11 +149,12 @@ function getHighestMemoryLevel(entries) {
 }
 
 /**
- * Retrieves all memory summaries for a character and thread from the database.
+ * Retrieves all memory entries for a character, optionally filtered by thread.
+ * Does not filter by level - returns all stored entries.
  *
  * @param {number} characterId - The ID of the character
  * @param {number} [threadId] - The ID of the thread (optional, for filtering)
- * @returns {Promise<string|null>} - All summaries joined with newlines, or null if none exist
+ * @returns {Promise<Array>} - All matching memory entry objects
  */
 async function getMemoryEntries(characterId, threadId) {
   let entries = await db.memories
@@ -122,6 +167,14 @@ async function getMemoryEntries(characterId, threadId) {
   return entries;
 }
 
+/**
+ * Retrieves the memory summary for a character, formatted for prompt inclusion.
+ * Returns only entries from the highest level (most recent memory level).
+ *
+ * @param {number} characterId - The ID of the character
+ * @param {number} [threadId] - The ID of the thread (optional, for filtering)
+ * @returns {Promise<string|null>} - Formatted memory text or null if no memories exist
+ */
 async function getMemorySummary(characterId, threadId) {
   const entries = await getMemoryEntries(characterId, threadId);
   if (entries.length === 0) return null;
@@ -169,6 +222,14 @@ function getCurrentMemoryMessagesToKeep() {
   return getMemoryMessagesToKeepValue(raw ?? 3);
 }
 
+/**
+ * Calculates the next slot/level for a character+thread memory sequence.
+ * Cycles through 1 to memorySlots, then increments levelNumber and resets slot to 1.
+ *
+ * @param {number} characterId - The character ID
+ * @param {number} [threadId] - Optional thread ID for thread-specific sequences
+ * @returns {Object} - { slot: number, level: number } - next values to use
+ */
 async function getNextMemorySlotInfo(characterId, threadId) {
   const limit = getCurrentMemorySlots();
   const entries = await db.memories
@@ -213,6 +274,14 @@ const MEMORY_PLACEHOLDER_STATUSES = new Set([
   "summarizing",
 ]);
 
+/**
+ * Checks if a message is a placeholder (spinner/bubble) or has a generation status
+ * that indicates it represents ongoing generation rather than real content.
+ * Placeholder messages are excluded from summarization.
+ *
+ * @param {Object} message - The message object to check
+ * @returns {boolean} - True if message is a placeholder
+ */
 function memoryIsPlaceholderMessage(message) {
   if (!message) return false;
   if (message.placeholder === true) return true;
@@ -232,15 +301,28 @@ function getCurrentSummaryThreshold() {
 }
 
 /**
- * Summarizes the unslaunched messages in the conversation history once the
- * configured threshold is reached and stores the summary in the database.
- * Messages remain visible in chat but are flagged as summarized (so they
- * no longer contribute to the prompt), except for the five most recent entries
- * which are kept as working context.
+ * Summarizes the oldest unsummarized assistant/user messages in the conversation
+ * history and stores the summary as a new memory entry. Only triggers if:
+ * - Character has memory enabled (character.useMemory !== false)
+ * - Unsummarized message count >= summaryThreshold setting
  *
- * This function is triggered automatically when the conversation has
- * accumulated at least the summary threshold of unsummarized assistant/user
- * messages and the character has memory enabled.
+ * The summarization process:
+ * 1. Identifies all unsummarized, non-placeholder assistant/user messages
+ * 2. Determines next slot/level for this character+thread combination
+ * 3. If entering new level (slot wraps to 1), fetches previous level summaries
+ *    and includes them in the summarization prompt for continuity
+ * 4. Creates a pending "summarizing" message bubble if user is viewing thread
+ * 5. Sends messages to AI with summarization prompt
+ * 6. Stores result in db.memories with computed slotNumber and levelNumber
+ * 7. Marks oldest unsummarized messages as summarized:
+ *    - All but the most recent 'memoryMessagesToKeep' messages get summarized=true
+ *    - Each marked message receives the summaryId linking to the new memory
+ * 8. Protects the recent memoryMessagesToKeep messages:
+ *    - These remain unsummarized but get summaryProtected=memoryId
+ *    - They stay in conversationHistory and continue contributing to prompts
+ * 9. Removes pending bubble, persists thread, and re-renders chat if viewing
+ *
+ * Messages are never deleted from conversationHistory; they remain visible in chat.
  *
  * @param {Object} character - The character object (must have id property)
  * @returns {Promise<void>}
@@ -347,12 +429,16 @@ async function summarizeMemory(character) {
 
     const summary = summaryResult.content;
 
+    const summarySystemContent = summarySystemPrompt;
+    const summaryUserContent = prompt;
     const memoryId = await db.memories.add({
       characterId: character.id,
       threadId,
       summary,
-        slotNumber: upcomingSlotInfo.slot,
-        levelNumber: upcomingSlotInfo.level,
+      slotNumber: upcomingSlotInfo.slot,
+      levelNumber: upcomingSlotInfo.level,
+      summarySystemContent,
+      summaryUserContent,
       createdAt: Date.now(),
     });
 

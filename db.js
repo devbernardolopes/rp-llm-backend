@@ -192,3 +192,27 @@ db.version(14)
       });
     }
   });
+
+db.version(15)
+  .stores({
+    characters: "++id, name",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories:
+      "++id, characterId, summary, createdAt, slotNumber, levelNumber, summarySystemContent, summaryUserContent",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+  })
+  .upgrade(async (tx) => {
+    const memoryTable = tx.table("memories");
+    await memoryTable.toCollection().modify((entry) => {
+      if (!Object.prototype.hasOwnProperty.call(entry, "summarySystemContent")) {
+        entry.summarySystemContent = "";
+      }
+      if (!Object.prototype.hasOwnProperty.call(entry, "summaryUserContent")) {
+        entry.summaryUserContent = "";
+      }
+    });
+  });
