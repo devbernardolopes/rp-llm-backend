@@ -127,7 +127,7 @@ function resetUserInputElementHeight(input) {
 function adjustUserInputElementHeight(input) {
   if (!input) return;
   const hasMeaningfulContent = String(input.value || "").trim().length > 0;
-  if (document.activeElement !== input || !hasMeaningfulContent) {
+  if (!hasMeaningfulContent) {
     resetUserInputElementHeight(input);
     return;
   }
@@ -2198,6 +2198,7 @@ function setupEvents() {
       );
     }
   });
+  requestAnimationFrame(() => adjustUserInputElementHeight(input));
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
     clearTimeout(state.marqueeRefreshTimer);
@@ -13955,6 +13956,7 @@ function openPromptHistory() {
         const promptInput = document.getElementById("user-input");
         if (promptInput) {
           promptInput.value = entry.content;
+          promptInput.focus();
           requestAnimationFrame(() => {
             adjustUserInputElementHeight(promptInput);
           });
