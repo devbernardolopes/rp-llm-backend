@@ -12146,9 +12146,43 @@ async function queueThreadForCooldown(threadId) {
   await renderThreads();
 }
 
-async function sendOocInquiry(text) {
-  if (!currentThread || !currentCharacter) return;
+function findPreviousOocUserMessageIndex(startIndex) {
+  const limit = Math.min(
+    Math.max(Number(startIndex), 0),
+    conversationHistory.length - 1,
+  );
+  for (let i = limit; i >= 0; i -= 1) {
+    const msg = conversationHistory[i];
+    if (!msg || msg.role !== "user") continue;
+    if (msg.ooc === true) return i;
+  }
+  return -1;
+}
 
+function getOocPromptForUserMessage(message) {
+  if (!message) return "";
+  if (typeof message.oocPrompt === "string") return message.oocPrompt;
+  const raw = String(message.content || "").trim();
+  if (!raw) return "";
+  const match = raw.match(
+    /^\(\(OOC: SYSTEM, reply in OOC manner\. ([\s\S]+?)\)\)$/,
+  );
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  if (raw.startsWith("((OOC: SYSTEM, reply in OOC manner. ")) {
+    return raw
+      .slice("((OOC: SYSTEM, reply in OOC manner. ".length)
+      .replace(/\)\)$/, "")
+      .trim();
+  }
+  if (raw.endsWith("))")) {
+    return raw.slice(0, -2).trim();
+  }
+  return raw;
+}
+
+async function buildOocSystemPrompt() {
   const contextMessages = getInSimulationMessages(conversationHistory)
     .filter((msg) => !isMessageLockedByMemory(msg))
     .map(formatOocContextEntry)
@@ -12167,113 +12201,124 @@ async function sendOocInquiry(text) {
     "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
     memorySection,
     messageSection,
-  ].filter((part) => Boolean(part));
-  const systemPrompt = systemPromptParts.join("\n\n").trim();
-
-  const log = document.getElementById("chat-log");
-  const isViewing = isViewingThread(currentThread.id);
-
-  const userIndex = conversationHistory.length;
-  const userMsg = {
-    role: "user",
-    content: `((OOC: SYSTEM, reply in OOC manner. ${text}))`,
-    createdAt: Date.now(),
-    senderName: currentPersona?.name || "You",
-    senderAvatar: currentPersona?.avatar || "",
-    senderPersonaId: currentPersona?.id || null,
-    ooc: true,
+  ].filter(Boolean);
+  return {
+    systemPrompt: systemPromptParts.join("\n\n").trim(),
+    contextMessages,
+    memoryContext,
   };
-  conversationHistory.push(userMsg);
-  if (log && isViewing) {
-    log.appendChild(buildMessageRow(userMsg, userIndex, false));
-    scrollChatToBottom();
+}
+
+async function sendOocInquiry(text) {
+  if (!currentThread || !currentCharacter) return;
+
+  const { systemPrompt } = await buildOocSystemPrompt();
+
+const log = document.getElementById("chat-log");
+const isViewing = isViewingThread(currentThread.id);
+
+const userIndex = conversationHistory.length;
+const userMsg = {
+  role: "user",
+  content: `((OOC: SYSTEM, reply in OOC manner. ${text}))`,
+  oocPrompt: text,
+  createdAt: Date.now(),
+  senderName: currentPersona?.name || "You",
+  senderAvatar: currentPersona?.avatar || "",
+  senderPersonaId: currentPersona?.id || null,
+  ooc: true,
+};
+conversationHistory.push(userMsg);
+if (log && isViewing) {
+  log.appendChild(buildMessageRow(userMsg, userIndex, false));
+  scrollChatToBottom();
+}
+
+const pendingAssistant = {
+  role: "assistant",
+  ooc: true,
+  content: "",
+  generationStatus: "generating",
+  createdAt: Date.now(),
+  finishReason: "",
+  nativeFinishReason: "",
+  truncatedByFilter: false,
+  generationId: "",
+  completionMeta: null,
+  generationInfo: null,
+  usedLoreEntries: [],
+  usedMemorySummary: "",
+  model: state.settings.model || "",
+  temperature: Number(state.settings.temperature) || 0,
+};
+const pendingIndex = conversationHistory.length;
+conversationHistory.push(pendingAssistant);
+let pendingRow = null;
+if (log && isViewing) {
+  pendingRow = buildMessageRow(pendingAssistant, pendingIndex, true);
+  log.appendChild(pendingRow);
+  const pendingContent = pendingRow?.querySelector(".message-content");
+  if (pendingContent) {
+    pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+      t("generatingLabel"),
+    )}`;
   }
+  scrollChatToBottom();
+}
 
-  const pendingAssistant = {
-    role: "assistant",
-    ooc: true,
-    content: "",
-    generationStatus: "generating",
-    createdAt: Date.now(),
-    finishReason: "",
-    nativeFinishReason: "",
-    truncatedByFilter: false,
-    generationId: "",
-    completionMeta: null,
-    generationInfo: null,
-    usedLoreEntries: [],
-    usedMemorySummary: "",
-    model: state.settings.model || "",
-    temperature: Number(state.settings.temperature) || 0,
-  };
-  const pendingIndex = conversationHistory.length;
-  conversationHistory.push(pendingAssistant);
-  let pendingRow = null;
-  if (log && isViewing) {
-    pendingRow = buildMessageRow(pendingAssistant, pendingIndex, true);
-    log.appendChild(pendingRow);
-    const pendingContent = pendingRow?.querySelector(".message-content");
-    if (pendingContent) {
-      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
-        t("generatingLabel"),
-      )}`;
-    }
-    scrollChatToBottom();
-  }
+await persistCurrentThread();
 
-  await persistCurrentThread();
-
-  try {
-    const result = await callOpenRouter(
-      systemPrompt,
-      [{ role: "user", content: userMsg.content }],
-      state.settings.model,
-      (chunk) => {
-        pendingAssistant.content += chunk;
-        if (state.settings.streamEnabled) {
-          const liveRow = document.querySelector(
-            `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+try {
+  const result = await callOpenRouter(
+    systemPrompt,
+    [{ role: "user", content: userMsg.content }],
+    state.settings.model,
+    (chunk) => {
+      pendingAssistant.content += chunk;
+      if (state.settings.streamEnabled) {
+        const liveRow = document.querySelector(
+          `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+        );
+        const liveContent = liveRow?.querySelector(".message-content");
+        if (liveContent) {
+          liveContent.innerHTML = renderMessageHtml(
+            pendingAssistant.content,
+            pendingAssistant.role,
           );
-          const liveContent = liveRow?.querySelector(".message-content");
-          if (liveContent) {
-            liveContent.innerHTML = renderMessageHtml(
-              pendingAssistant.content,
-              pendingAssistant.role,
-            );
-          }
         }
-        if (isViewing) scrollChatToBottom();
-      },
-    );
-    state.lastUsedModel = result.model || "";
-    state.lastUsedProvider = result.provider || "";
-    updateModelPill();
-    const assistantText = result.content || pendingAssistant.content || "";
-    pendingAssistant.content = assistantText || "(No content returned)";
-    pendingAssistant.finishReason = String(result.finishReason || "");
-    pendingAssistant.nativeFinishReason = String(result.nativeFinishReason || "");
-    pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
-    const finishReasonValue = result.finishReason;
-    const isOkFinish = finishReasonValue === "stop";
-    if (!isOkFinish && !pendingAssistant.truncatedByFilter) {
-      pendingAssistant.generationError = `finish_reason: ${
-        finishReasonValue ?? "null"
-      }`;
-    } else {
-      pendingAssistant.generationError = "";
-    }
-    pendingAssistant.generationStatus = "";
-  } catch (err) {
-    pendingAssistant.generationStatus = "";
-    const errorMessage = String(err?.message || err || "OOC request failed");
-    pendingAssistant.generationError = errorMessage;
-    pendingAssistant.content =
-      pendingAssistant.content || `OOC request failed: ${errorMessage}`;
-    showToast(`OOC request failed: ${errorMessage}`, "error");
-  } finally {
-    const liveRow = document.querySelector(
-      `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-    );
+      }
+      if (isViewing) scrollChatToBottom();
+    },
+  );
+  state.lastUsedModel = result.model || "";
+  state.lastUsedProvider = result.provider || "";
+  updateModelPill();
+  const assistantText = result.content || pendingAssistant.content || "";
+  pendingAssistant.content = assistantText || "(No content returned)";
+  pendingAssistant.finishReason = String(result.finishReason || "");
+  pendingAssistant.nativeFinishReason = String(result.nativeFinishReason || "");
+  pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
+  const finishReasonValue = result.finishReason;
+  const isOkFinish = finishReasonValue === "stop";
+  if (!isOkFinish && !pendingAssistant.truncatedByFilter) {
+    pendingAssistant.generationError = `finish_reason: ${
+      finishReasonValue ?? "null"
+    }`;
+  } else {
+    pendingAssistant.generationError = "";
+  }
+  pendingAssistant.generationStatus = "";
+} catch (err) {
+  pendingAssistant.generationStatus = "";
+  const errorMessage = String(err?.message || err || "OOC request failed");
+  pendingAssistant.generationError = errorMessage;
+  pendingAssistant.content =
+    pendingAssistant.content || `OOC request failed: ${errorMessage}`;
+  showToast(`OOC request failed: ${errorMessage}`, "error");
+} finally {
+  const liveRow = document.querySelector(
+    `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+  );
     if (liveRow) {
       liveRow.dataset.streaming = "0";
       const liveContent = liveRow.querySelector(".message-content");
@@ -12287,6 +12332,125 @@ async function sendOocInquiry(text) {
       scrollChatToBottom();
     }
     await renderThreads();
+  }
+}
+
+async function regenerateOocMessage(index) {
+  if (!currentThread || !currentCharacter || state.sending) return;
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return;
+  if (index < 0 || index >= conversationHistory.length) return;
+  const target = conversationHistory[index];
+  if (!target || target.role !== "assistant" || target.ooc !== true) return;
+  if (state.settings.lockMemoryMessages && target?.summarized) {
+    showToast(t("memoryMessageLockedNotice"), "warning");
+    return;
+  }
+  const userIndex = findPreviousOocUserMessageIndex(index - 1);
+  if (userIndex < 0) return;
+  const userMessage = conversationHistory[userIndex];
+  if (!userMessage || !userMessage.content) return;
+
+  stopTtsPlayback();
+  state.sending = true;
+  state.chatAutoScroll = true;
+  state.abortController = new AbortController();
+  state.activeGenerationThreadId = threadId;
+  setSendingState(true);
+  state.pendingPersonaInjectionPersonaId = null;
+
+  const isViewing = isViewingThread(currentThread.id);
+  const messagesToSave = conversationHistory.map((m) => ({ ...m }));
+
+  target.content = "";
+  target.generationStatus = "regenerating";
+  target.generationError = "";
+  messagesToSave[index].content = "";
+  messagesToSave[index].generationStatus = "regenerating";
+  messagesToSave[index].generationError = "";
+
+  renderChat();
+  const row = document.getElementById("chat-log").children[index];
+  const contentEl = row?.querySelector(".message-content");
+  if (row) row.dataset.streaming = "1";
+  refreshMessageControlStates();
+  if (contentEl) {
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+      t("regeneratingLabel"),
+    )}`;
+  }
+  if (isViewing) scrollChatToBottom();
+
+  try {
+    const { systemPrompt } = await buildOocSystemPrompt();
+    const result = await callOpenRouter(
+      systemPrompt,
+      [{ role: "user", content: userMessage.content }],
+      state.settings.model,
+      (chunk) => {
+        target.content += chunk;
+        messagesToSave[index].content = target.content;
+        if (contentEl) {
+          contentEl.innerHTML = renderMessageHtml(target.content, target.role);
+        }
+        if (isViewing) scrollChatToBottom();
+      },
+      state.abortController.signal,
+    );
+    state.lastUsedModel = result.model || "";
+    state.lastUsedProvider = result.provider || "";
+    updateModelPill();
+    const assistantText = result.content || target.content || "";
+    target.content = assistantText || "(No content returned)";
+    target.finishReason = String(result.finishReason || "");
+    target.nativeFinishReason = String(result.nativeFinishReason || "");
+    target.truncatedByFilter = result.truncatedByFilter === true;
+    target.generationId = String(result.generationId || "");
+    target.completionMeta = result.completionMeta || null;
+    target.generationInfo = result.generationInfo || null;
+    target.generationFetchDebug = result.generationFetchDebug || [];
+    target.model = result.model || state.settings.model || "";
+    target.temperature = Number(state.settings.temperature) || 0;
+    target.generationError = "";
+    target.generationStatus = "";
+    target.systemMessages = Array.isArray(result.systemMessages)
+      ? result.systemMessages.filter(
+          (entry) => entry && String(entry.content || "").trim(),
+        )
+      : [];
+    messagesToSave[index] = { ...target };
+    if (!isViewing) {
+      target.unreadAt = Date.now();
+      messagesToSave[index].unreadAt = target.unreadAt;
+    }
+    await persistThreadMessagesById(threadId, messagesToSave);
+    renderChat();
+    if (isViewing) scrollChatToBottom();
+    await renderThreads();
+  } catch (err) {
+    target.generationStatus = "";
+    target.generationError = String(err?.message || err || "OOC request failed");
+    messagesToSave[index].generationStatus = "";
+    messagesToSave[index].generationError = target.generationError;
+    if (!isViewing) {
+      target.unreadAt = Date.now();
+      messagesToSave[index].unreadAt = target.unreadAt;
+    }
+    await persistThreadMessagesById(threadId, messagesToSave);
+    renderChat();
+    if (isViewing) scrollChatToBottom();
+    await renderThreads();
+    showToast(`OOC request failed: ${target.generationError}`, "error");
+  } finally {
+    if (row) {
+      row.dataset.streaming = "0";
+    }
+    state.pendingPersonaInjectionPersonaId = null;
+    state.abortController = null;
+    state.activeGenerationThreadId = null;
+    state.sending = false;
+    setSendingState(false);
+    refreshMessageControlStates();
   }
 }
 
@@ -12676,9 +12840,13 @@ async function regenerateMessage(index) {
     await clearThreadGenerationQueueFlag(threadId);
   }
 
-  const target = conversationHistory[index];
-  if (!target || target.role !== "assistant") return;
-  target.placeholder = false;
+    const target = conversationHistory[index];
+    if (!target || target.role !== "assistant") return;
+    if (target.ooc === true) {
+      await regenerateOocMessage(index);
+      return;
+    }
+    target.placeholder = false;
   if (state.settings.lockMemoryMessages && target?.summarized) {
     showToast(t("memoryMessageLockedNotice"), "warning");
     return;
