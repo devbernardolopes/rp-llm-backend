@@ -12113,21 +12113,28 @@ async function sendMessage(options = {}) {
   await requestBotReplyForCurrentThread("manual_send_auto_reply");
 }
 
-async function queueThreadForCooldown(threadId) {
+async function queueThreadForCooldown(threadId, targetMessage = null) {
   if (!currentThread || Number(currentThread.id) !== threadId) return;
   const seconds = getCooldownRemainingSeconds();
   const cooldownLabel = tf("cooldownToastActive", { seconds });
   if (!state.generationQueue.includes(threadId)) {
     state.generationQueue.push(threadId);
   }
-  const existingPendingIdx = findLatestPendingAssistantIndex(conversationHistory);
-  if (existingPendingIdx >= 0) {
-    const pending = conversationHistory[existingPendingIdx];
-    pending.generationStatus = "cooling_down";
-    pending.content = cooldownLabel;
-    pending.generationError = "";
-    pending.truncatedByFilter = false;
-    pending.placeholder = true;
+  let cooldownTarget = targetMessage;
+  if (!cooldownTarget) {
+    const existingPendingIdx = findLatestPendingAssistantIndex(
+      conversationHistory,
+    );
+    if (existingPendingIdx >= 0) {
+      cooldownTarget = conversationHistory[existingPendingIdx];
+    }
+  }
+  if (cooldownTarget) {
+    cooldownTarget.generationStatus = "cooling_down";
+    cooldownTarget.content = cooldownLabel;
+    cooldownTarget.generationError = "";
+    cooldownTarget.truncatedByFilter = false;
+    cooldownTarget.placeholder = true;
   } else {
     conversationHistory.push({
       role: "assistant",
@@ -12849,7 +12856,8 @@ async function regenerateMessage(index) {
   if (index < 0 || index >= conversationHistory.length) return;
   const cooldown = Number(state.settings.completionCooldown) || 0;
   if (cooldown > 0 && isInCompletionCooldown()) {
-    await queueThreadForCooldown(threadId);
+    const target = conversationHistory[index];
+    await queueThreadForCooldown(threadId, target);
     return;
   }
   if (state.generationQueue.length > 0) {
