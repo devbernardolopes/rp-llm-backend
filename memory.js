@@ -75,6 +75,35 @@
 const DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT =
   "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.";
 
+function getEntryLevel(entry) {
+  const raw = Number(entry?.levelNumber);
+  return Number.isInteger(raw) && raw > 0 ? raw : 1;
+}
+
+function formatMemoryEntry(entry, idx) {
+  const rawSlot = Number(entry?.slotNumber);
+  const fallbackSlot =
+    Number.isInteger(idx) && idx >= 0 ? idx + 1 : undefined;
+  const slot =
+    Number.isInteger(rawSlot) && rawSlot > 0
+      ? rawSlot
+      : Number.isInteger(fallbackSlot)
+      ? fallbackSlot
+      : 1;
+  const level = getEntryLevel(entry);
+  const summaryText = String(entry?.summary || "");
+  return `**ENTRY ${slot} LEVEL ${level}**\n${summaryText}`;
+}
+
+function formatMemoryEntries(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return "";
+  return entries.map(formatMemoryEntry).join("\n\n");
+}
+
+function getHighestMemoryLevel(entries) {
+  return entries.reduce((max, entry) => Math.max(max, getEntryLevel(entry)), 1);
+}
+
 /**
  * Retrieves all memory summaries for a character and thread from the database.
  *
@@ -82,31 +111,27 @@ const DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT =
  * @param {number} [threadId] - The ID of the thread (optional, for filtering)
  * @returns {Promise<string|null>} - All summaries joined with newlines, or null if none exist
  */
-async function getMemorySummary(characterId, threadId) {
+async function getMemoryEntries(characterId, threadId) {
   let entries = await db.memories
     .where("characterId")
     .equals(characterId)
     .sortBy("createdAt");
-
   if (threadId != null) {
-    entries = entries.filter((e) => e.threadId === threadId);
+    entries = entries.filter((entry) => entry.threadId === threadId);
   }
+  return entries;
+}
 
+async function getMemorySummary(characterId, threadId) {
+  const entries = await getMemoryEntries(characterId, threadId);
   if (entries.length === 0) return null;
-
-  return entries
-    .map((entry, idx) => {
-      const slot =
-        Number.isInteger(entry.slotNumber) && entry.slotNumber > 0
-          ? entry.slotNumber
-          : idx + 1;
-      const level =
-        Number.isInteger(entry.levelNumber) && entry.levelNumber > 0
-          ? entry.levelNumber
-          : 1;
-      return `**ENTRY ${slot} LEVEL ${level}**\n${entry.summary}`;
-    })
-    .join("\n\n");
+  const highestLevel = getHighestMemoryLevel(entries);
+  const levelEntries = entries.filter(
+    (entry) => getEntryLevel(entry) === highestLevel,
+  );
+  const relevantEntries =
+    levelEntries.length > 0 ? levelEntries : entries;
+  return formatMemoryEntries(relevantEntries);
 }
 
 function getSummaryThresholdValue(raw) {
@@ -242,6 +267,22 @@ async function summarizeMemory(character) {
   const toSummarize = unsMessages.map((entry) => entry.message);
   if (toSummarize.length === 0) return;
 
+  const upcomingSlotInfo = await getNextMemorySlotInfo(character.id, threadId);
+  const shouldIncludePreviousLevel =
+    upcomingSlotInfo.slot === 1 && upcomingSlotInfo.level > 1;
+  let previousLevelContext = "";
+  if (shouldIncludePreviousLevel) {
+    const previousLevel = upcomingSlotInfo.level - 1;
+    const previousEntries = await getMemoryEntries(character.id, threadId);
+    const levelEntries = previousEntries.filter(
+      (entry) => getEntryLevel(entry) === previousLevel,
+    );
+    const formattedEntries = formatMemoryEntries(levelEntries);
+    if (formattedEntries) {
+      previousLevelContext = `***MEMORY LEVEL ${previousLevel} CONTEXT***\n\n${formattedEntries}`;
+    }
+  }
+
   if (isViewing) {
     showToast("Memory summarization triggered", "info");
   }
@@ -284,9 +325,14 @@ async function summarizeMemory(character) {
   const userPromptText =
     (state?.settings?.memorySummarizerUserPrompt || "").trim() ||
     DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT;
-  const prompt = `${userPromptText}\n\n${toSummarize
-    .map((m) => `${m.role}: ${m.content}`)
-    .join("\n\n")}`;
+  const summarySections = [];
+  if (previousLevelContext) {
+    summarySections.push(previousLevelContext);
+  }
+  summarySections.push(
+    ...toSummarize.map((m) => `${m.role}: ${m.content}`),
+  );
+  const prompt = `${userPromptText}\n\n${summarySections.join("\n\n")}`;
 
   try {
     const summarySystemPrompt =
@@ -300,14 +346,13 @@ async function summarizeMemory(character) {
     );
 
     const summary = summaryResult.content;
-    const slotInfo = await getNextMemorySlotInfo(character.id, threadId);
 
     const memoryId = await db.memories.add({
       characterId: character.id,
       threadId,
       summary,
-      slotNumber: slotInfo.slot,
-      levelNumber: slotInfo.level,
+        slotNumber: upcomingSlotInfo.slot,
+        levelNumber: upcomingSlotInfo.level,
       createdAt: Date.now(),
     });
 

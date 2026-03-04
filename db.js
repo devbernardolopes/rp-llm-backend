@@ -149,3 +149,46 @@ db.version(13).stores({
   writingInstructions: "++id, name, createdAt, updatedAt",
   assets: "++id, name, type, createdAt, updatedAt",
 });
+
+db.version(14)
+  .stores({
+    characters: "++id, name",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories:
+      "++id, characterId, summary, createdAt, slotNumber, levelNumber",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+  })
+  .upgrade(async (tx) => {
+    const memoryTable = tx.table("memories");
+    const slotLimit = 5;
+    const tracker = new Map();
+    const entries = await memoryTable.orderBy("createdAt").toArray();
+
+    for (const entry of entries) {
+      const key = `${entry.characterId}:${entry.threadId ?? "null"}`;
+      const current = tracker.get(key) || { slot: 0, level: 1 };
+      let slot = Number(entry.slotNumber);
+      let level = Number(entry.levelNumber);
+      const hasSlot = Number.isInteger(slot) && slot > 0;
+      const hasLevel = Number.isInteger(level) && level > 0;
+      if (hasSlot && hasLevel) {
+        tracker.set(key, { slot, level });
+        continue;
+      }
+      slot = current.slot + 1;
+      level = current.level;
+      if (slot > slotLimit) {
+        slot = 1;
+        level += 1;
+      }
+      tracker.set(key, { slot, level });
+      await memoryTable.update(entry.id, {
+        slotNumber: slot,
+        levelNumber: level,
+      });
+    }
+  });
