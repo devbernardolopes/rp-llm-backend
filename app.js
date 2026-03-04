@@ -2135,38 +2135,38 @@ function setupEvents() {
 
   setupModalTextareas();
 
-   const input = document.getElementById("user-input");
-   const chatLog = document.getElementById("chat-log");
-   input.addEventListener("keydown", onInputKeyDown);
-   const autoResize = () => {
-     input.style.height = "auto";
-     const newHeight = input.scrollHeight;
-     input.style.height = newHeight + "px";
-   };
-   input.addEventListener("input", () => {
-     if (state.promptHistoryOpen) closePromptHistory();
-     if (
-       state.activeShortcut &&
-       input.value !== state.activeShortcut.initialValue
-     ) {
-       state.activeShortcut = null;
-     }
-     scheduleThreadBudgetIndicatorUpdate();
-     requestAnimationFrame(autoResize);
-   });
-   input.addEventListener("blur", () => {
-     input.style.height = "";
-   });
-   input.addEventListener("focus", () => {
-     const defaultHeight = parseInt(getComputedStyle(input).minHeight) || 72;
-     if (input.scrollHeight > defaultHeight) {
-       requestAnimationFrame(autoResize);
-     }
-   });
-   input.addEventListener("blur", () => {
-     input.style.height = "";
-   });
-   input.addEventListener("focus", autoResize);
+  const input = document.getElementById("user-input");
+  const chatLog = document.getElementById("chat-log");
+  input.addEventListener("keydown", onInputKeyDown);
+  const autoResize = () => {
+    input.style.height = "auto";
+    const newHeight = input.scrollHeight;
+    input.style.height = newHeight + "px";
+  };
+  input.addEventListener("input", () => {
+    if (state.promptHistoryOpen) closePromptHistory();
+    if (
+      state.activeShortcut &&
+      input.value !== state.activeShortcut.initialValue
+    ) {
+      state.activeShortcut = null;
+    }
+    scheduleThreadBudgetIndicatorUpdate();
+    requestAnimationFrame(autoResize);
+  });
+  input.addEventListener("blur", () => {
+    input.style.height = "";
+  });
+  input.addEventListener("focus", () => {
+    const defaultHeight = parseInt(getComputedStyle(input).minHeight) || 72;
+    if (input.scrollHeight > defaultHeight) {
+      requestAnimationFrame(autoResize);
+    }
+  });
+  input.addEventListener("blur", () => {
+    input.style.height = "";
+  });
+  input.addEventListener("focus", autoResize);
   input.addEventListener("click", () => {
     if (state.promptHistoryOpen) closePromptHistory();
   });
@@ -3539,10 +3539,7 @@ async function setupSettingsControls() {
     const slots =
       typeof window.getMemorySlotsValue === "function"
         ? window.getMemorySlotsValue(state.settings.memorySlots)
-        : Math.max(
-            3,
-            Math.min(10, Number(state.settings.memorySlots) || 5),
-          );
+        : Math.max(3, Math.min(10, Number(state.settings.memorySlots) || 5));
     state.settings.memorySlots = slots;
     memorySlotsInput.value = String(slots);
   }
@@ -3765,9 +3762,7 @@ async function setupSettingsControls() {
   memoryMessagesToKeepInput?.addEventListener("change", () => {
     const keepValue =
       typeof window.getMemoryMessagesToKeepValue === "function"
-        ? window.getMemoryMessagesToKeepValue(
-            memoryMessagesToKeepInput.value,
-          )
+        ? window.getMemoryMessagesToKeepValue(memoryMessagesToKeepInput.value)
         : Math.max(
             0,
             Math.min(
@@ -8835,15 +8830,22 @@ async function deleteWritingInstruction(writingInstructionId) {
 
   // Find characters using this writing instruction (check all language definitions)
   const allCharacters = await db.characters.toArray();
-  const usingCharacters = allCharacters.filter(char => {
+  const usingCharacters = allCharacters.filter((char) => {
     if (!char.definitions || !Array.isArray(char.definitions)) return false;
-    return char.definitions.some(def => def.writingInstructionId === writingInstructionId);
+    return char.definitions.some(
+      (def) => def.writingInstructionId === writingInstructionId,
+    );
   });
 
   let message = tf("deleteWritingInstructionConfirm", { name: wi.name });
   if (usingCharacters.length > 0) {
-    const charNames = usingCharacters.map(c => c.name).join(", ");
-    message += "\n\n" + t("writingInstructionUsedByBots", { count: usingCharacters.length, names: charNames });
+    const charNames = usingCharacters.map((c) => c.name).join(", ");
+    message +=
+      "\n\n" +
+      t("writingInstructionUsedByBots", {
+        count: usingCharacters.length,
+        names: charNames,
+      });
   }
 
   const ok = await openConfirmDialog(
@@ -9059,9 +9061,7 @@ function getAssetDataUrl(asset, options = {}) {
   const data = asset.data;
   if (!data) return "";
   const key =
-    options.cacheKey ||
-    (asset.id ? `asset-${asset.id}` : null) ||
-    null;
+    options.cacheKey || (asset.id ? `asset-${asset.id}` : null) || null;
   return getCachedAssetBlobUrl(key, data);
 }
 
@@ -11762,16 +11762,16 @@ function buildMessageRow(message, index, streaming) {
 
   header.appendChild(controls);
 
-    const content = document.createElement("div");
-    content.className = "message-content";
-    content.addEventListener("dblclick", () => {
-      if (isOocMessage) return;
-      const rowEl = content.closest(".chat-row");
-      if (rowEl?.dataset?.streaming === "1") return;
-      if (String(message?.generationError || "").trim()) return;
-      if (isLockedMemoryMessage) return;
-      beginInlineMessageEdit(index, content);
-    });
+  const content = document.createElement("div");
+  content.className = "message-content";
+  content.addEventListener("dblclick", () => {
+    if (isOocMessage) return;
+    const rowEl = content.closest(".chat-row");
+    if (rowEl?.dataset?.streaming === "1") return;
+    if (String(message?.generationError || "").trim()) return;
+    if (isLockedMemoryMessage) return;
+    beginInlineMessageEdit(index, content);
+  });
   if (streaming) {
     let statusLabel = t("generatingLabel");
     const isQueued = message?.generationStatus === "queued";
@@ -12214,7 +12214,7 @@ async function sendMessage(options = {}) {
   );
   scrollChatToBottom();
 
-  // Trigger memory summarization if threshold reached (including when user sends the 20th/40th/60th... message)
+  // Trigger memory summarization if threshold reached (including when user sends the nth message)
   if (shouldTriggerMemorySummaries(currentCharacter)) {
     await summarizeMemory(currentCharacter);
   }
@@ -12236,9 +12236,8 @@ async function queueThreadForCooldown(threadId, targetMessage = null) {
   }
   let cooldownTarget = targetMessage;
   if (!cooldownTarget) {
-    const existingPendingIdx = findLatestPendingAssistantIndex(
-      conversationHistory,
-    );
+    const existingPendingIdx =
+      findLatestPendingAssistantIndex(conversationHistory);
     if (existingPendingIdx >= 0) {
       cooldownTarget = conversationHistory[existingPendingIdx];
     }
@@ -12340,9 +12339,7 @@ async function buildOocSystemPrompt() {
     ? `***MEMORY CONTEXT***\n\n${String(memoryContext || "").trim()}`
     : "";
   const charPersonaName =
-    currentThread?.initialUserName ||
-    currentPersona?.name ||
-    "You";
+    currentThread?.initialUserName || currentPersona?.name || "You";
   const charName = currentCharacter?.name || "Character";
   const characterPromptRaw = (
     currentCharacter?.systemPrompt ||
@@ -12378,111 +12375,113 @@ async function sendOocInquiry(text) {
 
   const { systemPrompt } = await buildOocSystemPrompt();
 
-const log = document.getElementById("chat-log");
-const isViewing = isViewingThread(currentThread.id);
+  const log = document.getElementById("chat-log");
+  const isViewing = isViewingThread(currentThread.id);
 
-const userIndex = conversationHistory.length;
-const userMsg = {
-  role: "user",
-  content: `((OOC: SYSTEM, reply in OOC manner. ${text}))`,
-  oocPrompt: text,
-  createdAt: Date.now(),
-  senderName: currentPersona?.name || "You",
-  senderAvatar: currentPersona?.avatar || "",
-  senderPersonaId: currentPersona?.id || null,
-  ooc: true,
-};
-conversationHistory.push(userMsg);
-if (log && isViewing) {
-  log.appendChild(buildMessageRow(userMsg, userIndex, false));
-  scrollChatToBottom();
-}
-
-const pendingAssistant = {
-  role: "assistant",
-  ooc: true,
-  content: "",
-  generationStatus: "generating",
-  createdAt: Date.now(),
-  finishReason: "",
-  nativeFinishReason: "",
-  truncatedByFilter: false,
-  generationId: "",
-  completionMeta: null,
-  generationInfo: null,
-  usedLoreEntries: [],
-  usedMemorySummary: "",
-  model: state.settings.model || "",
-  temperature: Number(state.settings.temperature) || 0,
-};
-const pendingIndex = conversationHistory.length;
-conversationHistory.push(pendingAssistant);
-let pendingRow = null;
-if (log && isViewing) {
-  pendingRow = buildMessageRow(pendingAssistant, pendingIndex, true);
-  log.appendChild(pendingRow);
-  const pendingContent = pendingRow?.querySelector(".message-content");
-  if (pendingContent) {
-    pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
-      t("generatingLabel"),
-    )}`;
+  const userIndex = conversationHistory.length;
+  const userMsg = {
+    role: "user",
+    content: `((OOC: SYSTEM, reply in OOC manner. ${text}))`,
+    oocPrompt: text,
+    createdAt: Date.now(),
+    senderName: currentPersona?.name || "You",
+    senderAvatar: currentPersona?.avatar || "",
+    senderPersonaId: currentPersona?.id || null,
+    ooc: true,
+  };
+  conversationHistory.push(userMsg);
+  if (log && isViewing) {
+    log.appendChild(buildMessageRow(userMsg, userIndex, false));
+    scrollChatToBottom();
   }
-  scrollChatToBottom();
-}
 
-await persistCurrentThread();
+  const pendingAssistant = {
+    role: "assistant",
+    ooc: true,
+    content: "",
+    generationStatus: "generating",
+    createdAt: Date.now(),
+    finishReason: "",
+    nativeFinishReason: "",
+    truncatedByFilter: false,
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    model: state.settings.model || "",
+    temperature: Number(state.settings.temperature) || 0,
+  };
+  const pendingIndex = conversationHistory.length;
+  conversationHistory.push(pendingAssistant);
+  let pendingRow = null;
+  if (log && isViewing) {
+    pendingRow = buildMessageRow(pendingAssistant, pendingIndex, true);
+    log.appendChild(pendingRow);
+    const pendingContent = pendingRow?.querySelector(".message-content");
+    if (pendingContent) {
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+        t("generatingLabel"),
+      )}`;
+    }
+    scrollChatToBottom();
+  }
 
-try {
-  const result = await callOpenRouter(
-    systemPrompt,
-    [{ role: "user", content: userMsg.content }],
-    state.settings.model,
-    (chunk) => {
-      pendingAssistant.content += chunk;
-      if (state.settings.streamEnabled) {
-        const liveRow = document.querySelector(
-          `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-        );
-        const liveContent = liveRow?.querySelector(".message-content");
-        if (liveContent) {
-          liveContent.innerHTML = renderMessageHtml(
-            pendingAssistant.content,
-            pendingAssistant.role,
+  await persistCurrentThread();
+
+  try {
+    const result = await callOpenRouter(
+      systemPrompt,
+      [{ role: "user", content: userMsg.content }],
+      state.settings.model,
+      (chunk) => {
+        pendingAssistant.content += chunk;
+        if (state.settings.streamEnabled) {
+          const liveRow = document.querySelector(
+            `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
           );
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(
+              pendingAssistant.content,
+              pendingAssistant.role,
+            );
+          }
         }
-      }
-      if (isViewing) scrollChatToBottom();
-    },
-  );
-  state.lastUsedModel = result.model || "";
-  state.lastUsedProvider = result.provider || "";
-  updateModelPill();
-  const assistantText = result.content || pendingAssistant.content || "";
-  pendingAssistant.content = assistantText || "(No content returned)";
-  pendingAssistant.finishReason = String(result.finishReason || "");
-  pendingAssistant.nativeFinishReason = String(result.nativeFinishReason || "");
-  pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
-  const finishReasonValue = result.finishReason;
-  const isOkFinish = finishReasonValue === "stop";
-  if (!isOkFinish && !pendingAssistant.truncatedByFilter) {
-    pendingAssistant.generationError = `finish_reason: ${
-      finishReasonValue ?? "null"
-    }`;
-  } else {
-    pendingAssistant.generationError = "";
-  }
-  pendingAssistant.generationStatus = "";
-} catch (err) {
-  pendingAssistant.generationStatus = "";
-  const errorMessage = String(err?.message || err || "OOC request failed");
-  pendingAssistant.generationError = errorMessage;
-  pendingAssistant.content =
-    pendingAssistant.content || `OOC request failed: ${errorMessage}`;
-  showToast(`OOC request failed: ${errorMessage}`, "error");
-} finally {
-  const liveRow = document.querySelector(
-    `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-  );
+        if (isViewing) scrollChatToBottom();
+      },
+    );
+    state.lastUsedModel = result.model || "";
+    state.lastUsedProvider = result.provider || "";
+    updateModelPill();
+    const assistantText = result.content || pendingAssistant.content || "";
+    pendingAssistant.content = assistantText || "(No content returned)";
+    pendingAssistant.finishReason = String(result.finishReason || "");
+    pendingAssistant.nativeFinishReason = String(
+      result.nativeFinishReason || "",
+    );
+    pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
+    const finishReasonValue = result.finishReason;
+    const isOkFinish = finishReasonValue === "stop";
+    if (!isOkFinish && !pendingAssistant.truncatedByFilter) {
+      pendingAssistant.generationError = `finish_reason: ${
+        finishReasonValue ?? "null"
+      }`;
+    } else {
+      pendingAssistant.generationError = "";
+    }
+    pendingAssistant.generationStatus = "";
+  } catch (err) {
+    pendingAssistant.generationStatus = "";
+    const errorMessage = String(err?.message || err || "OOC request failed");
+    pendingAssistant.generationError = errorMessage;
+    pendingAssistant.content =
+      pendingAssistant.content || `OOC request failed: ${errorMessage}`;
+    showToast(`OOC request failed: ${errorMessage}`, "error");
+  } finally {
+    const liveRow = document.querySelector(
+      `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
+    );
     if (liveRow) {
       liveRow.dataset.streaming = "0";
       const liveContent = liveRow.querySelector(".message-content");
@@ -12526,14 +12525,14 @@ async function regenerateOocMessage(index) {
   const isViewing = isViewingThread(currentThread.id);
   const messagesToSave = conversationHistory.map((m) => ({ ...m }));
 
-    target.content = "";
-    target.generationStatus = "regenerating";
-    target.generationError = "";
-    target.ooc = true;
-    messagesToSave[index].content = "";
-    messagesToSave[index].generationStatus = "regenerating";
-    messagesToSave[index].generationError = "";
-    messagesToSave[index].ooc = true;
+  target.content = "";
+  target.generationStatus = "regenerating";
+  target.generationError = "";
+  target.ooc = true;
+  messagesToSave[index].content = "";
+  messagesToSave[index].generationStatus = "regenerating";
+  messagesToSave[index].generationError = "";
+  messagesToSave[index].ooc = true;
 
   renderChat();
   const row = document.getElementById("chat-log").children[index];
@@ -12595,7 +12594,9 @@ async function regenerateOocMessage(index) {
     await renderThreads();
   } catch (err) {
     target.generationStatus = "";
-    target.generationError = String(err?.message || err || "OOC request failed");
+    target.generationError = String(
+      err?.message || err || "OOC request failed",
+    );
     messagesToSave[index].generationStatus = "";
     messagesToSave[index].generationError = target.generationError;
     if (!isViewing) {
@@ -13007,13 +13008,13 @@ async function regenerateMessage(index) {
     await clearThreadGenerationQueueFlag(threadId);
   }
 
-    const target = conversationHistory[index];
-    if (!target || target.role !== "assistant") return;
-    if (target.ooc === true) {
-      await regenerateOocMessage(index);
-      return;
-    }
-    target.placeholder = false;
+  const target = conversationHistory[index];
+  if (!target || target.role !== "assistant") return;
+  if (target.ooc === true) {
+    await regenerateOocMessage(index);
+    return;
+  }
+  target.placeholder = false;
   if (state.settings.lockMemoryMessages && target?.summarized) {
     showToast(t("memoryMessageLockedNotice"), "warning");
     return;
@@ -15084,8 +15085,9 @@ async function processNextQueuedThread() {
   const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
   const filteredTempConversation = getInSimulationMessages(tempConversation);
   const promptContext = await buildSystemPrompt(character, {
-    includeOneTimeExtraPrompt:
-      shouldIncludeOneTimeExtraPrompt(filteredTempConversation),
+    includeOneTimeExtraPrompt: shouldIncludeOneTimeExtraPrompt(
+      filteredTempConversation,
+    ),
     writingInstructionsTurnIndex: writingTurnIndex,
     returnTrace: true,
     personaOverride: tempPersona,
