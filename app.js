@@ -3229,6 +3229,28 @@ function renderCharacterTagFilterChips() {
   requestAnimationFrame(refreshMore);
 }
 
+function handleMemoryCommandFromInput(input, raw = "") {
+  if (!input) return false;
+  const trimmedValue = String(raw || input.value || "").trim();
+  if (trimmedValue !== "/mem") return false;
+  const threadId = currentThread?.id ?? null;
+  state.promptCommandHistory = state.promptCommandHistory || [];
+  state.promptCommandHistory.push({
+    threadId,
+    content: trimmedValue,
+    createdAt: Date.now(),
+  });
+  if (state.promptCommandHistory.length > 200) {
+    state.promptCommandHistory.shift();
+  }
+  openMemoryModal().catch(() => {});
+  input.value = "";
+  requestAnimationFrame(() => {
+    adjustUserInputElementHeight(input);
+  });
+  return true;
+}
+
 function onInputKeyDown(e) {
   const input = e.currentTarget;
   if (state.settings.autoPairEnabled !== false) {
@@ -3265,20 +3287,8 @@ function onInputKeyDown(e) {
     }
   }
   if (e.key !== "Enter") return;
-  const trimmedInput = String(input.value || "").trim();
-  if (trimmedInput === "/mem") {
+  if (handleMemoryCommandFromInput(input)) {
     e.preventDefault();
-    const threadId = currentThread?.id ?? null;
-    state.promptCommandHistory.push({
-      threadId,
-      content: trimmedInput,
-      createdAt: Date.now(),
-    });
-    if (state.promptCommandHistory.length > 200) {
-      state.promptCommandHistory.shift();
-    }
-    openMemoryModal().catch(() => {});
-    input.value = "";
     return;
   }
   const enterToSend = state.settings.enterToSendEnabled !== false;
@@ -12219,6 +12229,9 @@ async function sendMessage(options = {}) {
       : !!shortcutPreserve;
   const rawInput = input.value;
   const text = rawInput.trim();
+  if (handleMemoryCommandFromInput(input, text)) {
+    return;
+  }
   const shouldTriggerAiOnly = !text || /^\/ai\s*$/i.test(text);
   if (shouldTriggerAiOnly) {
     if (!preserveInput) {
@@ -14121,8 +14134,9 @@ async function renderMemoryModalEntries() {
     });
   };
 
-  collapseMemoryEntries();
   enforceExclusiveEntryExpansion();
+  collapseMemoryEntries();
+  requestAnimationFrame(collapseMemoryEntries);
 
   const updateSaveState = () => {
     const hasChanges = editableTextareas.some(
