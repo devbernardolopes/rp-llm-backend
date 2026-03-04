@@ -438,7 +438,7 @@
   "memoryMessagesToKeepLabel": "Amount of Messages to Keep",
   "memorySummarizerUserPrompt": "Memory Summarizer User Prompt",
   "writingInstructionUsedByBots": "Used by {count} BOT(s): {names}",
-  "memoryModalTitle": "Memory entries",
+  "memoryModalTitle": "Memory Entries",
   "memoryModalDisabled": "Memory is disabled for this BOT.",
   "memoryModalNotTriggered": "Memory has not been generated yet for this chat.",
   "memoryModalEntryLabel": "Level {level} · Slot {slot}",

@@ -951,6 +951,7 @@ const state = {
   currentPersonaAvatarBlob: null,
   activeModalId: null,
   promptHistoryOpen: false,
+  promptCommandHistory: [],
   chatAutoScroll: true,
   chatBackgroundAssetId: null,
   chatBackgroundAssetUrl: "",
@@ -1013,6 +1014,7 @@ const state = {
     "lore-modal": false,
     "writing-instructions-modal": false,
     "writing-instruction-editor-modal": false,
+    "memory-modal": false,
   },
   charModalTtsTestPlaying: false,
   imagePreview: {
@@ -2163,8 +2165,15 @@ function setupEvents() {
 
   document
     .getElementById("memory-modal-save")
-    ?.addEventListener("click", () => {
-      handleMemoryModalSave().catch(() => {});
+    ?.addEventListener("click", async () => {
+      try {
+        const saved = await handleMemoryModalSave();
+        if (saved) {
+          closeActiveModal();
+        }
+      } catch {
+        // errors are handled inside handleMemoryModalSave
+      }
     });
 
   const input = document.getElementById("user-input");
@@ -3259,6 +3268,15 @@ function onInputKeyDown(e) {
   const trimmedInput = String(input.value || "").trim();
   if (trimmedInput === "/mem") {
     e.preventDefault();
+    const threadId = currentThread?.id ?? null;
+    state.promptCommandHistory.push({
+      threadId,
+      content: trimmedInput,
+      createdAt: Date.now(),
+    });
+    if (state.promptCommandHistory.length > 200) {
+      state.promptCommandHistory.shift();
+    }
     openMemoryModal().catch(() => {});
     input.value = "";
     return;
@@ -6177,6 +6195,9 @@ async function closeActiveModal() {
 }
 
 async function handleModalSaveAction(modalId) {
+  if (modalId === "memory-modal") {
+    return handleMemoryModalSave();
+  }
   if (modalId === "character-modal") {
     return saveCharacterFromModal({ close: false });
   }
@@ -13954,9 +13975,21 @@ function openPromptHistory() {
   const list = document.getElementById("prompt-history-list");
   list.innerHTML = "";
 
-  const prompts = conversationHistory
-    .filter((m) => m.role === "user")
-    .reverse();
+  const threadId = currentThread?.id ?? null;
+  const equalsThreadId = (value) => {
+    if (value == null && threadId == null) return true;
+    if (value == null || threadId == null) return false;
+    return String(value) === String(threadId);
+  };
+  const conversationPrompts = conversationHistory.filter((m) => m.role === "user");
+  const commandPrompts = (
+    Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : []
+  ).filter((entry) => equalsThreadId(entry.threadId));
+  const prompts = [...conversationPrompts, ...commandPrompts].sort((a, b) => {
+    const aTs = Number(a.createdAt) || 0;
+    const bTs = Number(b.createdAt) || 0;
+    return bTs - aTs;
+  });
   if (prompts.length === 0) {
     const msg = document.createElement("p");
     msg.className = "muted";
@@ -14002,6 +14035,7 @@ async function renderMemoryModalEntries() {
   entriesRoot.innerHTML = "";
   statusEl.textContent = "";
   saveBtn.disabled = true;
+  setModalDirtyState("memory-modal", false);
   if (!currentCharacter || !currentThread) {
     statusEl.textContent = t("openThreadFirst");
     return;
@@ -14027,7 +14061,7 @@ async function renderMemoryModalEntries() {
     const slotB = Number(b?.slotNumber) || 0;
     return slotA - slotB;
   });
-  let editableCount = 0;
+  const editableTextareas = [];
   sorted.forEach((entry, idx) => {
     const entryLevel = getEntryLevel(entry);
     const slot =
@@ -14050,15 +14084,59 @@ async function renderMemoryModalEntries() {
       textarea.disabled = true;
       textarea.title = t("memoryModalLevelLocked");
     } else {
-      editableCount += 1;
+      editableTextareas.push(textarea);
     }
     const wrapper = document.createElement("div");
     wrapper.className = "memory-entry";
     wrapper.appendChild(textarea);
     entriesRoot.appendChild(wrapper);
   });
-  saveBtn.disabled = editableCount === 0;
+
   setupModalTextareas(modal);
+
+  const collapseMemoryEntries = () => {
+    modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+      const entryState = textareaCollapseStates.get(textarea);
+      if (entryState) {
+        entryState.setExpanded(false);
+      }
+    });
+  };
+
+  const enforceExclusiveEntryExpansion = () => {
+    const headers = modal.querySelectorAll(".textarea-collapse-header");
+    headers.forEach((header) => {
+      header.addEventListener("click", () => {
+        headers.forEach((otherHeader) => {
+          if (otherHeader === header) return;
+          const textarea = otherHeader
+            .closest(".textarea-collapse")
+            ?.querySelector("textarea");
+          const entryState = textareaCollapseStates.get(textarea);
+          if (entryState) {
+            entryState.setExpanded(false);
+          }
+        });
+      });
+    });
+  };
+
+  collapseMemoryEntries();
+  enforceExclusiveEntryExpansion();
+
+  const updateSaveState = () => {
+    const hasChanges = editableTextareas.some(
+      (textarea) => textarea.value !== textarea.dataset.originalValue,
+    );
+    setModalDirtyState("memory-modal", hasChanges);
+    saveBtn.disabled = !hasChanges;
+  };
+
+  editableTextareas.forEach((textarea) => {
+    textarea.addEventListener("input", updateSaveState);
+  });
+
+  updateSaveState();
 }
 
 async function openMemoryModal() {
@@ -14069,18 +14147,18 @@ async function openMemoryModal() {
 async function handleMemoryModalSave() {
   const modal = document.getElementById("memory-modal");
   const saveBtn = document.getElementById("memory-modal-save");
-  if (!modal || !saveBtn) return;
+  if (!modal || !saveBtn) return false;
   const editableTextareas = Array.from(
     modal.querySelectorAll("#memory-modal-entries textarea"),
   ).filter((textarea) => !textarea.disabled);
-  if (editableTextareas.length === 0) return;
+  if (editableTextareas.length === 0) return false;
   const updates = [];
   for (const textarea of editableTextareas) {
     const trimmed = String(textarea.value || "").trim();
     if (!trimmed) {
       showToast(t("memoryModalEmptyEntryWarning"), "error");
       textarea.focus();
-      return;
+      return false;
     }
     const original = textarea.dataset.originalValue || "";
     if (textarea.value !== original) {
@@ -14090,7 +14168,7 @@ async function handleMemoryModalSave() {
       }
     }
   }
-  if (updates.length === 0) return;
+  if (updates.length === 0) return false;
   saveBtn.disabled = true;
   try {
     for (const update of updates) {
@@ -14098,9 +14176,11 @@ async function handleMemoryModalSave() {
     }
     showToast(t("memoryModalSaveSuccess"), "success");
     await renderMemoryModalEntries();
+    return true;
   } catch (err) {
     console.warn("Failed to save memory entries:", err);
     showToast(t("unknownError"), "error");
+    return false;
   }
 }
 
