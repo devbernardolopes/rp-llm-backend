@@ -433,6 +433,7 @@
   "enableOocModeAria": "Activer le mode OOC",
   "disableOocModeAria": "D?sactiver le mode OOC",
   "memorySlotsLabel": "Emplacements mÃ©moire",
-  "memoryMessagesToKeepLabel": "Nombre de messages � conserver",
-  "memorySummarizerUserPrompt": "Invite utilisateur du r�sum� m�moire"
+  "memoryMessagesToKeepLabel": "Nombre de messages � conserver",
+  "memorySummarizerUserPrompt": "Invite utilisateur du rÃ©sumÃ© mÃ©moire",
+  "writingInstructionUsedByBots": "UtilisÃ© par {count} BOT(s) : {names}"
 }

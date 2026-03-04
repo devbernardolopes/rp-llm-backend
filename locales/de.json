@@ -434,5 +434,6 @@
   "disableOocModeAria": "OOC-Modus deaktivieren",
   "memorySlotsLabel": "SpeicherplÃ¤tze",
   "memoryMessagesToKeepLabel": "Anzahl der zu behaltenden Nachrichten",
-  "memorySummarizerUserPrompt": "Benutzerprompt f�r die Speicherzusammenfassung"
+  "memorySummarizerUserPrompt": "Benutzerprompt fÃ¼r die Speicherzusammenfassung",
+  "writingInstructionUsedByBots": "Wird verwendet von {count} BOT(s): {names}"
 }

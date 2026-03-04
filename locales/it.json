@@ -434,5 +434,6 @@
   "disableOocModeAria": "Disabilita modalit? OOC",
   "memorySlotsLabel": "Slot di memoria",
   "memoryMessagesToKeepLabel": "Numero di messaggi da conservare",
-  "memorySummarizerUserPrompt": "Prompt utente del riepilogo memoria"
+  "memorySummarizerUserPrompt": "Prompt utente del riepilogo memoria",
+  "writingInstructionUsedByBots": "Usato da {count} BOT: {names}"
 }

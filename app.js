@@ -8813,9 +8813,23 @@ async function deleteWritingInstruction(writingInstructionId) {
     await db.writingInstructions.get(writingInstructionId),
   );
   if (!wi) return;
+
+  // Find characters using this writing instruction
+  const allCharacters = await db.characters.toArray();
+  const usingCharacters = allCharacters.filter(char => {
+    const def = char.definitions?.find(d => d.language === state.charEditLang);
+    return def?.writingInstructionId === writingInstructionId;
+  });
+
+  let message = tf("deleteWritingInstructionConfirm", { name: wi.name });
+  if (usingCharacters.length > 0) {
+    const charNames = usingCharacters.map(c => c.name).join(", ");
+    message += "\n\n" + t("writingInstructionUsedByBots", { count: usingCharacters.length, names: charNames });
+  }
+
   const ok = await openConfirmDialog(
     t("deleteWritingInstructionTitle"),
-    t("deleteWritingInstructionConfirm", { name: wi.name }),
+    message,
   );
   if (!ok) return;
   await db.writingInstructions.delete(writingInstructionId);

@@ -436,5 +436,6 @@
   "disableOocModeAria": "Disable OOC mode",
   "memorySlotsLabel": "Memory Slots",
   "memoryMessagesToKeepLabel": "Amount of Messages to Keep",
-  "memorySummarizerUserPrompt": "Memory Summarizer User Prompt"
+  "memorySummarizerUserPrompt": "Memory Summarizer User Prompt",
+  "writingInstructionUsedByBots": "Used by {count} BOT(s): {names}"
 }
