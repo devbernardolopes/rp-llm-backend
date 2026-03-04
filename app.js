@@ -11626,15 +11626,16 @@ function buildMessageRow(message, index, streaming) {
 
   header.appendChild(controls);
 
-  const content = document.createElement("div");
-  content.className = "message-content";
-  content.addEventListener("dblclick", () => {
-    const rowEl = content.closest(".chat-row");
-    if (rowEl?.dataset?.streaming === "1") return;
-    if (String(message?.generationError || "").trim()) return;
-    if (isLockedMemoryMessage) return;
-    beginInlineMessageEdit(index, content);
-  });
+    const content = document.createElement("div");
+    content.className = "message-content";
+    content.addEventListener("dblclick", () => {
+      if (isOocMessage) return;
+      const rowEl = content.closest(".chat-row");
+      if (rowEl?.dataset?.streaming === "1") return;
+      if (String(message?.generationError || "").trim()) return;
+      if (isLockedMemoryMessage) return;
+      beginInlineMessageEdit(index, content);
+    });
   if (streaming) {
     let statusLabel = t("generatingLabel");
     const isQueued = message?.generationStatus === "queued";
@@ -11761,6 +11762,7 @@ function beginInlineMessageEdit(index, contentEl) {
   if (isMessageLockedByMemory(message)) return;
   if (message.truncatedByFilter === true) return;
   if (String(message.generationError || "").trim()) return;
+  if (message.ooc === true) return;
 
   if (
     state.editingMessageIndex !== null &&
@@ -12362,12 +12364,14 @@ async function regenerateOocMessage(index) {
   const isViewing = isViewingThread(currentThread.id);
   const messagesToSave = conversationHistory.map((m) => ({ ...m }));
 
-  target.content = "";
-  target.generationStatus = "regenerating";
-  target.generationError = "";
-  messagesToSave[index].content = "";
-  messagesToSave[index].generationStatus = "regenerating";
-  messagesToSave[index].generationError = "";
+    target.content = "";
+    target.generationStatus = "regenerating";
+    target.generationError = "";
+    target.ooc = true;
+    messagesToSave[index].content = "";
+    messagesToSave[index].generationStatus = "regenerating";
+    messagesToSave[index].generationError = "";
+    messagesToSave[index].ooc = true;
 
   renderChat();
   const row = document.getElementById("chat-log").children[index];
