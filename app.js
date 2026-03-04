@@ -12359,10 +12359,11 @@ async function buildOocSystemPrompt() {
     .filter((msg) => !isMessageLockedByMemory(msg))
     .map(formatOocContextEntry)
     .filter(Boolean);
-  const memoryContext = await getMemorySummary(
+  const rawMemory = await getMemorySummary(
     currentCharacter.id,
     currentThread.id,
   );
+  const memoryContext = await filterMemoriesByRelevance(rawMemory, currentCharacter, currentThread.id);
   const memorySection = memoryContext
     ? `***MEMORY CONTEXT***\n\n${String(memoryContext || "").trim()}`
     : "";

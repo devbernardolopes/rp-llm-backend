@@ -448,18 +448,32 @@ async function summarizeMemory(character) {
       .filter(Boolean);
     const summaryUserContent =
       userContentPieces.length > 0 ? userContentPieces.join("\n\n") : prompt;
-    const memoryId = await db.memories.add({
-      characterId: character.id,
-      threadId,
-      summary,
-      slotNumber: upcomingSlotInfo.slot,
-      levelNumber: upcomingSlotInfo.level,
-      summarySystemContent,
-      summaryUserContent,
-      createdAt: Date.now(),
-    });
+     const memoryId = await db.memories.add({
+       characterId: character.id,
+       threadId,
+       summary,
+       slotNumber: upcomingSlotInfo.slot,
+       levelNumber: upcomingSlotInfo.level,
+       summarySystemContent,
+       summaryUserContent,
+       createdAt: Date.now(),
+     });
 
-    const keepSetting = getCurrentMemoryMessagesToKeep();
+     // Generate and store embedding asynchronously for semantic filtering
+     if (typeof getEmbedding === 'function') {
+       (async () => {
+         try {
+           const embedding = await getEmbedding(String(summary || '').trim());
+           if (embedding && Array.isArray(embedding)) {
+             await db.memories.update(memoryId, { embedding });
+           }
+         } catch (e) {
+           console.warn('Failed to generate memory embedding:', e);
+         }
+       })();
+     }
+
+     const keepSetting = getCurrentMemoryMessagesToKeep();
     const keepCount = Math.min(keepSetting, unsMessages.length);
     const markCount = Math.max(0, unsMessages.length - keepCount);
     for (let i = 0; i < markCount; i += 1) {
@@ -511,3 +525,4 @@ async function summarizeMemory(character) {
 // Expose functions globally for app.js to use
 window.getMemorySummary = getMemorySummary;
 window.summarizeMemory = summarizeMemory;
+window.getMemoryEntries = getMemoryEntries;
