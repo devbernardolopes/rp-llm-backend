@@ -959,6 +959,7 @@ const state = {
       fetchPatched: false,
       voiceListLoaded: false,
       selectedVoice: DEFAULT_KOKORO_VOICE,
+      cacheDisabled: false,
     },
   },
   avatarSnapshotCache: new Map(),

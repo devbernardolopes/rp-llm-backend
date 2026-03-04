@@ -1,9 +1,10 @@
-﻿/**
+/**
  * Kokoro TTS Module
  *
  * This module provides text-to-speech functionality using Kokoro.js, a
  * client-side neural TTS engine that runs in the browser using WebGPU or WASM.
- * It handles voice model downloads, audio generation, and playback.
+ * It handles voice model downloads, audio generation, and playback with
+ * persistent caching via IndexedDB.
  *
  * ============================================================================
  * KOKORO TTS PIPELINE
@@ -16,17 +17,20 @@
  *
  * 2. INSTANCE CREATION (ensureKokoroInstance)
  *    - Creates or reuses a KokoroTTS instance with specific device/dtype
- *    - Patches fetch to intercept voice file downloads (patchKokoroVoiceFetch)
+ *    - Patches fetch to intercept voice and model file downloads (patchKokoroVoiceFetch)
  *    - Loads model from HuggingFace (KOKORO_MODEL_ID)
  *    - Patches _validate_voice to allow all KOKORO_VOICE_OPTIONS
  *    - Stores instance in state.tts.kokoro.instance
  *
- * 3. VOICE DOWNLOAD (patchKokoroVoiceFetch)
- *    - Intercepts fetch() calls for /voices/<name>.bin URLs
- *    - Tracks download progress in kokoroVoiceDownloadProgress
- *    - Caches downloaded voices in kokoroDownloadedVoices Set
+ * 3. VOICE & MODEL CACHING (patchKokoroVoiceFetch)
+ *    - Intercepts fetch() calls for:
+ *      a) Voice files: /voices/<name>.bin
+ *      b) Model files: URLs containing KOKORO_MODEL_ID
+ *    - Checks IndexedDB (assets table) for cached blobs first
+ *    - On cache hit: returns Response(blob) immediately
+ *    - On cache miss: downloads from network, caches to IndexedDB for future
+ *    - Tracks in-memory download progress for UI (voices only)
  *    - Supports cancellation via abort controller (cancelKokoroVoiceDownload)
- *    - Reassembles streamed chunks into Uint8Array
  *
  * 4. AUDIO GENERATION (in app.js: playKokoroTts)
  *    - Chunks text for TTS (chunkForTTS)
@@ -52,12 +56,37 @@
  *   - voiceListLoaded: boolean (true after voice options populated)
  *   - fetchPatched: boolean (true after fetch interceptor installed)
  *   - modulePromise: cached promise for module import
+ *   - cacheDisabled: boolean (true if IndexedDB quota exceeded)
  *
  * Global tracking (module scope):
  *   - kokoroVoiceDownloadAbortController: cancels voice downloads
  *   - kokoroVoiceDownloadProgress: { loaded, total, percent }
- *   - kokoroDownloadedVoices: Set of voice names already downloaded
+ *   - kokoroDownloadedVoices: Set of voice names already downloaded (session-only)
  *   - sharedKokoroAudioContext: singleton AudioContext for playback
+ *
+ * ============================================================================
+ * PERSISTENT CACHING (IndexedDB)
+ * ============================================================================
+ *
+ * Cache storage uses the existing Dexie `assets` table (version 13+).
+ * Cached items persist across page reloads and browser restarts.
+ *
+ * Asset types:
+ *   - 'kokoro-voice': Individual voice .bin files (~15MB each)
+ *   - 'kokoro-model-file': Individual model files (.onnx, .json, etc.)
+ *
+ * Cache functions:
+ *   - getCachedKokoroVoice(voiceName) -> Blob|null
+ *   - cacheKokoroVoice(voiceName, blob) -> Promise<void>
+ *   - getCachedKokoroModelFile(filename) -> Blob|null
+ *   - cacheKokoroModelFile(filename, blob) -> Promise<void>
+ *   - clearKokoroCache() -> Promise<void>  (clears all kokoro assets)
+ *
+ * Cache behavior:
+ *   - Automatic: patchKokoroVoiceFetch checks cache before network
+ *   - Transparent: no user action required
+ *   - Quota handling: if IndexedDB full, cacheDisabled flag set, fallback to network
+ *   - No auto-purge: cached files remain until manually cleared
  *
  * ============================================================================
  * CONSTANTS (defined in app.js)
@@ -83,7 +112,7 @@
  *     Returns current download progress object.
  *
  *   isVoiceDownloaded(voiceName)
- *     Checks if a voice model has been downloaded.
+ *     Checks if a voice model has been downloaded (session only).
  *
  *   markVoiceDownloaded(voiceName)
  *     Marks a voice as downloaded (internal use).
@@ -141,6 +170,13 @@
  *   getActiveCharacterTtsProvider()
  *     Returns current character's TTS provider ('kokoro' or 'browser').
  *
+ * Cache Control:
+ *   clearKokoroCache()
+ *     Clears all cached Kokoro model files and voices from IndexedDB.
+ *
+ *   isKokoroCacheDisabled()
+ *     Returns true if caching is disabled due to quota or errors.
+ *
  * ============================================================================
  * INTEGRATION POINTS
  * ============================================================================
@@ -162,6 +198,10 @@
  * - Download Progress: UI reads global functions to show progress during
  *   voice model downloads and allow cancellation.
  *
+ * - Persistent Caching: All voice and model file downloads are automatically
+ *   cached to IndexedDB. Subsequent page loads serve from cache, reducing
+ *   network bandwidth and improving load times.
+ *
  * ============================================================================
  * USAGE
  * ============================================================================
@@ -172,12 +212,14 @@
  * Typical flow:
  *   1. User selects a character with ttsProvider='kokoro'
  *   2. ensureKokoroInstance() loads the module and model
- *   3. patchKokoroVoiceFetch() intercepts voice downloads
+ *   3. patchKokoroVoiceFetch() intercepts voice and model downloads
  *   4. playKokoroTts() generates audio via kokoro.generate()
  *   5. Audio played via Web Audio API or HTMLAudioElement fallback
  *
- * Voice files (.bin) are cached in kokoroDownloadedVoices to avoid
- * re-downloading during the same session.
+ * Voice and model files are cached in IndexedDB (assets table) and persist
+ * across sessions. The cache is transparent - no user action required.
+ * If storage quota is exceeded, caching is disabled for the session and a
+ * warning toast is shown.
  *
  * ============================================================================
  */
@@ -201,7 +243,7 @@ function resetKokoroVoiceDownloadProgress() {
   kokoroVoiceDownloadProgress = { loaded: 0, total: 0, percent: 0 };
 }
 
-function patchKokoroVoiceFetch() {
+async function patchKokoroVoiceFetch() {
   if (state.tts.kokoro.fetchPatched) return;
   if (typeof window === "undefined" || typeof window.fetch !== "function")
     return;
@@ -209,9 +251,40 @@ function patchKokoroVoiceFetch() {
   window.fetch = async function (input, init) {
     let url = typeof input === "string" ? input : input?.url;
     if (typeof url === "string") {
-      const match = url.match(/\/voices\/([^/]+)\.bin$/);
-      const voice = match?.[1];
-      if (voice) {
+      let isVoice = false;
+      let isModel = false;
+      let resourceName = null;
+
+      const voiceMatch = url.match(/\/voices\/([^/]+)\.bin$/);
+      if (voiceMatch) {
+        isVoice = true;
+        resourceName = voiceMatch[1];
+      } else if (url.includes(KOKORO_MODEL_ID)) {
+        isModel = true;
+        resourceName = url.split('/').pop(); // filename
+      }
+
+      if (isVoice || isModel) {
+        // Check persistent cache first (unless cache disabled)
+        if (!isKokoroCacheDisabled()) {
+          try {
+            let cachedBlob = null;
+            if (isVoice) {
+              cachedBlob = await getCachedKokoroVoice(resourceName);
+            } else if (isModel) {
+              cachedBlob = await getCachedKokoroModelFile(resourceName);
+            }
+            if (cachedBlob) {
+              ttsDebug(isVoice ? "kokoro:voice:from-cache" : "kokoro:model:from-cache", resourceName);
+              return new Response(cachedBlob);
+            }
+          } catch (err) {
+            console.warn(isVoice ? "kokoro:cache:voice-check-failed" : "kokoro:cache:model-check-failed", resourceName, err);
+            // Continue to network fetch
+          }
+        }
+
+        // Network download with in-memory tracking
         kokoroVoiceDownloadAbortController = new AbortController();
         const options = {
           ...init,
@@ -251,7 +324,24 @@ function patchKokoroVoiceFetch() {
             position += chunk.length;
           }
 
-          markVoiceDownloaded(voice);
+          // Cache to IndexedDB (if not disabled)
+          if (!isKokoroCacheDisabled()) {
+            try {
+              const blob = new Blob([allChunks]);
+              if (isVoice) {
+                await cacheKokoroVoice(resourceName, blob);
+              } else if (isModel) {
+                await cacheKokoroModelFile(resourceName, blob);
+              }
+            } catch (err) {
+              console.warn(isVoice ? "kokoro:cache:voice-save-failed" : "kokoro:cache:model-save-failed", resourceName, err);
+              // Continue anyway - data still available in memory
+            }
+          }
+
+          if (isVoice) {
+            markVoiceDownloaded(resourceName);
+          }
 
           return new Response(allChunks, {
             status: response.status,
@@ -293,6 +383,141 @@ function getKokoroLanguageKey(language = "") {
   if (lower.startsWith("ja")) return "ja";
   if (lower.startsWith("hi")) return "hi";
   return lower;
+}
+
+// ============================================================================
+// KOKORO CACHING (IndexedDB)
+// ============================================================================
+
+async function getCachedKokoroVoice(voiceName) {
+  try {
+    const asset = await db.assets
+      .where('type')
+      .equals('kokoro-voice')
+      .and(asset => asset.name === voiceName)
+      .first();
+    return asset?.data || null;
+  } catch (err) {
+    console.warn("kokoro:cache:voice-get-failed", voiceName, err);
+    return null;
+  }
+}
+
+async function cacheKokoroVoice(voiceName, voiceBlob) {
+  try {
+    await db.assets.put({
+      name: voiceName,
+      type: 'kokoro-voice',
+      data: voiceBlob,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    ttsDebug("kokoro:cache:voice-saved", voiceName);
+  } catch (err) {
+    if (err.name === 'QuotaExceededError') {
+      console.error("kokoro:cache:quota-exceeded-voice", voiceName);
+      state.tts.kokoro.cacheDisabled = true;
+      showToast("Storage full: Kokoro voices will not be cached", "warning");
+    } else {
+      console.warn("kokoro:cache:voice-save-failed", voiceName, err);
+    }
+    throw err;
+  }
+}
+
+async function getCachedKokoroModelFile(filename) {
+  const cacheKey = `kokoro-model-file-${filename}`;
+  try {
+    const asset = await db.assets
+      .where('type')
+      .equals('kokoro-model-file')
+      .and(asset => asset.name === cacheKey)
+      .first();
+    return asset?.data || null;
+  } catch (err) {
+    console.warn("kokoro:cache:model-file-get-failed", filename, err);
+    return null;
+  }
+}
+
+async function cacheKokoroModelFile(filename, blob) {
+  const cacheKey = `kokoro-model-file-${filename}`;
+  try {
+    await db.assets.put({
+      name: cacheKey,
+      type: 'kokoro-model-file',
+      data: blob,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    ttsDebug("kokoro:cache:model-file-saved", filename);
+  } catch (err) {
+    if (err.name === 'QuotaExceededError') {
+      console.error("kokoro:cache:quota-exceeded-model-file", filename);
+      state.tts.kokoro.cacheDisabled = true;
+      showToast("Storage full: Kokoro model files will not be cached", "warning");
+    } else {
+      console.warn("kokoro:cache:model-file-save-failed", filename, err);
+    }
+    throw err;
+  }
+}
+
+async function getCachedKokoroModel() {
+  try {
+    const asset = await db.assets
+      .where('type')
+      .equals('kokoro-model')
+      .first();
+    return asset?.data || null;
+  } catch (err) {
+    console.warn("kokoro:cache:model-get-failed", err);
+    return null;
+  }
+}
+
+async function cacheKokoroModel(modelBlob) {
+  try {
+    await db.assets.put({
+      name: KOKORO_MODEL_ID,
+      type: 'kokoro-model',
+      data: modelBlob,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    ttsDebug("kokoro:cache:model-saved");
+  } catch (err) {
+    if (err.name === 'QuotaExceededError') {
+      console.error("kokoro:cache:quota-exceeded-model");
+      state.tts.kokoro.cacheDisabled = true;
+      showToast("Storage full: Kokoro model will not be cached", "warning");
+    } else {
+      console.warn("kokoro:cache:model-save-failed", err);
+    }
+    throw err;
+  }
+}
+
+async function clearKokoroCache() {
+  try {
+    await db.assets
+      .where('type')
+      .anyOf(['kokoro-model', 'kokoro-voice', 'kokoro-model-file'])
+      .delete();
+    ttsDebug("kokoro:cache:cleared");
+  } catch (err) {
+    console.warn("kokoro:cache:clear-failed", err);
+  }
+}
+
+function isKokoroCacheDisabled() {
+  return state.tts?.kokoro?.cacheDisabled === true;
+}
+
+function enableKokoroCache() {
+  if (state.tts?.kokoro) {
+    state.tts.kokoro.cacheDisabled = false;
+  }
 }
 
 function getFilteredKokoroVoicesForLanguage(language = "") {
@@ -512,4 +737,5 @@ if (typeof window !== "undefined") {
   window.resetKokoroVoiceDownloadProgress = resetKokoroVoiceDownloadProgress;
   window.cancelKokoroVoiceDownload = cancelKokoroVoiceDownload;
   window.isVoiceDownloaded = isVoiceDownloaded;
+  window.clearKokoroCache = clearKokoroCache;
 }
