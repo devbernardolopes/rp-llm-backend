@@ -435,5 +435,12 @@
   "memorySlotsLabel": "SpeicherplÃ¤tze",
   "memoryMessagesToKeepLabel": "Anzahl der zu behaltenden Nachrichten",
   "memorySummarizerUserPrompt": "Benutzerprompt fÃ¼r die Speicherzusammenfassung",
-  "writingInstructionUsedByBots": "Wird verwendet von {count} BOT(s): {names}"
+  "writingInstructionUsedByBots": "Wird verwendet von {count} BOT(s): {names}",
+  "memoryModalTitle": "Speichereinträge",
+  "memoryModalDisabled": "Memory ist für diesen BOT deaktiviert.",
+  "memoryModalNotTriggered": "Für diesen Chat wurden noch keine Memory-Einträge erstellt.",
+  "memoryModalEntryLabel": "Level {level} · Slot {slot}",
+  "memoryModalEmptyEntryWarning": "Der Memory-Eintrag darf nicht leer sein.",
+  "memoryModalSaveSuccess": "Memory-Einträge gespeichert.",
+  "memoryModalLevelLocked": "Einträge aus früheren Leveln können nicht bearbeitet werden."
 }

@@ -435,5 +435,12 @@
   "memorySlotsLabel": "Slot di memoria",
   "memoryMessagesToKeepLabel": "Numero di messaggi da conservare",
   "memorySummarizerUserPrompt": "Prompt utente del riepilogo memoria",
-  "writingInstructionUsedByBots": "Usato da {count} BOT: {names}"
+  "writingInstructionUsedByBots": "Usato da {count} BOT: {names}",
+  "memoryModalTitle": "Voci di memoria",
+  "memoryModalDisabled": "La memoria è disabilitata per questo BOT.",
+  "memoryModalNotTriggered": "Per questa chat non è stata ancora generata memoria.",
+  "memoryModalEntryLabel": "Livello {level} · Slot {slot}",
+  "memoryModalEmptyEntryWarning": "La voce di memoria non può essere vuota.",
+  "memoryModalSaveSuccess": "Voci di memoria salvate.",
+  "memoryModalLevelLocked": "Le voci dei livelli precedenti non possono essere modificate."
 }

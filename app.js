@@ -122,23 +122,24 @@ function resetUserInputElementHeight(input) {
   if (!input) return;
   input.style.height = "";
   input.style.overflowY = "";
+  input.style.maxHeight = "";
 }
 
 function adjustUserInputElementHeight(input) {
   if (!input) return;
-  const hasMeaningfulContent = String(input.value || "").trim().length > 0;
+  const textValue = String(input.value || "");
+  const hasMeaningfulContent = textValue.trim().length > 0;
   if (!hasMeaningfulContent) {
     resetUserInputElementHeight(input);
     return;
   }
   input.style.height = "auto";
-  const targetHeight = Math.min(
-    input.scrollHeight,
-    USER_INPUT_AUTO_EXPAND_MAX_HEIGHT,
-  );
+  const maxHeight = USER_INPUT_AUTO_EXPAND_MAX_HEIGHT;
+  const targetHeight = Math.min(input.scrollHeight, maxHeight);
   input.style.height = `${targetHeight}px`;
-  input.style.overflowY =
-    input.scrollHeight > USER_INPUT_AUTO_EXPAND_MAX_HEIGHT ? "auto" : "hidden";
+  input.style.maxHeight = `${maxHeight}px`;
+  const needsScroll = input.scrollHeight > maxHeight;
+  input.style.overflowY = needsScroll ? "auto" : "hidden";
 }
 
 let unreadSoundAudioCtx = null;
@@ -2160,6 +2161,12 @@ function setupEvents() {
 
   setupModalTextareas();
 
+  document
+    .getElementById("memory-modal-save")
+    ?.addEventListener("click", () => {
+      handleMemoryModalSave().catch(() => {});
+    });
+
   const input = document.getElementById("user-input");
   const chatLog = document.getElementById("chat-log");
   input.addEventListener("keydown", onInputKeyDown);
@@ -3249,6 +3256,13 @@ function onInputKeyDown(e) {
     }
   }
   if (e.key !== "Enter") return;
+  const trimmedInput = String(input.value || "").trim();
+  if (trimmedInput === "/mem") {
+    e.preventDefault();
+    openMemoryModal().catch(() => {});
+    input.value = "";
+    return;
+  }
   const enterToSend = state.settings.enterToSendEnabled !== false;
   if (enterToSend) {
     if (!e.shiftKey && !e.ctrlKey) {
@@ -13976,6 +13990,117 @@ function closePromptHistory() {
   if (!state.promptHistoryOpen) return;
   document.getElementById("prompt-history-popover").classList.add("hidden");
   state.promptHistoryOpen = false;
+}
+
+async function renderMemoryModalEntries() {
+  const modal = document.getElementById("memory-modal");
+  const entriesRoot = document.getElementById("memory-modal-entries");
+  const statusEl = document.getElementById("memory-modal-status");
+  const saveBtn = document.getElementById("memory-modal-save");
+  if (!modal || !entriesRoot || !statusEl || !saveBtn) return;
+  entriesRoot.innerHTML = "";
+  statusEl.textContent = "";
+  saveBtn.disabled = true;
+  if (!currentCharacter || !currentThread) {
+    statusEl.textContent = t("openThreadFirst");
+    return;
+  }
+  if (currentCharacter.useMemory === false) {
+    statusEl.textContent = t("memoryModalDisabled");
+    return;
+  }
+  const entries = await getMemoryEntries(
+    Number(currentCharacter.id),
+    Number(currentThread.id),
+  );
+  if (!entries.length) {
+    statusEl.textContent = t("memoryModalNotTriggered");
+    return;
+  }
+  const highestLevel = getHighestMemoryLevel(entries);
+  const sorted = [...entries].sort((a, b) => {
+    const levelA = getEntryLevel(a);
+    const levelB = getEntryLevel(b);
+    if (levelA !== levelB) return levelA - levelB;
+    const slotA = Number(a?.slotNumber) || 0;
+    const slotB = Number(b?.slotNumber) || 0;
+    return slotA - slotB;
+  });
+  let editableCount = 0;
+  sorted.forEach((entry, idx) => {
+    const entryLevel = getEntryLevel(entry);
+    const slot =
+      Number(entry.slotNumber) && Number(entry.slotNumber) > 0
+        ? Number(entry.slotNumber)
+        : idx + 1;
+    const textarea = document.createElement("textarea");
+    textarea.id = `memory-entry-${entry.id || idx}`;
+    textarea.rows = 4;
+    textarea.placeholder = tf("memoryModalEntryLabel", {
+      level: entryLevel,
+      slot,
+    });
+    const summaryValue = String(entry.summary || "");
+    textarea.value = summaryValue;
+    textarea.dataset.memoryEntryId = String(entry.id || "");
+    textarea.dataset.originalValue = summaryValue;
+    const isLocked = entryLevel < highestLevel;
+    if (isLocked) {
+      textarea.disabled = true;
+      textarea.title = t("memoryModalLevelLocked");
+    } else {
+      editableCount += 1;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.className = "memory-entry";
+    wrapper.appendChild(textarea);
+    entriesRoot.appendChild(wrapper);
+  });
+  saveBtn.disabled = editableCount === 0;
+  setupModalTextareas(modal);
+}
+
+async function openMemoryModal() {
+  await renderMemoryModalEntries();
+  openModal("memory-modal");
+}
+
+async function handleMemoryModalSave() {
+  const modal = document.getElementById("memory-modal");
+  const saveBtn = document.getElementById("memory-modal-save");
+  if (!modal || !saveBtn) return;
+  const editableTextareas = Array.from(
+    modal.querySelectorAll("#memory-modal-entries textarea"),
+  ).filter((textarea) => !textarea.disabled);
+  if (editableTextareas.length === 0) return;
+  const updates = [];
+  for (const textarea of editableTextareas) {
+    const trimmed = String(textarea.value || "").trim();
+    if (!trimmed) {
+      showToast(t("memoryModalEmptyEntryWarning"), "error");
+      textarea.focus();
+      return;
+    }
+    const original = textarea.dataset.originalValue || "";
+    if (textarea.value !== original) {
+      const id = Number(textarea.dataset.memoryEntryId);
+      if (Number.isInteger(id) && id > 0) {
+        updates.push({ id, summary: textarea.value });
+      }
+    }
+  }
+  if (updates.length === 0) return;
+  saveBtn.disabled = true;
+  try {
+    for (const update of updates) {
+      await db.memories.update(update.id, { summary: update.summary });
+    }
+    showToast(t("memoryModalSaveSuccess"), "success");
+    await renderMemoryModalEntries();
+  } catch (err) {
+    console.warn("Failed to save memory entries:", err);
+    showToast(t("unknownError"), "error");
+  }
 }
 
 function positionPromptHistoryPopover() {

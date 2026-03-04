@@ -415,6 +415,7 @@ async function summarizeMemory(character) {
     ...toSummarize.map((m) => `${m.role}: ${m.content}`),
   );
   const prompt = `${userPromptText}\n\n${summarySections.join("\n\n")}`;
+  const requestHistory = [{ role: "user", content: prompt }];
 
   try {
     const summarySystemPrompt =
@@ -423,14 +424,30 @@ async function summarizeMemory(character) {
 
     const summaryResult = await callOpenRouter(
       summarySystemPrompt,
-      [{ role: "user", content: prompt }],
+      requestHistory,
       state.settings.model,
     );
 
     const summary = summaryResult.content;
 
-    const summarySystemContent = summarySystemPrompt;
-    const summaryUserContent = prompt;
+    const systemMessages = Array.isArray(summaryResult.systemMessages)
+      ? summaryResult.systemMessages
+      : [];
+    const systemContentPieces = systemMessages
+      .filter((msg) => msg.role === "system")
+      .map((msg) => String(msg.content || "").trim())
+      .filter(Boolean);
+    const summarySystemContent =
+      systemContentPieces.length > 0
+        ? systemContentPieces.join("\n\n")
+        : summarySystemPrompt;
+
+    const userContentPieces = requestHistory
+      .filter((msg) => msg.role === "user")
+      .map((msg) => String(msg.content || "").trim())
+      .filter(Boolean);
+    const summaryUserContent =
+      userContentPieces.length > 0 ? userContentPieces.join("\n\n") : prompt;
     const memoryId = await db.memories.add({
       characterId: character.id,
       threadId,

@@ -435,5 +435,12 @@
   "memorySlotsLabel": "Emplacements mÃ©moire",
   "memoryMessagesToKeepLabel": "Nombre de messages � conserver",
   "memorySummarizerUserPrompt": "Invite utilisateur du rÃ©sumÃ© mÃ©moire",
-  "writingInstructionUsedByBots": "UtilisÃ© par {count} BOT(s) : {names}"
+  "writingInstructionUsedByBots": "UtilisÃ© par {count} BOT(s) : {names}",
+  "memoryModalTitle": "Entrées de mémoire",
+  "memoryModalDisabled": "La mémoire est désactivée pour ce BOT.",
+  "memoryModalNotTriggered": "Aucune mémoire n'a encore été générée pour cette discussion.",
+  "memoryModalEntryLabel": "Niveau {level} · Emplacement {slot}",
+  "memoryModalEmptyEntryWarning": "L'entrée de mémoire ne peut pas être vide.",
+  "memoryModalSaveSuccess": "Entrées de mémoire enregistrées.",
+  "memoryModalLevelLocked": "Les entrées des niveaux inférieurs ne peuvent pas être modifiées."
 }

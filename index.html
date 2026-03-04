@@ -984,6 +984,38 @@
     </div>
 
     <div
+      id="memory-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="memory-modal-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="memory-modal-title" data-i18n="memoryModalTitle">
+            Memory entries
+          </h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="memory-modal-status" class="muted"></p>
+          <div id="memory-modal-entries"></div>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="memory-modal-save"
+            class="primary-btn"
+            type="button"
+            data-i18n="save"
+            disabled
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
       id="asset-editor-modal"
       class="modal hidden"
       role="dialog"

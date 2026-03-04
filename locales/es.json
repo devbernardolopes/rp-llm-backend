@@ -435,5 +435,12 @@
   "memorySlotsLabel": "Ranuras de memoria",
   "memoryMessagesToKeepLabel": "Cantidad de mensajes a conservar",
   "memorySummarizerUserPrompt": "Solicitud de usuario del resumidor de memoria",
-  "writingInstructionUsedByBots": "Usado por {count} BOT(s): {names}"
+  "writingInstructionUsedByBots": "Usado por {count} BOT(s): {names}",
+  "memoryModalTitle": "Entradas de memoria",
+  "memoryModalDisabled": "La memoria está desactivada para este BOT.",
+  "memoryModalNotTriggered": "Aún no se ha generado memoria para este chat.",
+  "memoryModalEntryLabel": "Nivel {level} · Ranura {slot}",
+  "memoryModalEmptyEntryWarning": "La entrada de memoria no puede estar vacía.",
+  "memoryModalSaveSuccess": "Entradas de memoria guardadas.",
+  "memoryModalLevelLocked": "No se pueden editar entradas de niveles anteriores."
 }
