@@ -104,3 +104,37 @@ db.version(11).stores({
   writingInstructions: "++id, name, createdAt, updatedAt",
   assets: "++id, name, type, createdAt, updatedAt",
 });
+
+db.version(12)
+  .stores({
+    characters: "++id, name",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories: "++id, characterId, summary, createdAt",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+  })
+  .upgrade(async (tx) => {
+    const memoryTable = tx.table("memories");
+    const slotLimit = 5;
+    const tracker = new Map();
+    const entries = await memoryTable.orderBy("createdAt").toArray();
+
+    for (const entry of entries) {
+      const key = `${entry.characterId}:${entry.threadId ?? "null"}`;
+      const prev = tracker.get(key) || { slot: 0, level: 1 };
+      let nextSlot = prev.slot + 1;
+      let nextLevel = prev.level;
+      if (nextSlot > slotLimit) {
+        nextSlot = 1;
+        nextLevel += 1;
+      }
+      tracker.set(key, { slot: nextSlot, level: nextLevel });
+      await memoryTable.update(entry.id, {
+        slotNumber: nextSlot,
+        levelNumber: nextLevel,
+      });
+    }
+  });

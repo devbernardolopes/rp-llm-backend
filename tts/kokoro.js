@@ -1,4 +1,187 @@
-﻿let kokoroVoiceDownloadAbortController = null;
+﻿/**
+ * Kokoro TTS Module
+ *
+ * This module provides text-to-speech functionality using Kokoro.js, a
+ * client-side neural TTS engine that runs in the browser using WebGPU or WASM.
+ * It handles voice model downloads, audio generation, and playback.
+ *
+ * ============================================================================
+ * KOKORO TTS PIPELINE
+ * ============================================================================
+ *
+ * 1. MODULE LOADING (loadKokoroModule)
+ *    - Dynamically imports kokoro-js from CDN paths (KOKORO_MODULE_PATHS)
+ *    - Caches the module promise to avoid re-loading
+ *    - Exposes KokoroTTS class from the module
+ *
+ * 2. INSTANCE CREATION (ensureKokoroInstance)
+ *    - Creates or reuses a KokoroTTS instance with specific device/dtype
+ *    - Patches fetch to intercept voice file downloads (patchKokoroVoiceFetch)
+ *    - Loads model from HuggingFace (KOKORO_MODEL_ID)
+ *    - Patches _validate_voice to allow all KOKORO_VOICE_OPTIONS
+ *    - Stores instance in state.tts.kokoro.instance
+ *
+ * 3. VOICE DOWNLOAD (patchKokoroVoiceFetch)
+ *    - Intercepts fetch() calls for /voices/<name>.bin URLs
+ *    - Tracks download progress in kokoroVoiceDownloadProgress
+ *    - Caches downloaded voices in kokoroDownloadedVoices Set
+ *    - Supports cancellation via abort controller (cancelKokoroVoiceDownload)
+ *    - Reassembles streamed chunks into Uint8Array
+ *
+ * 4. AUDIO GENERATION (in app.js: playKokoroTts)
+ *    - Chunks text for TTS (chunkForTTS)
+ *    - Calls kokoro.generate(chunk, { voice, speed }) for each chunk
+ *    - Converts result Blob to ArrayBuffer
+ *    - Creates AudioBufferSourceNode via Web Audio API (createKokoroBufferSource)
+ *    - Fallback: HTMLAudioElement if AudioContext unavailable
+ *
+ * 5. PLAYBACK (playResolved in app.js)
+ *    - Plays each audio chunk sequentially
+ *    - Uses shared AudioContext (getSharedKokoroAudioContext)
+ *    - Handles cancellation and cleanup
+ *
+ * ============================================================================
+ * STATE MANAGEMENT
+ * ============================================================================
+ *
+ * state.tts.kokoro:
+ *   - instance: KokoroTTS engine instance (null until loaded)
+ *   - config: { device: 'webgpu'|'wasm', dtype: 'auto'|'fp16'|'fp32' }
+ *   - loading: boolean (true during model load)
+ *   - selectedVoice: currently selected voice name
+ *   - voiceListLoaded: boolean (true after voice options populated)
+ *   - fetchPatched: boolean (true after fetch interceptor installed)
+ *   - modulePromise: cached promise for module import
+ *
+ * Global tracking (module scope):
+ *   - kokoroVoiceDownloadAbortController: cancels voice downloads
+ *   - kokoroVoiceDownloadProgress: { loaded, total, percent }
+ *   - kokoroDownloadedVoices: Set of voice names already downloaded
+ *   - sharedKokoroAudioContext: singleton AudioContext for playback
+ *
+ * ============================================================================
+ * CONSTANTS (defined in app.js)
+ * ============================================================================
+ *
+ * KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX"
+ * KOKORO_MODULE_PATHS = [
+ *   "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js",
+ *   ...
+ * ]
+ * KOKORO_DEVICE_OPTIONS = ["wasm", "webgpu"]
+ * KOKORO_DTYPE_OPTIONS = ["auto", "fp16", "fp32"]
+ * KOKORO_VOICE_OPTIONS = [all available voice identifiers]
+ * DEFAULT_KOKORO_VOICE = "af_heart"
+ * DEFAULT_TTS_RATE = 1.0
+ *
+ * ============================================================================
+ * GLOBAL FUNCTIONS EXPOSED
+ * ============================================================================
+ *
+ * Voice Download Tracking:
+ *   getKokoroVoiceDownloadProgress()
+ *     Returns current download progress object.
+ *
+ *   isVoiceDownloaded(voiceName)
+ *     Checks if a voice model has been downloaded.
+ *
+ *   markVoiceDownloaded(voiceName)
+ *     Marks a voice as downloaded (internal use).
+ *
+ *   resetKokoroVoiceDownloadProgress()
+ *     Resets progress tracking to initial state.
+ *
+ *   cancelKokoroVoiceDownload()
+ *     Aborts any in-progress voice download.
+ *
+ * Language & Voice Selection:
+ *   getKokoroLanguageKey(language)
+ *     Normalizes language code to kokoro format (e.g., 'pt-br' -> 'pt-BR').
+ *
+ *   getFilteredKokoroVoicesForLanguage(language)
+ *     Returns KOKORO_VOICE_OPTIONS ( currently unfiltered ).
+ *
+ *   isKokoroSupportedForLanguage(language)
+ *     True if any voices exist for the language.
+ *
+ * Instance Management:
+ *   loadKokoroModule()
+ *     Dynamically imports kokoro-js module from CDN.
+ *
+ *   ensureKokoroInstance(device, dtype)
+ *     Creates or returns existing KokoroTTS instance with given config.
+ *
+ *   preloadKokoroForActiveCharacter()
+ *     Preloads Kokoro if active character uses it (called in app.js).
+ *
+ *   buildKokoroOptions(source, rateFallback)
+ *     Constructs {device, dtype, voice, speed} from character settings.
+ *
+ * UI Helpers:
+ *   setKokoroVoiceLoadingPlaceholder()
+ *     Shows "loading" option in voice select dropdown.
+ *
+ *   populateKokoroVoiceSelect(preferred, language)
+ *     Fills the voice dropdown with available voices for language.
+ *
+ * Audio Playback:
+ *   getSharedKokoroAudioContext()
+ *     Returns singleton AudioContext (creates if needed).
+ *
+ *   decodeKokoroAudioBuffer(arrayBuffer)
+ *     Decodes audio data into AudioBuffer.
+ *
+ *   createKokoroBufferSource(arrayBuffer)
+ *     Creates and returns AudioBufferSourceNode ready to play.
+ *
+ * Provider Checks:
+ *   isActiveTtsProviderReady(provider)
+ *     Returns true if kokoro instance is loaded and ready.
+ *
+ *   getActiveCharacterTtsProvider()
+ *     Returns current character's TTS provider ('kokoro' or 'browser').
+ *
+ * ============================================================================
+ * INTEGRATION POINTS
+ * ============================================================================
+ *
+ * This module is used by app.js in the following ways:
+ *
+ * - Character Modal: User selects TTS provider and configures kokoro options
+ *   (voice, device, dtype) via dropdowns in the bot definition UI.
+ *
+ * - TTS Playback: playKokoroTts() function generates and plays speech for
+ *   a given message using the configured voice and speed.
+ *
+ * - Preloading: When viewing a character with kokoro TTS, preloadKokoroForActiveCharacter()
+ *   is called to initialize the engine before first use.
+ *
+ * - Voice List: Populated from KOKORO_VOICE_OPTIONS constant and filtered
+ *   by character language (getFilteredKokoroVoicesForLanguage).
+ *
+ * - Download Progress: UI reads global functions to show progress during
+ *   voice model downloads and allow cancellation.
+ *
+ * ============================================================================
+ * USAGE
+ * ============================================================================
+ *
+ * This module is loaded as a regular script in index.html.
+ * It exposes functions globally via window.* assignments at the bottom.
+ *
+ * Typical flow:
+ *   1. User selects a character with ttsProvider='kokoro'
+ *   2. ensureKokoroInstance() loads the module and model
+ *   3. patchKokoroVoiceFetch() intercepts voice downloads
+ *   4. playKokoroTts() generates audio via kokoro.generate()
+ *   5. Audio played via Web Audio API or HTMLAudioElement fallback
+ *
+ * Voice files (.bin) are cached in kokoroDownloadedVoices to avoid
+ * re-downloading during the same session.
+ *
+ * ============================================================================
+ */
+
 let kokoroVoiceDownloadProgress = { loaded: 0, total: 0, percent: 0 };
 const kokoroDownloadedVoices = new Set();
 

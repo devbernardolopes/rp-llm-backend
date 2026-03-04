@@ -433,5 +433,6 @@
   "oocModeTitleOn": "OOC mode: On",
   "oocModeTitleOff": "OOC mode: Off",
   "enableOocModeAria": "Enable OOC mode",
-  "disableOocModeAria": "Disable OOC mode"
+  "disableOocModeAria": "Disable OOC mode",
+  "memorySlotsLabel": "Memory Slots"
 }

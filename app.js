@@ -107,6 +107,7 @@ const DEFAULT_SETTINGS = {
   threadAutoTitleMinMessages: 5,
   lockMemoryMessages: false,
   summaryThreshold: 20,
+  memorySlots: 5,
   favoriteModels: [],
   chatMessageAlignment: "left",
   unreadSoundEnabled: true,
@@ -3352,6 +3353,7 @@ async function setupSettingsControls() {
   );
   const lockMemoryMessages = document.getElementById("lock-memory-messages");
   const summaryThresholdInput = document.getElementById("summary-threshold");
+  const memorySlotsInput = document.getElementById("memory-slots");
   if (uiLanguageSelect) {
     uiLanguageSelect.querySelector('option[value="auto"]').textContent =
       t("languageAuto");
@@ -3485,6 +3487,17 @@ async function setupSettingsControls() {
         : Number(state.settings.summaryThreshold || 20);
     state.settings.summaryThreshold = threshold;
     summaryThresholdInput.value = String(threshold);
+  }
+  if (memorySlotsInput) {
+    const slots =
+      typeof window.getMemorySlotsValue === "function"
+        ? window.getMemorySlotsValue(state.settings.memorySlots)
+        : Math.max(
+            3,
+            Math.min(10, Number(state.settings.memorySlots) || 5),
+          );
+    state.settings.memorySlots = slots;
+    memorySlotsInput.value = String(slots);
   }
   const chatMessageAlignment = document.getElementById(
     "chat-message-alignment",
@@ -3693,6 +3706,15 @@ async function setupSettingsControls() {
         : Number(summaryThresholdInput.value) || 20;
     summaryThresholdInput.value = String(threshold);
     state.settings.summaryThreshold = threshold;
+    saveSettings();
+  });
+  memorySlotsInput?.addEventListener("change", () => {
+    const slots =
+      typeof window.getMemorySlotsValue === "function"
+        ? window.getMemorySlotsValue(memorySlotsInput.value)
+        : Math.max(3, Math.min(10, Number(memorySlotsInput.value) || 5));
+    memorySlotsInput.value = String(slots);
+    state.settings.memorySlots = slots;
     saveSettings();
   });
   document

@@ -46,7 +46,10 @@
  * Fields:
  *   - id (auto-increment primary key)
  *   - characterId (indexed)
+ *   - threadId (optional thread reference)
  *   - summary (string)
+ *   - slotNumber (int, sequential slot within a level)
+ *   - levelNumber (int, increments when slots wrap)
  *   - createdAt (timestamp)
  *
  * Message flags (in conversationHistory):
@@ -82,13 +85,25 @@ async function getMemorySummary(characterId, threadId) {
     .equals(characterId)
     .sortBy("createdAt");
 
-  if (threadId) {
+  if (threadId != null) {
     entries = entries.filter((e) => e.threadId === threadId);
   }
 
   if (entries.length === 0) return null;
 
-  return entries.map((e) => e.summary).join("\n");
+  return entries
+    .map((entry, idx) => {
+      const slot =
+        Number.isInteger(entry.slotNumber) && entry.slotNumber > 0
+          ? entry.slotNumber
+          : idx + 1;
+      const level =
+        Number.isInteger(entry.levelNumber) && entry.levelNumber > 0
+          ? entry.levelNumber
+          : 1;
+      return `**ENTRY ${slot} LEVEL ${level}**\n${entry.summary}`;
+    })
+    .join("\n\n");
 }
 
 function getSummaryThresholdValue(raw) {
@@ -98,7 +113,57 @@ function getSummaryThresholdValue(raw) {
   return Math.min(50, Math.max(10, stepped));
 }
 
+function getMemorySlotsValue(raw) {
+  const num = Number(raw);
+  if (!Number.isFinite(num)) return 5;
+  const rounded = Math.round(num);
+  return Math.min(10, Math.max(3, rounded));
+}
+
 window.getSummaryThresholdValue = getSummaryThresholdValue;
+window.getMemorySlotsValue = getMemorySlotsValue;
+
+function getCurrentMemorySlots() {
+  const raw = state?.settings?.memorySlots;
+  return getMemorySlotsValue(raw ?? 5);
+}
+
+async function getNextMemorySlotInfo(characterId, threadId) {
+  const limit = getCurrentMemorySlots();
+  const entries = await db.memories
+    .where("characterId")
+    .equals(characterId)
+    .sortBy("createdAt");
+
+  const filtered =
+    threadId != null
+      ? entries.filter((entry) => entry.threadId === threadId)
+      : entries;
+
+  if (filtered.length === 0) {
+    return { slot: 1, level: 1 };
+  }
+
+  const lastEntry = filtered[filtered.length - 1];
+  const lastSlot =
+    Number.isInteger(lastEntry.slotNumber) && lastEntry.slotNumber > 0
+      ? lastEntry.slotNumber
+      : 1;
+  const lastLevel =
+    Number.isInteger(lastEntry.levelNumber) && lastEntry.levelNumber > 0
+      ? lastEntry.levelNumber
+      : 1;
+
+  if (limit <= 0) {
+    return { slot: lastSlot, level: lastLevel };
+  }
+
+  if (lastSlot >= limit) {
+    return { slot: 1, level: lastLevel + 1 };
+  }
+
+  return { slot: lastSlot + 1, level: lastLevel };
+}
 
 const MEMORY_PLACEHOLDER_STATUSES = new Set([
   "queued",
@@ -214,11 +279,14 @@ async function summarizeMemory(character) {
     );
 
     const summary = summaryResult.content;
+    const slotInfo = await getNextMemorySlotInfo(character.id, threadId);
 
     const memoryId = await db.memories.add({
       characterId: character.id,
       threadId,
       summary,
+      slotNumber: slotInfo.slot,
+      levelNumber: slotInfo.level,
       createdAt: Date.now(),
     });
 

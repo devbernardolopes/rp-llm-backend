@@ -431,5 +431,6 @@
   "oocModeTitleOn": "Modalit? OOC: Attiva",
   "oocModeTitleOff": "Modalit? OOC: Disattiva",
   "enableOocModeAria": "Abilita modalit? OOC",
-  "disableOocModeAria": "Disabilita modalit? OOC"
+  "disableOocModeAria": "Disabilita modalit? OOC",
+  "memorySlotsLabel": "Slot di memoria"
 }

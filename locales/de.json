@@ -431,5 +431,6 @@
   "oocModeTitleOn": "OOC-Modus: Ein",
   "oocModeTitleOff": "OOC-Modus: Aus",
   "enableOocModeAria": "OOC-Modus aktivieren",
-  "disableOocModeAria": "OOC-Modus deaktivieren"
+  "disableOocModeAria": "OOC-Modus deaktivieren",
+  "memorySlotsLabel": "SpeicherplÃ¤tze"
 }
