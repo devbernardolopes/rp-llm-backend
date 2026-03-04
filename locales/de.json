@@ -432,5 +432,7 @@
   "oocModeTitleOff": "OOC-Modus: Aus",
   "enableOocModeAria": "OOC-Modus aktivieren",
   "disableOocModeAria": "OOC-Modus deaktivieren",
-  "memorySlotsLabel": "SpeicherplÃ¤tze"
+  "memorySlotsLabel": "SpeicherplÃ¤tze",
+  "memoryMessagesToKeepLabel": "Anzahl der zu behaltenden Nachrichten",
+  "memorySummarizerUserPrompt": "Benutzerprompt f�r die Speicherzusammenfassung"
 }

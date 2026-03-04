@@ -800,9 +800,22 @@
               <input
                 id="summary-threshold"
                 type="number"
-                min="10"
+                min="5"
                 max="50"
                 step="5"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="memoryMessagesToKeepLabel"
+                >Amount of Messages to Keep</span
+              >
+              <input
+                id="memory-messages-to-keep"
+                type="number"
+                min="0"
+                max="4"
+                step="1"
+                value="3"
               />
             </div>
             <div class="form-field">
@@ -858,6 +871,18 @@
                 rows="3"
                 placeholder="System prompt for memory summarization."
               ></textarea>
+            </div>
+            <div class="form-field">
+              <details class="collapsible-details" open>
+                <summary data-i18n="memorySummarizerUserPrompt">
+                  Memory Summarizer User Prompt
+                </summary>
+                <textarea
+                  id="memory-summarizer-user-prompt"
+                  rows="3"
+                  placeholder="User prompt for memory summarization."
+                ></textarea>
+              </details>
             </div>
             <div class="form-field">
               <span data-i18n="personaInjectionTemplate"

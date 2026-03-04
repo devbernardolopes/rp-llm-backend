@@ -434,5 +434,7 @@
   "oocModeTitleOff": "OOC mode: Off",
   "enableOocModeAria": "Enable OOC mode",
   "disableOocModeAria": "Disable OOC mode",
-  "memorySlotsLabel": "Memory Slots"
+  "memorySlotsLabel": "Memory Slots",
+  "memoryMessagesToKeepLabel": "Amount of Messages to Keep",
+  "memorySummarizerUserPrompt": "Memory Summarizer User Prompt"
 }

@@ -432,5 +432,7 @@
   "oocModeTitleOff": "Modo OOC: Desactivado",
   "enableOocModeAria": "Activar modo OOC",
   "disableOocModeAria": "Desactivar modo OOC",
-  "memorySlotsLabel": "Ranuras de memoria"
+  "memorySlotsLabel": "Ranuras de memoria",
+  "memoryMessagesToKeepLabel": "Cantidad de mensajes a conservar",
+  "memorySummarizerUserPrompt": "Solicitud de usuario del resumidor de memoria"
 }

@@ -432,5 +432,7 @@
   "oocModeTitleOff": "Modalit? OOC: Disattiva",
   "enableOocModeAria": "Abilita modalit? OOC",
   "disableOocModeAria": "Disabilita modalit? OOC",
-  "memorySlotsLabel": "Slot di memoria"
+  "memorySlotsLabel": "Slot di memoria",
+  "memoryMessagesToKeepLabel": "Numero di messaggi da conservare",
+  "memorySummarizerUserPrompt": "Prompt utente del riepilogo memoria"
 }

@@ -432,5 +432,7 @@
   "oocModeTitleOff": "Modo OOC: Desativado",
   "enableOocModeAria": "Ativar modo OOC",
   "disableOocModeAria": "Desativar modo OOC",
-  "memorySlotsLabel": "Slots de memÃ³ria"
+  "memorySlotsLabel": "Slots de memÃ³ria",
+  "memoryMessagesToKeepLabel": "Quantidade de mensagens a manter",
+  "memorySummarizerUserPrompt": "Prompt do usu�rio do resumo de mem�ria"
 }

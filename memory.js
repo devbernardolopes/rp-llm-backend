@@ -59,18 +59,21 @@
  * ============================================================================
  * USAGE
  * ============================================================================
- *
- * This module is loaded as a regular script in index.html.
- * It exposes two global functions:
+*
+* This module is loaded as a regular script in index.html.
+* It exposes two global functions:
  *
  * // Get all memory summaries for a character
- * const memory = await getMemorySummary(characterId, threadId);
- *
- * // Trigger memory summarization (called automatically in app.js)
- * await summarizeMemory(character);
- *
- * ============================================================================
- */
+* const memory = await getMemorySummary(characterId, threadId);
+*
+* // Trigger memory summarization (called automatically in app.js)
+* await summarizeMemory(character);
+*
+* ============================================================================
+*/
+
+const DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT =
+  "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.";
 
 /**
  * Retrieves all memory summaries for a character and thread from the database.
@@ -110,7 +113,14 @@ function getSummaryThresholdValue(raw) {
   const num = Number(raw);
   if (!Number.isFinite(num)) return 20;
   const stepped = Math.round(num / 5) * 5;
-  return Math.min(50, Math.max(10, stepped));
+  return Math.min(50, Math.max(5, stepped));
+}
+
+function getMemoryMessagesToKeepValue(raw) {
+  const num = Number(raw);
+  if (!Number.isFinite(num)) return 3;
+  const rounded = Math.round(num);
+  return Math.min(4, Math.max(0, rounded));
 }
 
 function getMemorySlotsValue(raw) {
@@ -122,10 +132,16 @@ function getMemorySlotsValue(raw) {
 
 window.getSummaryThresholdValue = getSummaryThresholdValue;
 window.getMemorySlotsValue = getMemorySlotsValue;
+window.getMemoryMessagesToKeepValue = getMemoryMessagesToKeepValue;
 
 function getCurrentMemorySlots() {
   const raw = state?.settings?.memorySlots;
   return getMemorySlotsValue(raw ?? 5);
+}
+
+function getCurrentMemoryMessagesToKeep() {
+  const raw = state?.settings?.memoryMessagesToKeep;
+  return getMemoryMessagesToKeepValue(raw ?? 3);
 }
 
 async function getNextMemorySlotInfo(characterId, threadId) {
@@ -265,7 +281,12 @@ async function summarizeMemory(character) {
     }
   }
 
-  const prompt = `Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.\n\n${toSummarize.map((m) => `${m.role}: ${m.content}`).join("\n\n")}`;
+  const userPromptText =
+    (state?.settings?.memorySummarizerUserPrompt || "").trim() ||
+    DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT;
+  const prompt = `${userPromptText}\n\n${toSummarize
+    .map((m) => `${m.role}: ${m.content}`)
+    .join("\n\n")}`;
 
   try {
     const summarySystemPrompt =
@@ -290,7 +311,8 @@ async function summarizeMemory(character) {
       createdAt: Date.now(),
     });
 
-    const keepCount = Math.min(5, unsMessages.length);
+    const keepSetting = getCurrentMemoryMessagesToKeep();
+    const keepCount = Math.min(keepSetting, unsMessages.length);
     const markCount = Math.max(0, unsMessages.length - keepCount);
     for (let i = 0; i < markCount; i += 1) {
       const entry = unsMessages[i];

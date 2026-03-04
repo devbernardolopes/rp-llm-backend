@@ -107,6 +107,9 @@ const DEFAULT_SETTINGS = {
   threadAutoTitleMinMessages: 5,
   lockMemoryMessages: false,
   summaryThreshold: 20,
+  memoryMessagesToKeep: 3,
+  memorySummarizerUserPrompt:
+    "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
   memorySlots: 5,
   favoriteModels: [],
   chatMessageAlignment: "left",
@@ -3354,6 +3357,9 @@ async function setupSettingsControls() {
   );
   const lockMemoryMessages = document.getElementById("lock-memory-messages");
   const summaryThresholdInput = document.getElementById("summary-threshold");
+  const memoryMessagesToKeepInput = document.getElementById(
+    "memory-messages-to-keep",
+  );
   const memorySlotsInput = document.getElementById("memory-slots");
   if (uiLanguageSelect) {
     uiLanguageSelect.querySelector('option[value="auto"]').textContent =
@@ -3456,6 +3462,9 @@ async function setupSettingsControls() {
     "global-prompt-template",
   );
   const summarySystemPrompt = document.getElementById("summary-system-prompt");
+  const memorySummarizerUserPrompt = document.getElementById(
+    "memory-summarizer-user-prompt",
+  );
   const personaInjectionTemplate = document.getElementById(
     "persona-injection-template",
   );
@@ -3488,6 +3497,24 @@ async function setupSettingsControls() {
         : Number(state.settings.summaryThreshold || 20);
     state.settings.summaryThreshold = threshold;
     summaryThresholdInput.value = String(threshold);
+  }
+  if (memoryMessagesToKeepInput) {
+    const keepValue =
+      typeof window.getMemoryMessagesToKeepValue === "function"
+        ? window.getMemoryMessagesToKeepValue(
+            state.settings.memoryMessagesToKeep,
+          )
+        : Math.max(
+            0,
+            Math.min(
+              4,
+              Number.isFinite(Number(state.settings.memoryMessagesToKeep))
+                ? Number(state.settings.memoryMessagesToKeep)
+                : 3,
+            ),
+          );
+    state.settings.memoryMessagesToKeep = keepValue;
+    memoryMessagesToKeepInput.value = String(keepValue);
   }
   if (memorySlotsInput) {
     const slots =
@@ -3587,6 +3614,13 @@ async function setupSettingsControls() {
   });
   globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
+  if (memorySummarizerUserPrompt) {
+    const userPromptValue =
+      state.settings.memorySummarizerUserPrompt ||
+      DEFAULT_SETTINGS.memorySummarizerUserPrompt;
+    state.settings.memorySummarizerUserPrompt = userPromptValue;
+    memorySummarizerUserPrompt.value = userPromptValue;
+  }
   personaInjectionTemplate.value =
     state.settings.personaInjectionTemplate ||
     DEFAULT_SETTINGS.personaInjectionTemplate;
@@ -3707,6 +3741,25 @@ async function setupSettingsControls() {
         : Number(summaryThresholdInput.value) || 20;
     summaryThresholdInput.value = String(threshold);
     state.settings.summaryThreshold = threshold;
+    saveSettings();
+  });
+  memoryMessagesToKeepInput?.addEventListener("change", () => {
+    const keepValue =
+      typeof window.getMemoryMessagesToKeepValue === "function"
+        ? window.getMemoryMessagesToKeepValue(
+            memoryMessagesToKeepInput.value,
+          )
+        : Math.max(
+            0,
+            Math.min(
+              4,
+              Number.isFinite(Number(memoryMessagesToKeepInput.value))
+                ? Number(memoryMessagesToKeepInput.value)
+                : 3,
+            ),
+          );
+    memoryMessagesToKeepInput.value = String(keepValue);
+    state.settings.memoryMessagesToKeep = keepValue;
     saveSettings();
   });
   memorySlotsInput?.addEventListener("change", () => {
@@ -3914,6 +3967,11 @@ async function setupSettingsControls() {
 
   summarySystemPrompt.addEventListener("input", () => {
     state.settings.summarySystemPrompt = summarySystemPrompt.value;
+    saveSettings();
+  });
+  memorySummarizerUserPrompt?.addEventListener("input", () => {
+    state.settings.memorySummarizerUserPrompt =
+      memorySummarizerUserPrompt.value;
     saveSettings();
   });
 
