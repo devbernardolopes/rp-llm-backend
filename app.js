@@ -2135,19 +2135,38 @@ function setupEvents() {
 
   setupModalTextareas();
 
-  const input = document.getElementById("user-input");
-  const chatLog = document.getElementById("chat-log");
-  input.addEventListener("keydown", onInputKeyDown);
-  input.addEventListener("input", () => {
-    if (state.promptHistoryOpen) closePromptHistory();
-    if (
-      state.activeShortcut &&
-      input.value !== state.activeShortcut.initialValue
-    ) {
-      state.activeShortcut = null;
-    }
-    scheduleThreadBudgetIndicatorUpdate();
-  });
+   const input = document.getElementById("user-input");
+   const chatLog = document.getElementById("chat-log");
+   input.addEventListener("keydown", onInputKeyDown);
+   input.addEventListener("input", () => {
+     if (state.promptHistoryOpen) closePromptHistory();
+     if (
+       state.activeShortcut &&
+       input.value !== state.activeShortcut.initialValue
+     ) {
+       state.activeShortcut = null;
+     }
+     scheduleThreadBudgetIndicatorUpdate();
+     // Auto-expand: reset to auto to get correct scrollHeight, then set to that height
+     input.style.height = "auto";
+     const maxHeight = parseInt(getComputedStyle(input).maxHeight) || 500;
+     const newHeight = Math.min(input.scrollHeight, maxHeight);
+     input.style.height = newHeight + "px";
+   });
+   input.addEventListener("blur", () => {
+     // Retract to default (remove inline height, CSS min-height will apply)
+     input.style.height = "";
+   });
+   input.addEventListener("focus", () => {
+     // Expand again if content exceeds default height
+     const defaultHeight = parseInt(getComputedStyle(input).minHeight) || 72;
+     if (input.scrollHeight > defaultHeight) {
+       input.style.height = "auto";
+       const maxHeight = parseInt(getComputedStyle(input).maxHeight) || 500;
+       const newHeight = Math.min(input.scrollHeight, maxHeight);
+       input.style.height = newHeight + "px";
+     }
+   });
   input.addEventListener("click", () => {
     if (state.promptHistoryOpen) closePromptHistory();
   });
