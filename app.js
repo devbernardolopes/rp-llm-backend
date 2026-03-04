@@ -8814,11 +8814,11 @@ async function deleteWritingInstruction(writingInstructionId) {
   );
   if (!wi) return;
 
-  // Find characters using this writing instruction
+  // Find characters using this writing instruction (check all language definitions)
   const allCharacters = await db.characters.toArray();
   const usingCharacters = allCharacters.filter(char => {
-    const def = char.definitions?.find(d => d.language === state.charEditLang);
-    return def?.writingInstructionId === writingInstructionId;
+    if (!char.definitions || !Array.isArray(char.definitions)) return false;
+    return char.definitions.some(def => def.writingInstructionId === writingInstructionId);
   });
 
   let message = tf("deleteWritingInstructionConfirm", { name: wi.name });
