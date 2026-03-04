@@ -2140,7 +2140,8 @@ function setupEvents() {
    input.addEventListener("keydown", onInputKeyDown);
    const autoResize = () => {
      input.style.height = "auto";
-     input.style.height = input.scrollHeight + "px";
+     const newHeight = input.scrollHeight;
+     input.style.height = newHeight + "px";
    };
    input.addEventListener("input", () => {
      if (state.promptHistoryOpen) closePromptHistory();
@@ -2151,7 +2152,16 @@ function setupEvents() {
        state.activeShortcut = null;
      }
      scheduleThreadBudgetIndicatorUpdate();
-     autoResize();
+     requestAnimationFrame(autoResize);
+   });
+   input.addEventListener("blur", () => {
+     input.style.height = "";
+   });
+   input.addEventListener("focus", () => {
+     const defaultHeight = parseInt(getComputedStyle(input).minHeight) || 72;
+     if (input.scrollHeight > defaultHeight) {
+       requestAnimationFrame(autoResize);
+     }
    });
    input.addEventListener("blur", () => {
      input.style.height = "";
