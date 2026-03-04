@@ -12225,11 +12225,30 @@ async function buildOocSystemPrompt() {
   const memorySection = memoryContext
     ? `***MEMORY CONTEXT***\n\n${String(memoryContext || "").trim()}`
     : "";
+  const charPersonaName =
+    currentThread?.initialUserName ||
+    currentPersona?.name ||
+    "You";
+  const charName = currentCharacter?.name || "Character";
+  const characterPromptRaw = (
+    currentCharacter?.systemPrompt ||
+    state.settings.globalPromptTemplate ||
+    ""
+  ).trim();
+  const characterPrompt = replaceLorePlaceholders(
+    characterPromptRaw,
+    charPersonaName,
+    charName,
+  ).trim();
+  const characterPromptSection = characterPrompt
+    ? `***CHARACTER PROMPT***\n\n${characterPrompt}`
+    : "";
   const messageSection = `***MESSAGES SO FAR***\n\n${contextMessages.join(
     "\n\n",
   )}`;
   const systemPromptParts = [
     "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
+    characterPromptSection,
     memorySection,
     messageSection,
   ].filter(Boolean);
