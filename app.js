@@ -9698,6 +9698,15 @@ function renderSfxList() {
             def.sfx.splice(idx, 1);
             setModalDirtyState("character-modal", true);
             renderSfxList();
+            const currentCharId = Number(currentThread?.characterId);
+            const editingCharId = Number(state.editingCharacterId);
+            if (
+              Number.isInteger(currentCharId) &&
+              Number.isInteger(editingCharId) &&
+              currentCharId === editingCharId
+            ) {
+              await applyChatViewBackgroundFromSfx(currentThread);
+            }
           },
         );
         deleteBtn.classList.add("danger-icon-btn");
@@ -9747,7 +9756,7 @@ async function saveSfxEntry({ close = true } = {}) {
     Number.isInteger(editingCharId) &&
     currentCharId === editingCharId
   ) {
-    await applyChatViewBackgroundFromSfx(currentCharacter, currentThread);
+    await applyChatViewBackgroundFromSfx(currentThread);
   }
   return true;
 }
@@ -10742,7 +10751,7 @@ async function openThread(threadId) {
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
   }));
-  await applyChatViewBackgroundFromSfx(currentCharacter, currentThread);
+  await applyChatViewBackgroundFromSfx(currentThread);
   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
   currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
@@ -16434,6 +16443,16 @@ function clearChatViewBackground() {
   state.chatBackgroundAssetUrl = "";
 }
 
+async function resolveThreadBackgroundCharacter(thread) {
+  if (!thread?.characterId) return null;
+  const base = await db.characters.get(Number(thread.characterId));
+  if (!base) return null;
+  return resolveCharacterForLanguage(
+    base,
+    thread.characterLanguage || thread.language || base.activeLanguage || "en",
+  );
+}
+
 async function getThreadStartImageSfxAsset(character, thread) {
   if (!character || !thread) return null;
   const lang = String(thread.characterLanguage || thread.language || "en");
@@ -16462,7 +16481,7 @@ async function getThreadStartImageSfxAsset(character, thread) {
   return null;
 }
 
-async function applyChatViewBackgroundFromSfx(character, thread) {
+async function applyChatViewBackgroundFromSfx(thread) {
   const chatView = document.getElementById("chat-view");
   if (!chatView) {
     state.chatBackgroundAssetId = null;
@@ -16470,7 +16489,17 @@ async function applyChatViewBackgroundFromSfx(character, thread) {
     return;
   }
   try {
-    const assetInfo = await getThreadStartImageSfxAsset(character, thread);
+    const resolvedCharacter = await resolveThreadBackgroundCharacter(thread);
+    if (!resolvedCharacter) {
+      if (state.chatBackgroundAssetId || state.chatBackgroundAssetUrl) {
+        clearChatViewBackground();
+      }
+      return;
+    }
+    const assetInfo = await getThreadStartImageSfxAsset(
+      resolvedCharacter,
+      thread,
+    );
     if (!assetInfo) {
       if (state.chatBackgroundAssetId || state.chatBackgroundAssetUrl) {
         clearChatViewBackground();
