@@ -10829,11 +10829,14 @@ async function importCharacterFromFile(e) {
       let tags = [];
       if (Array.isArray(data.tags)) {
         const normalizedTags = data.tags.map((t) => normalizeTagValue(t));
+        const existingTags = getAllAvailableTags();
+        const existingLowerMap = new Map();
+        existingTags.forEach((t) => existingLowerMap.set(t.toLowerCase(), t));
         const seen = new Set();
         normalizedTags.forEach((t) => {
           if (t && !seen.has(t.toLowerCase())) {
             seen.add(t.toLowerCase());
-            tags.push(t);
+            tags.push(existingLowerMap.get(t.toLowerCase()) || t);
           }
         });
       }
@@ -10892,17 +10895,18 @@ async function importCharacterFromFile(e) {
       if (!imported || typeof imported !== "object") {
         throw new Error("Invalid character file");
       }
-      mergeTagsIntoCatalog(
-        Array.isArray(imported.tags)
-          ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
-          : parseTagList(imported.tags || ""),
-      );
+      const rawTags = Array.isArray(imported.tags)
+        ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
+        : parseTagList(imported.tags || "");
+      const existingTags = getAllAvailableTags();
+      const existingLowerMap = new Map();
+      existingTags.forEach((t) => existingLowerMap.set(t.toLowerCase(), t));
+      const normalizedTags = rawTags.map((t) => existingLowerMap.get(t.toLowerCase()) || t);
+      mergeTagsIntoCatalog(rawTags);
       character = {
         ...imported,
         name: String(imported.name || "").trim(),
-        tags: Array.isArray(imported.tags)
-          ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
-          : parseTagList(imported.tags || ""),
+        tags: normalizedTags,
         avatarScale: 4,
         createdAt: Date.now(),
         updatedAt: Date.now(),
