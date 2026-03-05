@@ -66,6 +66,8 @@ const ICONS = {
 
 const PROMPT_COMMAND_HISTORY_KEY = "rp-prompt-command-history";
 const PROMPT_COMMAND_HISTORY_MAX = 200;
+const PROMPT_HISTORY_KEY = "rp-prompt-history";
+const PROMPT_HISTORY_MAX = 200;
 
 const DEFAULT_SETTINGS = {
   uiLanguage: "auto",
@@ -1020,6 +1022,7 @@ const state = {
   currentPersonaAvatarBlob: null,
   activeModalId: null,
   promptHistoryOpen: false,
+  promptHistory: [],
   promptCommandHistory: [],
   chatAutoScroll: true,
   chatBackgroundAssetId: null,
@@ -1503,6 +1506,7 @@ async function init() {
   ensureTagCatalogInitialized();
   await applyInterfaceLanguage();
   loadUiState();
+  loadPromptHistory();
   renderTagPresetsDataList();
   await setupSettingsControls();
   setupEvents();
@@ -4597,6 +4601,75 @@ function loadPromptCommandHistory() {
     console.warn("Failed to load prompt command history:", err);
     state.promptCommandHistory = [];
   }
+}
+
+function savePromptHistory() {
+  try {
+    localStorage.setItem(
+      PROMPT_HISTORY_KEY,
+      JSON.stringify(state.promptHistory || []),
+    );
+  } catch (err) {
+    console.warn("Failed to persist prompt history:", err);
+  }
+}
+
+function loadPromptHistory() {
+  const raw = localStorage.getItem(PROMPT_HISTORY_KEY);
+  if (!raw) {
+    state.promptHistory = [];
+    return;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      state.promptHistory = parsed
+        .filter((entry) => entry && typeof entry.content === "string")
+        .slice(-PROMPT_HISTORY_MAX);
+    } else {
+      state.promptHistory = [];
+    }
+  } catch (err) {
+    console.warn("Failed to load prompt history:", err);
+    state.promptHistory = [];
+  }
+}
+
+function addPromptToHistory(threadId, content) {
+  if (!content || !threadId) return;
+  const trimmed = String(content).trim();
+  if (!trimmed) return;
+
+  state.promptHistory = Array.isArray(state.promptHistory) ? state.promptHistory : [];
+
+  // Check most recent prompt history entry for this thread
+  const threadPromptEntries = state.promptHistory.filter((e) => e.threadId === threadId);
+  if (threadPromptEntries.length > 0) {
+    threadPromptEntries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (threadPromptEntries[0].content === trimmed) {
+      return;
+    }
+  }
+
+  // Check most recent command history entry for this thread
+  const commandEntries = (state.promptCommandHistory || []).filter((e) => e.threadId === threadId);
+  if (commandEntries.length > 0) {
+    commandEntries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (commandEntries[0].content === trimmed) {
+      return;
+    }
+  }
+
+  state.promptHistory.push({
+    threadId,
+    content: trimmed,
+    createdAt: Date.now(),
+  });
+
+  if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
+    state.promptHistory.shift();
+  }
+  savePromptHistory();
 }
 
 function addPromptCommandEntry(threadId, content) {
@@ -12820,10 +12893,11 @@ async function sendMessage(options = {}) {
     senderAvatar: currentPersona?.avatar || "",
     senderPersonaId: currentPersona?.id || null,
   };
-  conversationHistory.push(userMsg);
-  await persistCurrentThread();
+    conversationHistory.push(userMsg);
+    await persistCurrentThread();
+    addPromptToHistory(currentThread.id, text);
 
-  const log = document.getElementById("chat-log");
+    const log = document.getElementById("chat-log");
   log.appendChild(
     buildMessageRow(userMsg, conversationHistory.length - 1, false),
   );
@@ -13013,8 +13087,9 @@ async function sendOocInquiry(text) {
     senderPersonaId: currentPersona?.id || null,
     ooc: true,
   };
-  conversationHistory.push(userMsg);
-  if (log && isViewing) {
+    conversationHistory.push(userMsg);
+    addPromptToHistory(currentThread.id, text);
+    if (log && isViewing) {
     log.appendChild(buildMessageRow(userMsg, userIndex, false));
     scrollChatToBottom();
   }
@@ -14551,22 +14626,26 @@ function openPromptHistory() {
   list.innerHTML = "";
 
   const threadId = currentThread?.id ?? null;
-  const equalsThreadId = (value) => {
-    if (value == null && threadId == null) return true;
-    if (value == null || threadId == null) return false;
-    return String(value) === String(threadId);
-  };
-  const conversationPrompts = conversationHistory.filter(
-    (m) => m.role === "user",
-  );
+
+  // Get prompts from our persistent prompt history (user messages)
+  const historyPrompts = (state.promptHistory || [])
+    .filter((entry) => entry.threadId === threadId)
+    .map((entry) => ({ content: entry.content, createdAt: entry.createdAt }));
+
+  // Get command prompts
   const commandPrompts = (
     Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : []
-  ).filter((entry) => equalsThreadId(entry.threadId));
-  const prompts = [...conversationPrompts, ...commandPrompts].sort((a, b) => {
+  )
+    .filter((entry) => entry.threadId === threadId)
+    .map((entry) => ({ content: entry.content, createdAt: entry.createdAt }));
+
+  // Combine and sort by most recent first
+  const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
     const aTs = Number(a.createdAt) || 0;
     const bTs = Number(b.createdAt) || 0;
     return bTs - aTs;
   });
+
   if (prompts.length === 0) {
     const msg = document.createElement("p");
     msg.className = "muted";
@@ -14577,20 +14656,52 @@ function openPromptHistory() {
       const btn = document.createElement("button");
       btn.className = "prompt-history-item";
       btn.textContent = entry.content;
-      btn.addEventListener("click", () => {
+
+      // Single click: populate and close (with delay to allow double-click detection)
+      btn.addEventListener("click", (e) => {
+        const handler = setTimeout(() => {
+          const promptInput = document.getElementById("user-input");
+          if (promptInput) {
+            promptInput.value = entry.content;
+            promptInput.focus();
+            requestAnimationFrame(() => {
+              adjustUserInputElementHeight(promptInput);
+            });
+          }
+          closePromptHistory();
+        }, 250);
+        btn._clickTimeout = handler;
+      });
+
+      // Double click: populate and auto-send if allowed
+      btn.addEventListener("dblclick", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Cancel pending single-click action
+        if (btn._clickTimeout) {
+          clearTimeout(btn._clickTimeout);
+          btn._clickTimeout = null;
+        }
+        // Check if sending is allowed
+        if (state.sending || !currentThread) return;
         const promptInput = document.getElementById("user-input");
         if (promptInput) {
           promptInput.value = entry.content;
-          promptInput.focus();
           requestAnimationFrame(() => {
             adjustUserInputElementHeight(promptInput);
+            // Attempt to send
+            sendMessage();
           });
         }
         closePromptHistory();
       });
+
       list.appendChild(btn);
     });
   }
+
+  // Scroll to top
+  list.scrollTop = 0;
 
   document.getElementById("prompt-history-popover").classList.remove("hidden");
   state.promptHistoryOpen = true;
