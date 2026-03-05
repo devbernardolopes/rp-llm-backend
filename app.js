@@ -2727,6 +2727,49 @@ function restoreCharModalTextareaCollapseStates() {
   }
 }
 
+function savePersonaEditorTextareaCollapseStates() {
+  const personaId = state_editingPersonaId;
+  if (!personaId) return;
+  const key = `rp-persona-collapse-${personaId}`;
+  const states = {};
+  const modal = document.getElementById("persona-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    states[textarea.id] = expanded;
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+}
+
+function restorePersonaEditorTextareaCollapseStates(personaId) {
+  if (!personaId) return;
+  const key = `rp-persona-collapse-${personaId}`;
+  const raw = localStorage.getItem(key);
+  const modal = document.getElementById("persona-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (raw) {
+      try {
+        const states = JSON.parse(raw);
+        if (states[textarea.id] !== undefined) {
+          entry.setExpanded(states[textarea.id]);
+        } else {
+          entry.setExpanded(hasContent);
+        }
+      } catch {
+        entry.setExpanded(hasContent);
+      }
+    } else {
+      entry.setExpanded(hasContent);
+    }
+  });
+}
+
 function getWiEditorCollapseStorageKey() {
   const wiId = state_writingInstructions.editingId || "new";
   const lang = state_writingInstructions.activeLanguage || "en";
@@ -6557,6 +6600,7 @@ async function closeActiveModal() {
     }
   }
   if (closingId === "persona-editor-modal") {
+    savePersonaEditorTextareaCollapseStates();
     const parentModal = document.getElementById("personas-modal");
     if (parentModal) {
       parentModal.classList.remove("hidden");
@@ -8253,10 +8297,14 @@ function openPersonaEditor(persona = null) {
   if (editorModal) {
     editorModal.classList.remove("hidden");
     state.activeModalId = "persona-editor-modal";
+    setupModalTextareas(editorModal);
+    restorePersonaEditorTextareaCollapseStates(persona?.id);
   }
 }
 
 async function savePersonaFromEditor() {
+  savePersonaEditorTextareaCollapseStates();
+
   const name = document.getElementById("persona-editor-name").value.trim();
   if (!name) {
     showToast(t("personaNameRequired"), "error");
