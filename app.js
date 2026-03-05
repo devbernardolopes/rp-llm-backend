@@ -11570,18 +11570,15 @@ async function renameThread(threadId) {
     await openInfoDialog(t("missingFieldTitle"), t("threadTitleRequired"));
     return;
   }
-  const updatedAt = Date.now();
   await db.threads.update(thread.id, {
     title,
     titleManual: true,
     titleGenerated: true,
-    updatedAt,
   });
   if (currentThread?.id === thread.id) {
     currentThread.title = title;
     currentThread.titleManual = true;
     currentThread.titleGenerated = true;
-    currentThread.updatedAt = updatedAt;
     updateChatTitle();
   }
   await renderThreads();
