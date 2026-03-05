@@ -6592,6 +6592,7 @@ async function closeActiveModal() {
   const modal = document.getElementById(state.activeModalId);
   modal?.classList.add("hidden");
   if (closingId === "writing-instruction-editor-modal") {
+    saveWiEditorTextareaCollapseStates();
     const parentModal = document.getElementById("writing-instructions-modal");
     if (parentModal) {
       parentModal.classList.remove("hidden");
@@ -9122,13 +9123,14 @@ async function openWritingInstructionEditor(writingInstruction = null) {
   updateWritingInstructionNameCount();
   renderWritingInstructionTabs();
   loadActiveWritingInstructionToForm();
-  restoreWiEditorTextareaCollapseStates();
   const editorModal = document.getElementById(
     "writing-instruction-editor-modal",
   );
   if (editorModal) {
     editorModal.classList.remove("hidden");
     state.activeModalId = "writing-instruction-editor-modal";
+    setupModalTextareas(editorModal);
+    restoreWiEditorTextareaCollapseStates();
   }
 }
 
@@ -9262,6 +9264,7 @@ function updateSaveWritingInstructionButton() {
 }
 
 async function saveWritingInstruction({ close = true } = {}) {
+  saveWiEditorTextareaCollapseStates();
   saveActiveWritingInstructionFromForm();
   const name = String(
     document.getElementById("writing-instruction-name")?.value || "",
