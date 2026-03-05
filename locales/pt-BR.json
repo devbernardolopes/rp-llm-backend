@@ -454,6 +454,7 @@
   "memoryRegenerateProgressClose": "Fechar",
   "memoryRegenerateProgressFailed": "Falha na regeneração: {error}",
   "botCardAvatarEffectHover": "Ao passar o mouse",
-  "memorySummarizationFailed": "A sumarização da memória falhou: {error}. Por favor, tente novamente antes de continuar.",
-  "autoTitleFailed": "A geração do título automático falhou: {error}. Por favor, tente novamente antes de continuar."
-}
+   "memorySummarizationFailed": "A sumarização da memória falhou: {error}. Por favor, tente novamente antes de continuar.",
+   "autoTitleFailed": "A geração do título automático falhou: {error}. Por favor, tente novamente antes de continuar.",
+   "useLocalSummarization": "Usar Sumarização Local (mais rápido, sem custo de API)"
+ }

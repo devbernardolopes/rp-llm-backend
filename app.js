@@ -109,12 +109,13 @@ const DEFAULT_SETTINGS = {
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 5,
   lockMemoryMessages: false,
-  summaryThreshold: 20,
-  memoryMessagesToKeep: 3,
-  memorySummarizerUserPrompt:
-    "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
-  summaryMessagesPreProcessingJson: "[]",
-  memorySlots: 5,
+   summaryThreshold: 20,
+   memoryMessagesToKeep: 3,
+   memorySummarizerUserPrompt:
+     "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
+   summaryMessagesPreProcessingJson: "[]",
+   memorySlots: 5,
+   useLocalSummarization: false,
   favoriteModels: [],
   chatMessageAlignment: "left",
   unreadSoundEnabled: true,
@@ -1492,9 +1493,10 @@ async function init() {
   await migrateLegacySessions();
   await hydrateGenerationQueue();
   await ensurePersonasInitialized();
-  await renderAll();
-  setupCrossWindowSync();
-  // applyMarkdownCustomCss(); // Disabled - using markdown-it library
+   await renderAll();
+   setupCrossWindowSync();
+   preloadSummarizationIfEnabled();
+   // applyMarkdownCustomCss(); // Disabled - using markdown-it library
   applyChatMessageAlignment();
   renderCharacterTagFilterChips();
   updateThreadRenameButtonState();
@@ -3918,11 +3920,19 @@ async function setupSettingsControls() {
     threadAutoTitleMinMessages.value = String(value);
     saveSettings();
   });
-  lockMemoryMessages?.addEventListener("change", () => {
-    state.settings.lockMemoryMessages = lockMemoryMessages.checked;
-    saveSettings();
-  });
-  summaryThresholdInput?.addEventListener("change", () => {
+   lockMemoryMessages?.addEventListener("change", () => {
+     state.settings.lockMemoryMessages = lockMemoryMessages.checked;
+     saveSettings();
+   });
+   const useLocalSummarization = document.getElementById("use-local-summarization");
+   if (useLocalSummarization) {
+     useLocalSummarization.checked = state.settings.useLocalSummarization === true;
+     useLocalSummarization.addEventListener("change", () => {
+       state.settings.useLocalSummarization = useLocalSummarization.checked;
+       saveSettings();
+     });
+   }
+   summaryThresholdInput?.addEventListener("change", () => {
     const threshold =
       typeof window.getSummaryThresholdValue === "function"
         ? window.getSummaryThresholdValue(summaryThresholdInput.value)

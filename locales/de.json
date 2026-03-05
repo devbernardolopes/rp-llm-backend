@@ -454,6 +454,7 @@
   "memoryRegenerateProgressClose": "Schließen",
   "memoryRegenerateProgressFailed": "Regeneration fehlgeschlagen: {error}",
   "botCardAvatarEffectHover": "Beim Überfahren",
-  "memorySummarizationFailed": "Die Gedächtniszusammenfassung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst.",
-  "autoTitleFailed": "Die automatische Titelgenerierung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst."
-}
+   "memorySummarizationFailed": "Die Gedächtniszusammenfassung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst.",
+   "autoTitleFailed": "Die automatische Titelgenerierung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst.",
+   "useLocalSummarization": "Lokale Zusammenfassung verwenden (schneller, keine API-Kosten)"
+ }

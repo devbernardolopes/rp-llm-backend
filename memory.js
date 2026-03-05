@@ -424,40 +424,56 @@ async function summarizeMemory(character) {
   const prompt = `${userPromptText}\n\n${summarySections.join("\n\n")}`;
   const requestHistory = [{ role: "user", content: prompt }];
 
-  try {
-    const summarySystemPrompt =
-      state.settings.summarySystemPrompt ||
-      "You are a helpful summarization assistant.";
-
-    const summaryResult = await callOpenRouter(
-      summarySystemPrompt,
-      requestHistory,
-      state.settings.model,
-      null,
-      null,
-      { forceStream: false },
-    );
-
-    const summary = summaryResult.content;
-
-    const systemMessages = Array.isArray(summaryResult.systemMessages)
-      ? summaryResult.systemMessages
-      : [];
-    const systemContentPieces = systemMessages
-      .filter((msg) => msg.role === "system")
-      .map((msg) => String(msg.content || "").trim())
-      .filter(Boolean);
-    const summarySystemContent =
-      systemContentPieces.length > 0
-        ? systemContentPieces.join("\n\n")
-        : summarySystemPrompt;
-
-    const userContentPieces = requestHistory
-      .filter((msg) => msg.role === "user")
-      .map((msg) => String(msg.content || "").trim())
-      .filter(Boolean);
-    const summaryUserContent =
-      userContentPieces.length > 0 ? userContentPieces.join("\n\n") : prompt;
+   try {
+     let summary = null;
+     let summarySystemContent = summarySystemPrompt;
+     let summaryUserContent = prompt;
+     
+     if (state.settings.useLocalSummarization) {
+       if (isViewing) {
+         showToast("Using local summarization...", "info");
+       }
+       const localSummary = await getLocalSummary(prompt);
+       if (localSummary) {
+         summary = localSummary;
+       } else {
+         if (isViewing) {
+           showToast("Local summarization failed, using API", "warning");
+         }
+         // Fall through to API
+       }
+     }
+     
+     if (summary === null) {
+       const summaryResult = await callOpenRouter(
+         summarySystemPrompt,
+         requestHistory,
+         state.settings.model,
+         null,
+         null,
+         { forceStream: false },
+       );
+       summary = summaryResult.content;
+       
+       const systemMessages = Array.isArray(summaryResult.systemMessages)
+         ? summaryResult.systemMessages
+         : [];
+       const systemContentPieces = systemMessages
+         .filter((msg) => msg.role === "system")
+         .map((msg) => String(msg.content || "").trim())
+         .filter(Boolean);
+       summarySystemContent =
+         systemContentPieces.length > 0
+           ? systemContentPieces.join("\n\n")
+           : summarySystemPrompt;
+       
+       const userContentPieces = requestHistory
+         .filter((msg) => msg.role === "user")
+         .map((msg) => String(msg.content || "").trim())
+         .filter(Boolean);
+       summaryUserContent =
+         userContentPieces.length > 0 ? userContentPieces.join("\n\n") : prompt;
+     }
      const memoryId = await db.memories.add({
        characterId: character.id,
        threadId,

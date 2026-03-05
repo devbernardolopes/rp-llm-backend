@@ -954,9 +954,13 @@
                 <option value="every_fourth" data-i18n="everyFourth">
                   Every Fourth
                 </option>
-              </select>
-            </div>
-          </div>
+               </select>
+             </div>
+             <span class="checkbox-line">
+               <input type="checkbox" id="use-local-summarization" />
+               <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
+             </span>
+           </div>
           <div data-settings-group="shortcuts" class="settings-group">
             <div class="form-field">
               <span data-i18n="cancelGenerationShortcut"
@@ -2444,9 +2448,10 @@
 
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
-     <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"></script>
-     <script src="embeddings.js"></script>
-     <script src="config.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"></script>
+      <script src="embeddings.js"></script>
+      <script src="summarizer.js"></script>
+      <script src="config.js"></script>
      <script src="db.js"></script>
     <script src="lore.js"></script>
     <script src="memory.js"></script>
