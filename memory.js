@@ -426,6 +426,9 @@ async function summarizeMemory(character) {
       summarySystemPrompt,
       requestHistory,
       state.settings.model,
+      null,
+      null,
+      { forceStream: false },
     );
 
     const summary = summaryResult.content;

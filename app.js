@@ -11546,6 +11546,9 @@ async function maybeGenerateTitleBeforeBotReply() {
       "You create concise, descriptive chat thread titles.",
       [{ role: "user", content: titlePrompt }],
       state.settings.model,
+      null,
+      null,
+      { forceStream: false },
     );
     const raw = String(result?.content || "").trim();
     if (!raw) {
@@ -14562,6 +14565,9 @@ async function runMemoryRegeneration(entryId, promptText, level, slot) {
       summarySystemPrompt,
       requestHistory,
       state.settings.model,
+      null,
+      null,
+      { forceStream: false },
     );
     const summary = String(result.content || "").trim();
     if (!summary) throw new Error(t("unknownError"));
@@ -16565,6 +16571,7 @@ async function callOpenRouter(
   model,
   onChunk = null,
   signal = null,
+  options = {},
 ) {
   const resolvedModel = resolveModelForRequest(model);
   const fallbackModel = getFallbackModel(resolvedModel, model);
@@ -16593,6 +16600,10 @@ async function callOpenRouter(
     resolvedModel,
     promptMessages,
   );
+  const streamForced =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : null;
   const body = {
     model: resolvedModel,
     messages: promptMessages,
@@ -16601,7 +16612,10 @@ async function callOpenRouter(
     top_p: Number(state.settings.topP) || 1,
     frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
     presence_penalty: Number(state.settings.presencePenalty) || 0,
-    stream: !!state.settings.streamEnabled,
+    stream:
+      streamForced === null
+        ? !!state.settings.streamEnabled
+        : Boolean(streamForced),
   };
 
   state.currentRequestMessages = body.messages;
