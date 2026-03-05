@@ -10320,11 +10320,6 @@ function renderSfxList() {
         const actions = document.createElement("div");
         actions.className = "lorebook-actions";
 
-        const editBtn = iconButton("edit", t("editAssetAria") || "Edit", () => {
-          openSfxEditor(asset, entry, idx);
-        });
-        actions.appendChild(editBtn);
-
         const deleteBtn = iconButton(
           "delete",
           t("deleteAssetAria") || "Delete",
@@ -10355,6 +10350,16 @@ function renderSfxList() {
         actions.appendChild(deleteBtn);
 
         row.append(avatar, main, actions);
+        row.addEventListener("click", (e) => {
+          if (
+            e.target.closest(".lorebook-actions") ||
+            e.target.closest("button") ||
+            e.target.closest(".icon-btn")
+          ) {
+            return;
+          }
+          openSfxEditor(asset, entry, idx);
+        });
         list.appendChild(row);
       }
     })
