@@ -118,7 +118,11 @@ const DEFAULT_SETTINGS = {
 };
 
 function createSystemAvatarFallbackImage(letter = "S") {
-  const char = String(letter || "S").trim().charAt(0).toUpperCase() || "S";
+  const char =
+    String(letter || "S")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "S";
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="20" ry="20" fill="#7f1d1d"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="72" font-family="Segoe UI, system-ui, sans-serif" fill="#ffd7db">${char}</text></svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
@@ -130,7 +134,8 @@ function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result?.toString() ?? "");
-    reader.onerror = () => reject(reader.error || new Error("File read failed"));
+    reader.onerror = () =>
+      reject(reader.error || new Error("File read failed"));
     reader.readAsDataURL(file);
   });
 }
@@ -164,7 +169,7 @@ function setOocSystemAvatarData(src) {
 async function handleOocSystemAvatarFile(file) {
   if (!file || !file.type.startsWith("image/")) return;
   try {
-    const dataUrl = String(await readFileAsDataURL(file) || "");
+    const dataUrl = String((await readFileAsDataURL(file)) || "");
     if (dataUrl) {
       setOocSystemAvatarData(dataUrl);
     }
@@ -5023,6 +5028,102 @@ async function renderAll() {
   renderCharacterTagFilterChips();
 }
 
+function initCharacterCardHoverVideos(card, avatarWrap, videoAvatars) {
+  if (!card || !avatarWrap || !Array.isArray(videoAvatars)) return;
+  const hoverContainer = document.createElement("div");
+  hoverContainer.className = "character-avatar-hover-videos";
+  hoverContainer.setAttribute("aria-hidden", "true");
+  const videoElements = [];
+  videoAvatars.forEach((avatarData) => {
+    const video = document.createElement("video");
+    video.className = "character-avatar-hover-video";
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.loop = false;
+    const src =
+      avatarData.data instanceof Blob
+        ? getCachedAvatarBlobUrl(avatarData.data)
+        : avatarData.data;
+    if (src) {
+      video.src = src;
+    }
+    video.style.display = "none";
+    hoverContainer.appendChild(video);
+    videoElements.push(video);
+  });
+  if (videoElements.length === 0) return;
+  avatarWrap.appendChild(hoverContainer);
+
+  let hoverIndex = 0;
+  let hoverActive = false;
+
+  const showVideo = (index) => {
+    videoElements.forEach((video, idx) => {
+      if (idx === index) {
+        video.style.display = "block";
+        video.style.opacity = "1";
+      } else {
+        video.style.display = "none";
+        video.style.opacity = "0";
+      }
+    });
+  };
+
+  const playVideo = (index) => {
+    const video = videoElements[index];
+    if (!video) return;
+    video.currentTime = 0;
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
+  };
+
+  const advanceVideo = () => {
+    if (!hoverActive) return;
+    hoverIndex = (hoverIndex + 1) % videoElements.length;
+    showVideo(hoverIndex);
+    playVideo(hoverIndex);
+  };
+
+  videoElements.forEach((video) => {
+    video.addEventListener("ended", () => {
+      if (hoverActive) {
+        advanceVideo();
+      }
+    });
+  });
+
+  const startHoverPlayback = () => {
+    if (hoverActive) return;
+    hoverActive = true;
+    hoverIndex = 0;
+    showVideo(hoverIndex);
+    hoverContainer.classList.add("active");
+    playVideo(hoverIndex);
+  };
+
+  const stopHoverPlayback = () => {
+    if (!hoverActive) return;
+    hoverActive = false;
+    videoElements.forEach((video) => {
+      video.pause();
+      video.currentTime = 0;
+    });
+    hoverContainer.classList.remove("active");
+  };
+
+  const startHandler = () => startHoverPlayback();
+  const stopHandler = () => stopHoverPlayback();
+
+  card.addEventListener("pointerenter", startHandler);
+  card.addEventListener("focusin", startHandler);
+  card.addEventListener("pointerleave", stopHandler);
+  card.addEventListener("focusout", stopHandler);
+  card.tabIndex = 0;
+}
+
 async function renderCharacters() {
   const grid = document.getElementById("character-grid");
   if (!grid) return;
@@ -5126,6 +5227,11 @@ async function renderCharacters() {
     const avatarTransitionDelay =
       Number(state.settings.botCardAvatarTransitionDelay) || 4;
     const transitionDelayMs = avatarTransitionDelay * 1000;
+    const videoAvatars = avatars.filter(
+      (avatar) => avatar?.type === "video" && avatar.data,
+    );
+    const hoverEffectEnabled =
+      avatarEffect === "hover" && videoAvatars.length > 0;
 
     if (hasMultipleAvatars && avatarEffect === "carousel") {
       let currentAvatarIndex = 0;
@@ -5344,6 +5450,10 @@ async function renderCharacters() {
     threadOverlay.className = "character-avatar-threads";
     threadOverlay.textContent = String(threadCount);
     avatarWrap.appendChild(threadOverlay);
+
+    if (hoverEffectEnabled) {
+      initCharacterCardHoverVideos(card, avatarWrap, videoAvatars);
+    }
 
     const name = document.createElement("h3");
     name.className = "character-name";
@@ -12505,7 +12615,11 @@ async function buildOocSystemPrompt() {
     currentCharacter.id,
     currentThread.id,
   );
-  const memoryContext = await filterMemoriesByRelevance(rawMemory, currentCharacter, currentThread.id);
+  const memoryContext = await filterMemoriesByRelevance(
+    rawMemory,
+    currentCharacter,
+    currentThread.id,
+  );
   const memorySection = memoryContext
     ? `***MEMORY CONTEXT***\n\n${String(memoryContext || "").trim()}`
     : "";
@@ -14102,7 +14216,9 @@ function openPromptHistory() {
     if (value == null || threadId == null) return false;
     return String(value) === String(threadId);
   };
-  const conversationPrompts = conversationHistory.filter((m) => m.role === "user");
+  const conversationPrompts = conversationHistory.filter(
+    (m) => m.role === "user",
+  );
   const commandPrompts = (
     Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : []
   ).filter((entry) => equalsThreadId(entry.threadId));
@@ -14222,7 +14338,9 @@ async function renderMemoryModalEntries() {
         id: Number(entry.id),
         level: entryLevel,
         slot,
-        summaryUserContent: String(entry.summaryUserContent || entry.summary || ""),
+        summaryUserContent: String(
+          entry.summaryUserContent || entry.summary || "",
+        ),
       };
       regenBtn.addEventListener("click", () =>
         openMemoryRegeneratePromptModal(entryData),
@@ -14236,12 +14354,14 @@ async function renderMemoryModalEntries() {
   setupModalTextareas(modal);
 
   const collapseMemoryEntries = () => {
-    modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
-      const entryState = textareaCollapseStates.get(textarea);
-      if (entryState) {
-        entryState.setExpanded(false);
-      }
-    });
+    modal
+      .querySelectorAll(".textarea-collapse textarea")
+      .forEach((textarea) => {
+        const entryState = textareaCollapseStates.get(textarea);
+        if (entryState) {
+          entryState.setExpanded(false);
+        }
+      });
   };
 
   const enforceExclusiveEntryExpansion = () => {
@@ -14332,14 +14452,16 @@ let memoryRegenerationInFlight = false;
 function openMemoryRegeneratePromptModal(entry) {
   const modal = document.getElementById("memory-regenerate-prompt-modal");
   const textarea = document.getElementById("memory-regenerate-prompt-input");
-  const entryLabel = document.getElementById("memory-regenerate-prompt-entry-label");
+  const entryLabel = document.getElementById(
+    "memory-regenerate-prompt-entry-label",
+  );
   const description = document.getElementById(
     "memory-regenerate-prompt-description",
   );
   if (!modal || !textarea) return;
   pendingMemoryRegenerationEntry = entry;
   modal.dataset.memoryEntryId = String(entry.id || "");
-  entryLabel?.textContent = tf("memoryModalEntryLabel", {
+  entryLabel?.textContent = t("memoryModalEntryLabel", {
     level: entry.level,
     slot: entry.slot,
   });
@@ -14457,7 +14579,9 @@ async function runMemoryRegeneration(entryId, promptText, level, slot) {
       .map((msg) => String(msg.content || "").trim())
       .filter(Boolean);
     const summaryUserContent =
-      userContentPieces.length > 0 ? userContentPieces.join("\n\n") : promptText;
+      userContentPieces.length > 0
+        ? userContentPieces.join("\n\n")
+        : promptText;
     await db.memories.update(entryId, {
       summary,
       summarySystemContent,

@@ -451,5 +451,6 @@
   "memoryRegenerateProgressTitle": "Zusammenfassungsregeneration",
   "memoryRegenerateProgressPending": "Zusammenfassung wird regeneriert...",
   "memoryRegenerateProgressClose": "Schließen",
-  "memoryRegenerateProgressFailed": "Regeneration fehlgeschlagen: {error}"
+  "memoryRegenerateProgressFailed": "Regeneration fehlgeschlagen: {error}",
+  "botCardAvatarEffectHover": "Beim Überfahren"
 }

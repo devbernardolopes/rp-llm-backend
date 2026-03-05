@@ -913,6 +913,26 @@ textarea {
   border-radius: 10px;
 }
 
+.character-avatar-hover-videos {
+  position: absolute;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.character-avatar-hover-videos.active {
+  display: block;
+}
+
+.character-avatar-hover-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .character-avatar-flag,
 .character-avatar-id,
 .character-avatar-threads {

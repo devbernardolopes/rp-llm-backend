@@ -451,5 +451,6 @@
   "memoryRegenerateProgressTitle": "Régénération du résumé",
   "memoryRegenerateProgressPending": "Régénération du résumé en cours...",
   "memoryRegenerateProgressClose": "Fermer",
-  "memoryRegenerateProgressFailed": "Échec de la régénération : {error}"
+  "memoryRegenerateProgressFailed": "Échec de la régénération : {error}",
+  "botCardAvatarEffectHover": "Au survol"
 }

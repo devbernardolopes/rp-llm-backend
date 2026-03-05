@@ -451,5 +451,6 @@
   "memoryRegenerateProgressTitle": "Rigenerazione del riassunto",
   "memoryRegenerateProgressPending": "Rigenerazione del riassunto in corso...",
   "memoryRegenerateProgressClose": "Chiudi",
-  "memoryRegenerateProgressFailed": "Rigenerazione fallita: {error}"
+  "memoryRegenerateProgressFailed": "Rigenerazione fallita: {error}",
+  "botCardAvatarEffectHover": "Al passaggio del mouse"
 }

@@ -451,5 +451,6 @@
   "memoryRegenerateProgressTitle": "Regeneración de resumen",
   "memoryRegenerateProgressPending": "Regenerando resumen...",
   "memoryRegenerateProgressClose": "Cerrar",
-  "memoryRegenerateProgressFailed": "Error al regenerar: {error}"
+  "memoryRegenerateProgressFailed": "Error al regenerar: {error}",
+  "botCardAvatarEffectHover": "Al pasar el cursor"
 }
