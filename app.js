@@ -64,6 +64,9 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M8 7l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>',
 };
 
+const PROMPT_COMMAND_HISTORY_KEY = "rp-prompt-command-history";
+const PROMPT_COMMAND_HISTORY_MAX = 200;
+
 const DEFAULT_SETTINGS = {
   uiLanguage: "auto",
   openRouterApiKey: "",
@@ -4436,6 +4439,66 @@ function saveUiState() {
 
 function saveSettings() {
   localStorage.setItem("rp-settings", JSON.stringify(state.settings));
+}
+
+function savePromptCommandHistory() {
+  try {
+    localStorage.setItem(
+      PROMPT_COMMAND_HISTORY_KEY,
+      JSON.stringify(state.promptCommandHistory || []),
+    );
+  } catch (err) {
+    console.warn("Failed to persist prompt command history:", err);
+  }
+}
+
+function loadPromptCommandHistory() {
+  const raw = localStorage.getItem(PROMPT_COMMAND_HISTORY_KEY);
+  if (!raw) {
+    state.promptCommandHistory = [];
+    return;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      state.promptCommandHistory = parsed
+        .filter((entry) => entry && typeof entry.content === "string")
+        .slice(-PROMPT_COMMAND_HISTORY_MAX);
+    } else {
+      state.promptCommandHistory = [];
+    }
+  } catch (err) {
+    console.warn("Failed to load prompt command history:", err);
+    state.promptCommandHistory = [];
+  }
+}
+
+function addPromptCommandEntry(threadId, content) {
+  if (!content) return false;
+  const trimmed = String(content).trim();
+  if (!trimmed) return false;
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
+    ? state.promptCommandHistory
+    : [];
+  const lastEntry =
+    state.promptCommandHistory[state.promptCommandHistory.length - 1];
+  if (
+    lastEntry &&
+    lastEntry.threadId === threadId &&
+    lastEntry.content === trimmed
+  ) {
+    return false;
+  }
+  state.promptCommandHistory.push({
+    threadId,
+    content: trimmed,
+    createdAt: Date.now(),
+  });
+  if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+    state.promptCommandHistory.shift();
+  }
+  savePromptCommandHistory();
+  return true;
 }
 
 function updateSettingsRangeTone(slider, value, limits) {
