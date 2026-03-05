@@ -14461,10 +14461,12 @@ function openMemoryRegeneratePromptModal(entry) {
   if (!modal || !textarea) return;
   pendingMemoryRegenerationEntry = entry;
   modal.dataset.memoryEntryId = String(entry.id || "");
-  entryLabel?.textContent = t("memoryModalEntryLabel", {
-    level: entry.level,
-    slot: entry.slot,
-  });
+  if (entryLabel) {
+    entryLabel.textContent = t("memoryModalEntryLabel", {
+      level: entry.level,
+      slot: entry.slot,
+    });
+  }
   if (description) {
     description.textContent = t("memoryRegeneratePromptDescription");
   }
