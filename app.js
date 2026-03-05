@@ -1084,6 +1084,7 @@ const state = {
     "writing-instructions-modal": false,
     "writing-instruction-editor-modal": false,
     "memory-modal": false,
+    "text-input-modal": false,
   },
   charModalTtsTestPlaying: false,
   imagePreview: {
@@ -2274,10 +2275,10 @@ function setupEvents() {
     .addEventListener("click", () => resolveTextInputDialog(true));
   document
     .getElementById("text-input-cancel")
-    .addEventListener("click", () => resolveTextInputDialog(false));
+    .addEventListener("click", () => closeActiveModal());
   document
     .getElementById("text-input-cancel-x")
-    .addEventListener("click", () => resolveTextInputDialog(false));
+    .addEventListener("click", () => closeActiveModal());
 
   setupModalTextareas();
 
@@ -3489,7 +3490,7 @@ function closeAnyOpenModal() {
 
   const textInputModal = document.getElementById("text-input-modal");
   if (textInputModal && !textInputModal.classList.contains("hidden")) {
-    resolveTextInputDialog(false);
+    closeActiveModal();
     return;
   }
 
@@ -4823,15 +4824,35 @@ function openTextInputDialog({
       resolve(null);
       return;
     }
+    const originalValue = String(value || "");
     titleEl.textContent = title || t("input");
     labelEl.textContent = label || t("value");
-    inputEl.value = String(value || "");
+    inputEl.value = originalValue;
     inputEl.maxLength = Math.max(1, Number(maxLength) || 128);
     saveBtn.textContent = saveLabel || t("save");
     cancelBtn.textContent = cancelLabel || t("cancel");
-    state.textInputResolver = resolve;
-    modal.classList.remove("hidden");
+    setModalDirtyState("text-input-modal", false);
+    const onInput = () => {
+      setModalDirtyState("text-input-modal", inputEl.value !== originalValue);
+    };
+    const onKeyDown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        resolveTextInputDialog(true);
+      }
+    };
+    inputEl.addEventListener("input", onInput);
+    inputEl.addEventListener("keydown", onKeyDown);
+    const cleanup = () => {
+      inputEl.removeEventListener("input", onInput);
+      inputEl.removeEventListener("keydown", onKeyDown);
+    };
+    state.textInputResolver = (save) => {
+      cleanup();
+      resolve(save);
+    };
     state.activeModalId = "text-input-modal";
+    modal.classList.remove("hidden");
     window.setTimeout(() => {
       inputEl.focus();
       inputEl.select();
@@ -6477,6 +6498,19 @@ async function closeActiveModal() {
   if (!state.activeModalId) return;
   const closingId = state.activeModalId;
   if (closingId === "text-input-modal") {
+    if (state.modalDirty["text-input-modal"]) {
+      const action = await openUnsavedChangesDialog();
+      if (action === "back") return;
+      if (action === "close") {
+        setModalDirtyState("text-input-modal", false);
+        resolveTextInputDialog(false);
+        return;
+      } else if (action === "save") {
+        setModalDirtyState("text-input-modal", false);
+        resolveTextInputDialog(true);
+        return;
+      }
+    }
     resolveTextInputDialog(false);
     return;
   }
