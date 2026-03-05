@@ -442,5 +442,7 @@
   "memoryModalEntryLabel": "Level {level} · Slot {slot}",
   "memoryModalEmptyEntryWarning": "Der Memory-Eintrag darf nicht leer sein.",
   "memoryModalSaveSuccess": "Memory-Einträge gespeichert.",
-  "memoryModalLevelLocked": "Einträge aus früheren Leveln können nicht bearbeitet werden."
+  "memoryModalLevelLocked": "Einträge aus früheren Leveln können nicht bearbeitet werden.",
+  "oocSystemAvatarLabel": "OOC-System-Avatar",
+  "systemRoleName": "SYSTEM"
 }

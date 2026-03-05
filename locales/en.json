@@ -427,8 +427,7 @@
   "summarizingMemoryLabel": "Summarizing conversation...",
   "lockMemoryMessages": "Lock Memory Messages",
   "memoryMessageLockedNotice": "This message was used in a memory summary and cannot be changed.",
-  "summaryThresholdLabel": "Summary Threshold"
-,
+  "summaryThresholdLabel": "Summary Threshold",
   "oocModeLabel": "OOC",
   "oocModeTitleOn": "OOC mode: On",
   "oocModeTitleOff": "OOC mode: Off",
@@ -444,5 +443,7 @@
   "memoryModalEntryLabel": "Level {level} · Slot {slot}",
   "memoryModalEmptyEntryWarning": "Memory entry cannot be empty.",
   "memoryModalSaveSuccess": "Memory entries saved.",
-  "memoryModalLevelLocked": "Entries from earlier levels cannot be edited."
+  "memoryModalLevelLocked": "Entries from earlier levels cannot be edited.",
+  "oocSystemAvatarLabel": "OOC System Avatar",
+  "systemRoleName": "SYSTEM"
 }

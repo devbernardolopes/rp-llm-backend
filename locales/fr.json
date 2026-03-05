@@ -442,5 +442,7 @@
   "memoryModalEntryLabel": "Niveau {level} · Emplacement {slot}",
   "memoryModalEmptyEntryWarning": "L'entrée de mémoire ne peut pas être vide.",
   "memoryModalSaveSuccess": "Entrées de mémoire enregistrées.",
-  "memoryModalLevelLocked": "Les entrées des niveaux inférieurs ne peuvent pas être modifiées."
+  "memoryModalLevelLocked": "Les entrées des niveaux inférieurs ne peuvent pas être modifiées.",
+  "oocSystemAvatarLabel": "Avatar du système OOC",
+  "systemRoleName": "SYSTEM"
 }

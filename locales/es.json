@@ -442,5 +442,7 @@
   "memoryModalEntryLabel": "Nivel {level} · Ranura {slot}",
   "memoryModalEmptyEntryWarning": "La entrada de memoria no puede estar vacía.",
   "memoryModalSaveSuccess": "Entradas de memoria guardadas.",
-  "memoryModalLevelLocked": "No se pueden editar entradas de niveles anteriores."
+  "memoryModalLevelLocked": "No se pueden editar entradas de niveles anteriores.",
+  "oocSystemAvatarLabel": "Avatar del sistema OOC",
+  "systemRoleName": "SYSTEM"
 }

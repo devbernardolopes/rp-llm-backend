@@ -442,5 +442,7 @@
   "memoryModalEntryLabel": "Nível {level} · Slot {slot}",
   "memoryModalEmptyEntryWarning": "A entrada de memória não pode ficar vazia.",
   "memoryModalSaveSuccess": "Entradas de memória salvas.",
-  "memoryModalLevelLocked": "Entradas de níveis anteriores não podem ser editadas."
-}
+  "memoryModalLevelLocked": "Entradas de níveis anteriores não podem ser editadas.",
+  "oocSystemAvatarLabel": "Avatar do sistema OOC",
+  "systemRoleName": "SYSTEM"
+  }

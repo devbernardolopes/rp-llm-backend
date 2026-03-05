@@ -442,5 +442,7 @@
   "memoryModalEntryLabel": "Livello {level} · Slot {slot}",
   "memoryModalEmptyEntryWarning": "La voce di memoria non può essere vuota.",
   "memoryModalSaveSuccess": "Voci di memoria salvate.",
-  "memoryModalLevelLocked": "Le voci dei livelli precedenti non possono essere modificate."
+  "memoryModalLevelLocked": "Le voci dei livelli precedenti non possono essere modificate.",
+  "oocSystemAvatarLabel": "Avatar del sistema OOC",
+  "systemRoleName": "SYSTEM"
 }

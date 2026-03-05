@@ -1555,16 +1555,16 @@ textarea {
 }
 
 .chat-row-ooc .message-block {
-  background: linear-gradient(180deg, #2a0f15 0%, #1b080d 100%);
-  border-color: #7f1d1d;
+  background: linear-gradient(180deg, #5a0e1b 0%, #23060c 100%);
+  border-color: #c12b2b;
 }
 
 .chat-row-ooc .message-header {
-  color: #f5beb4;
+  color: #ffdede;
 }
 
 .chat-row-ooc .chat-avatar {
-  border-color: #b73536;
+  border-color: #d73d40;
 }
 
 .chat-row {
