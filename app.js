@@ -2817,6 +2817,8 @@ function getLabelFromElement(el) {
 
 function autoExpandTextarea(textarea) {
   if (!textarea) return;
+  const modalBody = textarea.closest(".modal-body");
+  const scrollTop = modalBody ? modalBody.scrollTop : 0;
   textarea.style.height = "auto";
   textarea.style.overflow = "hidden";
   textarea.style.resize = "none";
@@ -2830,6 +2832,11 @@ function autoExpandTextarea(textarea) {
   textarea.dataset.minHeight = minHeight;
   const newHeight = Math.max(textarea.scrollHeight, minHeight);
   textarea.style.height = `${newHeight}px`;
+  if (modalBody) {
+    requestAnimationFrame(() => {
+      modalBody.scrollTop = scrollTop;
+    });
+  }
 }
 
 function applyDataI18n() {
