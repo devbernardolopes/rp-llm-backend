@@ -435,6 +435,7 @@
   "memorySlotsLabel": "Ranuras de memoria",
   "memoryMessagesToKeepLabel": "Cantidad de mensajes a conservar",
   "memorySummarizerUserPrompt": "Solicitud de usuario del resumidor de memoria",
+  "summaryMessagesPreProcessingJson": "Preprocesamiento de mensajes de resumen (JSON)",
   "writingInstructionUsedByBots": "Usado por {count} BOT(s): {names}",
   "memoryModalTitle": "Entradas de memoria",
   "memoryModalDisabled": "La memoria está desactivada para este BOT.",

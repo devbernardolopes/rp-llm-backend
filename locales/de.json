@@ -435,6 +435,7 @@
   "memorySlotsLabel": "SpeicherplÃ¤tze",
   "memoryMessagesToKeepLabel": "Anzahl der zu behaltenden Nachrichten",
   "memorySummarizerUserPrompt": "Benutzerprompt fÃ¼r die Speicherzusammenfassung",
+  "summaryMessagesPreProcessingJson": "Vorverarbeitung von Zusammenfassungsnachrichten (JSON)",
   "writingInstructionUsedByBots": "Wird verwendet von {count} BOT(s): {names}",
   "memoryModalTitle": "Speichereinträge",
   "memoryModalDisabled": "Memory ist für diesen BOT deaktiviert.",

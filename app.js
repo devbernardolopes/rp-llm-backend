@@ -113,6 +113,7 @@ const DEFAULT_SETTINGS = {
   memoryMessagesToKeep: 3,
   memorySummarizerUserPrompt:
     "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
+  summaryMessagesPreProcessingJson: "[]",
   memorySlots: 5,
   favoriteModels: [],
   chatMessageAlignment: "left",
@@ -3646,6 +3647,9 @@ async function setupSettingsControls() {
   const memorySummarizerUserPrompt = document.getElementById(
     "memory-summarizer-user-prompt",
   );
+  const summaryMessagesPreProcessingJson = document.getElementById(
+    "summary-messages-preprocessing-json",
+  );
   const personaInjectionTemplate = document.getElementById(
     "persona-injection-template",
   );
@@ -3798,6 +3802,12 @@ async function setupSettingsControls() {
         DEFAULT_SETTINGS.memorySummarizerUserPrompt;
       state.settings.memorySummarizerUserPrompt = userPromptValue;
       memorySummarizerUserPrompt.value = userPromptValue;
+    }
+    if (summaryMessagesPreProcessingJson) {
+      const preProcessingValue =
+        state.settings.summaryMessagesPreProcessingJson || "[]";
+      state.settings.summaryMessagesPreProcessingJson = preProcessingValue;
+      summaryMessagesPreProcessingJson.value = preProcessingValue;
     }
   personaInjectionTemplate.value =
     state.settings.personaInjectionTemplate ||
@@ -4152,6 +4162,12 @@ async function setupSettingsControls() {
     saveSettings();
   });
 
+  summaryMessagesPreProcessingJson?.addEventListener("input", () => {
+    state.settings.summaryMessagesPreProcessingJson =
+      summaryMessagesPreProcessingJson.value;
+    saveSettings();
+  });
+
   personaInjectionTemplate.addEventListener("input", () => {
     state.settings.personaInjectionTemplate = personaInjectionTemplate.value;
     saveSettings();
@@ -4271,6 +4287,7 @@ function getSettingsGroupForNode(node) {
   if (
     has("#global-prompt-template") ||
     has("#summary-system-prompt") ||
+    has("#summary-messages-preprocessing-json") ||
     has("#persona-injection-template") ||
     has("#writing-instructions-injection-when")
   )
@@ -4323,6 +4340,7 @@ function getSettingsGroupForNode(node) {
   if (
     id === "global-prompt-template" ||
     id === "summary-system-prompt" ||
+    id === "summary-messages-preprocessing-json" ||
     id === "persona-injection-template" ||
     id === "writing-instructions-injection-when"
   ) {
@@ -17341,6 +17359,36 @@ function applyPostProcessingRules(text) {
 }
 
 function parsePostProcessingRules(rawJson) {
+  try {
+    const parsed = JSON.parse(rawJson || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (r) =>
+        r && typeof r.pattern === "string" && typeof r.replacement === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+function applySummaryMessagePreProcessing(text) {
+  const rules = parseSummaryPreProcessingRules(
+    state.settings.summaryMessagesPreProcessingJson,
+  );
+  if (rules.length === 0) return text;
+  let out = text;
+  for (const rule of rules) {
+    try {
+      const re = new RegExp(rule.pattern, rule.flags || "g");
+      out = out.replace(re, rule.replacement || "");
+    } catch {
+      // ignore malformed rule
+    }
+  }
+  return out;
+}
+
+function parseSummaryPreProcessingRules(rawJson) {
   try {
     const parsed = JSON.parse(rawJson || "[]");
     if (!Array.isArray(parsed)) return [];

@@ -435,6 +435,7 @@
   "memorySlotsLabel": "Slots de memÃ³ria",
   "memoryMessagesToKeepLabel": "Quantidade de mensagens a manter",
   "memorySummarizerUserPrompt": "Prompt do usuÃ¡rio do resumo de memÃ³ria",
+  "summaryMessagesPreProcessingJson": "Summary Messages Pre-processing (JSON)",
   "writingInstructionUsedByBots": "Usado por {count} BOT(s): {names}",
   "memoryModalTitle": "Entradas de memória",
   "memoryModalDisabled": "A memória está desativada para este BOT.",

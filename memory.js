@@ -412,7 +412,14 @@ async function summarizeMemory(character) {
     summarySections.push(previousLevelContext);
   }
   summarySections.push(
-    ...toSummarize.map((m) => `${m.role}: ${m.content}`),
+    ...toSummarize.map((m) => {
+      const rawContent = String(m.content || "");
+      const processedContent =
+        m.role === "assistant"
+          ? applySummaryMessagePreProcessing(rawContent)
+          : rawContent;
+      return `${m.role}: ${processedContent}`;
+    }),
   );
   const prompt = `${userPromptText}\n\n${summarySections.join("\n\n")}`;
   const requestHistory = [{ role: "user", content: prompt }];
