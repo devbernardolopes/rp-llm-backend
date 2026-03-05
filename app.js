@@ -11324,6 +11324,10 @@ async function duplicateThread(threadId) {
     return;
   }
 
+  // Ensure arrays exist
+  state.promptHistory = Array.isArray(state.promptHistory) ? state.promptHistory : [];
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : [];
+
   const clonedMessages = (() => {
     const list = Array.isArray(source.messages) ? source.messages : [];
     if (typeof structuredClone === "function") {
@@ -11359,26 +11363,66 @@ async function duplicateThread(threadId) {
     source.id,
     newThreadId,
   );
-  if (memoryMapping.size > 0) {
-    const remapId = (value) => {
-      const num = Number(value);
-      return Number.isInteger(num) && memoryMapping.has(num)
-        ? memoryMapping.get(num)
-        : value;
-    };
-    const remappedMessages = copy.messages.map((msg) => {
-      const next = { ...msg };
-      next.summaryId = remapId(next.summaryId);
-      next.summaryProtected = remapId(next.summaryProtected);
-      return next;
-    });
-    await db.threads.update(newThreadId, { messages: remappedMessages });
-  }
-  broadcastSyncEvent({
-    type: "thread-updated",
-    threadId: newThreadId,
-    updatedAt: Date.now(),
-  });
+   if (memoryMapping.size > 0) {
+     const remapId = (value) => {
+       const num = Number(value);
+       return Number.isInteger(num) && memoryMapping.has(num)
+         ? memoryMapping.get(num)
+         : value;
+     };
+     const remappedMessages = copy.messages.map((msg) => {
+       const next = { ...msg };
+       next.summaryId = remapId(next.summaryId);
+       next.summaryProtected = remapId(next.summaryProtected);
+       return next;
+     });
+     await db.threads.update(newThreadId, { messages: remappedMessages });
+   }
+
+   // Duplicate prompt history entries for the new thread
+   const originalPromptEntries = (state.promptHistory || []).filter(
+     (e) => e.threadId === threadId,
+   );
+   for (const entry of originalPromptEntries) {
+     state.promptHistory.push({
+       threadId: newThreadId,
+       content: entry.content,
+       createdAt: entry.createdAt,
+       isOoc: entry.isOoc || false,
+     });
+   }
+   if (originalPromptEntries.length > 0) {
+     if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
+       state.promptHistory = state.promptHistory.slice(-PROMPT_HISTORY_MAX);
+     }
+     savePromptHistory();
+   }
+
+   // Duplicate command history entries for the new thread
+   const originalCommandEntries = (state.promptCommandHistory || []).filter(
+     (e) => e.threadId === threadId,
+   );
+   for (const entry of originalCommandEntries) {
+     state.promptCommandHistory.push({
+       threadId: newThreadId,
+       content: entry.content,
+       createdAt: entry.createdAt,
+     });
+   }
+   if (originalCommandEntries.length > 0) {
+     if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+       state.promptCommandHistory = state.promptCommandHistory.slice(
+         -PROMPT_COMMAND_HISTORY_MAX,
+       );
+     }
+     savePromptCommandHistory();
+   }
+
+   broadcastSyncEvent({
+     type: "thread-updated",
+     threadId: newThreadId,
+     updatedAt: Date.now(),
+   });
   await renderThreads();
   await renderCharacters();
   showToast(t("threadDuplicated"), "success");
@@ -14628,30 +14672,22 @@ function openPromptHistory() {
 
   const threadId = currentThread?.id ?? null;
 
-  // Get prompts from our persistent prompt history (user messages)
-  const historyPrompts = (state.promptHistory || [])
-    .filter((entry) => entry.threadId === threadId)
-    .map((entry) => ({ content: entry.content, createdAt: entry.createdAt }));
+   // Get prompts from our persistent prompt history (user messages)
+   const historyPrompts = (state.promptHistory || []).filter(
+     (entry) => entry.threadId === threadId,
+   );
 
-  // Get command prompts
-  const commandPrompts = (
-    Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : []
-  )
-    .filter((entry) => entry.threadId === threadId)
-    .map((entry) => ({ content: entry.content, createdAt: entry.createdAt }));
+   // Get command prompts
+   const commandPrompts = (state.promptCommandHistory || []).filter(
+     (entry) => entry.threadId === threadId,
+   );
 
-  // Combine and sort by most recent first
-  const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
-    const aTs = Number(a.createdAt) || 0;
-    const bTs = Number(b.createdAt) || 0;
-    return bTs - aTs;
-  });
-
-  // Default isOoc to false for command prompts if not present
-  const normalizedPrompts = prompts.map(p => ({
-    ...p,
-    isOoc: p.isOoc === true,
-  }));
+   // Combine and sort by most recent first
+   const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
+     const aTs = Number(a.createdAt) || 0;
+     const bTs = Number(b.createdAt) || 0;
+     return bTs - aTs;
+   });
 
   if (prompts.length === 0) {
     const msg = document.createElement("p");
