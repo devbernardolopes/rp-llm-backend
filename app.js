@@ -3643,6 +3643,9 @@ async function setupSettingsControls() {
     "global-prompt-template",
   );
   const summarySystemPrompt = document.getElementById("summary-system-prompt");
+  const memorySummarizerUserPrompt = document.getElementById(
+    "memory-summarizer-user-prompt",
+  );
   const personaInjectionTemplate = document.getElementById(
     "persona-injection-template",
   );
@@ -3789,6 +3792,13 @@ async function setupSettingsControls() {
   });
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
     summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
+    if (memorySummarizerUserPrompt) {
+      const userPromptValue =
+        state.settings.memorySummarizerUserPrompt ||
+        DEFAULT_SETTINGS.memorySummarizerUserPrompt;
+      state.settings.memorySummarizerUserPrompt = userPromptValue;
+      memorySummarizerUserPrompt.value = userPromptValue;
+    }
   personaInjectionTemplate.value =
     state.settings.personaInjectionTemplate ||
     DEFAULT_SETTINGS.personaInjectionTemplate;
@@ -4136,6 +4146,11 @@ async function setupSettingsControls() {
     saveSettings();
   });
 
+  memorySummarizerUserPrompt?.addEventListener("input", () => {
+    state.settings.memorySummarizerUserPrompt =
+      memorySummarizerUserPrompt.value;
+    saveSettings();
+  });
 
   personaInjectionTemplate.addEventListener("input", () => {
     state.settings.personaInjectionTemplate = personaInjectionTemplate.value;

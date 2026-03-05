@@ -435,7 +435,7 @@
   "disableOocModeAria": "Disable OOC mode",
   "memorySlotsLabel": "Memory Slots",
   "memoryMessagesToKeepLabel": "Amount of Messages to Keep",
-  "memorySummarizerUserPrompt": "Memory Summarizer User Prompt",
+  "memorySummarizerUserPrompt": "User Prompt for Memory Summarization",
   "writingInstructionUsedByBots": "Used by {count} BOT(s): {names}",
   "memoryModalTitle": "Memory Entries",
   "memoryModalDisabled": "Memory is disabled for this BOT.",
