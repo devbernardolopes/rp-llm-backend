@@ -2141,7 +2141,13 @@ textarea {
   color: var(--text);
   cursor: pointer;
 }
-
+.prompt-history-item.ooc-prompt {
+  border-color: #c44;
+  background: rgba(196, 68, 68, 0.1);
+}
+.prompt-history-item.ooc-prompt:hover {
+  background: rgba(196, 68, 68, 0.2);
+}
 .prompt-history-item:hover {
   background: #233149;
 }

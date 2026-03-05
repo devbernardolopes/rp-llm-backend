@@ -4635,7 +4635,7 @@ function loadPromptHistory() {
   }
 }
 
-function addPromptToHistory(threadId, content) {
+function addPromptToHistory(threadId, content, isOoc = false) {
   if (!content || !threadId) return;
   const trimmed = String(content).trim();
   if (!trimmed) return;
@@ -4664,6 +4664,7 @@ function addPromptToHistory(threadId, content) {
     threadId,
     content: trimmed,
     createdAt: Date.now(),
+    isOoc,
   });
 
   if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
@@ -12893,11 +12894,11 @@ async function sendMessage(options = {}) {
     senderAvatar: currentPersona?.avatar || "",
     senderPersonaId: currentPersona?.id || null,
   };
-    conversationHistory.push(userMsg);
-    await persistCurrentThread();
-    addPromptToHistory(currentThread.id, text);
+  conversationHistory.push(userMsg);
+  await persistCurrentThread();
+  addPromptToHistory(currentThread.id, text, false);
 
-    const log = document.getElementById("chat-log");
+  const log = document.getElementById("chat-log");
   log.appendChild(
     buildMessageRow(userMsg, conversationHistory.length - 1, false),
   );
@@ -13088,7 +13089,7 @@ async function sendOocInquiry(text) {
     ooc: true,
   };
     conversationHistory.push(userMsg);
-    addPromptToHistory(currentThread.id, text);
+    addPromptToHistory(currentThread.id, text, true);
     if (log && isViewing) {
     log.appendChild(buildMessageRow(userMsg, userIndex, false));
     scrollChatToBottom();
@@ -14646,6 +14647,12 @@ function openPromptHistory() {
     return bTs - aTs;
   });
 
+  // Default isOoc to false for command prompts if not present
+  const normalizedPrompts = prompts.map(p => ({
+    ...p,
+    isOoc: p.isOoc === true,
+  }));
+
   if (prompts.length === 0) {
     const msg = document.createElement("p");
     msg.className = "muted";
@@ -14655,6 +14662,9 @@ function openPromptHistory() {
     prompts.forEach((entry) => {
       const btn = document.createElement("button");
       btn.className = "prompt-history-item";
+      if (entry.isOoc) {
+        btn.classList.add("ooc-prompt");
+      }
       btn.textContent = entry.content;
 
       // Single click: populate and close (with delay to allow double-click detection)
