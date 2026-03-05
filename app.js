@@ -14462,11 +14462,27 @@ async function renderMemoryModalEntries() {
         summaryUserContent: String(
           entry.summaryUserContent || entry.summary || "",
         ),
+        characterId: Number(currentCharacter?.id),
+        threadId: Number(currentThread?.id),
       };
       regenBtn.addEventListener("click", () =>
         openMemoryRegeneratePromptModal(entryData),
       );
       actions.appendChild(regenBtn);
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "secondary-btn memory-entry-delete-btn danger-btn";
+      deleteBtn.textContent = t("memoryEntryDelete");
+      deleteBtn.addEventListener("click", async () => {
+        if (deleteBtn.disabled) return;
+        deleteBtn.disabled = true;
+        try {
+          await handleMemoryEntryDelete(entryData);
+        } finally {
+          deleteBtn.disabled = false;
+        }
+      });
+      actions.appendChild(deleteBtn);
       wrapper.appendChild(actions);
     }
     entriesRoot.appendChild(wrapper);
@@ -14520,6 +14536,74 @@ async function renderMemoryModalEntries() {
   });
 
   updateSaveState();
+}
+
+async function deleteMemoryEntryAndRenumber(entryId, characterId, threadId) {
+  if (!Number.isInteger(entryId) || entryId <= 0) return false;
+  if (!Number.isInteger(characterId) || characterId <= 0) return false;
+  await db.memories.delete(entryId);
+  const limit = Math.max(1, getCurrentMemorySlots());
+  const entries = await getMemoryEntries(characterId, threadId);
+  let slot = 1;
+  let level = 1;
+  const updates = [];
+  for (const entry of entries) {
+    const targetSlot = slot;
+    const targetLevel = level;
+    if (
+      Number(entry.slotNumber) !== targetSlot ||
+      Number(entry.levelNumber) !== targetLevel
+    ) {
+      updates.push({
+        id: entry.id,
+        slotNumber: targetSlot,
+        levelNumber: targetLevel,
+      });
+    }
+    slot += 1;
+    if (slot > limit) {
+      slot = 1;
+      level += 1;
+    }
+  }
+  if (updates.length > 0) {
+    await db.transaction("rw", db.memories, async () => {
+      for (const update of updates) {
+        await db.memories.update(update.id, {
+          slotNumber: update.slotNumber,
+          levelNumber: update.levelNumber,
+        });
+      }
+    });
+  }
+  return true;
+}
+
+async function handleMemoryEntryDelete(entry) {
+  if (!entry || !Number.isInteger(entry.id)) return;
+  const level = Number(entry.level) || 1;
+  const slot = Number(entry.slot) || 1;
+  const ok = await openConfirmDialog(
+    t("memoryEntryDeleteTitle"),
+    tf("memoryEntryDeleteConfirm", { level, slot }),
+  );
+  if (!ok) return;
+  const characterId =
+    Number.isInteger(Number(entry.characterId)) && entry.characterId > 0
+      ? Number(entry.characterId)
+      : Number(currentCharacter?.id || 0);
+  const threadId =
+    Number.isInteger(Number(entry.threadId)) && entry.threadId > 0
+      ? Number(entry.threadId)
+      : Number(currentThread?.id || 0);
+  const success = await deleteMemoryEntryAndRenumber(
+    Number(entry.id),
+    characterId,
+    Number.isInteger(threadId) ? threadId : null,
+  );
+  if (!success) return;
+  showToast(t("memoryEntryDeleted"), "success");
+  await renderMemoryModalEntries();
 }
 
 async function openMemoryModal() {
