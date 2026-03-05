@@ -11106,6 +11106,26 @@ async function duplicateThread(threadId) {
   };
 
   const newThreadId = await db.threads.add(copy);
+  const memoryMapping = await duplicateThreadMemories(
+    source.characterId,
+    source.id,
+    newThreadId,
+  );
+  if (memoryMapping.size > 0) {
+    const remapId = (value) => {
+      const num = Number(value);
+      return Number.isInteger(num) && memoryMapping.has(num)
+        ? memoryMapping.get(num)
+        : value;
+    };
+    const remappedMessages = copy.messages.map((msg) => {
+      const next = { ...msg };
+      next.summaryId = remapId(next.summaryId);
+      next.summaryProtected = remapId(next.summaryProtected);
+      return next;
+    });
+    await db.threads.update(newThreadId, { messages: remappedMessages });
+  }
   broadcastSyncEvent({
     type: "thread-updated",
     threadId: newThreadId,
@@ -11114,6 +11134,34 @@ async function duplicateThread(threadId) {
   await renderThreads();
   await renderCharacters();
   showToast(t("threadDuplicated"), "success");
+}
+
+async function duplicateThreadMemories(characterId, originalThreadId, newThreadId) {
+  const mapping = new Map();
+  const charId = Number(characterId || 0);
+  const oldThreadId = Number(originalThreadId || 0);
+  const targetThreadId =
+    Number.isInteger(Number(newThreadId)) && Number(newThreadId) > 0
+      ? Number(newThreadId)
+      : null;
+  if (charId <= 0 || oldThreadId <= 0 || !targetThreadId) {
+    return mapping;
+  }
+  const entries = await getMemoryEntries(charId, oldThreadId);
+  if (!entries.length) return mapping;
+  await db.transaction("rw", db.memories, async () => {
+    for (const entry of entries) {
+      const entryId = Number(entry.id);
+      if (!Number.isInteger(entryId) || entryId <= 0) continue;
+      const copy = { ...entry };
+      delete copy.id;
+      copy.threadId = targetThreadId;
+      copy.characterId = charId;
+      const newId = await db.memories.add(copy);
+      mapping.set(entryId, newId);
+    }
+  });
+  return mapping;
 }
 
 async function toggleThreadFavorite(threadId) {
