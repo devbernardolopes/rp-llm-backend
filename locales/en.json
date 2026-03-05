@@ -447,7 +447,7 @@
   "oocSystemAvatarLabel": "OOC System Avatar",
   "systemRoleName": "SYSTEM",
   "memoryEntryRegenerate": "Regenerate",
-  "memoryRegeneratePromptTitle": "Regenerate memory entry",
+  "memoryRegeneratePromptTitle": "Regenerate Memory Entry",
   "memoryRegeneratePromptDescription": "Edit the USER prompt that generated this summary before regenerating.",
   "memoryRegenerateProgressTitle": "Summary regeneration",
   "memoryRegenerateProgressPending": "Regenerating summary...",

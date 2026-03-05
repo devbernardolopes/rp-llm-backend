@@ -2396,22 +2396,29 @@ function setupEvents() {
     });
   });
 
-  document.querySelectorAll(".modal").forEach((modal) => {
-    modal.addEventListener("click", (e) => {
-      if (e.target !== modal) return;
-      if (modal.id === "image-preview-modal") {
-        closeImagePreview();
-      } else if (modal.id === "char-language-modal") {
-        modal.classList.add("hidden");
-      } else if (modal.id === "confirm-modal") {
-        resolveConfirmDialog(false);
-      } else if (modal.id === "unsaved-modal") {
-        resolveUnsavedDialog("back");
-      } else {
-        closeActiveModal();
-      }
+    document.querySelectorAll(".modal").forEach((modal) => {
+      modal.addEventListener("click", (e) => {
+        if (e.target !== modal) return;
+        if (modal.id === "image-preview-modal") {
+          closeImagePreview();
+        } else if (modal.id === "char-language-modal") {
+          modal.classList.add("hidden");
+        } else if (modal.id === "confirm-modal") {
+          resolveConfirmDialog(false);
+        } else if (modal.id === "unsaved-modal") {
+          resolveUnsavedDialog("back");
+        } else if (
+          modal.id === "memory-modal" &&
+          isMemoryRegeneratePromptOpen()
+        ) {
+          hideMemoryRegeneratePromptModal();
+        } else if (modal.id === "memory-regenerate-prompt-modal") {
+          hideMemoryRegeneratePromptModal();
+        } else {
+          closeActiveModal();
+        }
+      });
     });
-  });
 
   document
     .getElementById("unsaved-back-btn")
@@ -6381,6 +6388,10 @@ function openModal(modalId) {
 }
 
 async function closeActiveModal() {
+  if (isMemoryRegeneratePromptOpen()) {
+    hideMemoryRegeneratePromptModal();
+    return;
+  }
   if (!state.activeModalId) return;
   const closingId = state.activeModalId;
   if (closingId === "text-input-modal") {
@@ -14548,6 +14559,12 @@ function hideMemoryRegeneratePromptModal() {
   if (!modal) return;
   modal.classList.add("hidden");
   pendingMemoryRegenerationEntry = null;
+}
+
+function isMemoryRegeneratePromptOpen() {
+  const modal = document.getElementById("memory-regenerate-prompt-modal");
+  if (!modal) return false;
+  return !modal.classList.contains("hidden");
 }
 
 function showMemoryRegenerateProgressModal(entryId, level, slot) {
