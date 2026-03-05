@@ -460,5 +460,6 @@
   "botCardAvatarEffectHover": "Au survol",
    "memorySummarizationFailed": "La synthèse de la mémoire a échoué : {error}. Veuillez réessayer avant de continuer.",
    "autoTitleFailed": "La génération automatique du titre a échoué : {error}. Veuillez réessayer avant de continuer.",
-   "useLocalSummarization": "Utiliser la synthèse locale (plus rapide, pas de coût API)"
+   "useLocalSummarization": "Utiliser la synthèse locale (plus rapide, pas de coût API)",
+   "memoryRelevanceFilterToggle": "Utiliser le filtre de pertinence de mémoire"
  }

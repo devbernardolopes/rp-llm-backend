@@ -109,13 +109,14 @@ const DEFAULT_SETTINGS = {
   threadAutoTitleEnabled: true,
   threadAutoTitleMinMessages: 5,
   lockMemoryMessages: false,
-   summaryThreshold: 20,
-   memoryMessagesToKeep: 3,
-   memorySummarizerUserPrompt:
-     "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
-   summaryMessagesPreProcessingJson: "[]",
-   memorySlots: 5,
-   useLocalSummarization: false,
+  summaryThreshold: 20,
+  memoryMessagesToKeep: 3,
+  memorySummarizerUserPrompt:
+    "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
+  summaryMessagesPreProcessingJson: "[]",
+  memoryRelevanceFilterEnabled: false,
+  memorySlots: 5,
+  useLocalSummarization: false,
   favoriteModels: [],
   chatMessageAlignment: "left",
   unreadSoundEnabled: true,
@@ -742,6 +743,7 @@ const I18N = {
     newCharacterShortcut: "New Character Shortcut",
     defaultCharacterPrompt: "Default Character Prompt",
     memorySummarizerPrompt: "Memory Summarizer System Prompt",
+    memoryRelevanceFilterToggle: "Use memory relevance filter",
     personaInjectionTemplate: "Persona Injection Template",
     writingInstructionsInjectionTiming: "Writing Instructions Injection Timing",
     always: "Always",
@@ -1127,6 +1129,22 @@ const state = {
     playingAssetId: null,
   },
 };
+
+async function ensureMemoryFilterModelReady() {
+  if (!state?.settings?.memoryRelevanceFilterEnabled) {
+    return Boolean(window.memoryEmbeddingReady);
+  }
+  if (window.memoryEmbeddingReady) return true;
+  if (typeof window.loadEmbeddingModel !== "function") return false;
+  try {
+    await window.loadEmbeddingModel();
+  } catch (error) {
+    console.warn("Failed to load memory embedding model:", error);
+  }
+  return Boolean(window.memoryEmbeddingReady);
+}
+
+window.ensureMemoryFilterModelReady = ensureMemoryFilterModelReady;
 
 const TTS_DEBUG = true;
 
@@ -3652,6 +3670,9 @@ async function setupSettingsControls() {
   const summaryMessagesPreProcessingJson = document.getElementById(
     "summary-messages-preprocessing-json",
   );
+  const memoryRelevanceFilterToggle = document.getElementById(
+    "memory-relevance-filter-enabled",
+  );
   const personaInjectionTemplate = document.getElementById(
     "persona-injection-template",
   );
@@ -4178,6 +4199,23 @@ async function setupSettingsControls() {
     saveSettings();
   });
 
+  if (memoryRelevanceFilterToggle) {
+    memoryRelevanceFilterToggle.checked =
+      state.settings.memoryRelevanceFilterEnabled === true;
+    memoryRelevanceFilterToggle.addEventListener("change", () => {
+      const enabled = memoryRelevanceFilterToggle.checked;
+      state.settings.memoryRelevanceFilterEnabled = enabled;
+      saveSettings();
+      if (enabled) {
+        ensureMemoryFilterModelReady().catch(() => {});
+      }
+    });
+  }
+
+  if (state.settings.memoryRelevanceFilterEnabled) {
+    ensureMemoryFilterModelReady().catch(() => {});
+  }
+
   personaInjectionTemplate.addEventListener("input", () => {
     state.settings.personaInjectionTemplate = personaInjectionTemplate.value;
     saveSettings();
@@ -4350,6 +4388,7 @@ function getSettingsGroupForNode(node) {
   if (
     id === "global-prompt-template" ||
     id === "summary-system-prompt" ||
+    id === "memory-relevance-filter-enabled" ||
     id === "summary-messages-preprocessing-json" ||
     id === "persona-injection-template" ||
     id === "writing-instructions-injection-when"

@@ -8,6 +8,14 @@
 async function filterMemoriesByRelevance(rawMemoryContext, character, threadId) {
   const K = 3;
   if (!rawMemoryContext) return null;
+  if (!state?.settings?.memoryRelevanceFilterEnabled) {
+    return rawMemoryContext;
+  }
+  const modelReady =
+    typeof window.ensureMemoryFilterModelReady === "function"
+      ? await window.ensureMemoryFilterModelReady()
+      : false;
+  if (!modelReady) return rawMemoryContext;
 
   // Split into individual entries
   const parts = rawMemoryContext.split('\n\n').filter(p => p.trim());
@@ -86,6 +94,3 @@ function cosineSimilarity(a, b) {
 }
 
 // Load embedding model at startup
-if (window.loadEmbeddingModel) {
-  window.loadEmbeddingModel().catch(() => {});
-}

@@ -460,5 +460,6 @@
   "botCardAvatarEffectHover": "Ao passar o mouse",
    "memorySummarizationFailed": "A sumarização da memória falhou: {error}. Por favor, tente novamente antes de continuar.",
    "autoTitleFailed": "A geração do título automático falhou: {error}. Por favor, tente novamente antes de continuar.",
-   "useLocalSummarization": "Usar Sumarização Local (mais rápido, sem custo de API)"
+   "useLocalSummarization": "Usar Sumarização Local (mais rápido, sem custo de API)",
+   "memoryRelevanceFilterToggle": "Usar filtro de relevância da memória"
  }
