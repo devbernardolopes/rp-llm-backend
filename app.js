@@ -1477,6 +1477,7 @@ async function init() {
   renderTagPresetsDataList();
   await setupSettingsControls();
   setupEvents();
+  setupMemoryRegenerationControls();
   initBrowserTtsSupport();
   updateModelPill();
   await migrateLegacySessions();
@@ -14209,6 +14210,26 @@ async function renderMemoryModalEntries() {
     const wrapper = document.createElement("div");
     wrapper.className = "memory-entry";
     wrapper.appendChild(textarea);
+    if (!isLocked) {
+      const actions = document.createElement("div");
+      actions.className = "memory-entry-actions";
+      const regenBtn = document.createElement("button");
+      regenBtn.type = "button";
+      regenBtn.className = "secondary-btn memory-entry-regen-btn";
+      regenBtn.textContent = t("memoryEntryRegenerate");
+      regenBtn.setAttribute("title", t("memoryEntryRegenerate"));
+      const entryData = {
+        id: Number(entry.id),
+        level: entryLevel,
+        slot,
+        summaryUserContent: String(entry.summaryUserContent || entry.summary || ""),
+      };
+      regenBtn.addEventListener("click", () =>
+        openMemoryRegeneratePromptModal(entryData),
+      );
+      actions.appendChild(regenBtn);
+      wrapper.appendChild(actions);
+    }
     entriesRoot.appendChild(wrapper);
   });
 
@@ -14303,6 +14324,199 @@ async function handleMemoryModalSave() {
     showToast(t("unknownError"), "error");
     return false;
   }
+}
+
+let pendingMemoryRegenerationEntry = null;
+let memoryRegenerationInFlight = false;
+
+function openMemoryRegeneratePromptModal(entry) {
+  const modal = document.getElementById("memory-regenerate-prompt-modal");
+  const textarea = document.getElementById("memory-regenerate-prompt-input");
+  const entryLabel = document.getElementById("memory-regenerate-prompt-entry-label");
+  const description = document.getElementById(
+    "memory-regenerate-prompt-description",
+  );
+  if (!modal || !textarea) return;
+  pendingMemoryRegenerationEntry = entry;
+  modal.dataset.memoryEntryId = String(entry.id || "");
+  entryLabel?.textContent = tf("memoryModalEntryLabel", {
+    level: entry.level,
+    slot: entry.slot,
+  });
+  if (description) {
+    description.textContent = t("memoryRegeneratePromptDescription");
+  }
+  textarea.value = String(entry.summaryUserContent || "");
+  modal.classList.remove("hidden");
+  setupModalTextareas(modal);
+  textarea.focus();
+}
+
+function hideMemoryRegeneratePromptModal() {
+  const modal = document.getElementById("memory-regenerate-prompt-modal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  pendingMemoryRegenerationEntry = null;
+}
+
+function showMemoryRegenerateProgressModal(entryId, level, slot) {
+  const modal = document.getElementById("memory-regenerate-progress-modal");
+  if (!modal) return;
+  modal.dataset.memoryEntryId = String(entryId || "");
+  const entryLabel = document.getElementById(
+    "memory-regenerate-progress-entry-label",
+  );
+  if (entryLabel) {
+    entryLabel.textContent = tf("memoryModalEntryLabel", {
+      level: level || 1,
+      slot: slot || 1,
+    });
+  }
+  const avatar = document.getElementById("memory-regenerate-progress-avatar");
+  if (avatar) {
+    const customAvatar = String(state.settings.oocSystemAvatar || "").trim();
+    avatar.src = customAvatar || DEFAULT_SYSTEM_AVATAR_IMAGE;
+  }
+  const statusEl = document.getElementById("memory-regenerate-progress-status");
+  const spinner = modal.querySelector(".memory-regenerate-progress-spinner");
+  if (statusEl) {
+    statusEl.textContent = t("memoryRegenerateProgressPending");
+  }
+  spinner?.classList.remove("hidden");
+  memoryRegenerationInFlight = true;
+  updateMemoryRegenerateProgressClosers();
+  modal.classList.remove("hidden");
+}
+
+function hideMemoryRegenerateProgressModal() {
+  const modal = document.getElementById("memory-regenerate-progress-modal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  memoryRegenerationInFlight = false;
+  updateMemoryRegenerateProgressClosers();
+}
+
+function updateMemoryRegenerateProgressClosers() {
+  const buttons = document.querySelectorAll(
+    "[data-memory-regenerate-progress-close-btn]",
+  );
+  buttons.forEach((btn) => {
+    btn.disabled = memoryRegenerationInFlight;
+  });
+}
+
+async function handleMemoryRegeneratePromptSubmit() {
+  const textarea = document.getElementById("memory-regenerate-prompt-input");
+  if (!textarea) return;
+  const entryMeta = pendingMemoryRegenerationEntry;
+  if (!entryMeta || !Number.isInteger(Number(entryMeta.id))) return;
+  const promptText = String(textarea.value || "").trim();
+  if (!promptText) {
+    showToast(t("memoryModalEmptyEntryWarning"), "error");
+    textarea.focus();
+    return;
+  }
+  const entryId = Number(entryMeta.id);
+  const level = entryMeta.level || 1;
+  const slot = entryMeta.slot || 1;
+  hideMemoryRegeneratePromptModal();
+  await runMemoryRegeneration(entryId, promptText, level, slot);
+}
+
+async function runMemoryRegeneration(entryId, promptText, level, slot) {
+  if (!Number.isInteger(entryId) || entryId <= 0) return;
+  showMemoryRegenerateProgressModal(entryId, level, slot);
+  const modal = document.getElementById("memory-regenerate-progress-modal");
+  const spinner = modal?.querySelector(".memory-regenerate-progress-spinner");
+  const statusEl = document.getElementById("memory-regenerate-progress-status");
+  try {
+    const summarySystemPrompt =
+      state.settings.summarySystemPrompt ||
+      "You are a helpful summarization assistant.";
+    const requestHistory = [{ role: "user", content: promptText }];
+    const result = await callOpenRouter(
+      summarySystemPrompt,
+      requestHistory,
+      state.settings.model,
+    );
+    const summary = String(result.content || "").trim();
+    if (!summary) throw new Error(t("unknownError"));
+    const systemMessages = Array.isArray(result.systemMessages)
+      ? result.systemMessages
+      : [];
+    const systemContentPieces = systemMessages
+      .filter((msg) => msg.role === "system")
+      .map((msg) => String(msg.content || "").trim())
+      .filter(Boolean);
+    const summarySystemContent =
+      systemContentPieces.length > 0
+        ? systemContentPieces.join("\n\n")
+        : summarySystemPrompt;
+    const userContentPieces = requestHistory
+      .filter((msg) => msg.role === "user")
+      .map((msg) => String(msg.content || "").trim())
+      .filter(Boolean);
+    const summaryUserContent =
+      userContentPieces.length > 0 ? userContentPieces.join("\n\n") : promptText;
+    await db.memories.update(entryId, {
+      summary,
+      summarySystemContent,
+      summaryUserContent,
+    });
+    if (typeof getEmbedding === "function") {
+      (async () => {
+        try {
+          const embedding = await getEmbedding(String(summary).trim());
+          if (embedding && Array.isArray(embedding)) {
+            await db.memories.update(entryId, { embedding });
+          }
+        } catch (embeddingErr) {
+          console.warn("Failed to generate memory embedding:", embeddingErr);
+        }
+      })();
+    }
+    spinner?.classList.add("hidden");
+    if (statusEl) {
+      statusEl.innerHTML = renderMessageHtml(summary, "assistant");
+    }
+    showToast(t("memoryModalSaveSuccess"), "success");
+    await renderMemoryModalEntries();
+  } catch (err) {
+    spinner?.classList.add("hidden");
+    const errorText = String(err?.message || t("unknownError"));
+    if (statusEl) {
+      statusEl.textContent = tf("memoryRegenerateProgressFailed", {
+        error: errorText,
+      });
+    }
+  } finally {
+    memoryRegenerationInFlight = false;
+    updateMemoryRegenerateProgressClosers();
+  }
+}
+
+function setupMemoryRegenerationControls() {
+  document
+    .querySelectorAll("[data-memory-regenerate-prompt-close]")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        hideMemoryRegeneratePromptModal();
+      });
+    });
+  const promptSubmit = document.getElementById(
+    "memory-regenerate-prompt-submit",
+  );
+  promptSubmit?.addEventListener("click", () => {
+    handleMemoryRegeneratePromptSubmit();
+  });
+  document
+    .querySelectorAll("[data-memory-regenerate-progress-close-btn]")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (memoryRegenerationInFlight) return;
+        hideMemoryRegenerateProgressModal();
+      });
+    });
 }
 
 function positionPromptHistoryPopover() {

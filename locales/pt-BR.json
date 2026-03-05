@@ -444,5 +444,12 @@
   "memoryModalSaveSuccess": "Entradas de memória salvas.",
   "memoryModalLevelLocked": "Entradas de níveis anteriores não podem ser editadas.",
   "oocSystemAvatarLabel": "Avatar do sistema OOC",
-  "systemRoleName": "SYSTEM"
-  }
+  "systemRoleName": "SYSTEM",
+  "memoryEntryRegenerate": "Regenerar",
+  "memoryRegeneratePromptTitle": "Regenerar entrada de memória",
+  "memoryRegeneratePromptDescription": "Edite o prompt do USUÁRIO que gerou este resumo antes de regenerar.",
+  "memoryRegenerateProgressTitle": "Regeneração de resumo",
+  "memoryRegenerateProgressPending": "Regenerando resumo...",
+  "memoryRegenerateProgressClose": "Fechar",
+  "memoryRegenerateProgressFailed": "Falha na regeneração: {error}"
+}

@@ -445,5 +445,12 @@
   "memoryModalSaveSuccess": "Memory entries saved.",
   "memoryModalLevelLocked": "Entries from earlier levels cannot be edited.",
   "oocSystemAvatarLabel": "OOC System Avatar",
-  "systemRoleName": "SYSTEM"
+  "systemRoleName": "SYSTEM",
+  "memoryEntryRegenerate": "Regenerate",
+  "memoryRegeneratePromptTitle": "Regenerate memory entry",
+  "memoryRegeneratePromptDescription": "Edit the USER prompt that generated this summary before regenerating.",
+  "memoryRegenerateProgressTitle": "Summary regeneration",
+  "memoryRegenerateProgressPending": "Regenerating summary...",
+  "memoryRegenerateProgressClose": "Close",
+  "memoryRegenerateProgressFailed": "Regeneration failed: {error}"
 }

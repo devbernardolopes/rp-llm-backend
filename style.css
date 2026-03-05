@@ -1595,6 +1595,40 @@ textarea {
   margin-bottom: 0;
 }
 
+.memory-entry-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.memory-entry-regen-btn {
+  font-size: 12px;
+  padding: 4px 12px;
+}
+
+#memory-regenerate-prompt-modal {
+  z-index: 215;
+}
+
+#memory-regenerate-progress-modal {
+  z-index: 225;
+}
+
+.memory-regenerate-prompt-info {
+  margin-bottom: 12px;
+}
+
+.memory-regenerate-progress-row .message-header span + span {
+  margin-left: auto;
+  font-size: 0.8em;
+  text-transform: uppercase;
+}
+
+.memory-regenerate-progress-content {
+  min-height: 60px;
+}
+
 .chat-avatar {
   width: 44px;
   height: 44px;

@@ -1041,6 +1041,136 @@
     </div>
 
     <div
+      id="memory-regenerate-prompt-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="memory-regenerate-prompt-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3
+            id="memory-regenerate-prompt-title"
+            data-i18n="memoryRegeneratePromptTitle"
+          >
+            Regenerate memory entry
+          </h3>
+          <button
+            type="button"
+            class="icon-btn modal-close"
+            data-memory-regenerate-prompt-close
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="memory-regenerate-prompt-info">
+            <p id="memory-regenerate-prompt-entry-label" class="muted"></p>
+            <p
+              id="memory-regenerate-prompt-description"
+              class="muted"
+              data-i18n="memoryRegeneratePromptDescription"
+            >
+              Edit the USER prompt that generated this summary before regenerating.
+            </p>
+          </div>
+          <textarea
+            id="memory-regenerate-prompt-input"
+            rows="8"
+            placeholder=""
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="secondary-btn"
+            data-memory-regenerate-prompt-close
+            data-i18n="cancel"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="primary-btn"
+            id="memory-regenerate-prompt-submit"
+            data-i18n="memoryEntryRegenerate"
+          >
+            Regenerate
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      id="memory-regenerate-progress-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="memory-regenerate-progress-title"
+    >
+      <div class="modal-card medium">
+        <div class="modal-header">
+          <h3
+            id="memory-regenerate-progress-title"
+            data-i18n="memoryRegenerateProgressTitle"
+          >
+            Summary regeneration
+          </h3>
+          <button
+            type="button"
+            class="icon-btn modal-close"
+            data-memory-regenerate-progress-close-btn
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="chat-row chat-row-ooc memory-regenerate-progress-row">
+            <img
+              id="memory-regenerate-progress-avatar"
+              class="chat-avatar"
+              src=""
+              alt="SYSTEM avatar"
+            />
+            <div class="message-block">
+              <div class="message-header">
+                <span data-i18n="systemRoleName">SYSTEM</span>
+                <span
+                  id="memory-regenerate-progress-entry-label"
+                  class="muted"
+                ></span>
+              </div>
+              <div class="message-content memory-regenerate-progress-content">
+                <span
+                  class="spinner memory-regenerate-progress-spinner"
+                  aria-hidden="true"
+                ></span>
+                <span
+                  id="memory-regenerate-progress-status"
+                  data-i18n="memoryRegenerateProgressPending"
+                >
+                  Regenerating summary...
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="primary-btn"
+            id="memory-regenerate-progress-close"
+            data-memory-regenerate-progress-close-btn
+            data-i18n="memoryRegenerateProgressClose"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
       id="asset-editor-modal"
       class="modal hidden"
       role="dialog"

@@ -444,5 +444,12 @@
   "memoryModalSaveSuccess": "Memory-Einträge gespeichert.",
   "memoryModalLevelLocked": "Einträge aus früheren Leveln können nicht bearbeitet werden.",
   "oocSystemAvatarLabel": "OOC-System-Avatar",
-  "systemRoleName": "SYSTEM"
+  "systemRoleName": "SYSTEM",
+  "memoryEntryRegenerate": "Regenerieren",
+  "memoryRegeneratePromptTitle": "Memory-Eintrag regenerieren",
+  "memoryRegeneratePromptDescription": "Bearbeite den USER-Prompt, der diese Zusammenfassung erzeugt hat, bevor du sie regenerierst.",
+  "memoryRegenerateProgressTitle": "Zusammenfassungsregeneration",
+  "memoryRegenerateProgressPending": "Zusammenfassung wird regeneriert...",
+  "memoryRegenerateProgressClose": "Schließen",
+  "memoryRegenerateProgressFailed": "Regeneration fehlgeschlagen: {error}"
 }

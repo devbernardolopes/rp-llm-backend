@@ -444,5 +444,12 @@
   "memoryModalSaveSuccess": "Entrées de mémoire enregistrées.",
   "memoryModalLevelLocked": "Les entrées des niveaux inférieurs ne peuvent pas être modifiées.",
   "oocSystemAvatarLabel": "Avatar du système OOC",
-  "systemRoleName": "SYSTEM"
+  "systemRoleName": "SYSTEM",
+  "memoryEntryRegenerate": "Régénérer",
+  "memoryRegeneratePromptTitle": "Régénérer l'entrée de mémoire",
+  "memoryRegeneratePromptDescription": "Modifiez l'invite UTILISATEUR ayant généré ce résumé avant de régénérer.",
+  "memoryRegenerateProgressTitle": "Régénération du résumé",
+  "memoryRegenerateProgressPending": "Régénération du résumé en cours...",
+  "memoryRegenerateProgressClose": "Fermer",
+  "memoryRegenerateProgressFailed": "Échec de la régénération : {error}"
 }

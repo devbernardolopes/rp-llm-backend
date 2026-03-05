@@ -444,5 +444,12 @@
   "memoryModalSaveSuccess": "Voci di memoria salvate.",
   "memoryModalLevelLocked": "Le voci dei livelli precedenti non possono essere modificate.",
   "oocSystemAvatarLabel": "Avatar del sistema OOC",
-  "systemRoleName": "SYSTEM"
+  "systemRoleName": "SYSTEM",
+  "memoryEntryRegenerate": "Rigenera",
+  "memoryRegeneratePromptTitle": "Rigenera voce di memoria",
+  "memoryRegeneratePromptDescription": "Modifica il prompt USER che ha generato questo riassunto prima di rigenerarlo.",
+  "memoryRegenerateProgressTitle": "Rigenerazione del riassunto",
+  "memoryRegenerateProgressPending": "Rigenerazione del riassunto in corso...",
+  "memoryRegenerateProgressClose": "Chiudi",
+  "memoryRegenerateProgressFailed": "Rigenerazione fallita: {error}"
 }
