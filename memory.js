@@ -424,7 +424,11 @@ async function summarizeMemory(character) {
   const prompt = `${userPromptText}\n\n${summarySections.join("\n\n")}`;
   const requestHistory = [{ role: "user", content: prompt }];
 
-   try {
+  const summarySystemPrompt =
+    state.settings.summarySystemPrompt ||
+    "You are a helpful summarization assistant.";
+
+  try {
      let summary = null;
      let summarySystemContent = summarySystemPrompt;
      let summaryUserContent = prompt;
