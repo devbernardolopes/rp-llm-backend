@@ -3415,14 +3415,8 @@ function handleMemoryCommandFromInput(input, raw = "") {
   const trimmedValue = String(raw || input.value || "").trim();
   if (trimmedValue !== "/mem") return false;
   const threadId = currentThread?.id ?? null;
-  state.promptCommandHistory = state.promptCommandHistory || [];
-  state.promptCommandHistory.push({
-    threadId,
-    content: trimmedValue,
-    createdAt: Date.now(),
-  });
-  if (state.promptCommandHistory.length > 200) {
-    state.promptCommandHistory.shift();
+  if (!addPromptCommandEntry(threadId, trimmedValue)) {
+    // Duplicate or excluded
   }
   openMemoryModal().catch(() => {});
   input.value = "";
@@ -4689,11 +4683,12 @@ function addPromptCommandEntry(threadId, content) {
   ) {
     return false;
   }
-  state.promptCommandHistory.push({
-    threadId,
-    content: trimmed,
-    createdAt: Date.now(),
-  });
+   state.promptCommandHistory.push({
+     threadId,
+     content: trimmed,
+     createdAt: Date.now(),
+     isOoc: true,
+   });
   if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
     state.promptCommandHistory.shift();
   }
@@ -12905,6 +12900,9 @@ async function sendMessage(options = {}) {
   }
   const shouldTriggerAiOnly = !text || /^\/ai\s*$/i.test(text);
   if (shouldTriggerAiOnly) {
+    if (currentThread) {
+      addPromptCommandEntry(currentThread.id, "/ai");
+    }
     if (!preserveInput) {
       input.value = "";
       state.activeShortcut = null;
@@ -14680,7 +14678,7 @@ function openPromptHistory() {
    // Get command prompts
    const commandPrompts = (state.promptCommandHistory || []).filter(
      (entry) => entry.threadId === threadId,
-   );
+   ).map(entry => ({ ...entry, isOoc: true })); // Treat commands as OOC for tint
 
    // Combine and sort by most recent first
    const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
