@@ -9546,11 +9546,23 @@ function resolveBlobSourceToUrl(source) {
 function getCachedAssetBlobUrl(cacheKey, source) {
   if (!source) return "";
   if (!cacheKey) return resolveBlobSourceToUrl(source);
-  const cached = state.assetBlobUrlCache.get(cacheKey);
-  if (cached) return cached;
+  const existingEntry = state.assetBlobUrlCache.get(cacheKey);
+  if (existingEntry && existingEntry.source === source) {
+    return existingEntry.url;
+  }
+  if (existingEntry) {
+    revokeBlobUrl(existingEntry.url);
+    if (existingEntry.source) {
+      state.assetBlobUrlCache.delete(existingEntry.source);
+    }
+  }
   const url = resolveBlobSourceToUrl(source);
   if (!url) return "";
-  state.assetBlobUrlCache.set(cacheKey, url);
+  const entry = { url, source };
+  state.assetBlobUrlCache.set(cacheKey, entry);
+  if (source) {
+    state.assetBlobUrlCache.set(source, entry);
+  }
   return url;
 }
 
@@ -9558,10 +9570,13 @@ const ASSET_EDITOR_CACHE_KEY = "asset-editor-current";
 
 function releaseAssetBlobUrl(cacheKey) {
   if (!cacheKey) return;
-  const url = state.assetBlobUrlCache.get(cacheKey);
-  if (!url) return;
+  const entry = state.assetBlobUrlCache.get(cacheKey);
+  if (!entry) return;
   state.assetBlobUrlCache.delete(cacheKey);
-  revokeBlobUrl(url);
+  if (entry.source) {
+    state.assetBlobUrlCache.delete(entry.source);
+  }
+  revokeBlobUrl(entry.url);
 }
 
 function getAssetDataUrl(asset, options = {}) {
