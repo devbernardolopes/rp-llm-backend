@@ -1750,12 +1750,6 @@ textarea {
   border-color: #8b3a42;
 }
 
-.message-controls .msg-context-btn:not(:disabled) {
-  color: #f2f7db;
-  background: #4b5f2a;
-  border-color: #8faa4d;
-}
-
 .message-controls .msg-model-info-btn:not(:disabled) {
   color: #d4e8ff;
   background: #2a4a6f;

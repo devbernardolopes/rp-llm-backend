@@ -286,7 +286,6 @@
   "msgCopyTitle": "Copy message",
   "msgMetadataTitle": "Message metadata",
   "msgModelInfoTitle": "Generation parameters",
-  "msgContextTitle": "Message context",
   "msgSpeakTitle": "Speak message",
   "msgSpeakCancelTitle": "Cancel speech",
   "msgSpeakLoadingTitle": "Loading speech... Click again to cancel.",

@@ -665,7 +665,6 @@ const I18N = {
     msgEditTitle: "Edit message",
     msgCopyTitle: "Copy message",
     msgMetadataTitle: "Message metadata",
-    msgContextTitle: "Message context",
     msgSpeakTitle: "Speak message",
     msgSpeakCancelTitle: "Cancel speech",
     msgSpeakLoadingTitle: "Loading speech... Click again to cancel.",
@@ -12436,14 +12435,6 @@ function buildMessageRow(message, index, streaming) {
       systemPromptBtn.setAttribute("aria-label", t("msgSystemPromptTitle"));
     }
     controls.appendChild(systemPromptBtn);
-    const contextBtn = iconButton("context", t("msgContextTitle"), async () => {
-      await openMessageContextModal(index);
-    });
-    contextBtn.classList.add("msg-context-btn");
-    contextBtn.disabled =
-      disableControlsForRow || !hasMessageContextData(message);
-    controls.appendChild(contextBtn);
-
     const speakerBtn = iconButton("speaker", t("msgSpeakTitle"), async (e) => {
       const clickedBtn = e?.currentTarget;
       const resolvedIndex = resolveMessageIndexFromButton(clickedBtn, index);
@@ -12544,15 +12535,6 @@ function renderMessageContent(contentEl, message) {
   if (String(message.generationError || "").trim()) {
     contentEl.appendChild(buildGenerationErrorNotice(message.generationError));
   }
-}
-
-function hasMessageContextData(message) {
-  if (!message) return false;
-  const loreCount = Array.isArray(message.usedLoreEntries)
-    ? message.usedLoreEntries.length
-    : 0;
-  const hasMemory = !!String(message.usedMemorySummary || "").trim();
-  return loreCount > 0 || hasMemory;
 }
 
 function hasSystemMessagesData(message) {
@@ -15344,9 +15326,6 @@ function refreshMessageControlStates() {
     row.querySelectorAll(".msg-info-btn").forEach((btn) => {
       applyInfoButtonAvailability(btn, message, isStreaming);
     });
-    row.querySelectorAll(".msg-context-btn").forEach((btn) => {
-      btn.disabled = isStreaming || !hasMessageContextData(message);
-    });
     row.querySelectorAll(".msg-model-info-btn").forEach((btn) => {
       const isInitial = message?.isInitial === true;
       const isUserEdited = message?.userEdited === true;
@@ -16993,23 +16972,6 @@ async function buildSystemPrompt(character, options = {}) {
     };
   }
   return { prompt, personaInjectionForEndMessages };
-}
-
-async function openMessageContextModal(index) {
-  const message = conversationHistory[index];
-  if (!message || !hasMessageContextData(message)) return;
-  openModal("message-context-modal");
-  const pre = document.getElementById("message-context-json");
-  if (!pre) return;
-  const view = {
-    index: index + 1,
-    role: message.role || "",
-    usedMemorySummary: message.usedMemorySummary || "",
-    usedLoreEntries: Array.isArray(message.usedLoreEntries)
-      ? message.usedLoreEntries
-      : [],
-  };
-  pre.textContent = JSON.stringify(view, null, 2);
 }
 
 async function openMessageModelInfoModal(index) {
