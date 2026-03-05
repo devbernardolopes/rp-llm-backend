@@ -5054,13 +5054,13 @@ async function removeTagFromCatalog(tag) {
     const affectedList = affectedCharacters
       .slice(0, 12)
       .map((c) => `- ${c.name || `Character #${c.id}`} (#${c.id})`)
-      .join("\n");
+      .join("\n\n");
     const extra =
       affectedCharacters.length > 12
-        ? `\n...and ${affectedCharacters.length - 12} more.`
+        ? `\n\n...and ${affectedCharacters.length - 12} more.`
         : "";
     const ok = await openConfirmDialog(
-      t("removeTagsConfirmTitle"),
+      t("removeTagTitle"),
       tf("removeTagAffectsChars", { list: affectedList, extra }),
     );
     if (!ok) return;
