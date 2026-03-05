@@ -4988,12 +4988,20 @@ function renderTagManagerList() {
   const list = document.getElementById("tag-manager-list");
   if (!list) return;
   list.innerHTML = "";
-  const tags = [...getAllAvailableTags()].reverse();
+  const tags = [...getAllAvailableTags()].sort((a, b) => a.localeCompare(b));
   tags.forEach((tag) => {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "tag-filter-chip";
     chip.textContent = tag;
+    chip.addEventListener("click", (e) => {
+      const input = document.getElementById("tag-manager-input");
+      if (input) {
+        input.value = tag;
+        input.focus();
+        updateTagManagerAddButtonState();
+      }
+    });
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "tag-remove-btn";
