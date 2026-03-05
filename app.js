@@ -4608,6 +4608,12 @@ function markModalDirtyOnInput(modalId, selectors) {
 }
 
 function getModalActionButtons(modalId) {
+  if (modalId === "text-input-modal") {
+    return {
+      applyBtn: null,
+      saveBtn: document.getElementById("text-input-save"),
+    };
+  }
   const prefix = String(modalId || "").replace(/-modal$/, "");
   return {
     applyBtn: document.getElementById(`apply-${prefix}-btn`),
@@ -4843,7 +4849,7 @@ function openTextInputDialog({
       setModalDirtyState("text-input-modal", inputEl.value !== originalValue);
     };
     const onKeyDown = (e) => {
-      if (e.key === "Enter") {
+      if (e.key === "Enter" && inputEl.value !== originalValue) {
         e.preventDefault();
         resolveTextInputDialog(true);
       }
