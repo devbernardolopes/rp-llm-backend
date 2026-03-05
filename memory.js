@@ -411,16 +411,16 @@ async function summarizeMemory(character) {
   if (previousLevelContext) {
     summarySections.push(previousLevelContext);
   }
-  summarySections.push(
-    ...toSummarize.map((m) => {
-      const rawContent = String(m.content || "");
-      const processedContent =
-        m.role === "assistant"
-          ? applySummaryMessagePreProcessing(rawContent)
-          : rawContent;
-      return `${m.role}: ${processedContent}`;
-    }),
-  );
+  const messageEntries = toSummarize
+    .map((m) => buildMessageEntryForSummary(m))
+    .filter(Boolean);
+  if (messageEntries.length === 0) {
+    return true;
+  }
+  const messagesSection = buildSummaryMessagesSection(messageEntries);
+  if (messagesSection) {
+    summarySections.push(messagesSection);
+  }
   const prompt = `${userPromptText}\n\n${summarySections.join("\n\n")}`;
   const requestHistory = [{ role: "user", content: prompt }];
 
@@ -555,9 +555,48 @@ async function summarizeMemory(character) {
       renderChat();
     }
     console.warn("Memory summarization failed:", detail);
-    showToast(errorMessage, "error");
-    return false;
-  }
+  showToast(errorMessage, "error");
+  return false;
+}
+}
+
+function buildMessageEntryForSummary(message) {
+  if (!message) return "";
+  const rawContent = String(message.content || "");
+  if (!rawContent.trim()) return "";
+  const processed =
+    message.role === "assistant"
+      ? applySummaryMessagePreProcessing(rawContent)
+      : rawContent;
+  const filtered = removeSummaryParagraphs(processed);
+  const trimmed = filtered.trim();
+  if (!trimmed) return "";
+  const labeled = `${message.role}: ${trimmed}`;
+  return normalizeSummaryRoleLabels(labeled);
+}
+
+function removeSummaryParagraphs(text, prefix = "> || ") {
+  if (!text) return "";
+  const normalized = text.replace(/\r\n/g, "\n");
+  const paragraphs = normalized.split(/\n\s*\n/);
+  const filtered = paragraphs.filter((paragraph) => {
+    const trimmed = paragraph.trimStart();
+    return !trimmed.startsWith(prefix);
+  });
+  return filtered.join("\n\n");
+}
+
+function normalizeSummaryRoleLabels(text) {
+  if (!text) return "";
+  const normalized = text.replace(/\r\n/g, "\n");
+  return normalized
+    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
+    .replace(/(^|\n)user:/gi, "$1[USER]:");
+}
+
+function buildSummaryMessagesSection(entries) {
+  if (!entries || entries.length === 0) return "";
+  return `***MESSAGES***\n\n${entries.join("\n\n")}`;
 }
 
 // Expose functions globally for app.js to use
