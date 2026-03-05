@@ -711,6 +711,7 @@ textarea {
 }
 
 #home-model-pill {
+  display: none;
   margin-left: auto;
   flex: 0 1 auto;
   max-width: 44vw;
