@@ -8139,11 +8139,6 @@ async function renderPersonaModalList() {
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
     actions.appendChild(
-      iconButton("edit", t("editPersonaAria"), () => {
-        openPersonaEditor(persona);
-      }),
-    );
-    actions.appendChild(
       iconButton("copy", t("duplicatePersonaAria"), async () => {
         await duplicatePersona(persona.id);
       }),
@@ -9065,11 +9060,6 @@ async function renderWritingInstructionsList() {
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
     actions.appendChild(
-      iconButton("edit", t("editWritingInstructionAria"), () =>
-        openWritingInstructionEditor(wi),
-      ),
-    );
-    actions.appendChild(
       iconButton("copy", t("duplicateWritingInstructionAria"), async () => {
         await duplicateWritingInstruction(wi.id);
       }),
@@ -9089,6 +9079,16 @@ async function renderWritingInstructionsList() {
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
     row.append(avatar, main, actions);
+    row.addEventListener("click", (e) => {
+      if (
+        e.target.closest(".lorebook-actions") ||
+        e.target.closest("button") ||
+        e.target.closest(".icon-btn")
+      ) {
+        return;
+      }
+      openWritingInstructionEditor(wi);
+    });
     list.appendChild(row);
   }
 }
@@ -9707,11 +9707,6 @@ async function renderAssetsList() {
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
 
-    const editBtn = iconButton("edit", t("editAssetAria") || "Edit", () => {
-      openAssetEditor(asset);
-    });
-    actions.appendChild(editBtn);
-
     const downloadBtn = iconButton(
       "export",
       t("downloadAssetAria") || "Download",
@@ -9740,6 +9735,16 @@ async function renderAssetsList() {
     actions.appendChild(deleteBtn);
 
     row.append(avatar, main, actions);
+    row.addEventListener("click", (e) => {
+      if (
+        e.target.closest(".lorebook-actions") ||
+        e.target.closest("button") ||
+        e.target.closest(".icon-btn")
+      ) {
+        return;
+      }
+      openAssetEditor(asset);
+    });
     list.appendChild(row);
   }
 }
