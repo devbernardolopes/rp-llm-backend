@@ -114,7 +114,64 @@ const DEFAULT_SETTINGS = {
   favoriteModels: [],
   chatMessageAlignment: "left",
   unreadSoundEnabled: true,
+  oocSystemAvatar: "",
 };
+
+function createSystemAvatarFallbackImage(letter = "S") {
+  const char = String(letter || "S").trim().charAt(0).toUpperCase() || "S";
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="20" ry="20" fill="#7f1d1d"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="72" font-family="Segoe UI, system-ui, sans-serif" fill="#ffd7db">${char}</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+const DEFAULT_SYSTEM_AVATAR_IMAGE = createSystemAvatarFallbackImage("S");
+
+function readFileAsDataURL(file) {
+  if (!file) return Promise.resolve("");
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result?.toString() ?? "");
+    reader.onerror = () => reject(reader.error || new Error("File read failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderOocSystemAvatarPreview(src) {
+  const dropzone = document.getElementById("ooc-system-avatar-dropzone");
+  const preview = document.getElementById("ooc-system-avatar-preview");
+  const removeBtn = document.getElementById("ooc-system-avatar-remove");
+  if (!dropzone || !preview || !removeBtn) return;
+  const normalized = String(src || "").trim();
+  const hasAvatar = Boolean(normalized);
+  if (hasAvatar) {
+    preview.src = normalized;
+    preview.classList.remove("hidden");
+    dropzone.classList.add("has-avatar");
+    removeBtn.classList.remove("hidden");
+  } else {
+    preview.src = "";
+    preview.classList.add("hidden");
+    dropzone.classList.remove("has-avatar");
+    removeBtn.classList.add("hidden");
+  }
+}
+
+function setOocSystemAvatarData(src) {
+  state.settings.oocSystemAvatar = String(src || "");
+  renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
+  saveSettings();
+}
+
+async function handleOocSystemAvatarFile(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  try {
+    const dataUrl = String(await readFileAsDataURL(file) || "");
+    if (dataUrl) {
+      setOocSystemAvatarData(dataUrl);
+    }
+  } catch (err) {
+    console.warn("Failed to load OOC system avatar:", err);
+  }
+}
 
 const USER_INPUT_AUTO_EXPAND_MAX_HEIGHT = 280; // keep the text box tall enough for longer prompts without taking over the UI
 
@@ -1945,6 +2002,37 @@ function setupEvents() {
         }
       }
     });
+  const oocDropzone = document.getElementById("ooc-system-avatar-dropzone");
+  const oocFileInput = document.getElementById("ooc-system-avatar-file-input");
+  const oocRemoveBtn = document.getElementById("ooc-system-avatar-remove");
+  renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
+  oocFileInput?.addEventListener("change", async (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await handleOocSystemAvatarFile(files[0]);
+    }
+    oocFileInput.value = "";
+  });
+  oocRemoveBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOocSystemAvatarData("");
+  });
+  oocDropzone?.addEventListener("click", () => {
+    oocFileInput?.click();
+  });
+  oocDropzone?.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  oocDropzone?.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      await handleOocSystemAvatarFile(files[0]);
+    }
+  });
   document
     .getElementById("persona-select")
     .addEventListener("change", onPersonaSelectChange);
@@ -3437,6 +3525,7 @@ async function setupSettingsControls() {
     "memory-messages-to-keep",
   );
   const memorySlotsInput = document.getElementById("memory-slots");
+  renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
   if (uiLanguageSelect) {
     uiLanguageSelect.querySelector('option[value="auto"]').textContent =
       t("languageAuto");
@@ -11589,6 +11678,9 @@ function buildMessageRow(message, index, streaming) {
   row.dataset.streaming = streaming ? "1" : "0";
   row.dataset.messageIndex = String(index);
   const isOocMessage = message?.ooc === true;
+  if (isOocMessage) {
+    row.classList.add("chat-row-ooc");
+  }
 
   const avatar = document.createElement("img");
   avatar.className = "chat-avatar";
@@ -11601,27 +11693,40 @@ function buildMessageRow(message, index, streaming) {
   const botName = currentCharacter?.name || "Character";
   const chatFsName =
     message.role === "assistant" ? botName : userName || t("message");
+  const systemRoleLabel = t("systemRoleName");
+  const isSystemOocMessage = isOocMessage && message.role === "assistant";
+  const senderLabel = isSystemOocMessage
+    ? systemRoleLabel
+    : message.role === "assistant"
+      ? botName
+      : userName;
   if (message.role === "assistant") {
-    const cache = state.cachedChatBotAvatar;
-    const charId = currentCharacter?.id;
-    const personaId = currentPersona?.id;
-    if (
-      cache.url &&
-      cache.characterId === charId &&
-      cache.personaId === personaId
-    ) {
-      avatar.src = cache.url;
-      avatar.alt = `${botName} avatar`;
+    if (isSystemOocMessage) {
+      const customAvatar = String(state.settings.oocSystemAvatar || "").trim();
+      avatar.dataset.avatarVideo = "";
+      avatar.src = customAvatar || DEFAULT_SYSTEM_AVATAR_IMAGE;
     } else {
-      setCharacterAvatarImage(avatar, currentCharacter, botName, 256);
-      state.cachedChatBotAvatar = {
-        url: avatar.src,
-        characterId: charId,
-        personaId,
-      };
-    }
-    if (avatar.dataset.avatarVideo) {
-      // Video avatar - ensure we have the snapshot cached for reuse
+      const cache = state.cachedChatBotAvatar;
+      const charId = currentCharacter?.id;
+      const personaId = currentPersona?.id;
+      if (
+        cache.url &&
+        cache.characterId === charId &&
+        cache.personaId === personaId
+      ) {
+        avatar.src = cache.url;
+        avatar.alt = `${botName} avatar`;
+      } else {
+        setCharacterAvatarImage(avatar, currentCharacter, botName, 256);
+        state.cachedChatBotAvatar = {
+          url: avatar.src,
+          characterId: charId,
+          personaId,
+        };
+      }
+      if (avatar.dataset.avatarVideo) {
+        // Video avatar - ensure we have the snapshot cached for reuse
+      }
     }
   } else {
     setCharacterAvatarImage(avatar, { avatar: userAvatar }, chatFsName, 256);
@@ -11644,7 +11749,8 @@ function buildMessageRow(message, index, streaming) {
     avatar.style.width = `${size}px`;
     avatar.style.height = `${size}px`;
   }
-  avatar.alt = `${message.role} avatar`;
+  const avatarRoleLabel = isSystemOocMessage ? systemRoleLabel : message.role;
+  avatar.alt = `${avatarRoleLabel} avatar`;
 
   const block = document.createElement("div");
   block.className = "message-block";
@@ -11656,7 +11762,7 @@ function buildMessageRow(message, index, streaming) {
   header.className = "message-header";
 
   const sender = document.createElement("span");
-  sender.textContent = message.role === "assistant" ? botName : userName;
+  sender.textContent = senderLabel;
   header.appendChild(sender);
 
   const controls = document.createElement("div");

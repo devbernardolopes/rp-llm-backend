@@ -767,6 +767,31 @@
             </span>
           </div>
           <div data-settings-group="threads" class="settings-group">
+            <div class="form-field">
+              <span data-i18n="oocSystemAvatarLabel">OOC System Avatar</span>
+              <div
+                id="ooc-system-avatar-dropzone"
+                class="char-avatar-dropzone"
+                tabindex="0"
+                aria-label="Upload OOC avatar"
+              >
+                <img id="ooc-system-avatar-preview" class="hidden" />
+                <span class="dropzone-plus">+</span>
+                <span class="dropzone-hint">Drag & drop or click</span>
+                <button
+                  type="button"
+                  id="ooc-system-avatar-remove"
+                  class="avatar-remove-btn hidden"
+                  title="Remove"
+                >&times;</button>
+              </div>
+              <input
+                type="file"
+                id="ooc-system-avatar-file-input"
+                accept="image/*"
+                class="hidden"
+              />
+            </div>
             <span class="checkbox-line">
               <input type="checkbox" id="autopair-enabled" checked />
               <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
