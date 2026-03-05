@@ -6800,7 +6800,7 @@ function createEmptyCharacterDefinition(language = "en") {
     writingInstructionId: "none",
     initialMessagesRaw: "",
     initialMessages: [],
-    personaInjectionPlacement: "end_messages",
+    personaInjectionPlacement: "end_system_prompt",
     ttsVoice: DEFAULT_TTS_VOICE,
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
     ttsRate: DEFAULT_TTS_RATE,
@@ -6876,7 +6876,7 @@ function normalizeCharacterDefinitions(character = null) {
     ? character.initialMessages
     : [];
   fallback.personaInjectionPlacement =
-    character?.personaInjectionPlacement || "end_messages";
+    character?.personaInjectionPlacement || "end_system_prompt";
   fallback.ttsVoice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
   fallback.ttsLanguage = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   fallback.ttsRate = Number.isFinite(Number(character?.ttsRate))
@@ -7105,7 +7105,7 @@ function saveActiveCharacterDefinitionFromForm() {
   );
   def.personaInjectionPlacement = String(
     document.getElementById("char-persona-injection-placement")?.value ||
-      "end_messages",
+      "end_system_prompt",
   );
   const selectedTts = getResolvedCharTtsSelection();
   def.ttsVoice = selectedTts.voice;
@@ -7149,7 +7149,7 @@ async function loadActiveCharacterDefinitionToForm() {
       ? formatInitialMessagesForEditor(def.initialMessages || [])
       : "");
   document.getElementById("char-persona-injection-placement").value =
-    def.personaInjectionPlacement || "end_messages";
+    def.personaInjectionPlacement || "end_system_prompt";
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   populateCharTtsVoiceSelect(def.ttsVoice || DEFAULT_TTS_VOICE);
   document.getElementById("char-tts-rate").value = String(
@@ -10884,7 +10884,7 @@ async function importCharacterFromFile(e) {
             writingInstructionId: String(writingInstructionId || ""),
             initialMessagesRaw: firstMes,
             initialMessages: firstMes ? [firstMes] : [],
-            personaInjectionPlacement: "end_messages",
+            personaInjectionPlacement: "end_system_prompt",
             ttsVoice: DEFAULT_TTS_VOICE,
             ttsLanguage: DEFAULT_TTS_LANGUAGE,
             ttsRate: DEFAULT_TTS_RATE,
@@ -10923,13 +10923,13 @@ async function importCharacterFromFile(e) {
         avatarScale: 4,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        personaInjectionPlacement: "end_messages",
+        personaInjectionPlacement: "end_system_prompt",
       };
       if (character.definitions && character.definitions.length > 0) {
         character.definitions = character.definitions.map((def) => ({
           ...def,
           personaInjectionPlacement:
-            def.personaInjectionPlacement || "end_messages",
+            def.personaInjectionPlacement || "end_system_prompt",
           kokoroDtype: def.kokoroDtype || "auto",
         }));
       }
@@ -16725,9 +16725,9 @@ async function buildSystemPrompt(character, options = {}) {
           DEFAULT_SETTINGS.personaInjectionTemplate ||
           "",
       ).trim();
-      if (placement === "end_messages" && templateNotEmpty) {
+      if (placement === "end_system_prompt" && templateNotEmpty) {
         personaInjectionForEndMessages = personaInjected;
-      } else if (placement !== "end_messages") {
+      } else if (placement !== "end_system_prompt") {
         systemPromptWithPersona = applyPersonaInjectionPlacement(
           promptBeforePersona,
           personaInjected,
