@@ -452,5 +452,7 @@
   "memoryRegenerateProgressPending": "Zusammenfassung wird regeneriert...",
   "memoryRegenerateProgressClose": "Schließen",
   "memoryRegenerateProgressFailed": "Regeneration fehlgeschlagen: {error}",
-  "botCardAvatarEffectHover": "Beim Überfahren"
+  "botCardAvatarEffectHover": "Beim Überfahren",
+  "memorySummarizationFailed": "Die Gedächtniszusammenfassung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst.",
+  "autoTitleFailed": "Die automatische Titelgenerierung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst."
 }

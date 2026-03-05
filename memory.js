@@ -328,7 +328,7 @@ function getCurrentSummaryThreshold() {
  * @returns {Promise<void>}
  */
 async function summarizeMemory(character) {
-  if (character.useMemory === false) return;
+  if (character.useMemory === false) return true;
 
   const threadId = currentThread?.id;
   const isViewing = threadId && isViewingThread(threadId);
@@ -344,10 +344,10 @@ async function summarizeMemory(character) {
         (entry.message.role === "assistant" || entry.message.role === "user"),
     );
   const threshold = getCurrentSummaryThreshold();
-  if (threshold <= 0 || unsMessages.length < threshold) return;
+  if (threshold <= 0 || unsMessages.length < threshold) return true;
 
   const toSummarize = unsMessages.map((entry) => entry.message);
-  if (toSummarize.length === 0) return;
+  if (toSummarize.length === 0) return true;
 
   const upcomingSlotInfo = await getNextMemorySlotInfo(character.id, threadId);
   const shouldIncludePreviousLevel =
@@ -511,17 +511,25 @@ async function summarizeMemory(character) {
     if (isViewing) {
       renderChat();
     }
+    return true;
   } catch (e) {
+    const detail = String(e?.message || t("unknownError"));
+    const errorMessage = tf("memorySummarizationFailed", { error: detail });
     const idx = conversationHistory.indexOf(pendingMessage);
     if (idx >= 0) {
-      conversationHistory.splice(idx, 1);
+      const failureMessage = conversationHistory[idx];
+      failureMessage.generationStatus = "";
+      failureMessage.placeholder = false;
+      failureMessage.content = "";
+      failureMessage.generationError = errorMessage;
     }
     await persistCurrentThread();
     if (isViewing) {
       renderChat();
     }
-    console.warn("Memory summarization failed:", e.message);
-    showToast(`Memory summarization failed: ${e.message}`, "error");
+    console.warn("Memory summarization failed:", detail);
+    showToast(errorMessage, "error");
+    return false;
   }
 }
 

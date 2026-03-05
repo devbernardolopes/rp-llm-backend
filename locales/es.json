@@ -452,5 +452,7 @@
   "memoryRegenerateProgressPending": "Regenerando resumen...",
   "memoryRegenerateProgressClose": "Cerrar",
   "memoryRegenerateProgressFailed": "Error al regenerar: {error}",
-  "botCardAvatarEffectHover": "Al pasar el cursor"
+  "botCardAvatarEffectHover": "Al pasar el cursor",
+  "memorySummarizationFailed": "La generación de resumen de memoria falló: {error}. Por favor, inténtalo de nuevo antes de continuar.",
+  "autoTitleFailed": "La generación del título automático falló: {error}. Por favor, inténtalo de nuevo antes de continuar."
 }

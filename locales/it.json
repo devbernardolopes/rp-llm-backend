@@ -452,5 +452,7 @@
   "memoryRegenerateProgressPending": "Rigenerazione del riassunto in corso...",
   "memoryRegenerateProgressClose": "Chiudi",
   "memoryRegenerateProgressFailed": "Rigenerazione fallita: {error}",
-  "botCardAvatarEffectHover": "Al passaggio del mouse"
+  "botCardAvatarEffectHover": "Al passaggio del mouse",
+  "memorySummarizationFailed": "La sintesi della memoria non è riuscita: {error}. Riprova prima di continuare.",
+  "autoTitleFailed": "La generazione automatica del titolo non è riuscita: {error}. Riprova prima di continuare."
 }

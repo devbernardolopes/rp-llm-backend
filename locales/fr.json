@@ -452,5 +452,7 @@
   "memoryRegenerateProgressPending": "Régénération du résumé en cours...",
   "memoryRegenerateProgressClose": "Fermer",
   "memoryRegenerateProgressFailed": "Échec de la régénération : {error}",
-  "botCardAvatarEffectHover": "Au survol"
+  "botCardAvatarEffectHover": "Au survol",
+  "memorySummarizationFailed": "La synthèse de la mémoire a échoué : {error}. Veuillez réessayer avant de continuer.",
+  "autoTitleFailed": "La génération automatique du titre a échoué : {error}. Veuillez réessayer avant de continuer."
 }

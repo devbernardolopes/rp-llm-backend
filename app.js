@@ -11501,13 +11501,13 @@ function refreshAllHoverMarquees() {
 }
 
 async function maybeGenerateTitleBeforeBotReply() {
-  if (!currentThread || !currentCharacter) return;
-  if (state.settings.threadAutoTitleEnabled === false) return;
+  if (!currentThread || !currentCharacter) return true;
+  if (state.settings.threadAutoTitleEnabled === false) return true;
   if (currentThread.titleGenerated === true) {
     state.pendingTitleGeneration = false;
-    return;
+    return true;
   }
-  if (currentThread.titleManual === true) return;
+  if (currentThread.titleManual === true) return true;
   const minMessages = Math.max(
     5,
     Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
@@ -11515,7 +11515,7 @@ async function maybeGenerateTitleBeforeBotReply() {
   const inSimulationHistory = getInSimulationMessages(conversationHistory);
   // Generate title if either we have enough messages OR pending flag is set
   if (inSimulationHistory.length < minMessages && !state.pendingTitleGeneration)
-    return;
+    return true;
 
   const existingTitleMessage = conversationHistory.find(
     (m) =>
@@ -11523,7 +11523,7 @@ async function maybeGenerateTitleBeforeBotReply() {
       m.role === "assistant" &&
       m.generationStatus === "title_generating",
   );
-  if (existingTitleMessage) return;
+  if (existingTitleMessage) return true;
 
   const hasExistingPendingMessage = conversationHistory.some(
     (m) =>
@@ -11534,7 +11534,7 @@ async function maybeGenerateTitleBeforeBotReply() {
         m.generationStatus === "queued" ||
         m.generationStatus === "cooling_down"),
   );
-  if (hasExistingPendingMessage) return;
+  if (hasExistingPendingMessage) return true;
 
   // Clear the pending flag
   state.pendingTitleGeneration = false;
@@ -11621,7 +11621,7 @@ async function maybeGenerateTitleBeforeBotReply() {
         renderChat();
       }
       setSendingState();
-      return;
+      return true;
     }
     const cleaned = raw
       .replace(/^["'`]+|["'`]+$/g, "")
@@ -11635,7 +11635,7 @@ async function maybeGenerateTitleBeforeBotReply() {
         renderChat();
       }
       setSendingState();
-      return;
+      return true;
     }
 
     const updatedAt = Date.now();
@@ -11667,23 +11667,33 @@ async function maybeGenerateTitleBeforeBotReply() {
       threadId: currentThread.id,
       updatedAt,
     });
-  } catch {
+    return true;
+  } catch (err) {
+    const detail = String(err?.message || t("unknownError"));
+    const errorMessage = tf("autoTitleFailed", { error: detail });
     const idx = conversationHistory.indexOf(pendingTitleMessage);
     if (idx >= 0) {
-      conversationHistory.splice(idx, 1);
+      const failureMessage = conversationHistory[idx];
+      failureMessage.generationStatus = "";
+      failureMessage.placeholder = false;
+      failureMessage.content = "";
+      failureMessage.generationError = errorMessage;
     }
     await persistCurrentThread();
     if (isViewingThread(currentThread.id)) {
       renderChat();
     }
     setSendingState();
+    showToast(errorMessage, "error");
+    console.warn("Auto-title generation failed:", detail);
+    return false;
   }
 }
 
 async function maybeGenerateThreadTitle() {
   if (!currentThread || !currentCharacter) return;
   if (state.settings.threadAutoTitleEnabled === false) return;
-  if (currentThread.titleGenerated === true) return;
+  if (currentThread.titleGenerated === true) return true;
   if (currentThread.titleManual === true) return;
   const minMessages = Math.max(
     5,
@@ -12562,7 +12572,11 @@ async function sendMessage(options = {}) {
 
   // Trigger memory summarization if threshold reached (including when user sends the nth message)
   if (shouldTriggerMemorySummaries(currentCharacter)) {
-    await summarizeMemory(currentCharacter);
+    const summaryResult = await summarizeMemory(currentCharacter);
+    if (summaryResult === false) {
+      await renderThreads();
+      return;
+    }
   }
 
   if (state.settings.autoReplyEnabled === false) {
@@ -13022,7 +13036,8 @@ async function generateBotReply() {
   if (!currentThread || !currentCharacter || state.sending) return;
 
   // Check if we need to generate title before bot reply
-  await maybeGenerateTitleBeforeBotReply();
+  const titleReady = await maybeGenerateTitleBeforeBotReply();
+  if (titleReady === false) return;
 
   const cooldown = Number(state.settings.completionCooldown) || 0;
   const threadId = Number(currentThread.id);
