@@ -341,6 +341,7 @@ async function summarizeMemory(character) {
         entry.message.ooc !== true &&
         !memoryIsPlaceholderMessage(entry.message) &&
         entry.message.summarized !== true &&
+        entry.message.summaryProtected !== true &&
         (entry.message.role === "assistant" || entry.message.role === "user"),
     );
   const threshold = getCurrentSummaryThreshold();
