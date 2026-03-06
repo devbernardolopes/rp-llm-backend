@@ -333,7 +333,7 @@ async function summarizeMemory(character) {
   const threadId = currentThread?.id;
   const isViewing = threadId && isViewingThread(threadId);
 
-  const unsMessages = conversationHistory
+  const candidateMessages = conversationHistory
     .map((message, idx) => ({ message, idx }))
     .filter((entry) => {
       const msg = entry.message;
@@ -341,8 +341,7 @@ async function summarizeMemory(character) {
         !msg ||
         msg.ooc === true ||
         memoryIsPlaceholderMessage(msg) ||
-        msg.summarized === true ||
-        Boolean(msg.summaryProtected)
+        msg.summarized === true
       ) {
         return false;
       }
@@ -351,11 +350,15 @@ async function summarizeMemory(character) {
       }
       return true;
     });
+  const unsummarizedCount = candidateMessages.reduce((count, entry) => {
+    const msg = entry.message;
+    if (Boolean(msg.summaryProtected)) {
+      return count;
+    }
+    return count + 1;
+  }, 0);
   const threshold = getCurrentSummaryThreshold();
-  if (threshold <= 0 || unsMessages.length < threshold) return true;
-
-  const toSummarize = unsMessages.map((entry) => entry.message);
-  if (toSummarize.length === 0) return true;
+  if (threshold <= 0 || unsummarizedCount < threshold) return true;
 
   const upcomingSlotInfo = await getNextMemorySlotInfo(character.id, threadId);
   const shouldIncludePreviousLevel =
@@ -377,6 +380,38 @@ async function summarizeMemory(character) {
   const memoryContextSection = storedMemorySummary
     ? `***MEMORY CONTEXT***\n\n${storedMemorySummary}`
     : "";
+
+  const userPromptText =
+    (state?.settings?.memorySummarizerUserPrompt || "").trim() ||
+    DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT;
+  const summarySections = [];
+  if (memoryContextSection) {
+    summarySections.push(memoryContextSection);
+  }
+  if (previousLevelContext) {
+    summarySections.push(previousLevelContext);
+  }
+  const keepSetting = getCurrentMemoryMessagesToKeep();
+  const keepCount = Math.min(keepSetting, candidateMessages.length);
+  const markCount = Math.max(0, candidateMessages.length - keepCount);
+  if (markCount === 0) return true;
+  const toSummarizeEntries = candidateMessages
+    .slice(0, markCount)
+    .map((entry) => entry.message)
+    .filter(Boolean);
+  if (toSummarizeEntries.length === 0) return true;
+  const messageEntries = toSummarizeEntries
+    .map((m) => buildMessageEntryForSummary(m))
+    .filter(Boolean);
+  if (messageEntries.length === 0) {
+    return true;
+  }
+  const messagesSection = buildSummaryMessagesSection(messageEntries);
+  if (messagesSection) {
+    summarySections.push(messagesSection);
+  }
+  const prompt = `${userPromptText}\n\n${summarySections.join("\n\n")}`;
+  const requestHistory = [{ role: "user", content: prompt }];
 
   if (isViewing) {
     showToast("Memory summarization triggered", "info");
@@ -416,29 +451,6 @@ async function summarizeMemory(character) {
       scrollChatToBottom();
     }
   }
-
-  const userPromptText =
-    (state?.settings?.memorySummarizerUserPrompt || "").trim() ||
-    DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT;
-  const summarySections = [];
-  if (memoryContextSection) {
-    summarySections.push(memoryContextSection);
-  }
-  if (previousLevelContext) {
-    summarySections.push(previousLevelContext);
-  }
-  const messageEntries = toSummarize
-    .map((m) => buildMessageEntryForSummary(m))
-    .filter(Boolean);
-  if (messageEntries.length === 0) {
-    return true;
-  }
-  const messagesSection = buildSummaryMessagesSection(messageEntries);
-  if (messagesSection) {
-    summarySections.push(messagesSection);
-  }
-  const prompt = `${userPromptText}\n\n${summarySections.join("\n\n")}`;
-  const requestHistory = [{ role: "user", content: prompt }];
 
   const summarySystemPrompt =
     state.settings.summarySystemPrompt ||
@@ -519,33 +531,30 @@ async function summarizeMemory(character) {
        })();
      }
 
-     const keepSetting = getCurrentMemoryMessagesToKeep();
-    const keepCount = Math.min(keepSetting, unsMessages.length);
-    const markCount = Math.max(0, unsMessages.length - keepCount);
-    for (let i = 0; i < markCount; i += 1) {
-      const entry = unsMessages[i];
-      const idx = entry?.idx;
-      if (
-        Number.isInteger(idx) &&
-        conversationHistory[idx] &&
-        conversationHistory[idx].summarized !== true
-      ) {
-        conversationHistory[idx].summarized = true;
-        conversationHistory[idx].summaryId = memoryId;
-        conversationHistory[idx].summaryProtected = false;
-      }
-    }
-    for (let i = markCount; i < unsMessages.length; i += 1) {
-      const entry = unsMessages[i];
-      const idx = entry?.idx;
-      if (
-        Number.isInteger(idx) &&
-        conversationHistory[idx] &&
-        conversationHistory[idx].summarized !== true
-      ) {
-        conversationHistory[idx].summaryProtected = memoryId;
-      }
-    }
+     for (let i = 0; i < markCount; i += 1) {
+       const entry = candidateMessages[i];
+       const idx = entry?.idx;
+       if (
+         Number.isInteger(idx) &&
+         conversationHistory[idx] &&
+         conversationHistory[idx].summarized !== true
+       ) {
+         conversationHistory[idx].summarized = true;
+         conversationHistory[idx].summaryId = memoryId;
+         conversationHistory[idx].summaryProtected = false;
+       }
+     }
+     for (let i = markCount; i < candidateMessages.length; i += 1) {
+       const entry = candidateMessages[i];
+       const idx = entry?.idx;
+       if (
+         Number.isInteger(idx) &&
+         conversationHistory[idx] &&
+         conversationHistory[idx].summarized !== true
+       ) {
+         conversationHistory[idx].summaryProtected = memoryId;
+       }
+     }
 
     conversationHistory.pop();
 
