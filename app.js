@@ -16935,14 +16935,16 @@ async function buildSystemPrompt(character, options = {}) {
           DEFAULT_SETTINGS.personaInjectionTemplate ||
           "",
       ).trim();
-      if (placement === "end_system_prompt" && templateNotEmpty) {
-        personaInjectionForEndMessages = personaInjected;
-      } else if (placement !== "end_system_prompt") {
-        systemPromptWithPersona = applyPersonaInjectionPlacement(
-          promptBeforePersona,
-          personaInjected,
-          placement,
-        );
+      if (templateNotEmpty) {
+        if (placement === "end_messages") {
+          personaInjectionForEndMessages = personaInjected;
+        } else {
+          systemPromptWithPersona = applyPersonaInjectionPlacement(
+            promptBeforePersona,
+            personaInjected,
+            placement,
+          );
+        }
       }
       state.pendingPersonaInjectionPersonaId = personaForContext.id || null;
     }
