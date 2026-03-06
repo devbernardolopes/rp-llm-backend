@@ -12354,7 +12354,10 @@ function buildMessageRow(message, index, streaming) {
     );
     regenBtn.classList.add("msg-regen-btn");
     regenBtn.disabled =
-      state.sending || disableControlsForRow || isLockedMemoryMessage;
+      state.sending ||
+      disableControlsForRow ||
+      isLockedMemoryMessage ||
+      message.manualMessage === true;
     controls.appendChild(regenBtn);
     const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
       beginInlineMessageEdit(index, content);
@@ -12880,30 +12883,32 @@ async function sendMessage(options = {}) {
   if (handleMemoryCommandFromInput(input, text)) {
     return;
   }
-  const shouldTriggerAiOnly = !text || /^\/ai\s*$/i.test(text);
-  if (shouldTriggerAiOnly) {
-    if (currentThread) {
-      addPromptCommandEntry(currentThread.id, "/ai");
-    }
-    if (!preserveInput) {
-      input.value = "";
-      state.activeShortcut = null;
-      if (currentThread) {
-        currentThread.draftInput = null;
-        db.threads.update(currentThread.id, { draftInput: null });
-      }
-    }
-    await requestBotReplyForCurrentThread("manual_send_ai_only");
-    return;
-  }
-  if (!preserveInput) {
+  const aiCommandMatch = text.match(/^\/ai(?:\s+(.*))?$/i);
+  const aiCommandContent = aiCommandMatch?.[1]?.trim();
+  const shouldTriggerAiOnly = !text || (aiCommandMatch && !aiCommandContent);
+  const clearDraftInput = () => {
+    if (preserveInput) return;
     input.value = "";
     state.activeShortcut = null;
     if (currentThread) {
       currentThread.draftInput = null;
       db.threads.update(currentThread.id, { draftInput: null });
     }
+  };
+  if (aiCommandMatch && aiCommandContent) {
+    clearDraftInput();
+    await addManualAssistantMessage(aiCommandContent);
+    return;
   }
+  if (shouldTriggerAiOnly) {
+    if (currentThread) {
+      addPromptCommandEntry(currentThread.id, "/ai");
+    }
+    clearDraftInput();
+    await requestBotReplyForCurrentThread("manual_send_ai_only");
+    return;
+  }
+  clearDraftInput();
 
   if (currentThread?.oocModeEnabled === true) {
     await sendOocInquiry(text);
@@ -12943,6 +12948,37 @@ async function sendMessage(options = {}) {
   }
 
   await requestBotReplyForCurrentThread("manual_send_auto_reply");
+}
+
+async function addManualAssistantMessage(content) {
+  if (!currentThread) return;
+  const messageContent = String(content || "").trim();
+  if (!messageContent) return;
+  const assistantMsg = {
+    role: "assistant",
+    content: messageContent,
+    createdAt: Date.now(),
+    senderName: currentCharacter?.name || "Character",
+    senderAvatar: currentCharacter?.avatar || "",
+    manualMessage: true,
+    generationStatus: "",
+    generationError: "",
+    truncatedByFilter: false,
+    finishReason: "",
+    nativeFinishReason: "",
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    writingInstructionsTurnIndex: 0,
+    writingInstructionsCounted: false,
+  };
+  conversationHistory.push(assistantMsg);
+  await persistCurrentThread();
+  renderChat();
+  scrollChatToBottom();
+  await renderThreads();
 }
 
 async function queueThreadForCooldown(threadId, targetMessage = null) {
@@ -13740,6 +13776,7 @@ async function regenerateMessage(index) {
 
   const target = conversationHistory[index];
   if (!target || target.role !== "assistant") return;
+  if (target.manualMessage === true) return;
   if (target.ooc === true) {
     await regenerateOocMessage(index);
     return;
