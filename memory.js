@@ -365,6 +365,11 @@ async function summarizeMemory(character) {
     }
   }
 
+  const storedMemorySummary = await getMemorySummary(character.id, threadId);
+  const memoryContextSection = storedMemorySummary
+    ? `***MEMORY CONTEXT***\n\n${storedMemorySummary}`
+    : "";
+
   if (isViewing) {
     showToast("Memory summarization triggered", "info");
   }
@@ -408,6 +413,9 @@ async function summarizeMemory(character) {
     (state?.settings?.memorySummarizerUserPrompt || "").trim() ||
     DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT;
   const summarySections = [];
+  if (memoryContextSection) {
+    summarySections.push(memoryContextSection);
+  }
   if (previousLevelContext) {
     summarySections.push(previousLevelContext);
   }
