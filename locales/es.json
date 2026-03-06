@@ -460,5 +460,8 @@
    "memorySummarizationFailed": "La generación de resumen de memoria falló: {error}. Por favor, inténtalo de nuevo antes de continuar.",
    "autoTitleFailed": "La generación del título automático falló: {error}. Por favor, inténtalo de nuevo antes de continuar.",
    "useLocalSummarization": "Usar Resumen Local (más rápido, sin costo de API)",
-   "memoryRelevanceFilterToggle": "Usar filtro de relevancia de memoria"
- }
+  "memoryRelevanceFilterToggle": "Usar filtro de relevancia de memoria",
+  "streamLabel": "Transmisión",
+  "enabledLabel": "Habilitado",
+  "disabledLabel": "Deshabilitado"
+}

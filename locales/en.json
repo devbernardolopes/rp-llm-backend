@@ -461,5 +461,8 @@
    "memorySummarizationFailed": "Memory summarization failed: {error}. Please retry before continuing.",
    "autoTitleFailed": "Auto-title generation failed: {error}. Please retry before continuing.",
    "useLocalSummarization": "Use Local Summarization (faster, no API cost)",
-   "memoryRelevanceFilterToggle": "Use memory relevance filter"
- }
+  "memoryRelevanceFilterToggle": "Use memory relevance filter",
+  "streamLabel": "Stream",
+  "enabledLabel": "Enabled",
+  "disabledLabel": "Disabled"
+}

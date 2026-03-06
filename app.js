@@ -13481,6 +13481,11 @@ async function generateBotReply() {
       writingInstructionsCounted: false,
       model: state.settings.model || "",
       temperature: Number(state.settings.temperature) || 0,
+      topP: Number(state.settings.topP) || 1,
+      maxTokens: Number(state.settings.maxTokens) || 0,
+      frequencyPenalty: Number(state.settings.frequencyPenalty) || 0,
+      presencePenalty: Number(state.settings.presencePenalty) || 0,
+      streamEnabled: Boolean(state.settings.streamEnabled),
       requestMessages: state.currentRequestMessages || null,
     };
     generationHistory.push(pending);
@@ -16985,12 +16990,48 @@ async function openMessageModelInfoModal(index) {
   const temperatureEl = document.getElementById(
     "message-model-info-temperature",
   );
+  const maxTokensEl = document.getElementById(
+    "message-model-info-max-tokens",
+  );
+  const topPEl = document.getElementById("message-model-info-top-p");
+  const frequencyEl = document.getElementById(
+    "message-model-info-frequency-penalty",
+  );
+  const presenceEl = document.getElementById(
+    "message-model-info-presence-penalty",
+  );
+  const streamEl = document.getElementById("message-model-info-stream");
+  const formatNumericValue = (rawValue, decimals = 2) => {
+    const parsed = Number(rawValue);
+    if (!Number.isFinite(parsed)) return "-";
+    if (decimals > 0) {
+      return parsed.toFixed(decimals).replace(/\.?0+$/, "");
+    }
+    return parsed.toString();
+  };
   if (modelEl) {
     modelEl.textContent = message.model || "-";
   }
   if (temperatureEl) {
     temperatureEl.textContent =
       message.temperature != null ? message.temperature : "-";
+  }
+  if (maxTokensEl) {
+    maxTokensEl.textContent = formatNumericValue(message.maxTokens, 0);
+  }
+  if (topPEl) {
+    topPEl.textContent = formatNumericValue(message.topP, 2);
+  }
+  if (frequencyEl) {
+    frequencyEl.textContent = formatNumericValue(message.frequencyPenalty, 2);
+  }
+  if (presenceEl) {
+    presenceEl.textContent = formatNumericValue(message.presencePenalty, 2);
+  }
+  if (streamEl) {
+    const streamLabel =
+      message.streamEnabled === true ? t("enabledLabel") : t("disabledLabel");
+    streamEl.textContent = streamLabel;
   }
 }
 

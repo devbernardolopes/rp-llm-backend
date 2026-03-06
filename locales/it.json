@@ -460,5 +460,8 @@
    "memorySummarizationFailed": "La sintesi della memoria non è riuscita: {error}. Riprova prima di continuare.",
    "autoTitleFailed": "La generazione automatica del titolo non è riuscita: {error}. Riprova prima di continuare.",
    "useLocalSummarization": "Usa Sintesi Locale (più veloce, senza costi API)",
-   "memoryRelevanceFilterToggle": "Usa il filtro di rilevanza della memoria"
- }
+  "memoryRelevanceFilterToggle": "Usa il filtro di rilevanza della memoria",
+  "streamLabel": "Streaming",
+  "enabledLabel": "Abilitato",
+  "disabledLabel": "Disabilitato"
+}
