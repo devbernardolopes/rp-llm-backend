@@ -335,15 +335,22 @@ async function summarizeMemory(character) {
 
   const unsMessages = conversationHistory
     .map((message, idx) => ({ message, idx }))
-    .filter(
-      (entry) =>
-        entry.message &&
-        entry.message.ooc !== true &&
-        !memoryIsPlaceholderMessage(entry.message) &&
-        entry.message.summarized !== true &&
-        entry.message.summaryProtected !== true &&
-        (entry.message.role === "assistant" || entry.message.role === "user"),
-    );
+    .filter((entry) => {
+      const msg = entry.message;
+      if (
+        !msg ||
+        msg.ooc === true ||
+        memoryIsPlaceholderMessage(msg) ||
+        msg.summarized === true ||
+        Boolean(msg.summaryProtected)
+      ) {
+        return false;
+      }
+      if (msg.role !== "assistant" && msg.role !== "user") {
+        return false;
+      }
+      return true;
+    });
   const threshold = getCurrentSummaryThreshold();
   if (threshold <= 0 || unsMessages.length < threshold) return true;
 
