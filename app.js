@@ -12709,9 +12709,21 @@ function renderChat(startIdx, endIdx) {
 
   // Determine effective range based on state.loadedMessageRange if no args provided
   let effectiveStart, effectiveEnd;
+  const latestIndex = conversationHistory.length - 1;
   if (arguments.length === 0 && state.loadedMessageRange) {
-    effectiveStart = state.loadedMessageRange.start;
-    effectiveEnd = state.loadedMessageRange.end;
+    effectiveStart = Number(state.loadedMessageRange.start ?? 0);
+    effectiveEnd = Number(state.loadedMessageRange.end ?? 0);
+    if (latestIndex < 0) {
+      effectiveStart = 0;
+      effectiveEnd = -1;
+    } else {
+      effectiveStart = Math.max(0, Math.min(effectiveStart, latestIndex));
+      if (latestIndex > effectiveEnd) {
+        effectiveEnd = latestIndex;
+      } else if (latestIndex < effectiveEnd) {
+        effectiveEnd = Math.max(latestIndex, effectiveStart);
+      }
+    }
     console.log('[Unload] renderChat using state range:', effectiveStart, effectiveEnd, 'total:', conversationHistory.length);
   } else {
     effectiveStart = startIdx !== undefined ? startIdx : 0;
