@@ -2412,6 +2412,27 @@ textarea {
   margin-bottom: 0;
 }
 
+#tags-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tag-manager-input-row {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel-2);
+  padding: 12px 0;
+  display: flex;
+  gap: 8px;
+}
+
+.tag-manager-input-row input {
+  flex: 1;
+  min-width: 0;
+}
+
 .modal textarea {
   resize: none;
 }
