@@ -11905,6 +11905,7 @@ async function duplicateThread(threadId) {
    });
   await renderThreads();
   await renderCharacters();
+  await openThread(newThreadId);
   showToast(t("threadDuplicated"), "success");
 }
 
