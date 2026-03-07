@@ -622,6 +622,42 @@ body {
   flex: 0 0 auto;
 }
 
+#left-pane.collapsed .pane-top {
+  padding-bottom: 240px;
+}
+
+#left-pane.collapsed .pane-bottom {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0 12px;
+  border-top: none;
+  background: transparent;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  z-index: 2;
+}
+
+#left-pane.collapsed .pane-bottom .option-btn {
+  width: 42px;
+  min-width: 42px;
+  margin: 2px 0;
+}
+
+#left-pane.collapsed .pane-bottom::-webkit-scrollbar {
+  width: 6px;
+}
+
+#left-pane.collapsed .pane-bottom::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}
+
 .option-btn,
 .primary-btn,
 .secondary-btn,
