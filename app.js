@@ -75,6 +75,7 @@ const PROMPT_HISTORY_KEY = "rp-prompt-history";
 const PROMPT_HISTORY_MAX = 200;
 
 const DEFAULT_PERSONA_COLOR = "#7c5cff";
+const DEFAULT_CHAT_OPACITY = 1;
 const DEFAULT_THREAD_TINT_INPUT_COLOR = "#7c5cff";
 
 const DEFAULT_SETTINGS = {
@@ -1827,9 +1828,41 @@ function hexToRgba(hex, alpha = 1) {
   return `rgba(${r}, ${g}, ${b}, ${clampedAlpha})`;
 }
 
+function normalizeChatOpacityValue(raw) {
+  const parsed = Number(raw);
+  if (Number.isFinite(parsed)) {
+    return Math.min(1, Math.max(0, parsed));
+  }
+  return DEFAULT_CHAT_OPACITY;
+}
+
+function getThreadChatOpacity(thread) {
+  if (thread) {
+    const threadValue = normalizeChatOpacityValue(thread.chatOpacity);
+    const hasExplicit = Object.prototype.hasOwnProperty.call(thread, "chatOpacity");
+    if (hasExplicit) {
+      return threadValue;
+    }
+  }
+  return normalizeChatOpacityValue(state.settings.chatOpacity);
+}
+
+async function persistThreadChatOpacityValue(threadId, opacity) {
+  if (!Number.isInteger(Number(threadId))) return;
+  const normalized = normalizeChatOpacityValue(opacity);
+  try {
+    await db.threads.update(threadId, { chatOpacity: normalized });
+  } catch (err) {
+    console.warn("Failed to persist chat opacity:", err);
+  }
+  if (currentThread && Number(currentThread.id) === Number(threadId)) {
+    currentThread.chatOpacity = normalized;
+  }
+}
+
 function applyChatOpacitySetting(value = null) {
-  const raw = value !== null ? Number(value) : Number(state.settings.chatOpacity);
-  const normalized = Number.isFinite(raw) ? Math.max(0, Math.min(1, raw)) : 1;
+  const raw = value !== null ? value : state.settings.chatOpacity;
+  const normalized = normalizeChatOpacityValue(raw);
   document.documentElement.style.setProperty("--chat-opacity", String(normalized));
   const slider = document.getElementById("chat-opacity-slider");
   if (slider && document.activeElement !== slider) {
@@ -1844,9 +1877,14 @@ function applyChatOpacitySetting(value = null) {
 function setChatOpacityFromPercent(percent) {
   const clamped = Math.min(100, Math.max(0, Number(percent) || 0));
   const normalized = clamped / 100;
-  state.settings.chatOpacity = normalized;
+  if (currentThread) {
+    currentThread.chatOpacity = normalized;
+    persistThreadChatOpacityValue(currentThread.id, normalized);
+  } else {
+    state.settings.chatOpacity = normalized;
+    saveSettings();
+  }
   applyChatOpacitySetting(normalized);
-  saveSettings();
   return normalized;
 }
 
@@ -7157,6 +7195,7 @@ function showMainView() {
   updateScrollBottomButtonVisibility();
   scheduleThreadBudgetIndicatorUpdate();
   startAllCarousels();
+  applyChatOpacitySetting();
 }
 
 function showChatView() {
@@ -11925,6 +11964,7 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     pendingGenerationQueuedAt: 0,
     shortcutsVisible: false,
     oocModeEnabled: false,
+    chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -11999,6 +12039,7 @@ async function forkThreadFromMessage(messageIndex) {
     writingInstructionsTurnCount: writingCount,
     shortcutsVisible: source.shortcutsVisible === true,
     oocModeEnabled: source.oocModeEnabled === true,
+    chatOpacity: getThreadChatOpacity(source),
     favorite: false,
     pendingGenerationReason: "",
     pendingGenerationQueuedAt: 0,
@@ -12157,6 +12198,7 @@ async function duplicateThread(threadId) {
         : 0,
     shortcutsVisible: source.shortcutsVisible === true,
     oocModeEnabled: source.oocModeEnabled === true,
+    chatOpacity: getThreadChatOpacity(source),
     favorite: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -12425,6 +12467,7 @@ async function openThread(threadId) {
     ...thread,
     writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
   };
+  applyChatOpacitySetting(getThreadChatOpacity(thread));
   if (!thread.characterLanguage && character?.activeLanguage) {
     currentThread.characterLanguage = character.activeLanguage;
     await db.threads.update(thread.id, {
@@ -18347,6 +18390,7 @@ async function migrateLegacySessions() {
       lastPersonaInjectionPersonaId: null,
       writingInstructionsTurnCount: 0,
       oocModeEnabled: false,
+      chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
       createdAt: session.updatedAt || Date.now(),
       updatedAt: session.updatedAt || Date.now(),
     });

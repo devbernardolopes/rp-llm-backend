@@ -228,3 +228,23 @@ db.version(16)
     writingInstructions: "++id, name, createdAt, updatedAt",
     assets: "++id, name, type, createdAt, updatedAt",
   });
+
+db.version(17)
+  .stores({
+    characters: "++id, name",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories: "++id, characterId, summary, createdAt, slotNumber, levelNumber, summarySystemContent, summaryUserContent, embedding",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+  })
+  .upgrade(async (tx) => {
+    const threads = tx.table("threads");
+    await threads.toCollection().modify((thread) => {
+      if (!Object.prototype.hasOwnProperty.call(thread, "chatOpacity")) {
+        thread.chatOpacity = null;
+      }
+    });
+  });
