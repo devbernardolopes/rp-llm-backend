@@ -3262,10 +3262,49 @@ function getAllAvailableTags() {
   )
     .map((t) => normalizeTagValue(t))
     .filter(Boolean);
-  return tags.filter(
+  const unique = tags.filter(
     (t, i, arr) =>
       arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i,
   );
+  return unique.sort((a, b) => a.localeCompare(b));
+}
+
+async function renameTagAcrossCharacters(oldTag, newTag) {
+  const normalizedOld = normalizeTagValue(oldTag);
+  const normalizedNew = normalizeTagValue(newTag);
+  if (!normalizedOld || !normalizedNew) return;
+  const lowerOld = normalizedOld.toLowerCase();
+  const newTagValue = normalizedNew;
+
+  state.characterTagFilters = state.characterTagFilters.map((filter) =>
+    String(filter || "").toLowerCase() === lowerOld ? newTagValue : filter,
+  );
+
+  const allCharacters = await db.characters.toArray();
+  const updates = [];
+  for (const character of allCharacters) {
+    const tags = Array.isArray(character.tags) ? [...character.tags] : [];
+    let replaced = false;
+    const nextTags = tags.map((tag) => {
+      if (String(tag || "").toLowerCase() === lowerOld) {
+        replaced = true;
+        return newTagValue;
+      }
+      return tag;
+    });
+    if (replaced) {
+      updates.push({ id: character.id, tags: nextTags });
+      if (
+        currentCharacter &&
+        Number(currentCharacter.id) === Number(character.id)
+      ) {
+        currentCharacter.tags = nextTags;
+      }
+    }
+  }
+  if (updates.length > 0) {
+    await db.characters.bulkPut(updates);
+  }
 }
 
 function mergeTagsIntoCatalog(tags) {
@@ -5322,16 +5361,14 @@ async function addTagFromManagerInput() {
     ? [...state.settings.customTags]
     : [];
   if (editingTag) {
-    const editingLower = editingTag.toLowerCase();
     const normalizedIndex = existing.findIndex(
-      (t) => t.toLowerCase() === editingLower,
+      (t) => t.toLowerCase() === editingTag.toLowerCase(),
     );
     if (normalizedIndex >= 0) {
       existing[normalizedIndex] = tag;
     } else {
       existing.push(tag);
     }
-    state.tagManagerEditingTag = null;
   } else {
     existing.push(tag);
   }
@@ -5339,6 +5376,10 @@ async function addTagFromManagerInput() {
   state.settings.tagsInitialized = true;
   saveSettings();
   input.value = "";
+  if (editingTag) {
+    await renameTagAcrossCharacters(editingTag, tag);
+    state.tagManagerEditingTag = null;
+  }
   updateTagManagerAddButtonState();
   renderTagManagerList();
   renderTagPresetsDataList();
