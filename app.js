@@ -13386,26 +13386,14 @@ function buildMessageRow(message, index, streaming) {
     beginInlineMessageEdit(index, content);
   });
   if (streaming) {
-    let statusLabel = t("generatingLabel");
-    const isQueued = message?.generationStatus === "queued";
-    const isCoolingDown = message?.generationStatus === "cooling_down";
-    const isTitleGenerating = message?.generationStatus === "title_generating";
-    if (message?.generationStatus === "regenerating") {
-      statusLabel = t("regeneratingLabel");
-    } else if (isTitleGenerating) {
-      statusLabel = t("generatingTitleLabel") || t("generatingLabel");
-    } else if (isCoolingDown) {
-      statusLabel =
-        String(message?.content || "").trim() ||
-        tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() });
-    } else if (isQueued) {
-      statusLabel =
-        String(message?.content || "").trim() || t("generatingLabel");
-    }
-    if (!isQueued && !isCoolingDown && String(message?.content || "").trim()) {
+    const statusInfo = getAssistantStreamingStatusInfo(message);
+    if (!statusInfo.shouldShowSpinner) {
       content.innerHTML = renderMessageHtml(message.content, message.role);
     } else {
-      content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(statusLabel)}`;
+      const label = statusInfo.statusLabel || t("generatingLabel");
+      content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+        label,
+      )}`;
     }
   } else {
     renderMessageContent(content, message);
@@ -13423,9 +13411,52 @@ function speakerBtnForRow(row) {
   return row?.querySelector(".msg-tts-btn") || null;
 }
 
+const STREAMING_STATUSES = new Set([
+  "queued",
+  "cooling_down",
+  "generating",
+  "regenerating",
+  "title_generating",
+]);
+
+function getAssistantStreamingStatusInfo(message) {
+  const status = String(message?.generationStatus || "").trim();
+  const hasContent = String(message?.content || "").trim().length > 0;
+  const isQueued = status === "queued";
+  const isCoolingDown = status === "cooling_down";
+  const isTitleGenerating = status === "title_generating";
+  const isStreamingStatus = STREAMING_STATUSES.has(status);
+  if (!isStreamingStatus) {
+    return { isStreamingStatus: false, shouldShowSpinner: false, statusLabel: null };
+  }
+  let statusLabel = t("generatingLabel");
+  if (status === "regenerating") {
+    statusLabel = t("regeneratingLabel");
+  } else if (isTitleGenerating) {
+    statusLabel = t("generatingTitleLabel") || t("generatingLabel");
+  } else if (isCoolingDown) {
+    statusLabel =
+      String(message?.content || "").trim() ||
+      tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() });
+  } else if (isQueued) {
+    statusLabel = String(message?.content || "").trim() || t("generatingLabel");
+  }
+  const shouldShowSpinner =
+    isQueued || isCoolingDown || isTitleGenerating || !hasContent;
+  return { isStreamingStatus, shouldShowSpinner, statusLabel };
+}
+
 function renderMessageContent(contentEl, message) {
   if (!contentEl || !message) return;
-  contentEl.innerHTML = renderMessageHtml(message.content || "", message.role);
+  const statusInfo = getAssistantStreamingStatusInfo(message);
+  if (statusInfo.shouldShowSpinner) {
+    const label = statusInfo.statusLabel ?? t("generatingLabel");
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+      label,
+    )}`;
+  } else {
+    contentEl.innerHTML = renderMessageHtml(message.content || "", message.role);
+  }
   if (message.truncatedByFilter === true) {
     contentEl.appendChild(buildTruncationNotice());
   }
