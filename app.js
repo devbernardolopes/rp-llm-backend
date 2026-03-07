@@ -13567,7 +13567,7 @@ async function generateBotReply() {
   await clearThreadGenerationQueueFlag(threadId);
   await persistThreadMessagesById(threadId, generationHistory);
   if (promptContext.personaInjectionAppliedOnce) {
-    await markThreadPersonaInjectionOnceApplied(pending.createdAt || Date.now());
+    await markThreadPersonaInjectionOnceApplied();
   }
   let pendingRow = null;
   if (isViewingThread(threadId)) {
@@ -17224,44 +17224,26 @@ function shouldInjectPersonaContext(persona, threadOverride = null) {
   return true;
 }
 
-function findFirstInSimulationAssistantMessage(history = conversationHistory) {
-  const list = Array.isArray(history) ? history : [];
-  for (let i = 0; i < list.length; i += 1) {
-    const message = list[i];
-    if (!isInSimulationMessage(message)) continue;
-    if (normalizeApiRole(message?.apiRole || message?.role) === "assistant") {
-      return message;
-    }
-  }
-  return null;
-}
-
 function shouldInjectPersonaOnceForThread(thread = currentThread) {
   if (!thread) return true;
-  const firstAssistant = findFirstInSimulationAssistantMessage();
-  if (!firstAssistant) return true;
-  const createdAt = Number(firstAssistant.createdAt) || 0;
-  if (!Number.isFinite(createdAt) || createdAt <= 0) return true;
-  const appliedAt = Number(thread.personaInjectionOnceAppliedAt) || 0;
-  return appliedAt !== createdAt;
+  return thread.personaInjectionOnceUsed !== true;
 }
 
-async function markThreadPersonaInjectionOnceApplied(timestamp) {
+async function markThreadPersonaInjectionOnceApplied() {
   if (!currentThread) return;
-  const value = Number(timestamp) || Date.now();
-  if (Number(currentThread.personaInjectionOnceAppliedAt) === value) return;
-  currentThread.personaInjectionOnceAppliedAt = value;
+  if (currentThread.personaInjectionOnceUsed === true) return;
+  currentThread.personaInjectionOnceUsed = true;
   await db.threads.update(currentThread.id, {
-    personaInjectionOnceAppliedAt: value,
+    personaInjectionOnceUsed: true,
   });
 }
 
 async function clearThreadPersonaInjectionOnceApplied() {
   if (!currentThread) return;
-  if (currentThread.personaInjectionOnceAppliedAt == null) return;
-  currentThread.personaInjectionOnceAppliedAt = null;
+  if (currentThread.personaInjectionOnceUsed !== true) return;
+  currentThread.personaInjectionOnceUsed = false;
   await db.threads.update(currentThread.id, {
-    personaInjectionOnceAppliedAt: null,
+    personaInjectionOnceUsed: false,
   });
 }
 
