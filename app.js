@@ -1,7 +1,8 @@
-﻿let currentCharacter = null;
+let currentCharacter = null;
 let currentThread = null;
 let conversationHistory = [];
 let currentPersona = null;
+let loadUnloadedDebounceTimer = null;
 
 const MODEL_OPTIONS = [
   { value: "openrouter/auto", label: "Auto" },
@@ -124,7 +125,9 @@ const DEFAULT_SETTINGS = {
   chatMessageAlignment: "left",
   unreadSoundEnabled: true,
   oocSystemAvatar: "",
-};
+  unloadThreshold: 0, // 0 = disabled, >0 = keep this many newest messages loaded
+  unloadTriggerDistance: 200, // pixels from first loaded message to trigger loading more
+}
 
 function createSystemAvatarFallbackImage(letter = "S") {
   const char =
@@ -1127,8 +1130,12 @@ const state = {
   charModalActiveLanguage: "",
   charModalActiveTab: "lang",
   charModalPendingThreadDeleteIds: [],
-  charModalAvatars: [],
-  sfx: {
+   charModalAvatars: [],
+   // Message unloading state
+   loadedMessageRange: { start: 0, end: 0 }, // inclusive indices in conversationHistory
+   unloadedMessageCount: 0,
+   isLoadingUnloaded: false,
+   sfx: {
     currentAudio: null,
     playingAssetId: null,
   },
@@ -2331,19 +2338,22 @@ function setupEvents() {
   });
   input.addEventListener("dblclick", openPromptHistory);
   input.addEventListener("pointerup", onInputPointerUp);
-  chatLog.addEventListener("scroll", () => {
-    if (state.sending) {
-      state.chatAutoScroll = isChatNearBottom();
-    }
-    maybeProcessUnreadMessagesSeen(true).catch(() => {});
-    updateScrollBottomButtonVisibility();
-    if (currentThread) {
-      localStorage.setItem(
-        `rp-thread-scroll-${currentThread.id}`,
-        chatLog.scrollTop,
-      );
-    }
-  });
+   chatLog.addEventListener("scroll", () => {
+     if (state.sending) {
+       state.chatAutoScroll = isChatNearBottom();
+     }
+     maybeProcessUnreadMessagesSeen(true).catch(() => {});
+     updateScrollBottomButtonVisibility();
+     if (currentThread) {
+       localStorage.setItem(
+         `rp-thread-scroll-${currentThread.id}`,
+         chatLog.scrollTop,
+       );
+     }
+     // Debounced check for loading unloaded messages
+     clearTimeout(loadUnloadedDebounceTimer);
+     loadUnloadedDebounceTimer = setTimeout(checkLoadUnloadedMessages, 100);
+   });
   requestAnimationFrame(() => adjustUserInputElementHeight(input));
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
@@ -4045,22 +4055,53 @@ async function setupSettingsControls() {
     state.settings.memoryMessagesToKeep = keepValue;
     saveSettings();
   });
-  memorySlotsInput?.addEventListener("change", () => {
-    const slots =
-      typeof window.getMemorySlotsValue === "function"
-        ? window.getMemorySlotsValue(memorySlotsInput.value)
-        : Math.max(3, Math.min(10, Number(memorySlotsInput.value) || 5));
-    memorySlotsInput.value = String(slots);
-    state.settings.memorySlots = slots;
-    saveSettings();
-  });
-  document
-    .getElementById("chat-message-alignment")
-    ?.addEventListener("change", (e) => {
-      state.settings.chatMessageAlignment = e.target.value;
-      saveSettings();
-      applyChatMessageAlignment();
-    });
+   memorySlotsInput?.addEventListener("change", () => {
+     const slots =
+       typeof window.getMemorySlotsValue === "function"
+         ? window.getMemorySlotsValue(memorySlotsInput.value)
+         : Math.max(3, Math.min(10, Number(memorySlotsInput.value) || 5));
+     memorySlotsInput.value = String(slots);
+     state.settings.memorySlots = slots;
+     saveSettings();
+   });
+
+   const unloadThresholdInput = document.getElementById("unload-threshold");
+   if (unloadThresholdInput) {
+     const threshold = Math.max(
+       0,
+       Math.min(500, Number(state.settings.unloadThreshold) || 0)
+     );
+     state.settings.unloadThreshold = threshold;
+     unloadThresholdInput.value = String(threshold);
+
+     unloadThresholdInput.addEventListener("change", () => {
+       const newThreshold = Math.max(
+         0,
+         Math.min(500, Number(unloadThresholdInput.value) || 0)
+       );
+       unloadThresholdInput.value = String(newThreshold);
+       state.settings.unloadThreshold = newThreshold;
+       saveSettings();
+       // Re-evaluate unloading if thread is open
+       if (currentThread && conversationHistory.length > 0) {
+         checkUnloadOldMessages(true);
+       }
+     });
+   }
+
+   const chatMessageAlignment = document.getElementById(
+     "chat-message-alignment",
+   );
+   if (chatMessageAlignment) {
+     chatMessageAlignment.value = state.settings.chatMessageAlignment || "left";
+   }
+   document
+     .getElementById("chat-message-alignment")
+     ?.addEventListener("change", (e) => {
+       state.settings.chatMessageAlignment = e.target.value;
+       saveSettings();
+       applyChatMessageAlignment();
+     });
 
   autoReplyEnabled?.addEventListener("click", async () => {
     const newValue = !(currentThread?.autoReplyEnabled !== false);
@@ -11576,11 +11617,28 @@ async function openThread(threadId) {
   currentCharacter = character || null;
   state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
   preloadKokoroForActiveCharacter();
-  conversationHistory = (thread.messages || []).map((m) => ({
-    ...m,
-    role: m.role === "ai" ? "assistant" : m.role,
-  }));
-  await applyChatViewBackgroundFromSfx(currentThread);
+   conversationHistory = (thread.messages || []).map((m) => ({
+     ...m,
+     role: m.role === "ai" ? "assistant" : m.role,
+   }));
+
+   // Initialize loaded message range based on unload threshold
+   const threshold = state.settings.unloadThreshold || 0;
+   if (threshold > 0 && conversationHistory.length > threshold) {
+     // Keep only newest threshold messages loaded, older ones as placeholders
+     state.loadedMessageRange = {
+       start: conversationHistory.length - threshold,
+       end: conversationHistory.length - 1
+     };
+   } else {
+     // Load all messages
+     state.loadedMessageRange = {
+       start: 0,
+       end: conversationHistory.length - 1
+     };
+   }
+
+   await applyChatViewBackgroundFromSfx(currentThread);
   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
   currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
@@ -12119,7 +12177,7 @@ async function maybeGenerateThreadTitle() {
   state.pendingTitleGeneration = true;
 }
 
-function renderChat() {
+function renderChat(startIdx, endIdx) {
   const log = document.getElementById("chat-log");
   const previousScrollTop = log.scrollTop;
   const previousScrollHeight = log.scrollHeight;
@@ -12131,8 +12189,23 @@ function renderChat() {
   const hasSavedScroll = savedScroll !== null;
   const savedScrollTop = hasSavedScroll ? Number(savedScroll) : null;
 
-  log.innerHTML = "";
-  state.editingMessageIndex = null;
+  // Determine effective range based on state.loadedMessageRange if no args provided
+  let effectiveStart, effectiveEnd;
+  if (arguments.length === 0 && state.loadedMessageRange) {
+    effectiveStart = state.loadedMessageRange.start;
+    effectiveEnd = state.loadedMessageRange.end;
+  } else {
+    effectiveStart = startIdx !== undefined ? startIdx : 0;
+    effectiveEnd = endIdx !== undefined && endIdx !== null ? endIdx : conversationHistory.length - 1;
+  }
+
+  // Don't clear everything if doing partial render - preserve already loaded messages
+  const isFullRender = effectiveStart === 0 && effectiveEnd >= conversationHistory.length - 1;
+
+  if (isFullRender) {
+    log.innerHTML = "";
+    state.editingMessageIndex = null;
+  }
 
   if (!currentThread) return;
 
@@ -12159,27 +12232,74 @@ function renderChat() {
     Number.isInteger(activeThreadId) &&
     Number.isInteger(currentId) &&
     activeThreadId === currentId;
-  conversationHistory.forEach((message, idx) => {
-    const status = String(message?.generationStatus || "").trim();
-    const rowStreaming =
-      message?.role === "assistant" &&
-      (status === "queued" ||
-        status === "cooling_down" ||
-        (isActiveGenerationThread &&
-          (status === "generating" || status === "regenerating")));
-    log.appendChild(buildMessageRow(message, idx, rowStreaming));
-  });
 
-  if (hasSavedScroll && !state.sending) {
-    log.scrollTop = savedScrollTop;
-  } else if (state.sending && isAtBottom) {
-    scrollChatToBottom();
-  } else if (!state.sending && isAtBottom) {
-    log.scrollTop = log.scrollHeight;
+  // Determine range to render
+  const renderStart = effectiveStart;
+  const renderEnd = effectiveEnd;
+
+  // Add placeholders for messages before effectiveStart if needed
+  const threshold = state.settings.unloadThreshold || 0;
+  if (threshold > 0 && effectiveStart > 0) {
+    for (let i = 0; i < effectiveStart; i++) {
+      const placeholder = createMessagePlaceholder(i);
+      log.appendChild(placeholder);
+    }
   }
+
+  // Render messages in range
+  for (let i = renderStart; i <= renderEnd; i++) {
+    const message = conversationHistory[i];
+    if (!message) continue;
+    // Check if row already exists (for partial updates)
+    const existingRow = log.querySelector(`.chat-row[data-message-index="${i}"]`);
+    if (existingRow) {
+      // Update existing row instead of duplicating
+      const status = String(message?.generationStatus || "").trim();
+      const rowStreaming =
+        message?.role === "assistant" &&
+        (status === "queued" ||
+          status === "cooling_down" ||
+          (isActiveGenerationThread &&
+            (status === "generating" || status === "regenerating")));
+      const newRow = buildMessageRow(message, i, rowStreaming);
+      // Preserve scroll position if replacing
+      existingRow.replaceWith(newRow);
+    } else {
+      const status = String(message?.generationStatus || "").trim();
+      const rowStreaming =
+        message?.role === "assistant" &&
+        (status === "queued" ||
+          status === "cooling_down" ||
+          (isActiveGenerationThread &&
+            (status === "generating" || status === "regenerating")));
+      log.appendChild(buildMessageRow(message, i, rowStreaming));
+    }
+  }
+
+  // Update loaded range state
+  state.loadedMessageRange = { start: effectiveStart, end: effectiveEnd };
+
+  if (isFullRender) {
+    if (hasSavedScroll && !state.sending) {
+      log.scrollTop = savedScrollTop;
+    } else if (state.sending && isAtBottom) {
+      scrollChatToBottom();
+    } else if (!state.sending && isAtBottom) {
+      log.scrollTop = log.scrollHeight;
+    }
+  } else {
+    // For partial loads, maintain scroll position relative to the gap
+    // The scroll adjustment is handled by the caller before calling renderChat
+  }
+
   updateScrollBottomButtonVisibility();
   scheduleThreadBudgetIndicatorUpdate();
   maybeProcessUnreadMessagesSeen(false).catch(() => {});
+  
+  // Check if we should unload old messages based on threshold
+  if (state.settings.unloadThreshold > 0) {
+    checkUnloadOldMessages(false);
+  }
 }
 
 function getUnreadAssistantCount(messages) {
@@ -12246,6 +12366,191 @@ function isMessageLockedByMemory(message) {
     state.settings.lockMemoryMessages === true &&
     (message?.summarized === true || message?.summaryProtected)
   );
+}
+
+function createMessagePlaceholder(index) {
+  const placeholder = document.createElement("div");
+  placeholder.className = "message-placeholder";
+  placeholder.dataset.messageIndex = String(index);
+  placeholder.dataset.placeholder = "true";
+
+  const avatar = document.createElement("div");
+  avatar.className = "placeholder-avatar";
+
+  const content = document.createElement("div");
+  content.className = "placeholder-content";
+
+  const line1 = document.createElement("div");
+  line1.className = "placeholder-line";
+  const line2 = document.createElement("div");
+  line2.className = "placeholder-line";
+  const line3 = document.createElement("div");
+  line3.className = "placeholder-line";
+
+  content.appendChild(line1);
+  content.appendChild(line2);
+  content.appendChild(line3);
+  placeholder.appendChild(avatar);
+  placeholder.appendChild(content);
+
+  return placeholder;
+}
+
+function checkUnloadOldMessages(force = false) {
+  const threshold = state.settings.unloadThreshold || 0;
+  if (threshold <= 0) return;
+
+  const totalMessages = conversationHistory.length;
+  if (totalMessages <= threshold) return;
+
+  // Only unload if near bottom (unless forced, like threshold change)
+  if (!force && !isChatNearBottom(200)) return;
+
+  const targetStart = totalMessages - threshold;
+
+  // If already loaded range start is already at or beyond target, nothing to do
+  if (state.loadedMessageRange.start <= targetStart) return;
+
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+
+  // Collect rows to unload (indices from state.loadedMessageRange.start to targetStart-1)
+  const toUnload = [];
+  for (let i = state.loadedMessageRange.start; i < targetStart; i++) {
+    const row = log.querySelector(`.chat-row[data-message-index="${i}"]`);
+    if (row) {
+      toUnload.push({ index: i, element: row });
+    }
+  }
+
+  if (toUnload.length === 0) {
+    state.loadedMessageRange.start = targetStart;
+    return;
+  }
+
+  // Insert placeholders before the first element to unload
+  const firstToUnload = toUnload[0];
+  if (firstToUnload) {
+    // Insert placeholders in reverse order to maintain ascending index order in DOM
+    for (let i = toUnload.length - 1; i >= 0; i--) {
+      const { index } = toUnload[i];
+      const placeholder = createMessagePlaceholder(index);
+      firstToUnload.element.before(placeholder);
+    }
+    // Remove the actual rows
+    toUnload.forEach(({ element }) => element.remove());
+  }
+
+  // Update state
+  state.loadedMessageRange.start = targetStart;
+}
+
+function loadUnloadedMessages(count) {
+  const threshold = state.settings.unloadThreshold || 0;
+  if (threshold <= 0 || !currentThread) return;
+
+  if (state.isLoadingUnloaded) return;
+  state.isLoadingUnloaded = true;
+
+  const log = document.getElementById("chat-log");
+  if (!log) {
+    state.isLoadingUnloaded = false;
+    return;
+  }
+
+  const currentStart = state.loadedMessageRange.start;
+  if (currentStart <= 0) {
+    state.isLoadingUnloaded = false;
+    return;
+  }
+
+  const loadStart = Math.max(0, currentStart - count);
+  if (loadStart >= currentStart) {
+    state.isLoadingUnloaded = false;
+    return;
+  }
+
+  // Gather messages to load
+  const messagesToLoad = [];
+  for (let i = loadStart; i < currentStart; i++) {
+    const msg = conversationHistory[i];
+    if (msg) {
+      messagesToLoad.push({ index: i, message: msg });
+    }
+  }
+
+  if (messagesToLoad.length === 0) {
+    state.isLoadingUnloaded = false;
+    return;
+  }
+
+  // Find the first currently loaded element (at index currentStart)
+  const firstLoadedEl = log.querySelector(`.chat-row[data-message-index="${currentStart}"]`);
+  const previousScrollTop = log.scrollTop;
+  const previousFirstTop = firstLoadedEl ? firstLoadedEl.offsetTop : 0;
+
+  // Remove placeholders for these indices
+  messagesToLoad.forEach(({ index }) => {
+    const placeholder = log.querySelector(`.message-placeholder[data-message-index="${index}"]`);
+    if (placeholder) placeholder.remove();
+  });
+
+  // Build document fragment with the loaded messages in order
+  const fragment = document.createDocumentFragment();
+  messagesToLoad.forEach(({ index, message }) => {
+    const row = buildMessageRow(message, index, false);
+    fragment.appendChild(row);
+  });
+
+  // Insert before the first loaded element (if exists), else append
+  if (firstLoadedEl) {
+    firstLoadedEl.before(fragment);
+  } else {
+    log.appendChild(fragment);
+  }
+
+  // Update loaded range
+  state.loadedMessageRange.start = loadStart;
+
+  // Adjust scrollTop to maintain visual position
+  if (firstLoadedEl) {
+    const newFirstTop = firstLoadedEl.offsetTop;
+    const offsetDiff = newFirstTop - previousFirstTop;
+    log.scrollTop = previousScrollTop + offsetDiff;
+  }
+
+  state.isLoadingUnloaded = false;
+}
+
+function checkLoadUnloadedMessages() {
+  if (!currentThread || state.isLoadingUnloaded) return;
+
+  const threshold = state.settings.unloadThreshold || 0;
+  if (threshold <= 0) return;
+
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+
+  // If already fully loaded or nothing to load
+  if (state.loadedMessageRange.start <= 0) return;
+
+  // Don't load if at bottom (user likely reading new messages)
+  if (isChatNearBottom(50)) return;
+
+  // Find first loaded element
+  const firstLoadedEl = log.querySelector(`.chat-row[data-message-index="${state.loadedMessageRange.start}"]`);
+  if (!firstLoadedEl) return;
+
+  // Calculate distance from top of chat log to the element
+  const logRect = log.getBoundingClientRect();
+  const elRect = firstLoadedEl.getBoundingClientRect();
+  const distance = elRect.top - logRect.top;
+
+  const triggerDistance = state.settings.unloadTriggerDistance || 200;
+  if (distance <= triggerDistance) {
+    const batchSize = Math.ceil(threshold / 2);
+    loadUnloadedMessages(batchSize);
+  }
 }
 
 function buildMessageRow(message, index, streaming) {

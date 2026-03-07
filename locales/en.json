@@ -469,5 +469,7 @@
   "msgMetadataUnavailableManualAria": "Metadata unavailable for user-created assistant message",
    "msgSystemPromptUnavailableManual": "System prompt details are unavailable for user-created assistant replies.",
   "prefixUserMessagesWithPersona": "Prefix user messages with active persona",
-  "personaInjectionOnce": "Once"
+  "personaInjectionOnce": "Once",
+  "unloadThresholdLabel": "Auto-unload old messages",
+  "unloadThresholdDescription": "Maximum number of recent messages to keep loaded in the chat (0 = disabled)"
 }

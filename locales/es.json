@@ -468,5 +468,7 @@
   "msgMetadataUnavailableManualAria": "Metadatos no disponibles para mensajes de BOT creados por el usuario.",
    "msgSystemPromptUnavailableManual": "Los detalles del prompt del sistema no están disponibles para respuestas de BOT creadas por el usuario.",
   "prefixUserMessagesWithPersona": "Prefijar mensajes de usuario con la persona activa",
-  "personaInjectionOnce": "Una vez"
+  "personaInjectionOnce": "Una vez",
+  "unloadThresholdLabel": "Descargar mensajes antiguos automáticamente",
+  "unloadThresholdDescription": "Número máximo de mensajes recientes para mantener cargados en el chat (0 = desactivado)"
 }
