@@ -13566,6 +13566,9 @@ async function generateBotReply() {
   }
   await clearThreadGenerationQueueFlag(threadId);
   await persistThreadMessagesById(threadId, generationHistory);
+  if (promptContext.personaInjectionAppliedOnce) {
+    await markThreadPersonaInjectionOnceApplied(pending.createdAt || Date.now());
+  }
   let pendingRow = null;
   if (isViewingThread(threadId)) {
     pendingRow = log?.querySelector(
@@ -13764,6 +13767,14 @@ async function deleteMessageAt(index) {
     showToast(t("memoryMessageLockedNotice"), "warning");
     return;
   }
+  const isFirstAssistantDeletion =
+    targetRole === "assistant" &&
+    !target?.ooc &&
+    isFirstAssistantMessageIndex(index) &&
+    currentCharacter?.personaInjectionPlacement === "once";
+  if (isFirstAssistantDeletion) {
+    await clearThreadPersonaInjectionOnceApplied();
+  }
   const latestCountedTurn =
     getThreadWritingInstructionsTurnCount(currentThread);
   const targetTurn = Number(target?.writingInstructionsTurnIndex);
@@ -13813,6 +13824,13 @@ async function regenerateMessage(index) {
 
   const target = conversationHistory[index];
   if (!target || target.role !== "assistant") return;
+  if (
+    target.ooc !== true &&
+    currentCharacter?.personaInjectionPlacement === "once" &&
+    isFirstAssistantMessageIndex(index)
+  ) {
+    await clearThreadPersonaInjectionOnceApplied();
+  }
   if (target.manualMessage === true) return;
   if (target.ooc === true) {
     await regenerateOocMessage(index);
@@ -17001,6 +17019,7 @@ async function buildSystemPrompt(character, options = {}) {
   state.pendingPersonaInjectionPersonaId = null;
   let systemPromptWithPersona = promptBeforePersona;
   let personaInjectionForEndMessages = null;
+  let personaInjectionAppliedOnce = false;
   if (
     personaForContext &&
     shouldInjectPersonaContext(
@@ -17008,12 +17027,18 @@ async function buildSystemPrompt(character, options = {}) {
       options?.threadOverride || null,
     )
   ) {
-    const placement =
+    const requestedPlacement =
       character?.personaInjectionPlacement || "end_system_prompt";
-    // Skip persona injection if placement is "none"
-    if (placement === "none") {
-      // Do not inject persona
-    } else {
+    let actualPlacement = requestedPlacement;
+    if (requestedPlacement === "once") {
+      if (shouldInjectPersonaOnceForThread(threadOverride)) {
+        personaInjectionAppliedOnce = true;
+        actualPlacement = "end_system_prompt";
+      } else {
+        actualPlacement = "none";
+      }
+    }
+    if (actualPlacement !== "none") {
       const personaInjected = renderPersonaInjectionContent(personaForContext);
       const templateNotEmpty = String(
         state.settings.personaInjectionTemplate ||
@@ -17021,18 +17046,22 @@ async function buildSystemPrompt(character, options = {}) {
           "",
       ).trim();
       if (templateNotEmpty) {
-        if (placement === "end_messages") {
+        if (actualPlacement === "end_messages") {
           personaInjectionForEndMessages = personaInjected;
         } else {
           systemPromptWithPersona = applyPersonaInjectionPlacement(
             promptBeforePersona,
             personaInjected,
-            placement,
+            actualPlacement,
           );
         }
       }
       state.pendingPersonaInjectionPersonaId = personaForContext.id || null;
+    } else {
+      state.pendingPersonaInjectionPersonaId = null;
     }
+  } else {
+    state.pendingPersonaInjectionPersonaId = null;
   }
 
   if (loreEntries.length > 0) {
@@ -17056,6 +17085,7 @@ async function buildSystemPrompt(character, options = {}) {
       loreEntries: Array.isArray(loreEntries) ? loreEntries : [],
       memory: memory || "",
       personaInjectionForEndMessages,
+      personaInjectionAppliedOnce,
     };
   }
   return { prompt, personaInjectionForEndMessages };
@@ -17192,6 +17222,47 @@ function shouldInjectPersonaContext(persona, threadOverride = null) {
     DEFAULT_SETTINGS.personaInjectionTemplate;
   if (!String(template || "").trim()) return false;
   return true;
+}
+
+function findFirstInSimulationAssistantMessage(history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  for (let i = 0; i < list.length; i += 1) {
+    const message = list[i];
+    if (!isInSimulationMessage(message)) continue;
+    if (normalizeApiRole(message?.apiRole || message?.role) === "assistant") {
+      return message;
+    }
+  }
+  return null;
+}
+
+function shouldInjectPersonaOnceForThread(thread = currentThread) {
+  if (!thread) return true;
+  const firstAssistant = findFirstInSimulationAssistantMessage();
+  if (!firstAssistant) return true;
+  const createdAt = Number(firstAssistant.createdAt) || 0;
+  if (!Number.isFinite(createdAt) || createdAt <= 0) return true;
+  const appliedAt = Number(thread.personaInjectionOnceAppliedAt) || 0;
+  return appliedAt !== createdAt;
+}
+
+async function markThreadPersonaInjectionOnceApplied(timestamp) {
+  if (!currentThread) return;
+  const value = Number(timestamp) || Date.now();
+  if (Number(currentThread.personaInjectionOnceAppliedAt) === value) return;
+  currentThread.personaInjectionOnceAppliedAt = value;
+  await db.threads.update(currentThread.id, {
+    personaInjectionOnceAppliedAt: value,
+  });
+}
+
+async function clearThreadPersonaInjectionOnceApplied() {
+  if (!currentThread) return;
+  if (currentThread.personaInjectionOnceAppliedAt == null) return;
+  currentThread.personaInjectionOnceAppliedAt = null;
+  await db.threads.update(currentThread.id, {
+    personaInjectionOnceAppliedAt: null,
+  });
 }
 
 function renderPersonaInjectionContent(persona) {

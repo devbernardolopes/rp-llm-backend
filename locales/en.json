@@ -468,5 +468,6 @@
   "msgMetadataUnavailableManual": "Message metadata is disabled for user-created assistant replies.",
   "msgMetadataUnavailableManualAria": "Metadata unavailable for user-created assistant message",
    "msgSystemPromptUnavailableManual": "System prompt details are unavailable for user-created assistant replies.",
-   "prefixUserMessagesWithPersona": "Prefix user messages with active persona"
+  "prefixUserMessagesWithPersona": "Prefix user messages with active persona",
+  "personaInjectionOnce": "Once"
 }

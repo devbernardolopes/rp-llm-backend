@@ -467,5 +467,6 @@
   "msgMetadataUnavailableManual": "Os metadados estão desativados para respostas do BOT criadas pelo usuário.",
   "msgMetadataUnavailableManualAria": "Metadados indisponíveis para mensagens do BOT criadas pelo usuário.",
    "msgSystemPromptUnavailableManual": "Os detalhes do prompt do sistema não estão disponíveis para respostas do BOT criadas pelo usuário.",
-   "prefixUserMessagesWithPersona": "Prefixar mensagens do usuário com a persona ativa"
+  "prefixUserMessagesWithPersona": "Prefixar mensagens do usuário com a persona ativa",
+  "personaInjectionOnce": "Uma vez"
 }
