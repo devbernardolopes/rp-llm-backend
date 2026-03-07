@@ -134,6 +134,9 @@ const DEFAULT_SETTINGS = {
   unloadTriggerDistance: 200, // pixels from first loaded message to trigger loading more
 }
 
+const CHARACTER_PAGE_SIZES = [0, 5, 10, 20, 50];
+const CHARACTER_PAGE_BUTTON_WINDOW = 7;
+
 function createSystemAvatarFallbackImage(letter = "S") {
   const char =
     String(letter || "S")
@@ -1092,6 +1095,9 @@ const state = {
   generationQueue: [],
   selectedThreadIds: new Set(),
   characterTagFilters: [],
+  characterPage: 1,
+  characterCardsPerPage: 0,
+  characterTotalPages: 0,
   tagManagerEditingTag: null,
   characterSortMode: "updated_desc",
   expandedCharacterTagIds: new Set(),
@@ -2221,7 +2227,8 @@ function setupEvents() {
       state.expandedCharacterTagIds.clear();
       saveUiState();
       renderCharacterTagFilterChips();
-      updateCharacterCardsVisibility();
+      state.characterPage = 1;
+      await renderCharacters();
     });
   const sortBtn = document.getElementById("character-sort-btn");
   if (sortBtn) {
@@ -2231,6 +2238,7 @@ function setupEvents() {
       state.characterSortMode = `${nextBase}_${parts.dir}`;
       saveUiState();
       renderCharacterTagFilterChips();
+      state.characterPage = 1;
       await renderCharacters();
     });
   }
@@ -2242,6 +2250,7 @@ function setupEvents() {
         parts.dir === "desc" ? `${parts.base}_asc` : `${parts.base}_desc`;
       saveUiState();
       renderCharacterTagFilterChips();
+      state.characterPage = 1;
       await renderCharacters();
     });
   const filters = document.getElementById("character-filters");
@@ -2487,6 +2496,31 @@ function setupEvents() {
   chatOpacityToggleBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     toggleChatOpacityOverlay().catch(() => {});
+  });
+  const paginationPrev = document.getElementById("character-pagination-prev");
+  const paginationNext = document.getElementById("character-pagination-next");
+  const paginationSize = document.getElementById("character-pagination-size");
+
+  paginationPrev?.addEventListener("click", () => {
+    if (state.characterPage <= 1) return;
+    state.characterPage -= 1;
+    renderCharacters();
+  });
+
+  paginationNext?.addEventListener("click", () => {
+    const maxPages = Math.max(1, state.characterTotalPages || 1);
+    if (state.characterPage >= maxPages) return;
+    state.characterPage += 1;
+    renderCharacters();
+  });
+
+  paginationSize?.addEventListener("change", async (event) => {
+    const value = Number(event.target?.value);
+    if (!CHARACTER_PAGE_SIZES.includes(value)) return;
+    state.characterCardsPerPage = value;
+    state.characterPage = 1;
+    saveUiState();
+    await renderCharacters();
   });
   const chatOpacityOverlay =
     document.getElementById("chat-opacity-overlay");
@@ -3420,17 +3454,18 @@ function renderCharacterTagPresetButtons() {
   });
 }
 
-function removeCharacterTagFilter(tag) {
+async function removeCharacterTagFilter(tag) {
   const lower = String(tag || "").toLowerCase();
   state.characterTagFilters = state.characterTagFilters.filter(
     (t) => t.toLowerCase() !== lower,
   );
   saveUiState();
   renderCharacterTagFilterChips();
-  updateCharacterCardsVisibility();
+  state.characterPage = 1;
+  await renderCharacters();
 }
 
-function toggleCharacterTagFilter(tag) {
+async function toggleCharacterTagFilter(tag) {
   const normalized = normalizeTagValue(tag);
   if (!normalized) return;
   const lower = normalized.toLowerCase();
@@ -3446,7 +3481,8 @@ function toggleCharacterTagFilter(tag) {
   }
   saveUiState();
   renderCharacterTagFilterChips();
-  updateCharacterCardsVisibility();
+  state.characterPage = 1;
+  await renderCharacters();
 }
 
 async function updateCharacterCardsVisibility() {
@@ -4769,6 +4805,23 @@ function loadUiState() {
       const parts = getCharacterSortParts(parsed.characterSortMode);
       state.characterSortMode = `${parts.base}_${parts.dir}`;
     }
+    if (
+      parsed.characterPagination &&
+      typeof parsed.characterPagination === "object"
+    ) {
+      const perPageVal = Number(parsed.characterPagination.perPage);
+      if (
+        Number.isFinite(perPageVal) &&
+        perPageVal >= 0 &&
+        CHARACTER_PAGE_SIZES.includes(perPageVal)
+      ) {
+        state.characterCardsPerPage = perPageVal;
+      }
+      const pageVal = Number(parsed.characterPagination.page);
+      if (Number.isFinite(pageVal) && pageVal >= 1) {
+        state.characterPage = Math.max(1, Math.floor(pageVal));
+      }
+    }
     const filters = document.getElementById("character-filters");
     if (filters) {
       const isCollapsed =
@@ -4795,6 +4848,12 @@ function saveUiState() {
       characterTagFilters: Array.isArray(state.characterTagFilters)
         ? state.characterTagFilters
         : [],
+      characterPagination: {
+        page: Math.max(1, Number(state.characterPage) || 1),
+        perPage: CHARACTER_PAGE_SIZES.includes(Number(state.characterCardsPerPage))
+          ? Number(state.characterCardsPerPage)
+          : 0,
+      },
       characterSortMode: state.characterSortMode || "updated_desc",
     }),
   );
@@ -5754,6 +5813,34 @@ async function renderCharacters() {
     return updatedB - updatedA;
   });
 
+  const perPageSetting = Number(state.characterCardsPerPage);
+  const perPage = CHARACTER_PAGE_SIZES.includes(perPageSetting)
+    ? perPageSetting
+    : 0;
+  const totalCharacters = sortedCharacters.length;
+  const totalPages =
+    totalCharacters === 0
+      ? 0
+      : perPage > 0
+      ? Math.max(1, Math.ceil(totalCharacters / perPage))
+      : 1;
+  let currentPage = Number(state.characterPage) || 1;
+  if (totalPages === 0) {
+    currentPage = 1;
+  } else {
+    currentPage = Math.max(1, Math.min(currentPage, totalPages));
+  }
+  state.characterPage = currentPage;
+  const charactersToRender =
+    totalCharacters === 0
+      ? []
+      : perPage > 0
+      ? sortedCharacters.slice(
+          (currentPage - 1) * perPage,
+          (currentPage - 1) * perPage + perPage,
+        )
+      : sortedCharacters;
+
   const existingCards = grid.querySelectorAll(".character-card");
   const carouselStates = new Map();
   existingCards.forEach((card) => {
@@ -5766,16 +5853,17 @@ async function renderCharacters() {
   });
 
   grid.innerHTML = "";
-  if (sortedCharacters.length === 0) {
+  if (totalCharacters === 0) {
     const empty = document.createElement("p");
     empty.className = "muted";
     empty.textContent =
       activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
     grid.appendChild(empty);
+    updateCharacterPaginationControls(0, 0);
     return;
   }
 
-  sortedCharacters.forEach((char) => {
+  charactersToRender.forEach((char) => {
     const resolved = resolveCharacterForLanguage(
       char,
       char?.selectedCardLanguage,
@@ -6100,7 +6188,7 @@ async function renderCharacters() {
         chip.classList.add("active-filter");
       }
       chip.textContent = tag;
-      chip.addEventListener("click", (e) => {
+      chip.addEventListener("click", async (e) => {
         e.stopPropagation();
         const lower = tag.toLowerCase();
         const exists = state.characterTagFilters.some(
@@ -6132,7 +6220,8 @@ async function renderCharacters() {
           }
         }
         renderCharacterTagFilterChips();
-        updateCharacterCardsVisibility();
+        state.characterPage = 1;
+        await renderCharacters();
       });
       tagsWrap.appendChild(chip);
     });
@@ -6333,6 +6422,8 @@ async function renderCharacters() {
     grid.appendChild(card);
   });
 
+  updateCharacterPaginationControls(totalCharacters, totalPages);
+
   carouselStates.forEach((state, charId) => {
     const card = grid.querySelector(
       `.character-card[data-character-id="${charId}"]`,
@@ -6356,6 +6447,82 @@ async function renderCharacters() {
   grid.scrollTop = Math.min(previousScrollTop, maxScroll);
   state.characterCardSlide = null;
   updateCarouselForPaneState();
+}
+
+function getCharacterPaginationRange(currentPage, totalPages, windowSize = CHARACTER_PAGE_BUTTON_WINDOW) {
+  const pages = [];
+  if (totalPages <= 0) return pages;
+  if (totalPages <= windowSize) {
+    for (let i = 1; i <= totalPages; i += 1) {
+      pages.push(i);
+    }
+    return pages;
+  }
+  let start = Math.max(1, currentPage - Math.floor(windowSize / 2));
+  let end = start + windowSize - 1;
+  if (end > totalPages) {
+    end = totalPages;
+    start = Math.max(1, end - windowSize + 1);
+  }
+  for (let i = start; i <= end; i += 1) {
+    pages.push(i);
+  }
+  return pages;
+}
+
+function updateCharacterPaginationControls(totalItems, totalPages) {
+  const container = document.getElementById("character-pagination");
+  const pagesContainer = document.getElementById("character-pagination-pages");
+  const prevBtn = document.getElementById("character-pagination-prev");
+  const nextBtn = document.getElementById("character-pagination-next");
+  const sizeSelect = document.getElementById("character-pagination-size");
+  if (!container || !pagesContainer || !prevBtn || !nextBtn || !sizeSelect) return;
+
+  const hasCharacters = totalItems > 0;
+  container.classList.toggle("hidden", !hasCharacters);
+  state.characterTotalPages = totalPages;
+
+  prevBtn.disabled = !hasCharacters || state.characterPage <= 1;
+  nextBtn.disabled =
+    !hasCharacters || totalPages <= 0 || state.characterPage >= totalPages;
+
+  const sanitizedPerPage = CHARACTER_PAGE_SIZES.includes(
+    Number(state.characterCardsPerPage),
+  )
+    ? Number(state.characterCardsPerPage)
+    : 0;
+  sizeSelect.value = String(sanitizedPerPage);
+
+  pagesContainer.innerHTML = "";
+  if (!hasCharacters || totalPages <= 0) return;
+
+  const pageRange = getCharacterPaginationRange(
+    state.characterPage,
+    totalPages,
+    CHARACTER_PAGE_BUTTON_WINDOW,
+  );
+  const fragment = document.createDocumentFragment();
+  pageRange.forEach((pageNum) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pagination-page-btn";
+    btn.textContent = String(pageNum);
+    btn.setAttribute("aria-label", tf("paginationPageAria", { page: pageNum }));
+    if (pageNum === state.characterPage) {
+      btn.classList.add("active");
+      btn.setAttribute("aria-current", "page");
+      btn.disabled = true;
+    } else {
+      btn.disabled = false;
+    }
+    btn.addEventListener("click", () => {
+      if (pageNum === state.characterPage) return;
+      state.characterPage = pageNum;
+      renderCharacters();
+    });
+    fragment.appendChild(btn);
+  });
+  pagesContainer.appendChild(fragment);
 }
 
 function updateThreadBulkBar() {

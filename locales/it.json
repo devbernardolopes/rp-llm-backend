@@ -476,5 +476,10 @@
   "msgForkTitle": "Biforca la chat da qui",
   "deleteMessageTitle": "Elimina messaggio",
   "deleteMessageConfirm": "Eliminare questo messaggio?{preview}",
-  "personaColor": "Colore"
+  "personaColor": "Colore",
+  "paginationPreviousPage": "Pagina precedente",
+  "paginationNextPage": "Pagina successiva",
+  "paginationResultsPerPage": "Schede per pagina",
+  "paginationUnlimited": "Illimitato",
+  "paginationPageAria": "Vai alla pagina {page}"
 }

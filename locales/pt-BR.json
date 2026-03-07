@@ -476,5 +476,10 @@
   "msgForkTitle": "Bifurcar o chat a partir daqui",
   "deleteMessageTitle": "Excluir mensagem",
   "deleteMessageConfirm": "Excluir esta mensagem?{preview}",
-  "personaColor": "Cor"
+  "personaColor": "Cor",
+  "paginationPreviousPage": "Página anterior",
+  "paginationNextPage": "Próxima página",
+  "paginationResultsPerPage": "Cartões por página",
+  "paginationUnlimited": "Ilimitado",
+  "paginationPageAria": "Ir para a página {page}"
 }

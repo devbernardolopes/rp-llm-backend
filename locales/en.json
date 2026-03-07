@@ -477,5 +477,10 @@
   "msgForkTitle": "Fork chat from here",
   "deleteMessageTitle": "Delete message",
   "deleteMessageConfirm": "Delete this message?{preview}",
-  "personaColor": "Color"
+  "personaColor": "Color",
+  "paginationPreviousPage": "Previous page",
+  "paginationNextPage": "Next page",
+  "paginationResultsPerPage": "Cards per page",
+  "paginationUnlimited": "Unlimited",
+  "paginationPageAria": "Go to page {page}"
 }

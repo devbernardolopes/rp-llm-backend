@@ -476,5 +476,10 @@
   "msgForkTitle": "Chat von hier abzweigen",
   "deleteMessageTitle": "Nachricht löschen",
   "deleteMessageConfirm": "Diese Nachricht wirklich löschen?{preview}",
-  "personaColor": "Farbe"
+  "personaColor": "Farbe",
+  "paginationPreviousPage": "Vorherige Seite",
+  "paginationNextPage": "Nächste Seite",
+  "paginationResultsPerPage": "Karten pro Seite",
+  "paginationUnlimited": "Unbegrenzt",
+  "paginationPageAria": "Zur Seite {page} wechseln"
 }

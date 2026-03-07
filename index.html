@@ -216,6 +216,49 @@
           </div>
         </section>
         <section id="character-grid" class="character-grid"></section>
+        <section id="character-pagination" class="character-pagination hidden">
+          <div class="character-pagination-group">
+            <button
+              id="character-pagination-prev"
+              class="pagination-arrow"
+              type="button"
+              data-i18n-title="paginationPreviousPage"
+              aria-label="Previous page"
+              disabled
+            >
+              &#8592;
+            </button>
+            <div
+              id="character-pagination-pages"
+              class="pagination-pages"
+              aria-live="polite"
+            ></div>
+            <button
+              id="character-pagination-next"
+              class="pagination-arrow"
+              type="button"
+              data-i18n-title="paginationNextPage"
+              aria-label="Next page"
+              disabled
+            >
+              &#8594;
+            </button>
+          </div>
+          <label class="pagination-size-label">
+            <span data-i18n="paginationResultsPerPage">Cards per page</span>
+            <select
+              id="character-pagination-size"
+              class="pagination-size-select"
+              aria-label="Cards per page"
+            >
+              <option value="0" data-i18n="paginationUnlimited">Unlimited</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+        </section>
       </main>
 
       <section id="chat-view" class="view">

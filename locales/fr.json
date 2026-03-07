@@ -476,5 +476,10 @@
   "msgForkTitle": "Bifurquer la discussion à partir d'ici",
   "deleteMessageTitle": "Supprimer le message",
   "deleteMessageConfirm": "Supprimer ce message ?{preview}",
-  "personaColor": "Couleur"
+  "personaColor": "Couleur",
+  "paginationPreviousPage": "Page précédente",
+  "paginationNextPage": "Page suivante",
+  "paginationResultsPerPage": "Cartes par page",
+  "paginationUnlimited": "Illimité",
+  "paginationPageAria": "Aller à la page {page}"
 }
