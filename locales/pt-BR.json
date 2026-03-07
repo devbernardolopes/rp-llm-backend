@@ -481,5 +481,6 @@
   "paginationNextPage": "Próxima página",
   "paginationResultsPerPage": "Cartões por página",
   "paginationUnlimited": "Ilimitado",
-  "paginationPageAria": "Ir para a página {page}"
+  "paginationPageAria": "Ir para a página {page}",
+  "memoryCommandButtonTitle": "Comando de memória"
 }

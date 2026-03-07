@@ -482,5 +482,6 @@
   "paginationNextPage": "Next page",
   "paginationResultsPerPage": "Cards per page",
   "paginationUnlimited": "Unlimited",
-  "paginationPageAria": "Go to page {page}"
+  "paginationPageAria": "Go to page {page}",
+  "memoryCommandButtonTitle": "Memory command"
 }

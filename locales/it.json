@@ -481,5 +481,6 @@
   "paginationNextPage": "Pagina successiva",
   "paginationResultsPerPage": "Schede per pagina",
   "paginationUnlimited": "Illimitato",
-  "paginationPageAria": "Vai alla pagina {page}"
+  "paginationPageAria": "Vai alla pagina {page}",
+  "memoryCommandButtonTitle": "Comando memoria"
 }

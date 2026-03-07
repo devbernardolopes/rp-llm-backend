@@ -481,5 +481,6 @@
   "paginationNextPage": "Nächste Seite",
   "paginationResultsPerPage": "Karten pro Seite",
   "paginationUnlimited": "Unbegrenzt",
-  "paginationPageAria": "Zur Seite {page} wechseln"
+  "paginationPageAria": "Zur Seite {page} wechseln",
+  "memoryCommandButtonTitle": "Speicherbefehl"
 }
