@@ -13182,6 +13182,7 @@ function buildMessageRow(message, index, streaming) {
 
   const controls = document.createElement("div");
   controls.className = "message-controls";
+  const assistantActionButtons = [];
   const messageIndex = document.createElement("span");
   messageIndex.className = "message-index";
   messageIndex.textContent = isOocMessage
@@ -13309,6 +13310,15 @@ function buildMessageRow(message, index, streaming) {
     speakerBtn.dataset.messageIndex = String(index);
     if (disableControlsForRow) speakerBtn.disabled = true;
     controls.appendChild(speakerBtn);
+    assistantActionButtons.push(
+      delBtn,
+      regenBtn,
+      editBtn,
+      copyBtn,
+      infoBtn,
+      modelInfoBtn,
+      speakerBtn,
+    );
   } else {
     controls.appendChild(messageIndex);
     const delBtn = iconButton("delete", t("msgDeleteTitle"), async () => {
@@ -13343,6 +13353,13 @@ function buildMessageRow(message, index, streaming) {
   forkBtn.dataset.messageIndex = String(index);
   forkBtn.disabled = disableControlsForRow;
   controls.appendChild(forkBtn);
+
+  if (isSystemOocMessage) {
+    assistantActionButtons.forEach((btn) => {
+      if (btn) btn.disabled = true;
+    });
+    forkBtn.disabled = true;
+  }
 
   header.appendChild(controls);
 
