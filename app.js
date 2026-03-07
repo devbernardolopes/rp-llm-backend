@@ -2709,12 +2709,14 @@ function setupModalTextareas(root = document) {
   textareas.forEach((textarea) => {
     const baseRows = Number(textarea.getAttribute("rows") || 3);
     textarea.dataset.baseRows = baseRows;
+    const forceCollapsed = textarea.dataset.forceCollapsed === "1";
     if (textarea.dataset.collapsible === "1") {
       autoExpandTextarea(textarea);
       const stored = textareaCollapseStates.get(textarea);
       if (stored) {
         const hasContent = String(textarea.value || "").trim().length > 0;
-        stored.setExpanded(hasContent);
+        const nextState = forceCollapsed ? false : hasContent;
+        stored.setExpanded(nextState);
       }
       return;
     }
@@ -2775,7 +2777,7 @@ function setupModalTextareas(root = document) {
     };
     textareaCollapseStates.set(textarea, entry);
     const hasContent = String(textarea.value || "").trim().length > 0;
-    entry.setExpanded(hasContent);
+    entry.setExpanded(forceCollapsed ? false : hasContent);
 
     // Determine appropriate save function based on modal
     const modal = textarea.closest(".modal");
@@ -18126,6 +18128,7 @@ async function openMessageSystemPromptModal(index) {
     textarea.rows = 4;
     textarea.readOnly = true;
     textarea.value = String(msg?.content || "");
+    textarea.dataset.forceCollapsed = "1";
 
     const countEl = document.createElement("span");
     countEl.id = `${textarea.id}-count`;

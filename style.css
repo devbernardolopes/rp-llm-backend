@@ -1690,13 +1690,6 @@ textarea {
   margin-bottom: 0;
 }
 
-.memory-entry-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 10px;
-}
-
 .memory-entry-regen-btn {
   font-size: 12px;
   padding: 4px 12px;
@@ -1715,9 +1708,10 @@ textarea {
 
 .memory-entry-actions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
   align-items: center;
+  gap: 6px;
+  margin: 0;
 }
 
 .memory-entry-action-btn {
