@@ -13471,19 +13471,43 @@ function ensureLoadedRangeInitialized() {
   }
 }
 
+function ensureMessageIndexVisible(index) {
+  if (index == null) return;
+  ensureLoadedRangeInitialized();
+  const total = conversationHistory.length;
+  const maxIndex = total - 1;
+  if (maxIndex < 0) {
+    state.loadedMessageRange.start = 0;
+    state.loadedMessageRange.end = -1;
+    return;
+  }
+  const threshold = Number(state.settings.unloadThreshold) || 0;
+  if (threshold <= 0) {
+    state.loadedMessageRange.start = 0;
+    state.loadedMessageRange.end = maxIndex;
+    return;
+  }
+  const range = state.loadedMessageRange;
+  if (index < range.start) {
+    range.start = Math.max(0, index);
+    range.end = Math.min(maxIndex, range.start + threshold - 1);
+    return;
+  }
+  if (index > range.end) {
+    range.end = Math.min(maxIndex, index);
+  }
+  if (range.end - range.start + 1 > threshold) {
+    range.start = Math.max(0, range.end - threshold + 1);
+  }
+}
+
 function ensureMessageRowExists(index) {
   if (index == null) return null;
   const log = document.getElementById("chat-log");
   if (!log) return null;
   let row = log.querySelector(`.chat-row[data-message-index="${index}"]`);
   if (row) return row;
-  ensureLoadedRangeInitialized();
-  const latestIndex = conversationHistory.length - 1;
-  const threshold = state.settings.unloadThreshold || 0;
-  const end = Math.max(latestIndex, index);
-  const start = threshold > 0 ? Math.max(0, end - threshold + 1) : 0;
-  state.loadedMessageRange.start = start;
-  state.loadedMessageRange.end = end;
+  ensureMessageIndexVisible(index);
   renderChat();
   return log.querySelector(`.chat-row[data-message-index="${index}"]`);
 }
@@ -14179,9 +14203,7 @@ async function sendOocInquiry(text) {
       (chunk) => {
         pendingAssistant.content += chunk;
         if (state.settings.streamEnabled) {
-          const liveRow = document.querySelector(
-            `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-          );
+        const liveRow = ensureMessageRowExists(pendingIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
             liveContent.innerHTML = renderMessageHtml(
@@ -14221,9 +14243,7 @@ async function sendOocInquiry(text) {
       pendingAssistant.content || `OOC request failed: ${errorMessage}`;
     showToast(`OOC request failed: ${errorMessage}`, "error");
   } finally {
-    const liveRow = document.querySelector(
-      `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-    );
+    const liveRow = ensureMessageRowExists(pendingIndex);
     if (liveRow) {
       liveRow.dataset.streaming = "0";
       const liveContent = liveRow.querySelector(".message-content");
@@ -14598,9 +14618,7 @@ async function generateBotReply() {
         Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
       );
     }
-    const liveRow = document.querySelector(
-      `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-    );
+    const liveRow = ensureMessageRowExists(pendingIndex);
     const liveContent = liveRow?.querySelector(".message-content");
     if (liveContent) {
       renderMessageContent(liveContent, pending);
@@ -14650,9 +14668,7 @@ async function generateBotReply() {
         if (pendingRow) pendingRow.remove();
       } else {
         pending.generationStatus = "";
-        const liveRow = document.querySelector(
-          `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-        );
+        const liveRow = ensureMessageRowExists(pendingIndex);
         const liveContent = liveRow?.querySelector(".message-content");
         if (liveContent) {
           renderMessageContent(liveContent, pending);
@@ -14681,9 +14697,7 @@ async function generateBotReply() {
       if (!String(pending.content || "").trim()) {
         pending.content = "";
       }
-      const liveRow = document.querySelector(
-        `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-      );
+      const liveRow = ensureMessageRowExists(pendingIndex);
       const liveContent = liveRow?.querySelector(".message-content");
       if (liveContent) {
         renderMessageContent(liveContent, pending);
