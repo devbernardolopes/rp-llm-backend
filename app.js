@@ -14668,7 +14668,7 @@ async function deleteMessageAt(index) {
       latestCountedTurn - 1,
     );
   }
-  await persistCurrentThread();
+  await persistCurrentThread(false, { skipUpdatedAt: true });
   renderChat();
 }
 
@@ -17684,13 +17684,15 @@ function updateQueuedPlaceholdersInMessages(threadId, messages) {
   return list;
 }
 
-async function persistCurrentThread(forceUpdate = false) {
+async function persistCurrentThread(forceUpdate = false, options = {}) {
   if (!currentThread) return;
 
   const allMessagesFinished = conversationHistory.every(
     (m) => !m.generationStatus || m.generationStatus === "",
   );
-  const shouldUpdateTimestamp = forceUpdate || allMessagesFinished;
+  const skipTimestampUpdate = options.skipUpdatedAt === true;
+  const shouldUpdateTimestamp =
+    !skipTimestampUpdate && (forceUpdate || allMessagesFinished);
 
   const updated = {
     messages: conversationHistory,
