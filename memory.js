@@ -597,7 +597,15 @@ function buildMessageEntryForSummary(message) {
   const trimmed = filtered.trim();
   if (!trimmed) return "";
   const labeled = `${message.role}: ${trimmed}`;
-  return normalizeSummaryRoleLabels(labeled);
+  const normalized = normalizeSummaryRoleLabels(labeled);
+  if (message.role === "user") {
+    const personaName = String(message.senderName || "You");
+    return normalized.replace(
+      /^\[USER\]:/,
+      `[USER (as ${personaName})]:`,
+    );
+  }
+  return normalized;
 }
 
 function removeSummaryParagraphs(text, prefix = "> || ") {
