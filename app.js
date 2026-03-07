@@ -11852,21 +11852,24 @@ async function openThread(threadId) {
      role: m.role === "ai" ? "assistant" : m.role,
    }));
 
-   // Initialize loaded message range based on unload threshold
-   const threshold = state.settings.unloadThreshold || 0;
-   if (threshold > 0 && conversationHistory.length > threshold) {
-     // Keep only newest threshold messages loaded, older ones as placeholders
-     state.loadedMessageRange = {
-       start: conversationHistory.length - threshold,
-       end: conversationHistory.length - 1
-     };
-   } else {
-     // Load all messages
-     state.loadedMessageRange = {
-       start: 0,
-       end: conversationHistory.length - 1
-     };
-   }
+    console.log('[Unload] openThread raw threshold:', state.settings.unloadThreshold, 'conversation length:', conversationHistory.length);
+
+    // Initialize loaded message range based on unload threshold
+    const threshold = state.settings.unloadThreshold || 0;
+    if (threshold > 0 && conversationHistory.length > threshold) {
+      // Keep only newest threshold messages loaded, older ones as placeholders
+      state.loadedMessageRange = {
+        start: conversationHistory.length - threshold,
+        end: conversationHistory.length - 1
+      };
+    } else {
+      // Load all messages
+      state.loadedMessageRange = {
+        start: 0,
+        end: conversationHistory.length - 1
+      };
+    }
+    console.log('[Unload] openThread set range:', state.loadedMessageRange, 'threshold:', threshold, 'total:', conversationHistory.length);
 
    await applyChatViewBackgroundFromSfx(currentThread);
   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
@@ -12424,9 +12427,11 @@ function renderChat(startIdx, endIdx) {
   if (arguments.length === 0 && state.loadedMessageRange) {
     effectiveStart = state.loadedMessageRange.start;
     effectiveEnd = state.loadedMessageRange.end;
+    console.log('[Unload] renderChat using state range:', effectiveStart, effectiveEnd, 'total:', conversationHistory.length);
   } else {
     effectiveStart = startIdx !== undefined ? startIdx : 0;
     effectiveEnd = endIdx !== undefined && endIdx !== null ? endIdx : conversationHistory.length - 1;
+    console.log('[Unload] renderChat using explicit range:', effectiveStart, effectiveEnd);
   }
 
   // Don't clear everything if doing partial render - preserve already loaded messages
@@ -12470,16 +12475,21 @@ function renderChat(startIdx, endIdx) {
   // Add placeholders for messages before effectiveStart if needed
   const threshold = state.settings.unloadThreshold || 0;
   if (threshold > 0 && effectiveStart > 0) {
+    console.log('[Unload] Adding', effectiveStart, 'placeholders');
     for (let i = 0; i < effectiveStart; i++) {
       const placeholder = createMessagePlaceholder(i);
       log.appendChild(placeholder);
     }
+  } else {
+    console.log('[Unload] No placeholders, effectiveStart:', effectiveStart, 'threshold:', threshold);
   }
 
   // Render messages in range
+  let renderedCount = 0;
   for (let i = renderStart; i <= renderEnd; i++) {
     const message = conversationHistory[i];
     if (!message) continue;
+    renderedCount++;
     // Check if row already exists (for partial updates)
     const existingRow = log.querySelector(`.chat-row[data-message-index="${i}"]`);
     if (existingRow) {
@@ -12505,6 +12515,7 @@ function renderChat(startIdx, endIdx) {
       log.appendChild(buildMessageRow(message, i, rowStreaming));
     }
   }
+  console.log('[Unload] Rendered', renderedCount, 'messages, range:', renderStart, renderEnd, 'effectiveStart:', effectiveStart, 'effectiveEnd:', effectiveEnd);
 
   // Update loaded range state
   state.loadedMessageRange = { start: effectiveStart, end: effectiveEnd };
@@ -12528,7 +12539,10 @@ function renderChat(startIdx, endIdx) {
   
   // Check if we should unload old messages based on threshold
   if (state.settings.unloadThreshold > 0) {
+    console.log('[Unload] renderChat calling checkUnloadOldMessages');
     checkUnloadOldMessages(false);
+  } else {
+    console.log('[Unload] threshold disabled, not unloading');
   }
 }
 
@@ -12628,18 +12642,26 @@ function createMessagePlaceholder(index) {
 
 function checkUnloadOldMessages(force = false) {
   const threshold = state.settings.unloadThreshold || 0;
+  console.log('[Unload] checkUnloadOldMessages called, force:', force, 'threshold:', threshold, 'total:', conversationHistory.length, 'currentRange:', state.loadedMessageRange);
   if (threshold <= 0) return;
 
   const totalMessages = conversationHistory.length;
   if (totalMessages <= threshold) return;
 
   // Only unload if near bottom (unless forced, like threshold change)
-  if (!force && !isChatNearBottom(200)) return;
+  if (!force && !isChatNearBottom(200)) {
+    console.log('[Unload] Not near bottom, skipping unload');
+    return;
+  }
 
   const targetStart = totalMessages - threshold;
+  console.log('[Unload] targetStart:', targetStart, 'current start:', state.loadedMessageRange.start);
 
   // If already loaded range start is already at or beyond target, nothing to do
-  if (state.loadedMessageRange.start <= targetStart) return;
+  if (state.loadedMessageRange.start >= targetStart) {
+    console.log('[Unload] Already loaded range sufficient');
+    return;
+  }
 
   const log = document.getElementById("chat-log");
   if (!log) return;
