@@ -2820,7 +2820,8 @@ function resetModalTextareaCollapseStates(root = document) {
     const state = textareaCollapseStates.get(textarea);
     if (!state) return;
     const hasContent = String(textarea.value || "").trim().length > 0;
-    state.setExpanded(hasContent);
+    const forceCollapsed = textarea.dataset.forceCollapsed === "1";
+    state.setExpanded(forceCollapsed ? false : hasContent);
   });
 }
 
