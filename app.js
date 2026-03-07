@@ -15639,15 +15639,10 @@ async function renderMemoryModalEntries() {
     }
     const wrapper = document.createElement("div");
     wrapper.className = "memory-entry";
-    wrapper.appendChild(textarea);
+    const row = document.createElement("div");
+    row.className = "memory-entry-row";
+    row.appendChild(textarea);
     if (!isLocked) {
-      const actions = document.createElement("div");
-      actions.className = "memory-entry-actions";
-      const regenBtn = document.createElement("button");
-      regenBtn.type = "button";
-      regenBtn.className = "secondary-btn memory-entry-regen-btn";
-      regenBtn.textContent = t("memoryEntryRegenerate");
-      regenBtn.setAttribute("title", t("memoryEntryRegenerate"));
       const entryData = {
         id: Number(entry.id),
         level: entryLevel,
@@ -15658,26 +15653,32 @@ async function renderMemoryModalEntries() {
         characterId: Number(currentCharacter?.id),
         threadId: Number(currentThread?.id),
       };
-      regenBtn.addEventListener("click", () =>
-        openMemoryRegeneratePromptModal(entryData),
+      const actions = document.createElement("div");
+      actions.className = "memory-entry-actions";
+      const regenBtn = iconButton(
+        "regenerate",
+        t("memoryEntryRegenerate"),
+        () => openMemoryRegeneratePromptModal(entryData),
       );
-      actions.appendChild(regenBtn);
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "secondary-btn memory-entry-delete-btn danger-btn";
-      deleteBtn.textContent = t("memoryEntryDelete");
-      deleteBtn.addEventListener("click", async () => {
-        if (deleteBtn.disabled) return;
-        deleteBtn.disabled = true;
-        try {
-          await handleMemoryEntryDelete(entryData);
-        } finally {
-          deleteBtn.disabled = false;
-        }
-      });
-      actions.appendChild(deleteBtn);
-      wrapper.appendChild(actions);
+      regenBtn.classList.add("memory-entry-action-btn", "memory-entry-regen-btn");
+      const deleteBtn = iconButton(
+        "delete",
+        t("memoryEntryDelete"),
+        async () => {
+          if (deleteBtn.disabled) return;
+          deleteBtn.disabled = true;
+          try {
+            await handleMemoryEntryDelete(entryData);
+          } finally {
+            deleteBtn.disabled = false;
+          }
+        },
+      );
+      deleteBtn.classList.add("memory-entry-action-btn", "memory-entry-delete-btn", "danger-btn");
+      actions.append(regenBtn, deleteBtn);
+      row.appendChild(actions);
     }
+    wrapper.appendChild(row);
     entriesRoot.appendChild(wrapper);
   });
 

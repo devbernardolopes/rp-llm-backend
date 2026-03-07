@@ -1676,6 +1676,7 @@ textarea {
 
 .memory-entry {
   margin-bottom: 16px;
+  padding-bottom: 2px;
 }
 
 .memory-entry .textarea-collapse {
@@ -1692,6 +1693,31 @@ textarea {
 .memory-entry-regen-btn {
   font-size: 12px;
   padding: 4px 12px;
+}
+
+.memory-entry-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.memory-entry-row .textarea-collapse {
+  flex: 1;
+  min-width: 0;
+}
+
+.memory-entry-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.memory-entry-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  padding: 0;
 }
 
 #memory-regenerate-prompt-modal {
