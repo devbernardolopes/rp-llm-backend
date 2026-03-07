@@ -1088,6 +1088,7 @@ const state = {
   generationQueue: [],
   selectedThreadIds: new Set(),
   characterTagFilters: [],
+  tagManagerEditingTag: null,
   characterSortMode: "updated_desc",
   expandedCharacterTagIds: new Set(),
   expandedCharacterTagFilters: false,
@@ -5252,19 +5253,28 @@ async function saveShortcutsFromModal({ close = true } = {}) {
   return true;
 }
 
-function isValidNewManagerTag(inputValue) {
+function isValidNewManagerTag(inputValue, editingTag = null) {
   const tag = normalizeTagValue(inputValue);
   if (tag.length < 2) return false;
-  return !getAllAvailableTags().some(
-    (t) => t.toLowerCase() === tag.toLowerCase(),
-  );
+  const normalizedTag = tag.toLowerCase();
+  const editingLower = editingTag ? String(editingTag || "").toLowerCase() : null;
+  return !getAllAvailableTags().some((t) => {
+    const lower = t.toLowerCase();
+    if (editingLower && lower === editingLower) {
+      return false;
+    }
+    return lower === normalizedTag;
+  });
 }
 
 function updateTagManagerAddButtonState() {
   const input = document.getElementById("tag-manager-input");
   const btn = document.getElementById("add-tag-btn");
   if (!input || !btn) return;
-  btn.disabled = !isValidNewManagerTag(input.value);
+  btn.disabled = !isValidNewManagerTag(
+    input.value,
+    state.tagManagerEditingTag,
+  );
 }
 
 function renderTagManagerList() {
@@ -5282,6 +5292,7 @@ function renderTagManagerList() {
       if (input) {
         input.value = tag;
         input.focus();
+        state.tagManagerEditingTag = tag;
         updateTagManagerAddButtonState();
       }
     });
@@ -5305,11 +5316,25 @@ async function addTagFromManagerInput() {
   if (!input) return;
   const tag = normalizeTagValue(input.value);
   if (tag.length < 2) return;
-  if (!isValidNewManagerTag(tag)) return;
+  if (!isValidNewManagerTag(tag, state.tagManagerEditingTag)) return;
+  const editingTag = state.tagManagerEditingTag;
   const existing = Array.isArray(state.settings.customTags)
-    ? state.settings.customTags.map((t) => normalizeTagValue(t)).filter(Boolean)
+    ? [...state.settings.customTags]
     : [];
-  existing.push(tag);
+  if (editingTag) {
+    const editingLower = editingTag.toLowerCase();
+    const normalizedIndex = existing.findIndex(
+      (t) => t.toLowerCase() === editingLower,
+    );
+    if (normalizedIndex >= 0) {
+      existing[normalizedIndex] = tag;
+    } else {
+      existing.push(tag);
+    }
+    state.tagManagerEditingTag = null;
+  } else {
+    existing.push(tag);
+  }
   state.settings.customTags = existing;
   state.settings.tagsInitialized = true;
   saveSettings();
@@ -6787,6 +6812,7 @@ function openModal(modalId) {
   } else if (modalId === "tags-modal") {
     const input = document.getElementById("tag-manager-input");
     if (input) input.value = "";
+    state.tagManagerEditingTag = null;
     renderTagManagerList();
     updateTagManagerAddButtonState();
   } else if (modalId === "writing-instructions-modal") {
