@@ -17721,21 +17721,25 @@ async function openMessageModelInfoModal(index) {
 
 async function openMessageSystemPromptModal(index) {
   const container = document.getElementById("message-system-prompt-list");
-  if (!container) return;
+  const modal = document.getElementById("message-system-prompt-modal");
+  if (!container || !modal) return;
   container.innerHTML = "";
 
-  const message = conversationHistory[index];
-  if (!message) {
+  const showUnavailable = () => {
     const notice = document.createElement("p");
     notice.className = "muted";
     notice.textContent = t("msgSystemPromptUnavailable");
     container.appendChild(notice);
     openModal("message-system-prompt-modal");
+  };
+
+  const message = conversationHistory[index];
+  if (!message) {
+    showUnavailable();
     return;
   }
 
   let messagesToShow = [];
-
   if (message.requestMessages && Array.isArray(message.requestMessages)) {
     messagesToShow = message.requestMessages;
   } else if (index >= 0 && index < conversationHistory.length) {
@@ -17743,11 +17747,7 @@ async function openMessageSystemPromptModal(index) {
   }
 
   if (messagesToShow.length === 0) {
-    const notice = document.createElement("p");
-    notice.className = "muted";
-    notice.textContent = t("msgSystemPromptUnavailable");
-    container.appendChild(notice);
-    openModal("message-system-prompt-modal");
+    showUnavailable();
     return;
   }
 
@@ -17755,38 +17755,70 @@ async function openMessageSystemPromptModal(index) {
     const entryWrapper = document.createElement("div");
     entryWrapper.className = "system-prompt-entry";
 
-    const header = document.createElement("div");
-    header.className = "system-prompt-header";
-    const roleLabel = document.createElement("span");
-    roleLabel.className = "system-prompt-role";
-    roleLabel.textContent = msg?.role || "unknown";
-    const toggleIcon = document.createElement("span");
-    toggleIcon.className = "system-prompt-toggle";
-    toggleIcon.textContent = "▼";
-    header.appendChild(roleLabel);
-    header.appendChild(toggleIcon);
+    const roleLabelText = String(msg?.role || "unknown").trim().toUpperCase();
+    const label = document.createElement("span");
+    label.className = "system-prompt-entry-label";
+    label.textContent = roleLabelText;
+    label.style.display = "none";
 
-    const contentPre = document.createElement("pre");
-    contentPre.className = "metadata-json system-prompt-content";
-    contentPre.style.display = "none";
-    contentPre.textContent = msg?.content ?? "";
+    const textarea = document.createElement("textarea");
+    textarea.id = `system-prompt-entry-${idx}`;
+    textarea.rows = 4;
+    textarea.readOnly = true;
+    textarea.value = String(msg?.content || "");
 
-    header.addEventListener("click", () => {
-      if (contentPre.style.display === "none") {
-        contentPre.style.display = "block";
-        toggleIcon.textContent = "▲";
-      } else {
-        contentPre.style.display = "none";
-        toggleIcon.textContent = "▼";
-      }
-    });
+    const countEl = document.createElement("span");
+    countEl.id = `${textarea.id}-count`;
+    countEl.className = "textarea-collapse-count system-prompt-word-count";
+    countEl.textContent = String(countWords(textarea.value));
 
-    entryWrapper.appendChild(header);
-    entryWrapper.appendChild(contentPre);
+    entryWrapper.append(label, textarea, countEl);
     container.appendChild(entryWrapper);
   });
 
+  setupModalTextareas(modal);
+
+  const collapseSystemPromptEntries = () => {
+    const textareas = modal.querySelectorAll(".textarea-collapse textarea");
+    textareas.forEach((textarea) => {
+      const entryState = textareaCollapseStates.get(textarea);
+      if (entryState) {
+        entryState.setExpanded(false);
+      }
+    });
+  };
+
+  const enforceExclusiveEntryExpansion = () => {
+    const headers = modal.querySelectorAll(".textarea-collapse-header");
+    headers.forEach((header) => {
+      if (header.dataset.systemPromptExclusive === "1") return;
+      header.dataset.systemPromptExclusive = "1";
+      header.addEventListener("click", () => {
+        headers.forEach((otherHeader) => {
+          if (otherHeader === header) return;
+          const textarea = otherHeader
+            .closest(".textarea-collapse")
+            ?.querySelector("textarea");
+          const entryState = textareaCollapseStates.get(textarea);
+          if (entryState) {
+            entryState.setExpanded(false);
+          }
+        });
+      });
+    });
+  };
+
+  enforceExclusiveEntryExpansion();
+  collapseSystemPromptEntries();
+  requestAnimationFrame(() => collapseSystemPromptEntries());
+
   openModal("message-system-prompt-modal");
+}
+
+function countWords(text) {
+  const value = String(text || "").trim();
+  if (!value) return 0;
+  return value.split(/\s+/).filter(Boolean).length;
 }
 
 function shouldInjectPersonaContext(persona, threadOverride = null) {

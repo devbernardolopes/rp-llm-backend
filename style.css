@@ -2296,6 +2296,7 @@ textarea {
 #writing-instructions-modal .modal-card,
 #writing-instruction-editor-modal .modal-card,
 #persona-editor-modal .modal-card,
+#message-system-prompt-modal .modal-card,
 #database-modal .modal-card {
   height: min(90vh, 720px);
   max-height: min(90vh, 720px);
@@ -3238,32 +3239,26 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
-.system-prompt-header {
+.system-prompt-entry {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: var(--bg-secondary);
-  border-radius: 6px;
-  cursor: pointer;
-  user-select: none;
+  flex-direction: column;
+  gap: 8px;
 }
-.system-prompt-role {
-  font-weight: 600;
-  font-size: 13px;
-  text-transform: uppercase;
-  color: var(--accent);
+.system-prompt-entry-label {
+  display: none;
 }
-.system-prompt-toggle {
-  font-size: 10px;
-  color: var(--muted);
-  transition: transform 0.2s ease;
+.system-prompt-word-count {
+  display: none;
 }
-.system-prompt-content {
-  margin-top: 8px;
-  max-height: 300px;
-  overflow-y: auto;
+
+#message-system-prompt-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .model-info-row {
