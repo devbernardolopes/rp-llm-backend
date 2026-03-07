@@ -4723,21 +4723,18 @@ function addPromptCommandEntry(threadId, content) {
   state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
     ? state.promptCommandHistory
     : [];
-  const lastEntry =
-    state.promptCommandHistory[state.promptCommandHistory.length - 1];
-  if (
-    lastEntry &&
-    lastEntry.threadId === threadId &&
-    lastEntry.content === trimmed
-  ) {
-    return false;
+  const existingIndex = state.promptCommandHistory.findIndex(
+    (entry) => entry.threadId === threadId && entry.content === trimmed,
+  );
+  if (existingIndex >= 0) {
+    state.promptCommandHistory.splice(existingIndex, 1);
   }
-   state.promptCommandHistory.push({
-     threadId,
-     content: trimmed,
-     createdAt: Date.now(),
-     isOoc: true,
-   });
+  state.promptCommandHistory.push({
+    threadId,
+    content: trimmed,
+    createdAt: Date.now(),
+    isOoc: true,
+  });
   if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
     state.promptCommandHistory.shift();
   }
@@ -15399,6 +15396,9 @@ function openPromptHistory() {
 
   // Scroll to top
   list.scrollTop = 0;
+  requestAnimationFrame(() => {
+    list.scrollTop = 0;
+  });
 
   document.getElementById("prompt-history-popover").classList.remove("hidden");
   state.promptHistoryOpen = true;
