@@ -13498,9 +13498,10 @@ async function generateBotReply() {
        if (
          role === "user" &&
          state.settings.personaPrefixEnabled &&
-         generationPersona?.name
+         m.senderName &&
+         m.senderName !== "You"
        ) {
-         content = `(As ${generationPersona.name}): ${content}`;
+         content = `(As ${m.senderName}): ${content}`;
        }
        return { role, content };
      });
@@ -17735,9 +17736,10 @@ async function updateThreadBudgetIndicator() {
        if (
          role === "user" &&
          state.settings.personaPrefixEnabled &&
-         currentPersona?.name
+         m.senderName &&
+         m.senderName !== "You"
        ) {
-         content = `(As ${currentPersona.name}): ${content}`;
+         content = `(As ${m.senderName}): ${content}`;
        }
        return { role, content };
      }),
@@ -17754,7 +17756,11 @@ async function updateThreadBudgetIndicator() {
    ).trim();
    if (pendingInput) {
      let pendingContent = pendingInput;
-     if (state.settings.personaPrefixEnabled && currentPersona?.name) {
+     if (
+       state.settings.personaPrefixEnabled &&
+       currentPersona?.name &&
+       currentPersona.name !== "You"
+     ) {
        pendingContent = `(As ${currentPersona.name}): ${pendingInput}`;
      }
      messages.push({ role: "user", content: pendingContent });
