@@ -1808,6 +1808,12 @@ function setupEvents() {
     .addEventListener("click", toggleShortcutsVisibility);
   document.getElementById("home-btn").addEventListener("click", showMainView);
   document
+    .getElementById("chat-title")
+    ?.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      renameCurrentThread();
+    });
+  document
     .getElementById("char-config-tab-btn")
     .addEventListener("click", () => {
       saveActiveCharacterDefinitionFromForm();
