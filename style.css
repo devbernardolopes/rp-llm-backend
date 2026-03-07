@@ -1668,6 +1668,13 @@ textarea {
 #memory-modal .modal-body {
   display: flex;
   flex-direction: column;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#memory-modal .modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .memory-modal-status {
