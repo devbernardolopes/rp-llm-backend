@@ -6674,6 +6674,8 @@ async function renderThreads() {
     row.dataset.threadId = String(thread.id);
     row.addEventListener("click", (e) => {
       if (e.target?.closest(".actions")) return;
+      if (e.target?.closest(".thread-tint-btn") || e.target?.closest(".thread-tint-input"))
+        return;
       const chatViewActive = document
         .getElementById("chat-view")
         ?.classList.contains("active");
@@ -6804,13 +6806,32 @@ async function renderThreads() {
     tintColorInput.type = "color";
     tintColorInput.className = "thread-tint-input";
     tintColorInput.value = thread.tintColor || DEFAULT_THREAD_TINT_INPUT_COLOR;
+    let tintPickerOpen = false;
+    const openColorPicker = () => {
+      if (typeof tintColorInput.showPicker === "function") {
+        tintColorInput.showPicker();
+        return;
+      }
+      tintColorInput.click();
+    };
+    const closeColorPicker = () => {
+      if (typeof tintColorInput.closePicker === "function") {
+        tintColorInput.closePicker();
+      }
+      tintColorInput.blur();
+    };
     tintBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       if (e.shiftKey) {
         persistThreadTintColor(thread, row, tintIndicator, tintColorInput, "");
+        closeColorPicker();
         return;
       }
-      tintColorInput.click();
+      if (tintPickerOpen) {
+        closeColorPicker();
+        return;
+      }
+      openColorPicker();
     });
     tintColorInput.addEventListener("input", (e) => {
       e.stopPropagation();
@@ -6821,6 +6842,18 @@ async function renderThreads() {
         tintColorInput,
         e.target?.value,
       );
+    });
+    tintColorInput.addEventListener("focus", () => {
+      tintPickerOpen = true;
+    });
+    tintColorInput.addEventListener("blur", () => {
+      tintPickerOpen = false;
+    });
+    tintColorInput.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+    tintColorInput.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
     });
     const renameMiniBtn = iconButton(
       "edit",
