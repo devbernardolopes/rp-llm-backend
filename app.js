@@ -75,6 +75,7 @@ const PROMPT_HISTORY_KEY = "rp-prompt-history";
 const PROMPT_HISTORY_MAX = 200;
 
 const DEFAULT_PERSONA_COLOR = "#7c5cff";
+const DEFAULT_THREAD_TINT_INPUT_COLOR = "#7c5cff";
 
 const DEFAULT_SETTINGS = {
   uiLanguage: "auto",
@@ -6897,6 +6898,68 @@ async function renderThreads() {
   if (renderSeq !== state.renderThreadsSeq) return;
   list.scrollTop = Math.min(previousScrollTop, maxScroll);
   updateDocumentTitleWithUnread();
+}
+
+function updateThreadTintIndicator(indicator, color) {
+  if (!indicator) return;
+  if (!color) {
+    indicator.style.removeProperty("background-color");
+    indicator.style.removeProperty("box-shadow");
+    return;
+  }
+  indicator.style.backgroundColor = color;
+  indicator.style.removeProperty("box-shadow");
+}
+
+function applyThreadTintToRow(row, color) {
+  if (!row) return;
+  if (color) {
+    row.classList.add("thread-has-tint");
+    row.style.setProperty("--thread-tint-color", color);
+    return;
+  }
+  row.classList.remove("thread-has-tint");
+  row.style.removeProperty("--thread-tint-color");
+}
+
+async function persistThreadTintColor(
+  thread,
+  row,
+  tintIndicator,
+  tintColorInput,
+  color,
+) {
+  if (!thread) return;
+  const trimmed = typeof color === "string" ? color.trim() : "";
+  const nextColor = trimmed ? normalizePersonaColor(trimmed) : "";
+  thread.tintColor = nextColor;
+  if (tintColorInput) {
+    const targetValue = nextColor || DEFAULT_THREAD_TINT_INPUT_COLOR;
+    if (tintColorInput.value !== targetValue) {
+      tintColorInput.value = targetValue;
+    }
+  }
+  updateThreadTintIndicator(tintIndicator, nextColor);
+  applyThreadTintToRow(row, nextColor);
+  if (!Number.isInteger(Number(thread.id))) return;
+  const updatedAt = Date.now();
+  try {
+    await db.threads.update(thread.id, {
+      tintColor: nextColor,
+      updatedAt,
+    });
+    thread.updatedAt = updatedAt;
+    if (currentThread && Number(currentThread.id) === Number(thread.id)) {
+      currentThread.tintColor = nextColor;
+    }
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: Number(thread.id),
+      updatedAt,
+    });
+  } catch (err) {
+    console.warn("Failed to persist thread tint:", err);
+  }
 }
 
 async function deleteSelectedThreads() {
