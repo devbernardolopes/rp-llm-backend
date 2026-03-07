@@ -6807,7 +6807,16 @@ async function renderThreads() {
     tintColorInput.className = "thread-tint-input";
     tintColorInput.value = thread.tintColor || DEFAULT_THREAD_TINT_INPUT_COLOR;
     let tintPickerOpen = false;
+    let tintPickerBlurSuppressed = false;
+    const suppressNextBlur = () => {
+      tintPickerBlurSuppressed = true;
+      window.requestAnimationFrame(() => {
+        tintPickerBlurSuppressed = false;
+      });
+    };
     const openColorPicker = () => {
+      if (tintPickerOpen) return;
+      tintPickerOpen = true;
       if (typeof tintColorInput.showPicker === "function") {
         tintColorInput.showPicker();
         return;
@@ -6815,6 +6824,8 @@ async function renderThreads() {
       tintColorInput.click();
     };
     const closeColorPicker = () => {
+      if (!tintPickerOpen) return;
+      tintPickerOpen = false;
       if (typeof tintColorInput.closePicker === "function") {
         tintColorInput.closePicker();
       }
@@ -6833,6 +6844,10 @@ async function renderThreads() {
       }
       openColorPicker();
     });
+    tintBtn.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+      suppressNextBlur();
+    });
     tintColorInput.addEventListener("input", (e) => {
       e.stopPropagation();
       persistThreadTintColor(
@@ -6847,6 +6862,10 @@ async function renderThreads() {
       tintPickerOpen = true;
     });
     tintColorInput.addEventListener("blur", () => {
+      if (tintPickerBlurSuppressed) {
+        tintPickerBlurSuppressed = false;
+        return;
+      }
       tintPickerOpen = false;
     });
     tintColorInput.addEventListener("click", (e) => {
