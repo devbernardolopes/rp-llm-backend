@@ -2223,7 +2223,16 @@ function setupEvents() {
       requestAnimationFrame(() => {
         renderCharacterTagFilterChips();
       });
+      return;
     }
+    const target = e.target;
+    const isInteractive =
+      target.closest?.("button, a, input, select, textarea") ||
+      target.closest?.(".tag-chip");
+    if (isInteractive) return;
+    filters.classList.add("collapsed");
+    localStorage.setItem("rp-filters-collapsed", "true");
+    updateCharacterFiltersToggleUi();
   });
   document
     .getElementById("character-filters-toggle")
