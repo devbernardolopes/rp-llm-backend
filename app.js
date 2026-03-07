@@ -13870,10 +13870,19 @@ async function regenerateMessage(index) {
     const systemPrompt = promptContext.prompt;
     const regenMessagesWithoutSystem = regenHistory
       .filter((m) => !m.summarized)
-      .map((m) => ({
-        role: m.role === "ai" ? "assistant" : m.role,
-        content: m.content,
-      }));
+      .map((m) => {
+        const role = m.role === "ai" ? "assistant" : m.role;
+        let content = m.content;
+        if (
+          role === "user" &&
+          state.settings.personaPrefixEnabled &&
+          m.senderName &&
+          m.senderName !== "You"
+        ) {
+          content = `(As ${m.senderName}): ${content}`;
+        }
+        return { role, content };
+      });
     const regenMessages = [
       { role: "system", content: systemPrompt },
       ...regenMessagesWithoutSystem,
