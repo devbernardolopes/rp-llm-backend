@@ -16436,6 +16436,9 @@ function refreshMessageControlStates() {
         btn.setAttribute("aria-label", t("msgSystemPromptUnavailable"));
       }
     });
+    row.querySelectorAll(".msg-fork-btn").forEach((btn) => {
+      btn.disabled = isStreaming;
+    });
   });
 }
 
