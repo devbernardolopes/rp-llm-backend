@@ -3292,7 +3292,6 @@ async function renameTagAcrossCharacters(oldTag, newTag) {
   );
 
   const allCharacters = await db.characters.toArray();
-  const updates = [];
   for (const character of allCharacters) {
     const tags = Array.isArray(character.tags) ? [...character.tags] : [];
     let replaced = false;
@@ -3303,18 +3302,14 @@ async function renameTagAcrossCharacters(oldTag, newTag) {
       }
       return tag;
     });
-    if (replaced) {
-      updates.push({ id: character.id, tags: nextTags });
-      if (
-        currentCharacter &&
-        Number(currentCharacter.id) === Number(character.id)
-      ) {
-        currentCharacter.tags = nextTags;
-      }
+    if (!replaced) continue;
+    await db.characters.update(character.id, { tags: nextTags });
+    if (
+      currentCharacter &&
+      Number(currentCharacter.id) === Number(character.id)
+    ) {
+      currentCharacter.tags = nextTags;
     }
-  }
-  if (updates.length > 0) {
-    await db.characters.bulkPut(updates);
   }
 }
 
