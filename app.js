@@ -13434,6 +13434,29 @@ function renderMessageContent(contentEl, message) {
   }
 }
 
+function ensureLoadedRangeInitialized() {
+  if (!state.loadedMessageRange) {
+    state.loadedMessageRange = { start: 0, end: conversationHistory.length - 1 };
+  }
+}
+
+function ensureMessageRowExists(index) {
+  if (index == null) return null;
+  const log = document.getElementById("chat-log");
+  if (!log) return null;
+  let row = log.querySelector(`.chat-row[data-message-index="${index}"]`);
+  if (row) return row;
+  ensureLoadedRangeInitialized();
+  const latestIndex = conversationHistory.length - 1;
+  const threshold = state.settings.unloadThreshold || 0;
+  const end = Math.max(latestIndex, index);
+  const start = threshold > 0 ? Math.max(0, end - threshold + 1) : 0;
+  state.loadedMessageRange.start = start;
+  state.loadedMessageRange.end = end;
+  renderChat();
+  return log.querySelector(`.chat-row[data-message-index="${index}"]`);
+}
+
 function refreshLatestAssistantRowContent() {
   if (!conversationHistory.length) return;
   for (let idx = conversationHistory.length - 1; idx >= 0; idx -= 1) {
@@ -14505,9 +14528,7 @@ async function generateBotReply() {
             () => {},
           );
         }
-        const liveRow = document.querySelector(
-          `#chat-log .chat-row[data-message-index="${pendingIndex}"]`,
-        );
+        const liveRow = ensureMessageRowExists(pendingIndex);
         const liveContent = liveRow?.querySelector(".message-content");
         if (liveContent) {
           liveContent.innerHTML = renderMessageHtml(
