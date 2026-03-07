@@ -11745,6 +11745,8 @@ async function forkThreadFromMessage(messageIndex) {
       content: entry.content,
       createdAt: entry.createdAt,
       isOoc: entry.isOoc || false,
+      personaId: entry.personaId ?? null,
+      personaColor: entry.personaColor ?? "",
     });
     promptHistoryChanged = true;
   }
@@ -11769,6 +11771,8 @@ async function forkThreadFromMessage(messageIndex) {
       content: entry.content,
       createdAt: entry.createdAt,
       isOoc: entry.isOoc || false,
+      personaId: entry.personaId ?? null,
+      personaColor: entry.personaColor ?? "",
     });
     promptCommandHistoryChanged = true;
   }
@@ -11854,14 +11858,16 @@ async function duplicateThread(threadId) {
    const originalPromptEntries = (state.promptHistory || []).filter(
      (e) => e.threadId === threadId,
    );
-   for (const entry of originalPromptEntries) {
-     state.promptHistory.push({
-       threadId: newThreadId,
-       content: entry.content,
-       createdAt: entry.createdAt,
-       isOoc: entry.isOoc || false,
-     });
-   }
+    for (const entry of originalPromptEntries) {
+      state.promptHistory.push({
+        threadId: newThreadId,
+        content: entry.content,
+        createdAt: entry.createdAt,
+        isOoc: entry.isOoc || false,
+        personaId: entry.personaId ?? null,
+        personaColor: entry.personaColor ?? "",
+      });
+    }
    if (originalPromptEntries.length > 0) {
      if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
        state.promptHistory = state.promptHistory.slice(-PROMPT_HISTORY_MAX);
@@ -11873,13 +11879,16 @@ async function duplicateThread(threadId) {
    const originalCommandEntries = (state.promptCommandHistory || []).filter(
      (e) => e.threadId === threadId,
    );
-   for (const entry of originalCommandEntries) {
-     state.promptCommandHistory.push({
-       threadId: newThreadId,
-       content: entry.content,
-       createdAt: entry.createdAt,
-     });
-   }
+    for (const entry of originalCommandEntries) {
+      state.promptCommandHistory.push({
+        threadId: newThreadId,
+        content: entry.content,
+        createdAt: entry.createdAt,
+        isOoc: entry.isOoc || false,
+        personaId: entry.personaId ?? null,
+        personaColor: entry.personaColor ?? "",
+      });
+    }
    if (originalCommandEntries.length > 0) {
      if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
        state.promptCommandHistory = state.promptCommandHistory.slice(
