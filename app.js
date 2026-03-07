@@ -1480,6 +1480,7 @@ document.addEventListener("visibilitychange", () => {
       }
     }
     renderChat();
+    refreshLatestAssistantRowContent();
   }
 });
 
@@ -1519,6 +1520,7 @@ window.addEventListener("focus", () => {
     }
   }
   renderChat();
+  refreshLatestAssistantRowContent();
 });
 
 function updateCarouselForPaneState() {}
@@ -13429,6 +13431,23 @@ function renderMessageContent(contentEl, message) {
   }
   if (String(message.generationError || "").trim()) {
     contentEl.appendChild(buildGenerationErrorNotice(message.generationError));
+  }
+}
+
+function refreshLatestAssistantRowContent() {
+  if (!conversationHistory.length) return;
+  for (let idx = conversationHistory.length - 1; idx >= 0; idx -= 1) {
+    const message = conversationHistory[idx];
+    if (!message || message.role !== "assistant") continue;
+    const row = document.querySelector(
+      `#chat-log .chat-row[data-message-index="${idx}"]`,
+    );
+    if (!row) continue;
+    const content = row.querySelector(".message-content");
+    if (content) {
+      renderMessageContent(content, message);
+    }
+    break;
   }
 }
 
