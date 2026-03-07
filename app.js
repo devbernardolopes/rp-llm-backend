@@ -6778,6 +6778,38 @@ async function renderThreads() {
     });
     const titleRow = document.createElement("div");
     titleRow.className = "thread-title-row";
+    const titleRowControls = document.createElement("div");
+    titleRowControls.className = "thread-title-row-controls";
+    const tintBtn = document.createElement("button");
+    tintBtn.type = "button";
+    tintBtn.className = "thread-tint-btn";
+    tintBtn.setAttribute("aria-label", t("threadTintColor"));
+    tintBtn.setAttribute("title", t("threadTintColorTitle"));
+    const tintIndicator = document.createElement("span");
+    tintIndicator.className = "thread-tint-indicator";
+    tintBtn.appendChild(tintIndicator);
+    const tintColorInput = document.createElement("input");
+    tintColorInput.type = "color";
+    tintColorInput.className = "thread-tint-input";
+    tintColorInput.value = thread.tintColor || DEFAULT_THREAD_TINT_INPUT_COLOR;
+    tintBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (e.shiftKey) {
+        persistThreadTintColor(thread, row, tintIndicator, tintColorInput, "");
+        return;
+      }
+      tintColorInput.click();
+    });
+    tintColorInput.addEventListener("input", (e) => {
+      e.stopPropagation();
+      persistThreadTintColor(
+        thread,
+        row,
+        tintIndicator,
+        tintColorInput,
+        e.target?.value,
+      );
+    });
     const renameMiniBtn = iconButton(
       "edit",
       t("renameThreadAria"),
@@ -6786,8 +6818,9 @@ async function renderThreads() {
         await renameThread(thread.id);
       },
     );
-    renameMiniBtn.classList.add("thread-rename-mini", "thread-rename-top");
-    titleRow.append(titleBtn);
+    renameMiniBtn.classList.add("thread-rename-mini");
+    titleRowControls.append(tintBtn, renameMiniBtn);
+    titleRow.append(titleBtn, titleRowControls);
 
     info.append(titleRow, meta);
 
@@ -6839,10 +6872,13 @@ async function renderThreads() {
 
     actions.prepend(selectBox);
     if (statusBadges.children.length > 0) {
-      row.append(avatar, info, metaRight, renameMiniBtn, statusBadges, actions);
+      row.append(avatar, info, metaRight, statusBadges, actions);
     } else {
-      row.append(avatar, info, metaRight, renameMiniBtn, actions);
+      row.append(avatar, info, metaRight, actions);
     }
+    row.appendChild(tintColorInput);
+    updateThreadTintIndicator(tintIndicator, thread.tintColor);
+    applyThreadTintToRow(row, thread.tintColor);
     list.appendChild(row);
   });
 
