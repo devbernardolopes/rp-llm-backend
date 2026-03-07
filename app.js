@@ -7577,8 +7577,7 @@ async function openCharacterModal(
   updateCharTtsRatePitchLabels();
   updateCharTtsTestButtonState();
   updateCharacterPromptPlaceholder();
-  state.modalDirty["character-modal"] = startDirty;
-  updateModalActionButtons("character-modal");
+  setModalDirtyState("character-modal", startDirty);
   document.getElementById("char-language-modal")?.classList.add("hidden");
 
   openModal("character-modal");
