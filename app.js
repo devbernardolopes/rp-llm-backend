@@ -12550,6 +12550,28 @@ function applyPersonaColorToPromptHistoryList(root) {
   });
 }
 
+function applyPersonaColorToUserMessageBlock(block, message) {
+  if (!block) return;
+  const shouldTint =
+    message &&
+    message.role === "user" &&
+    message.ooc !== true;
+  if (!shouldTint) {
+    block.style.removeProperty("border-color");
+    block.style.removeProperty("background-color");
+    return;
+  }
+  const personaColorValue = String(message.personaColor || "").trim();
+  if (!personaColorValue) {
+    block.style.removeProperty("border-color");
+    block.style.removeProperty("background-color");
+    return;
+  }
+  const color = normalizePersonaColor(personaColorValue);
+  block.style.borderColor = color;
+  block.style.backgroundColor = hexToRgba(color, 0.12);
+}
+
 async function toggleThreadAutoTts() {
   if (!currentThread) return;
   const next = !(currentThread.autoTtsEnabled === true);
@@ -13613,6 +13635,7 @@ function buildMessageRow(message, index, streaming) {
   }
 
   block.append(header, content);
+  applyPersonaColorToUserMessageBlock(block, message);
   row.append(avatar, block);
   if (message.role === "assistant") {
     updateMessageSpeakerButton(speakerBtnForRow(row), index);
@@ -14133,6 +14156,7 @@ async function sendMessage(options = {}) {
     return;
   }
 
+  const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
   const userMsg = {
     role: "user",
     content: text,
@@ -14140,6 +14164,7 @@ async function sendMessage(options = {}) {
     senderName: currentPersona?.name || "You",
     senderAvatar: currentPersona?.avatar || "",
     senderPersonaId: currentPersona?.id || null,
+    personaColor: entryPersonaColor,
   };
   conversationHistory.push(userMsg);
   await persistCurrentThread();
