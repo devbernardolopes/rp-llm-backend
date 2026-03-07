@@ -14436,15 +14436,17 @@ async function generateBotReply() {
     await markThreadPersonaInjectionOnceApplied();
   }
   let pendingRow = null;
-  if (isViewingThread(threadId)) {
-    pendingRow = log?.querySelector(
+  if (log) {
+    pendingRow = log.querySelector(
       `.chat-row[data-message-index="${pendingIndex}"]`,
     );
     if (!pendingRow) {
       pendingRow = buildMessageRow(pending, pendingIndex, true);
       log.appendChild(pendingRow);
     }
-    const pendingContent = pendingRow?.querySelector(".message-content");
+  }
+  if (isViewingThread(threadId) && pendingRow) {
+    const pendingContent = pendingRow.querySelector(".message-content");
     if (pendingContent) {
       pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
     }
