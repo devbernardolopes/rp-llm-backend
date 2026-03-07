@@ -93,6 +93,7 @@ const DEFAULT_SETTINGS = {
   summarySystemPrompt: "You are a helpful summarization assistant.",
   personaInjectionTemplate:
     "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
+  personaPrefixEnabled: false,
   writingInstructionsInjectionWhen: "always",
   markdownCustomCss:
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
@@ -3610,8 +3611,9 @@ async function setupSettingsControls() {
   const threadAutoTitleMinMessages = document.getElementById(
     "thread-autotitle-min-messages",
   );
-  const lockMemoryMessages = document.getElementById("lock-memory-messages");
-  const summaryThresholdInput = document.getElementById("summary-threshold");
+   const lockMemoryMessages = document.getElementById("lock-memory-messages");
+   const personaPrefixEnabled = document.getElementById("persona-prefix-enabled");
+   const summaryThresholdInput = document.getElementById("summary-threshold");
   const memoryMessagesToKeepInput = document.getElementById(
     "memory-messages-to-keep",
   );
@@ -3749,10 +3751,13 @@ async function setupSettingsControls() {
   state.settings.threadAutoTitleMinMessages = minMessages;
   threadAutoTitleMinMessages.value = String(minMessages);
   threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
-  if (lockMemoryMessages) {
-    lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
-  }
-  if (summaryThresholdInput) {
+   if (lockMemoryMessages) {
+     lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
+   }
+   if (personaPrefixEnabled) {
+     personaPrefixEnabled.checked = state.settings.personaPrefixEnabled === true;
+   }
+   if (summaryThresholdInput) {
     const threshold =
       typeof window.getSummaryThresholdValue === "function"
         ? window.getSummaryThresholdValue(state.settings.summaryThreshold)
@@ -3999,6 +4004,12 @@ async function setupSettingsControls() {
      state.settings.lockMemoryMessages = lockMemoryMessages.checked;
      saveSettings();
    });
+   if (personaPrefixEnabled) {
+     personaPrefixEnabled.addEventListener("change", () => {
+       state.settings.personaPrefixEnabled = personaPrefixEnabled.checked;
+       saveSettings();
+     });
+   }
    const useLocalSummarization = document.getElementById("use-local-summarization");
    if (useLocalSummarization) {
      useLocalSummarization.checked = state.settings.useLocalSummarization === true;
@@ -13478,12 +13489,20 @@ async function generateBotReply() {
     threadOverride: generationThreadSnapshot,
   });
   const systemPrompt = promptContext.prompt;
-  const messagesWithoutSystem = inSimulationHistory
-    .filter((m) => !m.summarized)
-    .map((m) => ({
-      role: m.role === "ai" ? "assistant" : m.role,
-      content: m.content,
-    }));
+   const messagesWithoutSystem = inSimulationHistory
+     .filter((m) => !m.summarized)
+     .map((m) => {
+       const role = m.role === "ai" ? "assistant" : m.role;
+       let content = m.content;
+       if (
+         role === "user" &&
+         state.settings.personaPrefixEnabled &&
+         generationPersona?.name
+       ) {
+         content = `(As ${generationPersona.name}): ${content}`;
+       }
+       return { role, content };
+     });
 
   const promptMessages = [
     { role: "system", content: systemPrompt },
@@ -17707,26 +17726,38 @@ async function updateThreadBudgetIndicator() {
   }
   if (seq !== state.budgetIndicator.seq) return;
 
-  const messages = [
-    { role: "system", content: systemPrompt },
-    ...inSimulationHistory.map((m) => ({
-      role: normalizeApiRole(m.apiRole || m.role),
-      content: m.content,
-    })),
-  ];
-  if (personaInjectionForEndMessages) {
-    messages.push({
-      role: "system",
-      content: personaInjectionForEndMessages,
-    });
-  }
+   const messages = [
+     { role: "system", content: systemPrompt },
+     ...inSimulationHistory.map((m) => {
+       const role = normalizeApiRole(m.apiRole || m.role);
+       let content = m.content;
+       if (
+         role === "user" &&
+         state.settings.personaPrefixEnabled &&
+         currentPersona?.name
+       ) {
+         content = `(As ${currentPersona.name}): ${content}`;
+       }
+       return { role, content };
+     }),
+   ];
+   if (personaInjectionForEndMessages) {
+     messages.push({
+       role: "system",
+       content: personaInjectionForEndMessages,
+     });
+   }
 
-  const pendingInput = String(
-    document.getElementById("user-input")?.value || "",
-  ).trim();
-  if (pendingInput) {
-    messages.push({ role: "user", content: pendingInput });
-  }
+   const pendingInput = String(
+     document.getElementById("user-input")?.value || "",
+   ).trim();
+   if (pendingInput) {
+     let pendingContent = pendingInput;
+     if (state.settings.personaPrefixEnabled && currentPersona?.name) {
+       pendingContent = `(As ${currentPersona.name}): ${pendingInput}`;
+     }
+     messages.push({ role: "user", content: pendingContent });
+   }
 
   const resolvedModel = resolveModelForRequest(state.settings.model);
   const userMax = clampMaxTokens(state.settings.maxTokens);
