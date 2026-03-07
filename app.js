@@ -14896,6 +14896,9 @@ async function regenerateMessage(index) {
         messagesToSave[index].content = target.content;
         if (contentEl)
           contentEl.innerHTML = renderMessageHtml(target.content, target.role);
+        if (!isViewingThread(threadId)) {
+          persistThreadMessagesById(threadId, messagesToSave).catch(() => {});
+        }
         scrollChatToBottom();
       },
       state.abortController.signal,
