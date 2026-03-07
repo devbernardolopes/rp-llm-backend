@@ -13933,6 +13933,7 @@ async function queueThreadForCooldown(threadId, targetMessage = null) {
   }
   await db.threads.update(threadId, updateData);
   renderChat();
+  scrollChatToBottom();
   setSendingState(state.sending);
   updateCooldownPinnedToast(seconds);
   await renderThreads();
