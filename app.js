@@ -42,6 +42,8 @@ const MODEL_OPTIONS = [
 const ICONS = {
   duplicate:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect></svg>',
+  fork:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5"></circle><circle cx="18" cy="6" r="2.5"></circle><circle cx="12" cy="18" r="2.5"></circle><path d="M6 8.5v3"></path><path d="M18 8.5v3"></path><path d="M6 12.5h12"></path><path d="M12 12.5v5.5"></path></svg>',
   edit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10-10a2 2 0 0 0-2.8-2.8l-10 10L4 20z"></path><path d="M13.5 6.5l4 4"></path></svg>',
   delete:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V5h6v2"></path><path d="M7 7l1 13h8l1-13"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>',
@@ -578,6 +580,9 @@ const I18N = {
     databaseImportedReloading: "Database imported. Reloading...",
     threadCreated: "Thread created.",
     threadDuplicated: "Thread duplicated.",
+    threadForked: "Thread forked.",
+    threadTitleForked: "Fork of {title}",
+    msgForkTitle: "Fork chat from here",
     threadFavorited: "Thread favorited.",
     threadUnfavorited: "Thread unfavorited.",
     threadDeleted: "Thread deleted.",
@@ -10553,6 +10558,20 @@ function getNextWritingInstructionsTurnIndex(thread = currentThread) {
   return getThreadWritingInstructionsTurnCount(thread) + 1;
 }
 
+function computeWritingInstructionsTurnCountFromMessages(messages = []) {
+  if (!Array.isArray(messages)) return 0;
+  let max = 0;
+  for (const message of messages) {
+    if (!message) continue;
+    const role = normalizeApiRole(message?.apiRole || message?.role);
+    if (role !== "assistant") continue;
+    const turnIndex = Number(message?.writingInstructionsTurnIndex);
+    if (!Number.isFinite(turnIndex)) continue;
+    max = Math.max(max, turnIndex);
+  }
+  return max;
+}
+
 function shouldInjectWritingInstructionsForTurn(turnIndex) {
   const mode = normalizeWritingInstructionsTiming(
     state.settings.writingInstructionsInjectionWhen,
@@ -11355,6 +11374,172 @@ async function startNewThread(characterId, forcedPersonaId = null) {
   showToast(t("threadCreated"), "success");
 }
 
+async function forkThreadFromMessage(messageIndex) {
+  if (!currentThread) return;
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return;
+  const source = await db.threads.get(threadId);
+  if (!source) return;
+  if (threadHasPendingBotActivity(source)) {
+    showToast(t("generationQueuedNotice"), "warning");
+    return;
+  }
+
+  const count = conversationHistory.length;
+  if (count === 0) return;
+  const requestedIndex = Number.isInteger(Number(messageIndex))
+    ? Number(messageIndex)
+    : count - 1;
+  const boundedIndex = Math.max(0, Math.min(count - 1, requestedIndex));
+  const targetMessage = conversationHistory[boundedIndex];
+  if (!targetMessage) return;
+
+  const truncated = conversationHistory.slice(0, boundedIndex + 1);
+  if (truncated.length === 0) return;
+  const cloneMessages = (() => {
+    if (typeof structuredClone === "function") {
+      return structuredClone(truncated);
+    }
+    return truncated.map((msg) => JSON.parse(JSON.stringify(msg)));
+  })();
+
+  const titleTarget =
+    source.title || tf("threadTitleDefault", { id: source.id });
+  const copyTitle = tf("threadTitleForked", { title: titleTarget });
+  const writingCount = computeWritingInstructionsTurnCountFromMessages(
+    cloneMessages,
+  );
+  const copy = {
+    characterId: source.characterId,
+    characterLanguage: source.characterLanguage || "",
+    title: copyTitle,
+    titleGenerated: false,
+    titleManual: true,
+    messages: cloneMessages,
+    selectedPersonaId: source.selectedPersonaId || null,
+    autoTtsEnabled: source.autoTtsEnabled === true,
+    lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
+    writingInstructionsTurnCount: writingCount,
+    shortcutsVisible: source.shortcutsVisible === true,
+    oocModeEnabled: source.oocModeEnabled === true,
+    favorite: false,
+    pendingGenerationReason: "",
+    pendingGenerationQueuedAt: 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  const newThreadId = await db.threads.add(copy);
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: newThreadId,
+    updatedAt: Date.now(),
+  });
+
+  const lastMessageTimestamp = Number(targetMessage.createdAt);
+  const cutoffTimestamp = Number.isFinite(lastMessageTimestamp)
+    ? lastMessageTimestamp
+    : Date.now();
+  const referencedMemoryIds = new Set();
+  for (const msg of truncated) {
+    const summaryId = Number(msg?.summaryId);
+    if (Number.isInteger(summaryId) && summaryId > 0) {
+      referencedMemoryIds.add(summaryId);
+    }
+    const protectedId = Number(msg?.summaryProtected);
+    if (Number.isInteger(protectedId) && protectedId > 0) {
+      referencedMemoryIds.add(protectedId);
+    }
+  }
+
+  const memoryMapping = await forkThreadMemories(
+    source.characterId,
+    source.id,
+    newThreadId,
+    {
+      cutoffTimestamp,
+      referencedMemoryIds,
+    },
+  );
+  if (memoryMapping.size > 0) {
+    const remapId = (value) => {
+      const num = Number(value);
+      return Number.isInteger(num) && memoryMapping.has(num)
+        ? memoryMapping.get(num)
+        : value;
+    };
+    const remappedMessages = cloneMessages.map((msg) => {
+      const next = { ...msg };
+      next.summaryId = remapId(next.summaryId);
+      next.summaryProtected = remapId(next.summaryProtected);
+      return next;
+    });
+    await db.threads.update(newThreadId, { messages: remappedMessages });
+  }
+
+  state.promptHistory = Array.isArray(state.promptHistory)
+    ? state.promptHistory
+    : [];
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
+    ? state.promptCommandHistory
+    : [];
+
+  const promptEntriesToCopy = (state.promptHistory || [])
+    .filter((entry) => entry.threadId === threadId)
+    .filter((entry) => {
+      const created = Number(entry.createdAt || 0);
+      return created <= cutoffTimestamp;
+    })
+    .sort((a, b) => (Number(a.createdAt || 0) - Number(b.createdAt || 0)));
+  let promptHistoryChanged = false;
+  for (const entry of promptEntriesToCopy) {
+    state.promptHistory.push({
+      threadId: newThreadId,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      isOoc: entry.isOoc || false,
+    });
+    promptHistoryChanged = true;
+  }
+  if (promptHistoryChanged) {
+    if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
+      state.promptHistory = state.promptHistory.slice(-PROMPT_HISTORY_MAX);
+    }
+    savePromptHistory();
+  }
+
+  const promptCommandEntriesToCopy = (state.promptCommandHistory || [])
+    .filter((entry) => entry.threadId === threadId)
+    .filter((entry) => {
+      const created = Number(entry.createdAt || 0);
+      return created <= cutoffTimestamp;
+    })
+    .sort((a, b) => (Number(a.createdAt || 0) - Number(b.createdAt || 0)));
+  let promptCommandHistoryChanged = false;
+  for (const entry of promptCommandEntriesToCopy) {
+    state.promptCommandHistory.push({
+      threadId: newThreadId,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      isOoc: entry.isOoc || false,
+    });
+    promptCommandHistoryChanged = true;
+  }
+  if (promptCommandHistoryChanged) {
+    if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+      state.promptCommandHistory = state.promptCommandHistory.slice(
+        -PROMPT_COMMAND_HISTORY_MAX,
+      );
+    }
+    savePromptCommandHistory();
+  }
+
+  await renderThreads();
+  await renderCharacters();
+  await openThread(newThreadId);
+  showToast(t("threadForked"), "success");
+}
+
 async function duplicateThread(threadId) {
   const source = await db.threads.get(threadId);
   if (!source) return;
@@ -11482,6 +11667,65 @@ async function duplicateThreadMemories(characterId, originalThreadId, newThreadI
   if (!entries.length) return mapping;
   await db.transaction("rw", db.memories, async () => {
     for (const entry of entries) {
+      const entryId = Number(entry.id);
+      if (!Number.isInteger(entryId) || entryId <= 0) continue;
+      const copy = { ...entry };
+      delete copy.id;
+      copy.threadId = targetThreadId;
+      copy.characterId = charId;
+      const newId = await db.memories.add(copy);
+      mapping.set(entryId, newId);
+    }
+  });
+  return mapping;
+}
+
+async function forkThreadMemories(
+  characterId,
+  originalThreadId,
+  newThreadId,
+  options = {},
+) {
+  const mapping = new Map();
+  const charId = Number(characterId || 0);
+  const oldThreadId = Number(originalThreadId || 0);
+  const targetThreadId =
+    Number.isInteger(Number(newThreadId)) && Number(newThreadId) > 0
+      ? Number(newThreadId)
+      : null;
+  if (charId <= 0 || oldThreadId <= 0 || !targetThreadId) {
+    return mapping;
+  }
+  const entries = await getMemoryEntries(charId, oldThreadId);
+  if (!entries.length) return mapping;
+  const cutoff =
+    Number.isFinite(Number(options.cutoffTimestamp || null)) &&
+    Number(options.cutoffTimestamp || null) > 0
+      ? Number(options.cutoffTimestamp)
+      : null;
+  const referencedIds = new Set();
+  if (options.referencedMemoryIds instanceof Set) {
+    options.referencedMemoryIds.forEach((id) => {
+      if (Number.isInteger(Number(id))) referencedIds.add(Number(id));
+    });
+  } else if (Array.isArray(options.referencedMemoryIds)) {
+    options.referencedMemoryIds.forEach((id) => {
+      if (Number.isInteger(Number(id))) referencedIds.add(Number(id));
+    });
+  }
+  const filtered = entries.filter((entry) => {
+    const entryId = Number(entry.id);
+    if (!Number.isInteger(entryId) || entryId <= 0) return false;
+    if (referencedIds.has(entryId)) return true;
+    if (cutoff !== null) {
+      const createdAt = Number(entry.createdAt || 0);
+      if (createdAt > cutoff) return false;
+    }
+    return true;
+  });
+  if (!filtered.length) return mapping;
+  await db.transaction("rw", db.memories, async () => {
+    for (const entry of filtered) {
       const entryId = Number(entry.id);
       if (!Number.isInteger(entryId) || entryId <= 0) continue;
       const copy = { ...entry };
@@ -12787,6 +13031,14 @@ function buildMessageRow(message, index, streaming) {
     applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
     controls.appendChild(infoBtn);
   }
+
+  const forkBtn = iconButton("fork", t("msgForkTitle"), async () => {
+    await forkThreadFromMessage(index);
+  });
+  forkBtn.classList.add("msg-fork-btn");
+  forkBtn.dataset.messageIndex = String(index);
+  forkBtn.disabled = disableControlsForRow;
+  controls.appendChild(forkBtn);
 
   header.appendChild(controls);
 

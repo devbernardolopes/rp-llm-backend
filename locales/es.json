@@ -470,5 +470,8 @@
   "prefixUserMessagesWithPersona": "Prefijar mensajes de usuario con la persona activa",
   "personaInjectionOnce": "Una vez",
   "unloadThresholdLabel": "Descargar mensajes antiguos automáticamente",
-  "unloadThresholdDescription": "Número máximo de mensajes recientes para mantener cargados en el chat (0 = desactivado)"
+  "unloadThresholdDescription": "Número máximo de mensajes recientes para mantener cargados en el chat (0 = desactivado)",
+  "threadForked": "Chat bifurcado.",
+  "threadTitleForked": "Bifurcación de {title}",
+  "msgForkTitle": "Bifurcar el chat desde aquí"
 }

@@ -471,5 +471,8 @@
   "prefixUserMessagesWithPersona": "Prefix user messages with active persona",
   "personaInjectionOnce": "Once",
   "unloadThresholdLabel": "Auto-unload old messages",
-  "unloadThresholdDescription": "Maximum number of recent messages to keep loaded in the chat (0 = disabled)"
+  "unloadThresholdDescription": "Maximum number of recent messages to keep loaded in the chat (0 = disabled)",
+  "threadForked": "Thread forked.",
+  "threadTitleForked": "Fork of {title}",
+  "msgForkTitle": "Fork chat from here"
 }

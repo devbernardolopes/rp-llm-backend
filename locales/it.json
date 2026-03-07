@@ -470,5 +470,8 @@
   "prefixUserMessagesWithPersona": "Prefissa i messaggi utente con la persona attiva",
   "personaInjectionOnce": "Una volta",
   "unloadThresholdLabel": "Scarica automaticamente i vecchi messaggi",
-  "unloadThresholdDescription": "Numero massimo di messaggi recenti da mantenere caricati nella chat (0 = disabilitato)"
+  "unloadThresholdDescription": "Numero massimo di messaggi recenti da mantenere caricati nella chat (0 = disabilitato)",
+  "threadForked": "Chat biforcata.",
+  "threadTitleForked": "Biforcazione di {title}",
+  "msgForkTitle": "Biforca la chat da qui"
 }

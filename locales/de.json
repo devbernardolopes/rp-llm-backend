@@ -470,5 +470,8 @@
   "prefixUserMessagesWithPersona": "Benutzernachrichten mit aktiver Persona präfixieren",
   "personaInjectionOnce": "Einmal",
   "unloadThresholdLabel": "Alte Nachrichten automatisch entladen",
-  "unloadThresholdDescription": "Maximale Anzahl der neuesten Nachrichten, die im Chat geladen bleiben (0 = deaktiviert)"
+  "unloadThresholdDescription": "Maximale Anzahl der neuesten Nachrichten, die im Chat geladen bleiben (0 = deaktiviert)",
+  "threadForked": "Chat abgezweigt.",
+  "threadTitleForked": "Fork von {title}",
+  "msgForkTitle": "Chat von hier abzweigen"
 }
