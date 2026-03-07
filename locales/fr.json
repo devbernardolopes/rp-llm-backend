@@ -473,5 +473,7 @@
   "unloadThresholdDescription": "Nombre maximum de messages récents à garder chargés dans le chat (0 = désactivé)",
   "threadForked": "Discussion bifurquée.",
   "threadTitleForked": "Bifurcation de {title}",
-  "msgForkTitle": "Bifurquer la discussion à partir d'ici"
+  "msgForkTitle": "Bifurquer la discussion à partir d'ici",
+  "deleteMessageTitle": "Supprimer le message",
+  "deleteMessageConfirm": "Supprimer ce message ?{preview}"
 }

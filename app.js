@@ -555,6 +555,8 @@ const I18N = {
     input: "Input",
     value: "Value",
     save: "Save",
+    deleteMessageTitle: "Delete message",
+    deleteMessageConfirm: "Delete this message?{preview}",
     unknownError: "unknown error",
     importFailed: "Import failed: {error}",
     databaseImportConfirm:
@@ -14532,6 +14534,17 @@ async function deleteMessageAt(index) {
     showToast(t("memoryMessageLockedNotice"), "warning");
     return;
   }
+  const previewBase = String(target?.content || "").trim();
+  const truncatedPreview =
+    previewBase.length > 120 ? `${previewBase.slice(0, 120)}…` : previewBase;
+  const previewText = truncatedPreview
+    ? `\n\n"${truncatedPreview}"`
+    : truncatedPreview;
+  const ok = await openConfirmDialog(
+    t("deleteMessageTitle"),
+    tf("deleteMessageConfirm", { preview: previewText }),
+  );
+  if (!ok) return;
   const isFirstAssistantDeletion =
     targetRole === "assistant" &&
     !target?.ooc &&

@@ -474,5 +474,7 @@
   "unloadThresholdDescription": "Maximum number of recent messages to keep loaded in the chat (0 = disabled)",
   "threadForked": "Thread forked.",
   "threadTitleForked": "Fork of {title}",
-  "msgForkTitle": "Fork chat from here"
+  "msgForkTitle": "Fork chat from here",
+  "deleteMessageTitle": "Delete message",
+  "deleteMessageConfirm": "Delete this message?{preview}"
 }
