@@ -125,6 +125,7 @@ const DEFAULT_SETTINGS = {
   useLocalSummarization: false,
   favoriteModels: [],
   chatMessageAlignment: "left",
+  chatOpacity: 1,
   unreadSoundEnabled: true,
   oocSystemAvatar: "",
   unloadThreshold: 0, // 0 = disabled, >0 = keep this many newest messages loaded
@@ -516,6 +517,9 @@ const I18N = {
       "Import will overwrite the current local data (characters, threads, settings, UI state, and more).",
     back: "Back",
     previousPrompts: "Previous prompts",
+    chatOpacityTitle: "Transparency",
+    chatOpacityToggle: "Adjust transparency",
+    chatOpacityClose: "Done",
     send: "Send",
     cancel: "Cancel",
     hideShortcuts: "Hide Shortcuts",
@@ -1033,6 +1037,7 @@ const state = {
   promptHistory: [],
   promptCommandHistory: [],
   chatAutoScroll: true,
+  chatOpacityOverlayVisible: false,
   chatBackgroundAssetId: null,
   chatBackgroundAssetUrl: "",
   lastUsedModel: "",
@@ -1515,6 +1520,7 @@ function updateCarouselForPaneState() {}
 
 async function init() {
   loadSettings();
+  applyChatOpacitySetting();
   ensureTagCatalogInitialized();
   await applyInterfaceLanguage();
   loadUiState();
@@ -1735,6 +1741,14 @@ async function applyInterfaceLanguage() {
   const enterToggle = document.getElementById("enter-to-send-enabled");
   if (enterToggle) enterToggle.title = t("enterToSend");
 
+  const chatOpacityBtn = document.getElementById("chat-opacity-toggle-btn");
+  if (chatOpacityBtn) {
+    const title = t("chatOpacityToggle");
+    chatOpacityBtn.classList.toggle("is-active", state.chatOpacityOverlayVisible);
+    chatOpacityBtn.setAttribute("title", title);
+    chatOpacityBtn.setAttribute("aria-label", title);
+  }
+
   const settingsTitle = document.getElementById("settings-title");
   if (settingsTitle) settingsTitle.textContent = t("settingsTitle");
   const dbTitle = document.getElementById("database-title");
@@ -1771,6 +1785,61 @@ function updateLanguageSelectOptions() {
   uiLanguageSelect.querySelector('option[value="pt-BR"]').textContent = t(
     "languagePortugueseBr",
   );
+}
+
+function applyChatOpacitySetting(value = null) {
+  const raw = value !== null ? Number(value) : Number(state.settings.chatOpacity);
+  const normalized = Number.isFinite(raw) ? Math.max(0, Math.min(1, raw)) : 1;
+  document.documentElement.style.setProperty("--chat-opacity", String(normalized));
+  const slider = document.getElementById("chat-opacity-slider");
+  if (slider && document.activeElement !== slider) {
+    slider.value = String(Math.round(normalized * 100));
+  }
+  const label = document.getElementById("chat-opacity-value");
+  if (label) {
+    label.textContent = `${Math.round(normalized * 100)}%`;
+  }
+}
+
+function setChatOpacityFromPercent(percent) {
+  const clamped = Math.min(100, Math.max(0, Number(percent) || 0));
+  const normalized = clamped / 100;
+  state.settings.chatOpacity = normalized;
+  applyChatOpacitySetting(normalized);
+  saveSettings();
+  return normalized;
+}
+
+async function toggleChatOpacityOverlay(force = null) {
+  const overlay = document.getElementById("chat-opacity-overlay");
+  if (!overlay) return;
+  const currentlyActive = overlay.classList.contains("is-active");
+  const shouldShow =
+    force === true ? true : force === false ? false : !currentlyActive;
+  if (shouldShow === currentlyActive) return;
+  const input = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+  const toggleBtn = document.getElementById("chat-opacity-toggle-btn");
+
+  if (shouldShow) {
+    overlay.classList.remove("hidden");
+    overlay.classList.add("is-active");
+    state.chatOpacityOverlayVisible = true;
+    toggleBtn?.classList.add("is-active");
+    if (input) input.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    closePromptHistory();
+    await closeShortcutsForOverlay();
+    const slider = document.getElementById("chat-opacity-slider");
+    slider?.focus();
+  } else {
+    overlay.classList.add("hidden");
+    overlay.classList.remove("is-active");
+    state.chatOpacityOverlayVisible = false;
+    toggleBtn?.classList.remove("is-active");
+    if (input) input.disabled = false;
+    setSendingState(state.sending);
+  }
 }
 
 function setupEvents() {
@@ -2374,6 +2443,35 @@ function setupEvents() {
     ro.observe(input);
   }
 
+  const chatOpacityToggleBtn = document.getElementById("chat-opacity-toggle-btn");
+  chatOpacityToggleBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleChatOpacityOverlay().catch(() => {});
+  });
+  const chatOpacityOverlay =
+    document.getElementById("chat-opacity-overlay");
+  chatOpacityOverlay?.addEventListener("click", (e) => {
+    if (e.target === chatOpacityOverlay) {
+      e.stopPropagation();
+      toggleChatOpacityOverlay(false).catch(() => {});
+    } else {
+      e.stopPropagation();
+    }
+  });
+  document
+    .getElementById("chat-opacity-overlay-close")
+    ?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleChatOpacityOverlay(false).catch(() => {});
+    });
+  document
+    .getElementById("chat-opacity-slider")
+    ?.addEventListener("input", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const value = Number(target.value);
+      setChatOpacityFromPercent(value);
+    });
   document.addEventListener("click", onGlobalClick);
   document.addEventListener("keydown", onGlobalKeyDown);
 
@@ -3520,6 +3618,16 @@ function onGlobalClick(e) {
   ) {
     closePromptHistory();
   }
+  const overlay = document.getElementById("chat-opacity-overlay");
+  const overlayButton = document.getElementById("chat-opacity-toggle-btn");
+  if (
+    state.chatOpacityOverlayVisible &&
+    overlay &&
+    !overlay.contains(e.target) &&
+    e.target !== overlayButton
+  ) {
+    toggleChatOpacityOverlay(false).catch(() => {});
+  }
 }
 
 function onGlobalKeyDown(e) {
@@ -3539,6 +3647,10 @@ function onGlobalKeyDown(e) {
     return;
   }
   if (e.key === "Escape") {
+    if (state.chatOpacityOverlayVisible) {
+      toggleChatOpacityOverlay(false).catch(() => {});
+      return;
+    }
     if (cancelActiveMessageEdit()) return;
     closePromptHistory();
     closeAnyOpenModal();
@@ -5328,6 +5440,21 @@ async function toggleShortcutsVisibility() {
     saveUiState();
   }
   renderShortcutsBar();
+}
+
+async function closeShortcutsForOverlay() {
+  if (currentThread) {
+    if (currentThread.shortcutsVisible === true) {
+      currentThread.shortcutsVisible = false;
+      await db.threads.update(currentThread.id, {
+        shortcutsVisible: false,
+      });
+    }
+  } else {
+    state.shortcutsVisible = false;
+    saveUiState();
+  }
+  await renderShortcutsBar();
 }
 
 async function applyShortcutEntry(entry, forceSend = false) {
@@ -15314,6 +15441,7 @@ async function toggleMessageSpeech(index) {
 
 function openPromptHistory() {
   if (!currentThread || state.sending) return;
+  if (state.chatOpacityOverlayVisible) return;
 
   const list = document.getElementById("prompt-history-list");
   list.innerHTML = "";
@@ -15331,11 +15459,11 @@ function openPromptHistory() {
    ).map(entry => ({ ...entry, isOoc: true })); // Treat commands as OOC for tint
 
    // Combine and sort by most recent first
-   const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
-     const aTs = Number(a.createdAt) || 0;
-     const bTs = Number(b.createdAt) || 0;
-     return bTs - aTs;
-   });
+  const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
+    const aTs = Number(a.createdAt) || 0;
+    const bTs = Number(b.createdAt) || 0;
+    return bTs - aTs;
+  });
 
   if (prompts.length === 0) {
     const msg = document.createElement("p");
@@ -15387,6 +15515,12 @@ function openPromptHistory() {
             sendMessage();
           });
         }
+        const isCommandEntry = entry.isOoc && String(entry.content || "").trim().startsWith("/");
+        if (isCommandEntry) {
+          setTimeout(() => {
+            promotePromptCommandHistoryEntry(entry);
+          }, 0);
+        }
         closePromptHistory();
       });
 
@@ -15394,21 +15528,53 @@ function openPromptHistory() {
     });
   }
 
-  // Scroll to top
-  list.scrollTop = 0;
-  requestAnimationFrame(() => {
-    list.scrollTop = 0;
-  });
-
   document.getElementById("prompt-history-popover").classList.remove("hidden");
   state.promptHistoryOpen = true;
   positionPromptHistoryPopover();
+
+  ensurePromptHistoryScrollTop(list);
 }
 
 function closePromptHistory() {
   if (!state.promptHistoryOpen) return;
   document.getElementById("prompt-history-popover").classList.add("hidden");
   state.promptHistoryOpen = false;
+}
+
+function ensurePromptHistoryScrollTop(list) {
+  if (!list) return;
+  list.scrollTop = 0;
+  list.scrollTo({ top: 0 });
+  requestAnimationFrame(() => {
+    list.scrollTop = 0;
+  });
+}
+
+function promotePromptCommandHistoryEntry(entry) {
+  if (!entry) return;
+  const threadId = entry.threadId ?? null;
+  const content = String(entry.content || "").trim();
+  if (!threadId || !content) return;
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
+    ? state.promptCommandHistory
+    : [];
+  const normalizedThreadId = String(threadId);
+  const normalizedContent = content;
+  const existingIndex = state.promptCommandHistory.findIndex(
+    (item) =>
+      String(item?.threadId ?? "") === normalizedThreadId &&
+      String(item?.content ?? "") === normalizedContent,
+  );
+  if (existingIndex < 0) {
+    return;
+  }
+  const [existingEntry] = state.promptCommandHistory.splice(existingIndex, 1);
+  existingEntry.createdAt = Date.now();
+  state.promptCommandHistory.push(existingEntry);
+  if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+    state.promptCommandHistory.shift();
+  }
+  savePromptCommandHistory();
 }
 
 async function renderMemoryModalEntries() {

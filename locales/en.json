@@ -377,7 +377,7 @@
   "kokoroVoicesLoading": "Loading Kokoro voices...",
   "kokoroVoicesUnavailable": "No Kokoro voices available for this language.",
   "writingInstructionsNone": "None",
-  "msgSystemPromptTitle": "System prompt",
+  "msgSystemPromptTitle": "System Prompt",
   "msgSystemPromptModalTitle": "System Prompt",
   "msgSystemPromptEntryLabel": "System message {index}",
   "msgSystemPromptUnavailable": "System prompt unavailable",

@@ -323,6 +323,16 @@
                  >
                    ⌨
                  </button>
+                 <button
+                   id="chat-opacity-toggle-btn"
+                   class="option-btn send-toggle-btn small"
+                   type="button"
+                   data-i18n-title="chatOpacityToggle"
+                   aria-label="Adjust transparency"
+                   title="Adjust transparency"
+                 >
+                   α
+                 </button>
                 <img
                   id="persona-selected-avatar"
                   class="persona-selected-avatar small"
@@ -335,6 +345,37 @@
                   aria-label="Select persona"
                 ></select>
                 <button id="send-btn" class="primary-btn"></button>
+              </div>
+            </div>
+            <div id="chat-opacity-overlay" class="chat-opacity-overlay hidden">
+              <div class="chat-opacity-overlay-content">
+                <div
+                  class="chat-opacity-overlay-title"
+                  data-i18n="chatOpacityTitle"
+                >
+                  Transparency
+                </div>
+                <div class="chat-opacity-slider-row">
+                  <input
+                    id="chat-opacity-slider"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                  />
+                  <span
+                    id="chat-opacity-value"
+                    class="chat-opacity-value"
+                  ></span>
+                </div>
+                <button
+                  id="chat-opacity-overlay-close"
+                  type="button"
+                  class="secondary-btn"
+                  data-i18n="chatOpacityClose"
+                >
+                  Done
+                </button>
               </div>
             </div>
           </div>
