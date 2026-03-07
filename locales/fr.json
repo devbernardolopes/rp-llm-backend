@@ -463,5 +463,8 @@
   "memoryRelevanceFilterToggle": "Utiliser le filtre de pertinence de mémoire",
   "streamLabel": "Flux",
   "enabledLabel": "Activé",
-  "disabledLabel": "Désactivé"
+  "disabledLabel": "Désactivé",
+  "msgMetadataUnavailableManual": "Les métadonnées sont désactivées pour les réponses du BOT créées par l'utilisateur.",
+  "msgMetadataUnavailableManualAria": "Métadonnées non disponibles pour un message du BOT créé par l'utilisateur.",
+  "msgSystemPromptUnavailableManual": "Les détails du prompt système ne sont pas disponibles pour les réponses manuelles du BOT."
 }

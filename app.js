@@ -12558,10 +12558,17 @@ function applyInfoButtonAvailability(button, message, isStreaming) {
   if (!button) return;
   const isInitial = message?.isInitial === true;
   const isUserEdited = message?.userEdited === true;
+  const isManualMessage = message?.manualMessage === true;
   button.disabled = !!isStreaming || isInitial || isUserEdited;
   if (isUserEdited) {
     button.setAttribute("title", t("msgMetadataUnavailableEdited"));
     button.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+    return;
+  }
+  if (isManualMessage) {
+    button.disabled = true;
+    button.setAttribute("title", t("msgMetadataUnavailableManual"));
+    button.setAttribute("aria-label", t("msgMetadataUnavailableManualAria"));
     return;
   }
   if (isInitial) {
@@ -12902,6 +12909,9 @@ async function sendMessage(options = {}) {
     }
   };
   if (aiCommandMatch && aiCommandContent) {
+    if (currentThread) {
+      addPromptCommandEntry(currentThread.id, text);
+    }
     clearDraftInput();
     await addManualAssistantMessage(aiCommandContent);
     return;
@@ -15401,7 +15411,13 @@ function refreshMessageControlStates() {
     });
     row.querySelectorAll(".msg-system-prompt-btn").forEach((btn) => {
       const hasMsg = message && Number.isInteger(index) && index >= 0;
-      btn.disabled = !hasMsg;
+      const isManualMessage = message?.manualMessage === true;
+      btn.disabled = !hasMsg || isManualMessage;
+      if (isManualMessage) {
+        btn.setAttribute("title", t("msgSystemPromptUnavailableManual"));
+        btn.setAttribute("aria-label", t("msgSystemPromptUnavailableManual"));
+        return;
+      }
       if (hasMsg) {
         btn.setAttribute("title", t("msgSystemPromptTitle"));
         btn.setAttribute("aria-label", t("msgSystemPromptTitle"));

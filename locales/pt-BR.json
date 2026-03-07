@@ -463,5 +463,8 @@
   "memoryRelevanceFilterToggle": "Usar filtro de relevância da memória",
   "streamLabel": "Transmissão",
   "enabledLabel": "Habilitado",
-  "disabledLabel": "Desabilitado"
+  "disabledLabel": "Desabilitado",
+  "msgMetadataUnavailableManual": "Os metadados estão desativados para respostas do BOT criadas pelo usuário.",
+  "msgMetadataUnavailableManualAria": "Metadados indisponíveis para mensagens do BOT criadas pelo usuário.",
+  "msgSystemPromptUnavailableManual": "Os detalhes do prompt do sistema não estão disponíveis para respostas do BOT criadas pelo usuário."
 }

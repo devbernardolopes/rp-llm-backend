@@ -463,5 +463,8 @@
   "memoryRelevanceFilterToggle": "Relevanzfilter für Erinnerungen verwenden",
   "streamLabel": "Stream",
   "enabledLabel": "Aktiviert",
-  "disabledLabel": "Deaktiviert"
+  "disabledLabel": "Deaktiviert",
+  "msgMetadataUnavailableManual": "Metadaten sind für vom Nutzer erstellte BOT-Antworten deaktiviert.",
+  "msgMetadataUnavailableManualAria": "Metadaten für vom Nutzer erstellte BOT-Nachrichten nicht verfügbar.",
+  "msgSystemPromptUnavailableManual": "Systemprompt-Details sind für vom Nutzer erstellte BOT-Antworten nicht verfügbar."
 }
