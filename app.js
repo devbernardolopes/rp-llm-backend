@@ -1507,6 +1507,7 @@ async function init() {
   await applyInterfaceLanguage();
   loadUiState();
   loadPromptHistory();
+  loadPromptCommandHistory();
   renderTagPresetsDataList();
   await setupSettingsControls();
   setupEvents();
