@@ -13747,6 +13747,13 @@ function getAssistantStreamingStatusInfo(message) {
 
 function renderMessageContent(contentEl, message) {
   if (!contentEl || !message) return;
+  const status = String(message?.generationStatus || "").trim();
+  if (status === "summarizing") {
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+      t("summarizingMemoryLabel"),
+    )}`;
+    return;
+  }
   const statusInfo = getAssistantStreamingStatusInfo(message);
   if (statusInfo.shouldShowSpinner) {
     const label = statusInfo.statusLabel ?? t("generatingLabel");
