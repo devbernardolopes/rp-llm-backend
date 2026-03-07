@@ -7857,10 +7857,10 @@ async function openCharacterModal(
   updateCharTtsRatePitchLabels();
   updateCharTtsTestButtonState();
   updateCharacterPromptPlaceholder();
-  setModalDirtyState("character-modal", startDirty);
   document.getElementById("char-language-modal")?.classList.add("hidden");
 
   openModal("character-modal");
+  setModalDirtyState("character-modal", startDirty);
   restoreCharModalTextareaCollapseStates();
   // For new characters, reset modal scroll to top
   if (!character?.id) {
@@ -11562,7 +11562,6 @@ async function importCharacterFromFile(e) {
     renderCharacters();
     showToast(t("characterImported"), "success");
     openCharacterModal(character, null, true);
-    setTimeout(() => setModalDirtyState("character-modal", true), 0);
   } catch (err) {
     await openInfoDialog(t("importFailedTitle"), err.message);
   }
