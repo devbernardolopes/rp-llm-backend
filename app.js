@@ -13241,6 +13241,7 @@ function buildMessageRow(message, index, streaming) {
       hasGenerationError ||
       isLockedMemoryMessage ||
       isOocMessage;
+    applyEditButtonEditedStyle(editBtn, message);
     controls.appendChild(editBtn);
 
     const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
@@ -13342,6 +13343,7 @@ function buildMessageRow(message, index, streaming) {
       isTruncated ||
       hasGenerationError ||
       isLockedMemoryMessage;
+    applyEditButtonEditedStyle(editBtn, message);
     controls.appendChild(editBtn);
     const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
       await openMessageMetadataModal(index);
@@ -13460,6 +13462,12 @@ function applyInfoButtonAvailability(button, message, isStreaming) {
   }
   button.setAttribute("title", t("msgMetadataTitle"));
   button.setAttribute("aria-label", t("msgMetadataTitle"));
+}
+
+function applyEditButtonEditedStyle(button, message) {
+  if (!button) return;
+  const isEdited = message?.userEdited === true;
+  button.classList.toggle("msg-edit-btn-edited", isEdited);
 }
 
 function buildTruncationNotice() {
@@ -16352,6 +16360,7 @@ function refreshMessageControlStates() {
         isTruncated ||
         hasGenerationError ||
         isLockedMemoryMessage;
+      applyEditButtonEditedStyle(btn, message);
     });
     row.querySelectorAll(".msg-info-btn").forEach((btn) => {
       applyInfoButtonAvailability(btn, message, isStreaming);

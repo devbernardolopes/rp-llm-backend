@@ -1853,6 +1853,12 @@ textarea {
   border-color: #4a7ab0;
 }
 
+.message-controls .msg-edit-btn.msg-edit-btn-edited:not(:disabled) {
+  color: #c8f5d0;
+  background: #135336;
+  border-color: #2d7c54;
+}
+
 .btn-spinner {
   width: 12px;
   height: 12px;
