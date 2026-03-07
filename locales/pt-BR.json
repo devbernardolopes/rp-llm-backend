@@ -475,5 +475,6 @@
   "threadTitleForked": "Bifurcação de {title}",
   "msgForkTitle": "Bifurcar o chat a partir daqui",
   "deleteMessageTitle": "Excluir mensagem",
-  "deleteMessageConfirm": "Excluir esta mensagem?{preview}"
+  "deleteMessageConfirm": "Excluir esta mensagem?{preview}",
+  "personaColor": "Cor"
 }

@@ -476,5 +476,6 @@
   "threadTitleForked": "Fork of {title}",
   "msgForkTitle": "Fork chat from here",
   "deleteMessageTitle": "Delete message",
-  "deleteMessageConfirm": "Delete this message?{preview}"
+  "deleteMessageConfirm": "Delete this message?{preview}",
+  "personaColor": "Color"
 }

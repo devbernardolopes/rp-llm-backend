@@ -475,5 +475,6 @@
   "threadTitleForked": "Fork von {title}",
   "msgForkTitle": "Chat von hier abzweigen",
   "deleteMessageTitle": "Nachricht löschen",
-  "deleteMessageConfirm": "Diese Nachricht wirklich löschen?{preview}"
+  "deleteMessageConfirm": "Diese Nachricht wirklich löschen?{preview}",
+  "personaColor": "Farbe"
 }

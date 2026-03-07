@@ -2079,12 +2079,20 @@ textarea {
   max-height: 280px;
   width: 100%;
   outline: none;
+  background: var(--persona-input-bg, #1e2736);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 #user-input-container:focus-within {
   outline: 2px solid #fff;
   outline-offset: -2px;
   border-radius: 10px;
+}
+#user-input-container:focus-within #user-input {
+  border-color: var(--persona-color, var(--primary));
 }
 
 #user-input-container.ooc-active {
@@ -3587,6 +3595,14 @@ textarea {
 
 .persona-row.dragging {
   opacity: 0.5;
+}
+
+.persona-color-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  display: inline-flex;
 }
 
 .persona-avatar {

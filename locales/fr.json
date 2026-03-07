@@ -475,5 +475,6 @@
   "threadTitleForked": "Bifurcation de {title}",
   "msgForkTitle": "Bifurquer la discussion à partir d'ici",
   "deleteMessageTitle": "Supprimer le message",
-  "deleteMessageConfirm": "Supprimer ce message ?{preview}"
+  "deleteMessageConfirm": "Supprimer ce message ?{preview}",
+  "personaColor": "Couleur"
 }

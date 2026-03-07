@@ -475,5 +475,6 @@
   "threadTitleForked": "Biforcazione di {title}",
   "msgForkTitle": "Biforca la chat da qui",
   "deleteMessageTitle": "Elimina messaggio",
-  "deleteMessageConfirm": "Eliminare questo messaggio?{preview}"
+  "deleteMessageConfirm": "Eliminare questo messaggio?{preview}",
+  "personaColor": "Colore"
 }

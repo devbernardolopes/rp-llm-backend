@@ -72,6 +72,8 @@ const PROMPT_COMMAND_HISTORY_MAX = 200;
 const PROMPT_HISTORY_KEY = "rp-prompt-history";
 const PROMPT_HISTORY_MAX = 200;
 
+const DEFAULT_PERSONA_COLOR = "#7c5cff";
+
 const DEFAULT_SETTINGS = {
   uiLanguage: "auto",
   openRouterApiKey: "",
@@ -1790,6 +1792,30 @@ function updateLanguageSelectOptions() {
   );
 }
 
+function normalizePersonaColor(value) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!match) return DEFAULT_PERSONA_COLOR;
+  let hex = match[1];
+  if (hex.length === 3) {
+    hex = hex
+      .split("")
+      .map((char) => `${char}${char}`)
+      .join("");
+  }
+  return `#${hex.toLowerCase()}`;
+}
+
+function hexToRgba(hex, alpha = 1) {
+  const color = normalizePersonaColor(hex);
+  const raw = color.slice(1);
+  const r = parseInt(raw.slice(0, 2), 16);
+  const g = parseInt(raw.slice(2, 4), 16);
+  const b = parseInt(raw.slice(4, 6), 16);
+  const clampedAlpha = Math.max(0, Math.min(1, Number(alpha) || 0));
+  return `rgba(${r}, ${g}, ${b}, ${clampedAlpha})`;
+}
+
 function applyChatOpacitySetting(value = null) {
   const raw = value !== null ? Number(value) : Number(state.settings.chatOpacity);
   const normalized = Number.isFinite(raw) ? Math.max(0, Math.min(1, raw)) : 1;
@@ -2624,6 +2650,7 @@ function setupEvents() {
     "#persona-editor-description",
     "#persona-editor-internal-description",
     "#persona-editor-is-default",
+    "#persona-editor-color",
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
   markModalDirtyOnInput("writing-instruction-editor-modal", [
@@ -4861,11 +4888,15 @@ function addPromptToHistory(threadId, content, isOoc = false) {
     }
   }
 
+  const entryPersonaId = currentPersona?.id ?? null;
+  const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
   state.promptHistory.push({
     threadId,
     content: trimmed,
     createdAt: Date.now(),
     isOoc,
+    personaId: entryPersonaId,
+    personaColor: entryPersonaColor,
   });
 
   if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
@@ -4887,11 +4918,15 @@ function addPromptCommandEntry(threadId, content) {
   if (existingIndex >= 0) {
     state.promptCommandHistory.splice(existingIndex, 1);
   }
+  const entryPersonaId = currentPersona?.id ?? null;
+  const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
   state.promptCommandHistory.push({
     threadId,
     content: trimmed,
     createdAt: Date.now(),
     isOoc: true,
+    personaId: entryPersonaId,
+    personaColor: entryPersonaColor,
   });
   if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
     state.promptCommandHistory.shift();
@@ -8320,6 +8355,7 @@ function updatePersonaPickerDisplay() {
       : currentPersona?.avatar || fallbackAvatar(name, 512, 512);
   img.src = avatarSrc;
   img.alt = `${name} avatar`;
+  applyPersonaColorStyles();
 }
 
 async function savePersonaFromModal() {
@@ -8482,6 +8518,11 @@ async function renderPersonaModalList() {
       openPersonaEditor(persona);
     });
 
+    const swatch = document.createElement("span");
+    swatch.className = "persona-color-swatch";
+    swatch.style.backgroundColor = normalizePersonaColor(persona.color);
+    row.appendChild(swatch);
+
     list.appendChild(row);
   }
 }
@@ -8576,6 +8617,8 @@ function openPersonaEditor(persona = null) {
   document.getElementById("persona-editor-internal-description").value =
     persona?.internalDescription || "";
 
+  document.getElementById("persona-editor-color").value =
+    normalizePersonaColor(persona?.color);
   document.getElementById("persona-editor-is-default").checked =
     !!persona?.isDefault;
 
@@ -8630,6 +8673,7 @@ async function savePersonaFromEditor() {
   const isDefault = document.getElementById(
     "persona-editor-is-default",
   ).checked;
+  const colorValue = document.getElementById("persona-editor-color")?.value;
 
   let avatar = null;
   if (state.currentPersonaAvatarBlob) {
@@ -8645,6 +8689,7 @@ async function savePersonaFromEditor() {
     internalDescription,
     avatar,
     isDefault: isDefault ? true : false,
+    color: normalizePersonaColor(colorValue),
     updatedAt: Date.now(),
   };
 
@@ -8693,6 +8738,7 @@ async function duplicatePersona(personaId) {
     description: source.description || "",
     internalDescription: source.internalDescription || "",
     avatar: source.avatar || null,
+    color: normalizePersonaColor(source.color),
     isDefault: false,
     order: maxOrder + 1,
     createdAt: Date.now(),
@@ -8734,6 +8780,7 @@ async function ensurePersonasInitialized() {
       description: "",
       internalDescription: "",
       isDefault: true,
+      color: DEFAULT_PERSONA_COLOR,
       order: 0,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -12235,6 +12282,44 @@ function updateOocModeUi() {
   if (container) {
     container.classList.toggle("ooc-active", isActive);
   }
+  applyPersonaColorStyles();
+}
+
+function applyPersonaColorStyles() {
+  const color = normalizePersonaColor(currentPersona?.color);
+  const isOocActive = currentThread?.oocModeEnabled === true;
+  if (isOocActive) {
+    document.documentElement.style.removeProperty("--persona-color");
+    document.documentElement.style.removeProperty("--persona-input-bg");
+  } else {
+    document.documentElement.style.setProperty("--persona-color", color);
+    document.documentElement.style.setProperty(
+      "--persona-input-bg",
+      hexToRgba(color, 0.08),
+    );
+  }
+  if (state.promptHistoryOpen) {
+    const list = document.getElementById("prompt-history-list");
+    if (list) {
+      applyPersonaColorToPromptHistoryList(list);
+    }
+  }
+}
+
+function applyPersonaColorToPromptHistoryList(root) {
+  if (!root) return;
+  root.querySelectorAll(".prompt-history-item").forEach((btn) => {
+    if (btn.classList.contains("ooc-prompt")) return;
+    const personaColorValue = String(btn.dataset.personaColor || "").trim();
+    if (!personaColorValue) {
+      btn.style.removeProperty("border-color");
+      btn.style.removeProperty("background-color");
+      return;
+    }
+    const color = normalizePersonaColor(personaColorValue);
+    btn.style.borderColor = color;
+    btn.style.backgroundColor = hexToRgba(color, 0.12);
+  });
 }
 
 async function toggleThreadAutoTts() {
@@ -15562,6 +15647,10 @@ function openPromptHistory() {
         btn.classList.add("ooc-prompt");
       }
       btn.textContent = entry.content;
+      const personaColorValue = String(entry.personaColor || "").trim();
+      if (personaColorValue) {
+        btn.dataset.personaColor = normalizePersonaColor(personaColorValue);
+      }
 
       // Single click: populate and close (with delay to allow double-click detection)
       btn.addEventListener("click", (e) => {
@@ -15617,6 +15706,7 @@ function openPromptHistory() {
   positionPromptHistoryPopover();
 
   ensurePromptHistoryScrollTop(list);
+  applyPersonaColorToPromptHistoryList(list);
 }
 
 function closePromptHistory() {
