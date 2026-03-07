@@ -4087,23 +4087,9 @@ async function setupSettingsControls() {
          checkUnloadOldMessages(true);
        }
      });
-   }
+    }
 
-   const chatMessageAlignment = document.getElementById(
-     "chat-message-alignment",
-   );
-   if (chatMessageAlignment) {
-     chatMessageAlignment.value = state.settings.chatMessageAlignment || "left";
-   }
-   document
-     .getElementById("chat-message-alignment")
-     ?.addEventListener("change", (e) => {
-       state.settings.chatMessageAlignment = e.target.value;
-       saveSettings();
-       applyChatMessageAlignment();
-     });
-
-  autoReplyEnabled?.addEventListener("click", async () => {
+   autoReplyEnabled?.addEventListener("click", async () => {
     const newValue = !(currentThread?.autoReplyEnabled !== false);
     if (currentThread) {
       currentThread.autoReplyEnabled = newValue;
