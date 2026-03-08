@@ -13386,7 +13386,8 @@ function computeVisibleMessageIndices() {
   const loadLimit = thread && thread.unloadState ? thread.unloadState.loadLimit : 0;
   const clampedLoadLimit = Math.max(0, Math.min(loadLimit, startActive));
   const visible = [];
-  for (let i = 0; i < clampedLoadLimit; i++) {
+  // Show most recently hidden messages first (from startActive - clampedLoadLimit to startActive - 1)
+  for (let i = startActive - clampedLoadLimit; i < startActive; i++) {
     visible.push(i);
   }
   for (let i = startActive; i < total; i++) {
