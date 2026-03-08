@@ -12326,53 +12326,85 @@ async function forkThreadFromMessage(messageIndex) {
     updatedAt: Date.now(),
   };
 
-  const newThreadId = await db.threads.add(copy);
-  broadcastSyncEvent({
-    type: "thread-updated",
-    threadId: newThreadId,
-    updatedAt: Date.now(),
-  });
-
-  const lastMessageTimestamp = Number(targetMessage.createdAt);
-  const cutoffTimestamp = Number.isFinite(lastMessageTimestamp)
-    ? lastMessageTimestamp
-    : Date.now();
-  const referencedMemoryIds = new Set();
-  for (const msg of truncated) {
-    const summaryId = Number(msg?.summaryId);
-    if (Number.isInteger(summaryId) && summaryId > 0) {
-      referencedMemoryIds.add(summaryId);
-    }
-    const protectedId = Number(msg?.summaryProtected);
-    if (Number.isInteger(protectedId) && protectedId > 0) {
-      referencedMemoryIds.add(protectedId);
-    }
-  }
-
-  const memoryMapping = await forkThreadMemories(
-    source.characterId,
-    source.id,
-    newThreadId,
-    {
-      cutoffTimestamp,
-      referencedMemoryIds,
-    },
-  );
-  if (memoryMapping.size > 0) {
-    const remapId = (value) => {
-      const num = Number(value);
-      return Number.isInteger(num) && memoryMapping.has(num)
-        ? memoryMapping.get(num)
-        : value;
-    };
-    const remappedMessages = cloneMessages.map((msg) => {
-      const next = { ...msg };
-      next.summaryId = remapId(next.summaryId);
-      next.summaryProtected = remapId(next.summaryProtected);
-      return next;
+   const newThreadId = await db.threads.add(copy);
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: newThreadId,
+      updatedAt: Date.now(),
     });
-    await db.threads.update(newThreadId, { messages: remappedMessages });
-  }
+
+    const lastMessageTimestamp = Number(targetMessage.createdAt);
+    const cutoffTimestamp = Number.isFinite(lastMessageTimestamp)
+      ? lastMessageTimestamp
+      : Date.now();
+
+    // Build a map of memoryId to the indices of messages that have that summaryId
+   const memoryIdToIndices = new Map();
+   conversationHistory.forEach((msg, idx) => {
+     const summaryId = Number(msg?.summaryId);
+     if (Number.isInteger(summaryId) && summaryId > 0) {
+       if (!memoryIdToIndices.has(summaryId)) {
+         memoryIdToIndices.set(summaryId, []);
+       }
+       memoryIdToIndices.get(summaryId).push(idx);
+     }
+   });
+
+   // Get all memory entries for the source character and thread
+   const allMemoryEntries = await getMemoryEntries(source.characterId, source.id);
+
+   // Filter entries: only those where all messages with that summaryId are within the truncated set (index <= boundedIndex)
+   const safeMemoryEntries = allMemoryEntries.filter(entry => {
+     const indices = memoryIdToIndices.get(entry.id) || [];
+     if (indices.length === 0) {
+       // Not referenced by any message, skip
+       return false;
+     }
+     // All referencing message indices must be <= boundedIndex
+     return indices.every(idx => idx <= boundedIndex);
+   });
+
+   // Copy safe memory entries to the new thread
+   const mapping = new Map();
+   if (safeMemoryEntries.length > 0) {
+     await db.transaction("rw", db.memories, async () => {
+       for (const entry of safeMemoryEntries) {
+         const entryCopy = { ...entry };
+         delete entryCopy.id;
+         entryCopy.threadId = newThreadId;
+         entryCopy.characterId = source.characterId;
+         const newId = await db.memories.add(entryCopy);
+         mapping.set(entry.id, newId);
+       }
+     });
+   }
+
+   // Remap message references: summaryId and summaryProtected
+   const remapId = (value) => {
+     const num = Number(value);
+     if (Number.isInteger(num) && mapping.has(num)) {
+       return mapping.get(num);
+     }
+     // No mapping: clear reference
+     return null;
+   };
+   const remappedMessages = cloneMessages.map((msg) => {
+     const next = { ...msg };
+     const newSummaryId = remapId(next.summaryId);
+     const newProtectedId = remapId(next.summaryProtected);
+     if (newSummaryId !== null) {
+       next.summaryId = newSummaryId;
+     } else {
+       delete next.summaryId;
+     }
+     if (newProtectedId !== null) {
+       next.summaryProtected = newProtectedId;
+     } else {
+       delete next.summaryProtected;
+     }
+     return next;
+   });
+   await db.threads.update(newThreadId, { messages: remappedMessages });
 
   state.promptHistory = Array.isArray(state.promptHistory)
     ? state.promptHistory
@@ -12588,64 +12620,6 @@ async function duplicateThreadMemories(characterId, originalThreadId, newThreadI
   return mapping;
 }
 
-async function forkThreadMemories(
-  characterId,
-  originalThreadId,
-  newThreadId,
-  options = {},
-) {
-  const mapping = new Map();
-  const charId = Number(characterId || 0);
-  const oldThreadId = Number(originalThreadId || 0);
-  const targetThreadId =
-    Number.isInteger(Number(newThreadId)) && Number(newThreadId) > 0
-      ? Number(newThreadId)
-      : null;
-  if (charId <= 0 || oldThreadId <= 0 || !targetThreadId) {
-    return mapping;
-  }
-  const entries = await getMemoryEntries(charId, oldThreadId);
-  if (!entries.length) return mapping;
-  const cutoff =
-    Number.isFinite(Number(options.cutoffTimestamp || null)) &&
-    Number(options.cutoffTimestamp || null) > 0
-      ? Number(options.cutoffTimestamp)
-      : null;
-  const referencedIds = new Set();
-  if (options.referencedMemoryIds instanceof Set) {
-    options.referencedMemoryIds.forEach((id) => {
-      if (Number.isInteger(Number(id))) referencedIds.add(Number(id));
-    });
-  } else if (Array.isArray(options.referencedMemoryIds)) {
-    options.referencedMemoryIds.forEach((id) => {
-      if (Number.isInteger(Number(id))) referencedIds.add(Number(id));
-    });
-  }
-  const filtered = entries.filter((entry) => {
-    const entryId = Number(entry.id);
-    if (!Number.isInteger(entryId) || entryId <= 0) return false;
-    if (referencedIds.has(entryId)) return true;
-    if (cutoff !== null) {
-      const createdAt = Number(entry.createdAt || 0);
-      if (createdAt > cutoff) return false;
-    }
-    return true;
-  });
-  if (!filtered.length) return mapping;
-  await db.transaction("rw", db.memories, async () => {
-    for (const entry of filtered) {
-      const entryId = Number(entry.id);
-      if (!Number.isInteger(entryId) || entryId <= 0) continue;
-      const copy = { ...entry };
-      delete copy.id;
-      copy.threadId = targetThreadId;
-      copy.characterId = charId;
-      const newId = await db.memories.add(copy);
-      mapping.set(entryId, newId);
-    }
-  });
-  return mapping;
-}
 
 async function toggleThreadFavorite(threadId) {
   const thread = await db.threads.get(threadId);
