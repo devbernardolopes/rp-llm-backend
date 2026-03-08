@@ -12805,14 +12805,15 @@ async function openThread(threadId) {
   await persistThreadMessagesById(Number(threadId), thread.messages || [], {
     _skipUpdatedAt: true,
   });
-  renderChat();
-  const input = document.getElementById("user-input");
-  input.value = thread.draftInput || "";
-  state.activeShortcut = null;
-  closePromptHistory();
-  await renderShortcutsBar();
-  await renderThreads();
-  showChatView();
+   renderChat();
+   const input = document.getElementById("user-input");
+   input.value = thread.draftInput || "";
+   state.activeShortcut = null;
+   closePromptHistory();
+   await renderShortcutsBar();
+   await renderThreads();
+   setSendingState();
+   showChatView();
   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
    const log = document.getElementById("chat-log");
    if (log && savedScroll) {
@@ -16905,17 +16906,18 @@ function setSendingState(sending) {
   const personaSelect = document.getElementById("persona-select");
   const currentId = Number(currentThread?.id);
   const activeId = Number(state.activeGenerationThreadId);
-  const hasGeneratingMarker = Array.isArray(conversationHistory)
-    ? conversationHistory.some((m) => {
-        if (!m || m.role !== "assistant") return false;
-        const st = String(m.generationStatus || "").trim();
-        return (
-          st === "generating" ||
-          st === "regenerating" ||
-          st === "title_generating"
-        );
-      })
-    : false;
+   const hasGeneratingMarker = Array.isArray(conversationHistory)
+     ? conversationHistory.some((m) => {
+         if (!m || m.role !== "assistant") return false;
+         const st = String(m.generationStatus || "").trim();
+         return (
+           st === "generating" ||
+           st === "regenerating" ||
+           st === "title_generating" ||
+           st === "summarizing"
+         );
+       })
+     : false;
   const hasTitleGeneratingMarker = Array.isArray(conversationHistory)
     ? conversationHistory.some((m) => {
         if (!m || m.role !== "assistant") return false;
