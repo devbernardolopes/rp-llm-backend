@@ -11496,8 +11496,9 @@ function isFirstAssistantMessageIndex(index, history = conversationHistory) {
   const list = Array.isArray(history) ? history : [];
   const first = list.findIndex(
     (m) =>
+      normalizeApiRole(m?.apiRole || m?.role) === "assistant" &&
       isInSimulationMessage(m) &&
-      normalizeApiRole(m?.apiRole || m?.role) === "assistant",
+      m.manualMessage !== true
   );
   return first === index;
 }
@@ -15243,27 +15244,40 @@ async function deleteMessageAt(index) {
     t("deleteMessageTitle"),
     tf("deleteMessageConfirm", { preview: previewText }),
   );
-  if (!ok) return;
-  const isFirstAssistantDeletion =
-    targetRole === "assistant" &&
-    !target?.ooc &&
-    isFirstAssistantMessageIndex(index) &&
-    currentCharacter?.personaInjectionPlacement === "once";
-  if (isFirstAssistantDeletion) {
-    await clearThreadPersonaInjectionOnceApplied();
-  }
-  const latestCountedTurn =
-    getThreadWritingInstructionsTurnCount(currentThread);
-  const targetTurn = Number(target?.writingInstructionsTurnIndex);
-  const isLatestAssistant =
-    targetRole === "assistant" &&
-    isLatestAssistantMessageIndex(index, conversationHistory);
-  const isLatestCountedAssistant =
-    isLatestAssistant &&
-    target?.writingInstructionsCounted === true &&
-    Number.isInteger(targetTurn) &&
-    targetTurn === latestCountedTurn;
-  conversationHistory.splice(index, 1);
+   if (!ok) return;
+
+   // Determine if this is an API-generated assistant message (not manual, not OOC) and placement is "once"
+   const isApiAssistant =
+     targetRole === "assistant" &&
+     !target?.ooc &&
+     target.manualMessage !== true &&
+     currentCharacter?.personaInjectionPlacement === "once";
+
+   const latestCountedTurn =
+     getThreadWritingInstructionsTurnCount(currentThread);
+   const targetTurn = Number(target?.writingInstructionsTurnIndex);
+   const isLatestAssistant =
+     targetRole === "assistant" &&
+     isLatestAssistantMessageIndex(index, conversationHistory);
+   const isLatestCountedAssistant =
+     isLatestAssistant &&
+     target?.writingInstructionsCounted === true &&
+     Number.isInteger(targetTurn) &&
+     targetTurn === latestCountedTurn;
+   conversationHistory.splice(index, 1);
+
+   // After deletion, if the deleted message was an API assistant and no other API assistants remain, clear the once flag
+   if (isApiAssistant) {
+     const hasApiAssistant = conversationHistory.some(
+       (m) => {
+         const role = normalizeApiRole(m?.apiRole || m?.role);
+         return role === "assistant" && m.manualMessage !== true && m.ooc !== true;
+       }
+     );
+     if (!hasApiAssistant) {
+       await clearThreadPersonaInjectionOnceApplied();
+     }
+   }
   if (isLatestCountedAssistant && currentThread) {
     currentThread.writingInstructionsTurnCount = Math.max(
       0,
