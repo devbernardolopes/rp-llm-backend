@@ -248,3 +248,69 @@ db.version(17)
       }
     });
   });
+
+db.version(18)
+  .stores({
+    characters: "++id, name",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories: "++id, characterId, summary, createdAt, slotNumber, levelNumber, summarySystemContent, summaryUserContent, embedding",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+    themes: "id, name, isBuiltIn, createdAt",
+  })
+  .upgrade(async (tx) => {
+    const table = tx.table("themes");
+    const now = Date.now();
+
+    // Dark theme
+    await table.put({
+      id: "dark",
+      name: "Dark",
+      nameI18n: "themeDark",
+      isBuiltIn: true,
+      createdAt: now,
+      variables: {
+        "--bg": "#0d1016",
+        "--panel": "#151b24",
+        "--panel-2": "#1a2230",
+        "--line": "#2a3244",
+        "--text": "#e8edf8",
+        "--muted": "#8e9ab3",
+        "--primary": "#2c7df0",
+        "--primary-hover": "#3a8bff",
+        "--danger": "#a64b4b",
+        "--text-bright": "#ffffff",
+        "--hover": "#2a3a52",
+        "--chat-opacity": "1",
+      },
+    });
+
+    // Light theme
+    await table.put({
+      id: "light",
+      name: "Light",
+      nameI18n: "themeLight",
+      isBuiltIn: true,
+      createdAt: now,
+      variables: {
+        "--bg": "#f5f5f5",
+        "--panel": "#ffffff",
+        "--panel-2": "#fafafa",
+        "--line": "#d1d5db",
+        "--text": "#1f2937",
+        "--muted": "#6b7280",
+        "--primary": "#2563eb",
+        "--primary-hover": "#3b82f6",
+        "--danger": "#dc2626",
+        "--text-bright": "#000000",
+        "--hover": "#e5e7eb",
+        "--chat-opacity": "1",
+      },
+    });
+  });
+}
+    });
+  });

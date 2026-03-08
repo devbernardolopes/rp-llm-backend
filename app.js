@@ -139,6 +139,58 @@ const DEFAULT_SETTINGS = {
   crossWindowSyncEnabled: true,
 }
 
+// Theme management
+function applyThemeVars(vars) {
+  if (!vars) return;
+  Object.entries(vars).forEach(([prop, value]) => {
+    document.documentElement.style.setProperty(prop, value);
+  });
+}
+
+async function getThemeById(id) {
+  return await db.themes.get(id);
+}
+
+async function getAllThemes() {
+  return await db.themes.toArray();
+}
+
+async function applyThemeFromDb(themeId) {
+  const theme = await getThemeById(themeId);
+  if (!theme) {
+    console.warn("Theme not found:", themeId);
+    return;
+  }
+  applyThemeVars(theme.variables);
+  document.documentElement.setAttribute("data-theme", themeId);
+  localStorage.setItem("rp-theme", themeId);
+}
+
+async function populateThemeDropdown() {
+  const themeSelect = document.getElementById("theme-select");
+  if (!themeSelect) return;
+  const themes = await getAllThemes();
+  const savedThemeId = localStorage.getItem("rp-theme") || "dark";
+  themeSelect.innerHTML = "";
+  themes.forEach((theme) => {
+    const opt = document.createElement("option");
+    opt.value = theme.id;
+    opt.textContent = t(theme.nameI18n || theme.name);
+    themeSelect.appendChild(opt);
+  });
+  // Set current selection if valid, else first theme
+  if (themes.find((t) => t.id === savedThemeId)) {
+    themeSelect.value = savedThemeId;
+  } else if (themes.length > 0) {
+    themeSelect.value = themes[0].id;
+  }
+}
+
+async function applySavedTheme() {
+  const savedThemeId = localStorage.getItem("rp-theme") || "dark";
+  await applyThemeFromDb(savedThemeId);
+}
+
 const CHARACTER_PAGE_SIZES = [0, 5, 10, 20, 50];
 const CHARACTER_PAGE_BUTTON_WINDOW = 7;
 
@@ -3862,6 +3914,13 @@ function closeAnyOpenModal() {
 }
 
 async function setupSettingsControls() {
+  // Apply saved theme early
+  try {
+    await applySavedTheme();
+  } catch (e) {
+    console.warn("Theme initialization failed:", e);
+  }
+
   const settingsVersionEl = document.getElementById("settings-version");
   if (settingsVersionEl && typeof CONFIG.version === "string") {
     settingsVersionEl.textContent = CONFIG.version;
@@ -3932,12 +3991,10 @@ async function setupSettingsControls() {
     if (!uiLanguageSelect.value) uiLanguageSelect.value = "auto";
   }
 
-  const themeSelect = document.getElementById("theme-select");
-  if (themeSelect) {
-    const savedTheme = localStorage.getItem("rp-theme") || "dark";
-    themeSelect.value = savedTheme;
-    document.documentElement.setAttribute("data-theme", savedTheme);
-  }
+   const themeSelect = document.getElementById("theme-select");
+   if (themeSelect) {
+     await populateThemeDropdown();
+   }
 
   if (modelPricingFilter) {
     modelPricingFilter.value =
@@ -4659,10 +4716,8 @@ async function setupSettingsControls() {
     });
   }
   if (themeSelect) {
-    themeSelect.addEventListener("change", () => {
-      const theme = themeSelect.value;
-      localStorage.setItem("rp-theme", theme);
-      document.documentElement.setAttribute("data-theme", theme);
+    themeSelect.addEventListener("change", async () => {
+      await applyThemeFromDb(themeSelect.value);
     });
   }
 }
