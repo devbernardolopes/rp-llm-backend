@@ -4089,6 +4089,16 @@ async function setupSettingsControls() {
   );
   if (chatMessageAlignment) {
     chatMessageAlignment.value = state.settings.chatMessageAlignment || "left";
+    chatMessageAlignment.addEventListener("change", () => {
+      const desired = String(chatMessageAlignment.value || "")
+        .trim()
+        .toLowerCase();
+      state.settings.chatMessageAlignment = ["center"].includes(desired)
+        ? desired
+        : "left";
+      applyChatMessageAlignment();
+      saveSettings();
+    });
   }
   autoReplyEnabled?.classList.toggle(
     "is-active",
