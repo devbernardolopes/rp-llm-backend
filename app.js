@@ -136,6 +136,7 @@ const DEFAULT_SETTINGS = {
   oocSystemAvatar: "",
   unloadThreshold: 0, // 0 = disabled, >0 = keep this many newest messages loaded
   unloadTriggerDistance: 200, // pixels from first loaded message to trigger loading more
+  crossWindowSyncEnabled: true,
 }
 
 const CHARACTER_PAGE_SIZES = [0, 5, 10, 20, 50];
@@ -1553,7 +1554,7 @@ async function init() {
   await hydrateGenerationQueue();
   await ensurePersonasInitialized();
    await renderAll();
-   setupCrossWindowSync();
+   applyCrossWindowSyncSetting();
    preloadSummarizationIfEnabled();
    // applyMarkdownCustomCss(); // Disabled - using markdown-it library
   applyChatMessageAlignment();
@@ -4296,13 +4297,24 @@ async function setupSettingsControls() {
      state.settings.lockMemoryMessages = lockMemoryMessages.checked;
      saveSettings();
    });
-   if (personaPrefixEnabled) {
-     personaPrefixEnabled.addEventListener("change", () => {
-       state.settings.personaPrefixEnabled = personaPrefixEnabled.checked;
-       saveSettings();
-     });
-   }
-   const useLocalSummarization = document.getElementById("use-local-summarization");
+    if (personaPrefixEnabled) {
+      personaPrefixEnabled.addEventListener("change", () => {
+        state.settings.personaPrefixEnabled = personaPrefixEnabled.checked;
+        saveSettings();
+      });
+    }
+    const crossWindowSyncEnabled = document.getElementById(
+      "cross-window-sync-enabled",
+    );
+    if (crossWindowSyncEnabled) {
+      crossWindowSyncEnabled.checked = state.settings.crossWindowSyncEnabled !== false;
+      crossWindowSyncEnabled.addEventListener("change", () => {
+        state.settings.crossWindowSyncEnabled = crossWindowSyncEnabled.checked;
+        saveSettings();
+        applyCrossWindowSyncSetting();
+      });
+    }
+    const useLocalSummarization = document.getElementById("use-local-summarization");
    if (useLocalSummarization) {
      useLocalSummarization.checked = state.settings.useLocalSummarization === true;
      useLocalSummarization.addEventListener("change", () => {
@@ -18281,13 +18293,26 @@ function positionScrollBottomButton() {
   const chatRect = chatView.getBoundingClientRect();
   const inputRect = inputRow.getBoundingClientRect();
   const bottom = Math.max(18, Math.round(chatRect.bottom - inputRect.top + 10));
-  btn.style.bottom = `${bottom}px`;
+   btn.style.bottom = `${bottom}px`;
+}
+
+function applyCrossWindowSyncSetting() {
+  if (state.settings.crossWindowSyncEnabled) {
+    setupCrossWindowSync();
+  } else {
+    if (state.syncTimerId) {
+      clearInterval(state.syncTimerId);
+      state.syncTimerId = null;
+    }
+  }
 }
 
 function setupCrossWindowSync() {
+  if (!state.settings.crossWindowSyncEnabled) return;
   if (typeof BroadcastChannel !== "undefined") {
     state.syncChannel = new BroadcastChannel("rp-thread-sync");
     state.syncChannel.onmessage = async (event) => {
+      if (!state.settings.crossWindowSyncEnabled) return;
       const data = event?.data;
       if (!data || data.sourceTabId === state.tabId) return;
       if (data.type === "thread-updated") {

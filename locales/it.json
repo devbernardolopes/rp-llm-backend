@@ -482,5 +482,6 @@
   "paginationResultsPerPage": "Schede per pagina",
   "paginationUnlimited": "Illimitato",
   "paginationPageAria": "Vai alla pagina {page}",
-  "memoryCommandButtonTitle": "Comando memoria"
+   "memoryCommandButtonTitle": "Comando memoria",
+   "crossWindowSync": "Sincronizza thread tra schede"
 }

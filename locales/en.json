@@ -483,5 +483,6 @@
   "paginationResultsPerPage": "Cards per page",
   "paginationUnlimited": "Unlimited",
   "paginationPageAria": "Go to page {page}",
-  "memoryCommandButtonTitle": "Memory command"
+  "memoryCommandButtonTitle": "Memory command",
+  "crossWindowSync": "Sync threads across tabs"
 }

@@ -482,5 +482,6 @@
   "paginationResultsPerPage": "Cartões por página",
   "paginationUnlimited": "Ilimitado",
   "paginationPageAria": "Ir para a página {page}",
-  "memoryCommandButtonTitle": "Comando de memória"
+   "memoryCommandButtonTitle": "Comando de memória",
+   "crossWindowSync": "Sincronizar threads entre abas"
 }

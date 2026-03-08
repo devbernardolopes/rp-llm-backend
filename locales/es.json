@@ -482,5 +482,6 @@
   "paginationResultsPerPage": "Tarjetas por página",
   "paginationUnlimited": "Ilimitado",
   "paginationPageAria": "Ir a la página {page}",
-  "memoryCommandButtonTitle": "Comando de memoria"
+   "memoryCommandButtonTitle": "Comando de memoria",
+   "crossWindowSync": "Sincronizar hilos entre pestañas"
 }
