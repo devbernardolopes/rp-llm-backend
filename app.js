@@ -1326,6 +1326,11 @@ const state = {
     currentAudio: null,
     playingAssetId: null,
   },
+  characterCache: {
+    data: new Map(),
+    timestamp: 0,
+    ttl: 5000, // 5 seconds cache TTL
+  },
 };
 
 async function ensureMemoryFilterModelReady() {
@@ -1599,12 +1604,39 @@ function chunkForTTS(text, maxLen = 180) {
     chunks.push(buffer.trim());
   }
 
-  return chunks.filter(Boolean);
+   return chunks.filter(Boolean);
+}
+
+// Debounce utility for event handlers
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      func.apply(this, args);
+    }, wait);
+  };
+}
+
+// Chunked processing for potentially many cards
+function processCardsInChunks(cards, processor, chunkSize = 10) {
+  let index = 0;
+  function processChunk() {
+    const end = Math.min(index + chunkSize, cards.length);
+    for (; index < end; index++) {
+      processor(cards[index]);
+    }
+    if (index < cards.length) {
+      requestIdleCallback(processChunk, { timeout: 100 });
+    }
+  }
+  processChunk();
 }
 
 window.addEventListener("DOMContentLoaded", init);
 
-document.addEventListener("visibilitychange", () => {
+// Debounced visibility change handler (150ms)
+const handleVisibilityChange = debounce(() => {
   const grid = document.getElementById("character-grid");
   if (!grid) return;
   const cards = grid.querySelectorAll(".character-card");
@@ -1612,11 +1644,15 @@ document.addEventListener("visibilitychange", () => {
   const isMainViewActive = mainView && mainView.classList.contains("active");
 
   if (document.hidden) {
-    cards.forEach((card) => {
+    // Process video save in chunks to avoid blocking
+    const cardArray = Array.from(cards);
+    processCardsInChunks(cardArray, (card) => {
       if (card._saveVideoTimes) card._saveVideoTimes();
     });
   } else if (isMainViewActive) {
-    cards.forEach((card) => {
+    // Process video restore/start in chunks
+    const cardArray = Array.from(cards);
+    processCardsInChunks(cardArray, (card) => {
       if (card._restoreVideoTimes) card._restoreVideoTimes();
       if (card._startCarousel) card._startCarousel();
     });
@@ -1651,13 +1687,17 @@ document.addEventListener("visibilitychange", () => {
         toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
       }
     }
+    // Only re-render if chat view is visible and we have changes
     renderChat();
     refreshLatestAssistantRowContent();
   }
-});
+}, 150);
 
+document.addEventListener("visibilitychange", handleVisibilityChange);
+
+// Debounced focus handler (150ms)
 let lastFocusTime = 0;
-window.addEventListener("focus", () => {
+const handleFocus = debounce(() => {
   const now = Date.now();
   if (now - lastFocusTime < 200) return;
   lastFocusTime = now;
@@ -1693,7 +1733,9 @@ window.addEventListener("focus", () => {
   }
   renderChat();
   refreshLatestAssistantRowContent();
-});
+}, 150);
+
+window.addEventListener("focus", handleFocus);
 
 function updateCarouselForPaneState() {}
 
@@ -6816,16 +6858,48 @@ async function renderThreads() {
   const charIds = [
     ...new Set(threads.map((t) => t.characterId).filter(Boolean)),
   ];
+
+  // Use cached characters if available and not stale
+  const now = Date.now();
+  const cache = state.characterCache;
+  let charMap = new Map();
+  let needDbQuery = false;
+
+  if (cache.data.size > 0 && now - cache.timestamp < cache.ttl) {
+    // Check if we have all required characters in cache
+    let cachedAll = true;
+    for (const id of charIds) {
+      if (!cache.data.has(Number(id))) {
+        cachedAll = false;
+        break;
+      }
+    }
+    if (cachedAll) {
+      charMap = cache.data;
+    } else {
+      needDbQuery = true;
+    }
+  } else {
+    needDbQuery = true;
+  }
+
+  if (needDbQuery) {
+    const characters = await db.characters.where("id").anyOf(charIds).toArray();
+    if (renderSeq !== state.renderThreadsSeq) return;
+    charMap = new Map(characters.map((c) => [c.id, c]));
+    // Update cache
+    cache.data = charMap;
+    cache.timestamp = now;
+  }
+
   const queuePosByThreadId = new Map(
     state.generationQueue
       .map((id, i) => [Number(id), i + 1])
       .filter(([id]) => Number.isInteger(id)),
   );
-  const characters = await db.characters.where("id").anyOf(charIds).toArray();
-  if (renderSeq !== state.renderThreadsSeq) return;
-  const charMap = new Map(characters.map((c) => [c.id, c]));
 
-  list.innerHTML = "";
+  // Build DOM using document fragment for better performance
+  const fragment = document.createDocumentFragment();
 
   const bulkBar = document.createElement("div");
   bulkBar.className = "thread-bulk-bar";
@@ -6851,21 +6925,20 @@ async function renderThreads() {
   );
   deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
   bulkBar.append(selectAll, deleteSelectedBtn);
-  list.appendChild(bulkBar);
+  fragment.appendChild(bulkBar);
 
   const selectedCount = state.selectedThreadIds.size;
   selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
   selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
   deleteSelectedBtn.disabled = selectedCount === 0;
 
-  threads.forEach((thread) => {
+  const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
+
+  for (const thread of threads) {
     const char = charMap.get(thread.characterId);
     const resolvedChar = char
       ? resolveCharacterForLanguage(char, thread.characterLanguage || "")
       : null;
-    const chatViewActive = document
-      .getElementById("chat-view")
-      ?.classList.contains("active");
 
     const row = document.createElement("div");
     row.className = "thread-row";
@@ -7152,15 +7225,17 @@ async function renderThreads() {
     }
     row.appendChild(tintColorInput);
     updateThreadTintIndicator(tintIndicator, thread.tintColor);
-    applyThreadTintToRow(row, thread.tintColor);
-    list.appendChild(row);
-  });
+     applyThreadTintToRow(row, thread.tintColor);
+     fragment.appendChild(row);
+   }
 
-  const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
-  if (renderSeq !== state.renderThreadsSeq) return;
-  list.scrollTop = Math.min(previousScrollTop, maxScroll);
-  updateDocumentTitleWithUnread();
-}
+   list.appendChild(fragment);
+
+   const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
+   if (renderSeq !== state.renderThreadsSeq) return;
+   list.scrollTop = Math.min(previousScrollTop, maxScroll);
+   updateDocumentTitleWithUnread();
+  }
 
 function updateThreadTintIndicator(indicator, color) {
   if (!indicator) return;
@@ -9437,13 +9512,6 @@ function onPersonaAvatarFileChange(e) {
   }
 }
 
-function countWords(text) {
-  return String(text || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
-}
-
 function formatDateTime(value) {
   const ts = Number(value || 0);
   if (!Number.isFinite(ts) || ts <= 0) return "-";
@@ -11317,24 +11385,6 @@ async function saveSfxEntry({ close = true } = {}) {
 
 async function saveSfxEntryFromEditor() {
   return await saveSfxEntry({ close: true });
-}
-
-function getAssetTypeLabel(type) {
-  const types = {
-    image: "Image",
-    video: "Video",
-    sound: "Sound",
-  };
-  return types[type] || type;
-}
-
-function getAssetTypeIcon(type) {
-  const icons = {
-    image: "🖼",
-    video: "🎬",
-    sound: "🔊",
-  };
-  return icons[type] || "📄";
 }
 
 function getThreadWritingInstructionsTurnCount(thread = currentThread) {
