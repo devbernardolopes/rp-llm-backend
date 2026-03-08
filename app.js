@@ -7047,6 +7047,7 @@ async function persistThreadTintColor(
       threadId: Number(thread.id),
       updatedAt,
     });
+    state.lastSyncSeenUpdatedAt = updatedAt;
   } catch (err) {
     console.warn("Failed to persist thread tint:", err);
   }
