@@ -51,9 +51,9 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7"></path><path d="M20 4v6h-6"></path></svg>',
   copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect></svg>',
   speaker:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-4h4l5-4v12l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M18.5 7a7 7 0 0 1 0 10"></path></svg>',
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 14v-4h4l5-4v12l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M18.5 7a7 7 0 0 1 0 10"></path></svg>',
   brain:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 11h-1a3 3 0 0 0-3-3h-1v-1a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v1H9a3 3 0 0 0-3 3H5a3 3 0 0 0 0 6h1v2a3 3 0 0 0 6 0v-2h2a3 3 0 0 0 6 0v-2h1a3 3 0 0 0 0-6h-1z"></path><path d="M12 6v4"></path><path d="M8 11h8"></path><path d="M12 14v4"></path></svg>',
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 11h-1a3 3 0 0 0-3-3h-1v-1a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v1H9a3 3 0 0 0-3 3H5a3 3 0 0 0 0 6h1v2a3 3 0 0 0 6 0v-2h2a3 3 0 0 0 6 0v-2h1a3 3 0 0 0 0-6h-1z"></path><path d="M12 6v4"></path><path d="M8 11h8"></path><path d="M12 14v4"></path></svg>',
   stop: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>',
   info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6"></path><circle cx="12" cy="7.5" r="1"></circle></svg>',
   context:

@@ -4046,6 +4046,10 @@ textarea {
   color: white;
 }
 
+#memory-command-btn {
+  color: white;
+}
+
 #chat-model-pill,
 #chat-budget-pill {
   display: none;
