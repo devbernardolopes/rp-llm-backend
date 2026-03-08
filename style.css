@@ -2016,9 +2016,7 @@ textarea {
 }
 
 .message-controls .msg-model-info-btn:not(:disabled) {
-  color: #d4e8ff;
-  background: #2a4a6f;
-  border-color: #4a7ab0;
+  color: inherit;
 }
 
 .message-controls .msg-edit-btn.msg-edit-btn-edited:not(:disabled) {
