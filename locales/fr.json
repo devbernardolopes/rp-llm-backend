@@ -484,6 +484,7 @@
   "paginationResultsPerPage": "Cartes par page",
   "paginationUnlimited": "Illimité",
   "paginationPageAria": "Aller à la page {page}",
-   "memoryCommandButtonTitle": "Commande mémoire",
-   "crossWindowSync": "Synchroniser les fils entre onglets"
+    "memoryCommandButtonTitle": "Commande mémoire",
+    "crossWindowSync": "Synchroniser les fils entre onglets",
+    "threadTintColorTitle": "Couleur de la carte du fil (Maj + Clic gauche = réinitialiser)"
 }

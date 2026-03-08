@@ -484,6 +484,7 @@
   "paginationResultsPerPage": "Karten pro Seite",
   "paginationUnlimited": "Unbegrenzt",
   "paginationPageAria": "Zur Seite {page} wechseln",
-   "memoryCommandButtonTitle": "Speicherbefehl",
-   "crossWindowSync": "Threads zwischen Tabs synchronisieren"
+    "memoryCommandButtonTitle": "Speicherbefehl",
+    "crossWindowSync": "Threads zwischen Tabs synchronisieren",
+    "threadTintColorTitle": "Thread-Kartenfarbe (Umschalt + Linksklick = zurücksetzen)"
 }

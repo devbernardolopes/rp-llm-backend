@@ -484,6 +484,7 @@
   "paginationResultsPerPage": "Cartões por página",
   "paginationUnlimited": "Ilimitado",
   "paginationPageAria": "Ir para a página {page}",
-   "memoryCommandButtonTitle": "Comando de memória",
-   "crossWindowSync": "Sincronizar threads entre abas"
+    "memoryCommandButtonTitle": "Comando de memória",
+    "crossWindowSync": "Sincronizar threads entre abas",
+    "threadTintColorTitle": "Cor do Cartão do Tópico (Shift + Clique esquerdo = resetar)"
 }

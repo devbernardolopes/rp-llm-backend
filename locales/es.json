@@ -484,6 +484,7 @@
   "paginationResultsPerPage": "Tarjetas por página",
   "paginationUnlimited": "Ilimitado",
   "paginationPageAria": "Ir a la página {page}",
-   "memoryCommandButtonTitle": "Comando de memoria",
-   "crossWindowSync": "Sincronizar hilos entre pestañas"
+    "memoryCommandButtonTitle": "Comando de memoria",
+    "crossWindowSync": "Sincronizar hilos entre pestañas",
+    "threadTintColorTitle": "Color de la tarjeta del hilo (Mayús + Clic izquierdo = restablecer)"
 }
