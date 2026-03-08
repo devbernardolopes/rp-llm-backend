@@ -6939,6 +6939,7 @@ async function renderThreads() {
     avatar.alt = `${threadFallback} avatar`;
 
     const hasGeneratingMessage = threadHasActiveGeneratingMessage(thread);
+    const hasSummarizingMessage = threadHasActiveSummarizingMessage(thread);
     const isGenerating =
       hasGeneratingMessage ||
       (state.sending &&
@@ -6954,8 +6955,9 @@ async function renderThreads() {
       playUnreadMessageSound();
     }
     state.threadUnreadCounts[threadId] = unreadCount;
+    const isProcessingThread = isGenerating || hasSummarizingMessage;
     const queuePos =
-      isGenerating || isInCooldown
+      isProcessingThread || isInCooldown
         ? 0
         : queuePosByThreadId.get(Number(thread.id)) || 0;
     const statusBadges = document.createElement("div");
@@ -6967,7 +6969,14 @@ async function renderThreads() {
       statusBadges.appendChild(unreadBadge);
     }
     let queueBadge = null;
-    if (isGenerating) {
+    if (hasSummarizingMessage) {
+      queueBadge = document.createElement("span");
+      queueBadge.className = "thread-generating-badge";
+      queueBadge.innerHTML = '<span class="spinner" aria-hidden="true"></span>';
+      const summaryLabel = t("summarizingMemoryLabel");
+      queueBadge.setAttribute("title", summaryLabel);
+      queueBadge.setAttribute("aria-label", summaryLabel);
+    } else if (isGenerating) {
       queueBadge = document.createElement("span");
       queueBadge.className = "thread-generating-badge";
       queueBadge.innerHTML = '<span class="spinner" aria-hidden="true"></span>';
@@ -12790,6 +12799,18 @@ function threadHasActiveGeneratingMessage(thread) {
     if (role !== "assistant") return false;
     const status = String(m.generationStatus || "").trim();
     return status === "generating" || status === "regenerating";
+  });
+}
+
+function threadHasActiveSummarizingMessage(thread) {
+  if (!thread) return false;
+  const messages = Array.isArray(thread.messages) ? thread.messages : [];
+  return messages.some((m) => {
+    if (!m) return false;
+    const role = normalizeApiRole(m?.apiRole || m?.role);
+    if (role !== "assistant") return false;
+    const status = String(m.generationStatus || "").trim();
+    return status === "summarizing";
   });
 }
 
