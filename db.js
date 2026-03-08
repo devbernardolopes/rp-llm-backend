@@ -285,6 +285,18 @@ db.version(18)
         "--text-bright": "#ffffff",
         "--hover": "#2a3a52",
         "--chat-opacity": "1",
+
+        /* Chat bubble styling */
+        "--user-message-bg": "var(--panel-2)",
+        "--user-message-border": "var(--line)",
+        "--user-message-header-color": "var(--muted)",
+        "--bot-message-bg": "var(--panel-2)",
+        "--bot-message-border": "var(--line)",
+        "--bot-message-header-color": "var(--muted)",
+        "--message-border-radius": "10px",
+        "--message-padding": "8px 10px",
+        "--avatar-bg": "#253147",
+        "--avatar-border-radius": "8px",
       },
     });
 
@@ -308,7 +320,19 @@ db.version(18)
         "--text-bright": "#000000",
         "--hover": "#e5e7eb",
         "--chat-opacity": "1",
-       },
+
+        /* Chat bubble styling */
+        "--user-message-bg": "var(--panel-2)",
+        "--user-message-border": "var(--line)",
+        "--user-message-header-color": "var(--muted)",
+        "--bot-message-bg": "var(--panel-2)",
+        "--bot-message-border": "var(--line)",
+        "--bot-message-header-color": "var(--muted)",
+        "--message-border-radius": "10px",
+        "--message-padding": "8px 10px",
+        "--avatar-bg": "#e5e7eb",
+        "--avatar-border-radius": "8px",
+        },
       });
   });
 

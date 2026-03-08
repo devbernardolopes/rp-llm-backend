@@ -13666,6 +13666,12 @@ function buildMessageRow(message, index, streaming) {
   const isOocMessage = message?.ooc === true;
   if (isOocMessage) {
     row.classList.add("chat-row-ooc");
+  } else {
+    if (message.role === "user") {
+      row.classList.add("chat-row-user");
+    } else if (message.role === "assistant") {
+      row.classList.add("chat-row-assistant");
+    }
   }
 
   const avatar = document.createElement("img");

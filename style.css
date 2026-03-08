@@ -15,6 +15,18 @@
   --text-bright: #ffffff;
   --hover: #2a3a52;
   --chat-opacity: 1;
+
+  /* Chat bubble styling */
+  --user-message-bg: var(--panel-2);
+  --user-message-border: var(--line);
+  --user-message-header-color: var(--muted);
+  --bot-message-bg: var(--panel-2);
+  --bot-message-border: var(--line);
+  --bot-message-header-color: var(--muted);
+  --message-border-radius: 10px;
+  --message-padding: 8px 10px;
+  --avatar-bg: #253147;
+  --avatar-border-radius: 8px;
 }
 
 body {
@@ -1748,16 +1760,16 @@ textarea {
   padding-right: 4px;
 }
 
-.chat-row-ooc .message-block {
+.chat-row.chat-row-ooc .message-block {
   background: linear-gradient(180deg, #5a0e1b 0%, #23060c 100%);
   border-color: #c12b2b;
 }
 
-.chat-row-ooc .message-header {
+.chat-row.chat-row-ooc .message-header {
   color: #ffdede;
 }
 
-.chat-row-ooc .chat-avatar {
+.chat-row.chat-row-ooc .chat-avatar {
   border-color: #d73d40;
 }
 
@@ -1871,12 +1883,12 @@ textarea {
 .chat-avatar {
   width: 44px;
   height: 44px;
-  border-radius: 8px;
   object-fit: cover;
-  border: 1px solid var(--line);
-  background: #253147;
   opacity: var(--chat-opacity, 1);
   transition: opacity 0.2s ease;
+  border-radius: var(--avatar-border-radius);
+  border: 1px solid var(--line);
+  background: var(--avatar-bg);
 }
 
 .chat-avatar.clickable-avatar {
@@ -1885,16 +1897,30 @@ textarea {
 
 .message-block {
   max-width: min(850px, 100%);
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 8px 10px;
   min-width: 200px;
   opacity: var(--chat-opacity, 1);
   transition: opacity 0.2s ease;
+  border-radius: var(--message-border-radius);
+  padding: var(--message-padding);
+  background: var(--bot-message-bg);
+  border: 1px solid var(--bot-message-border);
 }
 
-.message-block-unread {
+.chat-row-user .message-block {
+  background: var(--user-message-bg);
+  border: 1px solid var(--user-message-border);
+  border-radius: var(--message-border-radius);
+  padding: var(--message-padding);
+}
+
+.chat-row-assistant .message-block {
+  background: var(--bot-message-bg);
+  border: 1px solid var(--bot-message-border);
+  border-radius: var(--message-border-radius);
+  padding: var(--message-padding);
+}
+
+.chat-row .message-block-unread {
   border-color: #8b3a42;
   background: linear-gradient(180deg, #2b2430 0%, #23202c 100%);
   box-shadow: 0 0 0 1px rgba(139, 58, 66, 0.25);
@@ -1923,7 +1949,14 @@ textarea {
   gap: 10px;
   margin-bottom: 6px;
   font-size: 12px;
-  color: var(--muted);
+}
+
+.chat-row-user .message-header {
+  color: var(--user-message-header-color);
+}
+
+.chat-row-assistant .message-header {
+  color: var(--bot-message-header-color);
 }
 
 .message-controls {
