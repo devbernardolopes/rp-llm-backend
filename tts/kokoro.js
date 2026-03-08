@@ -548,6 +548,8 @@ async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
     ? device
     : "webgpu";
   const normalizedDtype = KOKORO_DTYPE_OPTIONS.includes(dtype) ? dtype : "auto";
+
+  // Return existing instance if same config
   if (
     state.tts.kokoro.instance &&
     state.tts.kokoro.config.device === normalizedDevice &&
@@ -555,20 +557,45 @@ async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
   ) {
     return state.tts.kokoro.instance;
   }
-  patchKokoroVoiceFetch();
-  const module = await loadKokoroModule();
-  const KokoroTTS = module?.KokoroTTS;
-  if (!KokoroTTS) {
-    throw new Error("Kokoro.js module is missing KokoroTTS.");
+
+  // Clean up old instance if different config
+  if (state.tts.kokoro.instance) {
+    if (state.tts.kokoro.config.device === 'wasm') {
+      terminateKokoroWorker();
+    }
+    state.tts.kokoro.instance = null;
   }
+
   state.tts.kokoro.loading = true;
-  await Promise.resolve();
+
   try {
-    // const instance = await KokoroTTS.from_pretrained(KOKORO_MODEL_ID, {
-    //   device: normalizedDevice,
-    //   dtype: normalizedDtype,
-    //   progress_callback: (info) => ttsDebug("kokoro:progress", info),
-    // });
+    // WASM: use worker-based inference
+    if (normalizedDevice === 'wasm') {
+      const workerReady = await initKokoroWorker(normalizedDevice, normalizedDtype);
+      if (!workerReady) {
+        throw new Error("Failed to initialize Kokoro worker");
+      }
+      const proxy = new WorkerProxy(normalizedDevice, normalizedDtype);
+      state.tts.kokoro.instance = proxy;
+      state.tts.kokoro.config.device = normalizedDevice;
+      state.tts.kokoro.config.dtype = normalizedDtype;
+      state.tts.kokoro.loading = false;
+      const preferredVoice =
+        state.tts.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE;
+      if (!state.tts.kokoro.voiceListLoaded) {
+        populateKokoroVoiceSelect(preferredVoice, state.charModalActiveLanguage);
+      }
+      updateTtsSupportUi();
+      return proxy;
+    }
+
+    // WebGPU: direct instance
+    patchKokoroVoiceFetch();
+    const module = await loadKokoroModule();
+    const KokoroTTS = module?.KokoroTTS;
+    if (!KokoroTTS) {
+      throw new Error("Kokoro.js module is missing KokoroTTS.");
+    }
 
     const instance = await KokoroTTS.from_pretrained(KOKORO_MODEL_ID, {
       device: normalizedDevice,
@@ -576,7 +603,7 @@ async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
       progress_callback: (info) => ttsDebug("kokoro:progress", info),
     });
 
-    // Patch _validate_voice to allow all voices in KOKORO_VOICE_OPTIONS
+    // Patch _validate_voice to allow all voices
     const originalValidate = instance._validate_voice?.bind(instance);
     instance._validate_voice = function (voice) {
       if (KOKORO_VOICE_OPTIONS.includes(voice)) return voice;
@@ -732,10 +759,259 @@ async function createKokoroBufferSource(arrayBuffer) {
   return source;
 }
 
+// ============================================================================
+// WORKER-BASED INFERENCE (for non-blocking WASM)
+// ============================================================================
+
+let kokoroWorker = null;
+let kokoroWorkerReady = false;
+let kokoroWorkerInitializing = false;
+const kokoroWorkerPromises = new Map(); // generationId -> Promise
+
+/**
+ * Creates or returns the existing Kokoro Web Worker.
+ * The worker handles TTS generation off the main thread to prevent UI freezing.
+ */
+function getKokoroWorker() {
+  if (kokoroWorker) return kokoroWorker;
+
+  const WorkerConstructor = window.Worker || window.webkitWorker;
+  if (!WorkerConstructor) {
+    throw new Error("Web Workers not supported in this browser.");
+  }
+
+  // Get the worker script path relative to the current page
+  const workerPath = (() => {
+    const scripts = document.getElementsByTagName("script");
+    for (let script of scripts) {
+      if (script.src && script.src.includes("kokoro.js")) {
+        // kokoro.js is in tts/, so worker is also in tts/
+        const base = script.src.substring(0, script.src.lastIndexOf("/"));
+        return `${base}/kokoro-worker.js`;
+      }
+    }
+    // Fallback: assume relative path from current location
+    return "tts/kokoro-worker.js";
+  })();
+
+  kokoroWorker = new WorkerConstructor(workerPath, { type: "module" });
+  kokoroWorkerReady = false;
+  kokoroWorkerInitializing = false;
+
+  // Handle messages from worker
+  kokoroWorker.onmessage = (event) => {
+    const { type, id, arrayBuffer, success, error, resourceType, name, loaded, total, percent } = event.data || {};
+
+    switch (type) {
+      case 'initialized':
+        kokoroWorkerReady = success;
+        kokoroWorkerInitializing = false;
+        if (success) {
+          ttsDebug("kokoro:worker:initialized");
+        } else {
+          console.error("kokoro:worker:init-failed", error);
+        }
+        break;
+
+      case 'generated':
+        const genPromise = kokoroWorkerPromises.get(id);
+        if (genPromise) {
+          if (error) {
+            genPromise.reject(new Error(error));
+          } else {
+            genPromise.resolve(arrayBuffer);
+          }
+          kokoroWorkerPromises.delete(id);
+        }
+        break;
+
+      case 'cancelled':
+        const cancelPromise = kokoroWorkerPromises.get(id);
+        if (cancelPromise) {
+          cancelPromise.reject(new Error("Generation cancelled"));
+          kokoroWorkerPromises.delete(id);
+        }
+        break;
+
+      case 'download-progress':
+        // Forward progress to global state for UI
+        kokoroVoiceDownloadProgress.loaded = loaded;
+        kokoroVoiceDownloadProgress.total = total;
+        kokoroVoiceDownloadProgress.percent = percent;
+        ttsDebug("kokoro:worker:download-progress", { resourceType, name, loaded, total, percent });
+        break;
+
+      case 'download-complete':
+        if (resourceType === 'voice' && name) {
+          markVoiceDownloaded(name);
+        }
+        ttsDebug("kokoro:worker:download-complete", { resourceType, name });
+        break;
+    }
+  };
+
+  kokoroWorker.onerror = (err) => {
+    console.error("kokoro:worker:error", err);
+    kokoroWorkerReady = false;
+    // Reject all pending promises
+    for (const [id, promise] of kokoroWorkerPromises) {
+      promise.reject(new Error("Worker error: " + err.message));
+      kokoroWorkerPromises.delete(id);
+    }
+  };
+
+  return kokoroWorker;
+}
+
+/**
+ * Initializes the worker with the specified device/dtype.
+ * Returns a promise that resolves when the worker is ready.
+ */
+async function initKokoroWorker(device, dtype) {
+  const worker = getKokoroWorker();
+
+  // Already ready or initializing?
+  if (kokoroWorkerReady) {
+    return true;
+  }
+  if (kokoroWorkerInitializing) {
+    // Wait for existing initialization to complete
+    await new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (!kokoroWorkerInitializing) {
+          clearInterval(checkInterval);
+          resolve(kokoroWorkerReady);
+        }
+      }, 50);
+    });
+    return kokoroWorkerReady;
+  }
+
+  kokoroWorkerInitializing = true;
+  ttsDebug("kokoro:worker:starting-init", { device, dtype });
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      kokoroWorkerInitializing = false;
+      reject(new Error("Worker initialization timeout"));
+    }, 30000);
+
+    const handleMessage = (event) => {
+      if (event.data?.type === 'initialized') {
+        clearTimeout(timeout);
+        worker.removeEventListener('message', handleMessage);
+        resolve(event.data.success);
+      }
+    };
+
+    worker.addEventListener('message', handleMessage);
+    worker.postMessage({ type: 'init', device, dtype });
+  });
+}
+
+/**
+ * Generates audio via the worker.
+ * Returns a promise that resolves with ArrayBuffer of the audio data.
+ */
+function generateKokoroViaWorker(text, voice, speed) {
+  const worker = getKokoroWorker();
+  const generationId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+  return new Promise((resolve, reject) => {
+    kokoroWorkerPromises.set(generationId, { resolve, reject });
+
+    worker.postMessage({
+      type: 'generate',
+      id: generationId,
+      text,
+      voice,
+      speed,
+    }, []);
+
+    // Timeout for safety
+    setTimeout(() => {
+      if (kokoroWorkerPromises.has(generationId)) {
+        kokoroWorkerPromises.delete(generationId);
+        reject(new Error("Worker generation timeout"));
+      }
+    }, 60000);
+  });
+}
+
+/**
+ * Cancels a specific generation in the worker.
+ */
+function cancelKokoroWorkerGeneration(generationId) {
+  const worker = kokoroWorker;
+  if (worker) {
+    worker.postMessage({ type: 'cancel', id: generationId });
+  }
+  // Also clean up the promise
+  const promise = kokoroWorkerPromises.get(generationId);
+  if (promise) {
+    promise.reject(new Error("Generation cancelled"));
+    kokoroWorkerPromises.delete(generationId);
+  }
+}
+
+/**
+ * Terminates the worker, cleaning up resources.
+ * Call this when switching away from kokoro or on page unload.
+ */
+function terminateKokoroWorker() {
+  if (kokoroWorker) {
+    kokoroWorker.terminate();
+    kokoroWorker = null;
+    kokoroWorkerReady = false;
+    kokoroWorkerInitializing = false;
+    kokoroWorkerPromises.clear();
+    ttsDebug("kokoro:worker:terminated");
+  }
+}
+
+/**
+ * Checks if the worker is ready for generation.
+ */
+function isKokoroWorkerReady() {
+  return kokoroWorkerReady && kokoroWorker && !kokoroWorkerInitializing;
+}
+
+/**
+ * Proxy class that makes the worker look like a KokoroTTS instance.
+ * Used when device is 'wasm' to offload inference to a background thread.
+ */
+class WorkerProxy {
+  constructor(device, dtype) {
+    this.device = device;
+    this.dtype = dtype;
+    // Allow all voices
+    this._validate_voice = (voice) => voice;
+  }
+
+  async generate(text, options) {
+    const { voice, speed } = options;
+    const arrayBuffer = await generateKokoroViaWorker(text, voice, speed);
+    const blob = new Blob([arrayBuffer], { type: 'audio/wav' });
+    return {
+      toBlob: () => Promise.resolve(blob)
+    };
+  }
+}
+
 if (typeof window !== "undefined") {
   window.getKokoroVoiceDownloadProgress = getKokoroVoiceDownloadProgress;
   window.resetKokoroVoiceDownloadProgress = resetKokoroVoiceDownloadProgress;
   window.cancelKokoroVoiceDownload = cancelKokoroVoiceDownload;
   window.isVoiceDownloaded = isVoiceDownloaded;
   window.clearKokoroCache = clearKokoroCache;
+
+  // Expose worker management functions
+  window.initKokoroWorker = initKokoroWorker;
+  window.isKokoroWorkerReady = isKokoroWorkerReady;
+  window.generateKokoroViaWorker = generateKokoroViaWorker;
+  window.cancelKokoroWorkerGeneration = cancelKokoroWorkerGeneration;
+  window.terminateKokoroWorker = terminateKokoroWorker;
+
+  // Terminate worker on page unload to free resources
+  window.addEventListener('unload', terminateKokoroWorker);
 }
