@@ -308,7 +308,6 @@ db.version(18)
         "--text-bright": "#000000",
         "--hover": "#e5e7eb",
         "--chat-opacity": "1",
-      },
-     });
-   });
-}
+       },
+      });
+    });
