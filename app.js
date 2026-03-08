@@ -3871,7 +3871,9 @@ function handleMemoryCommandFromInput(input, raw = "") {
     // Duplicate or excluded
   }
   openMemoryModal().catch(() => {});
-  input.value = "";
+  if (!raw) {
+    input.value = "";
+  }
   requestAnimationFrame(() => {
     adjustUserInputElementHeight(input);
   });
