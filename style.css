@@ -1752,54 +1752,7 @@ textarea {
 .chat-log.chat-messages-centered .chat-row {
   justify-content: center;
   width: 100%;
-}
-
-.message-placeholder {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 0;
-  opacity: 0.4;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.message-placeholder .placeholder-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, #3a3a3a 25%, #4a4a4a 50%, #3a3a3a 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-  flex-shrink: 0;
-}
-
-.message-placeholder .placeholder-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.message-placeholder .placeholder-line {
-  height: 12px;
-  background: linear-gradient(90deg, #3a3a3a 25%, #4a4a4a 50%, #3a3a3a 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-  border-radius: 2px;
-}
-
-.message-placeholder .placeholder-line:first-child {
-  width: 30%;
-  height: 14px;
-}
-
-.message-placeholder .placeholder-line:nth-child(2) {
-  width: 90%;
-}
-
-.message-placeholder .placeholder-line:nth-child(3) {
-  width: 70%;
-}
+ }
 
 @keyframes shimmer {
   0% {
