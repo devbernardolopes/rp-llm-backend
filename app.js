@@ -6898,8 +6898,8 @@ async function renderThreads() {
       .filter(([id]) => Number.isInteger(id)),
   );
 
-  // Build DOM using document fragment for better performance
-  const fragment = document.createDocumentFragment();
+  // Clear the list before building new content
+  list.innerHTML = "";
 
   const bulkBar = document.createElement("div");
   bulkBar.className = "thread-bulk-bar";
@@ -6925,7 +6925,7 @@ async function renderThreads() {
   );
   deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
   bulkBar.append(selectAll, deleteSelectedBtn);
-  fragment.appendChild(bulkBar);
+  list.appendChild(bulkBar);
 
   const selectedCount = state.selectedThreadIds.size;
   selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
@@ -6934,7 +6934,7 @@ async function renderThreads() {
 
   const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
 
-  for (const thread of threads) {
+  threads.forEach((thread) => {
     const char = charMap.get(thread.characterId);
     const resolvedChar = char
       ? resolveCharacterForLanguage(char, thread.characterLanguage || "")
@@ -7225,11 +7225,9 @@ async function renderThreads() {
     }
     row.appendChild(tintColorInput);
     updateThreadTintIndicator(tintIndicator, thread.tintColor);
-     applyThreadTintToRow(row, thread.tintColor);
-     fragment.appendChild(row);
-   }
-
-   list.appendChild(fragment);
+    applyThreadTintToRow(row, thread.tintColor);
+    list.appendChild(row);
+  });
 
    const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
    if (renderSeq !== state.renderThreadsSeq) return;
