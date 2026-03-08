@@ -15387,10 +15387,11 @@ async function regenerateMessage(index) {
     target.generationStatus = "regenerating";
     messagesToSave[index].content = target.content;
     messagesToSave[index].generationStatus = target.generationStatus;
-    await persistThreadMessagesById(threadId, messagesToSave);
-    renderChat();
-    const row = document.getElementById("chat-log").children[index];
-    const contentEl = row?.querySelector(".message-content");
+     await persistThreadMessagesById(threadId, messagesToSave);
+     renderChat();
+     const log = document.getElementById("chat-log");
+     const row = log?.querySelector(`.chat-row[data-message-index="${index}"]`);
+     const contentEl = row?.querySelector(".message-content");
     if (row) row.dataset.streaming = "1";
     refreshMessageControlStates();
     if (contentEl)
