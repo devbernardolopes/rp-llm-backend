@@ -472,6 +472,8 @@
   "personaInjectionOnce": "Once",
   "unloadThresholdLabel": "Auto-unload old messages",
   "unloadThresholdDescription": "Maximum number of recent messages to keep loaded in the chat (0 = disabled)",
+  "unloadThresholdLoadButton": "Load {count} more",
+  "unloadThresholdHideButton": "Hide oldest batch",
   "threadForked": "Thread forked.",
   "threadTitleForked": "Fork of {title}",
   "msgForkTitle": "Fork chat from here",

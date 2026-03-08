@@ -135,6 +135,7 @@ const DEFAULT_SETTINGS = {
   unreadSoundEnabled: true,
   oocSystemAvatar: "",
   crossWindowSyncEnabled: true,
+  autoUnloadThreshold: 0,
 }
 
 // Theme management
@@ -4306,6 +4307,34 @@ async function setupSettingsControls() {
         : Math.max(3, Math.min(10, Number(state.settings.memorySlots) || 5));
     state.settings.memorySlots = slots;
     memorySlotsInput.value = String(slots);
+  }
+  const autoUnloadThresholdInput = document.getElementById("auto-unload-threshold");
+  if (autoUnloadThresholdInput) {
+    const threshold = Math.max(
+      0,
+      Math.min(
+        1000,
+        Number.isFinite(Number(state.settings.autoUnloadThreshold))
+          ? Number(state.settings.autoUnloadThreshold)
+          : 0,
+      ),
+    );
+    state.settings.autoUnloadThreshold = threshold;
+    autoUnloadThresholdInput.value = String(threshold);
+    autoUnloadThresholdInput.addEventListener("change", async () => {
+      const val = Number(autoUnloadThresholdInput.value);
+      const clamped = Math.max(0, Math.min(1000, Number.isFinite(val) ? val : 0));
+      state.settings.autoUnloadThreshold = clamped;
+      autoUnloadThresholdInput.value = String(clamped);
+      saveSettings();
+      if (currentThread) {
+        currentThread.unloadState = { loadLimit: 0 };
+        await persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
+          unloadState: { loadLimit: 0 },
+        });
+      }
+      renderChat();
+    });
   }
   const chatMessageAlignment = document.getElementById(
     "chat-message-alignment",
@@ -12205,10 +12234,11 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     pendingGenerationQueuedAt: 0,
     shortcutsVisible: false,
     oocModeEnabled: false,
-    chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
+     chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
+     unloadState: { loadLimit: 0 },
+     createdAt: Date.now(),
+     updatedAt: Date.now(),
+   };
 
   const threadId = await db.threads.add(newThread);
   broadcastSyncEvent({
@@ -13332,6 +13362,102 @@ async function maybeGenerateThreadTitle() {
   // Instead of generating title in a new bubble after bot message,
   // set a flag so the NEXT bot reply will generate title first in the same bubble
   state.pendingTitleGeneration = true;
+ }
+
+function computeVisibleMessageIndices() {
+  const total = conversationHistory.length;
+  const threshold = state.settings.autoUnloadThreshold || 0;
+  if (threshold === 0 || total <= threshold) {
+    return { indices: null, loadLimit: 0, startActive: 0, hiddenCount: 0 };
+  }
+  const startActive = total - threshold;
+  const thread = currentThread;
+  const loadLimit = thread && thread.unloadState ? thread.unloadState.loadLimit : 0;
+  const clampedLoadLimit = Math.max(0, Math.min(loadLimit, startActive));
+  const visible = [];
+  for (let i = 0; i < clampedLoadLimit; i++) {
+    visible.push(i);
+  }
+  for (let i = startActive; i < total; i++) {
+    visible.push(i);
+  }
+  return {
+    indices: visible,
+    loadLimit: clampedLoadLimit,
+    startActive,
+    hiddenCount: startActive - clampedLoadLimit,
+  };
+  }
+
+function ensureUnloadButton() {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  let btn = document.getElementById("unload-oldest-btn");
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "unload-oldest-btn";
+    btn.type = "button";
+    btn.classList.add("unload-oldest-btn");
+    btn.addEventListener("click", toggleUnloadBatch);
+    log.insertBefore(btn, log.firstChild);
+  }
+}
+
+function updateUnloadButtonVisibility() {
+  const log = document.getElementById("chat-log");
+  const btn = document.getElementById("unload-oldest-btn");
+  if (!log || !btn || !currentThread) {
+    if (btn) btn.classList.add("hidden");
+    return;
+  }
+  const threshold = state.settings.autoUnloadThreshold || 0;
+  if (threshold === 0) {
+    btn.classList.add("hidden");
+    return;
+  }
+  const vis = computeVisibleMessageIndices();
+  const hiddenCount = vis.hiddenCount || 0;
+  const loadLimit = vis.loadLimit || 0;
+  if (hiddenCount === 0 && loadLimit === 0) {
+    btn.classList.add("hidden");
+    return;
+  }
+  // Show only when scrolled near top
+  if (log.scrollTop > 50) {
+    btn.classList.add("hidden");
+    return;
+  }
+  btn.classList.remove("hidden");
+  if (hiddenCount > 0) {
+    const count = Math.min(threshold, hiddenCount);
+    btn.textContent = tf("unloadThresholdLoadButton", { count });
+    btn.dataset.action = "load";
+  } else if (loadLimit > 0) {
+    btn.textContent = t("unloadThresholdHideButton");
+    btn.dataset.action = "hide";
+  } else {
+    btn.classList.add("hidden");
+  }
+}
+
+async function toggleUnloadBatch() {
+  if (!currentThread) return;
+  const threshold = state.settings.autoUnloadThreshold || 0;
+  if (threshold === 0) return;
+  const vis = computeVisibleMessageIndices();
+  const startActive = vis.startActive || 0;
+  let newLoadLimit = vis.loadLimit || 0;
+  if (vis.hiddenCount > 0) {
+    // Load one batch
+    newLoadLimit = Math.min(startActive, newLoadLimit + threshold);
+  } else if (newLoadLimit > 0) {
+    // Hide all loaded older messages
+    newLoadLimit = 0;
+  }
+  currentThread.unloadState = { loadLimit: newLoadLimit };
+  await persistThreadMessagesById(Number(currentThread.id), conversationHistory, {});
+  renderChat();
+  updateUnloadButtonVisibility();
 }
 
 function renderChat(startIdx, endIdx) {
@@ -13384,14 +13510,24 @@ function renderChat(startIdx, endIdx) {
     Number.isInteger(currentId) &&
     activeThreadId === currentId;
 
+  // Determine which indices to render
+  let indicesToRender = [];
+  if (isFullRender && state.settings.autoUnloadThreshold > 0) {
+    const vis = computeVisibleMessageIndices();
+    indicesToRender = vis.indices !== null ? vis.indices : [];
+  } else {
+    for (let i = renderStart; i <= renderEnd; i++) {
+      indicesToRender.push(i);
+    }
+  }
+
   // Render messages in range
-  for (let i = renderStart; i <= renderEnd; i++) {
+  for (let i of indicesToRender) {
     const message = conversationHistory[i];
     if (!message) continue;
     // Check if row already exists (for partial updates)
     const existingRow = log.querySelector(`.chat-row[data-message-index="${i}"]`);
     if (existingRow) {
-      // Update existing row instead of duplicating
       const status = String(message?.generationStatus || "").trim();
       const rowStreaming =
         message?.role === "assistant" &&
@@ -13400,7 +13536,6 @@ function renderChat(startIdx, endIdx) {
           (isActiveGenerationThread &&
             (status === "generating" || status === "regenerating")));
       const newRow = buildMessageRow(message, i, rowStreaming);
-      // Preserve scroll position if replacing
       existingRow.replaceWith(newRow);
     } else {
       const status = String(message?.generationStatus || "").trim();

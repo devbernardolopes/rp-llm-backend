@@ -960,9 +960,21 @@
                 step="1"
                 value="5"
               />
-            </div>
-            <div class="form-field">
-              <span data-i18n="chatMessageAlignment">Message Alignment</span>
+             </div>
+             <div class="form-field">
+               <span data-i18n="unloadThresholdLabel">Auto-unload old messages</span>
+               <input
+                 id="auto-unload-threshold"
+                 type="number"
+                 min="0"
+                 max="1000"
+                 step="1"
+                 title=""
+               />
+               <div class="form-field-hint" data-i18n="unloadThresholdDescription"></div>
+             </div>
+             <div class="form-field">
+               <span data-i18n="chatMessageAlignment">Message Alignment</span>
               <select id="chat-message-alignment">
                 <option value="left" data-i18n="messageAlignmentLeft">
                   Left (Default)
