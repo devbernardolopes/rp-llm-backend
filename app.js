@@ -1618,19 +1618,22 @@ function debounce(func, wait) {
   };
 }
 
-// Chunked processing for potentially many cards
-function processCardsInChunks(cards, processor, chunkSize = 10) {
+// Chunked processing for potentially many cards (smaller chunks to avoid long tasks)
+function processCardsInChunks(cards, processor, chunkSize = 3) {
   let index = 0;
-  function processChunk() {
-    const end = Math.min(index + chunkSize, cards.length);
-    for (; index < end; index++) {
-      processor(cards[index]);
+  function processChunk(deadline) {
+    while (index < cards.length && (deadline.timeRemaining() > 0 || index === 0)) {
+      const end = Math.min(index + chunkSize, cards.length);
+      for (; index < end; index++) {
+        processor(cards[index]);
+      }
+      if (index >= cards.length) break;
     }
     if (index < cards.length) {
-      requestIdleCallback(processChunk, { timeout: 100 });
+      requestIdleCallback(processChunk, { timeout: 50 });
     }
   }
-  processChunk();
+  requestIdleCallback(processChunk, { timeout: 50 });
 }
 
 window.addEventListener("DOMContentLoaded", init);
@@ -1678,18 +1681,23 @@ const handleVisibilityChange = debounce(() => {
       persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
         _skipUpdatedAt: true,
       }).catch(() => {});
-      renderThreads();
-      if (
-        lastUnreadAssistantIndex >= 0 &&
-        currentThread.autoTtsEnabled === true &&
-        state.tts.voiceSupportReady
-      ) {
-        toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
-      }
+      // Defer heavy renders to avoid blocking
+      queueMicrotask(() => {
+        renderThreads().catch(() => {});
+        if (
+          lastUnreadAssistantIndex >= 0 &&
+          currentThread.autoTtsEnabled === true &&
+          state.tts.voiceSupportReady
+        ) {
+          toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
+        }
+      });
     }
-    // Only re-render if chat view is visible and we have changes
-    renderChat();
-    refreshLatestAssistantRowContent();
+    // Defer renders to avoid blocking the event handler
+    queueMicrotask(() => {
+      renderChat();
+      refreshLatestAssistantRowContent();
+    });
   }
 }, 150);
 
@@ -1722,17 +1730,23 @@ const handleFocus = debounce(() => {
     persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
       _skipUpdatedAt: true,
     }).catch(() => {});
-    renderThreads();
-    if (
-      lastUnreadAssistantIndex >= 0 &&
-      currentThread.autoTtsEnabled === true &&
-      state.tts.voiceSupportReady
-    ) {
-      toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
-    }
+    // Defer heavy renders to avoid blocking
+    queueMicrotask(() => {
+      renderThreads().catch(() => {});
+      if (
+        lastUnreadAssistantIndex >= 0 &&
+        currentThread.autoTtsEnabled === true &&
+        state.tts.voiceSupportReady
+      ) {
+        toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
+      }
+    });
   }
-  renderChat();
-  refreshLatestAssistantRowContent();
+  // Defer renders to avoid blocking the event handler
+  queueMicrotask(() => {
+    renderChat();
+    refreshLatestAssistantRowContent();
+  });
 }, 150);
 
 window.addEventListener("focus", handleFocus);
@@ -6901,6 +6915,9 @@ async function renderThreads() {
   // Clear the list before building new content
   list.innerHTML = "";
 
+  // Use document fragment to batch DOM updates and avoid forced reflows
+  const fragment = document.createDocumentFragment();
+
   const bulkBar = document.createElement("div");
   bulkBar.className = "thread-bulk-bar";
   bulkBar.id = "thread-bulk-bar";
@@ -6925,7 +6942,7 @@ async function renderThreads() {
   );
   deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
   bulkBar.append(selectAll, deleteSelectedBtn);
-  list.appendChild(bulkBar);
+  fragment.appendChild(bulkBar);
 
   const selectedCount = state.selectedThreadIds.size;
   selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
@@ -6934,7 +6951,7 @@ async function renderThreads() {
 
   const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
 
-  threads.forEach((thread) => {
+  for (const thread of threads) {
     const char = charMap.get(thread.characterId);
     const resolvedChar = char
       ? resolveCharacterForLanguage(char, thread.characterLanguage || "")
@@ -7226,8 +7243,11 @@ async function renderThreads() {
     row.appendChild(tintColorInput);
     updateThreadTintIndicator(tintIndicator, thread.tintColor);
     applyThreadTintToRow(row, thread.tintColor);
-    list.appendChild(row);
-  });
+    fragment.appendChild(row);
+  }
+
+  // Single DOM insertion to minimize reflow
+  list.appendChild(fragment);
 
    const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
    if (renderSeq !== state.renderThreadsSeq) return;
