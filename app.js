@@ -16327,8 +16327,23 @@ function openPromptHistory() {
           clearTimeout(btn._clickTimeout);
           btn._clickTimeout = null;
         }
-        // Check if sending is allowed
-        if (state.sending || !currentThread) return;
+        // Check if sending is allowed (same checks as sendMessage)
+        if (!currentThread || !currentCharacter) return;
+        const pendingState = getThreadPendingGenerationState(
+          Number(currentThread.id),
+          conversationHistory,
+        );
+        if (pendingState) {
+          // Block if thread is queued, cooling down, generating, regenerating, or summarizing
+          return;
+        }
+        if (state.sending) {
+          const activeId = Number(state.activeGenerationThreadId);
+          const currentId = Number(currentThread.id);
+          if (Number.isInteger(activeId) && activeId === currentId) {
+            return;
+          }
+        }
         const promptInput = document.getElementById("user-input");
         if (promptInput) {
           promptInput.value = entry.content;
@@ -18169,7 +18184,8 @@ function getThreadPendingGenerationState(threadId, messages = []) {
       status === "queued" ||
       status === "cooling_down" ||
       status === "generating" ||
-      status === "regenerating"
+      status === "regenerating" ||
+      status === "summarizing"
     ) {
       return status;
     }
