@@ -3066,18 +3066,25 @@ function setupModalTextareas(root = document) {
       const expanded = header.getAttribute("aria-expanded") === "true";
       icon.textContent = expanded ? "▾" : "▴";
     };
-    entry.setExpanded = (next) => {
-      const current = header.getAttribute("aria-expanded") === "true";
-      if (next === current) {
-        entry.refresh();
-        if (next) autoExpandTextarea(textarea);
-        return;
-      }
-      header.setAttribute("aria-expanded", next ? "true" : "false");
-      body.classList.toggle("collapsed", !next);
-      if (next) autoExpandTextarea(textarea);
-      entry.refresh();
-    };
+     entry.setExpanded = (next) => {
+       const current = header.getAttribute("aria-expanded") === "true";
+       if (next === current) {
+         entry.refresh();
+         if (next) autoExpandTextarea(textarea);
+         return;
+       }
+       const modalBody = textarea.closest(".modal-body");
+       const scrollTop = modalBody ? modalBody.scrollTop : 0;
+       header.setAttribute("aria-expanded", next ? "true" : "false");
+       body.classList.toggle("collapsed", !next);
+       if (next) autoExpandTextarea(textarea);
+       entry.refresh();
+       if (modalBody && !next) {
+         requestAnimationFrame(() => {
+           modalBody.scrollTop = scrollTop;
+         });
+       }
+     };
     textareaCollapseStates.set(textarea, entry);
     const hasContent = String(textarea.value || "").trim().length > 0;
     entry.setExpanded(forceCollapsed ? false : hasContent);
@@ -16495,6 +16502,8 @@ async function renderMemoryModalEntries() {
   setupModalTextareas(modal);
 
   const collapseMemoryEntries = () => {
+    const modalBody = modal.querySelector(".modal-body");
+    const scrollTop = modalBody ? modalBody.scrollTop : 0;
     modal
       .querySelectorAll(".textarea-collapse textarea")
       .forEach((textarea) => {
@@ -16503,6 +16512,11 @@ async function renderMemoryModalEntries() {
           entryState.setExpanded(false);
         }
       });
+    if (modalBody) {
+      requestAnimationFrame(() => {
+        modalBody.scrollTop = scrollTop;
+      });
+    }
   };
 
   const enforceExclusiveEntryExpansion = () => {
