@@ -2731,18 +2731,19 @@ function setupEvents() {
   input.addEventListener("dblclick", openPromptHistory);
   input.addEventListener("pointerup", onInputPointerUp);
    chatLog.addEventListener("scroll", () => {
-     if (state.sending) {
-       state.chatAutoScroll = isChatNearBottom();
-     }
-      maybeProcessUnreadMessagesSeen(true).catch(() => {});
-      updateScrollBottomButtonVisibility();
-      if (currentThread) {
-        localStorage.setItem(
-          `rp-thread-scroll-${currentThread.id}`,
-          chatLog.scrollTop,
-        );
+      if (state.sending) {
+        state.chatAutoScroll = isChatNearBottom();
       }
-    });
+       maybeProcessUnreadMessagesSeen(true).catch(() => {});
+       updateScrollBottomButtonVisibility();
+       updateUnloadButtonVisibility();
+       if (currentThread) {
+         localStorage.setItem(
+           `rp-thread-scroll-${currentThread.id}`,
+           chatLog.scrollTop,
+         );
+       }
+     });
   requestAnimationFrame(() => adjustUserInputElementHeight(input));
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
@@ -12738,6 +12739,9 @@ async function openThread(threadId) {
     ...thread,
     writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
   };
+  if (!currentThread.unloadState) {
+    currentThread.unloadState = { loadLimit: 0 };
+  }
   applyChatOpacitySetting(getThreadChatOpacity(thread));
   if (!thread.characterLanguage && character?.activeLanguage) {
     currentThread.characterLanguage = character.activeLanguage;
@@ -12803,13 +12807,15 @@ async function openThread(threadId) {
   await renderThreads();
   showChatView();
   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
-  const log = document.getElementById("chat-log");
-  if (log && savedScroll) {
-    log.scrollTop = Number(savedScroll);
-  } else if (log) {
-    log.scrollTop = log.scrollHeight;
-  }
-  updateScrollBottomButtonVisibility();
+   const log = document.getElementById("chat-log");
+   if (log && savedScroll) {
+     log.scrollTop = Number(savedScroll);
+   } else if (log) {
+     log.scrollTop = log.scrollHeight;
+   }
+   ensureUnloadButton();
+   updateUnloadButtonVisibility();
+   updateScrollBottomButtonVisibility();
   broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
   if (thread.pendingGenerationReason) {
     const id = Number(thread.id);
@@ -13368,7 +13374,12 @@ function computeVisibleMessageIndices() {
   const total = conversationHistory.length;
   const threshold = state.settings.autoUnloadThreshold || 0;
   if (threshold === 0 || total <= threshold) {
-    return { indices: null, loadLimit: 0, startActive: 0, hiddenCount: 0 };
+    return {
+      indices: Array.from({ length: total }, (_, i) => i),
+      loadLimit: 0,
+      startActive: 0,
+      hiddenCount: 0,
+    };
   }
   const startActive = total - threshold;
   const thread = currentThread;
@@ -13387,7 +13398,7 @@ function computeVisibleMessageIndices() {
     startActive,
     hiddenCount: startActive - clampedLoadLimit,
   };
-  }
+}
 
 function ensureUnloadButton() {
   const log = document.getElementById("chat-log");
@@ -13455,7 +13466,9 @@ async function toggleUnloadBatch() {
     newLoadLimit = 0;
   }
   currentThread.unloadState = { loadLimit: newLoadLimit };
-  await persistThreadMessagesById(Number(currentThread.id), conversationHistory, {});
+  await persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
+    unloadState: currentThread.unloadState,
+  });
   renderChat();
   updateUnloadButtonVisibility();
 }
@@ -13511,11 +13524,16 @@ function renderChat(startIdx, endIdx) {
     activeThreadId === currentId;
 
   // Determine which indices to render
-  let indicesToRender = [];
+  let indicesToRender;
   if (isFullRender && state.settings.autoUnloadThreshold > 0) {
     const vis = computeVisibleMessageIndices();
-    indicesToRender = vis.indices !== null ? vis.indices : [];
+    indicesToRender = vis.indices;
   } else {
+    indicesToRender = null;
+  }
+
+  if (indicesToRender === null) {
+    indicesToRender = [];
     for (let i = renderStart; i <= renderEnd; i++) {
       indicesToRender.push(i);
     }
@@ -13559,10 +13577,12 @@ function renderChat(startIdx, endIdx) {
     }
   }
 
-  updateScrollBottomButtonVisibility();
-  scheduleThreadBudgetIndicatorUpdate();
-  maybeProcessUnreadMessagesSeen(false).catch(() => {});
-}
+   ensureUnloadButton();
+   updateUnloadButtonVisibility();
+   updateScrollBottomButtonVisibility();
+   scheduleThreadBudgetIndicatorUpdate();
+   maybeProcessUnreadMessagesSeen(false).catch(() => {});
+ }
 
 function getUnreadAssistantCount(messages) {
   const list = Array.isArray(messages) ? messages : [];

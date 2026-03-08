@@ -324,12 +324,11 @@ db.version(19)
     assets: "++id, name, type, createdAt, updatedAt",
     themes: "id, name, isBuiltIn, createdAt",
   })
-  .upgrade(async (tx) => {
-    const threads = tx.table("threads");
-    await threads.toCollection().modify((thread) => {
-      if (!Object.prototype.hasOwnProperty.call(thread, "unloadState")) {
-        thread.unloadState = { loadLimit: 0 };
-      }
-    });
-  });
-    });
+   .upgrade(async (tx) => {
+     const threads = tx.table("threads");
+     await threads.toCollection().modify((thread) => {
+       if (!Object.prototype.hasOwnProperty.call(thread, "unloadState")) {
+         thread.unloadState = { loadLimit: 0 };
+       }
+     });
+   });
