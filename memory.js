@@ -198,7 +198,7 @@ function getMemoryMessagesToKeepValue(raw) {
   const num = Number(raw);
   if (!Number.isFinite(num)) return 3;
   const rounded = Math.round(num);
-  return Math.min(4, Math.max(0, rounded));
+  return Math.min(10, Math.max(0, rounded));
 }
 
 function getMemorySlotsValue(raw) {
