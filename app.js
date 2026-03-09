@@ -14838,20 +14838,25 @@ async function regenerateOocMessage(index) {
 
   try {
     const { systemPrompt } = await buildOocSystemPrompt();
-    const result = await callOpenRouter(
-      systemPrompt,
-      [{ role: "user", content: userMessage.content }],
-      state.settings.model,
-      (chunk) => {
-        target.content += chunk;
-        messagesToSave[index].content = target.content;
-        if (contentEl) {
-          contentEl.innerHTML = renderMessageHtml(target.content, target.role);
-        }
-        if (isViewing) scrollChatToBottom();
-      },
-      state.abortController.signal,
-    );
+     const result = await callOpenRouter(
+       systemPrompt,
+       [{ role: "user", content: userMessage.content }],
+       state.settings.model,
+       (chunk) => {
+         target.content += chunk;
+         messagesToSave[index].content = target.content;
+         // Re-query DOM to get fresh reference (in case chat was re-rendered)
+         const liveRow = ensureMessageRowExists(index);
+         const liveContent = liveRow?.querySelector(".message-content");
+         if (liveContent) {
+           liveContent.innerHTML = renderMessageHtml(target.content, target.role);
+         } else if (isViewing) {
+           renderChat();
+         }
+         if (isViewing) scrollChatToBottom();
+       },
+       state.abortController.signal,
+     );
     state.lastUsedModel = result.model || "";
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
@@ -15427,24 +15432,30 @@ async function regenerateMessage(index) {
     refreshMessageControlStates();
     if (contentEl)
       contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
-    scrollChatToBottom();
+     scrollChatToBottom();
 
-    const result = await callOpenRouter(
-      systemPrompt,
-      regenMessagesWithoutSystem,
-      state.settings.model,
-      (chunk) => {
-        target.content += chunk;
-        messagesToSave[index].content = target.content;
-        if (contentEl)
-          contentEl.innerHTML = renderMessageHtml(target.content, target.role);
-        if (!isViewingThread(threadId)) {
-          persistThreadMessagesById(threadId, messagesToSave).catch(() => {});
-        }
-        scrollChatToBottom();
-      },
-      state.abortController.signal,
-    );
+     const result = await callOpenRouter(
+       systemPrompt,
+       regenMessagesWithoutSystem,
+       state.settings.model,
+       (chunk) => {
+         target.content += chunk;
+         messagesToSave[index].content = target.content;
+         // Re-query DOM to get fresh reference (in case chat was re-rendered)
+         const liveRow = ensureMessageRowExists(index);
+         const liveContent = liveRow?.querySelector(".message-content");
+         if (liveContent) {
+           liveContent.innerHTML = renderMessageHtml(target.content, target.role);
+         } else if (isViewingThread(threadId)) {
+           renderChat();
+         }
+         if (!isViewingThread(threadId)) {
+           persistThreadMessagesById(threadId, messagesToSave).catch(() => {});
+         }
+         scrollChatToBottom();
+       },
+       state.abortController.signal,
+     );
     const reply = result.content || target.content;
     state.lastUsedModel = result.model || "";
     state.lastUsedProvider = result.provider || "";
