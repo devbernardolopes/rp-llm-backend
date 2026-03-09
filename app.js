@@ -14845,15 +14845,16 @@ async function regenerateOocMessage(index) {
        (chunk) => {
          target.content += chunk;
          messagesToSave[index].content = target.content;
-         // Re-query DOM to get fresh reference (in case chat was re-rendered)
-         const liveRow = ensureMessageRowExists(index);
-         const liveContent = liveRow?.querySelector(".message-content");
-         if (liveContent) {
-           liveContent.innerHTML = renderMessageHtml(target.content, target.role);
-         } else if (isViewing) {
-           renderChat();
+         if (isViewing) {
+           const liveRow = ensureMessageRowExists(index);
+           const liveContent = liveRow?.querySelector(".message-content");
+           if (liveContent) {
+             liveContent.innerHTML = renderMessageHtml(target.content, target.role);
+           } else {
+             renderChat();
+           }
+           scrollChatToBottom();
          }
-         if (isViewing) scrollChatToBottom();
        },
        state.abortController.signal,
      );
@@ -15151,13 +15152,15 @@ async function generateBotReply() {
         Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
       );
     }
-    const liveRow = ensureMessageRowExists(pendingIndex);
-    const liveContent = liveRow?.querySelector(".message-content");
-    if (liveContent) {
-      renderMessageContent(liveContent, pending);
-    } else if (isViewingThread(threadId)) {
-      renderChat();
-    }
+     if (isViewingThread(threadId)) {
+       const liveRow = ensureMessageRowExists(pendingIndex);
+       const liveContent = liveRow?.querySelector(".message-content");
+       if (liveContent) {
+         renderMessageContent(liveContent, pending);
+       } else {
+         renderChat();
+       }
+     }
     if (liveRow) {
       liveRow.dataset.streaming = "0";
       const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
@@ -15441,18 +15444,19 @@ async function regenerateMessage(index) {
        (chunk) => {
          target.content += chunk;
          messagesToSave[index].content = target.content;
-         // Re-query DOM to get fresh reference (in case chat was re-rendered)
-         const liveRow = ensureMessageRowExists(index);
-         const liveContent = liveRow?.querySelector(".message-content");
-         if (liveContent) {
-           liveContent.innerHTML = renderMessageHtml(target.content, target.role);
-         } else if (isViewingThread(threadId)) {
-           renderChat();
+         if (isViewingThread(threadId)) {
+           const liveRow = ensureMessageRowExists(index);
+           const liveContent = liveRow?.querySelector(".message-content");
+           if (liveContent) {
+             liveContent.innerHTML = renderMessageHtml(target.content, target.role);
+           } else {
+             renderChat();
+           }
+           scrollChatToBottom();
          }
          if (!isViewingThread(threadId)) {
            persistThreadMessagesById(threadId, messagesToSave).catch(() => {});
          }
-         scrollChatToBottom();
        },
        state.abortController.signal,
      );
