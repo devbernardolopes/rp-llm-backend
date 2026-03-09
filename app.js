@@ -14205,6 +14205,7 @@ function beginInlineMessageEdit(index, contentEl) {
     }
     message.content = next;
     message.userEdited = true;
+    message.summarized = false;
     stopTtsPlayback();
     renderMessageContent(contentEl, message);
     refreshMessageControlStates();
