@@ -67,6 +67,10 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 5-3.1 8.6-7 9-3.9-.4-7-4-7-9V6z"></path><path d="M9.2 12.2l1.9 1.9 3.7-3.7"></path></svg>',
   export:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M8 7l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>',
+  pin:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"></path><circle cx="12" cy="9" r="2"></circle></svg>',
+  pinFilled:
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"></path><circle cx="12" cy="9" r="2"></circle></svg>',
 };
 
 const PROMPT_COMMAND_HISTORY_KEY = "rp-prompt-command-history";
@@ -1260,10 +1264,11 @@ const state = {
   assetBlobUrlCache: new Map(),
   cachedChatBotAvatar: { url: null, characterId: null, personaId: null },
   editingMessageIndex: null,
-  pendingPersonaInjectionPersonaId: null,
-  activeGenerationThreadId: null,
-  currentRequestMessages: null,
-  generationQueue: [],
+   pendingPersonaInjectionPersonaId: null,
+   activeGenerationThreadId: null,
+   currentRequestMessages: null,
+   generationQueue: [],
+   summarizationInProgress: new Set(),
   selectedThreadIds: new Set(),
   characterTagFilters: [],
   characterPage: 1,
@@ -6096,6 +6101,12 @@ async function renderCharacters() {
 
   const sortedCharacters = [...filteredCharacters];
   sortedCharacters.sort((a, b) => {
+    // Pinned characters always appear first (undefined/pinned false = 0, true = 1)
+    const pinA = a.pinned === true ? 1 : 0;
+    const pinB = b.pinned === true ? 1 : 0;
+    if (pinA !== pinB) {
+      return pinB - pinA; // pinned first
+    }
     const parts = getCharacterSortParts(state.characterSortMode);
     const mode = `${parts.base}_${parts.dir}`;
     const nameA = String(a.name || "").toLowerCase();
@@ -6409,13 +6420,31 @@ async function renderCharacters() {
         const lang = card.dataset.activeCardLanguage;
         openCharacterModal(char, lang);
       });
-      avatarWrap.appendChild(avatar);
-    }
+     avatarWrap.appendChild(avatar);
+     }
 
-    const idOverlay = document.createElement("span");
-    idOverlay.className = "character-avatar-id";
-    idOverlay.textContent = `#${char.id}`;
-    avatarWrap.appendChild(idOverlay);
+     // Pin button - positioned top-left
+     const pinBtn = document.createElement("button");
+     pinBtn.type = "button";
+     pinBtn.className = "character-pin-btn";
+     pinBtn.setAttribute("aria-label", char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle"));
+     pinBtn.title = char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle");
+     pinBtn.innerHTML = char.pinned ? ICONS.pinFilled : ICONS.pin;
+     pinBtn.addEventListener("click", async (e) => {
+       e.stopPropagation();
+       const newPinnedState = !char.pinned;
+       await db.characters.update(char.id, { pinned: newPinnedState });
+       // Update local char object
+       char.pinned = newPinnedState;
+       // Re-render characters to update order and button icons
+       await renderCharacters();
+     });
+     avatarWrap.appendChild(pinBtn);
+
+     const idOverlay = document.createElement("span");
+     idOverlay.className = "character-avatar-id";
+     idOverlay.textContent = `#${char.id}`;
+     avatarWrap.appendChild(idOverlay);
 
     const threadOverlay = document.createElement("span");
     threadOverlay.className = "character-avatar-threads";

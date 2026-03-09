@@ -483,7 +483,11 @@
   "paginationResultsPerPage": "Schede per pagina",
   "paginationUnlimited": "Illimitato",
   "paginationPageAria": "Vai alla pagina {page}",
-    "memoryCommandButtonTitle": "Comando memoria",
-    "crossWindowSync": "Sincronizza thread tra schede",
-    "threadTintColorTitle": "Colore della scheda del thread (Maiusc + Clic sinistro = ripristina)"
+     "memoryCommandButtonTitle": "Comando memoria",
+     "crossWindowSync": "Sincronizza thread tra schede",
+     "threadTintColorTitle": "Colore della scheda del thread (Maiusc + Clic sinistro = ripristina)",
+     "pinCharacter": "Fissa",
+     "unpinCharacter": "Definisci",
+     "pinCharacterTitle": "Fissa personaggio",
+     "unpinCharacterTitle": "Definisci personaggio"
 }

@@ -483,7 +483,11 @@
   "paginationResultsPerPage": "Cartes par page",
   "paginationUnlimited": "Illimité",
   "paginationPageAria": "Aller à la page {page}",
-    "memoryCommandButtonTitle": "Commande mémoire",
-    "crossWindowSync": "Synchroniser les fils entre onglets",
-    "threadTintColorTitle": "Couleur de la carte du fil (Maj + Clic gauche = réinitialiser)"
+     "memoryCommandButtonTitle": "Commande mémoire",
+     "crossWindowSync": "Synchroniser les fils entre onglets",
+     "threadTintColorTitle": "Couleur de la carte du fil (Maj + Clic gauche = réinitialiser)",
+     "pinCharacter": "Épingler",
+     "unpinCharacter": "Désépingler",
+     "pinCharacterTitle": "Épingler le personnage",
+     "unpinCharacterTitle": "Désépingler le personnage"
 }

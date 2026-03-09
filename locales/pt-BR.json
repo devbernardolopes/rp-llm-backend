@@ -483,7 +483,11 @@
   "paginationResultsPerPage": "Cartões por página",
   "paginationUnlimited": "Ilimitado",
   "paginationPageAria": "Ir para a página {page}",
-    "memoryCommandButtonTitle": "Comando de memória",
-    "crossWindowSync": "Sincronizar threads entre abas",
-    "threadTintColorTitle": "Cor do Cartão do Tópico (Shift + Clique esquerdo = resetar)"
+     "memoryCommandButtonTitle": "Comando de memória",
+     "crossWindowSync": "Sincronizar threads entre abas",
+     "threadTintColorTitle": "Cor do Cartão do Tópico (Shift + Clique esquerdo = resetar)",
+     "pinCharacter": "Fixar",
+     "unpinCharacter": "Desafixar",
+     "pinCharacterTitle": "Fixar personagem",
+     "unpinCharacterTitle": "Desafixar personagem"
 }

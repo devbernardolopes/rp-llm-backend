@@ -484,7 +484,11 @@
   "paginationResultsPerPage": "Cards per page",
   "paginationUnlimited": "Unlimited",
   "paginationPageAria": "Go to page {page}",
-   "memoryCommandButtonTitle": "Memory command",
-   "crossWindowSync": "Sync threads across tabs",
-   "threadTintColorTitle": "Thread Card Color (Shift + Left Click = reset)"
+    "memoryCommandButtonTitle": "Memory command",
+    "crossWindowSync": "Sync threads across tabs",
+    "threadTintColorTitle": "Thread Card Color (Shift + Left Click = reset)",
+    "pinCharacter": "Pin",
+    "unpinCharacter": "Unpin",
+    "pinCharacterTitle": "Pin character to top",
+    "unpinCharacterTitle": "Unpin character from top"
 }
