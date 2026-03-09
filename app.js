@@ -1,8 +1,7 @@
-let currentCharacter = null;
+﻿let currentCharacter = null;
 let currentThread = null;
 let conversationHistory = [];
 let currentPersona = null;
-
 
 const MODEL_OPTIONS = [
   { value: "openrouter/auto", label: "Auto" },
@@ -42,8 +41,7 @@ const MODEL_OPTIONS = [
 const ICONS = {
   duplicate:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect></svg>',
-  fork:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5"></circle><circle cx="18" cy="6" r="2.5"></circle><circle cx="12" cy="18" r="2.5"></circle><path d="M6 8.5v3"></path><path d="M18 8.5v3"></path><path d="M6 12.5h12"></path><path d="M12 12.5v5.5"></path></svg>',
+  fork: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5"></circle><circle cx="18" cy="6" r="2.5"></circle><circle cx="12" cy="18" r="2.5"></circle><path d="M6 8.5v3"></path><path d="M18 8.5v3"></path><path d="M6 12.5h12"></path><path d="M12 12.5v5.5"></path></svg>',
   edit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1 10-10a2 2 0 0 0-2.8-2.8l-10 10L4 20z"></path><path d="M13.5 6.5l4 4"></path></svg>',
   delete:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"></path><path d="M9 7V5h6v2"></path><path d="M7 7l1 13h8l1-13"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>',
@@ -67,8 +65,7 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 5-3.1 8.6-7 9-3.9-.4-7-4-7-9V6z"></path><path d="M9.2 12.2l1.9 1.9 3.7-3.7"></path></svg>',
   export:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M8 7l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>',
-  pin:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"></path><circle cx="12" cy="9" r="2"></circle></svg>',
+  pin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"></path><circle cx="12" cy="9" r="2"></circle></svg>',
   pinFilled:
     '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"></path><circle cx="12" cy="9" r="2"></circle></svg>',
 };
@@ -140,7 +137,7 @@ const DEFAULT_SETTINGS = {
   oocSystemAvatar: "",
   crossWindowSyncEnabled: true,
   autoUnloadThreshold: 0,
-}
+};
 
 // Theme management
 function applyThemeVars(vars) {
@@ -1264,11 +1261,11 @@ const state = {
   assetBlobUrlCache: new Map(),
   cachedChatBotAvatar: { url: null, characterId: null, personaId: null },
   editingMessageIndex: null,
-   pendingPersonaInjectionPersonaId: null,
-   activeGenerationThreadId: null,
-   currentRequestMessages: null,
-   generationQueue: [],
-   summarizationInProgress: new Set(),
+  pendingPersonaInjectionPersonaId: null,
+  activeGenerationThreadId: null,
+  currentRequestMessages: null,
+  generationQueue: [],
+  summarizationInProgress: new Set(),
   selectedThreadIds: new Set(),
   characterTagFilters: [],
   characterPage: 1,
@@ -1327,8 +1324,8 @@ const state = {
   charModalActiveLanguage: "",
   charModalActiveTab: "lang",
   charModalPendingThreadDeleteIds: [],
-   charModalAvatars: [],
-   sfx: {
+  charModalAvatars: [],
+  sfx: {
     currentAudio: null,
     playingAssetId: null,
   },
@@ -1610,13 +1607,13 @@ function chunkForTTS(text, maxLen = 180) {
     chunks.push(buffer.trim());
   }
 
-   return chunks.filter(Boolean);
+  return chunks.filter(Boolean);
 }
 
 // Debounce utility for event handlers
 function debounce(func, wait) {
   let timeout;
-  return function(...args) {
+  return function (...args) {
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       func.apply(this, args);
@@ -1628,7 +1625,10 @@ function debounce(func, wait) {
 function processCardsInChunks(cards, processor, chunkSize = 3) {
   let index = 0;
   function processChunk(deadline) {
-    while (index < cards.length && (deadline.timeRemaining() > 0 || index === 0)) {
+    while (
+      index < cards.length &&
+      (deadline.timeRemaining() > 0 || index === 0)
+    ) {
       const end = Math.min(index + chunkSize, cards.length);
       for (; index < end; index++) {
         processor(cards[index]);
@@ -1776,10 +1776,10 @@ async function init() {
   await migrateLegacySessions();
   await hydrateGenerationQueue();
   await ensurePersonasInitialized();
-   await renderAll();
-   applyCrossWindowSyncSetting();
-   preloadSummarizationIfEnabled();
-   // applyMarkdownCustomCss(); // Disabled - using markdown-it library
+  await renderAll();
+  applyCrossWindowSyncSetting();
+  preloadSummarizationIfEnabled();
+  // applyMarkdownCustomCss(); // Disabled - using markdown-it library
   applyChatMessageAlignment();
   renderCharacterTagFilterChips();
   updateThreadRenameButtonState();
@@ -1985,7 +1985,10 @@ async function applyInterfaceLanguage() {
   const chatOpacityBtn = document.getElementById("chat-opacity-toggle-btn");
   if (chatOpacityBtn) {
     const title = t("chatOpacityToggle");
-    chatOpacityBtn.classList.toggle("is-active", state.chatOpacityOverlayVisible);
+    chatOpacityBtn.classList.toggle(
+      "is-active",
+      state.chatOpacityOverlayVisible,
+    );
     chatOpacityBtn.setAttribute("title", title);
     chatOpacityBtn.setAttribute("aria-label", title);
   }
@@ -2063,7 +2066,10 @@ function normalizeChatOpacityValue(raw) {
 function getThreadChatOpacity(thread) {
   if (thread) {
     const threadValue = normalizeChatOpacityValue(thread.chatOpacity);
-    const hasExplicit = Object.prototype.hasOwnProperty.call(thread, "chatOpacity");
+    const hasExplicit = Object.prototype.hasOwnProperty.call(
+      thread,
+      "chatOpacity",
+    );
     if (hasExplicit) {
       return threadValue;
     }
@@ -2087,7 +2093,10 @@ async function persistThreadChatOpacityValue(threadId, opacity) {
 function applyChatOpacitySetting(value = null) {
   const raw = value !== null ? value : state.settings.chatOpacity;
   const normalized = normalizeChatOpacityValue(raw);
-  document.documentElement.style.setProperty("--chat-opacity", String(normalized));
+  document.documentElement.style.setProperty(
+    "--chat-opacity",
+    String(normalized),
+  );
   const slider = document.getElementById("chat-opacity-slider");
   if (slider && document.activeElement !== slider) {
     slider.value = String(Math.round(normalized * 100));
@@ -2735,20 +2744,20 @@ function setupEvents() {
   });
   input.addEventListener("dblclick", openPromptHistory);
   input.addEventListener("pointerup", onInputPointerUp);
-   chatLog.addEventListener("scroll", () => {
-      if (state.sending) {
-        state.chatAutoScroll = isChatNearBottom();
-      }
-       maybeProcessUnreadMessagesSeen(true).catch(() => {});
-       updateScrollBottomButtonVisibility();
-       updateUnloadButtonVisibility();
-       if (currentThread) {
-         localStorage.setItem(
-           `rp-thread-scroll-${currentThread.id}`,
-           chatLog.scrollTop,
-         );
-       }
-     });
+  chatLog.addEventListener("scroll", () => {
+    if (state.sending) {
+      state.chatAutoScroll = isChatNearBottom();
+    }
+    maybeProcessUnreadMessagesSeen(true).catch(() => {});
+    updateScrollBottomButtonVisibility();
+    updateUnloadButtonVisibility();
+    if (currentThread) {
+      localStorage.setItem(
+        `rp-thread-scroll-${currentThread.id}`,
+        chatLog.scrollTop,
+      );
+    }
+  });
   requestAnimationFrame(() => adjustUserInputElementHeight(input));
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
@@ -2764,7 +2773,9 @@ function setupEvents() {
     ro.observe(input);
   }
 
-  const chatOpacityToggleBtn = document.getElementById("chat-opacity-toggle-btn");
+  const chatOpacityToggleBtn = document.getElementById(
+    "chat-opacity-toggle-btn",
+  );
   chatOpacityToggleBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     toggleChatOpacityOverlay().catch(() => {});
@@ -2794,8 +2805,7 @@ function setupEvents() {
     saveUiState();
     await renderCharacters();
   });
-  const chatOpacityOverlay =
-    document.getElementById("chat-opacity-overlay");
+  const chatOpacityOverlay = document.getElementById("chat-opacity-overlay");
   chatOpacityOverlay?.addEventListener("click", (e) => {
     if (e.target === chatOpacityOverlay) {
       e.stopPropagation();
@@ -2888,29 +2898,29 @@ function setupEvents() {
     });
   });
 
-    document.querySelectorAll(".modal").forEach((modal) => {
-      modal.addEventListener("click", (e) => {
-        if (e.target !== modal) return;
-        if (modal.id === "image-preview-modal") {
-          closeImagePreview();
-        } else if (modal.id === "char-language-modal") {
-          modal.classList.add("hidden");
-        } else if (modal.id === "confirm-modal") {
-          resolveConfirmDialog(false);
-        } else if (modal.id === "unsaved-modal") {
-          resolveUnsavedDialog("back");
-        } else if (
-          modal.id === "memory-modal" &&
-          isMemoryRegeneratePromptOpen()
-        ) {
-          hideMemoryRegeneratePromptModal();
-        } else if (modal.id === "memory-regenerate-prompt-modal") {
-          hideMemoryRegeneratePromptModal();
-        } else {
-          closeActiveModal();
-        }
-      });
+  document.querySelectorAll(".modal").forEach((modal) => {
+    modal.addEventListener("click", (e) => {
+      if (e.target !== modal) return;
+      if (modal.id === "image-preview-modal") {
+        closeImagePreview();
+      } else if (modal.id === "char-language-modal") {
+        modal.classList.add("hidden");
+      } else if (modal.id === "confirm-modal") {
+        resolveConfirmDialog(false);
+      } else if (modal.id === "unsaved-modal") {
+        resolveUnsavedDialog("back");
+      } else if (
+        modal.id === "memory-modal" &&
+        isMemoryRegeneratePromptOpen()
+      ) {
+        hideMemoryRegeneratePromptModal();
+      } else if (modal.id === "memory-regenerate-prompt-modal") {
+        hideMemoryRegeneratePromptModal();
+      } else {
+        closeActiveModal();
+      }
     });
+  });
 
   document
     .getElementById("unsaved-back-btn")
@@ -3071,25 +3081,25 @@ function setupModalTextareas(root = document) {
       const expanded = header.getAttribute("aria-expanded") === "true";
       icon.textContent = expanded ? "▾" : "▴";
     };
-     entry.setExpanded = (next) => {
-       const current = header.getAttribute("aria-expanded") === "true";
-       if (next === current) {
-         entry.refresh();
-         if (next) autoExpandTextarea(textarea);
-         return;
-       }
-       const modalBody = textarea.closest(".modal-body");
-       const scrollTop = modalBody ? modalBody.scrollTop : 0;
-       header.setAttribute("aria-expanded", next ? "true" : "false");
-       body.classList.toggle("collapsed", !next);
-       if (next) autoExpandTextarea(textarea);
-       entry.refresh();
-       if (modalBody && !next) {
-         requestAnimationFrame(() => {
-           modalBody.scrollTop = scrollTop;
-         });
-       }
-     };
+    entry.setExpanded = (next) => {
+      const current = header.getAttribute("aria-expanded") === "true";
+      if (next === current) {
+        entry.refresh();
+        if (next) autoExpandTextarea(textarea);
+        return;
+      }
+      const modalBody = textarea.closest(".modal-body");
+      const scrollTop = modalBody ? modalBody.scrollTop : 0;
+      header.setAttribute("aria-expanded", next ? "true" : "false");
+      body.classList.toggle("collapsed", !next);
+      if (next) autoExpandTextarea(textarea);
+      entry.refresh();
+      if (modalBody && !next) {
+        requestAnimationFrame(() => {
+          modalBody.scrollTop = scrollTop;
+        });
+      }
+    };
     textareaCollapseStates.set(textarea, entry);
     const hasContent = String(textarea.value || "").trim().length > 0;
     entry.setExpanded(forceCollapsed ? false : hasContent);
@@ -4092,16 +4102,16 @@ function closeAnyOpenModal() {
 }
 
 async function setupSettingsControls() {
-   // Apply saved theme early
-   try {
-     await applySavedTheme();
-   } catch (e) {
-     console.warn("Theme initialization failed:", e);
-   }
-   // Seed additional built-in themes
-   await seedAdditionalThemes();
+  // Apply saved theme early
+  try {
+    await applySavedTheme();
+  } catch (e) {
+    console.warn("Theme initialization failed:", e);
+  }
+  // Seed additional built-in themes
+  await seedAdditionalThemes();
 
-   const settingsVersionEl = document.getElementById("settings-version");
+  const settingsVersionEl = document.getElementById("settings-version");
   if (settingsVersionEl && typeof CONFIG.version === "string") {
     settingsVersionEl.textContent = CONFIG.version;
   }
@@ -4143,9 +4153,11 @@ async function setupSettingsControls() {
   const threadAutoTitleMinMessages = document.getElementById(
     "thread-autotitle-min-messages",
   );
-   const lockMemoryMessages = document.getElementById("lock-memory-messages");
-   const personaPrefixEnabled = document.getElementById("persona-prefix-enabled");
-   const summaryThresholdInput = document.getElementById("summary-threshold");
+  const lockMemoryMessages = document.getElementById("lock-memory-messages");
+  const personaPrefixEnabled = document.getElementById(
+    "persona-prefix-enabled",
+  );
+  const summaryThresholdInput = document.getElementById("summary-threshold");
   const memoryMessagesToKeepInput = document.getElementById(
     "memory-messages-to-keep",
   );
@@ -4171,10 +4183,10 @@ async function setupSettingsControls() {
     if (!uiLanguageSelect.value) uiLanguageSelect.value = "auto";
   }
 
-   const themeSelect = document.getElementById("theme-select");
-   if (themeSelect) {
-     await populateThemeDropdown();
-   }
+  const themeSelect = document.getElementById("theme-select");
+  if (themeSelect) {
+    await populateThemeDropdown();
+  }
 
   if (modelPricingFilter) {
     modelPricingFilter.value =
@@ -4281,13 +4293,13 @@ async function setupSettingsControls() {
   state.settings.threadAutoTitleMinMessages = minMessages;
   threadAutoTitleMinMessages.value = String(minMessages);
   threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
-   if (lockMemoryMessages) {
-     lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
-   }
-   if (personaPrefixEnabled) {
-     personaPrefixEnabled.checked = state.settings.personaPrefixEnabled === true;
-   }
-   if (summaryThresholdInput) {
+  if (lockMemoryMessages) {
+    lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
+  }
+  if (personaPrefixEnabled) {
+    personaPrefixEnabled.checked = state.settings.personaPrefixEnabled === true;
+  }
+  if (summaryThresholdInput) {
     const threshold =
       typeof window.getSummaryThresholdValue === "function"
         ? window.getSummaryThresholdValue(state.settings.summaryThreshold)
@@ -4321,7 +4333,9 @@ async function setupSettingsControls() {
     state.settings.memorySlots = slots;
     memorySlotsInput.value = String(slots);
   }
-  const autoUnloadThresholdInput = document.getElementById("auto-unload-threshold");
+  const autoUnloadThresholdInput = document.getElementById(
+    "auto-unload-threshold",
+  );
   if (autoUnloadThresholdInput) {
     const threshold = Math.max(
       0,
@@ -4336,15 +4350,22 @@ async function setupSettingsControls() {
     autoUnloadThresholdInput.value = String(threshold);
     autoUnloadThresholdInput.addEventListener("change", async () => {
       const val = Number(autoUnloadThresholdInput.value);
-      const clamped = Math.max(0, Math.min(1000, Number.isFinite(val) ? val : 0));
+      const clamped = Math.max(
+        0,
+        Math.min(1000, Number.isFinite(val) ? val : 0),
+      );
       state.settings.autoUnloadThreshold = clamped;
       autoUnloadThresholdInput.value = String(clamped);
       saveSettings();
       if (currentThread) {
         currentThread.unloadState = { loadLimit: 0 };
-        await persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
-          unloadState: { loadLimit: 0 },
-        });
+        await persistThreadMessagesById(
+          Number(currentThread.id),
+          conversationHistory,
+          {
+            unloadState: { loadLimit: 0 },
+          },
+        );
       }
       renderChat();
     });
@@ -4444,21 +4465,21 @@ async function setupSettingsControls() {
     warnBelow: 0.7,
     dangerAbove: 1.0,
   });
-    globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
-    summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
-    if (memorySummarizerUserPrompt) {
-      const userPromptValue =
-        state.settings.memorySummarizerUserPrompt ||
-        DEFAULT_SETTINGS.memorySummarizerUserPrompt;
-      state.settings.memorySummarizerUserPrompt = userPromptValue;
-      memorySummarizerUserPrompt.value = userPromptValue;
-    }
-    if (summaryMessagesPreProcessingJson) {
-      const preProcessingValue =
-        state.settings.summaryMessagesPreProcessingJson || "[]";
-      state.settings.summaryMessagesPreProcessingJson = preProcessingValue;
-      summaryMessagesPreProcessingJson.value = preProcessingValue;
-    }
+  globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
+  summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
+  if (memorySummarizerUserPrompt) {
+    const userPromptValue =
+      state.settings.memorySummarizerUserPrompt ||
+      DEFAULT_SETTINGS.memorySummarizerUserPrompt;
+    state.settings.memorySummarizerUserPrompt = userPromptValue;
+    memorySummarizerUserPrompt.value = userPromptValue;
+  }
+  if (summaryMessagesPreProcessingJson) {
+    const preProcessingValue =
+      state.settings.summaryMessagesPreProcessingJson || "[]";
+    state.settings.summaryMessagesPreProcessingJson = preProcessingValue;
+    summaryMessagesPreProcessingJson.value = preProcessingValue;
+  }
   personaInjectionTemplate.value =
     state.settings.personaInjectionTemplate ||
     DEFAULT_SETTINGS.personaInjectionTemplate;
@@ -4568,36 +4589,40 @@ async function setupSettingsControls() {
     threadAutoTitleMinMessages.value = String(value);
     saveSettings();
   });
-   lockMemoryMessages?.addEventListener("change", () => {
-     state.settings.lockMemoryMessages = lockMemoryMessages.checked;
-     saveSettings();
-   });
-    if (personaPrefixEnabled) {
-      personaPrefixEnabled.addEventListener("change", () => {
-        state.settings.personaPrefixEnabled = personaPrefixEnabled.checked;
-        saveSettings();
-      });
-    }
-    const crossWindowSyncEnabled = document.getElementById(
-      "cross-window-sync-enabled",
-    );
-    if (crossWindowSyncEnabled) {
-      crossWindowSyncEnabled.checked = state.settings.crossWindowSyncEnabled !== false;
-      crossWindowSyncEnabled.addEventListener("change", () => {
-        state.settings.crossWindowSyncEnabled = crossWindowSyncEnabled.checked;
-        saveSettings();
-        applyCrossWindowSyncSetting();
-      });
-    }
-    const useLocalSummarization = document.getElementById("use-local-summarization");
-   if (useLocalSummarization) {
-     useLocalSummarization.checked = state.settings.useLocalSummarization === true;
-     useLocalSummarization.addEventListener("change", () => {
-       state.settings.useLocalSummarization = useLocalSummarization.checked;
-       saveSettings();
-     });
-   }
-   summaryThresholdInput?.addEventListener("change", () => {
+  lockMemoryMessages?.addEventListener("change", () => {
+    state.settings.lockMemoryMessages = lockMemoryMessages.checked;
+    saveSettings();
+  });
+  if (personaPrefixEnabled) {
+    personaPrefixEnabled.addEventListener("change", () => {
+      state.settings.personaPrefixEnabled = personaPrefixEnabled.checked;
+      saveSettings();
+    });
+  }
+  const crossWindowSyncEnabled = document.getElementById(
+    "cross-window-sync-enabled",
+  );
+  if (crossWindowSyncEnabled) {
+    crossWindowSyncEnabled.checked =
+      state.settings.crossWindowSyncEnabled !== false;
+    crossWindowSyncEnabled.addEventListener("change", () => {
+      state.settings.crossWindowSyncEnabled = crossWindowSyncEnabled.checked;
+      saveSettings();
+      applyCrossWindowSyncSetting();
+    });
+  }
+  const useLocalSummarization = document.getElementById(
+    "use-local-summarization",
+  );
+  if (useLocalSummarization) {
+    useLocalSummarization.checked =
+      state.settings.useLocalSummarization === true;
+    useLocalSummarization.addEventListener("change", () => {
+      state.settings.useLocalSummarization = useLocalSummarization.checked;
+      saveSettings();
+    });
+  }
+  summaryThresholdInput?.addEventListener("change", () => {
     const threshold =
       typeof window.getSummaryThresholdValue === "function"
         ? window.getSummaryThresholdValue(summaryThresholdInput.value)
@@ -4623,17 +4648,17 @@ async function setupSettingsControls() {
     state.settings.memoryMessagesToKeep = keepValue;
     saveSettings();
   });
-   memorySlotsInput?.addEventListener("change", () => {
-     const slots =
-       typeof window.getMemorySlotsValue === "function"
-         ? window.getMemorySlotsValue(memorySlotsInput.value)
-         : Math.max(3, Math.min(10, Number(memorySlotsInput.value) || 5));
-     memorySlotsInput.value = String(slots);
-     state.settings.memorySlots = slots;
-     saveSettings();
-   });
+  memorySlotsInput?.addEventListener("change", () => {
+    const slots =
+      typeof window.getMemorySlotsValue === "function"
+        ? window.getMemorySlotsValue(memorySlotsInput.value)
+        : Math.max(3, Math.min(10, Number(memorySlotsInput.value) || 5));
+    memorySlotsInput.value = String(slots);
+    state.settings.memorySlots = slots;
+    saveSettings();
+  });
 
-    autoReplyEnabled?.addEventListener("click", async () => {
+  autoReplyEnabled?.addEventListener("click", async () => {
     const newValue = !(currentThread?.autoReplyEnabled !== false);
     if (currentThread) {
       currentThread.autoReplyEnabled = newValue;
@@ -5161,7 +5186,9 @@ function saveUiState() {
         : [],
       characterPagination: {
         page: Math.max(1, Number(state.characterPage) || 1),
-        perPage: CHARACTER_PAGE_SIZES.includes(Number(state.characterCardsPerPage))
+        perPage: CHARACTER_PAGE_SIZES.includes(
+          Number(state.characterCardsPerPage),
+        )
           ? Number(state.characterCardsPerPage)
           : 0,
       },
@@ -5243,10 +5270,14 @@ function addPromptToHistory(threadId, content, isOoc = false) {
   const trimmed = String(content).trim();
   if (!trimmed) return;
 
-  state.promptHistory = Array.isArray(state.promptHistory) ? state.promptHistory : [];
+  state.promptHistory = Array.isArray(state.promptHistory)
+    ? state.promptHistory
+    : [];
 
   // Check most recent prompt history entry for this thread
-  const threadPromptEntries = state.promptHistory.filter((e) => e.threadId === threadId);
+  const threadPromptEntries = state.promptHistory.filter(
+    (e) => e.threadId === threadId,
+  );
   if (threadPromptEntries.length > 0) {
     threadPromptEntries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     if (threadPromptEntries[0].content === trimmed) {
@@ -5255,7 +5286,9 @@ function addPromptToHistory(threadId, content, isOoc = false) {
   }
 
   // Check most recent command history entry for this thread
-  const commandEntries = (state.promptCommandHistory || []).filter((e) => e.threadId === threadId);
+  const commandEntries = (state.promptCommandHistory || []).filter(
+    (e) => e.threadId === threadId,
+  );
   if (commandEntries.length > 0) {
     commandEntries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     if (commandEntries[0].content === trimmed) {
@@ -5712,7 +5745,9 @@ function isValidNewManagerTag(inputValue, editingTag = null) {
   const tag = normalizeTagValue(inputValue);
   if (tag.length < 2) return false;
   const normalizedTag = tag.toLowerCase();
-  const editingLower = editingTag ? String(editingTag || "").toLowerCase() : null;
+  const editingLower = editingTag
+    ? String(editingTag || "").toLowerCase()
+    : null;
   return !getAllAvailableTags().some((t) => {
     const lower = t.toLowerCase();
     if (editingLower && lower === editingLower) {
@@ -5726,10 +5761,7 @@ function updateTagManagerAddButtonState() {
   const input = document.getElementById("tag-manager-input");
   const btn = document.getElementById("add-tag-btn");
   if (!input || !btn) return;
-  btn.disabled = !isValidNewManagerTag(
-    input.value,
-    state.tagManagerEditingTag,
-  );
+  btn.disabled = !isValidNewManagerTag(input.value, state.tagManagerEditingTag);
 }
 
 function renderTagManagerList() {
@@ -6139,8 +6171,8 @@ async function renderCharacters() {
     totalCharacters === 0
       ? 0
       : perPage > 0
-      ? Math.max(1, Math.ceil(totalCharacters / perPage))
-      : 1;
+        ? Math.max(1, Math.ceil(totalCharacters / perPage))
+        : 1;
   let currentPage = Number(state.characterPage) || 1;
   if (totalPages === 0) {
     currentPage = 1;
@@ -6152,11 +6184,11 @@ async function renderCharacters() {
     totalCharacters === 0
       ? []
       : perPage > 0
-      ? sortedCharacters.slice(
-          (currentPage - 1) * perPage,
-          (currentPage - 1) * perPage + perPage,
-        )
-      : sortedCharacters;
+        ? sortedCharacters.slice(
+            (currentPage - 1) * perPage,
+            (currentPage - 1) * perPage + perPage,
+          )
+        : sortedCharacters;
 
   const existingCards = grid.querySelectorAll(".character-card");
   const carouselStates = new Map();
@@ -6420,31 +6452,36 @@ async function renderCharacters() {
         const lang = card.dataset.activeCardLanguage;
         openCharacterModal(char, lang);
       });
-     avatarWrap.appendChild(avatar);
-     }
+      avatarWrap.appendChild(avatar);
+    }
 
-     // Pin button - positioned top-left
-     const pinBtn = document.createElement("button");
-     pinBtn.type = "button";
-     pinBtn.className = "character-pin-btn";
-     pinBtn.setAttribute("aria-label", char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle"));
-     pinBtn.title = char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle");
-     pinBtn.innerHTML = char.pinned ? ICONS.pinFilled : ICONS.pin;
-     pinBtn.addEventListener("click", async (e) => {
-       e.stopPropagation();
-       const newPinnedState = !char.pinned;
-       await db.characters.update(char.id, { pinned: newPinnedState });
-       // Update local char object
-       char.pinned = newPinnedState;
-       // Re-render characters to update order and button icons
-       await renderCharacters();
-     });
-     avatarWrap.appendChild(pinBtn);
+    // Pin button - positioned top-left
+    const pinBtn = document.createElement("button");
+    pinBtn.type = "button";
+    pinBtn.className = "character-pin-btn";
+    pinBtn.setAttribute(
+      "aria-label",
+      char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle"),
+    );
+    pinBtn.title = char.pinned
+      ? t("unpinCharacterTitle")
+      : t("pinCharacterTitle");
+    pinBtn.innerHTML = char.pinned ? ICONS.pinFilled : ICONS.pin;
+    pinBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const newPinnedState = !char.pinned;
+      await db.characters.update(char.id, { pinned: newPinnedState });
+      // Update local char object
+      char.pinned = newPinnedState;
+      // Re-render characters to update order and button icons
+      await renderCharacters();
+    });
+    avatarWrap.appendChild(pinBtn);
 
-     const idOverlay = document.createElement("span");
-     idOverlay.className = "character-avatar-id";
-     idOverlay.textContent = `#${char.id}`;
-     avatarWrap.appendChild(idOverlay);
+    const idOverlay = document.createElement("span");
+    idOverlay.className = "character-avatar-id";
+    idOverlay.textContent = `#${char.id}`;
+    avatarWrap.appendChild(idOverlay);
 
     const threadOverlay = document.createElement("span");
     threadOverlay.className = "character-avatar-threads";
@@ -6784,7 +6821,11 @@ async function renderCharacters() {
   updateCarouselForPaneState();
 }
 
-function getCharacterPaginationRange(currentPage, totalPages, windowSize = CHARACTER_PAGE_BUTTON_WINDOW) {
+function getCharacterPaginationRange(
+  currentPage,
+  totalPages,
+  windowSize = CHARACTER_PAGE_BUTTON_WINDOW,
+) {
   const pages = [];
   if (totalPages <= 0) return pages;
   if (totalPages <= windowSize) {
@@ -6811,7 +6852,8 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   const prevBtn = document.getElementById("character-pagination-prev");
   const nextBtn = document.getElementById("character-pagination-next");
   const sizeSelect = document.getElementById("character-pagination-size");
-  if (!container || !pagesContainer || !prevBtn || !nextBtn || !sizeSelect) return;
+  if (!container || !pagesContainer || !prevBtn || !nextBtn || !sizeSelect)
+    return;
 
   const hasCharacters = totalItems > 0;
   container.classList.toggle("hidden", !hasCharacters);
@@ -7015,7 +7057,9 @@ async function renderThreads() {
   selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
   deleteSelectedBtn.disabled = selectedCount === 0;
 
-  const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
+  const chatViewActive = document
+    .getElementById("chat-view")
+    ?.classList.contains("active");
 
   for (const thread of threads) {
     const char = charMap.get(thread.characterId);
@@ -7031,7 +7075,10 @@ async function renderThreads() {
     row.dataset.threadId = String(thread.id);
     row.addEventListener("click", (e) => {
       if (e.target?.closest(".actions")) return;
-      if (e.target?.closest(".thread-tint-btn") || e.target?.closest(".thread-tint-input"))
+      if (
+        e.target?.closest(".thread-tint-btn") ||
+        e.target?.closest(".thread-tint-input")
+      )
         return;
       const chatViewActive = document
         .getElementById("chat-view")
@@ -7315,11 +7362,11 @@ async function renderThreads() {
   // Single DOM insertion to minimize reflow
   list.appendChild(fragment);
 
-   const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
-   if (renderSeq !== state.renderThreadsSeq) return;
-   list.scrollTop = Math.min(previousScrollTop, maxScroll);
-   updateDocumentTitleWithUnread();
-  }
+  const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
+  if (renderSeq !== state.renderThreadsSeq) return;
+  list.scrollTop = Math.min(previousScrollTop, maxScroll);
+  updateDocumentTitleWithUnread();
+}
 
 function updateThreadTintIndicator(indicator, color) {
   if (!indicator) return;
@@ -9322,8 +9369,9 @@ function openPersonaEditor(persona = null) {
   document.getElementById("persona-editor-internal-description").value =
     persona?.internalDescription || "";
 
-  document.getElementById("persona-editor-color").value =
-    normalizePersonaColor(persona?.color);
+  document.getElementById("persona-editor-color").value = normalizePersonaColor(
+    persona?.color,
+  );
   document.getElementById("persona-editor-is-default").checked =
     !!persona?.isDefault;
 
@@ -11527,7 +11575,7 @@ function isFirstAssistantMessageIndex(index, history = conversationHistory) {
     (m) =>
       normalizeApiRole(m?.apiRole || m?.role) === "assistant" &&
       isInSimulationMessage(m) &&
-      m.manualMessage !== true
+      m.manualMessage !== true,
   );
   return first === index;
 }
@@ -12046,7 +12094,9 @@ async function importCharacterFromFile(e) {
       const existingTags = getAllAvailableTags();
       const existingLowerMap = new Map();
       existingTags.forEach((t) => existingLowerMap.set(t.toLowerCase(), t));
-      const normalizedTags = rawTags.map((t) => existingLowerMap.get(t.toLowerCase()) || t);
+      const normalizedTags = rawTags.map(
+        (t) => existingLowerMap.get(t.toLowerCase()) || t,
+      );
       mergeTagsIntoCatalog(rawTags);
       character = {
         ...imported,
@@ -12272,11 +12322,11 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     pendingGenerationQueuedAt: 0,
     shortcutsVisible: false,
     oocModeEnabled: false,
-     chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
-     unloadState: { loadLimit: 0 },
-     createdAt: Date.now(),
-     updatedAt: Date.now(),
-   };
+    chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
+    unloadState: { loadLimit: 0 },
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
 
   const threadId = await db.threads.add(newThread);
   broadcastSyncEvent({
@@ -12332,9 +12382,8 @@ async function forkThreadFromMessage(messageIndex) {
   const titleTarget =
     source.title || tf("threadTitleDefault", { id: source.id });
   const copyTitle = tf("threadTitleForked", { title: titleTarget });
-  const writingCount = computeWritingInstructionsTurnCountFromMessages(
-    cloneMessages,
-  );
+  const writingCount =
+    computeWritingInstructionsTurnCountFromMessages(cloneMessages);
   const copy = {
     characterId: source.characterId,
     characterLanguage: source.characterLanguage || "",
@@ -12356,85 +12405,88 @@ async function forkThreadFromMessage(messageIndex) {
     updatedAt: Date.now(),
   };
 
-   const newThreadId = await db.threads.add(copy);
-    broadcastSyncEvent({
-      type: "thread-updated",
-      threadId: newThreadId,
-      updatedAt: Date.now(),
+  const newThreadId = await db.threads.add(copy);
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: newThreadId,
+    updatedAt: Date.now(),
+  });
+
+  const lastMessageTimestamp = Number(targetMessage.createdAt);
+  const cutoffTimestamp = Number.isFinite(lastMessageTimestamp)
+    ? lastMessageTimestamp
+    : Date.now();
+
+  // Build a map of memoryId to the indices of messages that have that summaryId
+  const memoryIdToIndices = new Map();
+  conversationHistory.forEach((msg, idx) => {
+    const summaryId = Number(msg?.summaryId);
+    if (Number.isInteger(summaryId) && summaryId > 0) {
+      if (!memoryIdToIndices.has(summaryId)) {
+        memoryIdToIndices.set(summaryId, []);
+      }
+      memoryIdToIndices.get(summaryId).push(idx);
+    }
+  });
+
+  // Get all memory entries for the source character and thread
+  const allMemoryEntries = await getMemoryEntries(
+    source.characterId,
+    source.id,
+  );
+
+  // Filter entries: only those where all messages with that summaryId are within the truncated set (index <= boundedIndex)
+  const safeMemoryEntries = allMemoryEntries.filter((entry) => {
+    const indices = memoryIdToIndices.get(entry.id) || [];
+    if (indices.length === 0) {
+      // Not referenced by any message, skip
+      return false;
+    }
+    // All referencing message indices must be <= boundedIndex
+    return indices.every((idx) => idx <= boundedIndex);
+  });
+
+  // Copy safe memory entries to the new thread
+  const mapping = new Map();
+  if (safeMemoryEntries.length > 0) {
+    await db.transaction("rw", db.memories, async () => {
+      for (const entry of safeMemoryEntries) {
+        const entryCopy = { ...entry };
+        delete entryCopy.id;
+        entryCopy.threadId = newThreadId;
+        entryCopy.characterId = source.characterId;
+        const newId = await db.memories.add(entryCopy);
+        mapping.set(entry.id, newId);
+      }
     });
+  }
 
-    const lastMessageTimestamp = Number(targetMessage.createdAt);
-    const cutoffTimestamp = Number.isFinite(lastMessageTimestamp)
-      ? lastMessageTimestamp
-      : Date.now();
-
-    // Build a map of memoryId to the indices of messages that have that summaryId
-   const memoryIdToIndices = new Map();
-   conversationHistory.forEach((msg, idx) => {
-     const summaryId = Number(msg?.summaryId);
-     if (Number.isInteger(summaryId) && summaryId > 0) {
-       if (!memoryIdToIndices.has(summaryId)) {
-         memoryIdToIndices.set(summaryId, []);
-       }
-       memoryIdToIndices.get(summaryId).push(idx);
-     }
-   });
-
-   // Get all memory entries for the source character and thread
-   const allMemoryEntries = await getMemoryEntries(source.characterId, source.id);
-
-   // Filter entries: only those where all messages with that summaryId are within the truncated set (index <= boundedIndex)
-   const safeMemoryEntries = allMemoryEntries.filter(entry => {
-     const indices = memoryIdToIndices.get(entry.id) || [];
-     if (indices.length === 0) {
-       // Not referenced by any message, skip
-       return false;
-     }
-     // All referencing message indices must be <= boundedIndex
-     return indices.every(idx => idx <= boundedIndex);
-   });
-
-   // Copy safe memory entries to the new thread
-   const mapping = new Map();
-   if (safeMemoryEntries.length > 0) {
-     await db.transaction("rw", db.memories, async () => {
-       for (const entry of safeMemoryEntries) {
-         const entryCopy = { ...entry };
-         delete entryCopy.id;
-         entryCopy.threadId = newThreadId;
-         entryCopy.characterId = source.characterId;
-         const newId = await db.memories.add(entryCopy);
-         mapping.set(entry.id, newId);
-       }
-     });
-   }
-
-   // Remap message references: summaryId and summaryProtected
-   const remapId = (value) => {
-     const num = Number(value);
-     if (Number.isInteger(num) && mapping.has(num)) {
-       return mapping.get(num);
-     }
-     // No mapping: clear reference
-     return null;
-   };
-   const remappedMessages = cloneMessages.map((msg) => {
-     const next = { ...msg };
-     const newSummaryId = remapId(next.summaryId);
-     const newProtectedId = remapId(next.summaryProtected);
-     if (newSummaryId !== null) {
-       next.summaryId = newSummaryId;
-     } else {
-       delete next.summaryId;
-     }
-     if (newProtectedId !== null) {
-       next.summaryProtected = newProtectedId;
-     } else {
-       delete next.summaryProtected;
-     }
-     return next;
-   });
-   await db.threads.update(newThreadId, { messages: remappedMessages });
+  // Remap message references: summaryId and summaryProtected
+  const remapId = (value) => {
+    const num = Number(value);
+    if (Number.isInteger(num) && mapping.has(num)) {
+      return mapping.get(num);
+    }
+    // No mapping: clear reference
+    return null;
+  };
+  const remappedMessages = cloneMessages.map((msg) => {
+    const next = { ...msg };
+    const newSummaryId = remapId(next.summaryId);
+    const newProtectedId = remapId(next.summaryProtected);
+    if (newSummaryId !== null) {
+      next.summaryId = newSummaryId;
+    } else {
+      delete next.summaryId;
+    }
+    if (newProtectedId !== null) {
+      next.summaryProtected = newProtectedId;
+    } else {
+      delete next.summaryProtected;
+    }
+    return next;
+  });
+  await db.threads.update(newThreadId, { messages: remappedMessages });
 
   state.promptHistory = Array.isArray(state.promptHistory)
     ? state.promptHistory
@@ -12449,7 +12501,7 @@ async function forkThreadFromMessage(messageIndex) {
       const created = Number(entry.createdAt || 0);
       return created <= cutoffTimestamp;
     })
-    .sort((a, b) => (Number(a.createdAt || 0) - Number(b.createdAt || 0)));
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
   let promptHistoryChanged = false;
   for (const entry of promptEntriesToCopy) {
     state.promptHistory.push({
@@ -12475,7 +12527,7 @@ async function forkThreadFromMessage(messageIndex) {
       const created = Number(entry.createdAt || 0);
       return created <= cutoffTimestamp;
     })
-    .sort((a, b) => (Number(a.createdAt || 0) - Number(b.createdAt || 0)));
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
   let promptCommandHistoryChanged = false;
   for (const entry of promptCommandEntriesToCopy) {
     state.promptCommandHistory.push({
@@ -12512,8 +12564,12 @@ async function duplicateThread(threadId) {
   }
 
   // Ensure arrays exist
-  state.promptHistory = Array.isArray(state.promptHistory) ? state.promptHistory : [];
-  state.promptCommandHistory = Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : [];
+  state.promptHistory = Array.isArray(state.promptHistory)
+    ? state.promptHistory
+    : [];
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
+    ? state.promptCommandHistory
+    : [];
 
   const clonedMessages = (() => {
     const list = Array.isArray(source.messages) ? source.messages : [];
@@ -12551,78 +12607,82 @@ async function duplicateThread(threadId) {
     source.id,
     newThreadId,
   );
-   if (memoryMapping.size > 0) {
-     const remapId = (value) => {
-       const num = Number(value);
-       return Number.isInteger(num) && memoryMapping.has(num)
-         ? memoryMapping.get(num)
-         : value;
-     };
-     const remappedMessages = copy.messages.map((msg) => {
-       const next = { ...msg };
-       next.summaryId = remapId(next.summaryId);
-       next.summaryProtected = remapId(next.summaryProtected);
-       return next;
-     });
-     await db.threads.update(newThreadId, { messages: remappedMessages });
-   }
+  if (memoryMapping.size > 0) {
+    const remapId = (value) => {
+      const num = Number(value);
+      return Number.isInteger(num) && memoryMapping.has(num)
+        ? memoryMapping.get(num)
+        : value;
+    };
+    const remappedMessages = copy.messages.map((msg) => {
+      const next = { ...msg };
+      next.summaryId = remapId(next.summaryId);
+      next.summaryProtected = remapId(next.summaryProtected);
+      return next;
+    });
+    await db.threads.update(newThreadId, { messages: remappedMessages });
+  }
 
-   // Duplicate prompt history entries for the new thread
-   const originalPromptEntries = (state.promptHistory || []).filter(
-     (e) => e.threadId === threadId,
-   );
-    for (const entry of originalPromptEntries) {
-      state.promptHistory.push({
-        threadId: newThreadId,
-        content: entry.content,
-        createdAt: entry.createdAt,
-        isOoc: entry.isOoc || false,
-        personaId: entry.personaId ?? null,
-        personaColor: entry.personaColor ?? "",
-      });
+  // Duplicate prompt history entries for the new thread
+  const originalPromptEntries = (state.promptHistory || []).filter(
+    (e) => e.threadId === threadId,
+  );
+  for (const entry of originalPromptEntries) {
+    state.promptHistory.push({
+      threadId: newThreadId,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      isOoc: entry.isOoc || false,
+      personaId: entry.personaId ?? null,
+      personaColor: entry.personaColor ?? "",
+    });
+  }
+  if (originalPromptEntries.length > 0) {
+    if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
+      state.promptHistory = state.promptHistory.slice(-PROMPT_HISTORY_MAX);
     }
-   if (originalPromptEntries.length > 0) {
-     if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
-       state.promptHistory = state.promptHistory.slice(-PROMPT_HISTORY_MAX);
-     }
-     savePromptHistory();
-   }
+    savePromptHistory();
+  }
 
-   // Duplicate command history entries for the new thread
-   const originalCommandEntries = (state.promptCommandHistory || []).filter(
-     (e) => e.threadId === threadId,
-   );
-    for (const entry of originalCommandEntries) {
-      state.promptCommandHistory.push({
-        threadId: newThreadId,
-        content: entry.content,
-        createdAt: entry.createdAt,
-        isOoc: entry.isOoc || false,
-        personaId: entry.personaId ?? null,
-        personaColor: entry.personaColor ?? "",
-      });
+  // Duplicate command history entries for the new thread
+  const originalCommandEntries = (state.promptCommandHistory || []).filter(
+    (e) => e.threadId === threadId,
+  );
+  for (const entry of originalCommandEntries) {
+    state.promptCommandHistory.push({
+      threadId: newThreadId,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      isOoc: entry.isOoc || false,
+      personaId: entry.personaId ?? null,
+      personaColor: entry.personaColor ?? "",
+    });
+  }
+  if (originalCommandEntries.length > 0) {
+    if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+      state.promptCommandHistory = state.promptCommandHistory.slice(
+        -PROMPT_COMMAND_HISTORY_MAX,
+      );
     }
-   if (originalCommandEntries.length > 0) {
-     if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
-       state.promptCommandHistory = state.promptCommandHistory.slice(
-         -PROMPT_COMMAND_HISTORY_MAX,
-       );
-     }
-     savePromptCommandHistory();
-   }
+    savePromptCommandHistory();
+  }
 
-   broadcastSyncEvent({
-     type: "thread-updated",
-     threadId: newThreadId,
-     updatedAt: Date.now(),
-   });
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: newThreadId,
+    updatedAt: Date.now(),
+  });
   await renderThreads();
   await renderCharacters();
   await openThread(newThreadId);
   showToast(t("threadDuplicated"), "success");
 }
 
-async function duplicateThreadMemories(characterId, originalThreadId, newThreadId) {
+async function duplicateThreadMemories(
+  characterId,
+  originalThreadId,
+  newThreadId,
+) {
   const mapping = new Map();
   const charId = Number(characterId || 0);
   const oldThreadId = Number(originalThreadId || 0);
@@ -12649,7 +12709,6 @@ async function duplicateThreadMemories(characterId, originalThreadId, newThreadI
   });
   return mapping;
 }
-
 
 async function toggleThreadFavorite(threadId) {
   const thread = await db.threads.get(threadId);
@@ -12763,12 +12822,12 @@ async function openThread(threadId) {
   currentCharacter = character || null;
   state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
   preloadKokoroForActiveCharacter();
-    conversationHistory = (thread.messages || []).map((m) => ({
-      ...m,
-      role: m.role === "ai" ? "assistant" : m.role,
-    }));
+  conversationHistory = (thread.messages || []).map((m) => ({
+    ...m,
+    role: m.role === "ai" ? "assistant" : m.role,
+  }));
 
-   await applyChatViewBackgroundFromSfx(currentThread);
+  await applyChatViewBackgroundFromSfx(currentThread);
   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
   currentPersona = thread.selectedPersonaId
     ? await db.personas.get(thread.selectedPersonaId)
@@ -12809,25 +12868,25 @@ async function openThread(threadId) {
   await persistThreadMessagesById(Number(threadId), thread.messages || [], {
     _skipUpdatedAt: true,
   });
-   renderChat();
-   const input = document.getElementById("user-input");
-   input.value = thread.draftInput || "";
-   state.activeShortcut = null;
-   closePromptHistory();
-   await renderShortcutsBar();
-   await renderThreads();
-   setSendingState();
-   showChatView();
+  renderChat();
+  const input = document.getElementById("user-input");
+  input.value = thread.draftInput || "";
+  state.activeShortcut = null;
+  closePromptHistory();
+  await renderShortcutsBar();
+  await renderThreads();
+  setSendingState();
+  showChatView();
   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
-   const log = document.getElementById("chat-log");
-   if (log && savedScroll) {
-     log.scrollTop = Number(savedScroll);
-   } else if (log) {
-     log.scrollTop = log.scrollHeight;
-   }
-   ensureUnloadButton();
-   updateUnloadButtonVisibility();
-   updateScrollBottomButtonVisibility();
+  const log = document.getElementById("chat-log");
+  if (log && savedScroll) {
+    log.scrollTop = Number(savedScroll);
+  } else if (log) {
+    log.scrollTop = log.scrollHeight;
+  }
+  ensureUnloadButton();
+  updateUnloadButtonVisibility();
+  updateScrollBottomButtonVisibility();
   broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
   if (thread.pendingGenerationReason) {
     const id = Number(thread.id);
@@ -12992,10 +13051,7 @@ function applyPersonaColorToPromptHistoryList(root) {
 
 function applyPersonaColorToUserMessageBlock(block, message) {
   if (!block) return;
-  const shouldTint =
-    message &&
-    message.role === "user" &&
-    message.ooc !== true;
+  const shouldTint = message && message.role === "user" && message.ooc !== true;
   if (!shouldTint) {
     block.style.removeProperty("border-color");
     block.style.removeProperty("background-color");
@@ -13380,7 +13436,7 @@ async function maybeGenerateThreadTitle() {
   // Instead of generating title in a new bubble after bot message,
   // set a flag so the NEXT bot reply will generate title first in the same bubble
   state.pendingTitleGeneration = true;
- }
+}
 
 function computeVisibleMessageIndices() {
   const total = conversationHistory.length;
@@ -13395,7 +13451,8 @@ function computeVisibleMessageIndices() {
   }
   const startActive = total - threshold;
   const thread = currentThread;
-  const loadLimit = thread && thread.unloadState ? thread.unloadState.loadLimit : 0;
+  const loadLimit =
+    thread && thread.unloadState ? thread.unloadState.loadLimit : 0;
   const clampedLoadLimit = Math.max(0, Math.min(loadLimit, startActive));
   const visible = [];
   // Show most recently hidden messages first (from startActive - clampedLoadLimit to startActive - 1)
@@ -13479,9 +13536,13 @@ async function toggleUnloadBatch() {
     newLoadLimit = 0;
   }
   currentThread.unloadState = { loadLimit: newLoadLimit };
-  await persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
-    unloadState: currentThread.unloadState,
-  });
+  await persistThreadMessagesById(
+    Number(currentThread.id),
+    conversationHistory,
+    {
+      unloadState: currentThread.unloadState,
+    },
+  );
   renderChat();
   updateUnloadButtonVisibility();
 }
@@ -13500,7 +13561,10 @@ function renderChat(startIdx, endIdx) {
 
   // Determine range to render
   const renderStart = startIdx !== undefined ? startIdx : 0;
-  const renderEnd = endIdx !== undefined && endIdx !== null ? endIdx : conversationHistory.length - 1;
+  const renderEnd =
+    endIdx !== undefined && endIdx !== null
+      ? endIdx
+      : conversationHistory.length - 1;
 
   // Always do full render when no explicit range provided
   const isFullRender = arguments.length === 0;
@@ -13557,7 +13621,9 @@ function renderChat(startIdx, endIdx) {
     const message = conversationHistory[i];
     if (!message) continue;
     // Check if row already exists (for partial updates)
-    const existingRow = log.querySelector(`.chat-row[data-message-index="${i}"]`);
+    const existingRow = log.querySelector(
+      `.chat-row[data-message-index="${i}"]`,
+    );
     if (existingRow) {
       const status = String(message?.generationStatus || "").trim();
       const rowStreaming =
@@ -13590,12 +13656,12 @@ function renderChat(startIdx, endIdx) {
     }
   }
 
-   ensureUnloadButton();
-   updateUnloadButtonVisibility();
-   updateScrollBottomButtonVisibility();
-   scheduleThreadBudgetIndicatorUpdate();
-   maybeProcessUnreadMessagesSeen(false).catch(() => {});
- }
+  ensureUnloadButton();
+  updateUnloadButtonVisibility();
+  updateScrollBottomButtonVisibility();
+  scheduleThreadBudgetIndicatorUpdate();
+  maybeProcessUnreadMessagesSeen(false).catch(() => {});
+}
 
 function getUnreadAssistantCount(messages) {
   const list = Array.isArray(messages) ? messages : [];
@@ -13983,7 +14049,11 @@ function getAssistantStreamingStatusInfo(message) {
   const isTitleGenerating = status === "title_generating";
   const isStreamingStatus = STREAMING_STATUSES.has(status);
   if (!isStreamingStatus) {
-    return { isStreamingStatus: false, shouldShowSpinner: false, statusLabel: null };
+    return {
+      isStreamingStatus: false,
+      shouldShowSpinner: false,
+      statusLabel: null,
+    };
   }
   let statusLabel = t("generatingLabel");
   if (status === "regenerating") {
@@ -14018,7 +14088,10 @@ function renderMessageContent(contentEl, message) {
       label,
     )}`;
   } else {
-    contentEl.innerHTML = renderMessageHtml(message.content || "", message.role);
+    contentEl.innerHTML = renderMessageHtml(
+      message.content || "",
+      message.role,
+    );
   }
   if (message.truncatedByFilter === true) {
     contentEl.appendChild(buildTruncationNotice());
@@ -14683,9 +14756,9 @@ async function sendOocInquiry(text) {
     senderPersonaId: currentPersona?.id || null,
     ooc: true,
   };
-    conversationHistory.push(userMsg);
-    addPromptToHistory(currentThread.id, text, true);
-    if (log && isViewing) {
+  conversationHistory.push(userMsg);
+  addPromptToHistory(currentThread.id, text, true);
+  if (log && isViewing) {
     log.appendChild(buildMessageRow(userMsg, userIndex, false));
     scrollChatToBottom();
   }
@@ -14732,7 +14805,7 @@ async function sendOocInquiry(text) {
       (chunk) => {
         pendingAssistant.content += chunk;
         if (state.settings.streamEnabled) {
-        const liveRow = ensureMessageRowExists(pendingIndex);
+          const liveRow = ensureMessageRowExists(pendingIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
             liveContent.innerHTML = renderMessageHtml(
@@ -14839,26 +14912,29 @@ async function regenerateOocMessage(index) {
 
   try {
     const { systemPrompt } = await buildOocSystemPrompt();
-     const result = await callOpenRouter(
-       systemPrompt,
-       [{ role: "user", content: userMessage.content }],
-       state.settings.model,
-       (chunk) => {
-         target.content += chunk;
-         messagesToSave[index].content = target.content;
-         if (isViewing) {
-           const liveRow = ensureMessageRowExists(index);
-           const liveContent = liveRow?.querySelector(".message-content");
-           if (liveContent) {
-             liveContent.innerHTML = renderMessageHtml(target.content, target.role);
-           } else {
-             renderChat();
-           }
-           scrollChatToBottom();
-         }
-       },
-       state.abortController.signal,
-     );
+    const result = await callOpenRouter(
+      systemPrompt,
+      [{ role: "user", content: userMessage.content }],
+      state.settings.model,
+      (chunk) => {
+        target.content += chunk;
+        messagesToSave[index].content = target.content;
+        if (isViewing) {
+          const liveRow = ensureMessageRowExists(index);
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(
+              target.content,
+              target.role,
+            );
+          } else {
+            renderChat();
+          }
+          scrollChatToBottom();
+        }
+      },
+      state.abortController.signal,
+    );
     state.lastUsedModel = result.model || "";
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
@@ -14999,21 +15075,21 @@ async function generateBotReply() {
     threadOverride: generationThreadSnapshot,
   });
   const systemPrompt = promptContext.prompt;
-   const messagesWithoutSystem = inSimulationHistory
-     .filter((m) => !m.summarized)
-     .map((m) => {
-       const role = m.role === "ai" ? "assistant" : m.role;
-       let content = m.content;
-       if (
-         role === "user" &&
-         state.settings.personaPrefixEnabled &&
-         m.senderName &&
-         m.senderName !== "You"
-       ) {
-         content = `(As ${m.senderName}): ${content}`;
-       }
-       return { role, content };
-     });
+  const messagesWithoutSystem = inSimulationHistory
+    .filter((m) => !m.summarized)
+    .map((m) => {
+      const role = m.role === "ai" ? "assistant" : m.role;
+      let content = m.content;
+      if (
+        role === "user" &&
+        state.settings.personaPrefixEnabled &&
+        m.senderName &&
+        m.senderName !== "You"
+      ) {
+        content = `(As ${m.senderName}): ${content}`;
+      }
+      return { role, content };
+    });
 
   const promptMessages = [
     { role: "system", content: systemPrompt },
@@ -15153,15 +15229,15 @@ async function generateBotReply() {
         Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
       );
     }
-     if (isViewingThread(threadId)) {
-       const liveRow = ensureMessageRowExists(pendingIndex);
-       const liveContent = liveRow?.querySelector(".message-content");
-       if (liveContent) {
-         renderMessageContent(liveContent, pending);
-       } else {
-         renderChat();
-       }
-     }
+    if (isViewingThread(threadId)) {
+      const liveRow = ensureMessageRowExists(pendingIndex);
+      const liveContent = liveRow?.querySelector(".message-content");
+      if (liveContent) {
+        renderMessageContent(liveContent, pending);
+      } else {
+        renderChat();
+      }
+    }
     if (liveRow) {
       liveRow.dataset.streaming = "0";
       const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
@@ -15282,40 +15358,38 @@ async function deleteMessageAt(index) {
     t("deleteMessageTitle"),
     tf("deleteMessageConfirm", { preview: previewText }),
   );
-   if (!ok) return;
+  if (!ok) return;
 
-   // Determine if this is an API-generated assistant message (not manual, not OOC) and placement is "once"
-   const isApiAssistant =
-     targetRole === "assistant" &&
-     !target?.ooc &&
-     target.manualMessage !== true &&
-     currentCharacter?.personaInjectionPlacement === "once";
+  // Determine if this is an API-generated assistant message (not manual, not OOC) and placement is "once"
+  const isApiAssistant =
+    targetRole === "assistant" &&
+    !target?.ooc &&
+    target.manualMessage !== true &&
+    currentCharacter?.personaInjectionPlacement === "once";
 
-   const latestCountedTurn =
-     getThreadWritingInstructionsTurnCount(currentThread);
-   const targetTurn = Number(target?.writingInstructionsTurnIndex);
-   const isLatestAssistant =
-     targetRole === "assistant" &&
-     isLatestAssistantMessageIndex(index, conversationHistory);
-   const isLatestCountedAssistant =
-     isLatestAssistant &&
-     target?.writingInstructionsCounted === true &&
-     Number.isInteger(targetTurn) &&
-     targetTurn === latestCountedTurn;
-   conversationHistory.splice(index, 1);
+  const latestCountedTurn =
+    getThreadWritingInstructionsTurnCount(currentThread);
+  const targetTurn = Number(target?.writingInstructionsTurnIndex);
+  const isLatestAssistant =
+    targetRole === "assistant" &&
+    isLatestAssistantMessageIndex(index, conversationHistory);
+  const isLatestCountedAssistant =
+    isLatestAssistant &&
+    target?.writingInstructionsCounted === true &&
+    Number.isInteger(targetTurn) &&
+    targetTurn === latestCountedTurn;
+  conversationHistory.splice(index, 1);
 
-   // After deletion, if the deleted message was an API assistant and no other API assistants remain, clear the once flag
-   if (isApiAssistant) {
-     const hasApiAssistant = conversationHistory.some(
-       (m) => {
-         const role = normalizeApiRole(m?.apiRole || m?.role);
-         return role === "assistant" && m.manualMessage !== true && m.ooc !== true;
-       }
-     );
-     if (!hasApiAssistant) {
-       await clearThreadPersonaInjectionOnceApplied();
-     }
-   }
+  // After deletion, if the deleted message was an API assistant and no other API assistants remain, clear the once flag
+  if (isApiAssistant) {
+    const hasApiAssistant = conversationHistory.some((m) => {
+      const role = normalizeApiRole(m?.apiRole || m?.role);
+      return role === "assistant" && m.manualMessage !== true && m.ooc !== true;
+    });
+    if (!hasApiAssistant) {
+      await clearThreadPersonaInjectionOnceApplied();
+    }
+  }
   if (isLatestCountedAssistant && currentThread) {
     currentThread.writingInstructionsTurnCount = Math.max(
       0,
@@ -15427,40 +15501,43 @@ async function regenerateMessage(index) {
     target.generationStatus = "regenerating";
     messagesToSave[index].content = target.content;
     messagesToSave[index].generationStatus = target.generationStatus;
-     await persistThreadMessagesById(threadId, messagesToSave);
-     renderChat();
-     const log = document.getElementById("chat-log");
-     const row = log?.querySelector(`.chat-row[data-message-index="${index}"]`);
-     const contentEl = row?.querySelector(".message-content");
+    await persistThreadMessagesById(threadId, messagesToSave);
+    renderChat();
+    const log = document.getElementById("chat-log");
+    const row = log?.querySelector(`.chat-row[data-message-index="${index}"]`);
+    const contentEl = row?.querySelector(".message-content");
     if (row) row.dataset.streaming = "1";
     refreshMessageControlStates();
     if (contentEl)
       contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
-     scrollChatToBottom();
+    scrollChatToBottom();
 
-     const result = await callOpenRouter(
-       systemPrompt,
-       regenMessagesWithoutSystem,
-       state.settings.model,
-       (chunk) => {
-         target.content += chunk;
-         messagesToSave[index].content = target.content;
-         if (isViewingThread(threadId)) {
-           const liveRow = ensureMessageRowExists(index);
-           const liveContent = liveRow?.querySelector(".message-content");
-           if (liveContent) {
-             liveContent.innerHTML = renderMessageHtml(target.content, target.role);
-           } else {
-             renderChat();
-           }
-           scrollChatToBottom();
-         }
-         if (!isViewingThread(threadId)) {
-           persistThreadMessagesById(threadId, messagesToSave).catch(() => {});
-         }
-       },
-       state.abortController.signal,
-     );
+    const result = await callOpenRouter(
+      systemPrompt,
+      regenMessagesWithoutSystem,
+      state.settings.model,
+      (chunk) => {
+        target.content += chunk;
+        messagesToSave[index].content = target.content;
+        if (isViewingThread(threadId)) {
+          const liveRow = ensureMessageRowExists(index);
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(
+              target.content,
+              target.role,
+            );
+          } else {
+            renderChat();
+          }
+          scrollChatToBottom();
+        }
+        if (!isViewingThread(threadId)) {
+          persistThreadMessagesById(threadId, messagesToSave).catch(() => {});
+        }
+      },
+      state.abortController.signal,
+    );
     const reply = result.content || target.content;
     state.lastUsedModel = result.model || "";
     state.lastUsedProvider = result.provider || "";
@@ -16300,17 +16377,17 @@ function openPromptHistory() {
 
   const threadId = currentThread?.id ?? null;
 
-   // Get prompts from our persistent prompt history (user messages)
-   const historyPrompts = (state.promptHistory || []).filter(
-     (entry) => entry.threadId === threadId,
-   );
+  // Get prompts from our persistent prompt history (user messages)
+  const historyPrompts = (state.promptHistory || []).filter(
+    (entry) => entry.threadId === threadId,
+  );
 
-   // Get command prompts
-   const commandPrompts = (state.promptCommandHistory || []).filter(
-     (entry) => entry.threadId === threadId,
-   ).map(entry => ({ ...entry, isOoc: true })); // Treat commands as OOC for tint
+  // Get command prompts
+  const commandPrompts = (state.promptCommandHistory || [])
+    .filter((entry) => entry.threadId === threadId)
+    .map((entry) => ({ ...entry, isOoc: true })); // Treat commands as OOC for tint
 
-   // Combine and sort by most recent first
+  // Combine and sort by most recent first
   const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
     const aTs = Number(a.createdAt) || 0;
     const bTs = Number(b.createdAt) || 0;
@@ -16386,7 +16463,11 @@ function openPromptHistory() {
             sendMessage();
           });
         }
-        const isCommandEntry = entry.isOoc && String(entry.content || "").trim().startsWith("/");
+        const isCommandEntry =
+          entry.isOoc &&
+          String(entry.content || "")
+            .trim()
+            .startsWith("/");
         if (isCommandEntry) {
           setTimeout(() => {
             promotePromptCommandHistoryEntry(entry);
@@ -16532,7 +16613,10 @@ async function renderMemoryModalEntries() {
         t("memoryEntryRegenerate"),
         () => openMemoryRegeneratePromptModal(entryData),
       );
-      regenBtn.classList.add("memory-entry-action-btn", "memory-entry-regen-btn");
+      regenBtn.classList.add(
+        "memory-entry-action-btn",
+        "memory-entry-regen-btn",
+      );
       const deleteBtn = iconButton(
         "delete",
         t("memoryEntryDelete"),
@@ -16546,7 +16630,11 @@ async function renderMemoryModalEntries() {
           }
         },
       );
-      deleteBtn.classList.add("memory-entry-action-btn", "memory-entry-delete-btn", "danger-btn");
+      deleteBtn.classList.add(
+        "memory-entry-action-btn",
+        "memory-entry-delete-btn",
+        "danger-btn",
+      );
       actions.append(regenBtn, deleteBtn);
       row.appendChild(actions);
     }
@@ -16954,18 +17042,18 @@ function setSendingState(sending) {
   const personaSelect = document.getElementById("persona-select");
   const currentId = Number(currentThread?.id);
   const activeId = Number(state.activeGenerationThreadId);
-   const hasGeneratingMarker = Array.isArray(conversationHistory)
-     ? conversationHistory.some((m) => {
-         if (!m || m.role !== "assistant") return false;
-         const st = String(m.generationStatus || "").trim();
-         return (
-           st === "generating" ||
-           st === "regenerating" ||
-           st === "title_generating" ||
-           st === "summarizing"
-         );
-       })
-     : false;
+  const hasGeneratingMarker = Array.isArray(conversationHistory)
+    ? conversationHistory.some((m) => {
+        if (!m || m.role !== "assistant") return false;
+        const st = String(m.generationStatus || "").trim();
+        return (
+          st === "generating" ||
+          st === "regenerating" ||
+          st === "title_generating" ||
+          st === "summarizing"
+        );
+      })
+    : false;
   const hasTitleGeneratingMarker = Array.isArray(conversationHistory)
     ? conversationHistory.some((m) => {
         if (!m || m.role !== "assistant") return false;
@@ -18462,7 +18550,7 @@ function positionScrollBottomButton() {
   const chatRect = chatView.getBoundingClientRect();
   const inputRect = inputRow.getBoundingClientRect();
   const bottom = Math.max(18, Math.round(chatRect.bottom - inputRect.top + 10));
-   btn.style.bottom = `${bottom}px`;
+  btn.style.bottom = `${bottom}px`;
 }
 
 function applyCrossWindowSyncSetting() {
@@ -18745,9 +18833,7 @@ async function openMessageModelInfoModal(index) {
   const temperatureEl = document.getElementById(
     "message-model-info-temperature",
   );
-  const maxTokensEl = document.getElementById(
-    "message-model-info-max-tokens",
-  );
+  const maxTokensEl = document.getElementById("message-model-info-max-tokens");
   const topPEl = document.getElementById("message-model-info-top-p");
   const frequencyEl = document.getElementById(
     "message-model-info-frequency-penalty",
@@ -18826,7 +18912,9 @@ async function openMessageSystemPromptModal(index) {
     const entryWrapper = document.createElement("div");
     entryWrapper.className = "system-prompt-entry";
 
-    const roleLabelText = String(msg?.role || "unknown").trim().toUpperCase();
+    const roleLabelText = String(msg?.role || "unknown")
+      .trim()
+      .toUpperCase();
     const label = document.createElement("span");
     label.className = "system-prompt-entry-label";
     label.textContent = roleLabelText;
@@ -19254,9 +19342,9 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
         }
       } catch {
         // ignore malformed chunk
-       }
-     }
-   }
+      }
+    }
+  }
 
   // Process any remaining data in buffer after stream ends
   if (buffer && buffer.startsWith("data:")) {
@@ -19495,43 +19583,43 @@ async function updateThreadBudgetIndicator() {
   }
   if (seq !== state.budgetIndicator.seq) return;
 
-   const messages = [
-     { role: "system", content: systemPrompt },
-     ...inSimulationHistory.map((m) => {
-       const role = normalizeApiRole(m.apiRole || m.role);
-       let content = m.content;
-       if (
-         role === "user" &&
-         state.settings.personaPrefixEnabled &&
-         m.senderName &&
-         m.senderName !== "You"
-       ) {
-         content = `(As ${m.senderName}): ${content}`;
-       }
-       return { role, content };
-     }),
-   ];
-   if (personaInjectionForEndMessages) {
-     messages.push({
-       role: "system",
-       content: personaInjectionForEndMessages,
-     });
-   }
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...inSimulationHistory.map((m) => {
+      const role = normalizeApiRole(m.apiRole || m.role);
+      let content = m.content;
+      if (
+        role === "user" &&
+        state.settings.personaPrefixEnabled &&
+        m.senderName &&
+        m.senderName !== "You"
+      ) {
+        content = `(As ${m.senderName}): ${content}`;
+      }
+      return { role, content };
+    }),
+  ];
+  if (personaInjectionForEndMessages) {
+    messages.push({
+      role: "system",
+      content: personaInjectionForEndMessages,
+    });
+  }
 
-   const pendingInput = String(
-     document.getElementById("user-input")?.value || "",
-   ).trim();
-   if (pendingInput) {
-     let pendingContent = pendingInput;
-     if (
-       state.settings.personaPrefixEnabled &&
-       currentPersona?.name &&
-       currentPersona.name !== "You"
-     ) {
-       pendingContent = `(As ${currentPersona.name}): ${pendingInput}`;
-     }
-     messages.push({ role: "user", content: pendingContent });
-   }
+  const pendingInput = String(
+    document.getElementById("user-input")?.value || "",
+  ).trim();
+  if (pendingInput) {
+    let pendingContent = pendingInput;
+    if (
+      state.settings.personaPrefixEnabled &&
+      currentPersona?.name &&
+      currentPersona.name !== "You"
+    ) {
+      pendingContent = `(As ${currentPersona.name}): ${pendingInput}`;
+    }
+    messages.push({ role: "user", content: pendingContent });
+  }
 
   const resolvedModel = resolveModelForRequest(state.settings.model);
   const userMax = clampMaxTokens(state.settings.maxTokens);
