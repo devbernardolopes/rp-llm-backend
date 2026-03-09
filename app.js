@@ -10520,7 +10520,8 @@ function getMessageDisplayIndex(index, history = conversationHistory) {
   let count = 0;
   for (let i = 0; i <= max; i += 1) {
     const msg = list[i];
-    if (!msg || !isInSimulationMessage(msg)) continue;
+    if (!msg) continue;
+    if (msg.ooc === true) continue;
     const role = normalizeApiRole(msg?.apiRole || msg?.role);
     if (role !== "assistant" && role !== "user") continue;
     count += 1;
@@ -15145,35 +15146,35 @@ async function generateBotReply() {
     if (!isViewingThread(threadId)) {
       pending.unreadAt = Date.now();
     }
-    if (pending.writingInstructionsCounted !== true) {
-      pending.writingInstructionsCounted = true;
-      writingTurnCountForThread = Math.max(
-        writingTurnCountForThread,
-        Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
-      );
-    }
+     if (pending.writingInstructionsCounted !== true) {
+       pending.writingInstructionsCounted = true;
+       writingTurnCountForThread = Math.max(
+         writingTurnCountForThread,
+         Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
+       );
+     }
+
      if (isViewingThread(threadId)) {
-       const liveRow = ensureMessageRowExists(pendingIndex);
+       let liveRow = ensureMessageRowExists(pendingIndex);
        const liveContent = liveRow?.querySelector(".message-content");
        if (liveContent) {
          renderMessageContent(liveContent, pending);
        } else {
          renderChat();
        }
+       if (liveRow) {
+         liveRow.dataset.streaming = "0";
+         const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
+         if (modelInfoBtn && pending.model) {
+           modelInfoBtn.disabled = false;
+           modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
+           modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
+         }
+       }
+       refreshAllSpeakerButtons();
      }
-    if (liveRow) {
-      liveRow.dataset.streaming = "0";
-      const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
-      if (modelInfoBtn && pending.model) {
-        modelInfoBtn.disabled = false;
-        modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
-        modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
-      }
-    }
-    if (isViewingThread(threadId)) {
-      refreshAllSpeakerButtons();
-    }
-    if (currentThread && Number(currentThread.id) === threadId) {
+
+     if (currentThread && Number(currentThread.id) === threadId) {
       commitPendingPersonaInjectionMarker();
     } else {
       state.pendingPersonaInjectionPersonaId = null;
