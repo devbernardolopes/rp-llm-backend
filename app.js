@@ -15237,14 +15237,14 @@ async function generateBotReply() {
       } else {
         renderChat();
       }
-    }
-    if (liveRow) {
-      liveRow.dataset.streaming = "0";
-      const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
-      if (modelInfoBtn && pending.model) {
-        modelInfoBtn.disabled = false;
-        modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
-        modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
+      if (liveRow) {
+        liveRow.dataset.streaming = "0";
+        const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
+        if (modelInfoBtn && pending.model) {
+          modelInfoBtn.disabled = false;
+          modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
+          modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
+        }
       }
     }
     if (isViewingThread(threadId)) {
