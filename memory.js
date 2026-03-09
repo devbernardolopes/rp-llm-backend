@@ -437,6 +437,15 @@ async function summarizeMemory(character) {
   conversationHistory.push(pendingMessage);
   const pendingIndex = conversationHistory.length - 1;
 
+  // Set thread as actively generating for UI state
+  state.activeGenerationThreadId = threadId;
+  // No abort controller needed for summarization (unless we want to support cancelling)
+  // But we'll set a flag that summarization is in progress
+  if (!state.summarizationInProgress) {
+    state.summarizationInProgress = new Set();
+  }
+  state.summarizationInProgress.add(threadId);
+
   await persistCurrentThread();
 
   if (isViewing) {
@@ -558,6 +567,15 @@ async function summarizeMemory(character) {
 
     conversationHistory.pop();
 
+    // Clean up summarization state
+    if (state.summarizationInProgress) {
+      state.summarizationInProgress.delete(threadId);
+    }
+    // Refresh send button state
+    if (typeof setSendingState === 'function') {
+      setSendingState();
+    }
+
     await persistCurrentThread();
 
     if (isViewing) {
@@ -575,13 +593,21 @@ async function summarizeMemory(character) {
       failureMessage.content = "";
       failureMessage.generationError = errorMessage;
     }
+    // Clean up summarization state on error
+    if (state.summarizationInProgress) {
+      state.summarizationInProgress.delete(threadId);
+    }
+    // Refresh send button state
+    if (typeof setSendingState === 'function') {
+      setSendingState();
+    }
     await persistCurrentThread();
     if (isViewing) {
       renderChat();
     }
     console.warn("Memory summarization failed:", detail);
-  showToast(errorMessage, "error");
-  return false;
+    showToast(errorMessage, "error");
+    return false;
 }
 }
 

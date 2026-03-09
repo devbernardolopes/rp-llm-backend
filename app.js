@@ -16927,13 +16927,16 @@ function setSendingState(sending) {
         return String(m.generationStatus || "").trim() === "title_generating";
       })
     : false;
-  const currentThreadGenerating =
-    Number.isInteger(currentId) &&
-    currentId > 0 &&
+  const isActiveGeneration =
     Number.isInteger(activeId) &&
     activeId > 0 &&
     currentId === activeId &&
     (hasGeneratingMarker || !!state.abortController);
+  const isSummarizing =
+    Number.isInteger(currentId) &&
+    currentId > 0 &&
+    state.summarizationInProgress?.has(currentId) === true;
+  const currentThreadGenerating = isActiveGeneration || isSummarizing;
   const pendingState = getThreadPendingGenerationState(
     currentId,
     conversationHistory,
