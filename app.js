@@ -5076,21 +5076,27 @@ function setupSettingsTabsLayout() {
 
   const groups = ["api", "appearance", "threads", "prompting", "shortcuts"];
   const panels = new Map();
+  
+  // Use the form as container if available, otherwise body
+  const container = body.querySelector("form") || body;
+  
   groups.forEach((group) => {
     const panel = document.createElement("div");
     panel.className = "settings-tab-panel";
     panel.dataset.settingsTabPanel = group;
     if (group !== "api") panel.classList.add("hidden");
     panels.set(group, panel);
-    body.appendChild(panel);
+    container.appendChild(panel);
   });
 
-  const movable = Array.from(body.children).filter(
-    (el) => !el.classList.contains("settings-tab-panel"),
+  // Move settings-group elements into their corresponding panels
+  const movable = Array.from(container.children).filter(
+    (el) => el.hasAttribute("data-settings-group")
   );
   movable.forEach((node) => {
-    const target = panels.get(getSettingsGroupForNode(node));
-    (target || panels.get("appearance")).appendChild(node);
+    const group = node.getAttribute("data-settings-group");
+    const target = panels.get(group) || panels.get("appearance");
+    target.appendChild(node);
   });
 
   tabs.forEach((btn) => {
