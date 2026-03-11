@@ -2679,8 +2679,7 @@ function setupEvents() {
     .getElementById("writing-instruction-text")
     .addEventListener("input", (e) => {
       const textField = e.target;
-      textField.style.height = "auto";
-      textField.style.height = textField.scrollHeight + "px";
+      autoExpandTextarea(textField);
       updateWritingInstructionTextCount();
       saveActiveWritingInstructionFromForm();
       updateSaveWritingInstructionButton();
@@ -10333,13 +10332,11 @@ function loadActiveWritingInstructionToForm() {
   const textField = document.getElementById("writing-instruction-text");
   if (textField && def) {
     textField.value = def.instructions || "";
-    textField.style.height = "auto";
-    textField.style.height = textField.scrollHeight + "px";
+    autoExpandTextarea(textField);
     updateWritingInstructionTextCount();
   } else if (textField) {
     textField.value = "";
-    textField.style.height = "auto";
-    textField.style.height = textField.scrollHeight + "px";
+    autoExpandTextarea(textField);
     updateWritingInstructionTextCount();
   }
   updateSaveWritingInstructionButton();
