@@ -266,6 +266,14 @@
           <div id="chat-title">Thread</div>
         </header>
 
+        <div id="active-sfx-panel" class="active-sfx-panel hidden">
+          <div class="active-sfx-header">
+            <span data-i18n="activeSfx">Active SFX</span>
+            <button id="evict-all-sfx-btn" class="icon-btn danger-icon-btn" title="${t("evictAllSfx") || "Stop all"}">&times;</button>
+          </div>
+          <div class="active-sfx-list"></div>
+        </div>
+
         <div id="chat-log" class="chat-log"></div>
         <button
           id="scroll-bottom-btn"
@@ -2148,27 +2156,107 @@
             <div id="sfx-asset-preview-container" class="asset-preview-container"></div>
           </div>
           <div class="form-field full">
+            <span data-i18n="sfxRuleName">Rule Name</span>
+            <input type="text" id="sfx-name" placeholder="e.g., Rainy mood, Door bell" />
+          </div>
+          <div class="form-field full">
+            <span data-i18n="sfxType">SFX Type</span>
+            <select id="sfx-type">
+              <option value="sound" data-i18n="sfxTypeSound">Sound Effect</option>
+              <option value="background" data-i18n="sfxTypeBackground">Background</option>
+              <option value="overlay" data-i18n="sfxTypeOverlay">Overlay</option>
+              <option value="avatar" data-i18n="sfxTypeAvatar">Avatar Swap</option>
+            </select>
+          </div>
+          <div class="form-field full">
             <span data-i18n="triggerLabel">Trigger</span>
             <select id="sfx-trigger">
               <option value="start" data-i18n="triggerStart">Start</option>
-              <option value="tone" data-i18n="triggerTone">Tone</option>
-              <option value="depth" data-i18n="triggerDepth">Depth</option>
+              <option value="keyword" data-i18n="triggerKeyword">Keyword</option>
+              <option value="action_pattern" data-i18n="triggerActionPattern">Action Pattern</option>
+              <option value="turn_interval" data-i18n="triggerTurnInterval">Every N Turns</option>
+              <option value="always" data-i18n="triggerAlways">Always</option>
             </select>
+          </div>
+          <div class="form-field full hidden" id="sfx-keywords-field">
+            <span data-i18n="triggerKeywords">Trigger Keywords</span>
+            <input type="text" id="sfx-trigger-keywords" placeholder="rain, storm, thunder" />
+            <small class="muted" data-i18n="triggerKeywordsHelp">Comma-separated. Any match triggers.</small>
+          </div>
+          <div class="form-field full hidden" id="sfx-keywords-secondary-field">
+            <span data-i18n="triggerKeywordsSecondary">Secondary Keywords</span>
+            <input type="text" id="sfx-trigger-keywords-secondary" placeholder="dark, cloudy" />
+            <small class="muted" data-i18n="triggerKeywordsSecondaryHelp">All must match (optional).</small>
+          </div>
+          <div class="form-field full hidden" id="sfx-action-pattern-field">
+            <span data-i18n="triggerActionPatternLabel">Action Pattern (Regex)</span>
+            <input type="text" id="sfx-trigger-action-pattern" placeholder="\*.*(laugh|smile)\*" />
+            <small class="muted" data-i18n="triggerActionPatternHelp">Matches *action* text. Use regex format.</small>
+          </div>
+          <div class="form-field full hidden" id="sfx-turn-interval-field">
+            <span data-i18n="triggerTurnIntervalLabel">Every N Turns</span>
+            <input type="number" id="sfx-trigger-turn-interval" value="5" min="1" />
+          </div>
+          <div class="form-field full hidden" id="sfx-cooldown-field">
+            <span data-i18n="triggerCooldown">Cooldown (seconds)</span>
+            <input type="number" id="sfx-trigger-cooldown" value="0" min="0" />
           </div>
           <div class="form-field full">
             <span data-i18n="evictionLabel">Eviction</span>
             <select id="sfx-eviction">
               <option value="never" data-i18n="evictionNever">Never</option>
-              <option value="tone_change" data-i18n="evictionToneChange">Tone Change</option>
-              <option value="depth_threshold" data-i18n="evictionDepthThreshold">Depth Threshold</option>
-              <option value="eof" data-i18n="evictionEOF">EOF</option>
+              <option value="keyword" data-i18n="evictionKeyword">Keyword</option>
+              <option value="message_count" data-i18n="evictionMessageCount">After N Messages</option>
+              <option value="manual" data-i18n="evictionManual">Manual</option>
             </select>
           </div>
-          <div class="form-field full hidden" id="sfx-loop-field">
-            <span class="checkbox-line">
-              <input id="sfx-loop" type="checkbox" />
-              <span data-i18n="loopLabel">Loop</span>
-            </span>
+          <div class="form-field full hidden" id="sfx-eviction-keywords-field">
+            <span data-i18n="evictionKeywords">Eviction Keywords</span>
+            <input type="text" id="sfx-eviction-keywords" placeholder="sunny, clear, stop" />
+            <small class="muted" data-i18n="evictionKeywordsHelp">When these keywords appear, stop the SFX.</small>
+          </div>
+          <div class="form-field full hidden" id="sfx-eviction-message-count-field">
+            <span data-i18n="evictionMessageCountLabel">Stop after N messages</span>
+            <input type="number" id="sfx-eviction-message-count" value="10" min="1" />
+          </div>
+          <div class="form-field full hidden" id="sfx-playback-options">
+            <span data-i18n="playbackOptions">Playback Options</span>
+            <div class="checkbox-grid">
+              <label class="checkbox-line">
+                <input id="sfx-loop" type="checkbox" />
+                <span data-i18n="loopLabel">Loop</span>
+              </label>
+              <label class="checkbox-line">
+                <input id="sfx-match-case" type="checkbox" />
+                <span data-i18n="matchCase">Match Case</span>
+              </label>
+              <label class="checkbox-line">
+                <input id="sfx-match-whole-word" type="checkbox" />
+                <span data-i18n="matchWholeWord">Match Whole Word</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-field half hidden" id="sfx-volume-field">
+            <span data-i18n="volumeLabel">Volume</span>
+            <input type="range" id="sfx-volume" min="0" max="1" step="0.1" value="1" />
+            <span id="sfx-volume-value">100%</span>
+          </div>
+          <div class="form-field half hidden" id="sfx-fade-in-field">
+            <span data-i18n="fadeInLabel">Fade In (ms)</span>
+            <input type="number" id="sfx-fade-in" value="0" min="0" step="100" />
+          </div>
+          <div class="form-field half hidden" id="sfx-fade-out-field">
+            <span data-i18n="fadeOutLabel">Fade Out (ms)</span>
+            <input type="number" id="sfx-fade-out" value="0" min="0" step="100" />
+          </div>
+          <div class="form-field half hidden" id="sfx-opacity-field">
+            <span data-i18n="opacityLabel">Opacity</span>
+            <input type="range" id="sfx-opacity" min="0" max="1" step="0.1" value="1" />
+            <span id="sfx-opacity-value">100%</span>
+          </div>
+          <div class="form-field half hidden" id="sfx-layer-field">
+            <span data-i18n="layerLabel">Layer (Z-Index)</span>
+            <input type="number" id="sfx-layer" value="100" min="0" />
           </div>
         </div>
         <div class="modal-footer">
