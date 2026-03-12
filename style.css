@@ -1808,6 +1808,31 @@ textarea {
   gap: 10px;
 }
 
+.initial-message-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 0 12px;
+  border-radius: 12px;
+  background: #111827;
+  border: 1px solid var(--line);
+}
+.initial-message-controls.hidden {
+  display: none;
+}
+.initial-message-counter {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.chat-row.chat-row-initial .message-block {
+  border-color: var(--bot-message-border);
+}
+.chat-row.initial-message-hidden {
+  display: none;
+}
+
 .chat-log.chat-messages-centered .chat-row {
   justify-content: center;
   width: 100%;
@@ -2697,6 +2722,84 @@ textarea {
   background: #111827;
   padding: 10px 12px;
   overflow: hidden;
+}
+.initial-messages-hidden-textarea {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  pointer-events: none;
+}
+.initial-messages-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.initial-messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.initial-message-entry {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: #0d101b;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.initial-message-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.initial-message-entry-header span {
+  font-weight: 600;
+  color: var(--text);
+}
+.initial-message-entry textarea {
+  width: 100%;
+  min-height: 80px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  background: #05060d;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+.initial-message-role-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.initial-message-role-row label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.initial-message-role-select {
+  background: #111827;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: var(--text);
+  min-width: 140px;
+}
+.initial-message-remove-btn {
+  padding: 2px 8px;
+  font-size: 0.8rem;
+}
+.initial-messages-add-btn {
+  align-self: flex-start;
 }
 .image-preview-card {
   width: auto;

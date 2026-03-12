@@ -524,5 +524,17 @@
     "layerLabel": "Livello (Z-Index)",
     "activeSfx": "SFX Attivi",
     "stopSfx": "Ferma",
-    "evictAllSfx": "Ferma tutto"
+    "evictAllSfx": "Ferma tutto",
+    "addInitialMessage": "Aggiungi messaggio iniziale",
+    "initialMessagesEditorEmpty": "Nessun messaggio iniziale definito.",
+    "initialMessageLabel": "Messaggio iniziale {number}",
+    "removeInitialMessage": "Rimuovi messaggio iniziale",
+    "roleLabel": "Ruolo",
+    "initialMessageRoleSystem": "Sistema",
+    "initialMessageRoleAssistant": "Assistente",
+    "initialMessageRoleUser": "Utente",
+    "initialMessageContentPlaceholder": "Scrivi qui il messaggio iniziale...",
+    "initialMessageCarouselPrevTitle": "Mostra il messaggio iniziale precedente",
+    "initialMessageCarouselNextTitle": "Mostra il messaggio iniziale successivo",
+    "initialMessageCounterLabel": "Messaggio iniziale {current}/{total}"
 }

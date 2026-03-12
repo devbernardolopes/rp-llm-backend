@@ -266,6 +266,33 @@
           <div id="chat-title">Thread</div>
         </header>
 
+        <div
+          id="initial-message-controls"
+          class="initial-message-controls hidden"
+          aria-live="polite"
+        >
+          <button
+            id="initial-message-prev-btn"
+            class="icon-btn small"
+            type="button"
+            data-i18n-title="initialMessageCarouselPrevTitle"
+          >
+            ‹
+          </button>
+          <span
+            id="initial-message-counter"
+            class="initial-message-counter muted"
+          ></span>
+          <button
+            id="initial-message-next-btn"
+            class="icon-btn small"
+            type="button"
+            data-i18n-title="initialMessageCarouselNextTitle"
+          >
+            ›
+          </button>
+        </div>
+
         <div id="active-sfx-panel" class="active-sfx-panel hidden">
           <div class="active-sfx-header">
             <span data-i18n="activeSfx">Active SFX</span>
@@ -1801,18 +1828,33 @@
               placeholder="Appended only for the first assistant generation."
             ></textarea>
           </div>
-          <div class="full lang-field">
-            <span data-i18n="initialMessages">Initial Messages</span>
-            <textarea
-              id="char-initial-messages"
-              rows="8"
-              placeholder="[AI]: text...
-
-[USER]: text...
-
-[SYSTEM]: text..."
-            ></textarea>
-          </div>
+            <div class="full lang-field">
+              <span data-i18n="initialMessages">Initial Messages</span>
+              <div
+                id="char-initial-messages-editor"
+                class="initial-messages-editor"
+              >
+                <div
+                  id="char-initial-messages-list"
+                  class="initial-messages-list"
+                ></div>
+                <button
+                  id="add-initial-message-btn"
+                  type="button"
+                  class="option-btn small initial-messages-add-btn"
+                  data-i18n="addInitialMessage"
+                >
+                  Add initial message
+                </button>
+              </div>
+              <textarea
+                id="char-initial-messages"
+                rows="1"
+                aria-hidden="true"
+                tabindex="-1"
+                class="initial-messages-hidden-textarea"
+              ></textarea>
+            </div>
           <div class="full tags-field hidden">
             <span data-i18n="tagsCommaSeparated">Tags (comma-separated)</span>
             <input

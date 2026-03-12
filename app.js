@@ -1224,6 +1224,7 @@ const state = {
   lastCompletionTime: 0,
   draggingPersonaId: null,
   threadUnreadCounts: {},
+  initialMessageIndexByThread: {},
   tabId: `tab-${Math.random().toString(36).slice(2)}`,
   syncChannel: null,
   syncTimerId: null,
@@ -2248,6 +2249,11 @@ function setupEvents() {
       updateCharWritingInstructionsVisibility();
     });
   document
+    .getElementById("add-initial-message-btn")
+    ?.addEventListener("click", () => {
+      addCharacterInitialMessage();
+    });
+  document
     .getElementById("char-language-cancel")
     .addEventListener("click", () => {
       document.getElementById("char-language-modal")?.classList.add("hidden");
@@ -2331,6 +2337,12 @@ function setupEvents() {
   document
     .getElementById("scroll-bottom-btn")
     .addEventListener("click", () => scrollChatToBottom(true));
+  document
+    .getElementById("initial-message-prev-btn")
+    ?.addEventListener("click", () => cycleInitialMessagePreview(-1));
+  document
+    .getElementById("initial-message-next-btn")
+    ?.addEventListener("click", () => cycleInitialMessagePreview(1));
   document
     .getElementById("image-preview-download-btn")
     .addEventListener("click", (e) => {
@@ -2978,7 +2990,6 @@ function setupEvents() {
     "#char-one-time-extra-prompt",
     "#char-writing-instructions",
     "#char-writing-instructions-select",
-    "#char-initial-messages",
     "#char-persona-injection-placement",
     "#char-use-memory",
     "#char-use-postprocess",
@@ -3661,6 +3672,7 @@ async function buildThreadInitialMessages(character) {
       content,
       createdAt: now + i,
       isInitial: true,
+      initialMessageIndex: i,
     };
     if (role === "user") {
       payload.senderName = personaName;
@@ -8308,9 +8320,11 @@ function saveActiveCharacterDefinitionFromForm() {
     selectedWritingInstructionId === ""
       ? String(writingInstructionsTextarea?.value || "").trim()
       : "";
-  def.initialMessagesRaw = String(
-    document.getElementById("char-initial-messages")?.value || "",
+  const normalizedInitialMessages = normalizeDefinitionInitialMessages(
+    def.initialMessages,
   );
+  def.initialMessages = normalizedInitialMessages;
+  def.initialMessagesRaw = serializeInitialMessages(normalizedInitialMessages);
   def.personaInjectionPlacement = String(
     document.getElementById("char-persona-injection-placement")?.value ||
       "end_system_prompt",
@@ -8337,6 +8351,146 @@ function saveActiveCharacterDefinitionFromForm() {
   def.lorebookIds = getSelectedLorebookIds();
 }
 
+function normalizeDefinitionInitialMessages(list) {
+  const items = Array.isArray(list) ? list : [];
+  return items.map((entry) => {
+    const normalizedRole = normalizeInitialMessageRole(
+      entry?.role || entry?.apiRole,
+    );
+    const role = normalizedRole || "assistant";
+    return {
+      role,
+      apiRole: role,
+      content: String(entry?.content || ""),
+    };
+  });
+}
+
+function ensureCharacterInitialMessagesEditorAttached() {
+  const textarea = document.getElementById("char-initial-messages");
+  const editor = document.getElementById("char-initial-messages-editor");
+  if (!textarea || !editor) return;
+  const body = textarea.closest(".textarea-collapse-body");
+  if (body && editor.parentElement !== body) {
+    body.insertBefore(editor, textarea);
+  }
+}
+
+function getActiveCharacterInitialMessages() {
+  const def = getActiveCharacterDefinition();
+  if (!def) return [];
+  if (!Array.isArray(def.initialMessages)) {
+    def.initialMessages = [];
+  }
+  return def.initialMessages;
+}
+
+function renderCharacterInitialMessagesList() {
+  const listRoot = document.getElementById("char-initial-messages-list");
+  if (!listRoot) return;
+  const messages = getActiveCharacterInitialMessages();
+  listRoot.innerHTML = "";
+  if (messages.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = t("initialMessagesEditorEmpty");
+    listRoot.appendChild(empty);
+    return;
+  }
+  messages.forEach((message, index) => {
+    const entry = buildInitialMessageEntry(message, index);
+    listRoot.appendChild(entry);
+  });
+}
+
+function buildInitialMessageEntry(message, index) {
+  const entry = document.createElement("div");
+  entry.className = "initial-message-entry";
+  entry.dataset.initialMessageIndex = String(index);
+
+  const header = document.createElement("div");
+  header.className = "initial-message-entry-header";
+  const title = document.createElement("span");
+  title.textContent = tf("initialMessageLabel", { number: index + 1 });
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "option-btn small initial-message-remove-btn";
+  removeBtn.textContent = t("removeInitialMessage");
+  removeBtn.addEventListener("click", () => {
+    const def = getActiveCharacterDefinition();
+    if (!def) return;
+    def.initialMessages = def.initialMessages.filter((_, i) => i !== index);
+    setModalDirtyState("character-modal", true);
+    renderCharacterInitialMessagesList();
+    saveActiveCharacterDefinitionFromForm();
+  });
+  header.append(title, removeBtn);
+
+  const roleRow = document.createElement("div");
+  roleRow.className = "initial-message-role-row";
+  const roleLabel = document.createElement("label");
+  roleLabel.textContent = t("roleLabel");
+  const roleSelect = document.createElement("select");
+  roleSelect.className = "initial-message-role-select";
+  [
+    { value: "system", label: t("initialMessageRoleSystem") },
+    { value: "assistant", label: t("initialMessageRoleAssistant") },
+    { value: "user", label: t("initialMessageRoleUser") },
+  ].forEach((item) => {
+    const option = document.createElement("option");
+    option.value = item.value;
+    option.textContent = item.label;
+    roleSelect.appendChild(option);
+  });
+  const normalizedRole = normalizeInitialMessageRole(
+    message.role || message.apiRole,
+  );
+  roleSelect.value = normalizedRole || "assistant";
+  roleSelect.addEventListener("change", (event) => {
+    const def = getActiveCharacterDefinition();
+    if (!def) return;
+    const selectedRole =
+      normalizeInitialMessageRole(event.target.value) || "assistant";
+    message.role = selectedRole;
+    message.apiRole = selectedRole;
+    setModalDirtyState("character-modal", true);
+    saveActiveCharacterDefinitionFromForm();
+  });
+  roleRow.append(roleLabel, roleSelect);
+
+  const textarea = document.createElement("textarea");
+  textarea.rows = 3;
+  textarea.value = String(message.content || "");
+  textarea.placeholder = t("initialMessageContentPlaceholder");
+  textarea.addEventListener("input", (event) => {
+    message.content = event.target.value;
+    autoExpandTextarea(textarea);
+    setModalDirtyState("character-modal", true);
+    saveActiveCharacterDefinitionFromForm();
+  });
+  autoExpandTextarea(textarea);
+
+  entry.append(header, roleRow, textarea);
+  return entry;
+}
+
+function addCharacterInitialMessage(role = "assistant") {
+  const def = getActiveCharacterDefinition();
+  if (!def) return;
+  def.initialMessages = Array.isArray(def.initialMessages)
+    ? def.initialMessages
+    : [];
+  const normalizedRole = normalizeInitialMessageRole(role) || "assistant";
+  def.initialMessages.push({
+    role: normalizedRole,
+    apiRole: normalizedRole,
+    content: "",
+  });
+  setModalDirtyState("character-modal", true);
+  renderCharacterInitialMessagesList();
+  saveActiveCharacterDefinitionFromForm();
+}
+
 async function loadActiveCharacterDefinitionToForm() {
   const def = getActiveCharacterDefinition();
   if (!def) return;
@@ -8351,11 +8505,11 @@ async function loadActiveCharacterDefinitionToForm() {
     def.writingInstructions || "";
   await populateCharWritingInstructionsSelect(def.writingInstructionId);
   updateCharWritingInstructionsVisibility();
-  document.getElementById("char-initial-messages").value =
-    def.initialMessagesRaw ||
-    ((def.initialMessages || []).length > 0
-      ? formatInitialMessagesForEditor(def.initialMessages || [])
-      : "");
+  if (!Array.isArray(def.initialMessages)) {
+    def.initialMessages = [];
+  }
+  ensureCharacterInitialMessagesEditorAttached();
+  renderCharacterInitialMessagesList();
   document.getElementById("char-persona-injection-placement").value =
     def.personaInjectionPlacement || "end_system_prompt";
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
@@ -13006,6 +13160,13 @@ async function openThread(threadId) {
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
   }));
+  let initialOrdinal = 0;
+  conversationHistory.forEach((msg) => {
+    if (msg?.isInitial) {
+      msg.initialMessageIndex = initialOrdinal;
+      initialOrdinal += 1;
+    }
+  });
 
   await applyChatViewBackgroundFromSfx(currentThread);
   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
@@ -13840,7 +14001,79 @@ function renderChat(startIdx, endIdx) {
   updateUnloadButtonVisibility();
   updateScrollBottomButtonVisibility();
   scheduleThreadBudgetIndicatorUpdate();
+  updateInitialMessageControls();
   maybeProcessUnreadMessagesSeen(false).catch(() => {});
+}
+
+function getCurrentThreadInitialMessages() {
+  return conversationHistory.filter((msg) => msg?.isInitial);
+}
+
+function updateInitialMessageControls() {
+  const controls = document.getElementById("initial-message-controls");
+  if (!controls) return;
+  if (!currentThread) {
+    controls.classList.add("hidden");
+    return;
+  }
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) {
+    controls.classList.add("hidden");
+    return;
+  }
+  const initialMessages = getCurrentThreadInitialMessages();
+  if (initialMessages.length === 0) {
+    controls.classList.add("hidden");
+    refreshInitialMessageRowVisibility();
+    return;
+  }
+  controls.classList.remove("hidden");
+  let index = state.initialMessageIndexByThread[threadId];
+  if (!Number.isInteger(index) || index < 0) {
+    index = 0;
+  }
+  if (index >= initialMessages.length) {
+    index = initialMessages.length - 1;
+  }
+  state.initialMessageIndexByThread[threadId] = index;
+  const counter = document.getElementById("initial-message-counter");
+  if (counter) {
+    counter.textContent = tf("initialMessageCounterLabel", {
+      current: index + 1,
+      total: initialMessages.length,
+    });
+  }
+  const prevBtn = document.getElementById("initial-message-prev-btn");
+  const nextBtn = document.getElementById("initial-message-next-btn");
+  if (prevBtn) prevBtn.disabled = initialMessages.length <= 1;
+  if (nextBtn) nextBtn.disabled = initialMessages.length <= 1;
+  refreshInitialMessageRowVisibility();
+}
+
+function refreshInitialMessageRowVisibility() {
+  const log = document.getElementById("chat-log");
+  if (!log || !currentThread) return;
+  const threadId = Number(currentThread.id);
+  const selectedIndex = state.initialMessageIndexByThread[threadId] ?? 0;
+  const rows = log.querySelectorAll(".chat-row[data-initial-message]");
+  rows.forEach((row) => {
+    const rowIndex = Number(row.dataset.initialMessageIndex || 0);
+    const hide = rowIndex !== selectedIndex;
+    row.classList.toggle("initial-message-hidden", hide);
+  });
+}
+
+function cycleInitialMessagePreview(delta) {
+  if (!currentThread) return;
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return;
+  const initialMessages = getCurrentThreadInitialMessages();
+  const total = initialMessages.length;
+  if (total <= 1) return;
+  let index = state.initialMessageIndexByThread[threadId] ?? 0;
+  index = (index + delta + total) % total;
+  state.initialMessageIndexByThread[threadId] = index;
+  updateInitialMessageControls();
 }
 
 function getUnreadAssistantCount(messages) {
@@ -13915,6 +14148,15 @@ function buildMessageRow(message, index, streaming) {
   row.dataset.streaming = streaming ? "1" : "0";
   row.dataset.messageIndex = String(index);
   const isOocMessage = message?.ooc === true;
+  if (message?.isInitial) {
+    row.dataset.initialMessage = "1";
+    row.dataset.initialMessageIndex = String(
+      Number.isInteger(message.initialMessageIndex)
+        ? message.initialMessageIndex
+        : 0,
+    );
+    row.classList.add("chat-row-initial");
+  }
   if (isOocMessage) {
     row.classList.add("chat-row-ooc");
   } else {

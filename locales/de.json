@@ -524,5 +524,17 @@
     "layerLabel": "Schicht (Z-Index)",
     "activeSfx": "Aktive SFX",
     "stopSfx": "Stoppen",
-    "evictAllSfx": "Alle stoppen"
+    "evictAllSfx": "Alle stoppen",
+    "addInitialMessage": "Startnachricht hinzufügen",
+    "initialMessagesEditorEmpty": "Keine Startnachrichten definiert.",
+    "initialMessageLabel": "Startnachricht {number}",
+    "removeInitialMessage": "Startnachricht entfernen",
+    "roleLabel": "Rolle",
+    "initialMessageRoleSystem": "System",
+    "initialMessageRoleAssistant": "Assistent",
+    "initialMessageRoleUser": "Benutzer",
+    "initialMessageContentPlaceholder": "Schreibe hier die Startnachricht...",
+    "initialMessageCarouselPrevTitle": "Vorherige Startnachricht anzeigen",
+    "initialMessageCarouselNextTitle": "Nächste Startnachricht anzeigen",
+    "initialMessageCounterLabel": "Startnachricht {current}/{total}"
 }

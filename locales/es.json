@@ -524,5 +524,17 @@
     "layerLabel": "Capa (Z-Index)",
     "activeSfx": "SFX Activos",
     "stopSfx": "Detener",
-    "evictAllSfx": "Detener todos"
+    "evictAllSfx": "Detener todos",
+    "addInitialMessage": "Agregar mensaje inicial",
+    "initialMessagesEditorEmpty": "No hay mensajes iniciales definidos.",
+    "initialMessageLabel": "Mensaje inicial {number}",
+    "removeInitialMessage": "Eliminar mensaje inicial",
+    "roleLabel": "Rol",
+    "initialMessageRoleSystem": "Sistema",
+    "initialMessageRoleAssistant": "Asistente",
+    "initialMessageRoleUser": "Usuario",
+    "initialMessageContentPlaceholder": "Escribe el mensaje inicial aquí...",
+    "initialMessageCarouselPrevTitle": "Mostrar mensaje inicial anterior",
+    "initialMessageCarouselNextTitle": "Mostrar siguiente mensaje inicial",
+    "initialMessageCounterLabel": "Mensaje inicial {current}/{total}"
 }

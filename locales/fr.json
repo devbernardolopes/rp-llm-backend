@@ -524,5 +524,17 @@
     "layerLabel": "Calque (Z-Index)",
     "activeSfx": "SFX Actifs",
     "stopSfx": "Arrêter",
-    "evictAllSfx": "Tout arrêter"
+    "evictAllSfx": "Tout arrêter",
+    "addInitialMessage": "Ajouter un message initial",
+    "initialMessagesEditorEmpty": "Aucun message initial défini.",
+    "initialMessageLabel": "Message initial {number}",
+    "removeInitialMessage": "Supprimer le message initial",
+    "roleLabel": "Rôle",
+    "initialMessageRoleSystem": "Système",
+    "initialMessageRoleAssistant": "Assistant",
+    "initialMessageRoleUser": "Utilisateur",
+    "initialMessageContentPlaceholder": "Saisissez le message initial ici...",
+    "initialMessageCarouselPrevTitle": "Afficher le message initial précédent",
+    "initialMessageCarouselNextTitle": "Afficher le message initial suivant",
+    "initialMessageCounterLabel": "Message initial {current}/{total}"
 }

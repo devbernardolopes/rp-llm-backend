@@ -525,5 +525,17 @@
     "layerLabel": "Layer (Z-Index)",
     "activeSfx": "Active SFX",
     "stopSfx": "Stop",
-    "evictAllSfx": "Stop all"
+    "evictAllSfx": "Stop all",
+    "addInitialMessage": "Add initial message",
+    "initialMessagesEditorEmpty": "No initial messages defined.",
+    "initialMessageLabel": "Initial message {number}",
+    "removeInitialMessage": "Remove initial message",
+    "roleLabel": "Role",
+    "initialMessageRoleSystem": "System",
+    "initialMessageRoleAssistant": "Assistant",
+    "initialMessageRoleUser": "User",
+    "initialMessageContentPlaceholder": "Write the initial message here...",
+    "initialMessageCarouselPrevTitle": "Show previous initial message",
+    "initialMessageCarouselNextTitle": "Show next initial message",
+    "initialMessageCounterLabel": "Initial message {current}/{total}"
 }

@@ -524,5 +524,17 @@
     "layerLabel": "Camada (Z-Index)",
     "activeSfx": "SFX Ativos",
     "stopSfx": "Parar",
-    "evictAllSfx": "Parar todos"
+    "evictAllSfx": "Parar todos",
+    "addInitialMessage": "Adicionar mensagem inicial",
+    "initialMessagesEditorEmpty": "Nenhuma mensagem inicial definida.",
+    "initialMessageLabel": "Mensagem inicial {number}",
+    "removeInitialMessage": "Remover mensagem inicial",
+    "roleLabel": "Papel",
+    "initialMessageRoleSystem": "Sistema",
+    "initialMessageRoleAssistant": "Assistente",
+    "initialMessageRoleUser": "Usuário",
+    "initialMessageContentPlaceholder": "Escreva a mensagem inicial aqui...",
+    "initialMessageCarouselPrevTitle": "Mostrar mensagem inicial anterior",
+    "initialMessageCarouselNextTitle": "Mostrar próxima mensagem inicial",
+    "initialMessageCounterLabel": "Mensagem inicial {current}/{total}"
 }
