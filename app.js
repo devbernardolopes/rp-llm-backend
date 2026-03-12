@@ -13697,6 +13697,8 @@ async function maybeGenerateTitleBeforeBotReply() {
     5,
     Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
   );
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return true;
   const filteredConversationHistory = filterConversationHistoryForSelectedInitialMessage(
     threadId,
     conversationHistory,
