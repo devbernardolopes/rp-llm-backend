@@ -1226,7 +1226,9 @@ const state = {
   draggingPersonaId: null,
   threadUnreadCounts: {},
   initialMessageIndexByThread: {},
-  initialMessageDraftsByLang: {},
+  charModalDraftNamespace: "",
+  nextCharModalDraftNamespace: 0,
+  initialMessageDraftsByKey: {},
   tabId: `tab-${Math.random().toString(36).slice(2)}`,
   syncChannel: null,
   syncTimerId: null,
@@ -8348,17 +8350,28 @@ function saveActiveCharacterDefinitionFromForm() {
   def.lorebookIds = getSelectedLorebookIds();
 }
 
+function getInitialMessageDraftKey(language) {
+  const normalizedLang = normalizeBotLanguageCode(language || "en");
+  const charId = state.editingCharacterId;
+  const hasCharacterId =
+    charId !== null && charId !== undefined && String(charId).trim() !== "";
+  const namespace = hasCharacterId
+    ? `char-${String(charId)}`
+    : state.charModalDraftNamespace || "new-0";
+  return `${namespace}:${normalizedLang}`;
+}
+
 function getInitialMessageDrafts(language) {
-  if (!language) return [];
-  if (!Array.isArray(state.initialMessageDraftsByLang[language])) {
-    state.initialMessageDraftsByLang[language] = [];
+  const key = getInitialMessageDraftKey(language);
+  if (!Array.isArray(state.initialMessageDraftsByKey[key])) {
+    state.initialMessageDraftsByKey[key] = [];
   }
-  return state.initialMessageDraftsByLang[language];
+  return state.initialMessageDraftsByKey[key];
 }
 
 function setInitialMessageDrafts(language, drafts) {
-  if (!language) return;
-  state.initialMessageDraftsByLang[language] = Array.isArray(drafts) ? drafts : [];
+  const key = getInitialMessageDraftKey(language);
+  state.initialMessageDraftsByKey[key] = Array.isArray(drafts) ? drafts : [];
 }
 
 function ensureInitialMessageDraftsForLanguage(def) {
@@ -8562,6 +8575,13 @@ async function openCharacterModal(
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
+  if (character?.id) {
+    state.charModalDraftNamespace = `char-${character.id}`;
+  } else {
+    state.nextCharModalDraftNamespace =
+      Number(state.nextCharModalDraftNamespace || 0) + 1;
+    state.charModalDraftNamespace = `new-${state.nextCharModalDraftNamespace}`;
+  }
   setupKokoroDownloadCancel();
 
   const hasAvatars =
