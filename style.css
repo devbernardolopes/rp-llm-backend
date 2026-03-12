@@ -404,6 +404,12 @@ body {
   font-weight: 400;
 }
 
+.thread-msg-count {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .thread-status-badges {
   grid-area: actions;
   align-self: center;

@@ -7173,6 +7173,10 @@ async function renderThreads() {
       updateThreadBulkBar();
     });
 
+    const msgCount = document.createElement("span");
+    msgCount.className = "thread-msg-count";
+    msgCount.textContent = `${thread.messages?.length || 0}`;
+
     const avatar = document.createElement("img");
     avatar.className = "thread-avatar";
     const threadFallback = resolvedChar?.name || char?.name || t("threadWord");
@@ -7420,7 +7424,7 @@ async function renderThreads() {
     if (thread.favorite) favBtn.classList.add("is-favorite");
     actions.appendChild(favBtn);
 
-    actions.prepend(selectBox);
+    actions.prepend(msgCount, selectBox);
     if (statusBadges.children.length > 0) {
       row.append(avatar, info, metaRight, statusBadges, actions);
     } else {
