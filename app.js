@@ -8319,23 +8319,9 @@ function saveActiveCharacterDefinitionFromForm() {
   let drafts = getInitialMessageDrafts(language);
   if (drafts.length === 0) {
     drafts = [""];
+    setInitialMessageDrafts(language, drafts);
   }
-  setInitialMessageDrafts(language, drafts);
-  const normalizedDrafts = drafts
-    .map((txt) => String(txt || ""))
-    .filter((txt) => txt.trim().length > 0);
-  const combinedRaw = normalizedDrafts.join("\n\n");
-  def.initialMessagesRaw = combinedRaw;
-  if (!combinedRaw) {
-    def.initialMessages = [];
-  } else {
-    try {
-      const parsedInitialMessages = parseInitialMessagesInput(combinedRaw);
-      def.initialMessages = parsedInitialMessages.messages;
-    } catch {
-      // Keep existing parsed messages until final validation.
-    }
-  }
+  def.initialMessageDrafts = [...drafts];
   def.personaInjectionPlacement = String(
     document.getElementById("char-persona-injection-placement")?.value ||
       "end_system_prompt",
@@ -8678,18 +8664,30 @@ async function saveCharacterFromModal({ close = true } = {}) {
     delete def.avatar;
     delete def.avatars;
     if (!def.name) missingNameLanguages.push(def.language);
-    try {
-      const parsedInitialMessages = parseInitialMessagesInput(
-        def.initialMessagesRaw || "",
-      );
-      def.initialMessagesRaw = parsedInitialMessages.raw;
-      def.initialMessages = parsedInitialMessages.messages;
-    } catch (err) {
-      await openInfoDialog(
-        t("invalidInitialMessagesTitle"),
-        String(err?.message || t("invalidInitialMessagesMessage")),
-      );
-      return;
+    const drafts = Array.isArray(def.initialMessageDrafts)
+      ? def.initialMessageDrafts
+      : [];
+    const collectedMessages = [];
+    for (const draft of drafts) {
+      const trimmed = String(draft || "").trim();
+      if (!trimmed) continue;
+      try {
+        const parsed = parseInitialMessagesInput(trimmed);
+        collectedMessages.push(...parsed.messages);
+      } catch (err) {
+        await openInfoDialog(
+          t("invalidInitialMessagesTitle"),
+          String(err?.message || t("invalidInitialMessagesMessage")),
+        );
+        return;
+      }
+    }
+    if (collectedMessages.length === 0) {
+      def.initialMessagesRaw = "";
+      def.initialMessages = [];
+    } else {
+      def.initialMessages = collectedMessages;
+      def.initialMessagesRaw = formatInitialMessagesForEditor(collectedMessages);
     }
   }
 
