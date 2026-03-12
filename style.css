@@ -1933,6 +1933,7 @@ textarea {
   padding: var(--message-padding);
   background: var(--bot-message-bg);
   border: 1px solid var(--bot-message-border);
+  overflow-x: hidden;
 }
 
 .chat-row-user .message-block {
@@ -2126,7 +2127,7 @@ textarea {
 }
 
 .message-content p {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
 }
 
 .message-content p:empty {
@@ -2135,6 +2136,24 @@ textarea {
 
 .message-content p:last-child {
   margin-bottom: 0;
+}
+
+.message-content ol,
+.message-content ul {
+  margin: 4px 0;
+  padding-left: 24px;
+}
+
+.message-content li {
+  margin-bottom: 2px;
+}
+
+.message-content blockquote {
+  border-left: 3px solid var(--muted);
+  padding-left: 12px;
+  margin: 8px 0;
+  color: var(--muted);
+  font-style: italic;
 }
 
 .message-content pre,
