@@ -20185,7 +20185,6 @@ async function playStartSfxForCharacter(character, thread) {
     return;
   }
 
-  // Find the first SFX with trigger = "start"
   const sfx = sfxList.find(
     (s) => s && String(s.trigger || "").toLowerCase() === "start",
   );
@@ -20195,44 +20194,17 @@ async function playStartSfxForCharacter(character, thread) {
     return;
   }
 
-  // Don't restart if the same asset is already playing
-  if (
-    state.sfx.playingAssetId === sfx.assetId &&
-    state.sfx.currentAudio &&
-    !state.sfx.currentAudio.paused
-  ) {
+  const entry = normalizeSfxEntry(sfx);
+  
+  if (isSfxEntryActive(entry.assetId)) {
     console.log("[SFX] Same asset already playing, skipping");
     return;
   }
 
-  // Stop any currently playing SFX before starting new one
   stopAllSfx();
 
   try {
-    const asset = await db.assets.get(sfx.assetId);
-    console.log("[SFX] Asset:", asset);
-    if (!asset || !asset.data) {
-      console.log("[SFX] No asset or data, returning");
-      return;
-    }
-
-    const url = getAssetDataUrl(asset);
-    console.log("[SFX] Created blob URL:", url);
-    const audio = new Audio(url);
-    audio.loop = sfx.loop === true;
-    console.log("[SFX] Audio loop:", audio.loop);
-    state.sfx.currentAudio = audio;
-    state.sfx.playingAssetId = sfx.assetId;
-
-    audio
-      .play()
-      .then(() => {
-        console.log("[SFX] Audio started playing");
-      })
-      .catch((err) => {
-        console.warn("SFX playback failed:", err);
-        stopAllSfx();
-      });
+    await activateSfxEntry(entry, thread);
   } catch (err) {
     console.warn("Error playing start SFX:", err);
     stopAllSfx();
@@ -20387,10 +20359,8 @@ async function evaluateSfxTriggers(botMessage, thread) {
     const triggerType = entry.trigger;
     
     if (triggerType === "start") {
-      continue;
-    }
-    
-    if (triggerType === "keyword" || triggerType === "keywords") {
+      shouldTrigger = conversationHistory.length <= 1;
+    } else if (triggerType === "keyword" || triggerType === "keywords") {
       const primaryMatch = doesTextMatchKeywords(fullText, entry.triggerKeywords, {
         matchCase: entry.triggerMatchCase,
         matchWholeWord: entry.triggerMatchWholeWord,
@@ -20465,6 +20435,8 @@ async function activateSfxEntry(entry, thread) {
 async function playSfxSound(entry, asset) {
   if (!asset.data) return;
   
+  console.log("[SFX] playSfxSound called with entry:", entry);
+  
   const url = getAssetDataUrl(asset);
   if (!url) return;
   
@@ -20477,7 +20449,9 @@ async function playSfxSound(entry, asset) {
   
   const audio = new Audio(url);
   audio.loop = !!entry.loop;
-  audio.volume = entry.volume || 1;
+  const volume = Number(entry.volume);
+  audio.volume = (Number.isFinite(volume) && volume >= 0 && volume <= 1) ? volume : 1;
+  console.log("[SFX] Setting audio volume to:", audio.volume);
   
   if (entry.fadeInMs > 0) {
     audio.volume = 0;
