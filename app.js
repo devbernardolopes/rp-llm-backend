@@ -20150,6 +20150,19 @@ function stopAllSfx() {
     state.sfx.currentAudio = null;
     state.sfx.playingAssetId = null;
   }
+  
+  clearSfxBackground();
+  
+  const overlayContainer = getOrCreateSfxOverlayContainer();
+  if (overlayContainer) {
+    overlayContainer.innerHTML = "";
+  }
+  
+  state.sfx.activeEntries = [];
+  state.sfx.lastTriggered = {};
+  state.sfx.messageCount = {};
+  
+  renderActiveSfxPanel();
 }
 
 async function playStartSfxForCharacter(character, thread) {
