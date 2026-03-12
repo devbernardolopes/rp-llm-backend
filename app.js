@@ -14453,11 +14453,18 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
   const historyForDisplay = Array.isArray(displayHistory)
     ? displayHistory
     : conversationHistory;
+  const resolvedIndex = historyForDisplay.indexOf(message);
   const displayIndex =
     message?.isInitial
       ? cachedInitialMessageDisplayIndex ??
-        getMessageDisplayIndex(index, historyForDisplay)
-      : getMessageDisplayIndex(index, historyForDisplay);
+        getMessageDisplayIndex(
+          resolvedIndex >= 0 ? resolvedIndex : index,
+          historyForDisplay,
+        )
+      : getMessageDisplayIndex(
+          resolvedIndex >= 0 ? resolvedIndex : index,
+          historyForDisplay,
+        );
   messageIndex.textContent = isOocMessage
     ? "OOC"
     : `#${displayIndex}`;
