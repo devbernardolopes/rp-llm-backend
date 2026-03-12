@@ -15710,14 +15710,14 @@ async function generateBotReply() {
     await queueThreadForCooldown(threadId);
     return;
   }
-  const inSimulationHistory = getInSimulationMessages(conversationHistory);
+  const displayHistory = getFilteredConversationHistoryForThread();
+  const inSimulationHistory = getInSimulationMessages(displayHistory);
   const includeOneTimeExtra =
     shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
   const generationCharacter = currentCharacter;
   const generationPersona = currentPersona;
   const generationThreadSnapshot = { ...currentThread };
   const generationHistory = conversationHistory;
-  const displayHistory = getFilteredConversationHistoryForThread();
   let writingTurnCountForThread = getThreadWritingInstructionsTurnCount(
     generationThreadSnapshot,
   );
