@@ -4446,13 +4446,9 @@ async function setupSettingsControls() {
             loadedStartIndex: 0,
           };
         }
-        await persistThreadMessagesById(
-          Number(currentThread.id),
-          conversationHistory,
-          {
-            unloadState: currentThread.unloadState,
-          },
-        );
+        await db.threads.update(Number(currentThread.id), {
+          unloadState: currentThread.unloadState,
+        });
         renderChat();
         updateUnloadButtonVisibility();
       }
@@ -13346,6 +13342,10 @@ async function openThread(threadId) {
     };
   }
 
+  await db.threads.update(thread.id, {
+    unloadState: currentThread.unloadState,
+  });
+
   let initialOrdinal = 0;
   conversationHistory.forEach((msg) => {
     if (msg?.isInitial) {
@@ -14130,17 +14130,14 @@ async function toggleUnloadBatch() {
     currentThread.unloadState = { ...currentThread.unloadState, loadLimit: newLoadLimit };
   }
 
-  await persistThreadMessagesById(
-    threadId,
-    conversationHistory,
-    {
-      unloadState: {
-        loadLimit: currentThread.unloadState.loadLimit,
-        totalMessageCount: currentThread.unloadState.totalMessageCount,
-        loadedStartIndex: currentThread.unloadState.loadedStartIndex,
-      },
+  await db.threads.update(threadId, {
+    unloadState: {
+      loadLimit: currentThread.unloadState.loadLimit,
+      totalMessageCount: currentThread.unloadState.totalMessageCount,
+      loadedStartIndex: currentThread.unloadState.loadedStartIndex,
     },
-  );
+  });
+
   renderChat();
   updateUnloadButtonVisibility();
 }
@@ -14202,7 +14199,9 @@ function renderChat(startIdx, endIdx) {
 
   // Determine which indices to render
   let indicesToRender;
-  if (isFullRender && state.settings.autoUnloadThreshold > 0) {
+  const unloadState = currentThread?.unloadState;
+  const hasUnloadedMessages = unloadState && unloadState.loadedStartIndex > 0;
+  if (isFullRender && hasUnloadedMessages) {
     const vis = computeVisibleMessageIndices();
     indicesToRender = vis.indices;
   } else {
@@ -18766,9 +18765,12 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
     const loadedStart = unloadState.loadedStartIndex;
     const loadedCount = msgs.length;
 
-    const beforeLoaded = existingMessages.slice(0, loadedStart);
-    const afterLoaded = existingMessages.slice(loadedStart + loadedCount);
-    messagesToSave = [...beforeLoaded, ...msgs, ...afterLoaded];
+    if (loadedCount < unloadState.totalMessageCount - loadedStart) {
+      const beforeLoaded = existingMessages.slice(0, loadedStart);
+      messagesToSave = [...beforeLoaded, ...msgs];
+    } else {
+      messagesToSave = msgs;
+    }
   }
 
   const updated = {
