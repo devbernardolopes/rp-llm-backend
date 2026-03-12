@@ -13697,7 +13697,13 @@ async function maybeGenerateTitleBeforeBotReply() {
     5,
     Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
   );
-  const inSimulationHistory = getInSimulationMessages(conversationHistory);
+  const filteredConversationHistory = filterConversationHistoryForSelectedInitialMessage(
+    threadId,
+    conversationHistory,
+  );
+  const inSimulationHistory = getInSimulationMessages(
+    filteredConversationHistory,
+  );
   // Generate title if either we have enough messages OR pending flag is set
   if (inSimulationHistory.length < minMessages && !state.pendingTitleGeneration)
     return true;
@@ -14144,6 +14150,39 @@ function renderChat(startIdx, endIdx) {
 
 function getCurrentThreadInitialMessages() {
   return conversationHistory.filter((msg) => msg?.isInitial);
+}
+
+function getSelectedInitialMessageIndexForThread(threadId, history = conversationHistory) {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return null;
+  const list = Array.isArray(history) ? history : [];
+  const initialMessages = list.filter((msg) => msg?.isInitial);
+  if (initialMessages.length === 0) return null;
+  let index = state.initialMessageIndexByThread[id];
+  if (!Number.isInteger(index) || index < 0) {
+    index = 0;
+  }
+  if (index >= initialMessages.length) {
+    index = initialMessages.length - 1;
+  }
+  return index;
+}
+
+function filterConversationHistoryForSelectedInitialMessage(
+  threadId,
+  history = conversationHistory,
+) {
+  const selectedIndex = getSelectedInitialMessageIndexForThread(threadId, history);
+  if (selectedIndex === null) return history;
+  const list = Array.isArray(history) ? history : [];
+  return list.filter((msg) => {
+    if (!msg?.isInitial) return true;
+    const msgIndex =
+      Number.isInteger(msg.initialMessageIndex) && msg.initialMessageIndex >= 0
+        ? msg.initialMessageIndex
+        : 0;
+    return msgIndex === selectedIndex;
+  });
 }
 
 function updateInitialMessageControls() {
