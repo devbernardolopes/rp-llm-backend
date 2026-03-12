@@ -1229,6 +1229,7 @@ const state = {
   charModalDraftNamespace: "",
   nextCharModalDraftNamespace: 0,
   initialMessageDraftsByKey: {},
+  initialMessageDraftsMetaByKey: {},
   tabId: `tab-${Math.random().toString(36).slice(2)}`,
   syncChannel: null,
   syncTimerId: null,
@@ -1345,6 +1346,8 @@ const state = {
     ttl: 5000, // 5 seconds cache TTL
   },
 };
+
+let cachedInitialMessageDisplayIndex = null;
 
 async function ensureMemoryFilterModelReady() {
   if (!state?.settings?.memoryRelevanceFilterEnabled) {
@@ -8369,31 +8372,49 @@ function getInitialMessageDrafts(language) {
   return state.initialMessageDraftsByKey[key];
 }
 
-function setInitialMessageDrafts(language, drafts) {
+function setInitialMessageDrafts(language, drafts, meta = null) {
   const key = getInitialMessageDraftKey(language);
   state.initialMessageDraftsByKey[key] = Array.isArray(drafts) ? drafts : [];
+  if (meta) {
+    state.initialMessageDraftsMetaByKey[key] = { ...meta };
+  }
 }
 
 function ensureInitialMessageDraftsForLanguage(def) {
   const language = def?.language;
   if (!language) return;
-  const existing = getInitialMessageDrafts(language);
-  if (existing.length > 0) return;
+  const key = getInitialMessageDraftKey(language);
+  const existingDrafts = getInitialMessageDrafts(language);
+  const meta = state.initialMessageDraftsMetaByKey[key];
   let parsed = [];
+  let desiredRaw = "";
+
   if (Array.isArray(def.initialMessages) && def.initialMessages.length > 0) {
     parsed = def.initialMessages;
-  } else if (def?.initialMessagesRaw) {
+    desiredRaw = formatInitialMessagesForEditor(parsed);
+  } else if (String(def.initialMessagesRaw || "").trim()) {
+    const rawInput = String(def.initialMessagesRaw || "");
     try {
-      parsed = parseInitialMessagesInput(def.initialMessagesRaw).messages;
+      const parsedInput = parseInitialMessagesInput(rawInput);
+      parsed = parsedInput.messages;
+      desiredRaw = String(parsedInput.raw || rawInput);
     } catch {
       parsed = [];
+      desiredRaw = rawInput;
     }
+  } else {
+    desiredRaw = "";
   }
-  const drafts =
+
+  const needsReset =
+    !meta || meta.loadedRaw !== desiredRaw || existingDrafts.length === 0;
+  if (!needsReset) return;
+
+  const nextDrafts =
     parsed.length > 0
       ? parsed.map((message) => formatInitialMessagesForEditor([message]))
       : [""];
-  setInitialMessageDrafts(language, drafts);
+  setInitialMessageDrafts(language, nextDrafts, { loadedRaw: desiredRaw });
 }
 
 function renderCharacterInitialMessagesList() {
@@ -8410,6 +8431,34 @@ function renderCharacterInitialMessagesList() {
     const entry = buildInitialMessageEntry(messageText, index, language);
     listRoot.appendChild(entry);
   });
+}
+
+async function refreshOpenThreadInitialMessagesForCharacter(characterId) {
+  if (!currentThread || !Number.isInteger(Number(currentThread?.id))) return;
+  if (Number(currentThread.characterId) !== Number(characterId)) return;
+  const characterRecord = await db.characters.get(characterId);
+  if (!characterRecord) return;
+  const resolvedCharacter = resolveCharacterForLanguage(
+    characterRecord,
+    currentThread.characterLanguage || "",
+  );
+  const initialMessages = await buildThreadInitialMessages(resolvedCharacter);
+  if (!Array.isArray(initialMessages)) return;
+  const remaining = (currentThread.messages || []).filter(
+    (msg) => !msg?.isInitial,
+  );
+  const updatedMessages = [...initialMessages, ...remaining];
+  currentThread.messages = updatedMessages;
+  conversationHistory = updatedMessages.map((msg) => ({
+    ...msg,
+    role: msg.role === "ai" ? "assistant" : msg.role,
+  }));
+  await db.threads.update(Number(currentThread.id), {
+    messages: updatedMessages,
+    updatedAt: Date.now(),
+  });
+  state.initialMessageIndexByThread[Number(currentThread.id)] = 0;
+  renderChat();
 }
 
 function buildInitialMessageEntry(text, index, language) {
@@ -8709,6 +8758,8 @@ async function saveCharacterFromModal({ close = true } = {}) {
       def.initialMessages = collectedMessages;
       def.initialMessagesRaw = formatInitialMessagesForEditor(collectedMessages);
     }
+    const savedRaw = String(def.initialMessagesRaw || "");
+    setInitialMessageDrafts(def.language, drafts, { loadedRaw: savedRaw });
   }
 
   if (missingNameLanguages.length > 0) {
@@ -8799,7 +8850,9 @@ async function saveCharacterFromModal({ close = true } = {}) {
     renderCharacterTagFilterChips();
   }
 
+  let savedCharacterId = null;
   if (state.editingCharacterId) {
+    savedCharacterId = Number(state.editingCharacterId);
     await db.characters.update(state.editingCharacterId, payload);
     if (
       currentCharacter &&
@@ -8822,6 +8875,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
     payload.createdAt = Date.now();
     const newId = await db.characters.add(payload);
     state.editingCharacterId = newId;
+    savedCharacterId = Number(newId);
     showToast(t("characterCreated"), "success");
   }
 
@@ -8855,6 +8909,9 @@ async function saveCharacterFromModal({ close = true } = {}) {
   state.charModalPendingThreadDeleteIds = [];
   setModalDirtyState("character-modal", false);
   await renderAll();
+  if (Number.isInteger(savedCharacterId)) {
+    await refreshOpenThreadInitialMessagesForCharacter(savedCharacterId);
+  }
   if (close) {
     if (state.editingCharacterId) {
       localStorage.setItem(
@@ -9173,6 +9230,9 @@ async function onPersonaSelectChange() {
     : await getCharacterDefaultPersona();
   updatePersonaPickerDisplay();
   if (!currentThread) return;
+  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex();
+
+  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex();
   const updatedAt = Date.now();
   currentThread.selectedPersonaId = currentPersona?.id || null;
   state.lastSyncSeenUpdatedAt = updatedAt;
@@ -10786,6 +10846,13 @@ function getMessageDisplayIndex(index, history = conversationHistory) {
     count += 1;
   }
   return count;
+}
+
+function getFirstInitialDisplayIndex(history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  const firstInitialIndex = list.findIndex((msg) => msg?.isInitial);
+  if (firstInitialIndex < 0) return null;
+  return getMessageDisplayIndex(firstInitialIndex, history);
 }
 
 function formatOocContextEntry(message) {
@@ -14253,9 +14320,13 @@ function buildMessageRow(message, index, streaming) {
   controls.className = "message-controls";
   const messageIndex = document.createElement("span");
   messageIndex.className = "message-index";
+  const displayIndex =
+    message?.isInitial
+      ? cachedInitialMessageDisplayIndex ?? getMessageDisplayIndex(index)
+      : getMessageDisplayIndex(index);
   messageIndex.textContent = isOocMessage
     ? "OOC"
-    : `#${getMessageDisplayIndex(index)}`;
+    : `#${displayIndex}`;
   const isTruncated = message.truncatedByFilter === true;
   const hasGenerationError = !!String(message.generationError || "").trim();
   const isLockedMemoryMessage = isMessageLockedByMemory(message);
