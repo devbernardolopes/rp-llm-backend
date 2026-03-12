@@ -18759,9 +18759,8 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
 
   let messagesToSave = msgs;
   const unloadState = extra.unloadState;
-  const hasPartialLoad = unloadState && unloadState.loadedStartIndex > 0;
 
-  if (hasPartialLoad) {
+  if (unloadState && unloadState.loadedStartIndex > 0) {
     const thread = await db.threads.get(threadId);
     const existingMessages = thread?.messages || [];
     const loadedStart = unloadState.loadedStartIndex;
