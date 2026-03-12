@@ -9231,8 +9231,6 @@ async function onPersonaSelectChange() {
   updatePersonaPickerDisplay();
   if (!currentThread) return;
   cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex();
-
-  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex();
   const updatedAt = Date.now();
   currentThread.selectedPersonaId = currentPersona?.id || null;
   state.lastSyncSeenUpdatedAt = updatedAt;
@@ -13982,6 +13980,7 @@ function renderChat(startIdx, endIdx) {
   }
 
   if (!currentThread) return;
+  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex();
 
   if (
     conversationHistory.length === 0 &&
