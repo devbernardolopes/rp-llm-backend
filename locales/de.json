@@ -536,5 +536,8 @@
     "initialMessageContentPlaceholder": "Schreibe hier die Startnachricht...",
     "initialMessageCarouselPrevTitle": "Vorherige Startnachricht anzeigen",
     "initialMessageCarouselNextTitle": "Nächste Startnachricht anzeigen",
-    "initialMessageCounterLabel": "Startnachricht {current}/{total}"
+    "initialMessageCounterLabel": "Startnachricht {current}/{total}",
+    "initialMessagesHint": "Verwende [AI]:, [SYSTEM]: oder [USER]:, um jede Nachricht zu kennzeichnen.",
+    "initialMessagesInsertTitle": "Markierte Anfangsnachricht einfügen",
+    "initialMessagesClearTitle": "Alle Anfangsnachrichten löschen"
 }

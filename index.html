@@ -1828,33 +1828,47 @@
               placeholder="Appended only for the first assistant generation."
             ></textarea>
           </div>
-            <div class="full lang-field">
-              <span data-i18n="initialMessages">Initial Messages</span>
-              <div
-                id="char-initial-messages-editor"
-                class="initial-messages-editor"
-              >
-                <div
-                  id="char-initial-messages-list"
-                  class="initial-messages-list"
-                ></div>
-                <button
-                  id="add-initial-message-btn"
-                  type="button"
-                  class="option-btn small initial-messages-add-btn"
-                  data-i18n="addInitialMessage"
-                >
-                  Add initial message
-                </button>
+          <div class="full lang-field">
+            <span data-i18n="initialMessages">Initial Messages</span>
+            <div class="initial-messages-editor">
+              <div class="initial-messages-controls">
+                <div class="initial-messages-actions">
+                  <button
+                    id="initial-messages-insert-btn"
+                    type="button"
+                    class="icon-btn small initial-messages-action-btn"
+                    data-i18n-title="initialMessagesInsertTitle"
+                  >
+                    <span
+                      class="visually-hidden"
+                      data-i18n="initialMessagesInsertTitle"
+                    ></span>
+                  </button>
+                  <button
+                    id="initial-messages-clear-btn"
+                    type="button"
+                    class="icon-btn small initial-messages-action-btn danger-icon-btn"
+                    data-i18n-title="initialMessagesClearTitle"
+                  >
+                    <span
+                      class="visually-hidden"
+                      data-i18n="initialMessagesClearTitle"
+                    ></span>
+                  </button>
+                </div>
+                <span
+                  class="muted initial-messages-hint"
+                  data-i18n="initialMessagesHint"
+                ></span>
               </div>
               <textarea
                 id="char-initial-messages"
-                rows="1"
-                aria-hidden="true"
-                tabindex="-1"
-                class="initial-messages-hidden-textarea"
+                class="initial-messages-textarea"
+                rows="8"
+                data-i18n-placeholder="initialMessageContentPlaceholder"
               ></textarea>
             </div>
+          </div>
           <div class="full tags-field hidden">
             <span data-i18n="tagsCommaSeparated">Tags (comma-separated)</span>
             <input

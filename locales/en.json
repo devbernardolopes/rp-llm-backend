@@ -537,5 +537,8 @@
     "initialMessageContentPlaceholder": "Write the initial message here...",
     "initialMessageCarouselPrevTitle": "Show previous initial message",
     "initialMessageCarouselNextTitle": "Show next initial message",
-    "initialMessageCounterLabel": "Initial message {current}/{total}"
+    "initialMessageCounterLabel": "Initial message {current}/{total}",
+    "initialMessagesHint": "Use [AI]:, [SYSTEM]:, or [USER]: to label each message.",
+    "initialMessagesInsertTitle": "Insert tagged initial message",
+    "initialMessagesClearTitle": "Clear all initial messages"
 }

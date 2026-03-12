@@ -536,5 +536,8 @@
     "initialMessageContentPlaceholder": "Saisissez le message initial ici...",
     "initialMessageCarouselPrevTitle": "Afficher le message initial précédent",
     "initialMessageCarouselNextTitle": "Afficher le message initial suivant",
-    "initialMessageCounterLabel": "Message initial {current}/{total}"
+    "initialMessageCounterLabel": "Message initial {current}/{total}",
+    "initialMessagesHint": "Utilisez [AI]:, [SYSTEM]: ou [USER]: pour indiquer le rôle de chaque message.",
+    "initialMessagesInsertTitle": "Insérer un message initial tagué",
+    "initialMessagesClearTitle": "Effacer tous les messages initiaux"
 }

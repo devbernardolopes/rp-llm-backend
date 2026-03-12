@@ -48,6 +48,7 @@ const ICONS = {
   regenerate:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7"></path><path d="M20 4v6h-6"></path></svg>',
   copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><rect x="4" y="4" width="11" height="11" rx="2"></rect></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>',
   speaker:
     '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 14v-4h4l5-4v12l-5-4H4z"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M18.5 7a7 7 0 0 1 0 10"></path></svg>',
   brain:
@@ -2248,11 +2249,26 @@ function setupEvents() {
       setModalDirtyState("character-modal", true);
       updateCharWritingInstructionsVisibility();
     });
-  document
-    .getElementById("add-initial-message-btn")
-    ?.addEventListener("click", () => {
-      addCharacterInitialMessage();
+  const insertInitialMessageBtn = document.getElementById(
+    "initial-messages-insert-btn",
+  );
+  if (insertInitialMessageBtn) {
+    insertInitialMessageBtn.insertAdjacentHTML("afterbegin", ICONS.plus);
+    insertInitialMessageBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      insertTaggedInitialMessage();
     });
+  }
+  const clearInitialMessageBtn = document.getElementById(
+    "initial-messages-clear-btn",
+  );
+  if (clearInitialMessageBtn) {
+    clearInitialMessageBtn.insertAdjacentHTML("afterbegin", ICONS.delete);
+    clearInitialMessageBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      clearInitialMessagesEditor();
+    });
+  }
   document
     .getElementById("char-language-cancel")
     .addEventListener("click", () => {
@@ -2331,7 +2347,6 @@ function setupEvents() {
   });
   
   document
-  document
     .getElementById("pane-toggle-chat")
     ?.addEventListener("click", togglePane);
   document
@@ -2400,6 +2415,13 @@ function setupEvents() {
     el.addEventListener("dragover", onTextAreaFileDragOver);
     el.addEventListener("drop", onTextAreaFileDrop);
   });
+  const initialMessagesTextarea = document.getElementById("char-initial-messages");
+  if (initialMessagesTextarea) {
+    initialMessagesTextarea.addEventListener(
+      "input",
+      handleInitialMessagesTextareaInput,
+    );
+  }
   document
     .getElementById("char-tags-input")
     .addEventListener("input", renderCharacterTagPresetButtons);
@@ -3562,14 +3584,6 @@ function parseInitialMessagesInput(raw) {
     });
   });
   return { raw: text, messages };
-}
-
-function serializeInitialMessages(messages) {
-  const safe = (Array.isArray(messages) ? messages : []).map((m) => ({
-    role: normalizeInitialMessageRole(m?.role || m?.apiRole) || "user",
-    content: String(m?.content || ""),
-  }));
-  return JSON.stringify(safe, null, 2);
 }
 
 function parseTaggedInitialMessages(text) {
@@ -8320,11 +8334,7 @@ function saveActiveCharacterDefinitionFromForm() {
     selectedWritingInstructionId === ""
       ? String(writingInstructionsTextarea?.value || "").trim()
       : "";
-  const normalizedInitialMessages = normalizeDefinitionInitialMessages(
-    def.initialMessages,
-  );
-  def.initialMessages = normalizedInitialMessages;
-  def.initialMessagesRaw = serializeInitialMessages(normalizedInitialMessages);
+  syncInitialMessagesFromTextareaValue();
   def.personaInjectionPlacement = String(
     document.getElementById("char-persona-injection-placement")?.value ||
       "end_system_prompt",
@@ -8351,144 +8361,47 @@ function saveActiveCharacterDefinitionFromForm() {
   def.lorebookIds = getSelectedLorebookIds();
 }
 
-function normalizeDefinitionInitialMessages(list) {
-  const items = Array.isArray(list) ? list : [];
-  return items.map((entry) => {
-    const normalizedRole = normalizeInitialMessageRole(
-      entry?.role || entry?.apiRole,
-    );
-    const role = normalizedRole || "assistant";
-    return {
-      role,
-      apiRole: role,
-      content: String(entry?.content || ""),
-    };
-  });
+function handleInitialMessagesTextareaInput() {
+  syncInitialMessagesFromTextareaValue();
+  setModalDirtyState("character-modal", true);
 }
 
-function ensureCharacterInitialMessagesEditorAttached() {
-  const textarea = document.getElementById("char-initial-messages");
-  const editor = document.getElementById("char-initial-messages-editor");
-  if (!textarea || !editor) return;
-  const body = textarea.closest(".textarea-collapse-body");
-  if (body && editor.parentElement !== body) {
-    body.insertBefore(editor, textarea);
-  }
-}
-
-function getActiveCharacterInitialMessages() {
-  const def = getActiveCharacterDefinition();
-  if (!def) return [];
-  if (!Array.isArray(def.initialMessages)) {
-    def.initialMessages = [];
-  }
-  return def.initialMessages;
-}
-
-function renderCharacterInitialMessagesList() {
-  const listRoot = document.getElementById("char-initial-messages-list");
-  if (!listRoot) return;
-  const messages = getActiveCharacterInitialMessages();
-  listRoot.innerHTML = "";
-  if (messages.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "muted";
-    empty.textContent = t("initialMessagesEditorEmpty");
-    listRoot.appendChild(empty);
-    return;
-  }
-  messages.forEach((message, index) => {
-    const entry = buildInitialMessageEntry(message, index);
-    listRoot.appendChild(entry);
-  });
-}
-
-function buildInitialMessageEntry(message, index) {
-  const entry = document.createElement("div");
-  entry.className = "initial-message-entry";
-  entry.dataset.initialMessageIndex = String(index);
-
-  const header = document.createElement("div");
-  header.className = "initial-message-entry-header";
-  const title = document.createElement("span");
-  title.textContent = tf("initialMessageLabel", { number: index + 1 });
-  const removeBtn = document.createElement("button");
-  removeBtn.type = "button";
-  removeBtn.className = "option-btn small initial-message-remove-btn";
-  removeBtn.textContent = t("removeInitialMessage");
-  removeBtn.addEventListener("click", () => {
-    const def = getActiveCharacterDefinition();
-    if (!def) return;
-    def.initialMessages = def.initialMessages.filter((_, i) => i !== index);
-    setModalDirtyState("character-modal", true);
-    renderCharacterInitialMessagesList();
-    saveActiveCharacterDefinitionFromForm();
-  });
-  header.append(title, removeBtn);
-
-  const roleRow = document.createElement("div");
-  roleRow.className = "initial-message-role-row";
-  const roleLabel = document.createElement("label");
-  roleLabel.textContent = t("roleLabel");
-  const roleSelect = document.createElement("select");
-  roleSelect.className = "initial-message-role-select";
-  [
-    { value: "system", label: t("initialMessageRoleSystem") },
-    { value: "assistant", label: t("initialMessageRoleAssistant") },
-    { value: "user", label: t("initialMessageRoleUser") },
-  ].forEach((item) => {
-    const option = document.createElement("option");
-    option.value = item.value;
-    option.textContent = item.label;
-    roleSelect.appendChild(option);
-  });
-  const normalizedRole = normalizeInitialMessageRole(
-    message.role || message.apiRole,
-  );
-  roleSelect.value = normalizedRole || "assistant";
-  roleSelect.addEventListener("change", (event) => {
-    const def = getActiveCharacterDefinition();
-    if (!def) return;
-    const selectedRole =
-      normalizeInitialMessageRole(event.target.value) || "assistant";
-    message.role = selectedRole;
-    message.apiRole = selectedRole;
-    setModalDirtyState("character-modal", true);
-    saveActiveCharacterDefinitionFromForm();
-  });
-  roleRow.append(roleLabel, roleSelect);
-
-  const textarea = document.createElement("textarea");
-  textarea.rows = 3;
-  textarea.value = String(message.content || "");
-  textarea.placeholder = t("initialMessageContentPlaceholder");
-  textarea.addEventListener("input", (event) => {
-    message.content = event.target.value;
-    autoExpandTextarea(textarea);
-    setModalDirtyState("character-modal", true);
-    saveActiveCharacterDefinitionFromForm();
-  });
-  autoExpandTextarea(textarea);
-
-  entry.append(header, roleRow, textarea);
-  return entry;
-}
-
-function addCharacterInitialMessage(role = "assistant") {
+function syncInitialMessagesFromTextareaValue(rawValue) {
   const def = getActiveCharacterDefinition();
   if (!def) return;
-  def.initialMessages = Array.isArray(def.initialMessages)
-    ? def.initialMessages
-    : [];
-  const normalizedRole = normalizeInitialMessageRole(role) || "assistant";
-  def.initialMessages.push({
-    role: normalizedRole,
-    apiRole: normalizedRole,
-    content: "",
-  });
-  setModalDirtyState("character-modal", true);
-  renderCharacterInitialMessagesList();
-  saveActiveCharacterDefinitionFromForm();
+  const textarea = document.getElementById("char-initial-messages");
+  const rawInput = rawValue ?? String(textarea?.value || "");
+  let parsed = { raw: rawInput, messages: [] };
+  try {
+    parsed = parseInitialMessagesInput(rawInput);
+  } catch {
+    parsed = { raw: rawInput, messages: [] };
+  }
+  def.initialMessagesRaw = parsed.raw;
+  def.initialMessages = parsed.messages;
+}
+
+function insertTaggedInitialMessage(role = "assistant") {
+  const textarea = document.getElementById("char-initial-messages");
+  if (!textarea) return;
+  const label =
+    role === "system" ? "SYSTEM" : role === "user" ? "USER" : "AI";
+  const current = String(textarea.value || "");
+  const needsSeparator = current && !current.endsWith("\n\n");
+  const separator = needsSeparator ? "\n\n" : "";
+  textarea.value = `${current}${separator}[${label}]: `;
+  const position = textarea.value.length;
+  textarea.focus();
+  textarea.setSelectionRange(position, position);
+  handleInitialMessagesTextareaInput();
+}
+
+function clearInitialMessagesEditor() {
+  const textarea = document.getElementById("char-initial-messages");
+  if (!textarea) return;
+  textarea.value = "";
+  handleInitialMessagesTextareaInput();
+  textarea.focus();
 }
 
 async function loadActiveCharacterDefinitionToForm() {
@@ -8508,8 +8421,12 @@ async function loadActiveCharacterDefinitionToForm() {
   if (!Array.isArray(def.initialMessages)) {
     def.initialMessages = [];
   }
-  ensureCharacterInitialMessagesEditorAttached();
-  renderCharacterInitialMessagesList();
+  const initialMessagesTextarea = document.getElementById("char-initial-messages");
+  if (initialMessagesTextarea) {
+    const raw = String(def.initialMessagesRaw || "").trim();
+    const fallback = formatInitialMessagesForEditor(def.initialMessages || []);
+    initialMessagesTextarea.value = raw || fallback;
+  }
   document.getElementById("char-persona-injection-placement").value =
     def.personaInjectionPlacement || "end_system_prompt";
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
