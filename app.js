@@ -9230,7 +9230,8 @@ async function onPersonaSelectChange() {
     : await getCharacterDefaultPersona();
   updatePersonaPickerDisplay();
   if (!currentThread) return;
-  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex();
+  const displayHistory = getFilteredConversationHistoryForThread();
+  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex(displayHistory);
   const updatedAt = Date.now();
   currentThread.selectedPersonaId = currentPersona?.id || null;
   state.lastSyncSeenUpdatedAt = updatedAt;
@@ -13697,14 +13698,9 @@ async function maybeGenerateTitleBeforeBotReply() {
     5,
     Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
   );
-  const threadId = Number(currentThread.id);
-  if (!Number.isInteger(threadId)) return true;
-  const filteredConversationHistory = filterConversationHistoryForSelectedInitialMessage(
-    threadId,
-    conversationHistory,
-  );
+  const displayHistory = getFilteredConversationHistoryForThread(currentThread);
   const inSimulationHistory = getInSimulationMessages(
-    filteredConversationHistory,
+    displayHistory,
   );
   // Generate title if either we have enough messages OR pending flag is set
   if (inSimulationHistory.length < minMessages && !state.pendingTitleGeneration)
@@ -13757,7 +13753,12 @@ async function maybeGenerateTitleBeforeBotReply() {
 
   const log = document.getElementById("chat-log");
   if (log && isViewingThread(currentThread.id)) {
-    const pendingRow = buildMessageRow(pendingTitleMessage, pendingIndex, true);
+    const pendingRow = buildMessageRow(
+      pendingTitleMessage,
+      pendingIndex,
+      true,
+      displayHistory,
+    );
     log.appendChild(pendingRow);
     const pendingContent = pendingRow?.querySelector(".message-content");
     if (pendingContent) {
@@ -14060,7 +14061,8 @@ function renderChat(startIdx, endIdx) {
   }
 
   if (!currentThread) return;
-  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex();
+  const displayHistory = getFilteredConversationHistoryForThread();
+  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex(displayHistory);
 
   if (
     conversationHistory.length === 0 &&
@@ -14118,7 +14120,12 @@ function renderChat(startIdx, endIdx) {
           status === "cooling_down" ||
           (isActiveGenerationThread &&
             (status === "generating" || status === "regenerating")));
-      const newRow = buildMessageRow(message, i, rowStreaming);
+      const newRow = buildMessageRow(
+        message,
+        i,
+        rowStreaming,
+        displayHistory,
+      );
       existingRow.replaceWith(newRow);
     } else {
       const status = String(message?.generationStatus || "").trim();
@@ -14128,7 +14135,9 @@ function renderChat(startIdx, endIdx) {
           status === "cooling_down" ||
           (isActiveGenerationThread &&
             (status === "generating" || status === "regenerating")));
-      log.appendChild(buildMessageRow(message, i, rowStreaming));
+      log.appendChild(
+        buildMessageRow(message, i, rowStreaming, displayHistory),
+      );
     }
   }
 
@@ -14185,6 +14194,15 @@ function filterConversationHistoryForSelectedInitialMessage(
         : 0;
     return msgIndex === selectedIndex;
   });
+}
+
+function getFilteredConversationHistoryForThread(
+  thread = currentThread,
+  history = conversationHistory,
+) {
+  if (!thread) return history;
+  const threadId = Number(thread.id);
+  return filterConversationHistoryForSelectedInitialMessage(threadId, history);
 }
 
 function updateInitialMessageControls() {
@@ -14320,7 +14338,7 @@ function isMessageLockedByMemory(message) {
   );
 }
 
-function buildMessageRow(message, index, streaming) {
+function buildMessageRow(message, index, streaming, displayHistory = null) {
   const row = document.createElement("div");
   row.className = "chat-row";
   row.dataset.streaming = streaming ? "1" : "0";
@@ -14432,10 +14450,14 @@ function buildMessageRow(message, index, streaming) {
   controls.className = "message-controls";
   const messageIndex = document.createElement("span");
   messageIndex.className = "message-index";
+  const historyForDisplay = Array.isArray(displayHistory)
+    ? displayHistory
+    : conversationHistory;
   const displayIndex =
     message?.isInitial
-      ? cachedInitialMessageDisplayIndex ?? getMessageDisplayIndex(index)
-      : getMessageDisplayIndex(index);
+      ? cachedInitialMessageDisplayIndex ??
+        getMessageDisplayIndex(index, historyForDisplay)
+      : getMessageDisplayIndex(index, historyForDisplay);
   messageIndex.textContent = isOocMessage
     ? "OOC"
     : `#${displayIndex}`;
@@ -15139,8 +15161,14 @@ async function sendMessage(options = {}) {
   addPromptToHistory(currentThread.id, text, false);
 
   const log = document.getElementById("chat-log");
+  const displayHistory = getFilteredConversationHistoryForThread();
   log.appendChild(
-    buildMessageRow(userMsg, conversationHistory.length - 1, false),
+    buildMessageRow(
+      userMsg,
+      conversationHistory.length - 1,
+      false,
+      displayHistory,
+    ),
   );
   scrollChatToBottom();
 
@@ -15355,6 +15383,7 @@ async function sendOocInquiry(text) {
 
   const log = document.getElementById("chat-log");
   const isViewing = isViewingThread(currentThread.id);
+  const displayHistory = getFilteredConversationHistoryForThread();
 
   const userIndex = conversationHistory.length;
   const userMsg = {
@@ -15370,7 +15399,9 @@ async function sendOocInquiry(text) {
   conversationHistory.push(userMsg);
   addPromptToHistory(currentThread.id, text, true);
   if (log && isViewing) {
-    log.appendChild(buildMessageRow(userMsg, userIndex, false));
+    log.appendChild(
+      buildMessageRow(userMsg, userIndex, false, displayHistory),
+    );
     scrollChatToBottom();
   }
 
@@ -15395,7 +15426,12 @@ async function sendOocInquiry(text) {
   conversationHistory.push(pendingAssistant);
   let pendingRow = null;
   if (log && isViewing) {
-    pendingRow = buildMessageRow(pendingAssistant, pendingIndex, true);
+    pendingRow = buildMessageRow(
+      pendingAssistant,
+      pendingIndex,
+      true,
+      displayHistory,
+    );
     log.appendChild(pendingRow);
     const pendingContent = pendingRow?.querySelector(".message-content");
     if (pendingContent) {
@@ -15681,6 +15717,7 @@ async function generateBotReply() {
   const generationPersona = currentPersona;
   const generationThreadSnapshot = { ...currentThread };
   const generationHistory = conversationHistory;
+  const displayHistory = getFilteredConversationHistoryForThread();
   let writingTurnCountForThread = getThreadWritingInstructionsTurnCount(
     generationThreadSnapshot,
   );
@@ -15781,7 +15818,12 @@ async function generateBotReply() {
       `.chat-row[data-message-index="${pendingIndex}"]`,
     );
     if (!pendingRow) {
-      pendingRow = buildMessageRow(pending, pendingIndex, true);
+        pendingRow = buildMessageRow(
+          pending,
+          pendingIndex,
+          true,
+          displayHistory,
+        );
       log.appendChild(pendingRow);
     }
   }
