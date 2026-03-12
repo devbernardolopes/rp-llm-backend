@@ -14201,6 +14201,15 @@ function renderChat(startIdx, endIdx) {
   let indicesToRender;
   const unloadState = currentThread?.unloadState;
   const hasUnloadedMessages = unloadState && unloadState.loadedStartIndex > 0;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+  
+  function getOriginalIndex(memIndex) {
+    if (hasUnloadedMessages) {
+      return loadedStartIndex + memIndex;
+    }
+    return memIndex;
+  }
+
   if (isFullRender && hasUnloadedMessages) {
     const vis = computeVisibleMessageIndices();
     indicesToRender = vis.indices;
@@ -14219,9 +14228,10 @@ function renderChat(startIdx, endIdx) {
   for (let i of indicesToRender) {
     const message = conversationHistory[i];
     if (!message) continue;
+    const originalIndex = getOriginalIndex(i);
     // Check if row already exists (for partial updates)
     const existingRow = log.querySelector(
-      `.chat-row[data-message-index="${i}"]`,
+      `.chat-row[data-message-index="${originalIndex}"]`,
     );
     if (existingRow) {
       const status = String(message?.generationStatus || "").trim();
@@ -14233,7 +14243,7 @@ function renderChat(startIdx, endIdx) {
             (status === "generating" || status === "regenerating")));
       const newRow = buildMessageRow(
         message,
-        i,
+        originalIndex,
         rowStreaming,
         displayHistory,
       );
@@ -14247,7 +14257,7 @@ function renderChat(startIdx, endIdx) {
           (isActiveGenerationThread &&
             (status === "generating" || status === "regenerating")));
       log.appendChild(
-        buildMessageRow(message, i, rowStreaming, displayHistory),
+        buildMessageRow(message, originalIndex, rowStreaming, displayHistory),
       );
     }
   }
@@ -14404,6 +14414,8 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
   const logRect = log.getBoundingClientRect();
   let changed = false;
   const now = Date.now();
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
 
   for (let i = 0; i < conversationHistory.length; i += 1) {
     const message = conversationHistory[i];
@@ -14413,7 +14425,8 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
       Number(message.unreadAt) <= 0
     )
       continue;
-    const row = log.querySelector(`.chat-row[data-message-index="${i}"]`);
+    const originalIndex = loadedStartIndex + i;
+    const row = log.querySelector(`.chat-row[data-message-index="${originalIndex}"]`);
     if (!row) continue;
     const rowRect = row.getBoundingClientRect();
     const isVisible =
@@ -14857,11 +14870,14 @@ function ensureMessageRowExists(index) {
 
 function refreshLatestAssistantRowContent() {
   if (!conversationHistory.length) return;
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
   for (let idx = conversationHistory.length - 1; idx >= 0; idx -= 1) {
     const message = conversationHistory[idx];
     if (!message || message.role !== "assistant") continue;
+    const originalIndex = loadedStartIndex + idx;
     const row = document.querySelector(
-      `#chat-log .chat-row[data-message-index="${idx}"]`,
+      `#chat-log .chat-row[data-message-index="${originalIndex}"]`,
     );
     if (!row) continue;
     const content = row.querySelector(".message-content");
@@ -15550,12 +15566,15 @@ async function sendOocInquiry(text) {
     temperature: Number(state.settings.temperature) || 0,
   };
   const pendingIndex = conversationHistory.length;
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+  const originalPendingIndex = loadedStartIndex + pendingIndex;
   conversationHistory.push(pendingAssistant);
   let pendingRow = null;
   if (log && isViewing) {
     pendingRow = buildMessageRow(
       pendingAssistant,
-      pendingIndex,
+      originalPendingIndex,
       true,
       displayHistory,
     );
@@ -15890,8 +15909,11 @@ async function generateBotReply() {
 
   const log = document.getElementById("chat-log");
   const existingPendingIdx = findLatestPendingAssistantIndex(generationHistory);
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
   let pending = null;
   let pendingIndex = existingPendingIdx;
+  let originalPendingIndex = pendingIndex >= 0 ? loadedStartIndex + pendingIndex : -1;
   if (existingPendingIdx >= 0) {
     pending = generationHistory[existingPendingIdx];
     pending.placeholder = false;
@@ -15933,6 +15955,7 @@ async function generateBotReply() {
     };
     generationHistory.push(pending);
     pendingIndex = generationHistory.length - 1;
+    originalPendingIndex = loadedStartIndex + pendingIndex;
   }
   await clearThreadGenerationQueueFlag(threadId);
   await persistThreadMessagesById(threadId, generationHistory);
@@ -15942,12 +15965,12 @@ async function generateBotReply() {
   let pendingRow = null;
   if (log) {
     pendingRow = log.querySelector(
-      `.chat-row[data-message-index="${pendingIndex}"]`,
+      `.chat-row[data-message-index="${originalPendingIndex}"]`,
     );
     if (!pendingRow) {
         pendingRow = buildMessageRow(
           pending,
-          pendingIndex,
+          originalPendingIndex,
           true,
           displayHistory,
         );
@@ -16195,6 +16218,10 @@ async function regenerateMessage(index) {
   const threadId = Number(currentThread.id);
   if (!Number.isInteger(threadId)) return;
   if (index < 0 || index >= conversationHistory.length) return;
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+  const originalIndex = loadedStartIndex + index;
+
   const cooldown = Number(state.settings.completionCooldown) || 0;
   if (cooldown > 0 && isInCompletionCooldown()) {
     const target = conversationHistory[index];
@@ -16294,7 +16321,7 @@ async function regenerateMessage(index) {
     await persistThreadMessagesById(threadId, messagesToSave);
     renderChat();
     const log = document.getElementById("chat-log");
-    const row = log?.querySelector(`.chat-row[data-message-index="${index}"]`);
+    const row = log?.querySelector(`.chat-row[data-message-index="${originalIndex}"]`);
     const contentEl = row?.querySelector(".message-content");
     if (row) row.dataset.streaming = "1";
     refreshMessageControlStates();
@@ -16310,7 +16337,7 @@ async function regenerateMessage(index) {
         target.content += chunk;
         messagesToSave[index].content = target.content;
         if (isViewingThread(threadId)) {
-          const liveRow = ensureMessageRowExists(index);
+          const liveRow = ensureMessageRowExists(originalIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
             liveContent.innerHTML = renderMessageHtml(
