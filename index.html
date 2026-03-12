@@ -1834,26 +1834,12 @@
               <div class="initial-messages-controls">
                 <div class="initial-messages-actions">
                   <button
-                    id="initial-messages-insert-btn"
+                    id="add-initial-message-btn"
                     type="button"
-                    class="icon-btn small initial-messages-action-btn"
-                    data-i18n-title="initialMessagesInsertTitle"
+                    class="icon-btn small"
+                    data-i18n-title="addInitialMessage"
                   >
-                    <span
-                      class="visually-hidden"
-                      data-i18n="initialMessagesInsertTitle"
-                    ></span>
-                  </button>
-                  <button
-                    id="initial-messages-clear-btn"
-                    type="button"
-                    class="icon-btn small initial-messages-action-btn danger-icon-btn"
-                    data-i18n-title="initialMessagesClearTitle"
-                  >
-                    <span
-                      class="visually-hidden"
-                      data-i18n="initialMessagesClearTitle"
-                    ></span>
+                    <span class="visually-hidden" data-i18n="addInitialMessage"></span>
                   </button>
                 </div>
                 <span
@@ -1861,12 +1847,10 @@
                   data-i18n="initialMessagesHint"
                 ></span>
               </div>
-              <textarea
-                id="char-initial-messages"
-                class="initial-messages-textarea"
-                rows="8"
-                data-i18n-placeholder="initialMessageContentPlaceholder"
-              ></textarea>
+              <div
+                id="char-initial-messages-list"
+                class="initial-messages-list"
+              ></div>
             </div>
           </div>
           <div class="full tags-field hidden">

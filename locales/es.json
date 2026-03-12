@@ -537,7 +537,5 @@
     "initialMessageCarouselPrevTitle": "Mostrar mensaje inicial anterior",
     "initialMessageCarouselNextTitle": "Mostrar siguiente mensaje inicial",
     "initialMessageCounterLabel": "Mensaje inicial {current}/{total}",
-    "initialMessagesHint": "Usa [AI]:, [SYSTEM]: o [USER]: para etiquetar cada mensaje.",
-    "initialMessagesInsertTitle": "Insertar mensaje inicial etiquetado",
-    "initialMessagesClearTitle": "Borrar todos los mensajes iniciales"
+    "initialMessagesHint": "Usa [AI]:, [SYSTEM]: o [USER]: para etiquetar cada mensaje."
 }

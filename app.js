@@ -1226,6 +1226,7 @@ const state = {
   draggingPersonaId: null,
   threadUnreadCounts: {},
   initialMessageIndexByThread: {},
+  initialMessageDraftsByLang: {},
   tabId: `tab-${Math.random().toString(36).slice(2)}`,
   syncChannel: null,
   syncTimerId: null,
@@ -2249,24 +2250,12 @@ function setupEvents() {
       setModalDirtyState("character-modal", true);
       updateCharWritingInstructionsVisibility();
     });
-  const insertInitialMessageBtn = document.getElementById(
-    "initial-messages-insert-btn",
-  );
-  if (insertInitialMessageBtn) {
-    insertInitialMessageBtn.insertAdjacentHTML("afterbegin", ICONS.plus);
-    insertInitialMessageBtn.addEventListener("click", (event) => {
+  const addInitialMessageBtn = document.getElementById("add-initial-message-btn");
+  if (addInitialMessageBtn) {
+    addInitialMessageBtn.innerHTML = ICONS.plus;
+    addInitialMessageBtn.addEventListener("click", (event) => {
       event.preventDefault();
-      insertTaggedInitialMessage();
-    });
-  }
-  const clearInitialMessageBtn = document.getElementById(
-    "initial-messages-clear-btn",
-  );
-  if (clearInitialMessageBtn) {
-    clearInitialMessageBtn.insertAdjacentHTML("afterbegin", ICONS.delete);
-    clearInitialMessageBtn.addEventListener("click", (event) => {
-      event.preventDefault();
-      clearInitialMessagesEditor();
+      addInitialMessageDraft(state.charModalActiveLanguage);
     });
   }
   document
@@ -2408,20 +2397,12 @@ function setupEvents() {
   [
     "char-system-prompt",
     "char-one-time-extra-prompt",
-    "char-initial-messages",
   ].forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener("dragover", onTextAreaFileDragOver);
     el.addEventListener("drop", onTextAreaFileDrop);
   });
-  const initialMessagesTextarea = document.getElementById("char-initial-messages");
-  if (initialMessagesTextarea) {
-    initialMessagesTextarea.addEventListener(
-      "input",
-      handleInitialMessagesTextareaInput,
-    );
-  }
   document
     .getElementById("char-tags-input")
     .addEventListener("input", renderCharacterTagPresetButtons);
@@ -8334,7 +8315,27 @@ function saveActiveCharacterDefinitionFromForm() {
     selectedWritingInstructionId === ""
       ? String(writingInstructionsTextarea?.value || "").trim()
       : "";
-  syncInitialMessagesFromTextareaValue();
+  const language = def.language;
+  let drafts = getInitialMessageDrafts(language);
+  if (drafts.length === 0) {
+    drafts = [""];
+  }
+  setInitialMessageDrafts(language, drafts);
+  const normalizedDrafts = drafts
+    .map((txt) => String(txt || ""))
+    .filter((txt) => txt.trim().length > 0);
+  const combinedRaw = normalizedDrafts.join("\n\n");
+  def.initialMessagesRaw = combinedRaw;
+  if (!combinedRaw) {
+    def.initialMessages = [];
+  } else {
+    try {
+      const parsedInitialMessages = parseInitialMessagesInput(combinedRaw);
+      def.initialMessages = parsedInitialMessages.messages;
+    } catch {
+      // Keep existing parsed messages until final validation.
+    }
+  }
   def.personaInjectionPlacement = String(
     document.getElementById("char-persona-injection-placement")?.value ||
       "end_system_prompt",
@@ -8361,47 +8362,114 @@ function saveActiveCharacterDefinitionFromForm() {
   def.lorebookIds = getSelectedLorebookIds();
 }
 
-function handleInitialMessagesTextareaInput() {
-  syncInitialMessagesFromTextareaValue();
+function getInitialMessageDrafts(language) {
+  if (!language) return [];
+  if (!Array.isArray(state.initialMessageDraftsByLang[language])) {
+    state.initialMessageDraftsByLang[language] = [];
+  }
+  return state.initialMessageDraftsByLang[language];
+}
+
+function setInitialMessageDrafts(language, drafts) {
+  if (!language) return;
+  state.initialMessageDraftsByLang[language] = Array.isArray(drafts) ? drafts : [];
+}
+
+function ensureInitialMessageDraftsForLanguage(def) {
+  const language = def?.language;
+  if (!language) return;
+  const existing = getInitialMessageDrafts(language);
+  if (existing.length > 0) return;
+  let parsed = [];
+  if (Array.isArray(def.initialMessages) && def.initialMessages.length > 0) {
+    parsed = def.initialMessages;
+  } else if (def?.initialMessagesRaw) {
+    try {
+      parsed = parseInitialMessagesInput(def.initialMessagesRaw).messages;
+    } catch {
+      parsed = [];
+    }
+  }
+  const drafts =
+    parsed.length > 0
+      ? parsed.map((message) => formatInitialMessagesForEditor([message]))
+      : [""];
+  setInitialMessageDrafts(language, drafts);
+}
+
+function renderCharacterInitialMessagesList() {
+  const listRoot = document.getElementById("char-initial-messages-list");
+  if (!listRoot) return;
+  const language = state.charModalActiveLanguage;
+  if (!language) {
+    listRoot.innerHTML = "";
+    return;
+  }
+  const drafts = getInitialMessageDrafts(language);
+  listRoot.innerHTML = "";
+  drafts.forEach((messageText, index) => {
+    const entry = buildInitialMessageEntry(messageText, index, language);
+    listRoot.appendChild(entry);
+  });
+}
+
+function buildInitialMessageEntry(text, index, language) {
+  const entry = document.createElement("div");
+  entry.className = "initial-message-card";
+
+  const headerRow = document.createElement("div");
+  headerRow.className = "initial-message-card-header-row";
+  const title = document.createElement("span");
+  title.className = "initial-message-card-header";
+  title.textContent = tf("initialMessageLabel", { number: index + 1 });
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "icon-btn small initial-message-remove-btn";
+  removeBtn.innerHTML = ICONS.delete;
+  const removeLabel = t("removeInitialMessage");
+  removeBtn.setAttribute("aria-label", removeLabel);
+  removeBtn.title = removeLabel;
+  removeBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    removeInitialMessageDraft(language, index);
+  });
+  headerRow.append(title, removeBtn);
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "initial-message-entry-textarea";
+  textarea.rows = 3;
+  textarea.placeholder = t("initialMessageContentPlaceholder");
+  textarea.value = String(text || "");
+  textarea.addEventListener("input", (event) => {
+    const drafts = getInitialMessageDrafts(language);
+    drafts[index] = String(event.target.value || "");
+    setModalDirtyState("character-modal", true);
+  });
+
+  entry.append(headerRow, textarea);
+  return entry;
+}
+
+function addInitialMessageDraft(language) {
+  if (!language) return;
+  const drafts = getInitialMessageDrafts(language);
+  const next = [...drafts, ""];
+  setInitialMessageDrafts(language, next);
+  renderCharacterInitialMessagesList();
   setModalDirtyState("character-modal", true);
 }
 
-function syncInitialMessagesFromTextareaValue(rawValue) {
-  const def = getActiveCharacterDefinition();
-  if (!def) return;
-  const textarea = document.getElementById("char-initial-messages");
-  const rawInput = rawValue ?? String(textarea?.value || "");
-  let parsed = { raw: rawInput, messages: [] };
-  try {
-    parsed = parseInitialMessagesInput(rawInput);
-  } catch {
-    parsed = { raw: rawInput, messages: [] };
+function removeInitialMessageDraft(language, index) {
+  if (!language) return;
+  const drafts = getInitialMessageDrafts(language);
+  if (index < 0 || index >= drafts.length) return;
+  const next = drafts.filter((_, idx) => idx !== index);
+  if (next.length === 0) {
+    next.push("");
   }
-  def.initialMessagesRaw = parsed.raw;
-  def.initialMessages = parsed.messages;
-}
-
-function insertTaggedInitialMessage(role = "assistant") {
-  const textarea = document.getElementById("char-initial-messages");
-  if (!textarea) return;
-  const label =
-    role === "system" ? "SYSTEM" : role === "user" ? "USER" : "AI";
-  const current = String(textarea.value || "");
-  const needsSeparator = current && !current.endsWith("\n\n");
-  const separator = needsSeparator ? "\n\n" : "";
-  textarea.value = `${current}${separator}[${label}]: `;
-  const position = textarea.value.length;
-  textarea.focus();
-  textarea.setSelectionRange(position, position);
-  handleInitialMessagesTextareaInput();
-}
-
-function clearInitialMessagesEditor() {
-  const textarea = document.getElementById("char-initial-messages");
-  if (!textarea) return;
-  textarea.value = "";
-  handleInitialMessagesTextareaInput();
-  textarea.focus();
+  setInitialMessageDrafts(language, next);
+  renderCharacterInitialMessagesList();
+  setModalDirtyState("character-modal", true);
 }
 
 async function loadActiveCharacterDefinitionToForm() {
@@ -8421,12 +8489,8 @@ async function loadActiveCharacterDefinitionToForm() {
   if (!Array.isArray(def.initialMessages)) {
     def.initialMessages = [];
   }
-  const initialMessagesTextarea = document.getElementById("char-initial-messages");
-  if (initialMessagesTextarea) {
-    const raw = String(def.initialMessagesRaw || "").trim();
-    const fallback = formatInitialMessagesForEditor(def.initialMessages || []);
-    initialMessagesTextarea.value = raw || fallback;
-  }
+  ensureInitialMessageDraftsForLanguage(def);
+  renderCharacterInitialMessagesList();
   document.getElementById("char-persona-injection-placement").value =
     def.personaInjectionPlacement || "end_system_prompt";
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);

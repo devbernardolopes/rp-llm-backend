@@ -2742,25 +2742,45 @@ textarea {
   font-size: 0.85rem;
   color: var(--muted);
 }
-.initial-messages-textarea {
-  width: 100%;
-  min-height: 150px;
-  border-radius: 12px;
+.initial-messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.initial-message-card {
   border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0d101b;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.initial-message-card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.initial-message-card-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.initial-message-card textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 8px 10px;
   background: #05060d;
   color: var(--text);
   font-family: inherit;
   font-size: 0.95rem;
-  padding: 10px 12px;
   resize: vertical;
 }
-.initial-messages-textarea:focus {
+.initial-message-card textarea:focus {
   outline: none;
   border-color: var(--primary);
-}
-.initial-messages-action-btn svg {
-  width: 16px;
-  height: 16px;
 }
 .image-preview-card {
   width: auto;
