@@ -12381,6 +12381,43 @@ async function exportCharacter(characterId) {
   showToast(t("characterExported"), "success");
 }
 
+function buildLegacyInitialMessagesFromPayload(source) {
+  const list = [];
+  if (!source || typeof source !== "object") return list;
+  const pushText = (value) => {
+    const text = String(value || "").trim();
+    if (!text) return;
+    list.push({
+      role: "assistant",
+      apiRole: "assistant",
+      content: text,
+    });
+  };
+  const primary = source.first_mes ?? source.firstMes;
+  if (primary) {
+    pushText(primary);
+  }
+  const alt = Array.isArray(source.alternate_greetings)
+    ? source.alternate_greetings
+    : [];
+  alt.forEach((entry) => {
+    let candidate = "";
+    if (typeof entry === "string") {
+      candidate = entry;
+    } else if (entry && typeof entry === "object") {
+      candidate =
+        entry.message ||
+        entry.text ||
+        entry.greeting ||
+        entry.value ||
+        entry.content ||
+        "";
+    }
+    pushText(candidate);
+  });
+  return list;
+}
+
 async function importCharacterFromFile(e) {
   const file = e.target.files?.[0];
   e.target.value = "";
@@ -12401,7 +12438,14 @@ async function importCharacterFromFile(e) {
       }
       const description = String(data.description || "").trim();
       const personality = String(data.personality || "").trim();
-      const firstMes = String(data.first_mes || "").trim();
+      const legacyInitialMessages = buildLegacyInitialMessagesFromPayload(data);
+      const initialMessagesRaw =
+        legacyInitialMessages.length > 0
+          ? formatInitialMessagesForEditor(legacyInitialMessages)
+          : "";
+      const initialMessages = legacyInitialMessages.map((message) => ({
+        ...message,
+      }));
       let avatarUrl = String(data.avatar || "").trim();
       let avatarData = "";
       if (avatarUrl) {
@@ -12460,8 +12504,8 @@ async function importCharacterFromFile(e) {
             oneTimeExtraPrompt: scenario,
             writingInstructions: postHistory || "",
             writingInstructionId: String(writingInstructionId || ""),
-            initialMessagesRaw: firstMes,
-            initialMessages: firstMes ? [firstMes] : [],
+            initialMessagesRaw: initialMessagesRaw,
+            initialMessages: initialMessages,
             personaInjectionPlacement: "end_system_prompt",
             ttsVoice: DEFAULT_TTS_VOICE,
             ttsLanguage: DEFAULT_TTS_LANGUAGE,
@@ -12505,6 +12549,34 @@ async function importCharacterFromFile(e) {
         updatedAt: Date.now(),
         personaInjectionPlacement: "end_system_prompt",
       };
+      const legacyInitialMessagesFromImported =
+        buildLegacyInitialMessagesFromPayload(imported);
+      if (legacyInitialMessagesFromImported.length > 0) {
+        const formattedLegacyRaw = formatInitialMessagesForEditor(
+          legacyInitialMessagesFromImported,
+        );
+        if (Array.isArray(character.definitions)) {
+          character.definitions = character.definitions.map((def) => {
+            const copy = { ...def };
+            const hasExistingMessages =
+              Array.isArray(copy.initialMessages) &&
+              copy.initialMessages.length > 0;
+            const hasRaw = String(copy.initialMessagesRaw || "").trim().length > 0;
+            if (!hasExistingMessages) {
+              copy.initialMessages =
+                copy.initialMessages && copy.initialMessages.length > 0
+                  ? copy.initialMessages
+                  : legacyInitialMessagesFromImported.map((message) => ({
+                      ...message,
+                    }));
+            }
+            if (!hasRaw) {
+              copy.initialMessagesRaw = formattedLegacyRaw;
+            }
+            return copy;
+          });
+        }
+      }
       if (character.definitions && character.definitions.length > 0) {
         character.definitions = character.definitions.map((def) => ({
           ...def,
