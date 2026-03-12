@@ -4425,16 +4425,37 @@ async function setupSettingsControls() {
       autoUnloadThresholdInput.value = String(clamped);
       saveSettings();
       if (currentThread) {
-        currentThread.unloadState = { loadLimit: 0 };
+        const threshold = clamped;
+        const totalMessages = currentThread.unloadState?.totalMessageCount ?? conversationHistory.length;
+        
+        if (threshold > 0 && totalMessages > threshold) {
+          const startIndex = totalMessages - threshold;
+          const keptMessages = conversationHistory.slice(-threshold);
+          conversationHistory = keptMessages;
+          currentThread.unloadState = {
+            loadLimit: 0,
+            totalMessageCount: totalMessages,
+            loadedStartIndex: startIndex,
+          };
+        } else {
+          const fullHistory = await getFullHistoryFromDb(Number(currentThread.id));
+          conversationHistory = fullHistory;
+          currentThread.unloadState = {
+            loadLimit: 0,
+            totalMessageCount: fullHistory.length,
+            loadedStartIndex: 0,
+          };
+        }
         await persistThreadMessagesById(
           Number(currentThread.id),
           conversationHistory,
           {
-            unloadState: { loadLimit: 0 },
+            unloadState: currentThread.unloadState,
           },
         );
+        renderChat();
+        updateUnloadButtonVisibility();
       }
-      renderChat();
     });
   }
   const chatMessageAlignment = document.getElementById(
@@ -7175,7 +7196,8 @@ async function renderThreads() {
 
     const msgCount = document.createElement("span");
     msgCount.className = "thread-msg-count";
-    msgCount.textContent = `${thread.messages?.length || 0}`;
+    const totalMsgs = thread.unloadState?.totalMessageCount ?? thread.messages?.length ?? 0;
+    msgCount.textContent = `${totalMsgs}`;
 
     const avatar = document.createElement("img");
     avatar.className = "thread-avatar";
@@ -13297,10 +13319,33 @@ async function openThread(threadId) {
   currentCharacter = character || null;
   state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
   preloadKokoroForActiveCharacter();
-  conversationHistory = (thread.messages || []).map((m) => ({
-    ...m,
-    role: m.role === "ai" ? "assistant" : m.role,
-  }));
+
+  const threshold = state.settings.autoUnloadThreshold || 0;
+  const totalMessages = thread.messages?.length || 0;
+
+  if (threshold > 0 && totalMessages > threshold) {
+    const startIndex = totalMessages - threshold;
+    conversationHistory = (thread.messages.slice(startIndex) || []).map((m) => ({
+      ...m,
+      role: m.role === "ai" ? "assistant" : m.role,
+    }));
+    currentThread.unloadState = {
+      loadLimit: 0,
+      totalMessageCount: totalMessages,
+      loadedStartIndex: startIndex,
+    };
+  } else {
+    conversationHistory = (thread.messages || []).map((m) => ({
+      ...m,
+      role: m.role === "ai" ? "assistant" : m.role,
+    }));
+    currentThread.unloadState = {
+      loadLimit: 0,
+      totalMessageCount: totalMessages,
+      loadedStartIndex: 0,
+    };
+  }
+
   let initialOrdinal = 0;
   conversationHistory.forEach((msg) => {
     if (msg?.isInitial) {
@@ -13928,35 +13973,76 @@ async function maybeGenerateThreadTitle() {
   state.pendingTitleGeneration = true;
 }
 
+async function loadMessagesFromDb(threadId, startIndex, count) {
+  const thread = await db.threads.get(threadId);
+  if (!thread?.messages) return [];
+  const messages = thread.messages;
+  const endIndex = Math.min(startIndex + count, messages.length);
+  const loaded = [];
+  for (let i = startIndex; i < endIndex; i++) {
+    const msg = messages[i];
+    if (msg) {
+      loaded.push({
+        ...msg,
+        role: msg.role === "ai" ? "assistant" : msg.role,
+      });
+    }
+  }
+  return loaded;
+}
+
+async function getFullHistoryFromDb(threadId) {
+  const thread = await db.threads.get(threadId);
+  if (!thread?.messages) return [];
+  return thread.messages.map((m) => ({
+    ...m,
+    role: m.role === "ai" ? "assistant" : m.role,
+  }));
+}
+
 function computeVisibleMessageIndices() {
-  const total = conversationHistory.length;
   const threshold = state.settings.autoUnloadThreshold || 0;
-  if (threshold === 0 || total <= threshold) {
+  const thread = currentThread;
+  const unloadState = thread?.unloadState;
+  const totalMessages = unloadState?.totalMessageCount || conversationHistory.length;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+
+  if (threshold === 0 || totalMessages <= threshold) {
     return {
-      indices: Array.from({ length: total }, (_, i) => i),
+      indices: Array.from({ length: conversationHistory.length }, (_, i) => i),
       loadLimit: 0,
       startActive: 0,
       hiddenCount: 0,
+      totalMessages,
+      loadedStartIndex: 0,
     };
   }
-  const startActive = total - threshold;
-  const thread = currentThread;
-  const loadLimit =
-    thread && thread.unloadState ? thread.unloadState.loadLimit : 0;
+
+  const startActive = totalMessages - threshold;
+  const loadLimit = unloadState?.loadLimit || 0;
   const clampedLoadLimit = Math.max(0, Math.min(loadLimit, startActive));
+
   const visible = [];
-  // Show most recently hidden messages first (from startActive - clampedLoadLimit to startActive - 1)
   for (let i = startActive - clampedLoadLimit; i < startActive; i++) {
-    visible.push(i);
+    const memIndex = i - loadedStartIndex;
+    if (memIndex >= 0 && memIndex < conversationHistory.length) {
+      visible.push(memIndex);
+    }
   }
-  for (let i = startActive; i < total; i++) {
-    visible.push(i);
+  const memStart = startActive - loadedStartIndex;
+  for (let i = 0; i < conversationHistory.length; i++) {
+    if (i >= memStart && !visible.includes(i)) {
+      visible.push(i);
+    }
   }
+
   return {
-    indices: visible,
+    indices: visible.sort((a, b) => a - b),
     loadLimit: clampedLoadLimit,
     startActive,
     hiddenCount: startActive - clampedLoadLimit,
+    totalMessages,
+    loadedStartIndex,
   };
 }
 
@@ -14018,19 +14104,41 @@ async function toggleUnloadBatch() {
   const vis = computeVisibleMessageIndices();
   const startActive = vis.startActive || 0;
   let newLoadLimit = vis.loadLimit || 0;
+  const threadId = Number(currentThread.id);
+
   if (vis.hiddenCount > 0) {
-    // Load one batch
     newLoadLimit = Math.min(startActive, newLoadLimit + threshold);
+    const loadStart = startActive - newLoadLimit;
+    const loaded = await loadMessagesFromDb(threadId, loadStart, newLoadLimit - (vis.loadLimit || 0));
+    const existingStart = conversationHistory.map((m) => ({ ...m }));
+    conversationHistory = [...loaded, ...existingStart];
+    currentThread.unloadState = {
+      ...currentThread.unloadState,
+      loadLimit: newLoadLimit,
+      loadedStartIndex: loadStart,
+    };
   } else if (newLoadLimit > 0) {
-    // Hide all loaded older messages
     newLoadLimit = 0;
+    const keepStart = vis.loadLimit;
+    conversationHistory = conversationHistory.slice(keepStart);
+    currentThread.unloadState = {
+      ...currentThread.unloadState,
+      loadLimit: 0,
+      loadedStartIndex: startActive,
+    };
+  } else {
+    currentThread.unloadState = { ...currentThread.unloadState, loadLimit: newLoadLimit };
   }
-  currentThread.unloadState = { loadLimit: newLoadLimit };
+
   await persistThreadMessagesById(
-    Number(currentThread.id),
+    threadId,
     conversationHistory,
     {
-      unloadState: currentThread.unloadState,
+      unloadState: {
+        loadLimit: currentThread.unloadState.loadLimit,
+        totalMessageCount: currentThread.unloadState.totalMessageCount,
+        loadedStartIndex: currentThread.unloadState.loadedStartIndex,
+      },
     },
   );
   renderChat();
@@ -15339,7 +15447,16 @@ function getOocPromptForUserMessage(message) {
 }
 
 async function buildOocSystemPrompt() {
-  const contextMessages = getInSimulationMessages(conversationHistory)
+  const threshold = state.settings.autoUnloadThreshold || 0;
+  const unloadState = currentThread?.unloadState;
+  const hasUnloadedMessages = threshold > 0 && unloadState && unloadState.loadedStartIndex > 0;
+
+  let historyForPrompt = conversationHistory;
+  if (hasUnloadedMessages) {
+    historyForPrompt = await getFullHistoryFromDb(Number(currentThread.id));
+  }
+
+  const contextMessages = getInSimulationMessages(historyForPrompt)
     .filter((msg) => !isMessageLockedByMemory(msg))
     .map(formatOocContextEntry)
     .filter(Boolean);
@@ -18640,8 +18757,23 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
     (m) => !m.generationStatus || m.generationStatus === "",
   );
 
+  let messagesToSave = msgs;
+  const unloadState = extra.unloadState;
+  const hasPartialLoad = unloadState && unloadState.loadedStartIndex > 0;
+
+  if (hasPartialLoad) {
+    const thread = await db.threads.get(threadId);
+    const existingMessages = thread?.messages || [];
+    const loadedStart = unloadState.loadedStartIndex;
+    const loadedCount = msgs.length;
+
+    const beforeLoaded = existingMessages.slice(0, loadedStart);
+    const afterLoaded = existingMessages.slice(loadedStart + loadedCount);
+    messagesToSave = [...beforeLoaded, ...msgs, ...afterLoaded];
+  }
+
   const updated = {
-    messages: msgs,
+    messages: messagesToSave,
     ...extra,
   };
 
