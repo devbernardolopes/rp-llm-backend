@@ -3002,6 +3002,8 @@ function setupEvents() {
     "#char-use-memory",
     "#char-use-postprocess",
     "#char-auto-trigger-first-ai",
+    "#char-auto-title",
+    "#char-auto-title-min-messages",
     "#char-avatar-scale",
     "#char-tags-input",
     "#char-tts-voice",
