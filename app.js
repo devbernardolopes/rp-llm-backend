@@ -7051,11 +7051,11 @@ function updateThreadMessageCount(threadId, messages) {
   if (!row) return;
   const msgCountEl = row.querySelector(".thread-msg-count");
   if (msgCountEl) {
-    const nonOocCount = (messages || []).filter((m) => !m.ooc).length;
+    const nonOocCount = (messages || []).filter((m) => !m.ooc && !m.isInitial).length;
     msgCountEl.textContent = `${nonOocCount}`;
   }
   if (currentThread && Number(currentThread.id) === Number(threadId) && currentThread.unloadState) {
-    const nonOocCount = (messages || []).filter((m) => !m.ooc).length;
+    const nonOocCount = (messages || []).filter((m) => !m.ooc && !m.isInitial).length;
     currentThread.unloadState.totalMessageCount = nonOocCount;
   }
 }
