@@ -332,6 +332,7 @@ async function summarizeMemory(character) {
 
   const threadId = currentThread?.id;
   const isViewing = threadId && isViewingThread(threadId);
+  const includeOoc = character?.includeOocInCompletions === true;
 
   const candidateMessages = conversationHistory
     .map((message, idx) => ({ message, idx }))
@@ -339,7 +340,7 @@ async function summarizeMemory(character) {
       const msg = entry.message;
       if (
         !msg ||
-        msg.ooc === true ||
+        (!includeOoc && msg.ooc === true) ||
         memoryIsPlaceholderMessage(msg) ||
         msg.summarized === true
       ) {
@@ -626,9 +627,14 @@ function buildMessageEntryForSummary(message) {
   const filtered = removeSummaryParagraphs(processed);
   const trimmed = filtered.trim();
   if (!trimmed) return "";
-  const labeled = `${message.role}: ${trimmed}`;
+  const isOoc = message.ooc === true;
+  let labelContent = trimmed;
+  if (isOoc) {
+    labelContent = `((OOC: ${trimmed}))`;
+  }
+  const labeled = `${message.role}: ${labelContent}`;
   const normalized = normalizeSummaryRoleLabels(labeled);
-  if (message.role === "user") {
+  if (message.role === "user" && !isOoc) {
     const personaName = String(message.senderName || "You");
     return normalized.replace(
       /^\[USER\]:/,
