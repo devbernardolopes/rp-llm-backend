@@ -2726,8 +2726,11 @@ textarea {
   width: 100%;
   border-radius: 10px;
   background: #111827;
-  padding: 10px 12px;
+  border: 1px solid var(--line);
+  padding: 14px 16px;
   overflow: hidden;
+  box-sizing: border-box;
+  line-height: 1.45;
 }
 .initial-messages-editor {
   display: flex;

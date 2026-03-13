@@ -3177,6 +3177,7 @@ function setupModalTextareas(root = document) {
     textareaCollapseStates.set(textarea, entry);
     const hasContent = String(textarea.value || "").trim().length > 0;
     entry.setExpanded(forceCollapsed ? false : hasContent);
+    refreshTextareaWordCount(textarea);
 
     // Determine appropriate save function based on modal
     const modal = textarea.closest(".modal");
@@ -3201,6 +3202,7 @@ function setupModalTextareas(root = document) {
         autoExpandTextarea(textarea);
       }
       entry.refresh();
+      refreshTextareaWordCount(textarea);
     });
     textarea.addEventListener("focus", () => {
       if (header.getAttribute("aria-expanded") === "true") {
@@ -17765,7 +17767,7 @@ function openMemoryRegeneratePromptModal(entry) {
   pendingMemoryRegenerationEntry = entry;
   modal.dataset.memoryEntryId = String(entry.id || "");
   if (entryLabel) {
-    entryLabel.textContent = t("memoryModalEntryLabel", {
+    entryLabel.textContent = tf("memoryModalEntryLabel", {
       level: entry.level,
       slot: entry.slot,
     });
@@ -17774,6 +17776,7 @@ function openMemoryRegeneratePromptModal(entry) {
     description.textContent = t("memoryRegeneratePromptDescription");
   }
   textarea.value = String(entry.summaryUserContent || "");
+  refreshTextareaWordCount(textarea);
   modal.classList.remove("hidden");
   setupModalTextareas(modal);
   textarea.focus();
@@ -19934,6 +19937,13 @@ async function openMessageSystemPromptModal(index) {
   requestAnimationFrame(() => collapseSystemPromptEntries());
 
   openModal("message-system-prompt-modal");
+}
+
+function refreshTextareaWordCount(textarea) {
+  if (!textarea || !textarea.id) return;
+  const countEl = document.getElementById(`${textarea.id}-count`);
+  if (!countEl) return;
+  countEl.textContent = String(countWords(textarea.value));
 }
 
 function countWords(text) {
