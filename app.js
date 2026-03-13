@@ -15628,7 +15628,8 @@ async function buildOocSystemPrompt() {
     historyForPrompt = await getFullHistoryFromDb(Number(currentThread.id));
   }
 
-  const contextMessages = getInSimulationMessages(historyForPrompt, { includeOoc: currentCharacter?.includeOocInCompletions === true })
+  const filteredHistory = getFilteredConversationHistoryForThread(currentThread, historyForPrompt);
+  const contextMessages = getInSimulationMessages(filteredHistory, { includeOoc: currentCharacter?.includeOocInCompletions === true })
     .filter((msg) => !isMessageLockedByMemory(msg))
     .map(formatOocContextEntry)
     .filter(Boolean);
