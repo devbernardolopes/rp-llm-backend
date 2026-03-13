@@ -7021,6 +7021,17 @@ function updateDocumentTitleWithUnread() {
   });
 }
 
+function updateThreadMessageCount(threadId, messageCount) {
+  const list = document.getElementById("thread-list");
+  if (!list) return;
+  const row = list.querySelector(`.thread-row[data-thread-id="${threadId}"]`);
+  if (!row) return;
+  const msgCountEl = row.querySelector(".thread-msg-count");
+  if (msgCountEl) {
+    msgCountEl.textContent = `${messageCount}`;
+  }
+}
+
 async function renderThreads() {
   const list = document.getElementById("thread-list");
   if (!list) return;
@@ -13836,6 +13847,10 @@ async function maybeGenerateTitleBeforeBotReply() {
     placeholder: true,
   };
   conversationHistory.push(pendingTitleMessage);
+  if (currentThread) {
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, msgCount);
+  }
   const pendingIndex = conversationHistory.length - 1;
 
   await persistCurrentThread();
@@ -15352,6 +15367,10 @@ async function sendMessage(options = {}) {
     personaColor: entryPersonaColor,
   };
   conversationHistory.push(userMsg);
+  if (currentThread) {
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, msgCount);
+  }
   await persistCurrentThread();
   addPromptToHistory(currentThread.id, text, false);
 
@@ -15416,6 +15435,10 @@ async function addManualAssistantMessage(content) {
     writingInstructionsCounted: false,
   };
   conversationHistory.push(assistantMsg);
+  if (currentThread) {
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, msgCount);
+  }
   await persistCurrentThread();
   renderChat();
   scrollChatToBottom();
@@ -15461,6 +15484,10 @@ async function queueThreadForCooldown(threadId, targetMessage = null) {
       writingInstructionsCounted: false,
       placeholder: true,
     });
+    if (currentThread) {
+      const msgCount = conversationHistory.length;
+      updateThreadMessageCount(currentThread.id, msgCount);
+    }
   }
   const nowTs = Date.now();
   currentThread.pendingGenerationReason = "cooldown";
@@ -15601,6 +15628,10 @@ async function sendOocInquiry(text) {
     ooc: true,
   };
   conversationHistory.push(userMsg);
+  if (currentThread) {
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, msgCount);
+  }
   addPromptToHistory(currentThread.id, text, true);
   if (log && isViewing) {
     log.appendChild(
@@ -15631,6 +15662,10 @@ async function sendOocInquiry(text) {
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
   const originalPendingIndex = loadedStartIndex + pendingIndex;
   conversationHistory.push(pendingAssistant);
+  if (currentThread) {
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, msgCount);
+  }
   let pendingRow = null;
   if (log && isViewing) {
     pendingRow = buildMessageRow(
@@ -16253,6 +16288,10 @@ async function deleteMessageAt(index) {
     Number.isInteger(targetTurn) &&
     targetTurn === latestCountedTurn;
   conversationHistory.splice(index, 1);
+  if (currentThread) {
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, msgCount);
+  }
 
   // After deletion, if the deleted message was an API assistant and no other API assistants remain, clear the once flag
   if (isApiAssistant) {

@@ -435,6 +435,10 @@ async function summarizeMemory(character) {
     placeholder: true,
   };
   conversationHistory.push(pendingMessage);
+  if (currentThread) {
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, msgCount);
+  }
   const pendingIndex = conversationHistory.length - 1;
 
   // Set thread as actively generating for UI state
