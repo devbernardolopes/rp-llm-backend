@@ -15697,9 +15697,10 @@ async function sendOocInquiry(text) {
     updateThreadMessageCount(currentThread.id, conversationHistory);
   }
   addPromptToHistory(currentThread.id, text, true);
+  const updatedDisplayHistory = getFilteredConversationHistoryForThread();
   if (log && isViewing) {
     log.appendChild(
-      buildMessageRow(userMsg, userIndex, false, displayHistory),
+      buildMessageRow(userMsg, userIndex, false, updatedDisplayHistory),
     );
     scrollChatToBottom();
   }
@@ -15725,7 +15726,7 @@ async function sendOocInquiry(text) {
   const unloadState = currentThread?.unloadState;
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
   const originalPendingIndex = loadedStartIndex + pendingIndex;
-  const displayPendingIndex = displayHistory.length;
+  const displayPendingIndex = updatedDisplayHistory.length;
   const displayPendingRowIndex = displayPendingIndex;
   conversationHistory.push(pendingAssistant);
   if (currentThread) {
@@ -15739,7 +15740,7 @@ async function sendOocInquiry(text) {
       pendingAssistant,
       displayPendingIndex,
       true,
-      displayHistory,
+      updatedDisplayHistory,
     );
     log.appendChild(pendingRow);
     const pendingContent = pendingRow?.querySelector(".message-content");
