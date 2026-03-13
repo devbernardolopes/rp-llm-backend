@@ -13433,6 +13433,7 @@ async function openThread(threadId) {
   state.unreadNeedsUserScrollThreadId = null;
   await persistThreadMessagesById(Number(threadId), thread.messages || [], {
     _skipUpdatedAt: true,
+    _retainConversationHistory: true,
   });
   renderChat();
   const input = document.getElementById("user-input");
