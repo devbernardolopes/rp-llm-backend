@@ -10969,9 +10969,14 @@ function formatOocContextEntry(message) {
     role === "assistant"
       ? currentCharacter?.name || "Assistant"
       : message.senderName || "You";
-  const content = String(message.content || "").trim();
+  const content = removeImageLinksFromContent(message.content);
   if (!content) return "";
   return `${role}: ${fallbackSender}: ${content}`;
+}
+
+function removeImageLinksFromContent(content) {
+  if (!content) return "";
+  return String(content).replace(/!\[([^\]]*)\]\([^)]+\)/g, "").trim();
 }
 
 function hasMeaningfulAssistantMessage(history) {
@@ -16055,7 +16060,7 @@ async function generateBotReply() {
     .filter((m) => !m.summarized)
     .map((m) => {
       const role = m.role === "ai" ? "assistant" : m.role;
-      let content = m.content;
+      let content = removeImageLinksFromContent(m.content);
       if (
         role === "user" &&
         state.settings.personaPrefixEnabled &&
@@ -19220,7 +19225,7 @@ async function processNextQueuedThread() {
     .filter((m) => !m.summarized)
     .map((m) => ({
       role: m.role === "ai" ? "assistant" : m.role,
-      content: m.content,
+      content: removeImageLinksFromContent(m.content),
     }));
   const promptMessages = [
     { role: "system", content: systemPrompt },
