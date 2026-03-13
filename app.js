@@ -8698,6 +8698,11 @@ async function openCharacterModal(
     character?.usePostProcessing !== false;
   document.getElementById("char-auto-trigger-first-ai").checked =
     character?.autoTriggerAiFirstMessage !== false;
+  document.getElementById("char-auto-title").checked =
+    character?.autoTitleEnabled !== false;
+  document.getElementById("char-auto-title-min-messages").value = String(
+    Number(character?.autoTitleMinMessages) || 10,
+  );
   document.getElementById("char-avatar-scale").value = String(
     Number(character?.avatarScale) || 4,
   );
@@ -8842,6 +8847,10 @@ async function saveCharacterFromModal({ close = true } = {}) {
     autoTriggerAiFirstMessage: document.getElementById(
       "char-auto-trigger-first-ai",
     ).checked,
+    autoTitleEnabled: document.getElementById("char-auto-title").checked,
+    autoTitleMinMessages: Number(
+      document.getElementById("char-auto-title-min-messages").value,
+    ) || 10,
     personaInjectionPlacement: String(
       primaryDef?.personaInjectionPlacement || "end_system_prompt",
     ),
@@ -13795,7 +13804,7 @@ function refreshAllHoverMarquees() {
 
 async function maybeGenerateTitleBeforeBotReply() {
   if (!currentThread || !currentCharacter) return true;
-  if (state.settings.threadAutoTitleEnabled === false) return true;
+  if (currentCharacter.autoTitleEnabled === false) return true;
   if (currentThread.titleGenerated === true) {
     state.pendingTitleGeneration = false;
     return true;
@@ -13803,7 +13812,7 @@ async function maybeGenerateTitleBeforeBotReply() {
   if (currentThread.titleManual === true) return true;
   const minMessages = Math.max(
     5,
-    Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
+    Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10),
   );
   const displayHistory = getFilteredConversationHistoryForThread(currentThread);
   const inSimulationHistory = getInSimulationMessages(
@@ -13998,12 +14007,12 @@ async function maybeGenerateTitleBeforeBotReply() {
 
 async function maybeGenerateThreadTitle() {
   if (!currentThread || !currentCharacter) return;
-  if (state.settings.threadAutoTitleEnabled === false) return;
+  if (currentCharacter.autoTitleEnabled === false) return;
   if (currentThread.titleGenerated === true) return true;
   if (currentThread.titleManual === true) return;
   const minMessages = Math.max(
     5,
-    Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
+    Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10),
   );
   const inSimulationHistory = getInSimulationMessages(conversationHistory);
   if (inSimulationHistory.length < minMessages) return;

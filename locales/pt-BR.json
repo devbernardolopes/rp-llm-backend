@@ -252,6 +252,8 @@
   "enableMemory": "Ativar Memória",
   "enablePostprocess": "Ativar Regras de Pós-processamento",
   "autoTriggerAiFirst": "Disparar automaticamente a primeira mensagem da IA",
+  "autoTitleThreads": "Gerar automaticamente títulos de conversas",
+  "autoTitleMinMessages": "Mín. mensagens para auto-título",
   "avatarScaleInChat": "Escala do Avatar (no Chat)",
   "ttsProvider": "Provedor de TTS",
   "ttsLanguage": "Idioma do TTS",
