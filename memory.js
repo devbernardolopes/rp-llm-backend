@@ -437,8 +437,7 @@ async function summarizeMemory(character) {
   conversationHistory.push(pendingMessage);
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
-    const msgCount = conversationHistory.length;
-    updateThreadMessageCount(currentThread.id, msgCount);
+    updateThreadMessageCount(currentThread.id, conversationHistory);
   }
   const pendingIndex = conversationHistory.length - 1;
 

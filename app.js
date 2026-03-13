@@ -7023,17 +7023,19 @@ function updateDocumentTitleWithUnread() {
   });
 }
 
-function updateThreadMessageCount(threadId, messageCount) {
+function updateThreadMessageCount(threadId, messages) {
   const list = document.getElementById("thread-list");
   if (!list) return;
   const row = list.querySelector(`.thread-row[data-thread-id="${threadId}"]`);
   if (!row) return;
   const msgCountEl = row.querySelector(".thread-msg-count");
   if (msgCountEl) {
-    msgCountEl.textContent = `${messageCount}`;
+    const nonOocCount = (messages || []).filter((m) => !m.ooc).length;
+    msgCountEl.textContent = `${nonOocCount}`;
   }
   if (currentThread && Number(currentThread.id) === Number(threadId) && currentThread.unloadState) {
-    currentThread.unloadState.totalMessageCount = messageCount;
+    const nonOocCount = (messages || []).filter((m) => !m.ooc).length;
+    currentThread.unloadState.totalMessageCount = nonOocCount;
   }
 }
 
@@ -13855,7 +13857,7 @@ async function maybeGenerateTitleBeforeBotReply() {
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
-    updateThreadMessageCount(currentThread.id, msgCount);
+    updateThreadMessageCount(currentThread.id, conversationHistory);
   }
   const pendingIndex = conversationHistory.length - 1;
 
@@ -15376,7 +15378,7 @@ async function sendMessage(options = {}) {
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
-    updateThreadMessageCount(currentThread.id, msgCount);
+    updateThreadMessageCount(currentThread.id, conversationHistory);
   }
   await persistCurrentThread();
   addPromptToHistory(currentThread.id, text, false);
@@ -15445,7 +15447,7 @@ async function addManualAssistantMessage(content) {
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
-    updateThreadMessageCount(currentThread.id, msgCount);
+    updateThreadMessageCount(currentThread.id, conversationHistory);
   }
   await persistCurrentThread();
   renderChat();
@@ -15495,7 +15497,7 @@ async function queueThreadForCooldown(threadId, targetMessage = null) {
     if (currentThread) {
       currentThread.messages = [...conversationHistory];
       const msgCount = conversationHistory.length;
-      updateThreadMessageCount(currentThread.id, msgCount);
+      updateThreadMessageCount(currentThread.id, conversationHistory);
     }
   }
   const nowTs = Date.now();
@@ -15640,7 +15642,7 @@ async function sendOocInquiry(text) {
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
-    updateThreadMessageCount(currentThread.id, msgCount);
+    updateThreadMessageCount(currentThread.id, conversationHistory);
   }
   addPromptToHistory(currentThread.id, text, true);
   if (log && isViewing) {
@@ -15675,7 +15677,7 @@ async function sendOocInquiry(text) {
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
-    updateThreadMessageCount(currentThread.id, msgCount);
+    updateThreadMessageCount(currentThread.id, conversationHistory);
   }
   let pendingRow = null;
   if (log && isViewing) {
@@ -16037,8 +16039,7 @@ async function generateBotReply() {
     }
     if (currentThread && Number(currentThread.id) === threadId) {
       currentThread.messages = [...generationHistory];
-      const msgCount = generationHistory.length;
-      updateThreadMessageCount(threadId, msgCount);
+      updateThreadMessageCount(threadId, generationHistory);
     }
   } else {
     pending = {
@@ -16070,8 +16071,7 @@ async function generateBotReply() {
     originalPendingIndex = loadedStartIndex + pendingIndex;
     if (currentThread && Number(currentThread.id) === threadId) {
       currentThread.messages = [...generationHistory];
-      const msgCount = generationHistory.length;
-      updateThreadMessageCount(threadId, msgCount);
+      updateThreadMessageCount(threadId, generationHistory);
     }
   }
   await clearThreadGenerationQueueFlag(threadId);
@@ -16312,7 +16312,7 @@ async function deleteMessageAt(index) {
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
-    updateThreadMessageCount(currentThread.id, msgCount);
+    updateThreadMessageCount(currentThread.id, conversationHistory);
   }
 
   // After deletion, if the deleted message was an API assistant and no other API assistants remain, clear the once flag
