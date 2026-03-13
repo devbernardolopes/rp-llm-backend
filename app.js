@@ -20126,14 +20126,15 @@ async function callOpenRouter(
     options && Object.prototype.hasOwnProperty.call(options, "forceStream")
       ? Boolean(options.forceStream)
       : null;
+  const isSummarization = options?.isSummarization === true;
   const body = {
     model: resolvedModel,
     messages: promptMessages,
     max_completion_tokens: effectiveMaxTokens,
-    temperature: clampTemperature(state.settings.temperature),
-    top_p: Number(state.settings.topP) || 1,
-    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
-    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    temperature: isSummarization ? 0.35 : clampTemperature(state.settings.temperature),
+    top_p: isSummarization ? 1 : (Number(state.settings.topP) || 1),
+    frequency_penalty: isSummarization ? 0 : (Number(state.settings.frequencyPenalty) || 0),
+    presence_penalty: isSummarization ? 0 : (Number(state.settings.presencePenalty) || 0),
     stream:
       streamForced === null
         ? !!state.settings.streamEnabled

@@ -490,16 +490,16 @@ async function summarizeMemory(character) {
        }
      }
      
-     if (summary === null) {
-       const summaryResult = await callOpenRouter(
-         summarySystemPrompt,
-         requestHistory,
-         state.settings.model,
-         null,
-         null,
-         { forceStream: false },
-       );
-       summary = summaryResult.content;
+      if (summary === null) {
+        const summaryResult = await callOpenRouter(
+          summarySystemPrompt,
+          requestHistory,
+          state.settings.model,
+          null,
+          null,
+          { forceStream: false, isSummarization: true },
+        );
+        summary = summaryResult.content;
        
        const systemMessages = Array.isArray(summaryResult.systemMessages)
          ? summaryResult.systemMessages
