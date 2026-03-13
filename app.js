@@ -7030,6 +7030,9 @@ function updateThreadMessageCount(threadId, messageCount) {
   if (msgCountEl) {
     msgCountEl.textContent = `${messageCount}`;
   }
+  if (currentThread && Number(currentThread.id) === Number(threadId) && currentThread.unloadState) {
+    currentThread.unloadState.totalMessageCount = messageCount;
+  }
 }
 
 async function renderThreads() {
