@@ -4425,27 +4425,11 @@ async function setupSettingsControls() {
       autoUnloadThresholdInput.value = String(clamped);
       saveSettings();
       if (currentThread) {
-        const threshold = clamped;
-        const totalMessages = currentThread.unloadState?.totalMessageCount ?? conversationHistory.length;
-        
-        if (threshold > 0 && totalMessages > threshold) {
-          const startIndex = totalMessages - threshold;
-          const keptMessages = conversationHistory.slice(-threshold);
-          conversationHistory = keptMessages;
-          currentThread.unloadState = {
-            loadLimit: 0,
-            totalMessageCount: totalMessages,
-            loadedStartIndex: startIndex,
-          };
-        } else {
-          const fullHistory = await getFullHistoryFromDb(Number(currentThread.id));
-          conversationHistory = fullHistory;
-          currentThread.unloadState = {
-            loadLimit: 0,
-            totalMessageCount: fullHistory.length,
-            loadedStartIndex: 0,
-          };
-        }
+        const threadRecord = await db.threads.get(Number(currentThread.id));
+        if (!threadRecord) return;
+        const snapshot = buildThreadConversationSnapshot(threadRecord, clamped);
+        conversationHistory = snapshot.conversationHistory;
+        currentThread.unloadState = snapshot.unloadState;
         await db.threads.update(Number(currentThread.id), {
           unloadState: currentThread.unloadState,
         });
@@ -10850,6 +10834,37 @@ if (typeof window !== "undefined") {
   window.PLACEHOLDER_STATUSES = PLACEHOLDER_STATUSES;
 }
 
+function isCountedSimulationMessage(message) {
+  if (!message || !isInSimulationMessage(message)) return false;
+  const role = normalizeApiRole(message?.apiRole || message?.role);
+  return role === "assistant" || role === "user";
+}
+
+function countSimulationMessages(messages, start = 0, end = Infinity) {
+  const list = Array.isArray(messages) ? messages : [];
+  const normalizedStart = Math.max(
+    0,
+    Number.isFinite(Number(start)) ? Number(start) : 0,
+  );
+  const normalizedEnd = Math.min(
+    list.length,
+    Number.isFinite(Number(end)) ? Number(end) : list.length,
+  );
+  let count = 0;
+  for (let i = normalizedStart; i < normalizedEnd; i += 1) {
+    if (isCountedSimulationMessage(list[i])) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+function getThreadDisplayOffset(thread = currentThread) {
+  if (!thread || !thread.unloadState) return 0;
+  const offset = Number(thread.unloadState.displayIndexOffset);
+  return Number.isFinite(offset) && offset >= 0 ? offset : 0;
+}
+
 function getInSimulationMessages(history = conversationHistory) {
   const list = Array.isArray(history) ? history : [];
   return list.filter((m) => isInSimulationMessage(m));
@@ -10861,10 +10876,9 @@ function getMessageDisplayIndex(index, history = conversationHistory) {
   let count = 0;
   for (let i = 0; i <= max; i += 1) {
     const msg = list[i];
-    if (!msg || !isInSimulationMessage(msg)) continue;
-    const role = normalizeApiRole(msg?.apiRole || msg?.role);
-    if (role !== "assistant" && role !== "user") continue;
-    count += 1;
+    if (isCountedSimulationMessage(msg)) {
+      count += 1;
+    }
   }
   return count;
 }
@@ -10914,6 +10928,46 @@ function normalizeWritingInstructionsTiming(value) {
     return v;
   }
   return "always";
+}
+
+function buildThreadConversationSnapshot(thread, threshold = state.settings.autoUnloadThreshold || 0) {
+  const allMessages = Array.isArray(thread?.messages) ? thread.messages : [];
+  const totalMessages = allMessages.length;
+  const normalizedThreshold = Math.max(0, Number(threshold) || 0);
+  let loadedStartIndex = 0;
+  let loadLimit = 0;
+  if (normalizedThreshold > 0 && totalMessages > normalizedThreshold) {
+    const startActive = Math.max(0, totalMessages - normalizedThreshold);
+    const storedStart = thread?.unloadState?.loadedStartIndex;
+    let candidate = Number.isFinite(Number(storedStart))
+      ? Number(storedStart)
+      : startActive;
+    candidate = Math.max(0, Math.min(startActive, candidate));
+    loadedStartIndex = candidate;
+    loadLimit = Math.max(0, startActive - loadedStartIndex);
+  }
+  const subset = allMessages.slice(loadedStartIndex).map((msg) =>
+    msg
+      ? {
+          ...msg,
+          role: msg.role === "ai" ? "assistant" : msg.role,
+        }
+      : msg,
+  );
+  const displayIndexOffset = countSimulationMessages(
+    allMessages,
+    0,
+    loadedStartIndex,
+  );
+  return {
+    conversationHistory: subset,
+    unloadState: {
+      loadLimit,
+      totalMessageCount: totalMessages,
+      loadedStartIndex,
+      displayIndexOffset,
+    },
+  };
 }
 
 let state_assets = {
@@ -13303,7 +13357,12 @@ async function openThread(threadId) {
     writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
   };
   if (!currentThread.unloadState) {
-    currentThread.unloadState = { loadLimit: 0 };
+    currentThread.unloadState = {
+      loadLimit: 0,
+      totalMessageCount: Number(thread.messages?.length) || 0,
+      loadedStartIndex: 0,
+      displayIndexOffset: 0,
+    };
   }
   applyChatOpacitySetting(getThreadChatOpacity(thread));
   if (!thread.characterLanguage && character?.activeLanguage) {
@@ -13316,32 +13375,12 @@ async function openThread(threadId) {
   state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
   preloadKokoroForActiveCharacter();
 
-  const threshold = state.settings.autoUnloadThreshold || 0;
-  const totalMessages = thread.messages?.length || 0;
-
-  if (threshold > 0 && totalMessages > threshold) {
-    const startIndex = totalMessages - threshold;
-    conversationHistory = (thread.messages.slice(startIndex) || []).map((m) => ({
-      ...m,
-      role: m.role === "ai" ? "assistant" : m.role,
-    }));
-    currentThread.unloadState = {
-      loadLimit: 0,
-      totalMessageCount: totalMessages,
-      loadedStartIndex: startIndex,
-    };
-  } else {
-    conversationHistory = (thread.messages || []).map((m) => ({
-      ...m,
-      role: m.role === "ai" ? "assistant" : m.role,
-    }));
-    currentThread.unloadState = {
-      loadLimit: 0,
-      totalMessageCount: totalMessages,
-      loadedStartIndex: 0,
-    };
-  }
-
+  const snapshot = buildThreadConversationSnapshot(
+    thread,
+    state.settings.autoUnloadThreshold || 0,
+  );
+  conversationHistory = snapshot.conversationHistory;
+  currentThread.unloadState = snapshot.unloadState;
   await db.threads.update(thread.id, {
     unloadState: currentThread.unloadState,
   });
@@ -14111,20 +14150,28 @@ async function toggleUnloadBatch() {
     const loadStart = startActive - newLoadLimit;
     const loaded = await loadMessagesFromDb(threadId, loadStart, newLoadLimit - (vis.loadLimit || 0));
     const existingStart = conversationHistory.map((m) => ({ ...m }));
+    const additionalSimulationCount = countSimulationMessages(loaded);
+    const previousOffset = currentThread.unloadState?.displayIndexOffset || 0;
+    const normalizedOffset = Math.max(0, previousOffset - additionalSimulationCount);
     conversationHistory = [...loaded, ...existingStart];
     currentThread.unloadState = {
       ...currentThread.unloadState,
       loadLimit: newLoadLimit,
       loadedStartIndex: loadStart,
+      displayIndexOffset: normalizedOffset,
     };
   } else if (newLoadLimit > 0) {
     newLoadLimit = 0;
     const keepStart = vis.loadLimit;
+    const removed = conversationHistory.slice(0, keepStart);
+    const removedSimulationCount = countSimulationMessages(removed);
+    const prevOffset = currentThread.unloadState?.displayIndexOffset || 0;
     conversationHistory = conversationHistory.slice(keepStart);
     currentThread.unloadState = {
       ...currentThread.unloadState,
       loadLimit: 0,
       loadedStartIndex: startActive,
+      displayIndexOffset: prevOffset + removedSimulationCount,
     };
   } else {
     currentThread.unloadState = { ...currentThread.unloadState, loadLimit: newLoadLimit };
@@ -14135,11 +14182,29 @@ async function toggleUnloadBatch() {
       loadLimit: currentThread.unloadState.loadLimit,
       totalMessageCount: currentThread.unloadState.totalMessageCount,
       loadedStartIndex: currentThread.unloadState.loadedStartIndex,
+      displayIndexOffset: currentThread.unloadState.displayIndexOffset || 0,
     },
   });
 
   renderChat();
   updateUnloadButtonVisibility();
+}
+
+function releaseMessageRowResources(row) {
+  if (!row) return;
+  row.querySelectorAll("img, video").forEach((media) => {
+    if (media.tagName === "VIDEO") {
+      media.pause();
+    }
+    media.removeAttribute("src");
+  });
+  const content = row.querySelector(".message-content");
+  if (content) content.innerHTML = "";
+}
+
+function releaseAllChatRowResources(log) {
+  if (!log) return;
+  Array.from(log.children).forEach((row) => releaseMessageRowResources(row));
 }
 
 function renderChat(startIdx, endIdx) {
@@ -14165,6 +14230,7 @@ function renderChat(startIdx, endIdx) {
   const isFullRender = arguments.length === 0;
 
   if (isFullRender) {
+    releaseAllChatRowResources(log);
     log.innerHTML = "";
     state.editingMessageIndex = null;
   }
@@ -14233,29 +14299,23 @@ function renderChat(startIdx, endIdx) {
     const existingRow = log.querySelector(
       `.chat-row[data-message-index="${originalIndex}"]`,
     );
+    const status = String(message?.generationStatus || "").trim();
+    const rowStreaming =
+      message?.role === "assistant" &&
+      (status === "queued" ||
+        status === "cooling_down" ||
+        (isActiveGenerationThread &&
+          (status === "generating" || status === "regenerating")));
     if (existingRow) {
-      const status = String(message?.generationStatus || "").trim();
-      const rowStreaming =
-        message?.role === "assistant" &&
-        (status === "queued" ||
-          status === "cooling_down" ||
-          (isActiveGenerationThread &&
-            (status === "generating" || status === "regenerating")));
       const newRow = buildMessageRow(
         message,
         originalIndex,
         rowStreaming,
         displayHistory,
       );
+      releaseMessageRowResources(existingRow);
       existingRow.replaceWith(newRow);
     } else {
-      const status = String(message?.generationStatus || "").trim();
-      const rowStreaming =
-        message?.role === "assistant" &&
-        (status === "queued" ||
-          status === "cooling_down" ||
-          (isActiveGenerationThread &&
-            (status === "generating" || status === "regenerating")));
       log.appendChild(
         buildMessageRow(message, originalIndex, rowStreaming, displayHistory),
       );
@@ -14589,9 +14649,9 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
           resolvedIndex >= 0 ? resolvedIndex : index,
           historyForDisplay,
         );
-  messageIndex.textContent = isOocMessage
-    ? "OOC"
-    : `#${displayIndex}`;
+  const offset = getThreadDisplayOffset();
+  const numberedIndex = isOocMessage ? null : displayIndex + offset;
+  messageIndex.textContent = isOocMessage ? "OOC" : `#${numberedIndex}`;
   const isTruncated = message.truncatedByFilter === true;
   const hasGenerationError = !!String(message.generationError || "").trim();
   const isLockedMemoryMessage = isMessageLockedByMemory(message);
@@ -18779,13 +18839,25 @@ function isViewingThread(threadId) {
 
 async function persistThreadMessagesById(threadId, messages, extra = {}) {
   const msgs = Array.isArray(messages) ? messages : [];
+  const payload = { ...extra };
+  const skipUpdatedAt = payload._skipUpdatedAt === true;
+  const retainConversationHistory = payload._retainConversationHistory === true;
+  delete payload._skipUpdatedAt;
+  delete payload._retainConversationHistory;
+
   const allMessagesFinished = msgs.every(
     (m) => !m.generationStatus || m.generationStatus === "",
   );
 
-  let messagesToSave = msgs;
-  const unloadState = extra.unloadState;
+  let unloadState = payload.unloadState;
+  if (!unloadState && currentThread && Number(currentThread.id) === Number(threadId)) {
+    unloadState = currentThread.unloadState;
+  }
+  if (unloadState) {
+    payload.unloadState = unloadState;
+  }
 
+  let messagesToSave = msgs;
   if (unloadState && unloadState.loadedStartIndex > 0) {
     const thread = await db.threads.get(threadId);
     const existingMessages = thread?.messages || [];
@@ -18802,22 +18874,26 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
 
   const updated = {
     messages: messagesToSave,
-    ...extra,
+    ...payload,
   };
 
-  if (allMessagesFinished && !extra._skipUpdatedAt) {
+  if (allMessagesFinished && !skipUpdatedAt) {
     updated.updatedAt = Date.now();
   }
 
   await db.threads.update(threadId, updated);
   if (currentThread && Number(currentThread.id) === Number(threadId)) {
+    const nextThread = { ...currentThread, ...updated };
+    nextThread.messages = updated.messages;
+    if (updated.unloadState) {
+      nextThread.unloadState = updated.unloadState;
+    }
+    currentThread = nextThread;
+    if (!retainConversationHistory) {
+      conversationHistory = updated.messages;
+    }
     if (updated.updatedAt) {
-      currentThread = { ...currentThread, ...updated };
-      conversationHistory = updated.messages;
       state.lastSyncSeenUpdatedAt = Number(updated.updatedAt || 0);
-    } else {
-      currentThread.messages = updated.messages;
-      conversationHistory = updated.messages;
     }
   }
   if (updated.updatedAt) {
@@ -19313,37 +19389,17 @@ async function persistCurrentThread(forceUpdate = false, options = {}) {
   const shouldUpdateTimestamp =
     !skipTimestampUpdate && (forceUpdate || allMessagesFinished);
 
-  const updated = {
-    messages: conversationHistory,
+  await persistThreadMessagesById(currentThread.id, conversationHistory, {
     selectedPersonaId: currentThread.selectedPersonaId || null,
     lastPersonaInjectionPersonaId:
       currentThread.lastPersonaInjectionPersonaId || null,
     writingInstructionsTurnCount:
       getThreadWritingInstructionsTurnCount(currentThread),
     oocModeEnabled: currentThread.oocModeEnabled === true,
-  };
-
-  if (shouldUpdateTimestamp) {
-    updated.updatedAt = Date.now();
-  }
-
-  await db.threads.update(currentThread.id, updated);
-  if (shouldUpdateTimestamp) {
-    currentThread = { ...currentThread, ...updated };
-    state.lastSyncSeenUpdatedAt = Number(currentThread.updatedAt || 0);
-    broadcastSyncEvent({
-      type: "thread-updated",
-      threadId: currentThread.id,
-      updatedAt: currentThread.updatedAt,
-    });
-  } else {
-    currentThread.messages = updated.messages;
-    currentThread.selectedPersonaId = updated.selectedPersonaId;
-    currentThread.lastPersonaInjectionPersonaId =
-      updated.lastPersonaInjectionPersonaId;
-    currentThread.writingInstructionsTurnCount =
-      updated.writingInstructionsTurnCount;
-  }
+    unloadState: currentThread.unloadState,
+    _skipUpdatedAt: !shouldUpdateTimestamp,
+    _retainConversationHistory: true,
+  });
 }
 
 function isChatNearBottom() {
@@ -19470,10 +19526,12 @@ async function refreshCurrentThreadFromDb() {
       personaId: null,
     };
   }
-  conversationHistory = (thread.messages || []).map((m) => ({
-    ...m,
-    role: m.role === "ai" ? "assistant" : m.role,
-  }));
+  const snapshot = buildThreadConversationSnapshot(
+    thread,
+    state.settings.autoUnloadThreshold || 0,
+  );
+  conversationHistory = snapshot.conversationHistory;
+  currentThread.unloadState = snapshot.unloadState;
   state.unreadNeedsUserScrollThreadId =
     getUnreadAssistantCount(conversationHistory) > 0 ? Number(thread.id) : null;
   currentPersona = thread.selectedPersonaId
