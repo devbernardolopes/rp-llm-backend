@@ -7038,10 +7038,16 @@ function updateDocumentTitleWithUnread() {
         }
       }
     }
+    let title = "Scenara";
+    if (state.activeModalId === "character-modal" && currentCharacter?.name) {
+      title = currentCharacter.name;
+    } else if (currentThread?.title) {
+      title = currentThread.title;
+    }
     if (totalUnread > 0) {
-      document.title = `(${totalUnread}) Scenara`;
+      document.title = `(${totalUnread}) ${title}`;
     } else {
-      document.title = "Scenara";
+      document.title = title;
     }
   });
 }
