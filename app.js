@@ -18841,10 +18841,20 @@ function isViewingThread(threadId) {
 async function persistThreadMessagesById(threadId, messages, extra = {}) {
   const msgs = Array.isArray(messages) ? messages : [];
   const payload = { ...extra };
-  const skipUpdatedAt = payload._skipUpdatedAt === true;
-  const retainConversationHistory = payload._retainConversationHistory === true;
+  const explicitSkipUpdatedAt = payload._skipUpdatedAt === true;
+  const explicitRetainFlag = payload._retainConversationHistory;
   delete payload._skipUpdatedAt;
   delete payload._retainConversationHistory;
+  const isActiveThread =
+    currentThread && Number(currentThread.id) === Number(threadId);
+  const activeUnloadState =
+    isActiveThread && currentThread?.unloadState ? currentThread.unloadState : null;
+  const hasActiveUnloadHistory =
+    activeUnloadState && Number(activeUnloadState.loadedStartIndex) > 0;
+  const skipUpdatedAt = explicitSkipUpdatedAt;
+  const retainConversationHistory =
+    explicitRetainFlag === true ||
+    (explicitRetainFlag !== false && hasActiveUnloadHistory);
 
   const allMessagesFinished = msgs.every(
     (m) => !m.generationStatus || m.generationStatus === "",
@@ -18882,7 +18892,7 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
   }
 
   await db.threads.update(threadId, updated);
-  if (currentThread && Number(currentThread.id) === Number(threadId)) {
+  if (isActiveThread) {
     const nextThread = { ...currentThread, ...updated };
     nextThread.messages = updated.messages;
     if (updated.unloadState) {
