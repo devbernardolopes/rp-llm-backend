@@ -1787,7 +1787,7 @@ async function init() {
   initBrowserTtsSupport();
   updateModelPill();
   await migrateLegacySessions();
-  await hydrateGenerationQueue();
+  await hydrateGenerationQueue(null, false);
   await ensurePersonasInitialized();
   await renderAll();
   applyCrossWindowSyncSetting();
@@ -1816,10 +1816,15 @@ async function init() {
   }, 250);
 }
 
-async function hydrateGenerationQueue(threads = null) {
-  const list = Array.isArray(threads)
-    ? [...threads]
-    : await db.threads.toArray();
+async function hydrateGenerationQueue(threads = null, loadFullMessages = false) {
+  let list;
+  if (Array.isArray(threads)) {
+    list = [...threads];
+  } else if (loadFullMessages) {
+    list = await db.threads.toArray();
+  } else {
+    list = await loadThreadsMetadataOnly();
+  }
   const queued = list
     .filter((t) => String(t.pendingGenerationReason || "").trim())
     .sort(
@@ -1831,6 +1836,20 @@ async function hydrateGenerationQueue(threads = null) {
     .map((t) => Number(t.id))
     .filter(Number.isInteger);
   return list;
+}
+
+async function loadThreadsMetadataOnly() {
+  const threads = await db.threads.toArray();
+  return threads.map((thread) => {
+    const { messages, ...meta } = thread;
+    if (!meta.unloadState) {
+      meta.unloadState = {
+        loadLimit: 0,
+        totalMessageCount: Array.isArray(messages) ? messages.length : 0,
+      };
+    }
+    return meta;
+  });
 }
 
 function ensureTagCatalogInitialized() {
@@ -7008,11 +7027,10 @@ function updateThreadBulkBar() {
 }
 
 function updateDocumentTitleWithUnread() {
-  db.threads.toArray().then((threads) => {
+  loadThreadsMetadataOnly().then((threads) => {
     let totalUnread = 0;
-    for (const thread of threads) {
-      const messages = Array.isArray(thread.messages) ? thread.messages : [];
-      for (const m of messages) {
+    if (currentThread && Array.isArray(currentThread.messages)) {
+      for (const m of currentThread.messages) {
         if (m.role === "assistant" && Number(m.unreadAt) > 0) {
           totalUnread += 1;
         }
@@ -7197,7 +7215,7 @@ async function renderThreads() {
 
     const msgCount = document.createElement("span");
     msgCount.className = "thread-msg-count";
-    const totalMsgs = thread.unloadState?.totalMessageCount ?? thread.messages?.length ?? 0;
+    const totalMsgs = thread.unloadState?.totalMessageCount ?? 0;
     msgCount.textContent = `${totalMsgs}`;
 
     const avatar = document.createElement("img");
@@ -7220,7 +7238,9 @@ async function renderThreads() {
       !isGenerating &&
       String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
       isInCompletionCooldown();
-    const unreadCount = getUnreadAssistantCount(thread.messages || []);
+    const unreadCount = (currentThread && Number(currentThread.id) === Number(thread.id) && thread.messages)
+      ? getUnreadAssistantCount(thread.messages)
+      : 0;
     const threadId = Number(thread.id);
     const previousUnreadCount = state.threadUnreadCounts[threadId] || 0;
     if (unreadCount > previousUnreadCount) {
@@ -13510,6 +13530,7 @@ function threadHasPendingBotActivity(thread) {
     return true;
   }
   if (String(thread.pendingGenerationReason || "").trim()) return true;
+  if (!thread.messages) return false;
   const messages = Array.isArray(thread.messages) ? thread.messages : [];
   return messages.some((m) => {
     if (!m || m.role !== "assistant") return false;
@@ -13525,6 +13546,8 @@ function threadHasPendingBotActivity(thread) {
 
 function threadHasActiveGeneratingMessage(thread) {
   if (!thread) return false;
+  if (String(thread.pendingGenerationReason || "").trim()) return true;
+  if (!thread.messages) return false;
   const messages = Array.isArray(thread.messages) ? thread.messages : [];
   return messages.some((m) => {
     if (!m) return false;
@@ -13537,6 +13560,7 @@ function threadHasActiveGeneratingMessage(thread) {
 
 function threadHasActiveSummarizingMessage(thread) {
   if (!thread) return false;
+  if (!thread.messages) return false;
   const messages = Array.isArray(thread.messages) ? thread.messages : [];
   return messages.some((m) => {
     if (!m) return false;
