@@ -1843,10 +1843,11 @@ async function loadThreadsMetadataOnly() {
   return threads.map((thread) => {
     const { messages, ...meta } = thread;
     if (!meta.unloadState) {
+      const hasInitialMessages = (messages || []).some((m) => m.isInitial);
       const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
       meta.unloadState = {
         loadLimit: 0,
-        totalMessageCount: nonInitialCount,
+        totalMessageCount: nonInitialCount + (hasInitialMessages ? 1 : 0),
       };
     }
     return meta;
@@ -7052,12 +7053,14 @@ function updateThreadMessageCount(threadId, messages) {
   if (!row) return;
   const msgCountEl = row.querySelector(".thread-msg-count");
   if (msgCountEl) {
+    const hasInitialMessages = (messages || []).some((m) => m.isInitial);
     const nonOocCount = (messages || []).filter((m) => !m.ooc && !m.isInitial).length;
-    msgCountEl.textContent = `${nonOocCount}`;
+    msgCountEl.textContent = `${nonOocCount + (hasInitialMessages ? 1 : 0)}`;
   }
   if (currentThread && Number(currentThread.id) === Number(threadId) && currentThread.unloadState) {
+    const hasInitialMessages = (messages || []).some((m) => m.isInitial);
     const nonOocCount = (messages || []).filter((m) => !m.ooc && !m.isInitial).length;
-    currentThread.unloadState.totalMessageCount = nonOocCount;
+    currentThread.unloadState.totalMessageCount = nonOocCount + (hasInitialMessages ? 1 : 0);
   }
 }
 
@@ -10994,7 +10997,9 @@ function normalizeWritingInstructionsTiming(value) {
 
 function buildThreadConversationSnapshot(thread, threshold = state.settings.autoUnloadThreshold || 0) {
   const allMessages = Array.isArray(thread?.messages) ? thread.messages : [];
-  const totalMessages = allMessages.filter((m) => !m.isInitial).length;
+  const hasInitialMessages = allMessages.some((m) => m.isInitial);
+  const nonInitialCount = allMessages.filter((m) => !m.isInitial).length;
+  const totalMessages = nonInitialCount + (hasInitialMessages ? 1 : 0);
   const normalizedThreshold = Math.max(0, Number(threshold) || 0);
   let loadedStartIndex = 0;
   let loadLimit = 0;
@@ -13424,10 +13429,11 @@ async function openThread(threadId) {
     writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
   };
   if (!currentThread.unloadState) {
+    const hasInitialMessages = (thread.messages || []).some((m) => m.isInitial);
     const nonInitialCount = (thread.messages || []).filter((m) => !m.isInitial).length;
     currentThread.unloadState = {
       loadLimit: 0,
-      totalMessageCount: nonInitialCount,
+      totalMessageCount: nonInitialCount + (hasInitialMessages ? 1 : 0),
       loadedStartIndex: 0,
       displayIndexOffset: 0,
     };
