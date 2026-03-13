@@ -16033,6 +16033,11 @@ async function generateBotReply() {
       pending.writingInstructionsTurnIndex = writingTurnIndex;
       pending.writingInstructionsCounted = false;
     }
+    if (currentThread && Number(currentThread.id) === threadId) {
+      currentThread.messages = [...generationHistory];
+      const msgCount = generationHistory.length;
+      updateThreadMessageCount(threadId, msgCount);
+    }
   } else {
     pending = {
       role: "assistant",
@@ -16061,6 +16066,11 @@ async function generateBotReply() {
     generationHistory.push(pending);
     pendingIndex = generationHistory.length - 1;
     originalPendingIndex = loadedStartIndex + pendingIndex;
+    if (currentThread && Number(currentThread.id) === threadId) {
+      currentThread.messages = [...generationHistory];
+      const msgCount = generationHistory.length;
+      updateThreadMessageCount(threadId, msgCount);
+    }
   }
   await clearThreadGenerationQueueFlag(threadId);
   await persistThreadMessagesById(threadId, generationHistory);
