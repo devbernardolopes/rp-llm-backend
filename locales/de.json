@@ -254,6 +254,7 @@
   "autoTriggerAiFirst": "KI-Erstnachricht automatisch auslösen",
   "autoTitleThreads": "Thread-Titel automatisch generieren",
   "autoTitleMinMessages": "Min. Nachrichten für Auto-Titel",
+  "includeOocMessages": "OOC-Nachrichten in Completions einschließen",
   "avatarScaleInChat": "Avatar-Größe (im Chat)",
   "ttsProvider": "TTS-Anbieter",
   "ttsLanguage": "TTS-Sprache",

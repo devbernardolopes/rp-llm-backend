@@ -3004,6 +3004,7 @@ function setupEvents() {
     "#char-auto-trigger-first-ai",
     "#char-auto-title",
     "#char-auto-title-min-messages",
+    "#char-include-ooc",
     "#char-avatar-scale",
     "#char-tags-input",
     "#char-tts-voice",
@@ -8705,6 +8706,8 @@ async function openCharacterModal(
   document.getElementById("char-auto-title-min-messages").value = String(
     Number(character?.autoTitleMinMessages) || 10,
   );
+  document.getElementById("char-include-ooc").checked =
+    character?.includeOocInCompletions === true;
   document.getElementById("char-avatar-scale").value = String(
     Number(character?.avatarScale) || 4,
   );
@@ -8853,6 +8856,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
     autoTitleMinMessages: Number(
       document.getElementById("char-auto-title-min-messages").value,
     ) || 10,
+    includeOocInCompletions: document.getElementById("char-include-ooc").checked,
     personaInjectionPlacement: String(
       primaryDef?.personaInjectionPlacement || "end_system_prompt",
     ),
@@ -10894,9 +10898,17 @@ function getThreadDisplayOffset(thread = currentThread) {
   return Number.isFinite(offset) && offset >= 0 ? offset : 0;
 }
 
-function getInSimulationMessages(history = conversationHistory) {
+function getInSimulationMessages(history = conversationHistory, options = {}) {
   const list = Array.isArray(history) ? history : [];
-  return list.filter((m) => isInSimulationMessage(m));
+  const includeOoc = options.includeOoc === true;
+  return list.filter((m) => isInSimulationMessage(m, includeOoc));
+}
+
+function isInSimulationMessage(message, includeOoc = false) {
+  if (includeOoc) {
+    return !!message && !isPlaceholderMessage(message);
+  }
+  return !!message && message.ooc !== true && !isPlaceholderMessage(message);
 }
 
 function getMessageDisplayIndex(index, history = conversationHistory) {
@@ -15581,7 +15593,7 @@ async function buildOocSystemPrompt() {
     historyForPrompt = await getFullHistoryFromDb(Number(currentThread.id));
   }
 
-  const contextMessages = getInSimulationMessages(historyForPrompt)
+  const contextMessages = getInSimulationMessages(historyForPrompt, { includeOoc: currentCharacter?.includeOocInCompletions === true })
     .filter((msg) => !isMessageLockedByMemory(msg))
     .map(formatOocContextEntry)
     .filter(Boolean);
@@ -15977,7 +15989,8 @@ async function generateBotReply() {
     return;
   }
   const displayHistory = getFilteredConversationHistoryForThread();
-  const inSimulationHistory = getInSimulationMessages(displayHistory);
+  const includeOoc = currentCharacter?.includeOocInCompletions === true;
+  const inSimulationHistory = getInSimulationMessages(displayHistory, { includeOoc });
   const includeOneTimeExtra =
     shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
   const generationCharacter = currentCharacter;
@@ -16396,7 +16409,8 @@ async function regenerateMessage(index) {
   }
 
   const prior = conversationHistory.slice(0, index);
-  const regenHistory = getInSimulationMessages(prior);
+  const includeOoc = currentCharacter?.includeOocInCompletions === true;
+  const regenHistory = getInSimulationMessages(prior, { includeOoc });
   const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
   const regenWritingTurnIndex =
     Number(target.writingInstructionsTurnIndex) || 0;
@@ -19150,7 +19164,8 @@ async function processNextQueuedThread() {
   const writingTurnCountForThread =
     getThreadWritingInstructionsTurnCount(tempThread);
   const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
-  const filteredTempConversation = getInSimulationMessages(tempConversation);
+  const includeOoc = character?.includeOocInCompletions === true;
+  const filteredTempConversation = getInSimulationMessages(tempConversation, { includeOoc });
   const promptContext = await buildSystemPrompt(character, {
     includeOneTimeExtraPrompt: shouldIncludeOneTimeExtraPrompt(
       filteredTempConversation,
@@ -20545,7 +20560,8 @@ async function updateThreadBudgetIndicator() {
   const seq = Number(state.budgetIndicator.seq || 0) + 1;
   state.budgetIndicator.seq = seq;
 
-  const inSimulationHistory = getInSimulationMessages(conversationHistory);
+  const includeOoc = currentCharacter?.includeOocInCompletions === true;
+  const inSimulationHistory = getInSimulationMessages(conversationHistory, { includeOoc });
   const includeOneTimeExtra =
     shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
   const previousPendingPersonaInjection =

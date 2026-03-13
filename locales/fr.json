@@ -254,6 +254,7 @@
   "autoTriggerAiFirst": "Déclencher automatiquement le premier message de l'IA",
   "autoTitleThreads": "Générer automatiquement les titres de fil",
   "autoTitleMinMessages": "Min. messages pour auto-titre",
+  "includeOocMessages": "Inclure les messages OOC dans les complétions",
   "avatarScaleInChat": "Taille de l'avatar (dans le chat)",
   "ttsProvider": "Fournisseur TTS",
   "ttsLanguage": "Langue TTS",
