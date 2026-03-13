@@ -451,6 +451,11 @@ async function summarizeMemory(character) {
   }
   state.summarizationInProgress.add(threadId);
 
+  // Update send button state to show cancel mode
+  if (typeof setSendingState === 'function') {
+    setSendingState(true);
+  }
+
   await persistCurrentThread();
 
   if (isViewing) {
