@@ -13848,6 +13848,7 @@ async function maybeGenerateTitleBeforeBotReply() {
   };
   conversationHistory.push(pendingTitleMessage);
   if (currentThread) {
+    currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
     updateThreadMessageCount(currentThread.id, msgCount);
   }
@@ -15368,6 +15369,7 @@ async function sendMessage(options = {}) {
   };
   conversationHistory.push(userMsg);
   if (currentThread) {
+    currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
     updateThreadMessageCount(currentThread.id, msgCount);
   }
@@ -15436,6 +15438,7 @@ async function addManualAssistantMessage(content) {
   };
   conversationHistory.push(assistantMsg);
   if (currentThread) {
+    currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
     updateThreadMessageCount(currentThread.id, msgCount);
   }
@@ -15485,6 +15488,7 @@ async function queueThreadForCooldown(threadId, targetMessage = null) {
       placeholder: true,
     });
     if (currentThread) {
+      currentThread.messages = [...conversationHistory];
       const msgCount = conversationHistory.length;
       updateThreadMessageCount(currentThread.id, msgCount);
     }
@@ -15629,6 +15633,7 @@ async function sendOocInquiry(text) {
   };
   conversationHistory.push(userMsg);
   if (currentThread) {
+    currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
     updateThreadMessageCount(currentThread.id, msgCount);
   }
@@ -15663,6 +15668,7 @@ async function sendOocInquiry(text) {
   const originalPendingIndex = loadedStartIndex + pendingIndex;
   conversationHistory.push(pendingAssistant);
   if (currentThread) {
+    currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
     updateThreadMessageCount(currentThread.id, msgCount);
   }
@@ -16289,6 +16295,7 @@ async function deleteMessageAt(index) {
     targetTurn === latestCountedTurn;
   conversationHistory.splice(index, 1);
   if (currentThread) {
+    currentThread.messages = [...conversationHistory];
     const msgCount = conversationHistory.length;
     updateThreadMessageCount(currentThread.id, msgCount);
   }
