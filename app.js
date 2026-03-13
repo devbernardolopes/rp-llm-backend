@@ -14472,11 +14472,10 @@ function getFilteredConversationHistoryForThread(
 
 function updateInitialMessageControls() {
   const controls = document.getElementById("initial-message-controls");
-  if (!controls) return;
-  if (!currentThread) {
+  if (controls) {
     controls.classList.add("hidden");
-    return;
   }
+}
   const threadId = Number(currentThread.id);
   if (!Number.isInteger(threadId)) {
     controls.classList.add("hidden");
@@ -14895,6 +14894,31 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
   forkBtn.dataset.messageIndex = String(index);
   forkBtn.disabled = disableControlsForRow;
   controls.appendChild(forkBtn);
+
+  if (message.isInitial) {
+    const initialControls = document.createElement("span");
+    initialControls.className = "inline-initial-controls";
+    const prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.className = "inline-initial-btn";
+    prevBtn.textContent = "‹";
+    prevBtn.addEventListener("click", () => cycleInitialMessagePreview(-1));
+    const counter = document.createElement("span");
+    counter.className = "inline-initial-counter";
+    const threadId = currentThread?.id;
+    if (threadId) {
+      const allInitial = (conversationHistory || []).filter((m) => m.isInitial);
+      const currentIdx = state.initialMessageIndexByThread[Number(threadId)] ?? 0;
+      counter.textContent = `${currentIdx + 1}/${allInitial.length}`;
+    }
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "inline-initial-btn";
+    nextBtn.textContent = "›";
+    nextBtn.addEventListener("click", () => cycleInitialMessagePreview(1));
+    initialControls.append(prevBtn, counter, nextBtn);
+    controls.appendChild(initialControls);
+  }
 
   header.appendChild(controls);
 

@@ -2027,6 +2027,34 @@ textarea {
   justify-content: flex-end;
 }
 
+.inline-initial-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.inline-initial-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.inline-initial-btn:hover {
+  color: var(--text);
+}
+
+.inline-initial-counter {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 28px;
+  text-align: center;
+}
+
 .message-index {
   font-size: 11px;
   color: var(--muted);
