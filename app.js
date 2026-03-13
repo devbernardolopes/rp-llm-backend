@@ -18861,16 +18861,15 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
   let messagesToSave = msgs;
   if (unloadState && unloadState.loadedStartIndex > 0) {
     const thread = await db.threads.get(threadId);
-    const existingMessages = thread?.messages || [];
-    const loadedStart = unloadState.loadedStartIndex;
-    const loadedCount = msgs.length;
-
-    if (loadedCount < unloadState.totalMessageCount - loadedStart) {
-      const beforeLoaded = existingMessages.slice(0, loadedStart);
-      messagesToSave = [...beforeLoaded, ...msgs];
-    } else {
-      messagesToSave = msgs;
-    }
+    const existingMessages = Array.isArray(thread?.messages)
+      ? thread.messages
+      : [];
+    const loadedStart = Math.min(
+      existingMessages.length,
+      Math.max(0, Number(unloadState.loadedStartIndex) || 0),
+    );
+    const beforeLoaded = existingMessages.slice(0, loadedStart);
+    messagesToSave = [...beforeLoaded, ...msgs];
   }
 
   const updated = {
