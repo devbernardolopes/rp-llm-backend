@@ -14476,39 +14476,6 @@ function updateInitialMessageControls() {
     controls.classList.add("hidden");
   }
 }
-  const threadId = Number(currentThread.id);
-  if (!Number.isInteger(threadId)) {
-    controls.classList.add("hidden");
-    return;
-  }
-  const initialMessages = getCurrentThreadInitialMessages();
-  if (initialMessages.length === 0) {
-    controls.classList.add("hidden");
-    refreshInitialMessageRowVisibility();
-    return;
-  }
-  controls.classList.remove("hidden");
-  let index = state.initialMessageIndexByThread[threadId];
-  if (!Number.isInteger(index) || index < 0) {
-    index = 0;
-  }
-  if (index >= initialMessages.length) {
-    index = initialMessages.length - 1;
-  }
-  state.initialMessageIndexByThread[threadId] = index;
-  const counter = document.getElementById("initial-message-counter");
-  if (counter) {
-    counter.textContent = tf("initialMessageCounterLabel", {
-      current: index + 1,
-      total: initialMessages.length,
-    });
-  }
-  const prevBtn = document.getElementById("initial-message-prev-btn");
-  const nextBtn = document.getElementById("initial-message-next-btn");
-  if (prevBtn) prevBtn.disabled = initialMessages.length <= 1;
-  if (nextBtn) nextBtn.disabled = initialMessages.length <= 1;
-  refreshInitialMessageRowVisibility();
-}
 
 function refreshInitialMessageRowVisibility() {
   const log = document.getElementById("chat-log");
@@ -15758,6 +15725,8 @@ async function sendOocInquiry(text) {
   const unloadState = currentThread?.unloadState;
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
   const originalPendingIndex = loadedStartIndex + pendingIndex;
+  const displayPendingIndex = displayHistory.length;
+  const displayPendingRowIndex = displayPendingIndex;
   conversationHistory.push(pendingAssistant);
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
@@ -15768,7 +15737,7 @@ async function sendOocInquiry(text) {
   if (log && isViewing) {
     pendingRow = buildMessageRow(
       pendingAssistant,
-      originalPendingIndex,
+      displayPendingIndex,
       true,
       displayHistory,
     );
@@ -15792,7 +15761,7 @@ async function sendOocInquiry(text) {
       (chunk) => {
         pendingAssistant.content += chunk;
         if (state.settings.streamEnabled) {
-          const liveRow = ensureMessageRowExists(pendingIndex);
+          const liveRow = ensureMessageRowExists(displayPendingIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
             liveContent.innerHTML = renderMessageHtml(
