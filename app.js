@@ -1843,9 +1843,10 @@ async function loadThreadsMetadataOnly() {
   return threads.map((thread) => {
     const { messages, ...meta } = thread;
     if (!meta.unloadState) {
+      const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
       meta.unloadState = {
         loadLimit: 0,
-        totalMessageCount: Array.isArray(messages) ? messages.length : 0,
+        totalMessageCount: nonInitialCount,
       };
     }
     return meta;
@@ -10993,7 +10994,7 @@ function normalizeWritingInstructionsTiming(value) {
 
 function buildThreadConversationSnapshot(thread, threshold = state.settings.autoUnloadThreshold || 0) {
   const allMessages = Array.isArray(thread?.messages) ? thread.messages : [];
-  const totalMessages = allMessages.length;
+  const totalMessages = allMessages.filter((m) => !m.isInitial).length;
   const normalizedThreshold = Math.max(0, Number(threshold) || 0);
   let loadedStartIndex = 0;
   let loadLimit = 0;
@@ -12932,6 +12933,7 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     oocModeEnabled: false,
     chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
     unloadState: { loadLimit: 0 },
+    initialMessageIndex: 0,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -13407,6 +13409,10 @@ async function openThread(threadId) {
   const thread = await db.threads.get(threadId);
   if (!thread) return;
 
+  if (Number.isInteger(thread.initialMessageIndex) && thread.initialMessageIndex >= 0) {
+    state.initialMessageIndexByThread[Number(threadId)] = thread.initialMessageIndex;
+  }
+
   stopTtsPlayback();
   stopAllSfx();
   const characterBase = await db.characters.get(thread.characterId);
@@ -13418,9 +13424,10 @@ async function openThread(threadId) {
     writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
   };
   if (!currentThread.unloadState) {
+    const nonInitialCount = (thread.messages || []).filter((m) => !m.isInitial).length;
     currentThread.unloadState = {
       loadLimit: 0,
-      totalMessageCount: Number(thread.messages?.length) || 0,
+      totalMessageCount: nonInitialCount,
       loadedStartIndex: 0,
       displayIndexOffset: 0,
     };
@@ -14511,7 +14518,7 @@ function refreshInitialMessageRowVisibility() {
   });
 }
 
-function cycleInitialMessagePreview(delta) {
+async function cycleInitialMessagePreview(delta) {
   if (!currentThread) return;
   const threadId = Number(currentThread.id);
   if (!Number.isInteger(threadId)) return;
@@ -14521,6 +14528,7 @@ function cycleInitialMessagePreview(delta) {
   let index = state.initialMessageIndexByThread[threadId] ?? 0;
   index = (index + delta + total) % total;
   state.initialMessageIndexByThread[threadId] = index;
+  await db.threads.update(threadId, { initialMessageIndex: index });
   updateInitialMessageControls();
 }
 
