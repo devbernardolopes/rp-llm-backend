@@ -171,10 +171,17 @@ body {
 
 .pane-top {
   min-height: 0;
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+
+.pane-middle {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -680,8 +687,13 @@ body {
 }
 
 #left-pane.collapsed {
-  overflow: hidden;
-  padding-bottom: 120px;
+  overflow: visible;
+  padding: 8px 0 4px;
+  gap: 8px;
+}
+
+#left-pane.collapsed .pane-top {
+  padding-bottom: 0;
 }
 
 .pane-bottom {
@@ -695,27 +707,28 @@ body {
   flex: 0 0 auto;
 }
 
-#left-pane.collapsed .pane-top {
-  padding-bottom: 0;
-}
-
-#left-pane.collapsed .thread-list {
-  padding-bottom: 220px;
+#left-pane.collapsed .pane-middle {
+  flex: 1 1 auto;
 }
 
 #left-pane.collapsed .pane-bottom {
-  position: sticky;
-  bottom: 0;
+  position: static;
   align-self: stretch;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
-  padding: 8px 0 12px;
+  padding: 8px 0 10px;
   border-top: 1px solid var(--line);
   background: rgba(21, 27, 36, 0.95);
-  max-height: 70vh;
+  max-height: 45vh;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#left-pane.collapsed .pane-bottom::-webkit-scrollbar {
+  display: none;
 }
 
 #left-pane.collapsed .pane-bottom .option-btn {
