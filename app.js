@@ -7039,10 +7039,14 @@ function updateDocumentTitleWithUnread() {
       }
     }
     let title = "Scenara";
+    let suffix = "";
     if (state.activeModalId === "character-modal" && currentCharacter?.name) {
-      title = currentCharacter.name;
+      suffix = currentCharacter.name;
     } else if (currentThread?.title) {
-      title = currentThread.title;
+      suffix = currentThread.title;
+    }
+    if (suffix) {
+      title = `${title} - ${suffix}`;
     }
     if (totalUnread > 0) {
       document.title = `(${totalUnread}) ${title}`;
