@@ -18092,7 +18092,7 @@ async function runMemoryRegeneration(entryId, promptText, level, slot) {
       state.settings.model,
       null,
       null,
-      { forceStream: false },
+      { forceStream: false, isSummarization: true },
     );
     const summary = String(result.content || "").trim();
     if (!summary) throw new Error(t("unknownError"));
@@ -20287,12 +20287,13 @@ async function callOpenRouter(
       ? Boolean(options.forceStream)
       : null;
   const isSummarization = options?.isSummarization === true;
+  const summaryModel = "arcee-ai/trinity-large-preview:free";
   const body = {
-    model: resolvedModel,
+    model: isSummarization ? summaryModel : resolvedModel,
     messages: promptMessages,
     max_completion_tokens: effectiveMaxTokens,
     temperature: isSummarization
-      ? 0.2
+      ? 0.25
       : clampTemperature(state.settings.temperature),
     top_p: isSummarization ? 0.9 : Number(state.settings.topP) || 1,
     frequency_penalty: isSummarization
