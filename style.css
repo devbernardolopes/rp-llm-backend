@@ -349,7 +349,7 @@ body {
   gap: 6px;
   width: 100%;
   min-width: 0;
-  padding-right: 12px;
+  padding-right: 0;
 }
 
 .thread-title-row .thread-title {
@@ -363,6 +363,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .thread-meta {
