@@ -2795,9 +2795,10 @@ textarea {
   background: #111827;
   border: 1px solid var(--line);
   padding: 14px 16px;
-  overflow: hidden;
+  overflow: auto;
   box-sizing: border-box;
   line-height: 1.45;
+  max-height: 220px;
 }
 .initial-messages-editor {
   display: flex;
