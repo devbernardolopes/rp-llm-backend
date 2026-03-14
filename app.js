@@ -1937,30 +1937,25 @@ function updateCheckboxLabelText(inputId, text) {
   nodes[nodes.length - 1].nodeValue = ` ${text}`;
 }
 
-function getHomeButtonText() {
-  return `H ${t("home")}`;
-}
-
 async function applyInterfaceLanguage() {
   state.i18nLang = resolveInterfaceLanguage();
   await loadLocaleBundle(state.i18nLang);
   applyDataI18n();
 
-  const paneCollapsed = document
-    .getElementById("left-pane")
-    ?.classList.contains("collapsed");
   const createBtn = document.getElementById("create-character-btn");
-  if (createBtn && !paneCollapsed) {
-    createBtn.textContent = t("createCharacter");
-  }
   const homeBtn = document.getElementById("home-btn");
-  if (homeBtn) {
-    homeBtn.textContent = paneCollapsed ? "H" : getHomeButtonText();
-    homeBtn.title = paneCollapsed ? t("home") : "";
-  }
   const importBtn = document.getElementById("import-character-btn");
+  if (homeBtn) {
+    homeBtn.title = t("home");
+    homeBtn.setAttribute("aria-label", t("home"));
+  }
+  if (createBtn) {
+    createBtn.title = t("createCharacter");
+    createBtn.setAttribute("aria-label", t("createCharacter"));
+  }
   if (importBtn) {
-    importBtn.textContent = paneCollapsed ? "^" : `^ ${t("importCharacter")}`;
+    importBtn.title = t("importCharacter");
+    importBtn.setAttribute("aria-label", t("importCharacter"));
   }
 
   const bottomButtons = document.querySelectorAll(".pane-bottom .option-btn");
@@ -2001,12 +1996,6 @@ async function applyInterfaceLanguage() {
     bottomButtons[8].setAttribute("aria-label", t("guide"));
   }
 
-  if (
-    homeBtn &&
-    !document.getElementById("left-pane")?.classList.contains("collapsed")
-  ) {
-    homeBtn.textContent = getHomeButtonText();
-  }
   const popTitle = document.querySelector(".popover-title");
   if (popTitle) popTitle.textContent = t("previousPrompts");
   const sendBtn = document.getElementById("send-btn");
@@ -7676,29 +7665,6 @@ function togglePane() {
       "collapsed",
       pane.classList.contains("collapsed"),
     );
-  }
-  if (pane.classList.contains("collapsed")) {
-    if (homeBtn) {
-      homeBtn.textContent = "H";
-      homeBtn.title = t("home");
-    }
-    createBtn.textContent = "+";
-    createBtn.title = t("createCharacter");
-    if (importBtn) {
-      importBtn.textContent = "^";
-      importBtn.title = t("importCharacter");
-    }
-  } else {
-    if (homeBtn) {
-      homeBtn.textContent = getHomeButtonText();
-      homeBtn.title = "";
-    }
-    createBtn.textContent = t("createCharacter");
-    createBtn.title = "";
-    if (importBtn) {
-      importBtn.textContent = `^ ${t("importCharacter")}`;
-      importBtn.title = "";
-    }
   }
   updateCarouselForPaneState();
 }
