@@ -329,10 +329,6 @@ body {
   opacity: 0.32;
 }
 
-.thread-row.active-thread::after {
-  opacity: 0;
-}
-
 .thread-row:hover {
   border-color: #3f5e8a;
   background: linear-gradient(180deg, #202b40 0%, #1a2538 100%);
