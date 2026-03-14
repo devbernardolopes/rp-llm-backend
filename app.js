@@ -12790,12 +12790,21 @@ async function importCharacterFromFile(e) {
         }
       }
       if (character.definitions && character.definitions.length > 0) {
-        character.definitions = character.definitions.map((def) => ({
-          ...def,
-          personaInjectionPlacement:
-            def.personaInjectionPlacement || "end_system_prompt",
-          kokoroDtype: def.kokoroDtype || "auto",
-        }));
+        character.definitions = character.definitions.map((def) => {
+          const updated = {
+            ...def,
+            personaInjectionPlacement:
+              def.personaInjectionPlacement || "end_system_prompt",
+            kokoroDtype: def.kokoroDtype || "auto",
+          };
+          const hasCustomInstructions =
+            typeof def.writingInstructions === "string" &&
+            def.writingInstructions.trim().length > 0;
+          updated.writingInstructionId = hasCustomInstructions
+            ? ""
+            : def.writingInstructionId || "none";
+          return updated;
+        });
       }
     }
 
