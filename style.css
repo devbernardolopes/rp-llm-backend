@@ -191,6 +191,8 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   padding-right: 8px;
+  justify-content: center;
+  align-items: center;
 }
 
 .pane-top-option-btn {
