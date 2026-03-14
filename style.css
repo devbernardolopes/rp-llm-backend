@@ -2650,6 +2650,10 @@ textarea {
   z-index: 220;
 }
 
+#writing-instruction-language-modal {
+  z-index: 240;
+}
+
 #persona-editor-modal {
   z-index: 220;
 }
