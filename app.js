@@ -9580,6 +9580,10 @@ async function renderPersonaModalList() {
 
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
+    const swatch = document.createElement("span");
+    swatch.className = "persona-color-swatch";
+    swatch.style.backgroundColor = normalizePersonaColor(persona.color);
+    actions.appendChild(swatch);
     actions.appendChild(
       iconButton("copy", t("duplicatePersonaAria"), async () => {
         await duplicatePersona(persona.id);
@@ -9608,11 +9612,6 @@ async function renderPersonaModalList() {
       }
       openPersonaEditor(persona);
     });
-
-    const swatch = document.createElement("span");
-    swatch.className = "persona-color-swatch";
-    swatch.style.backgroundColor = normalizePersonaColor(persona.color);
-    row.appendChild(swatch);
 
     list.appendChild(row);
   }

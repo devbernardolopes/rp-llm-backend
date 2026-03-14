@@ -3994,11 +3994,14 @@ textarea {
 }
 
 .persona-color-swatch {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   border: 1px solid var(--line);
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
 }
 
 .persona-avatar {
