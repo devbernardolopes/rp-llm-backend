@@ -15745,6 +15745,10 @@ async function sendOocInquiry(text) {
     usedMemorySummary: "",
     model: state.settings.model || "",
     temperature: Number(state.settings.temperature) || 0,
+    requestMessages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMsg.content },
+    ],
   };
   const pendingIndex = conversationHistory.length;
   const unloadState = currentThread?.unloadState;
@@ -15893,6 +15897,12 @@ async function regenerateOocMessage(index) {
 
   try {
     const { systemPrompt } = await buildOocSystemPrompt();
+    const oocRequestMessages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage.content },
+    ];
+    target.requestMessages = oocRequestMessages;
+    messagesToSave[index].requestMessages = oocRequestMessages;
     const result = await callOpenRouter(
       systemPrompt,
       [{ role: "user", content: userMessage.content }],
