@@ -10874,10 +10874,6 @@ async function addWritingInstructionLanguage() {
   renderWritingInstructionTabs();
 }
 
-function isInSimulationMessage(message) {
-  return !!message && message.ooc !== true && !isPlaceholderMessage(message);
-}
-
 const PLACEHOLDER_STATUSES = new Set([
   "queued",
   "cooling_down",
@@ -14515,6 +14511,21 @@ async function cycleInitialMessagePreview(delta) {
   await db.threads.update(threadId, { initialMessageIndex: index });
   updateInitialMessageControls();
   refreshInitialMessageRowVisibility();
+  updateInlineInitialMessageCounters();
+}
+
+function updateInlineInitialMessageCounters() {
+  const threadId = currentThread?.id;
+  if (!threadId) return;
+  const currentIdx = state.initialMessageIndexByThread[Number(threadId)] ?? 0;
+  const allInitial = (conversationHistory || []).filter((m) => m.isInitial);
+  const counterText = `${currentIdx + 1}/${allInitial.length}`;
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const counters = log.querySelectorAll(".inline-initial-counter");
+  counters.forEach((counter) => {
+    counter.textContent = counterText;
+  });
 }
 
 function getUnreadAssistantCount(messages) {
@@ -20116,7 +20127,7 @@ async function callOpenRouter(
       })
       .map((m) => ({
         role: normalizeApiRole(m.apiRole || m.role),
-        content: m.content,
+        content: removeImageLinksFromContent(m.content),
       })),
   ];
   const systemMessages = promptMessages
