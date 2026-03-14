@@ -346,7 +346,6 @@ body {
 }
 
 .thread-row.active-thread {
-  background: linear-gradient(180deg, #3c351b 0%, #2f2a16 100%);
   border-color: #8d7f3a;
 }
 
