@@ -14432,6 +14432,7 @@ function renderChat(startIdx, endIdx) {
   updateScrollBottomButtonVisibility();
   scheduleThreadBudgetIndicatorUpdate();
   updateInitialMessageControls();
+  refreshInitialMessageRowVisibility();
   maybeProcessUnreadMessagesSeen(false).catch(() => {});
 }
 
@@ -14513,6 +14514,7 @@ async function cycleInitialMessagePreview(delta) {
   state.initialMessageIndexByThread[threadId] = index;
   await db.threads.update(threadId, { initialMessageIndex: index });
   updateInitialMessageControls();
+  refreshInitialMessageRowVisibility();
 }
 
 function getUnreadAssistantCount(messages) {
