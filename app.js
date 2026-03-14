@@ -14459,13 +14459,12 @@ function filterConversationHistoryForSelectedInitialMessage(
   const selectedIndex = getSelectedInitialMessageIndexForThread(threadId, history);
   if (selectedIndex === null) return history;
   const list = Array.isArray(history) ? history : [];
+  let initialOrdinal = 0;
   return list.filter((msg) => {
     if (!msg?.isInitial) return true;
-    const msgIndex =
-      Number.isInteger(msg.initialMessageIndex) && msg.initialMessageIndex >= 0
-        ? msg.initialMessageIndex
-        : 0;
-    return msgIndex === selectedIndex;
+    const keep = initialOrdinal === selectedIndex;
+    initialOrdinal += 1;
+    return keep;
   });
 }
 
