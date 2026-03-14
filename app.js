@@ -2389,6 +2389,12 @@ function setupEvents() {
       downloadImagePreview();
     });
   document
+    .getElementById("image-preview-close-btn")
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeImagePreview();
+    });
+  document
     .getElementById("image-preview-img")
     .addEventListener("wheel", onImagePreviewWheel, { passive: false });
   document

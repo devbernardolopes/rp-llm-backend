@@ -2876,19 +2876,38 @@ textarea {
   display: block;
 }
 
-.image-preview-download-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
+.image-preview-controls {
+  position: fixed;
+  left: 50%;
+  bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.image-preview-download-btn,
+.image-preview-close-btn {
   width: 42px;
   height: 42px;
   border-radius: 10px;
+  line-height: 1;
+  font-size: 22px;
+}
+
+.image-preview-download-btn {
   border-color: #3c9f57;
   background: #2c8d47;
   color: #eaffef;
-  font-size: 22px;
-  line-height: 1;
+}
+
+.image-preview-close-btn {
+  border-color: var(--line);
+  background: rgba(21, 27, 36, 0.95);
+  color: var(--text);
+  font-size: 24px;
 }
 
 .image-preview-download-btn:hover {

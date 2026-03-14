@@ -2184,6 +2184,10 @@
       aria-label="Media preview"
     >
       <div class="modal-card image-preview-card">
+        <img id="image-preview-img" alt="Preview" />
+        <video id="image-preview-video" controls class="hidden"></video>
+      </div>
+      <div class="image-preview-controls">
         <button
           id="image-preview-download-btn"
           class="icon-btn image-preview-download-btn"
@@ -2193,8 +2197,15 @@
         >
           v
         </button>
-        <img id="image-preview-img" alt="Preview" />
-        <video id="image-preview-video" controls class="hidden"></video>
+        <button
+          id="image-preview-close-btn"
+          class="icon-btn image-preview-close-btn"
+          type="button"
+          title="Close preview"
+          aria-label="Close preview"
+        >
+          ×
+        </button>
       </div>
     </div>
 
