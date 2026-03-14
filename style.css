@@ -3813,6 +3813,15 @@ textarea {
   margin-bottom: 8px;
 }
 
+#writing-instructions-modal .lore-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #151d2a;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
 .lorebook-list {
   display: flex;
   flex-direction: column;
