@@ -2795,6 +2795,9 @@ textarea {
   line-height: 1.45;
   max-height: 220px;
 }
+.textarea-collapse-body:not(.collapsed) textarea {
+  max-height: none;
+}
 .initial-messages-editor {
   display: flex;
   flex-direction: column;
