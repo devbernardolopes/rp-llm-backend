@@ -2571,6 +2571,7 @@ function setupEvents() {
     if (titleEl) {
       titleEl.textContent = document.getElementById("char-name").value || "BOT";
     }
+    updateDocumentTitleWithUnread();
   });
   document.getElementById("char-tagline").addEventListener("input", () => {
     updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
@@ -7869,6 +7870,7 @@ async function closeActiveModal() {
   }
   state.activeModalId = null;
   setModalDirtyState(closingId, false);
+  updateDocumentTitleWithUnread();
 }
 
 async function handleModalSaveAction(modalId) {
@@ -8578,6 +8580,7 @@ async function loadActiveCharacterDefinitionToForm() {
   if (titleEl) {
     titleEl.textContent = def.name || "BOT";
   }
+  updateDocumentTitleWithUnread();
   document.getElementById("char-tagline").value = def.tagline || "";
   updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
   document.getElementById("char-system-prompt").value = def.systemPrompt || "";
