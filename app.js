@@ -15745,7 +15745,7 @@ async function buildOocSystemPrompt() {
     historyForPrompt,
   );
   const contextMessages = getInSimulationMessages(filteredHistory, {
-    includeOoc: currentCharacter?.includeOocInCompletions === true,
+    includeOoc: true,
   })
     .filter((msg) => !isMessageLockedByMemory(msg))
     .map(formatOocContextEntry)
