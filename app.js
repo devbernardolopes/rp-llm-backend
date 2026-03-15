@@ -14058,7 +14058,7 @@ async function maybeGenerateTitleBeforeBotReply() {
       state.settings.model,
       null,
       null,
-      { forceStream: false },
+      { forceStream: false, isTitleGeneration: true },
     );
     const raw = String(result?.content || "").trim();
     if (!raw) {
@@ -20267,23 +20267,40 @@ async function callOpenRouter(
       ? Boolean(options.forceStream)
       : null;
   const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
   const summaryModel = "arcee-ai/trinity-large-preview:free";
+  const titleModel = "arcee-ai/trinity-large-preview:free";
   const body = {
-    model: isSummarization ? summaryModel : resolvedModel,
+    model: isTitleGeneration
+      ? titleModel
+      : isSummarization
+        ? summaryModel
+        : resolvedModel,
     messages: promptMessages,
     max_completion_tokens: effectiveMaxTokens,
-    temperature: isSummarization
+    temperature: isTitleGeneration
       ? 0.25
-      : clampTemperature(state.settings.temperature),
-    top_p: isSummarization ? 0.9 : Number(state.settings.topP) || 1,
-    frequency_penalty: isSummarization
+      : isSummarization
+        ? 0.25
+        : clampTemperature(state.settings.temperature),
+    top_p: isTitleGeneration
+      ? 0.9
+      : isSummarization
+        ? 0.9
+        : Number(state.settings.topP) || 1,
+    frequency_penalty: isTitleGeneration
       ? 0
-      : Number(state.settings.frequencyPenalty) || 0,
-    presence_penalty: isSummarization
+      : isSummarization
+        ? 0
+        : Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: isTitleGeneration
       ? 0
-      : Number(state.settings.presencePenalty) || 0,
-    stream:
-      streamForced === null
+      : isSummarization
+        ? 0
+        : Number(state.settings.presencePenalty) || 0,
+    stream: isTitleGeneration
+      ? false
+      : streamForced === null
         ? !!state.settings.streamEnabled
         : Boolean(streamForced),
   };
