@@ -7557,22 +7557,18 @@ async function persistThreadTintColor(
   updateThreadTintIndicator(tintIndicator, nextColor);
   applyThreadTintToRow(row, nextColor);
   if (!Number.isInteger(Number(thread.id))) return;
-  const updatedAt = Date.now();
   try {
     await db.threads.update(thread.id, {
       tintColor: nextColor,
-      updatedAt,
     });
-    thread.updatedAt = updatedAt;
     if (currentThread && Number(currentThread.id) === Number(thread.id)) {
       currentThread.tintColor = nextColor;
     }
     broadcastSyncEvent({
       type: "thread-updated",
       threadId: Number(thread.id),
-      updatedAt,
+      updatedAt: thread.updatedAt,
     });
-    state.lastSyncSeenUpdatedAt = updatedAt;
   } catch (err) {
     console.warn("Failed to persist thread tint:", err);
   }
