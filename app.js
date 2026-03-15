@@ -15149,14 +15149,13 @@ function refreshLatestAssistantRowContent() {
     const message = conversationHistory[idx];
     if (!message || message.role !== "assistant") continue;
     const originalIndex = loadedStartIndex + idx;
-    const row = document.querySelector(
+    const oldRow = document.querySelector(
       `#chat-log .chat-row[data-message-index="${originalIndex}"]`,
     );
-    if (!row) continue;
-    const content = row.querySelector(".message-content");
-    if (content) {
-      renderMessageContent(content, message);
-    }
+    if (!oldRow) continue;
+    const isStreaming = oldRow.dataset.streaming === "1";
+    const newRow = buildMessageRow(message, originalIndex, isStreaming);
+    oldRow.replaceWith(newRow);
     break;
   }
 }
