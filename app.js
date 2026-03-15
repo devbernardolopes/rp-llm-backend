@@ -1712,9 +1712,10 @@ const handleVisibilityChange = debounce(() => {
         }
       });
     }
-    // Defer lightweight unread styling clear
+    // Defer lightweight unread styling clear + latest message refresh
     queueMicrotask(() => {
       clearChatUnreadStyling();
+      refreshLatestAssistantRowContent();
     });
   }
 }, 150);
@@ -1760,9 +1761,10 @@ const handleFocus = debounce(() => {
       }
     });
   }
-  // Defer lightweight unread styling clear
+  // Defer lightweight unread styling clear + latest message refresh
   queueMicrotask(() => {
     clearChatUnreadStyling();
+    refreshLatestAssistantRowContent();
   });
 }, 150);
 
