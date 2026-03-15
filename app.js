@@ -2567,6 +2567,10 @@ function setupEvents() {
     });
   document.getElementById("char-name").addEventListener("input", () => {
     updateNameLengthCounter("char-name", "char-name-count", 128);
+    const titleEl = document.getElementById("character-title");
+    if (titleEl) {
+      titleEl.textContent = document.getElementById("char-name").value || "BOT";
+    }
   });
   document.getElementById("char-tagline").addEventListener("input", () => {
     updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
@@ -8570,6 +8574,10 @@ async function loadActiveCharacterDefinitionToForm() {
   if (!def) return;
   document.getElementById("char-name").value = def.name || "";
   updateNameLengthCounter("char-name", "char-name-count", 128);
+  const titleEl = document.getElementById("character-title");
+  if (titleEl) {
+    titleEl.textContent = def.name || "BOT";
+  }
   document.getElementById("char-tagline").value = def.tagline || "";
   updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
   document.getElementById("char-system-prompt").value = def.systemPrompt || "";
