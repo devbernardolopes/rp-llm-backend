@@ -1712,10 +1712,9 @@ const handleVisibilityChange = debounce(() => {
         }
       });
     }
-    // Defer renders to avoid blocking the event handler
+    // Defer lightweight unread styling clear
     queueMicrotask(() => {
-      renderChat();
-      refreshLatestAssistantRowContent();
+      clearChatUnreadStyling();
     });
   }
 }, 150);
@@ -1761,10 +1760,9 @@ const handleFocus = debounce(() => {
       }
     });
   }
-  // Defer renders to avoid blocking the event handler
+  // Defer lightweight unread styling clear
   queueMicrotask(() => {
-    renderChat();
-    refreshLatestAssistantRowContent();
+    clearChatUnreadStyling();
   });
 }, 150);
 
@@ -14623,6 +14621,19 @@ function getUnreadAssistantCount(messages) {
     if (Number(m.unreadAt) > 0) count += 1;
   }
   return count;
+}
+
+function clearChatUnreadStyling() {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const unreadBlocks = log.querySelectorAll(".message-block-unread");
+  for (const block of unreadBlocks) {
+    block.classList.remove("message-block-unread");
+    block.classList.add("message-block-unread-clearing");
+    window.setTimeout(() => {
+      block.classList.remove("message-block-unread-clearing");
+    }, 700);
+  }
 }
 
 async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
