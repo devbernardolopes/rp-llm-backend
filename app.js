@@ -16372,25 +16372,7 @@ async function generateBotReply() {
       );
     }
     if (isViewingThread(threadId)) {
-      const liveRow = ensureMessageRowExists(pendingIndex);
-      const liveContent = liveRow?.querySelector(".message-content");
-      if (liveContent) {
-        renderMessageContent(liveContent, pending);
-      } else {
-        renderChat();
-      }
-      if (liveRow) {
-        liveRow.dataset.streaming = "0";
-        const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
-        if (modelInfoBtn && pending.model) {
-          modelInfoBtn.disabled = false;
-          modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
-          modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
-        }
-      }
-    }
-    if (isViewingThread(threadId)) {
-      refreshAllSpeakerButtons();
+      refreshLatestAssistantRowContent();
     }
     if (currentThread && Number(currentThread.id) === threadId) {
       commitPendingPersonaInjectionMarker();
@@ -16423,21 +16405,8 @@ async function generateBotReply() {
         if (pendingRow) pendingRow.remove();
       } else {
         pending.generationStatus = "";
-        const liveRow = ensureMessageRowExists(pendingIndex);
-        const liveContent = liveRow?.querySelector(".message-content");
-        if (liveContent) {
-          renderMessageContent(liveContent, pending);
-        } else if (isViewingThread(threadId)) {
-          renderChat();
-        }
-        if (liveRow) {
-          liveRow.dataset.streaming = "0";
-          const modelInfoBtn = liveRow.querySelector(".msg-model-info-btn");
-          if (modelInfoBtn && pending.model) {
-            modelInfoBtn.disabled = false;
-            modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
-            modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
-          }
+        if (isViewingThread(threadId)) {
+          refreshLatestAssistantRowContent();
         }
         if (isViewingThread(threadId)) {
           refreshAllSpeakerButtons();
@@ -16452,14 +16421,9 @@ async function generateBotReply() {
       if (!String(pending.content || "").trim()) {
         pending.content = "";
       }
-      const liveRow = ensureMessageRowExists(pendingIndex);
-      const liveContent = liveRow?.querySelector(".message-content");
-      if (liveContent) {
-        renderMessageContent(liveContent, pending);
-      } else if (isViewingThread(threadId)) {
-        renderChat();
+      if (isViewingThread(threadId)) {
+        refreshLatestAssistantRowContent();
       }
-      if (liveRow) liveRow.dataset.streaming = "0";
       if (isViewingThread(threadId)) {
         refreshAllSpeakerButtons();
         refreshMessageControlStates();
