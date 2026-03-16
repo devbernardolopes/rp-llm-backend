@@ -8627,10 +8627,6 @@ async function loadActiveCharacterDefinitionToForm() {
   updateCharTtsRatePitchLabels();
   refreshCharTtsProviderFields();
   renderCharacterLorebookList(def.lorebookIds || []);
-  const loreCooldownInput = document.getElementById("char-lore-cooldown");
-  if (loreCooldownInput) {
-    loreCooldownInput.value = String(Number(character?.loreCooldown) || 20);
-  }
 }
 
 function populateCharacterLanguageSelectOptions() {
@@ -8754,6 +8750,11 @@ async function openCharacterModal(
   await loadActiveCharacterDefinitionToForm();
   setCharacterModalTab("lang");
   populateCharacterLanguageSelectOptions();
+
+  const loreCooldownInput = document.getElementById("char-lore-cooldown");
+  if (loreCooldownInput) {
+    loreCooldownInput.value = String(Number(character?.loreCooldown) || 20);
+  }
 
   updateCharTtsRatePitchLabels();
   updateCharTtsTestButtonState();
