@@ -3739,16 +3739,21 @@ textarea {
   align-items: center;
   gap: 8px;
   font-size: 13px;
+  justify-content: flex-start;
+  width: 100%;
 }
 .check-list.lorebook-list .lorebook-entry {
   align-items: center;
   gap: 10px;
 }
+.check-item input[type="checkbox"] {
+  flex-shrink: 0;
+}
 .lorebook-entry-text {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
 }
 .lorebook-entry-name {

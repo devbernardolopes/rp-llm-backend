@@ -12220,6 +12220,9 @@ async function renderCharacterLorebookList(selectedIds = []) {
     checkbox.type = "checkbox";
     checkbox.value = String(entry.id);
     checkbox.checked = selected.has(Number(entry.id));
+    checkbox.addEventListener("change", () => {
+      setModalDirtyState("character-modal", true);
+    });
 
     const textWrapper = document.createElement("span");
     textWrapper.className = "lorebook-entry-text";
