@@ -3740,6 +3740,28 @@ textarea {
   gap: 8px;
   font-size: 13px;
 }
+.check-list.lorebook-list .lorebook-entry {
+  align-items: center;
+  gap: 10px;
+}
+.lorebook-entry-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.lorebook-entry-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lorebook-entry-id {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
 
 .metadata-json {
   margin: 0;

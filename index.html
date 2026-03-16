@@ -107,8 +107,8 @@
             class="option-btn"
             data-open-modal="lore-modal"
             data-i18n-title="loreBooks"
-            title="Lore Books"
-            aria-label="Lore Books"
+            title="Lorebooks"
+            aria-label="Lorebooks"
           >
             &#128218;
           </button>
@@ -1495,7 +1495,7 @@
       <div class="modal-card wide">
         <div class="modal-header">
           <h3 id="lore-title" data-i18n="loreBookManagement">
-            Lore Book Management
+            Lorebook Management
           </h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
@@ -1508,7 +1508,7 @@
                 type="button"
                 data-i18n="createLoreBook"
               >
-                + Create Lore Book
+                + Create Lorebook
               </button>
               <button
                 id="import-lorebook-btn"
@@ -1516,7 +1516,7 @@
                 type="button"
                 data-i18n="importLoreBook"
               >
-                ^ Import Lore Book
+                ^ Import Lorebook
               </button>
             </div>
             <div id="lorebook-list" class="lorebook-list"></div>
@@ -1609,7 +1609,7 @@
                 type="button"
                 data-i18n="saveLoreBook"
               >
-                Save Lore Book
+                Save Lorebook
               </button>
             </div>
           </div>
@@ -2091,19 +2091,9 @@
             />
           </div>
           <div class="full lang-field">
-            <span class="checkbox-line">
-              <input id="char-prefer-lore-language" type="checkbox" checked />
-              <span data-i18n="preferLoreBooksInMatchingLanguage"
-                >Prefer Lore Books in Matching Language</span
-              >
-            </span>
+            <span data-i18n="loreBooksForCharacter">Lorebooks for this character</span>
+            <div id="char-lorebooks-list" class="check-list lorebook-list"></div>
           </div>
-           <div class="full lang-field">
-             <span data-i18n="loreBooksForCharacter"
-               >Lore Books for this character</span
-             >
-             <div id="char-lorebooks-list" class="check-list"></div>
-           </div>
            <div class="full sfx-field hidden">
              <div class="sfx-toolbar">
                <button

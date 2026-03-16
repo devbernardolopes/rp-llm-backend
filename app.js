@@ -684,7 +684,7 @@ const I18N = {
     home: "HOME",
     database: "Database",
     personas: "Personas",
-    loreBooks: "Lore Books",
+    loreBooks: "Lorebooks",
     shortcuts: "Shortcuts",
     tags: "Tags",
     guide: "Guide",
@@ -754,12 +754,12 @@ const I18N = {
     personaCreated: "Persona created.",
     personaDeleted: "Persona deleted.",
     defaultPersonaUpdated: "Default persona updated.",
-    loreImportSoon: "Lore Book import will be added soon.",
-    loreExportSoon: "Lore Book export will be added soon.",
-    loreUpdated: "Lore Book updated.",
-    loreCreated: "Lore Book created.",
-    loreDuplicated: "Lore Book duplicated.",
-    loreDeleted: "Lore Book deleted.",
+    loreImportSoon: "Lorebook import will be added soon.",
+    loreExportSoon: "Lorebook export will be added soon.",
+    loreUpdated: "Lorebook updated.",
+    loreCreated: "Lorebook created.",
+    loreDuplicated: "Lorebook duplicated.",
+    loreDeleted: "Lorebook deleted.",
     databaseExported: "Database exported.",
     databaseImportedReloading: "Database imported. Reloading...",
     threadCreated: "Thread created.",
@@ -824,12 +824,12 @@ const I18N = {
     deletePersonaTitle: "Delete Persona",
     deletePersonaConfirm: "Delete this persona?",
     editPersonaAria: "Edit persona",
-    deleteLoreBookTitle: "Delete Lore Book",
+    deleteLoreBookTitle: "Delete Lorebook",
     deleteThreadTitle: "Delete Thread",
     deleteThreadConfirm: "Delete this thread?",
-    editLoreBookAria: "Edit lore book",
-    deleteLoreBookAria: "Delete lore book",
-    invalidLoreBookTitle: "Invalid Lore Book",
+    editLoreBookAria: "Edit Lorebook",
+    deleteLoreBookAria: "Delete Lorebook",
+    invalidLoreBookTitle: "Invalid Lorebook",
     invalidLoreEntryTitle: "Invalid Lore Entry",
     loreAtLeastOneEntry: "At least one lore entry is required.",
     invalidInitialMessagesTitle: "Invalid Initial Messages",
@@ -953,9 +953,9 @@ const I18N = {
     personaInternalDescription: "Internal Description (optional)",
     setDefaultPersona: "Set as default persona",
     savePersona: "Save Persona",
-    loreBookManagement: "Lore Book Management",
-    createLoreBook: "+ Create Lore Book",
-    importLoreBook: "^ Import Lore Book",
+    loreBookManagement: "Lorebook Management",
+    createLoreBook: "+ Create Lorebook",
+    importLoreBook: "^ Import Lorebook",
     backToList: "< Back to List",
     avatarUrlOptional: "Avatar URL (optional)",
     descriptionOptional: "Description (optional)",
@@ -963,7 +963,7 @@ const I18N = {
     tokenBudget: "Token Budget",
     recursiveScanning: "Recursive Scanning",
     addEntry: "+ Add Entry",
-    saveLoreBook: "Save Lore Book",
+    saveLoreBook: "Save Lorebook",
     shortcutEntries: "Shortcut Entries",
     saveShortcuts: "Save Shortcuts",
     tagManager: "Tag Manager",
@@ -991,7 +991,6 @@ const I18N = {
     addLanguage: "Add Language",
     add: "Add",
     enableTts: "Enable TTS",
-    preferLoreBooksInMatchingLanguage: "Prefer Lore Books in Matching Language",
     removeLanguageTitle: "Remove Language",
     removeLanguageConfirm: "Remove language definition {lang}?",
     removeLanguageConfirmWithThreads:
@@ -1008,7 +1007,7 @@ const I18N = {
     ttsPitch: "TTS Pitch",
     testCharacterVoice: "Test Character Voice",
     stopCharacterVoiceTest: "Stop character voice test",
-    loreBooksForCharacter: "Lore Books for this character",
+    loreBooksForCharacter: "Lorebooks for this character",
     createdLabel: "Created",
     updatedLabel: "Updated",
     threadsLower: "threads",
@@ -3045,7 +3044,6 @@ function setupEvents() {
     "#char-tts-kokoro-device",
     "#char-tts-kokoro-dtype",
     "#char-tts-kokoro-voice",
-    "#char-prefer-lore-language",
   ]);
   markModalDirtyOnInput("personas-modal", [
     "#persona-name",
@@ -8404,8 +8402,6 @@ function saveActiveCharacterDefinitionFromForm() {
       DEFAULT_KOKORO_VOICE,
   );
   def.kokoroSpeed = selectedTts.rate;
-  def.preferLoreBooksMatchingLanguage =
-    document.getElementById("char-prefer-lore-language")?.checked !== false;
   def.lorebookIds = getSelectedLorebookIds();
 }
 
@@ -8624,8 +8620,6 @@ async function loadActiveCharacterDefinitionToForm() {
     def.kokoroVoice || DEFAULT_KOKORO_VOICE,
     activeModalLanguage,
   );
-  document.getElementById("char-prefer-lore-language").checked =
-    def.preferLoreBooksMatchingLanguage !== false;
   updateCharTtsRatePitchLabels();
   refreshCharTtsProviderFields();
   renderCharacterLorebookList(def.lorebookIds || []);
@@ -10178,7 +10172,7 @@ async function renderLorebookManagementList() {
   if (lorebooks.length === 0) {
     const empty = document.createElement("p");
     empty.className = "muted";
-    empty.textContent = "No lore books yet.";
+    empty.textContent = "No Lorebooks yet.";
     list.appendChild(empty);
     return;
   }
@@ -10197,7 +10191,7 @@ async function renderLorebookManagementList() {
     avatar.className = "lorebook-avatar";
     avatar.src =
       lorebook.avatar || fallbackAvatar(lorebook.name || "LB", 512, 512);
-    avatar.alt = `${lorebook.name || "Lore Book"} avatar`;
+    avatar.alt = `${lorebook.name || "Lorebook"} avatar`;
     avatar.classList.add("clickable-avatar");
     avatar.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -10208,7 +10202,7 @@ async function renderLorebookManagementList() {
     main.className = "lorebook-main";
     const title = document.createElement("div");
     title.className = "lorebook-title";
-    title.textContent = lorebook.name || "Untitled Lore Book";
+    title.textContent = lorebook.name || "Untitled Lorebook";
     const meta = document.createElement("div");
     meta.className = "lorebook-meta";
     meta.textContent = `Created: ${formatDateTime(lorebook.createdAt)}\nUpdated: ${formatDateTime(lorebook.updatedAt)}`;
@@ -10250,14 +10244,14 @@ async function renderLorebookManagementList() {
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
     actions.appendChild(
-      iconButton("edit", "Edit lore book", () => openLoreEditor(lorebook)),
+      iconButton("edit", "Edit Lorebook", () => openLoreEditor(lorebook)),
     );
     actions.appendChild(
-      iconButton("duplicate", "Duplicate lore book", async () => {
+      iconButton("duplicate", "Duplicate Lorebook", async () => {
         await duplicateLorebook(lorebook.id);
       }),
     );
-    const exportBtn = iconButton("export", "Export lore book", async () => {
+    const exportBtn = iconButton("export", "Export Lorebook", async () => {
       showToast(t("loreExportSoon"), "success");
     });
     exportBtn.disabled = true;
@@ -10306,7 +10300,7 @@ async function collectLorebookFromEditor() {
 
   if (name.length < 2 || name.length > 128) {
     await openInfoDialog(
-      "Invalid Lore Book",
+      "Invalid Lorebook",
       "Name must have between 2 and 128 characters.",
     );
     return null;
@@ -10407,7 +10401,7 @@ async function deleteLorebook(lorebookId) {
       Array.isArray(char.lorebookIds) &&
       char.lorebookIds.map(Number).includes(Number(lorebookId)),
   );
-  let message = `Delete lore book "${lorebook.name}"?`;
+  let message = `Delete Lorebook "${lorebook.name}"?`;
   if (affected.length > 0) {
     const lines = affected
       .slice(0, 20)
@@ -12213,24 +12207,33 @@ async function renderCharacterLorebookList(selectedIds = []) {
   if (allLore.length === 0) {
     const empty = document.createElement("p");
     empty.className = "muted";
-    empty.textContent = "No lore books available.";
+    empty.textContent = "No Lorebooks available.";
     root.appendChild(empty);
     return;
   }
 
   allLore.forEach((entry) => {
     const label = document.createElement("label");
-    label.className = "check-item";
+    label.className = "check-item lorebook-entry";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.value = String(entry.id);
     checkbox.checked = selected.has(Number(entry.id));
 
-    const text = document.createElement("span");
-    text.textContent = `${entry.name || "Untitled"} (#${entry.id})`;
+    const textWrapper = document.createElement("span");
+    textWrapper.className = "lorebook-entry-text";
 
-    label.append(checkbox, text);
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "lorebook-entry-name";
+    nameSpan.textContent = entry.name || "Untitled";
+
+    const idSpan = document.createElement("span");
+    idSpan.className = "lorebook-entry-id";
+    idSpan.textContent = `#${entry.id}`;
+
+    textWrapper.append(nameSpan, idSpan);
+    label.append(checkbox, textWrapper);
     root.appendChild(label);
   });
 }
@@ -12729,7 +12732,7 @@ async function importLorebookFromFile(e) {
     const fallbackName = file.name ? file.name.replace(/\.[^.]+$/, "") : "";
     const record = mapImportedLorebookPayload(payload, fallbackName);
     if (!record) {
-      throw new Error("Imported lore book contains no valid entries.");
+      throw new Error("Imported lorebook contains no valid entries.");
     }
     openLoreEditor(record);
   } catch (err) {
