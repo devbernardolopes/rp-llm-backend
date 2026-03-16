@@ -3035,6 +3035,7 @@ function setupEvents() {
     "#char-auto-title-min-messages",
     "#char-include-ooc",
     "#char-avatar-scale",
+    "#char-lore-cooldown",
     "#char-tags-input",
     "#char-tts-voice",
     "#char-tts-language",
@@ -8403,10 +8404,6 @@ function saveActiveCharacterDefinitionFromForm() {
   );
   def.kokoroSpeed = selectedTts.rate;
   def.lorebookIds = getSelectedLorebookIds();
-  def.loreCooldown = Math.max(
-    0,
-    Math.min(100, Number(document.getElementById("char-lore-cooldown")?.value) || 20),
-  );
 }
 
 function getInitialMessageDraftKey(language) {
@@ -8909,6 +8906,13 @@ async function saveCharacterFromModal({ close = true } = {}) {
     preferLoreBooksMatchingLanguage:
       primaryDef?.preferLoreBooksMatchingLanguage !== false,
     lorebookIds: selectedLorebookIds,
+    loreCooldown: Math.max(
+      0,
+      Math.min(
+        100,
+        Number(document.getElementById("char-lore-cooldown")?.value) || 20,
+      ),
+    ),
     avatar:
       state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
     avatars:
