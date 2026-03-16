@@ -7083,11 +7083,11 @@ function updateThreadMessageCount(threadId, messages) {
     currentThread.unloadState
   ) {
     const hasInitialMessages = (messages || []).some((m) => m.isInitial);
-    const nonOocCount = (messages || []).filter(
-      (m) => !m.ooc && !m.isInitial,
+    const nonInitialCount = (messages || []).filter(
+      (m) => !m.isInitial,
     ).length;
     currentThread.unloadState.totalMessageCount =
-      nonOocCount + (hasInitialMessages ? 1 : 0);
+      nonInitialCount + (hasInitialMessages ? 1 : 0);
   }
 }
 
