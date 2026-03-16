@@ -13658,6 +13658,7 @@ async function openThread(threadId) {
   if (chatViewActive && Number(currentThread?.id) === Number(threadId)) {
     return;
   }
+  state.pendingTitleGeneration = false;
   if (chatViewActive && currentThread) {
     const log = document.getElementById("chat-log");
     if (log) {
