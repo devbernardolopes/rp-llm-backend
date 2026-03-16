@@ -357,7 +357,7 @@ db.version(19)
      });
    });
 
-db.version(20)
+db.version(21)
   .stores({
     characters: "++id, name, pinned",
     lorebooks: "++id, name, createdAt, updatedAt",
@@ -370,10 +370,16 @@ db.version(20)
     themes: "id, name, isBuiltIn, createdAt",
   })
   .upgrade(async (tx) => {
+    const threads = tx.table("threads");
+    await threads.toCollection().modify((thread) => {
+      if (!Object.prototype.hasOwnProperty.call(thread, "loreState")) {
+        thread.loreState = {};
+      }
+    });
     const chars = tx.table("characters");
     await chars.toCollection().modify((char) => {
-      if (!Object.prototype.hasOwnProperty.call(char, "pinned")) {
-        char.pinned = false;
+      if (!Object.prototype.hasOwnProperty.call(char, "loreCooldown")) {
+        char.loreCooldown = 20;
       }
     });
   });

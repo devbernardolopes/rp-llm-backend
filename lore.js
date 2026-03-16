@@ -132,6 +132,7 @@ window.replaceLorePlaceholders = replaceLorePlaceholders;
 window.doesLoreEntryMatch = doesLoreEntryMatch;
 window.takeLoreEntriesByTokenBudget = takeLoreEntriesByTokenBudget;
 window.getCharacterLoreEntries = getCharacterLoreEntries;
+window.updateLoreState = updateLoreState;
 
 /**
  * Replaces placeholders in lore content with actual names.
@@ -214,21 +215,29 @@ function takeLoreEntriesByTokenBudget(entries, tokenBudget) {
  * @param {Object} options - Optional configuration
  * @param {Array} options.historyOverride - Use custom history instead of conversationHistory
  * @param {Object} options.personaOverride - Use custom persona for placeholder replacement
- * @returns {Promise<Array>} - Array of {lorebookName, entryId, content}
+ * @param {Object} options.thread - Thread object with loreState for tracking injected entries
+ * @returns {Promise<{entries: Array, newLoreState: Object}>} - entries + new state to persist
  */
 async function getCharacterLoreEntries(character, options = {}) {
   const loreIds = Array.isArray(character.lorebookIds)
     ? character.lorebookIds.map(Number).filter(Number.isInteger)
     : [];
   
-  if (loreIds.length === 0) return [];
+  if (loreIds.length === 0) return { entries: [], newLoreState: null };
   
   const lorebooksRaw = await db.lorebooks.where("id").anyOf(loreIds).toArray();
   const lorebooks = lorebooksRaw
     .map((lb) => normalizeLorebookRecord(lb))
     .filter(Boolean);
   
-  if (lorebooks.length === 0) return [];
+  if (lorebooks.length === 0) return { entries: [], newLoreState: null };
+
+  const thread = options?.thread;
+  const loreState = thread?.loreState || {};
+  const cooldown = Math.max(0, Number(character.loreCooldown) || 20);
+  const currentMessageIndex = Array.isArray(options?.historyOverride)
+    ? options.historyOverride.length
+    : (conversationHistory?.length || 0);
 
   // Determine scan window size (how many recent messages to check)
   const scanWindow = Math.max(
@@ -257,11 +266,13 @@ async function getCharacterLoreEntries(character, options = {}) {
   const charName = character?.name || "Character";
   
   const results = [];
+  const newLoreState = {};
 
   // Process each lorebook
   lorebooks.forEach((lb) => {
     if (!Array.isArray(lb.entries) || lb.entries.length === 0) return;
     
+    const lorebookState = loreState[String(lb.id)] || {};
     let source = baseSource;
     const matched = [];
     const matchedIds = new Set();
@@ -275,9 +286,20 @@ async function getCharacterLoreEntries(character, options = {}) {
         if (matchedIds.has(entry.id)) return;
         if (!doesLoreEntryMatch(entry, source)) return;
         
-        matched.push(entry);
-        matchedIds.add(entry.id);
-        addedThisPass += 1;
+        const entryKey = String(entry.id);
+        const lastInjectedAt = lorebookState[entryKey];
+        const shouldInject = !Number.isFinite(lastInjectedAt) || 
+          (currentMessageIndex - lastInjectedAt) >= cooldown;
+        
+        if (shouldInject) {
+          matched.push(entry);
+          matchedIds.add(entry.id);
+          addedThisPass += 1;
+          newLoreState[String(lb.id)] = {
+            ...(newLoreState[String(lb.id)] || {}),
+            [entryKey]: currentMessageIndex,
+          };
+        }
       });
       
       if (addedThisPass === 0) break;
@@ -304,7 +326,7 @@ async function getCharacterLoreEntries(character, options = {}) {
     });
   });
 
-  return results;
+  return { entries: results, newLoreState };
 }
 
 /**
@@ -370,5 +392,36 @@ async function getCharacterDefaultPersona() {
     return personas.find(p => p.isDefault) || personas[0] || null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Updates the lore state for a thread after completion.
+ * Merges new lore state with existing state.
+ * 
+ * @param {number} threadId - The thread ID
+ * @param {Object} newLoreState - New lore state to merge
+ * @returns {Promise<void>}
+ */
+async function updateLoreState(threadId, newLoreState) {
+  if (!Number.isFinite(threadId) || !newLoreState || typeof newLoreState !== 'object') return;
+  
+  try {
+    const thread = await db.threads.get(Number(threadId));
+    if (!thread) return;
+    
+    const currentState = thread.loreState || {};
+    const mergedState = { ...currentState };
+    
+    for (const [lorebookId, entries] of Object.entries(newLoreState)) {
+      mergedState[lorebookId] = {
+        ...(mergedState[lorebookId] || {}),
+        ...entries,
+      };
+    }
+    
+    await db.threads.update(Number(threadId), { loreState: mergedState });
+  } catch (err) {
+    console.warn('Failed to update lore state:', err);
   }
 }

@@ -264,6 +264,7 @@
   "testCharacterVoice": "Testar Voz do Personagem",
   "stopCharacterVoiceTest": "Parar teste de voz do personagem",
   "loreBooksForCharacter": "Lorebooks para este personagem",
+  "loreCooldown": "Tempo de espera de re-injeção de lore (mensagens)",
   "createdLabel": "Criado",
   "updatedLabel": "Atualizado",
   "threadsLower": "chats",

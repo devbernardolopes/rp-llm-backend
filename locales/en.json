@@ -264,6 +264,7 @@
   "testCharacterVoice": "Test Character Voice",
   "stopCharacterVoiceTest": "Stop character voice test",
   "loreBooksForCharacter": "Lorebooks for this character",
+  "loreCooldown": "Lore re-injection cooldown (messages)",
   "createdLabel": "Created",
   "updatedLabel": "Updated",
   "threadsLower": "threads",

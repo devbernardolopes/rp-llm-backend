@@ -8403,6 +8403,10 @@ function saveActiveCharacterDefinitionFromForm() {
   );
   def.kokoroSpeed = selectedTts.rate;
   def.lorebookIds = getSelectedLorebookIds();
+  def.loreCooldown = Math.max(
+    0,
+    Math.min(100, Number(document.getElementById("char-lore-cooldown")?.value) || 20),
+  );
 }
 
 function getInitialMessageDraftKey(language) {
@@ -8623,6 +8627,10 @@ async function loadActiveCharacterDefinitionToForm() {
   updateCharTtsRatePitchLabels();
   refreshCharTtsProviderFields();
   renderCharacterLorebookList(def.lorebookIds || []);
+  const loreCooldownInput = document.getElementById("char-lore-cooldown");
+  if (loreCooldownInput) {
+    loreCooldownInput.value = String(Number(character?.loreCooldown) || 20);
+  }
 }
 
 function populateCharacterLanguageSelectOptions() {
@@ -16897,6 +16905,9 @@ async function regenerateMessage(index) {
     }
     commitPendingPersonaInjectionMarker();
     await persistThreadMessagesById(threadId, messagesToSave);
+    if (promptContext.newLoreState) {
+      await updateLoreState(threadId, promptContext.newLoreState);
+    }
     renderChat();
     maybeAutoSpeakAssistantMessage(index).catch(() => {});
     await renderThreads();
@@ -20078,10 +20089,13 @@ async function buildSystemPrompt(character, options = {}) {
     .filter((part) => String(part || "").trim())
     .join("\n\n")
     .trim();
-  const loreEntries = await getCharacterLoreEntries(character, {
+  const loreEntriesResult = await getCharacterLoreEntries(character, {
     historyOverride: options?.historyOverride,
     personaOverride: personaForContext,
+    thread: threadOverride,
   });
+  const loreEntries = loreEntriesResult.entries;
+  const newLoreState = loreEntriesResult.newLoreState;
   const threadIdForMemory = threadOverride?.id;
   const memory =
     character.useMemory === false
@@ -20155,6 +20169,7 @@ async function buildSystemPrompt(character, options = {}) {
     return {
       prompt,
       loreEntries: Array.isArray(loreEntries) ? loreEntries : [],
+      newLoreState: newLoreState || null,
       memory: memory || "",
       personaInjectionForEndMessages,
       personaInjectionAppliedOnce,
