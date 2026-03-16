@@ -3745,6 +3745,14 @@ textarea {
 .check-list.lorebook-list .lorebook-entry {
   align-items: center;
   gap: 10px;
+  justify-content: flex-start;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+.check-list.lorebook-list .lorebook-entry:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 .check-item input[type="checkbox"] {
   flex-shrink: 0;
