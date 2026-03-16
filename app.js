@@ -7070,10 +7070,10 @@ function updateThreadMessageCount(threadId, messages) {
   const msgCountEl = row.querySelector(".thread-msg-count");
   if (msgCountEl) {
     const hasInitialMessages = (messages || []).some((m) => m.isInitial);
-    const nonOocCount = (messages || []).filter(
-      (m) => !m.ooc && !m.isInitial,
+    const nonInitialCount = (messages || []).filter(
+      (m) => !m.isInitial,
     ).length;
-    msgCountEl.textContent = `${nonOocCount + (hasInitialMessages ? 1 : 0)}`;
+    msgCountEl.textContent = `${nonInitialCount + (hasInitialMessages ? 1 : 0)}`;
   }
   if (
     currentThread &&
@@ -10897,7 +10897,7 @@ if (typeof window !== "undefined") {
 }
 
 function isCountedSimulationMessage(message) {
-  if (!message || !isInSimulationMessage(message)) return false;
+  if (!message || !isInSimulationMessage(message, true)) return false;
   const role = normalizeApiRole(message?.apiRole || message?.role);
   return role === "assistant" || role === "user";
 }
@@ -14838,7 +14838,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       );
   const offset = getThreadDisplayOffset();
   const numberedIndex = displayIndex + offset;
-  messageIndex.textContent = `#${numberedIndex}`;
+  messageIndex.textContent = isOocMessage ? `OOC #${numberedIndex}` : `#${numberedIndex}`;
   const isTruncated = message.truncatedByFilter === true;
   const hasGenerationError = !!String(message.generationError || "").trim();
   const isLockedMemoryMessage = isMessageLockedByMemory(message);
