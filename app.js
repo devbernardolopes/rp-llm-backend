@@ -2686,9 +2686,12 @@ function setupEvents() {
     .addEventListener("click", () => openLoreEditor());
   document
     .getElementById("import-lorebook-btn")
-    .addEventListener("click", () => {
-      showToast(t("loreImportSoon"), "success");
-    });
+    .addEventListener("click", () =>
+      document.getElementById("import-lorebook-input").click(),
+    );
+  document
+    .getElementById("import-lorebook-input")
+    .addEventListener("change", importLorebookFromFile);
   document
     .getElementById("lore-editor-back-btn")
     .addEventListener("click", closeLoreEditor);
@@ -12634,6 +12637,110 @@ function buildLegacyInitialMessagesFromPayload(source) {
     pushText(candidate);
   });
   return list;
+}
+
+function normalizeLoreImportKeyList(raw) {
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter(Boolean);
+  }
+  if (typeof raw === "string") {
+    return raw
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  if (raw && typeof raw === "object") {
+    return Object.values(raw)
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function mapImportedLorebookPayload(payload, fallbackName = "") {
+  if (!payload || typeof payload !== "object") return null;
+  const entriesSource = payload.entries;
+  const rawEntries = Array.isArray(entriesSource)
+    ? entriesSource
+    : entriesSource && typeof entriesSource === "object"
+      ? Object.values(entriesSource)
+      : [];
+  const entries = rawEntries
+    .map((entry, idx) => {
+      if (!entry || typeof entry !== "object") return null;
+      const keys = normalizeLoreImportKeyList(entry.key ?? entry.keys);
+      const secondaryKeys = normalizeLoreImportKeyList(
+        entry.keysecondary ?? entry.secondary_keys,
+      );
+      const content = String(entry.content || "").trim();
+      if (!content || keys.length === 0) return null;
+      return {
+        id: Number(entry.id) || Date.now() + idx,
+        keys,
+        secondaryKeys,
+        content,
+      };
+    })
+    .filter(Boolean);
+
+  if (entries.length === 0) return null;
+
+  const nameCandidate = String(
+    payload.name || payload.title || payload.label || "",
+  ).trim();
+  const scanDepth = Math.max(
+    5,
+    Math.min(
+      100,
+      Number(payload.scan_depth ?? payload.scanDepth) || 50,
+    ),
+  );
+  const tokenBudget = Math.max(
+    100,
+    Math.min(
+      1000,
+      Number(payload.token_budget ?? payload.tokenBudget) || 200,
+    ),
+  );
+  const description = String(payload.description || "").trim();
+  const recursiveScanning =
+    payload.recursive_scanning ?? payload.recursiveScanning ?? false;
+
+  return {
+    name: nameCandidate || fallbackName || "",
+    description,
+    scanDepth,
+    tokenBudget,
+    recursiveScanning: Boolean(recursiveScanning),
+    entries,
+  };
+}
+
+async function importLorebookFromFile(e) {
+  const input = e?.target;
+  const file = input?.files?.[0];
+  if (input) input.value = "";
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    const fallbackName = file.name ? file.name.replace(/\.[^.]+$/, "") : "";
+    const record = mapImportedLorebookPayload(payload, fallbackName);
+    if (!record) {
+      throw new Error("Imported lore book contains no valid entries.");
+    }
+    openLoreEditor(record);
+  } catch (err) {
+    console.error("Lore book import failed", err);
+    await openInfoDialog(
+      t("importFailedTitle"),
+      tf("importFailed", {
+        error: err?.message || t("unknownError"),
+      }),
+    );
+  }
 }
 
 async function importCharacterFromFile(e) {
