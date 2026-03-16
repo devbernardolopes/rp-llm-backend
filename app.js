@@ -14837,15 +14837,18 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
         historyForDisplay,
       );
   const offset = getThreadDisplayOffset();
-  const numberedIndex = isOocMessage ? null : displayIndex + offset;
-  messageIndex.textContent = isOocMessage ? "OOC" : `#${numberedIndex}`;
+  const numberedIndex = displayIndex + offset;
+  messageIndex.textContent = `#${numberedIndex}`;
   const isTruncated = message.truncatedByFilter === true;
   const hasGenerationError = !!String(message.generationError || "").trim();
   const isLockedMemoryMessage = isMessageLockedByMemory(message);
   const disableControlsForRow = streaming;
 
-  if (message.role === "assistant") {
+  if (message.role === "assistant" || isOocMessage) {
     controls.appendChild(messageIndex);
+  }
+
+  if (message.role === "assistant") {
     const delBtn = iconButton("delete", t("msgDeleteTitle"), async () => {
       await deleteMessageAt(index);
     });
