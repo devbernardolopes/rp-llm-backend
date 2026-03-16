@@ -15269,7 +15269,10 @@ function refreshLatestAssistantRowContent() {
       `#chat-log .chat-row[data-message-index="${originalIndex}"]`,
     );
     if (!oldRow) continue;
-    const isStreaming = oldRow.dataset.streaming === "1";
+    const status = String(message?.generationStatus || "").trim();
+    const isStreamingStatus = STREAMING_STATUSES.has(status);
+    const isStreaming =
+      isStreamingStatus || oldRow.dataset.streaming === "1";
     const newRow = buildMessageRow(message, originalIndex, isStreaming);
     oldRow.replaceWith(newRow);
     break;
