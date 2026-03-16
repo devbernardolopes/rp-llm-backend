@@ -10252,9 +10252,8 @@ async function renderLorebookManagementList() {
       }),
     );
     const exportBtn = iconButton("export", "Export Lorebook", async () => {
-      showToast(t("loreExportSoon"), "success");
+      await exportLorebook(lorebook.id);
     });
-    exportBtn.disabled = true;
     actions.appendChild(exportBtn);
     const deleteBtn = iconButton(
       "delete",
@@ -10441,6 +10440,73 @@ async function deleteLorebook(lorebookId) {
   await renderCharacters();
   await renderCharacterLorebookList(getSelectedLorebookIds());
   showToast(t("loreDeleted"), "success");
+}
+
+function buildLorebookExportPayload(lorebook) {
+  if (!lorebook) return null;
+  const entries = {};
+  (Array.isArray(lorebook.entries) ? lorebook.entries : []).forEach(
+    (entry, index) => {
+      const keys = (Array.isArray(entry.keys) ? entry.keys : [])
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      if (keys.length === 0) return;
+      const secondaryKeys = (Array.isArray(entry.secondaryKeys)
+        ? entry.secondaryKeys
+        : []
+      )
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      entries[String(index + 1)] = {
+        key: keys,
+        keysecondary: secondaryKeys,
+        content: String(entry.content || "").trim(),
+      };
+    },
+  );
+  if (Object.keys(entries).length === 0) return null;
+  return {
+    name: String(lorebook.name || "").trim(),
+    description: String(lorebook.description || "").trim(),
+    scan_depth: Math.max(5, Math.min(100, Number(lorebook.scanDepth) || 50)),
+    token_budget: Math.max(
+      100,
+      Math.min(1000, Number(lorebook.tokenBudget) || 200),
+    ),
+    recursive_scanning: Boolean(lorebook.recursiveScanning),
+    entries,
+  };
+}
+
+async function exportLorebook(lorebookId) {
+  try {
+    const source = normalizeLorebookRecord(await db.lorebooks.get(lorebookId));
+    if (!source) {
+      showToast(t("lorebookNotFound"), "error");
+      return;
+    }
+    const payload = buildLorebookExportPayload(source);
+    if (!payload) {
+      showToast(t("lorebookExportFailed"), "error");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeName = (source.name || "lorebook").replace(/[^\w-]+/g, "_");
+    a.href = url;
+    a.download = `${safeName}.lorebook.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast(t("lorebookExported"), "success");
+  } catch (err) {
+    console.error("Lorebook export failed", err);
+    showToast(t("lorebookExportFailed"), "error");
+  }
 }
 
 let state_writingInstructions = {

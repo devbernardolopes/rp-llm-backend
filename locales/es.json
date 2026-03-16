@@ -539,5 +539,8 @@
     "initialMessageCarouselPrevTitle": "Mostrar mensaje inicial anterior",
     "initialMessageCarouselNextTitle": "Mostrar siguiente mensaje inicial",
     "initialMessageCounterLabel": "Mensaje inicial {current}/{total}",
-    "initialMessagesHint": "Usa [AI]:, [SYSTEM]: o [USER]: para etiquetar cada mensaje."
+    "initialMessagesHint": "Usa [AI]:, [SYSTEM]: o [USER]: para etiquetar cada mensaje.",
+    "lorebookExported": "Lorebook exportado.",
+    "lorebookExportFailed": "La exportación del Lorebook falló.",
+    "lorebookNotFound": "Lorebook no encontrado."
 }

@@ -539,5 +539,8 @@
     "initialMessageCarouselPrevTitle": "Mostrar mensagem inicial anterior",
     "initialMessageCarouselNextTitle": "Mostrar próxima mensagem inicial",
     "initialMessageCounterLabel": "Mensagem inicial {current}/{total}",
-    "initialMessagesHint": "Use [AI]:, [SYSTEM]: ou [USER]: para rotular cada mensagem."
+    "initialMessagesHint": "Use [AI]:, [SYSTEM]: ou [USER]: para rotular cada mensagem.",
+    "lorebookExported": "Lorebook exportado.",
+    "lorebookExportFailed": "Falha ao exportar Lorebook.",
+    "lorebookNotFound": "Lorebook não encontrado."
 }

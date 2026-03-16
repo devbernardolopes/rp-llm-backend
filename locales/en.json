@@ -540,5 +540,8 @@
     "initialMessageCarouselPrevTitle": "Show previous initial message",
     "initialMessageCarouselNextTitle": "Show next initial message",
     "initialMessageCounterLabel": "Initial message {current}/{total}",
-    "initialMessagesHint": "Use [AI]:, [SYSTEM]:, or [USER]: to label each message."
+    "initialMessagesHint": "Use [AI]:, [SYSTEM]:, or [USER]: to label each message.",
+    "lorebookExported": "Lorebook exported.",
+    "lorebookExportFailed": "Lorebook export failed.",
+    "lorebookNotFound": "Lorebook not found."
 }
