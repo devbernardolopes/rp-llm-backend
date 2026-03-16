@@ -15338,10 +15338,11 @@ function refreshLatestAssistantRowContent() {
     if (!oldRow) continue;
     const status = String(message?.generationStatus || "").trim();
     const isStreamingStatus = STREAMING_STATUSES.has(status);
-    const isStreaming =
-      isStreamingStatus || oldRow.dataset.streaming === "1";
+    const isStreaming = isStreamingStatus;
     const newRow = buildMessageRow(message, originalIndex, isStreaming);
     oldRow.replaceWith(newRow);
+    refreshMessageControlStates();
+    refreshAllSpeakerButtons();
     break;
   }
 }
