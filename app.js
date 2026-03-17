@@ -1589,6 +1589,8 @@ function setupModalTextareas(root = document) {
       const expanded = header.getAttribute("aria-expanded") === "true";
       icon.textContent = expanded ? "▾" : "▴";
     };
+    const scrollContainer =
+      textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
     entry.setExpanded = (next) => {
       const current = header.getAttribute("aria-expanded") === "true";
       if (next === current) {
@@ -1596,15 +1598,14 @@ function setupModalTextareas(root = document) {
         if (next) autoExpandTextarea(textarea);
         return;
       }
-      const modalBody = textarea.closest(".modal-body");
-      const scrollTop = modalBody ? modalBody.scrollTop : 0;
+      const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
       header.setAttribute("aria-expanded", next ? "true" : "false");
       body.classList.toggle("collapsed", !next);
       if (next) autoExpandTextarea(textarea);
       entry.refresh();
-      if (modalBody && !next) {
+      if (scrollContainer && !next) {
         requestAnimationFrame(() => {
-          modalBody.scrollTop = scrollTop;
+          scrollContainer.scrollTop = scrollTop;
         });
       }
     };
@@ -1861,8 +1862,9 @@ function getLabelFromElement(el) {
 
 function autoExpandTextarea(textarea) {
   if (!textarea) return;
-  const modalBody = textarea.closest(".modal-body");
-  const scrollTop = modalBody ? modalBody.scrollTop : 0;
+  const scrollContainer =
+    textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
+  const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
   textarea.style.height = "auto";
   textarea.style.overflow = "hidden";
   textarea.style.resize = "none";
@@ -1876,9 +1878,9 @@ function autoExpandTextarea(textarea) {
   textarea.dataset.minHeight = minHeight;
   const newHeight = Math.max(textarea.scrollHeight, minHeight);
   textarea.style.height = `${newHeight}px`;
-  if (modalBody) {
+  if (scrollContainer) {
     requestAnimationFrame(() => {
-      modalBody.scrollTop = scrollTop;
+      scrollContainer.scrollTop = scrollTop;
     });
   }
 }
