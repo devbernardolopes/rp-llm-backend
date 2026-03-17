@@ -7197,7 +7197,10 @@ async function openCharacterModal(
 
   const loreCooldownInput = document.getElementById("char-lore-cooldown");
   if (loreCooldownInput) {
-    loreCooldownInput.value = String(Number(character?.loreCooldown) || 20);
+    const storedLoreCooldown = Number.isFinite(Number(character?.loreCooldown))
+      ? Number(character.loreCooldown)
+      : 20;
+    loreCooldownInput.value = String(storedLoreCooldown);
   }
 
   updateCharTtsRatePitchLabels();
@@ -7353,13 +7356,14 @@ async function saveCharacterFromModal({ close = true } = {}) {
     preferLoreBooksMatchingLanguage:
       primaryDef?.preferLoreBooksMatchingLanguage !== false,
     lorebookIds: selectedLorebookIds,
-    loreCooldown: Math.max(
-      0,
-      Math.min(
-        100,
-        Number(document.getElementById("char-lore-cooldown")?.value) || 20,
-      ),
-    ),
+    loreCooldown: (() => {
+      const rawValue = document.getElementById("char-lore-cooldown")?.value;
+      const parsed = Number(rawValue);
+      if (!Number.isFinite(parsed) || String(rawValue).trim() === "") {
+        return 20;
+      }
+      return Math.max(0, Math.min(100, parsed));
+    })(),
     avatar:
       state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
     avatars:
