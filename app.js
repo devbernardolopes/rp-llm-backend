@@ -61,6 +61,8 @@ const DEFAULT_SETTINGS = {
   oocSystemAvatar: "",
   crossWindowSyncEnabled: true,
   autoUnloadThreshold: 0,
+  loreMatchingMode: "keyword",
+  loreSemanticThreshold: 0.5,
 };
 
 // Theme management
@@ -2865,6 +2867,55 @@ async function setupSettingsControls() {
         ? desired
         : "left";
       applyChatMessageAlignment();
+      saveSettings();
+    });
+  }
+  const loreMatchingMode = document.getElementById(
+    "lore-matching-mode",
+  );
+  const loreSemanticThresholdContainer = document.getElementById(
+    "lore-semantic-threshold-container",
+  );
+  const loreSemanticThresholdInput = document.getElementById(
+    "lore-semantic-threshold",
+  );
+  if (loreMatchingMode) {
+    loreMatchingMode.value = state.settings.loreMatchingMode || "keyword";
+    loreMatchingMode.addEventListener("change", () => {
+      const mode = String(loreMatchingMode.value || "").trim().toLowerCase();
+      state.settings.loreMatchingMode = mode === "semantic" ? "semantic" : "keyword";
+      if (loreSemanticThresholdContainer) {
+        loreSemanticThresholdContainer.classList.toggle(
+          "hidden",
+          state.settings.loreMatchingMode !== "semantic",
+        );
+      }
+      saveSettings();
+    });
+    if (loreSemanticThresholdContainer) {
+      loreSemanticThresholdContainer.classList.toggle(
+        "hidden",
+        state.settings.loreMatchingMode !== "semantic",
+      );
+    }
+  }
+  if (loreSemanticThresholdInput) {
+    const threshold = Math.max(
+      0,
+      Math.min(
+        1,
+        Number.isFinite(Number(state.settings.loreSemanticThreshold))
+          ? Number(state.settings.loreSemanticThreshold)
+          : 0.5,
+      ),
+    );
+    state.settings.loreSemanticThreshold = threshold;
+    loreSemanticThresholdInput.value = String(threshold);
+    loreSemanticThresholdInput.addEventListener("change", () => {
+      const val = Number(loreSemanticThresholdInput.value);
+      const clamped = Math.max(0, Math.min(1, Number.isFinite(val) ? val : 0.5));
+      state.settings.loreSemanticThreshold = clamped;
+      loreSemanticThresholdInput.value = String(clamped);
       saveSettings();
     });
   }

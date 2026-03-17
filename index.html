@@ -1023,6 +1023,29 @@
                   title=""
                 />
               </div>
+              <div class="form-field">
+                <span data-i18n="loreMatchingMode">Lore Matching Mode</span>
+                <select id="lore-matching-mode">
+                  <option value="keyword" data-i18n="loreMatchingModeKeyword">
+                    Keyword (Word Boundary + Negative Keys + Proximity)
+                  </option>
+                  <option value="semantic" data-i18n="loreMatchingModeSemantic">
+                    Semantic (Uses Embeddings)
+                  </option>
+                </select>
+              </div>
+              <div class="form-field hidden" id="lore-semantic-threshold-container">
+                <span data-i18n="loreSemanticThreshold">Semantic Threshold</span>
+                <input
+                  id="lore-semantic-threshold"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value="0.5"
+                />
+                <span class="settings-hint" data-i18n="loreSemanticThresholdHint">Higher = stricter matching (0.5-0.7 recommended)</span>
+              </div>
              <div class="form-field">
                <span data-i18n="chatMessageAlignment">Message Alignment</span>
               <select id="chat-message-alignment">
@@ -2795,9 +2818,9 @@
     <script src="i18n.js"></script>
     <script src="ui-utils.js"></script>
     <script src="tts-preprocess.js"></script>
-    <script src="lore.js"></script>
     <script src="memory.js"></script>
     <script src="app.js"></script>
+    <script src="lore.js"></script>
     <script src="memory-filter.js"></script>
     <script src="tts/kokoro.js"></script>
   </body>

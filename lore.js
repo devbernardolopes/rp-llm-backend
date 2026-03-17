@@ -25,14 +25,22 @@
  *    - Steps:
  *      a) Get character's selected lorebooks by IDs
  *      b) Scan last N messages (scanDepth) for keyword matching
- *      c) For each entry, check if keys/secondaryKeys match
+ *      c) For each entry, check if keys/secondaryKeys match (based on matching mode)
  *      d) Apply token budget limit to matched entries
  *      e) Replace placeholders ({{char}}, {{user}}) in content
  * 
- * 3. KEYWORD MATCHING (doesLoreEntryMatch function)
- *    - Primary keys: At least ONE must match in recent text
+ * 3. KEYWORD MATCHING MODES
+ * 
+ *    Option A - Keyword (default):
+ *    - Primary keys: At least ONE must match in recent text (word boundary)
  *    - Secondary keys: ALL must match (if present)
- *    - Case-insensitive substring matching
+ *    - Negative keys: If ANY match, entry is excluded
+ *    - Proximity bonus: Primary and secondary keys near each other = higher score
+ * 
+ *    Option B - Semantic:
+ *    - Keywords must match (same as Option A)
+ *    - Additional semantic similarity check using embeddings
+ *    - Entry only matches if similarity >= threshold
  * 
  * 4. RECURSIVE SCANNING (optional)
  *    - If enabled, runs up to 4 passes
@@ -64,6 +72,7 @@
  *       id: number,
  *       keys: string[],        // Primary trigger keywords
  *       secondaryKeys: string[], // Secondary keywords (all must match)
+ *       negativeKeys: string[], // Keywords that exclude entry if found
  *       content: string        // The lore content
  *     }
  *   - scanDepth: number (default: 50)
@@ -72,6 +81,13 @@
  *   - createdAt: timestamp
  *   - updatedAt: timestamp
  *   - avatar: string (optional)
+ * 
+ * ============================================================================
+ * SETTINGS
+ * ============================================================================
+ * 
+ * loreMatchingMode: "keyword" | "semantic" (default: "keyword")
+ * loreSemanticThreshold: number 0.0-1.0 (default: 0.5)
  * 
  * ============================================================================
  * USAGE
@@ -94,35 +110,6 @@
  * 
  * // Apply token budget to lore entries
  * const limited = takeLoreEntriesByTokenBudget(entries, budget);
- * 
- * ============================================================================
- * KNOWN ISSUES / IMPROVEMENTS NEEDED
- * ============================================================================
- * 
- * 1. NO SEMANTIC SEARCH
- *    - Only keyword substring matching, no vector/semantic similarity
- *    - Can't find related concepts
- * 
- * 2. NO PERSISTENT CONTEXT WINDOW
- *    - Only scans last N messages each request
- *    - Doesn't accumulate "seen" state across requests
- *    - Same keywords trigger every time
- * 
- * 3. EVERY REQUEST PENALTY
- *    - Lore lookup happens on EVERY completion request
- *    - Not just when history gets long or keywords are likely present
- * 
- * 4. TOKEN ESTIMATION IS ROUGH
- *    - Uses 4 chars per token estimate
- *    - Not accurate for all content types
- * 
- * 5. RECURSIVE SCANNING CAN BE EXPENSIVE
- *    - Up to 4 passes over all entries
- *    - Could slow down prompt building
- * 
- * 6. NO SELECTIVE INJECTION
- *    - All matched lore is injected every time
- *    - Could be smarter about what to include
  * 
  * ============================================================================
  */
@@ -151,14 +138,119 @@ function replaceLorePlaceholders(text, personaName, charName) {
 }
 
 /**
+ * Escapes special regex characters in a string.
+ * 
+ * @param {string} str - String to escape
+ * @returns {string} - Escaped string
+ */
+function escapeRegex(str) {
+  return String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Finds all positions of a substring in text.
+ * 
+ * @param {string} text - Text to search in
+ * @param {string} sub - Substring to find
+ * @returns {number[]} - Array of positions
+ */
+function findAllPositions(text, sub) {
+  const positions = [];
+  let pos = 0;
+  const lowerText = text.toLowerCase();
+  const lowerSub = sub.toLowerCase();
+  while ((pos = lowerText.indexOf(lowerSub, pos)) !== -1) {
+    positions.push(pos);
+    pos += 1;
+  }
+  return positions;
+}
+
+/**
+ * Checks if a key matches at a word boundary in the text.
+ * Uses regex with \b for word boundaries.
+ * 
+ * @param {string} key - Keyword to match
+ * @param {string} text - Text to search in
+ * @returns {boolean} - True if key matches at word boundary
+ */
+function keyMatchesAtWordBoundary(key, text) {
+  if (!key || !text) return false;
+  const escaped = escapeRegex(key);
+  const regex = new RegExp(`\\b${escaped}\\b`, "gi");
+  return regex.test(text);
+}
+
+/**
+ * Checks if any negative key matches in the text.
+ * Uses word boundary matching.
+ * 
+ * @param {string[]} negativeKeys - Array of negative keywords
+ * @param {string} text - Text to search in
+ * @returns {boolean} - True if any negative key matches
+ */
+function anyNegativeKeyMatches(negativeKeys, text) {
+  if (!Array.isArray(negativeKeys) || negativeKeys.length === 0) return false;
+  return negativeKeys.some((k) => k && keyMatchesAtWordBoundary(k, text));
+}
+
+/**
+ * Calculates proximity score based on distance between primary and secondary keys.
+ * Returns a bonus score (0-1) based on how close the keys are.
+ * Closer keys = higher score.
+ * 
+ * @param {string[]} keys - Primary keys
+ * @param {string[]} secondaryKeys - Secondary keys
+ * @param {string} text - Text to search in
+ * @returns {number} - Proximity bonus (0 to 1)
+ */
+function calculateProximityScore(keys, secondaryKeys, text) {
+  if (!Array.isArray(keys) || keys.length === 0) return 0;
+  if (!Array.isArray(secondaryKeys) || secondaryKeys.length === 0) return 0;
+  
+  const lowerText = text.toLowerCase();
+  
+  let minDistance = Infinity;
+  
+  for (const primary of keys) {
+    if (!primary) continue;
+    const primaryPos = findAllPositions(lowerText, primary);
+    if (primaryPos.length === 0) continue;
+    
+    for (const secondary of secondaryKeys) {
+      if (!secondary) continue;
+      const secondaryPos = findAllPositions(lowerText, secondary);
+      
+      for (const pp of primaryPos) {
+        for (const sp of secondaryPos) {
+          const distance = Math.abs(pp - sp);
+          if (distance < minDistance) {
+            minDistance = distance;
+          }
+        }
+      }
+    }
+  }
+  
+  if (minDistance === Infinity) return 0;
+  
+  const maxWindow = 200;
+  const score = Math.max(0, 1 - (minDistance / maxWindow));
+  return score;
+}
+
+/**
  * Checks if a lore entry matches the source text based on keys.
  * 
- * Primary keys: At least ONE must be found in the text
- * Secondary keys: ALL must be found in the text (if present)
+ * Option A - Keyword Matching:
+ * - Primary keys: At least ONE must match (word boundary)
+ * - Secondary keys: ALL must match (if present)
+ * - Negative keys: If ANY match, entry is excluded
+ * - Proximity bonus: Returns score 0-1 based on key proximity
  * 
- * @param {Object} entry - Lore entry with keys and secondaryKeys
+ * @param {Object} entry - Lore entry with keys, secondaryKeys, negativeKeys
  * @param {string} sourceText - Text to search in
- * @returns {boolean} - True if entry matches
+ * @returns {Object} - { matches: boolean, score: number }
  */
 function doesLoreEntryMatch(entry, sourceText) {
   const hay = String(sourceText || "").toLowerCase();
@@ -168,15 +260,28 @@ function doesLoreEntryMatch(entry, sourceText) {
   const secondary = (entry?.secondaryKeys || [])
     .map((k) => String(k || "").toLowerCase())
     .filter(Boolean);
+  const negative = (entry?.negativeKeys || [])
+    .map((k) => String(k || "").toLowerCase())
+    .filter(Boolean);
   
-  if (keys.length === 0) return false;
+  if (keys.length === 0) return { matches: false, score: 0 };
   
-  const primaryMatch = keys.some((k) => hay.includes(k));
-  if (!primaryMatch) return false;
+  const primaryMatch = keys.some((k) => keyMatchesAtWordBoundary(k, hay));
+  if (!primaryMatch) return { matches: false, score: 0 };
   
-  if (secondary.length === 0) return true;
+  if (anyNegativeKeyMatches(negative, hay)) {
+    return { matches: false, score: 0 };
+  }
   
-  return secondary.every((k) => hay.includes(k));
+  if (secondary.length > 0) {
+    const secondaryMatch = secondary.every((k) => keyMatchesAtWordBoundary(k, hay));
+    if (!secondaryMatch) return { matches: false, score: 0 };
+  }
+  
+  const proximityScore = calculateProximityScore(keys, secondary, hay);
+  const score = 0.5 + (proximityScore * 0.5);
+  
+  return { matches: true, score };
 }
 
 /**
@@ -203,6 +308,89 @@ function takeLoreEntriesByTokenBudget(entries, tokenBudget) {
   }
   
   return results;
+}
+
+let loreEmbeddingCache = new Map();
+
+function getLoreEntryKeyText(entry) {
+  const keys = entry?.keys || [];
+  const secondary = entry?.secondaryKeys || [];
+  const allKeys = [...keys, ...secondary].filter(Boolean);
+  return allKeys.join(" ");
+}
+
+/**
+ * Calculates cosine similarity between two embedding vectors.
+ * 
+ * @param {number[]} a - First embedding vector
+ * @param {number[]} b - Second embedding vector
+ * @returns {number} - Similarity score (-1 to 1)
+ */
+function cosineSimilarity(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return 0;
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < a.length; i += 1) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  
+  const denominator = Math.sqrt(normA) * Math.sqrt(normB);
+  if (denominator === 0) return 0;
+  
+  return dotProduct / denominator;
+}
+
+/**
+ * Checks if entry passes semantic similarity threshold.
+ * Compares entry keywords against conversation context.
+ * 
+ * @param {Object} entry - Lore entry with keys
+ * @param {string} contextText - Conversation context
+ * @param {number} threshold - Similarity threshold (0-1)
+ * @returns {Promise<boolean>} - True if similarity >= threshold
+ */
+async function doesLoreEntryMatchSemantically(entry, contextText, threshold) {
+  if (threshold <= 0) return true;
+  if (threshold >= 1) return false;
+  
+  const keyText = getLoreEntryKeyText(entry);
+  if (!keyText.trim()) return false;
+  
+  const cacheKey = `context:${contextText.slice(0, 100)}`;
+  let contextEmbedding = loreEmbeddingCache.get(cacheKey);
+  
+  if (!contextEmbedding) {
+    contextEmbedding = await window.getEmbedding(contextText);
+    if (!contextEmbedding) return true;
+    loreEmbeddingCache.set(cacheKey, contextEmbedding);
+    
+    if (loreEmbeddingCache.size > 10) {
+      const firstKey = loreEmbeddingCache.keys().next().value;
+      loreEmbeddingCache.delete(firstKey);
+    }
+  }
+  
+  let keyEmbedding = loreEmbeddingCache.get(`key:${keyText}`);
+  if (!keyEmbedding) {
+    keyEmbedding = await window.getEmbedding(keyText);
+    if (!keyEmbedding) return true;
+    loreEmbeddingCache.set(`key:${keyText}`, keyEmbedding);
+  }
+  
+  const similarity = cosineSimilarity(contextEmbedding, keyEmbedding);
+  return similarity >= threshold;
+}
+
+/**
+ * Clears the lore embedding cache.
+ */
+function clearLoreEmbeddingCache() {
+  loreEmbeddingCache.clear();
 }
 
 /**
@@ -239,6 +427,23 @@ async function getCharacterLoreEntries(character, options = {}) {
     ? options.historyOverride.length
     : (conversationHistory?.length || 0);
 
+  const matchingMode = (typeof state !== 'undefined' && state.settings?.loreMatchingMode) 
+    ? state.settings.loreMatchingMode 
+    : 'keyword';
+  const semanticThreshold = (typeof state !== 'undefined' && typeof state.settings?.loreSemanticThreshold === 'number')
+    ? state.settings.loreSemanticThreshold
+    : 0.5;
+  
+  const useSemantic = matchingMode === 'semantic';
+  let semanticReady = false;
+  
+  if (useSemantic) {
+    if (!window.memoryEmbeddingReady) {
+      await window.loadEmbeddingModel();
+    }
+    semanticReady = window.memoryEmbeddingReady;
+  }
+
   // Determine scan window size (how many recent messages to check)
   const scanWindow = Math.max(
     5,
@@ -269,8 +474,8 @@ async function getCharacterLoreEntries(character, options = {}) {
   const newLoreState = {};
 
   // Process each lorebook
-  lorebooks.forEach((lb) => {
-    if (!Array.isArray(lb.entries) || lb.entries.length === 0) return;
+  for (const lb of lorebooks) {
+    if (!Array.isArray(lb.entries) || lb.entries.length === 0) continue;
     
     const lorebookState = loreState[String(lb.id)] || {};
     let source = baseSource;
@@ -282,9 +487,20 @@ async function getCharacterLoreEntries(character, options = {}) {
     for (let pass = 0; pass < maxPasses; pass += 1) {
       let addedThisPass = 0;
       
-      lb.entries.forEach((entry) => {
-        if (matchedIds.has(entry.id)) return;
-        if (!doesLoreEntryMatch(entry, source)) return;
+      for (const entry of lb.entries) {
+        if (matchedIds.has(entry.id)) continue;
+        
+        const keywordResult = doesLoreEntryMatch(entry, source);
+        if (!keywordResult.matches) continue;
+        
+        if (useSemantic && semanticReady) {
+          const semanticMatch = await doesLoreEntryMatchSemantically(
+            entry,
+            source,
+            semanticThreshold
+          );
+          if (!semanticMatch) continue;
+        }
         
         const entryKey = String(entry.id);
         const lastInjectedAt = lorebookState[entryKey];
@@ -300,7 +516,7 @@ async function getCharacterLoreEntries(character, options = {}) {
             [entryKey]: currentMessageIndex,
           };
         }
-      });
+      };
       
       if (addedThisPass === 0) break;
       
@@ -324,7 +540,7 @@ async function getCharacterLoreEntries(character, options = {}) {
         content: replaceLorePlaceholders(entry.content, personaName, charName),
       });
     });
-  });
+  }
 
   return { entries: results, newLoreState };
 }
@@ -371,6 +587,9 @@ function normalizeLorebookEntry(entry, fallbackIndex = 0) {
       : [],
     secondaryKeys: Array.isArray(entry.secondaryKeys)
       ? entry.secondaryKeys.map((k) => String(k || "").trim()).filter(Boolean)
+      : [],
+    negativeKeys: Array.isArray(entry.negativeKeys)
+      ? entry.negativeKeys.map((k) => String(k || "").trim()).filter(Boolean)
       : [],
     content: String(entry.content || "").trim(),
   };

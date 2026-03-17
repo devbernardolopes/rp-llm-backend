@@ -9,4 +9,6 @@ const CONFIG = {
   model: "openrouter/free",
   maxTokens: 1024,
   temperature: 0.8,
+  loreMatchingMode: "keyword",
+  loreSemanticThreshold: 0.5,
 };

@@ -3112,6 +3112,12 @@ textarea {
   font-size: 13px;
 }
 
+.settings-hint {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}
+
 .tts-control-row {
   display: flex;
   align-items: center;
