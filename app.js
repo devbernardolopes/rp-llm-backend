@@ -5481,9 +5481,11 @@ function updateDocumentTitleWithUnread() {
     }
     let title = "Scenara";
     let suffix = "";
+    const chatActive =
+      document.getElementById("chat-view")?.classList.contains("active");
     if (state.activeModalId === "character-modal" && currentCharacter?.name) {
       suffix = currentCharacter.name;
-    } else if (currentThread?.title) {
+    } else if (chatActive && currentThread?.title) {
       suffix = currentThread.title;
     }
     if (suffix) {
