@@ -205,7 +205,7 @@ function getMemorySlotsValue(raw) {
   const num = Number(raw);
   if (!Number.isFinite(num)) return 5;
   const rounded = Math.round(num);
-  return Math.min(10, Math.max(3, rounded));
+  return Math.min(10, Math.max(1, rounded));
 }
 
 window.getSummaryThresholdValue = getSummaryThresholdValue;

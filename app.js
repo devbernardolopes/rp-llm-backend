@@ -2994,7 +2994,7 @@ async function setupSettingsControls() {
     const slots =
       typeof window.getMemorySlotsValue === "function"
         ? window.getMemorySlotsValue(state.settings.memorySlots)
-        : Math.max(3, Math.min(10, Number(state.settings.memorySlots) || 5));
+    : Math.max(1, Math.min(10, Number(state.settings.memorySlots) || 5));
     state.settings.memorySlots = slots;
     memorySlotsInput.value = String(slots);
   }
@@ -3318,7 +3318,7 @@ async function setupSettingsControls() {
     const slots =
       typeof window.getMemorySlotsValue === "function"
         ? window.getMemorySlotsValue(memorySlotsInput.value)
-        : Math.max(3, Math.min(10, Number(memorySlotsInput.value) || 5));
+        : Math.max(1, Math.min(10, Number(memorySlotsInput.value) || 5));
     memorySlotsInput.value = String(slots);
     state.settings.memorySlots = slots;
     saveSettings();
