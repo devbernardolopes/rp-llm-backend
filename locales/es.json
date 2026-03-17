@@ -549,5 +549,21 @@
     "lorebookExported": "Lorebook exportado.",
     "lorebookExportFailed": "La exportación del Lorebook falló.",
     "lorebookNotFound": "Lorebook no encontrado.",
-    "loreBookEditor": "Editor de Lorebooks"
+    "loreBookEditor": "Editor de Lorebooks",
+    "stt": "Reconocimiento de voz",
+    "sttLanguageLabel": "Idioma de reconocimiento de voz",
+    "sttTitleOff": "STT: Desactivado",
+    "sttTitleOn": "STT: Activado",
+    "sttListening": "Escuchando...",
+    "sttProcessing": "Procesando voz...",
+    "sttTranscribed": "Transcrito",
+    "sttError": "Transcripción fallida",
+    "sttErrorMic": "Acceso al micrófono denegado",
+    "sttNoSpeech": "No se detectó voz",
+    "sttNoThread": "Abre un hilo para usar STT",
+    "sttAutoSendOn": "STT Auto-enviar: Activado",
+    "sttAutoSendOff": "STT Auto-enviar: Desactivado",
+    "sttAutoSendEnabled": "STT auto-enviar activado",
+    "sttAutoSendDisabled": "STT auto-enviar desactivado"
+  }
 }

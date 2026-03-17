@@ -63,6 +63,8 @@ const DEFAULT_SETTINGS = {
   autoUnloadThreshold: 0,
   loreMatchingMode: "keyword",
   loreSemanticThreshold: 0.5,
+  sttLanguage: "en",
+  sttAutoSend: true,
 };
 
 // Theme management
@@ -126,6 +128,13 @@ const state = {
       selectedVoice: DEFAULT_KOKORO_VOICE,
       cacheDisabled: false,
     },
+  },
+  stt: {
+    isListening: false,
+    isLoaded: false,
+    autoSend: true,
+    mediaRecorder: null,
+    audioChunks: [],
   },
   avatarSnapshotCache: new Map(),
   avatarBlobUrlCache: new Map(),
@@ -824,6 +833,16 @@ function setupEvents() {
   document
     .getElementById("auto-tts-toggle-btn")
     .addEventListener("click", toggleThreadAutoTts);
+  document.getElementById("stt-toggle-btn").innerHTML = ICONS.mic;
+  document
+    .getElementById("stt-toggle-btn")
+    .addEventListener("click", toggleSttRecording);
+  document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#21A9;";
+  document
+    .getElementById("stt-auto-send-toggle-btn")
+    .addEventListener("click", toggleSttAutoSend);
+  state.stt.autoSend = state.settings.sttAutoSend;
+  updateSttAutoSendButton();
   setupCharAvatarDropzone();
   ["char-system-prompt", "char-one-time-extra-prompt"].forEach((id) => {
     const el = document.getElementById(id);
@@ -2668,6 +2687,12 @@ async function setupSettingsControls() {
     if (!uiLanguageSelect.value) uiLanguageSelect.value = "auto";
   }
 
+  const sttLanguageSelect = document.getElementById("stt-language-select");
+  if (sttLanguageSelect) {
+    sttLanguageSelect.value = state.settings.sttLanguage || "en";
+    if (!sttLanguageSelect.value) sttLanguageSelect.value = "en";
+  }
+
   const themeSelect = document.getElementById("theme-select");
   if (themeSelect) {
     await populateThemeDropdown();
@@ -3457,6 +3482,12 @@ async function setupSettingsControls() {
       await renderShortcutsBar();
       await renderCharacters();
       updateModelPill();
+    });
+  }
+  if (sttLanguageSelect) {
+    sttLanguageSelect.addEventListener("change", () => {
+      state.settings.sttLanguage = sttLanguageSelect.value || "en";
+      saveSettings();
     });
   }
   if (themeSelect) {
@@ -12468,6 +12499,135 @@ async function toggleThreadAutoTts() {
     threadId: currentThread.id,
   });
   showToast(next ? t("autoTtsEnabled") : t("autoTtsDisabled"), "success");
+}
+
+async function toggleSttRecording() {
+  if (state.stt.isListening) {
+    await stopSttRecording();
+  } else {
+    await startSttRecording();
+  }
+}
+
+async function startSttRecording() {
+  if (!currentThread) {
+    showToast(t("sttNoThread"), "error");
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.stt.mediaRecorder = new MediaRecorder(stream);
+    state.stt.audioChunks = [];
+    
+    state.stt.mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        state.stt.audioChunks.push(e.data);
+      }
+    };
+    
+    state.stt.mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(state.stt.audioChunks, { type: "audio/webm" });
+      const stream = state.stt.mediaRecorder.stream;
+      stream.getTracks().forEach(track => track.stop());
+      state.stt.mediaRecorder = null;
+      
+      if (audioBlob.size > 0) {
+        await processSttAudio(audioBlob);
+      }
+    };
+    
+    state.stt.mediaRecorder.start();
+    state.stt.isListening = true;
+    updateSttToggleButton();
+    showToast(t("sttListening"), "info");
+  } catch (e) {
+    console.error("STT recording failed:", e);
+    showToast(t("sttErrorMic"), "error");
+  }
+}
+
+async function stopSttRecording() {
+  if (state.stt.mediaRecorder && state.stt.isListening) {
+    state.stt.mediaRecorder.stop();
+    state.stt.isListening = false;
+    updateSttToggleButton();
+  }
+}
+
+async function processSttAudio(audioBlob) {
+  const input = document.getElementById("user-input");
+  if (!input) return;
+  
+  showToast(t("sttProcessing"), "info");
+  
+  try {
+    if (!window.sttReady) {
+      await loadSttModel();
+    }
+    
+    const language = state.settings.sttLanguage || "en";
+    const text = await transcribeAudio(audioBlob, language);
+    
+    if (text) {
+      const existingText = input.value.trim();
+      input.value = existingText ? `${existingText} ${text}` : text;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      
+      showToast(t("sttTranscribed"), "success");
+      
+      if (state.stt.autoSend) {
+        setTimeout(() => {
+          const sendBtn = document.getElementById("send-btn");
+          if (sendBtn) sendBtn.click();
+        }, 100);
+      }
+    } else {
+      showToast(t("sttNoSpeech"), "warn");
+    }
+  } catch (e) {
+    console.error("STT transcription failed:", e);
+    showToast(t("sttError"), "error");
+  }
+}
+
+function updateSttToggleButton() {
+  const btn = document.getElementById("stt-toggle-btn");
+  if (!btn) return;
+  
+  if (state.stt.isListening) {
+    btn.classList.add("is-active");
+    btn.setAttribute("data-i18n-title", "sttTitleOn");
+    btn.title = "STT: On";
+    btn.innerHTML = ICONS.micFilled;
+  } else {
+    btn.classList.remove("is-active");
+    btn.setAttribute("data-i18n-title", "sttTitleOff");
+    btn.title = "STT: Off";
+    btn.innerHTML = ICONS.mic;
+  }
+}
+
+function toggleSttAutoSend() {
+  state.stt.autoSend = !state.stt.autoSend;
+  state.settings.sttAutoSend = state.stt.autoSend;
+  saveSettings();
+  updateSttAutoSendButton();
+  showToast(state.stt.autoSend ? t("sttAutoSendEnabled") : t("sttAutoSendDisabled"), "success");
+}
+
+function updateSttAutoSendButton() {
+  const btn = document.getElementById("stt-auto-send-toggle-btn");
+  if (!btn) return;
+  
+  if (state.stt.autoSend) {
+    btn.classList.add("is-active");
+    btn.setAttribute("data-i18n-title", "sttAutoSendOn");
+    btn.title = "STT Auto-send: On";
+  } else {
+    btn.classList.remove("is-active");
+    btn.setAttribute("data-i18n-title", "sttAutoSendOff");
+    btn.title = "STT Auto-send: Off";
+  }
 }
 
 async function maybeAutoSpeakAssistantMessage(messageIndex) {

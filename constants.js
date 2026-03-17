@@ -51,6 +51,8 @@ const ICONS = {
   brain:
     '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 11h-1a3 3 0 0 0-3-3h-1v-1a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v1H9a3 3 0 0 0-3 3H5a3 3 0 0 0 0 6h1v2a3 3 0 0 0 6 0v-2h2a3 3 0 0 0 6 0v-2h1a3 3 0 0 0 0-6h-1z"></path><path d="M12 6v4"></path><path d="M8 11h8"></path><path d="M12 14v4"></path></svg>',
   stop: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>',
+  mic: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path></svg>',
+  micFilled: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path></svg>',
   info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6"></path><circle cx="12" cy="7.5" r="1"></circle></svg>',
   context:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5a3 3 0 0 1 5.7-1.2A3.2 3.2 0 0 1 18 7v.2a3 3 0 0 1 1 5.7A3.2 3.2 0 0 1 16 18h-1a3 3 0 0 1-6 0H8a3.2 3.2 0 0 1-3-5.1A3 3 0 0 1 6 7v-.2A3.2 3.2 0 0 1 9 5z"></path><path d="M10 9.5v5"></path><path d="M14 9.5v5"></path><path d="M10 12h4"></path></svg>',

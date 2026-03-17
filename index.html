@@ -372,15 +372,31 @@
                    title="Memory command"
                    aria-label="Memory command"
                  ></button>
-                 <button
-                   id="auto-tts-toggle-btn"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="autoTtsTitleOff"
-                   title="Auto TTS: Off"
-                   aria-label="Toggle auto TTS"
-                 ></button>
                   <button
+                    id="auto-tts-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="autoTtsTitleOff"
+                    title="Auto TTS: Off"
+                    aria-label="Toggle auto TTS"
+                  ></button>
+                  <button
+                    id="stt-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="sttTitleOff"
+                    title="STT: Off"
+                    aria-label="Toggle STT"
+                  ></button>
+                  <button
+                    id="stt-auto-send-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="sttAutoSendOn"
+                    title="STT Auto-send: On"
+                    aria-label="Toggle STT auto-send"
+                  ></button>
+                   <button
                     id="ooc-mode-toggle"
                     class="option-btn send-toggle-btn small"
                     type="button"
@@ -825,6 +841,17 @@
               <span data-i18n="languageLabel">Interface Language</span>
               <select id="ui-language-select">
                 <option value="auto">Auto (browser)</option>
+                <option value="en">English</option>
+                <option value="fr">Francais</option>
+                <option value="it">Italiano</option>
+                <option value="de">Deutsch</option>
+                <option value="es">Espanol</option>
+                <option value="pt-BR">Portugues (Brasil)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="sttLanguageLabel">Speech-to-Text Language</span>
+              <select id="stt-language-select">
                 <option value="en">English</option>
                 <option value="fr">Francais</option>
                 <option value="it">Italiano</option>
@@ -2822,6 +2849,7 @@
     <script src="app.js"></script>
     <script src="lore.js"></script>
     <script src="memory-filter.js"></script>
+    <script src="stt/whisper.js"></script>
     <script src="tts/kokoro.js"></script>
   </body>
 <style>
