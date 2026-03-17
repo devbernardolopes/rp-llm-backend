@@ -3704,6 +3704,9 @@ textarea {
   gap: 8px;
   background: #141d29;
 }
+.check-list.lorebook-list {
+  text-align: left;
+}
 
 #personas-modal .modal-body {
   min-height: 0;
@@ -3743,6 +3746,8 @@ textarea {
   width: 100%;
 }
 .check-list.lorebook-list .lorebook-entry {
+  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 10px;
   justify-content: flex-start;
