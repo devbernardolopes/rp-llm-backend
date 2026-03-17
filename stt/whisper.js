@@ -42,58 +42,20 @@ async function transcribeAudio(audioBlob, language = "en") {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     
-    const wavBuffer = audioBufferToWav(audioBuffer);
-    const blob = new Blob([wavBuffer], { type: "audio/wav" });
+    const channelData = audioBuffer.getChannelData(0);
+    const samplingRate = audioBuffer.sampleRate;
     
     const langCode = language === "pt-BR" ? "pt" : language.split("-")[0];
     
-    const result = await window.sttModel(blob, { language: langCode });
+    const result = await window.sttModel(channelData, { 
+      language: langCode,
+      sampling_rate: samplingRate
+    });
     return result.text.trim();
   } catch (e) {
     console.error("STT transcription failed:", e);
     throw e;
   }
-}
-
-function audioBufferToWav(buffer) {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1;
-  const bitDepth = 16;
-  
-  const resultLength = 44 + buffer.length * numChannels * (bitDepth / 8);
-  const result = new ArrayBuffer(resultLength);
-  const view = new DataView(result);
-  
-  writeString(view, 0, "RIFF");
-  view.setUint32(4, 36 + buffer.length * numChannels * 2, true);
-  writeString(view, 8, "WAVE");
-  writeString(view, 12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * 2, true);
-  view.setUint16(32, numChannels * 2, true);
-  view.setUint16(34, bitDepth, true);
-  writeString(view, 36, "data");
-  view.setUint32(40, buffer.length * numChannels * 2, true);
-  
-  const channelData = [];
-  for (let i = 0; i < numChannels; i++) {
-    channelData.push(buffer.getChannelData(i));
-  }
-  
-  let offset = 44;
-  for (let i = 0; i < buffer.length; i++) {
-    for (let ch = 0; ch < numChannels; ch++) {
-      const sample = Math.max(-1, Math.min(1, channelData[ch][i]));
-      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
-      offset += 2;
-    }
-  }
-  
-  return result;
 }
 
 function writeString(view, offset, string) {
