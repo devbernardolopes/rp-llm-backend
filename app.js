@@ -150,6 +150,7 @@ const state = {
     "shortcuts-modal": false,
     "tags-modal": false,
     "lore-modal": false,
+    "lore-editor-modal": false,
     "writing-instructions-modal": false,
     "writing-instruction-editor-modal": false,
     "memory-modal": false,
@@ -1104,7 +1105,7 @@ function setupEvents() {
     });
   document
     .getElementById("save-lorebook-btn")
-    .addEventListener("click", saveLorebookFromEditor);
+    .addEventListener("click", () => saveLorebookFromEditor({ close: true }));
   document
     .getElementById("create-writing-instruction-btn")
     .addEventListener("click", () => openWritingInstructionEditor());
@@ -1464,7 +1465,7 @@ function setupEvents() {
     "#writing-instruction-name",
     "#writing-instruction-text",
   ]);
-  markModalDirtyOnInput("lore-modal", [
+  markModalDirtyOnInput("lore-editor-modal", [
     "#lore-name",
     "#lore-avatar",
     "#lore-description",
@@ -6147,7 +6148,7 @@ function openModal(modalId) {
     document.getElementById("shortcuts-raw").value =
       state.settings.shortcutsRaw || "";
   } else if (modalId === "lore-modal") {
-    closeLoreEditor();
+    resetLoreEditorState();
     renderLorebookManagementList().catch(() => {});
   } else if (modalId === "tags-modal") {
     const input = document.getElementById("tag-manager-input");
@@ -6241,6 +6242,18 @@ async function closeActiveModal() {
       return;
     }
   }
+  if (closingId === "lore-editor-modal") {
+    setModalDirtyState(closingId, false);
+    resetLoreEditorState();
+    const parentModal = document.getElementById("lore-modal");
+    if (parentModal) {
+      renderLorebookManagementList().catch(() => {});
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "lore-modal";
+      updateDocumentTitleWithUnread();
+      return;
+    }
+  }
   if (closingId === "character-modal") {
     if (state.editingCharacterId) {
       localStorage.setItem(
@@ -6273,8 +6286,8 @@ async function handleModalSaveAction(modalId) {
     await savePersonaFromEditor();
     return true;
   }
-  if (modalId === "lore-modal") {
-    return saveLorebookFromEditor();
+  if (modalId === "lore-editor-modal") {
+    return saveLorebookFromEditor({ close: false });
   }
   if (modalId === "writing-instructions-modal") {
     return saveWritingInstruction();
@@ -8463,14 +8476,16 @@ function addLoreEntryEditor(entry = null) {
       state.lore.entries.length,
     ),
   );
-  state.modalDirty["lore-modal"] = true;
+  state.modalDirty["lore-editor-modal"] = true;
 }
 
-function closeLoreEditor() {
+function resetLoreEditorState() {
   state.lore.editingId = null;
   state.lore.entries = [];
-  document.getElementById("lore-list-view")?.classList.remove("hidden");
-  document.getElementById("lore-editor-view")?.classList.add("hidden");
+}
+
+async function closeLoreEditor() {
+  await closeActiveModal();
 }
 
 function openLoreEditor(lorebook = null) {
@@ -8480,24 +8495,29 @@ function openLoreEditor(lorebook = null) {
     ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx))
     : [];
 
-  document.getElementById("lore-name").value = normalized?.name || "";
-  document.getElementById("lore-avatar").value = normalized?.avatar || "";
-  document.getElementById("lore-description").value =
-    normalized?.description || "";
-  document.getElementById("lore-scan-depth").value = String(
-    normalized?.scanDepth || 50,
-  );
-  document.getElementById("lore-token-budget").value = String(
-    normalized?.tokenBudget || 200,
-  );
-  document.getElementById("lore-recursive-scanning").checked =
-    normalized?.recursiveScanning === true;
+  const nameField = document.getElementById("lore-name");
+  if (nameField) nameField.value = normalized?.name || "";
+  const avatarField = document.getElementById("lore-avatar");
+  if (avatarField) avatarField.value = normalized?.avatar || "";
+  const descriptionField = document.getElementById("lore-description");
+  if (descriptionField) descriptionField.value = normalized?.description || "";
+  const scanDepthField = document.getElementById("lore-scan-depth");
+  if (scanDepthField)
+    scanDepthField.value = String(normalized?.scanDepth || 50);
+  const tokenBudgetField = document.getElementById("lore-token-budget");
+  if (tokenBudgetField)
+    tokenBudgetField.value = String(normalized?.tokenBudget || 200);
+  const recursiveField = document.getElementById("lore-recursive-scanning");
+  if (recursiveField)
+    recursiveField.checked = normalized?.recursiveScanning === true;
 
   if (state.lore.entries.length === 0) addLoreEntryEditor();
   renderLoreEntryEditors();
-  document.getElementById("lore-list-view")?.classList.add("hidden");
-  document.getElementById("lore-editor-view")?.classList.remove("hidden");
-  state.modalDirty["lore-modal"] = false;
+  openModal("lore-editor-modal");
+  const editorModal = document.getElementById("lore-editor-modal");
+  if (editorModal) {
+    setupModalTextareas(editorModal);
+  }
 }
 
 function renderLoreEntryEditors() {
@@ -8515,7 +8535,7 @@ function renderLoreEntryEditors() {
     const delBtn = iconButton("delete", "Delete entry", () => {
       state.lore.entries.splice(index, 1);
       if (state.lore.entries.length === 0) addLoreEntryEditor();
-      state.modalDirty["lore-modal"] = true;
+      state.modalDirty["lore-editor-modal"] = true;
       renderLoreEntryEditors();
     });
     delBtn.classList.add("danger-icon-btn");
@@ -8527,7 +8547,7 @@ function renderLoreEntryEditors() {
     keysInput.value = (entry.keys || []).join(", ");
     keysInput.addEventListener("input", () => {
       entry.keys = parseCsvValues(keysInput.value);
-      state.modalDirty["lore-modal"] = true;
+      state.modalDirty["lore-editor-modal"] = true;
     });
 
     const secondaryInput = document.createElement("textarea");
@@ -8536,7 +8556,7 @@ function renderLoreEntryEditors() {
     secondaryInput.value = (entry.secondaryKeys || []).join(", ");
     secondaryInput.addEventListener("input", () => {
       entry.secondaryKeys = parseCsvValues(secondaryInput.value);
-      state.modalDirty["lore-modal"] = true;
+      state.modalDirty["lore-editor-modal"] = true;
     });
 
     const contentInput = document.createElement("textarea");
@@ -8546,7 +8566,7 @@ function renderLoreEntryEditors() {
     contentInput.value = entry.content || "";
     contentInput.addEventListener("input", () => {
       entry.content = String(contentInput.value || "");
-      state.modalDirty["lore-modal"] = true;
+      state.modalDirty["lore-editor-modal"] = true;
     });
 
     card.append(head, keysInput, secondaryInput, contentInput);
@@ -8744,7 +8764,7 @@ async function collectLorebookFromEditor() {
   };
 }
 
-async function saveLorebookFromEditor() {
+async function saveLorebookFromEditor({ close = true } = {}) {
   const payload = await collectLorebookFromEditor();
   if (!payload) return false;
   if (state.lore.editingId) {
@@ -8755,10 +8775,11 @@ async function saveLorebookFromEditor() {
     await db.lorebooks.add(payload);
     showToast(t("loreCreated"), "success");
   }
-  state.modalDirty["lore-modal"] = false;
-  closeLoreEditor();
-  await renderLorebookManagementList();
+  setModalDirtyState("lore-editor-modal", false);
   await renderCharacterLorebookList(getSelectedLorebookIds());
+  if (close) {
+    await closeLoreEditor();
+  }
   return true;
 }
 

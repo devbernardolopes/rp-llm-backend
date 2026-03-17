@@ -543,5 +543,6 @@
     "initialMessagesHint": "Verwende [AI]:, [SYSTEM]: oder [USER]:, um jede Nachricht zu kennzeichnen.",
     "lorebookExported": "Lorebook exportiert.",
     "lorebookExportFailed": "Lorebook-Export fehlgeschlagen.",
-    "lorebookNotFound": "Lorebook nicht gefunden."
+    "lorebookNotFound": "Lorebook nicht gefunden.",
+    "loreBookEditor": "Lorebook-Editor"
 }

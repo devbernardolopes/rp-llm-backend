@@ -543,5 +543,6 @@
     "initialMessagesHint": "Usa [AI]:, [SYSTEM]: o [USER]: per etichettare ogni messaggio.",
     "lorebookExported": "Lorebook esportato.",
     "lorebookExportFailed": "Esportazione del Lorebook non riuscita.",
-    "lorebookNotFound": "Lorebook non trovato."
+    "lorebookNotFound": "Lorebook non trovato.",
+    "loreBookEditor": "Editor di Lorebook"
 }

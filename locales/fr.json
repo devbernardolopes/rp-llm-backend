@@ -543,5 +543,6 @@
     "initialMessagesHint": "Utilisez [AI]:, [SYSTEM]: ou [USER]: pour indiquer le rôle de chaque message.",
     "lorebookExported": "Lorebook exporté.",
     "lorebookExportFailed": "Échec de l'exportation du Lorebook.",
-    "lorebookNotFound": "Lorebook introuvable."
+    "lorebookNotFound": "Lorebook introuvable.",
+    "loreBookEditor": "Éditeur de Lorebooks"
 }

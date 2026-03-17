@@ -544,5 +544,6 @@
     "initialMessagesHint": "Use [AI]:, [SYSTEM]:, or [USER]: to label each message.",
     "lorebookExported": "Lorebook exported.",
     "lorebookExportFailed": "Lorebook export failed.",
-    "lorebookNotFound": "Lorebook not found."
+    "lorebookNotFound": "Lorebook not found.",
+    "loreBookEditor": "Lorebook Editor"
 }

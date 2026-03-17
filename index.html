@@ -1522,100 +1522,113 @@
             <div id="lorebook-list" class="lorebook-list"></div>
           </div>
 
-          <div id="lore-editor-view" class="hidden">
-            <div class="lore-toolbar">
-              <button
-                id="lore-editor-back-btn"
-                class="secondary-btn"
-                type="button"
-                data-i18n="backToList"
-              >
-                Back to List
-              </button>
-            </div>
-            <div class="two-col lore-editor-grid">
-              <div class="form-field">
-                <span data-i18n="nameLabel">Name</span>
-                <input
-                  id="lore-name"
-                  type="text"
-                  minlength="2"
-                  maxlength="128"
-                />
-              </div>
-            <div class="form-field">
-                <span data-i18n="avatarUrlOptional">Avatar URL (optional)</span>
-                <input id="lore-avatar" type="text" placeholder="optional" />
-              </div>
-              <div class="form-field full">
-                <span data-i18n="descriptionOptional"
-                  >Description (optional)</span
-                >
-                <textarea
-                  id="lore-description"
-                  rows="3"
-                  maxlength="512"
-                ></textarea>
-              </div>
-              <div class="form-field">
-                <span data-i18n="scanDepth">Scan Depth</span>
-                <input
-                  id="lore-scan-depth"
-                  type="number"
-                  min="5"
-                  max="100"
-                  step="1"
-                />
-              </div>
-              <div class="form-field">
-                <span data-i18n="tokenBudget">Token Budget</span>
-                <input
-                  id="lore-token-budget"
-                  type="number"
-                  min="100"
-                  max="1000"
-                  step="10"
-                />
-              </div>
-              <span class="checkbox-line">
-                <input id="lore-recursive-scanning" type="checkbox" />
-                <span data-i18n="recursiveScanning">Recursive Scanning</span>
-              </span>
-            </div>
-            <div class="lore-entry-head">
-              <h4 id="lore-entries-title">Entries</h4>
-              <button
-                id="add-lore-entry-btn"
-                class="secondary-btn"
-                type="button"
-                data-i18n="addEntry"
-              >
-                + Add Entry
-              </button>
-            </div>
-            <div id="lore-entries-list" class="lore-entries-list"></div>
-            <div class="modal-footer">
-              <button
-                id="cancel-lore-editor-btn"
-                class="secondary-btn"
-                type="button"
-                data-i18n="cancel"
-              >
-                Cancel
-              </button>
-              <button
-                id="save-lorebook-btn"
-                class="primary-btn"
-                type="button"
-                data-i18n="saveLoreBook"
-              >
-                Save Lorebook
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
+
+    <div
+      id="lore-editor-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lore-editor-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="lore-editor-title" data-i18n="loreBookEditor">
+            Lorebook Editor
+          </h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="lore-toolbar">
+            <button
+              id="lore-editor-back-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="backToList"
+            >
+              Back to List
+            </button>
+          </div>
+          <div class="two-col lore-editor-grid">
+            <div class="form-field">
+              <span data-i18n="nameLabel">Name</span>
+              <input id="lore-name" type="text" minlength="2" maxlength="128" />
+            </div>
+            <div class="form-field">
+              <span data-i18n="avatarUrlOptional">Avatar URL (optional)</span>
+              <input id="lore-avatar" type="text" placeholder="optional" />
+            </div>
+            <div class="form-field full">
+              <span data-i18n="descriptionOptional">
+                Description (optional)
+              </span>
+              <textarea
+                id="lore-description"
+                rows="3"
+                maxlength="512"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="scanDepth">Scan Depth</span>
+              <input
+                id="lore-scan-depth"
+                type="number"
+                min="5"
+                max="100"
+                step="1"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="tokenBudget">Token Budget</span>
+              <input
+                id="lore-token-budget"
+                type="number"
+                min="100"
+                max="1000"
+                step="10"
+              />
+            </div>
+            <span class="checkbox-line">
+              <input id="lore-recursive-scanning" type="checkbox" />
+              <span data-i18n="recursiveScanning">Recursive Scanning</span>
+            </span>
+          </div>
+          <div class="lore-entry-head">
+            <h4 id="lore-entries-title">Entries</h4>
+            <button
+              id="add-lore-entry-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="addEntry"
+            >
+              + Add Entry
+            </button>
+          </div>
+          <div id="lore-entries-list" class="lore-entries-list"></div>
+        </div>
+        <div class="modal-footer">
+          <button
+            id="cancel-lore-editor-btn"
+            class="secondary-btn"
+            type="button"
+            data-i18n="cancel"
+          >
+            Cancel
+          </button>
+          <button
+            id="save-lorebook-btn"
+            class="primary-btn"
+            type="button"
+            data-i18n="saveLoreBook"
+          >
+            Save Lorebook
+          </button>
+        </div>
+      </div>
+    </div>
+
     <input
       id="import-lorebook-input"
       type="file"
