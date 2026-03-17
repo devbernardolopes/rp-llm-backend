@@ -736,6 +736,7 @@ body {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  flex-wrap: nowrap;
 }
 
 #left-pane.collapsed .pane-bottom::-webkit-scrollbar {
