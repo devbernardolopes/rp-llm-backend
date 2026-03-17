@@ -8,14 +8,30 @@
 - It connects to AI models via OpenRouter with the use of an API Key.
 - It makes requests via OpenRouter API following OpenAI-compatible format.
 - The main request is `completion` because it generates a BOT message (endpoint: `/api/v1/chat/completions`).
-- The main files are `index.html` and `app.js`, with supporting modules: `lore.js` (lorebooks), `memory.js` (conversation summarization), and `db.js` (Dexie.js database).
+- The main file is `index.html` and `app.js`, with supporting modules.
 
 ### Module Files
 
-- `lore.js` - Lorebooks: keyword-based fact lookup during chat (not API calls)
+- `app.js` - Main application logic (~20,400 lines)
+- `constants.js` - Static constants (model options, icons, language options, etc.)
+- `themes.js` - Theme management (applyThemeVars, getThemeById, seedAdditionalThemes, etc.)
+- `i18n.js` - Internationalization (t(), tf(), loadLocaleBundle, applyInterfaceLanguage, etc.)
+- `ui-utils.js` - UI utility functions (avatar handling, text input, color normalization, etc.)
+- `tts-preprocess.js` - TTS text preprocessing (preprocessForTTS, normalizeNumbersForTTS, chunkForTTS, etc.)
+- `lore.js` - Lorebooks: keyword-based fact lookup during chat
 - `memory.js` - Conversation memory: summarizes old messages to preserve context
 - `db.js` - Database schema using Dexie.js (characters, threads, lorebooks, memories, personas, sessions)
 - `tts/kokoro.js` - TTS functions using Kokoro.js for text-to-speech
+- `embeddings.js` - Text embeddings using transformers
+- `summarizer.js` - Text summarization
+- `memory-filter.js` - Memory relevance filtering
+- `config.js` - Application configuration
+
+### Script Loading Order (in index.html)
+
+```plaintext
+db.js → constants.js → themes.js → i18n.js → ui-utils.js → tts-preprocess.js → lore.js → memory.js → app.js → memory-filter.js → tts/kokoro.js
+```
 
 ### UI Features
 
@@ -38,8 +54,8 @@
 
 ### Development
 
-- Run the app using VS Code Live Server.
 - No build steps or tests required.
+- When creating new modules, add them to the script loading order in `index.html` in the correct dependency order.
 
 ## Git Rules
 
