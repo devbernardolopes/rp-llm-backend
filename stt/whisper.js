@@ -42,20 +42,44 @@ async function transcribeAudio(audioBlob, language = "en") {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     
-    const channelData = audioBuffer.getChannelData(0);
-    const samplingRate = audioBuffer.sampleRate;
+    const targetSampleRate = 16000;
+    let channelData = audioBuffer.getChannelData(0);
+    
+    if (audioBuffer.sampleRate !== targetSampleRate) {
+      channelData = resampleAudio(channelData, audioBuffer.sampleRate, targetSampleRate);
+    }
     
     const langCode = language === "pt-BR" ? "pt" : language.split("-")[0];
     
     const result = await window.sttModel(channelData, { 
       language: langCode,
-      sampling_rate: samplingRate
+      sampling_rate: targetSampleRate
     });
     return result.text.trim();
   } catch (e) {
     console.error("STT transcription failed:", e);
     throw e;
   }
+}
+
+function resampleAudio(channelData, fromSampleRate, toSampleRate = 16000) {
+  const ratio = fromSampleRate / toSampleRate;
+  const newLength = Math.round(channelData.length / ratio);
+  const result = new Float32Array(newLength);
+  
+  for (let i = 0; i < newLength; i++) {
+    const srcIndex = i * ratio;
+    const index = Math.floor(srcIndex);
+    const frac = srcIndex - index;
+    
+    if (index + 1 < channelData.length) {
+      result[i] = channelData[index] * (1 - frac) + channelData[index + 1] * frac;
+    } else if (index < channelData.length) {
+      result[i] = channelData[index];
+    }
+  }
+  
+  return result;
 }
 
 function writeString(view, offset, string) {
