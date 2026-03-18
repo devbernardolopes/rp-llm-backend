@@ -11882,6 +11882,7 @@ async function forkThreadFromMessage(messageIndex) {
     selectedPersonaId: source.selectedPersonaId || null,
     autoTtsEnabled: source.autoTtsEnabled === true,
     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
+    personaInjectionOnceUsed: !!source.personaInjectionOnceUsed,
     writingInstructionsTurnCount: writingCount,
     shortcutsVisible: source.shortcutsVisible === true,
     oocModeEnabled: source.oocModeEnabled === true,
@@ -12077,6 +12078,7 @@ async function duplicateThread(threadId) {
     selectedPersonaId: source.selectedPersonaId || null,
     autoTtsEnabled: source.autoTtsEnabled === true,
     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
+    personaInjectionOnceUsed: !!source.personaInjectionOnceUsed,
     writingInstructionsTurnCount:
       Number(source.writingInstructionsTurnCount) >= 0
         ? Number(source.writingInstructionsTurnCount)
