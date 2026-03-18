@@ -12102,15 +12102,38 @@ async function duplicateThread(threadId) {
       const num = Number(value);
       return Number.isInteger(num) && memoryMapping.has(num)
         ? memoryMapping.get(num)
-        : value;
+        : null;
     };
     const remappedMessages = copy.messages.map((msg) => {
       const next = { ...msg };
-      next.summaryId = remapId(next.summaryId);
-      next.summaryProtected = remapId(next.summaryProtected);
+      const newSummaryId = remapId(next.summaryId);
+      const newProtectedId = remapId(next.summaryProtected);
+      if (newSummaryId !== null) {
+        next.summaryId = newSummaryId;
+      } else {
+        delete next.summaryId;
+      }
+      if (newProtectedId !== null) {
+        next.summaryProtected = newProtectedId;
+      } else {
+        delete next.summaryProtected;
+      }
       return next;
     });
     await db.threads.update(newThreadId, { messages: remappedMessages });
+  } else {
+    const needsCleanup = copy.messages.some(
+      (msg) => msg.summaryId || msg.summaryProtected,
+    );
+    if (needsCleanup) {
+      const cleanedMessages = copy.messages.map((msg) => {
+        const next = { ...msg };
+        delete next.summaryId;
+        delete next.summaryProtected;
+        return next;
+      });
+      await db.threads.update(newThreadId, { messages: cleanedMessages });
+    }
   }
 
   // Duplicate prompt history entries for the new thread
