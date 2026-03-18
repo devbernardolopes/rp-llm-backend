@@ -1,8 +1,5 @@
 // stt/whisper.js
-// Speech-to-Text using Whisper (Transformers.js)
-
-window.sttModel = null;
-window.sttReady = false;
+// Speech-to-Text using Whisper (Transformers.js) via WebWorker
 
 const STT_LANGUAGES = [
   { code: "en", label: "English" },
@@ -13,66 +10,128 @@ const STT_LANGUAGES = [
   { code: "pt-BR", label: "Portuguese (Brazil)" },
 ];
 
+const TARGET_SAMPLE_RATE = 16000;
+
+// Worker state
+let sttWorker = null;
+let sttWorkerReady = false;
+let sttWorkerInitializing = false;
+let sttInitPromise = null;
+const sttTranscribePromises = new Map();
+let transcriptionIdCounter = 0;
+
+function sttDebug(...args) {
+  // console.debug('[whisper]', ...args);
+}
+
+function getWorkerPath() {
+  const scripts = document.getElementsByTagName("script");
+  for (let script of scripts) {
+    if (script.src && script.src.includes("whisper.js")) {
+      const base = script.src.substring(0, script.src.lastIndexOf("/"));
+      return `${base}/whisper-worker.js`;
+    }
+  }
+  return "stt/whisper-worker.js";
+}
+
+function getWorker() {
+  if (sttWorker) return sttWorker;
+
+  const WorkerConstructor = window.Worker || window.webkitWorker;
+  if (!WorkerConstructor) {
+    throw new Error("Web Workers not supported in this browser.");
+  }
+
+  const workerPath = getWorkerPath();
+  sttWorker = new WorkerConstructor(workerPath, { type: "module" });
+
+  sttWorker.onmessage = (event) => {
+    const { type, id, text, success, error, message } = event.data || {};
+
+    switch (type) {
+      case 'initialized':
+        sttWorkerReady = success;
+        sttWorkerInitializing = false;
+        if (success) {
+          sttDebug("whisper:worker:initialized");
+        } else {
+          console.error("whisper:worker:init-failed", error);
+        }
+        break;
+
+      case 'transcribed':
+        const promise = sttTranscribePromises.get(id);
+        if (promise) {
+          promise.resolve(text);
+          sttTranscribePromises.delete(id);
+        }
+        break;
+
+      case 'error':
+        const errorPromise = sttTranscribePromises.get(id);
+        if (errorPromise) {
+          errorPromise.reject(new Error(message || "Transcription failed"));
+          sttTranscribePromises.delete(id);
+        }
+        break;
+
+      case 'download-progress':
+        sttDebug("whisper:download-progress", event.data.percent + "%");
+        break;
+    }
+  };
+
+  sttWorker.onerror = (err) => {
+    console.error("whisper:worker:error", err);
+    sttWorkerReady = false;
+    for (const [id, promise] of sttTranscribePromises) {
+      promise.reject(new Error("Worker error: " + err.message));
+      sttTranscribePromises.delete(id);
+    }
+  };
+
+  return sttWorker;
+}
+
 async function loadSttModel() {
-  if (window.sttReady) return;
+  if (sttWorkerReady) return;
 
-  try {
-    const { pipeline, whisper } = await import(
-      "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"
-    );
-    window.sttModel = await pipeline("automatic-speech-recognition", "Xenova/whisper-tiny");
-    window.sttReady = true;
-    console.log("STT model loaded");
-  } catch (e) {
-    console.warn("Failed to load STT model:", e);
-    window.sttReady = false;
-  }
-}
-
-async function transcribeAudio(audioBlob, language = "en") {
-  if (!window.sttReady || !window.sttModel) {
-    await loadSttModel();
-    if (!window.sttReady) {
-      throw new Error("STT model not ready");
-    }
+  if (sttInitPromise) {
+    await sttInitPromise;
+    return;
   }
 
-  try {
-    const arrayBuffer = await audioBlob.arrayBuffer();
-    console.log("STT: Audio blob size:", audioBlob.size, "type:", audioBlob.type);
-    
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    console.log("STT: Decoded audioBuffer sampleRate:", audioBuffer.sampleRate, "length:", audioBuffer.length, "channels:", audioBuffer.numberOfChannels);
-    
-    const targetSampleRate = 16000;
-    let channelData = audioBuffer.getChannelData(0);
-    
-    if (audioBuffer.sampleRate !== targetSampleRate) {
-      channelData = resampleAudio(channelData, audioBuffer.sampleRate, targetSampleRate);
-    }
-    
-    // Ensure it's a proper Float32Array
-    let audioArray = new Float32Array(channelData);
-    console.log("STT: Audio array type:", audioArray.constructor.name, "length:", audioArray.length);
-    
-    const langCode = language === "pt-BR" ? "pt" : language.split("-")[0];
-    console.log("STT: Using language code:", langCode);
-    
-    const result = await window.sttModel(audioArray, { 
-      language: langCode,
-      task: "transcribe",
-      sampling_rate: targetSampleRate
+  if (sttWorkerInitializing) {
+    await new Promise((resolve) => {
+      const checkReady = setInterval(() => {
+        if (sttWorkerReady) {
+          clearInterval(checkReady);
+          resolve();
+        }
+      }, 100);
     });
-    console.log("STT: Transcription result:", result.text.trim());
-    return result.text.trim();
-  } catch (e) {
-    console.error("STT transcription failed:", e);
-    throw e;
+    return;
   }
+
+  sttWorkerInitializing = true;
+  sttInitPromise = new Promise((resolve) => {
+    const worker = getWorker();
+    
+    const checkReady = setInterval(() => {
+      if (sttWorkerReady) {
+        clearInterval(checkReady);
+        sttInitPromise = null;
+        resolve();
+      }
+    }, 100);
+  });
+
+  worker.postMessage({ type: 'init' });
+  await sttInitPromise;
 }
 
-function resampleAudio(channelData, fromSampleRate, toSampleRate = 16000) {
+function resampleAudio(channelData, fromSampleRate, toSampleRate = TARGET_SAMPLE_RATE) {
   const ratio = fromSampleRate / toSampleRate;
   const newLength = Math.round(channelData.length / ratio);
   const result = new Float32Array(newLength);
@@ -114,8 +173,61 @@ function createSilenceDetector(audioContext, stream, onSilenceDetected) {
   return { analyser, getAudioLevel };
 }
 
-function writeString(view, offset, string) {
-  for (let i = 0; i < string.length; i++) {
-    view.setUint8(offset + i, string.charCodeAt(i));
+async function transcribeAudio(audioBlob, language = "en") {
+  if (!sttWorkerReady) {
+    await loadSttModel();
+    if (!sttWorkerReady) {
+      throw new Error("STT model not ready");
+    }
+  }
+
+  try {
+    sttDebug("STT: Processing audio blob, size:", audioBlob.size, "type:", audioBlob.type);
+    
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    sttDebug("STT: Decoded audio, sampleRate:", audioBuffer.sampleRate, "length:", audioBuffer.length, "channels:", audioBuffer.numberOfChannels);
+    
+    let channelData = audioBuffer.getChannelData(0);
+    
+    // Resample if necessary
+    if (audioBuffer.sampleRate !== TARGET_SAMPLE_RATE) {
+      channelData = resampleAudio(channelData, audioBuffer.sampleRate, TARGET_SAMPLE_RATE);
+    }
+    
+    // Create a new Float32Array to ensure proper format
+    const audioArray = new Float32Array(channelData);
+    sttDebug("STT: Audio array ready, length:", audioArray.length);
+    
+    // Generate unique ID for this transcription
+    const id = ++transcriptionIdCounter;
+    
+    // Create promise that will be resolved by worker message
+    const textPromise = new Promise((resolve, reject) => {
+      sttTranscribePromises.set(id, { resolve, reject });
+    });
+    
+    // Send to worker with transferable array buffer
+    const worker = getWorker();
+    worker.postMessage(
+      {
+        type: 'transcribe',
+        id,
+        audioData: audioArray,
+        language,
+        sampleRate: TARGET_SAMPLE_RATE,
+      },
+      [audioArray.buffer]
+    );
+    
+    // Wait for result
+    const text = await textPromise;
+    sttDebug("STT: Transcription result:", text);
+    return text;
+  } catch (e) {
+    console.error("STT transcription failed:", e);
+    throw e;
   }
 }
