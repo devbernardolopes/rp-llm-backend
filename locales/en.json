@@ -574,5 +574,6 @@
   "sttListeningAutoStop": "Listening... Release to stop",
   "sttSilenceDetected": "Silence detected, stopping...",
   "sttPushToTalkHint": "Hold the button to record",
-  "sttAutoStopHint": "Click to start, waits for silence"
+  "sttAutoStopHint": "Click to start, waits for silence",
+  "sttWrongThread": "Recording was from a different chat."
 }

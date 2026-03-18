@@ -143,6 +143,7 @@ const state = {
     animationFrameId: null,
     audioContext: null,
     stream: null,
+    threadId: null,
   },
   avatarSnapshotCache: new Map(),
   avatarBlobUrlCache: new Map(),
@@ -12593,6 +12594,7 @@ async function startSttRecording() {
   }
   
   stopTtsPlayback();
+  state.stt.threadId = currentThread?.id || null;
   
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -12706,6 +12708,9 @@ async function processSttAudio(audioBlob) {
   const input = document.getElementById("user-input");
   if (!input) return;
   
+  const originalThreadId = state.stt.threadId;
+  state.stt.threadId = null;
+  
   showToast(t("sttProcessing"), "info");
   
   try {
@@ -12718,6 +12723,11 @@ async function processSttAudio(audioBlob) {
     const text = await transcribeAudio(audioBlob, language);
     
     if (text) {
+      if (currentThread?.id !== originalThreadId) {
+        showToast(t("sttWrongThread"), "warn");
+        return;
+      }
+      
       const existingText = input.value.trim();
       input.value = existingText ? `${existingText} ${text}` : text;
       input.dispatchEvent(new Event("input", { bubbles: true }));
