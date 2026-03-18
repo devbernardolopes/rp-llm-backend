@@ -12591,6 +12591,9 @@ async function startSttRecording() {
     showToast(t("sttNoThread"), "error");
     return;
   }
+  
+  stopTtsPlayback();
+  
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     state.stt.stream = stream;
