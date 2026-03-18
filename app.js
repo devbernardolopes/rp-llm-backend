@@ -837,7 +837,7 @@ function setupEvents() {
   document
     .getElementById("stt-toggle-btn")
     .addEventListener("click", toggleSttRecording);
-  document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#21A9;";
+  document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#10148;";
   document
     .getElementById("stt-auto-send-toggle-btn")
     .addEventListener("click", toggleSttAutoSend);
