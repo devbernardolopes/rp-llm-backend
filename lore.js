@@ -478,10 +478,15 @@ async function getCharacterLoreEntries(character, options = {}) {
     if (!Array.isArray(lb.entries) || lb.entries.length === 0) continue;
     
     const lorebookState = loreState[String(lb.id)] || {};
+    const injectionMode = lb.injectionMode || "cooldown";
+    const suppressionWindow = Math.max(1, lb.suppressionWindow || 10);
     let source = baseSource;
     const matched = [];
     const matchedIds = new Set();
     const maxPasses = lb.recursiveScanning ? 4 : 1;
+    
+    // First pass: determine which entries have keyword matches
+    const keywordMatchesThisCall = new Set();
     
     // Recursive scanning: multiple passes to find cascading matches
     for (let pass = 0; pass < maxPasses; pass += 1) {
@@ -489,6 +494,7 @@ async function getCharacterLoreEntries(character, options = {}) {
       
       for (const entry of lb.entries) {
         if (matchedIds.has(entry.id)) continue;
+        if (keywordMatchesThisCall.has(entry.id)) continue;
         
         const keywordResult = doesLoreEntryMatch(entry, source);
         if (!keywordResult.matches) continue;
@@ -502,22 +508,90 @@ async function getCharacterLoreEntries(character, options = {}) {
           if (!semanticMatch) continue;
         }
         
+        // Keywords matched this call
+        keywordMatchesThisCall.add(entry.id);
+        
         const entryKey = String(entry.id);
-        const lastInjectedAt = lorebookState[entryKey];
-        const shouldInject = !Number.isFinite(lastInjectedAt) || 
-          (currentMessageIndex - lastInjectedAt) >= cooldown;
+        const entryState = lorebookState[entryKey];
+        
+        let shouldInject = false;
+        
+        if (injectionMode === "cooldown") {
+          // Original cooldown logic
+          const lastInjectedAt = typeof entryState === "number" ? entryState : (entryState?.injectedAt);
+          shouldInject = !Number.isFinite(lastInjectedAt) || 
+            (currentMessageIndex - lastInjectedAt) >= cooldown;
+        } else if (injectionMode === "once_per_context") {
+          // Once per context logic
+          if (!entryState || !Number.isFinite(entryState.injectedAt)) {
+            // Never injected: inject
+            shouldInject = true;
+          } else if (entryState.suppressedAt == null) {
+            // Injected, not suppressed
+            // Keywords matched this call: skip (already in context)
+            // Keywords absent for >= suppressionWindow: inject again
+            const messagesSinceInjection = currentMessageIndex - entryState.injectedAt;
+            if (messagesSinceInjection >= suppressionWindow) {
+              shouldInject = true;
+            }
+            // else: keywords matched but still in context, shouldInject = false
+          } else {
+            // Injected and currently suppressed
+            // Keywords matched this call: unsuppress and inject
+            // Keywords absent: stay suppressed
+            shouldInject = true;
+          }
+        }
         
         if (shouldInject) {
           matched.push(entry);
           matchedIds.add(entry.id);
           addedThisPass += 1;
+          
+          // Update lore state
+          const newEntryState = {
+            injectedAt: currentMessageIndex,
+            suppressedAt: injectionMode === "once_per_context" ? null : (entryState?.suppressedAt ?? null),
+            lastKeywordMatchAt: currentMessageIndex
+          };
           newLoreState[String(lb.id)] = {
             ...(newLoreState[String(lb.id)] || {}),
-            [entryKey]: currentMessageIndex,
+            [entryKey]: newEntryState,
           };
+        } else if (injectionMode === "once_per_context" && entryState) {
+          // Track suppression: if keywords not matched and entry was injected
+          let suppressedAt = entryState.suppressedAt;
+          
+          if (!keywordMatchesThisCall.has(entry.id)) {
+            // Keywords absent
+            if (suppressedAt == null) {
+              // Start suppression window
+              suppressedAt = currentMessageIndex;
+            } else if ((currentMessageIndex - suppressedAt) >= suppressionWindow) {
+              // Suppression window elapsed, entry can be injected again
+              // Remove suppressedAt so it will be injected on next keyword match
+              suppressedAt = null;
+            }
+          } else {
+            // Keywords matched, unsuppress
+            suppressedAt = null;
+          }
+          
+          // Only update if state changed
+          if (suppressedAt !== entryState.suppressedAt) {
+            newLoreState[String(lb.id)] = {
+              ...(newLoreState[String(lb.id)] || {}),
+              [entryKey]: {
+                ...entryState,
+                suppressedAt,
+                lastKeywordMatchAt: keywordMatchesThisCall.has(entry.id) ? currentMessageIndex : entryState.lastKeywordMatchAt
+              },
+            };
+          }
         }
       };
       
+      if (addedThisPass === 0 && pass === 0) break;
       if (addedThisPass === 0) break;
       
       // Add matched content to source for next pass (recursive scanning)
@@ -562,6 +636,8 @@ function normalizeLorebookRecord(record) {
     scanDepth: Math.max(1, Number(record.scanDepth) || 50),
     tokenBudget: Math.max(0, Number(record.tokenBudget) || 1024),
     recursiveScanning: record.recursiveScanning === true,
+    injectionMode: record.injectionMode === "once_per_context" ? "once_per_context" : "cooldown",
+    suppressionWindow: Math.max(1, Number(record.suppressionWindow) || 10),
     entries: Array.isArray(record.entries)
       ? record.entries.map(normalizeLorebookEntry).filter(Boolean)
       : [],

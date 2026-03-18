@@ -574,5 +574,9 @@
   "sttSilenceDetected": "Silence detecte, arret...",
   "sttPushToTalkHint": "Maintenez la touche pour enregistrer",
   "sttAutoStopHint": "Cliquez pour demarrer, attend le silence",
-  "sttWrongThread": "L'enregistrement provenait d'un autre chat."
+  "sttWrongThread": "L'enregistrement provenait d'un autre chat.",
+  "lorebookInjectionMode": "Mode d injection",
+  "lorebookCooldown": "Delai de recharge",
+  "lorebookOncePerContext": "Une fois par contexte",
+  "lorebookSuppressionWindow": "Fenetre de suppression (messages)"
 }

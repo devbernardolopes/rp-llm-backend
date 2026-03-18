@@ -574,5 +574,9 @@
   "sttSilenceDetected": "Silencio detectado, parando...",
   "sttPushToTalkHint": "Segure a tecla para gravar",
   "sttAutoStopHint": "Clique para iniciar, espera silencio",
-  "sttWrongThread": "A gravação era de um chat diferente."
+  "sttWrongThread": "A gravação era de um chat diferente.",
+  "lorebookInjectionMode": "Modo de injecao",
+  "lorebookCooldown": "Tempo de espera",
+  "lorebookOncePerContext": "Uma vez por contexto",
+  "lorebookSuppressionWindow": "Janela de supressao (mensagens)"
 }

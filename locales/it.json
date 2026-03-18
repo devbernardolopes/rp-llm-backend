@@ -574,5 +574,9 @@
   "sttSilenceDetected": "Silenzio rilevato, fermo...",
   "sttPushToTalkHint": "Tieni premuto il tasto per registrare",
   "sttAutoStopHint": "Clicca per avviare, aspetta il silenzio",
-  "sttWrongThread": "La registrazione era da una chat diversa."
+  "sttWrongThread": "La registrazione era da una chat diversa.",
+  "lorebookInjectionMode": "Modalita di iniezione",
+  "lorebookCooldown": "Tempo di attesa",
+  "lorebookOncePerContext": "Una volta per contesto",
+  "lorebookSuppressionWindow": "Finestra di soppressione (messaggi)"
 }

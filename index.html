@@ -1655,6 +1655,24 @@
               <input id="lore-recursive-scanning" type="checkbox" />
               <span data-i18n="recursiveScanning">Recursive Scanning</span>
             </span>
+            <div class="form-field">
+              <span data-i18n="lorebookInjectionMode">Injection Mode</span>
+              <select id="lore-injection-mode">
+                <option value="cooldown" data-i18n="lorebookCooldown">Cooldown</option>
+                <option value="once_per_context" data-i18n="lorebookOncePerContext">Once per Context</option>
+              </select>
+            </div>
+            <div class="form-field" id="lore-suppression-window-field">
+              <span data-i18n="lorebookSuppressionWindow">Suppression Window (messages)</span>
+              <input
+                id="lore-suppression-window"
+                type="number"
+                min="1"
+                max="100"
+                step="1"
+                value="10"
+              />
+            </div>
           </div>
           <div class="lore-entry-head">
             <h4 id="lore-entries-title">Entries</h4>

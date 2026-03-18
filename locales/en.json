@@ -575,5 +575,9 @@
   "sttSilenceDetected": "Silence detected, stopping...",
   "sttPushToTalkHint": "Hold the button to record",
   "sttAutoStopHint": "Click to start, waits for silence",
-  "sttWrongThread": "Recording was from a different chat."
+  "sttWrongThread": "Recording was from a different chat.",
+  "lorebookInjectionMode": "Injection Mode",
+  "lorebookCooldown": "Cooldown",
+  "lorebookOncePerContext": "Once per Context",
+  "lorebookSuppressionWindow": "Suppression Window (messages)"
 }

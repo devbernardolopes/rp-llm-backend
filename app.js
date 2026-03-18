@@ -1179,6 +1179,19 @@ function setupEvents() {
     .getElementById("save-lorebook-btn")
     .addEventListener("click", () => saveLorebookFromEditor({ close: true }));
   document
+    .getElementById("lore-injection-mode")
+    ?.addEventListener("change", toggleSuppressionWindowField);
+
+  function toggleSuppressionWindowField() {
+    const field = document.getElementById("lore-suppression-window-field");
+    const select = document.getElementById("lore-injection-mode");
+    if (field && select) {
+      field.classList.toggle("hidden", select.value !== "once_per_context");
+    }
+  }
+  window.toggleSuppressionWindowField = toggleSuppressionWindowField;
+
+  document
     .getElementById("create-writing-instruction-btn")
     .addEventListener("click", () => openWritingInstructionEditor());
   document
@@ -8676,6 +8689,13 @@ function openLoreEditor(lorebook = null) {
   const recursiveField = document.getElementById("lore-recursive-scanning");
   if (recursiveField)
     recursiveField.checked = normalized?.recursiveScanning === true;
+  const injectionModeField = document.getElementById("lore-injection-mode");
+  if (injectionModeField)
+    injectionModeField.value = normalized?.injectionMode || "cooldown";
+  const suppressionWindowField = document.getElementById("lore-suppression-window");
+  if (suppressionWindowField)
+    suppressionWindowField.value = String(normalized?.suppressionWindow || 10);
+  toggleSuppressionWindowField();
 
   if (state.lore.entries.length === 0) addLoreEntryEditor();
   renderLoreEntryEditors();
@@ -8874,6 +8894,15 @@ async function collectLorebookFromEditor() {
   );
   const recursiveScanning =
     document.getElementById("lore-recursive-scanning")?.checked === true;
+  const injectionMode =
+    document.getElementById("lore-injection-mode")?.value || "cooldown";
+  const suppressionWindow = Math.max(
+    1,
+    Math.min(
+      100,
+      Number(document.getElementById("lore-suppression-window")?.value) || 10,
+    ),
+  );
 
   if (name.length < 2 || name.length > 128) {
     await openInfoDialog(
@@ -8925,6 +8954,8 @@ async function collectLorebookFromEditor() {
     scanDepth,
     tokenBudget,
     recursiveScanning,
+    injectionMode,
+    suppressionWindow,
     entries,
     updatedAt: Date.now(),
   };

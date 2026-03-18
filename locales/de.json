@@ -574,5 +574,9 @@
   "sttSilenceDetected": "Stille erkannt, wird gestoppt...",
   "sttPushToTalkHint": "Halte die Taste gedrueckt, um aufzunehmen",
   "sttAutoStopHint": "Klicken zum Starten, wartet auf Stille",
-  "sttWrongThread": "Aufnahme war aus einem anderen Chat."
+  "sttWrongThread": "Aufnahme war aus einem anderen Chat.",
+  "lorebookInjectionMode": "Injektionsmodus",
+  "lorebookCooldown": "Abkuehlzeit",
+  "lorebookOncePerContext": "Einmal pro Kontext",
+  "lorebookSuppressionWindow": "Unterdrueckungsfenster (Nachrichten)"
 }
