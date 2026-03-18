@@ -550,20 +550,5 @@
     "lorebookExported": "Lorebook exported.",
     "lorebookExportFailed": "Lorebook export failed.",
     "lorebookNotFound": "Lorebook not found.",
-    "loreBookEditor": "Lorebook Editor",
-    "stt": "Speech-to-Text",
-    "sttLanguageLabel": "Speech-to-Text Language",
-    "sttTitleOff": "STT: Off",
-    "sttTitleOn": "STT: On",
-    "sttListening": "Listening...",
-    "sttProcessing": "Processing speech...",
-    "sttTranscribed": "Transcribed",
-    "sttError": "Transcription failed",
-    "sttErrorMic": "Microphone access denied",
-    "sttNoSpeech": "No speech detected",
-    "sttNoThread": "Open a thread to use STT",
-    "sttAutoSendOn": "STT Auto-send: On",
-    "sttAutoSendOff": "STT Auto-send: Off",
-    "sttAutoSendEnabled": "STT auto-send enabled",
-    "sttAutoSendDisabled": "STT auto-send disabled"
+    "loreBookEditor": "Lorebook Editor"
 }

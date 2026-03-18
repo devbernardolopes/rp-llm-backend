@@ -65,6 +65,8 @@ const DEFAULT_SETTINGS = {
   loreSemanticThreshold: 0.5,
   sttLanguage: "en",
   sttAutoSend: true,
+  sttMode: "push-to-talk",
+  sttSilenceDuration: 2,
 };
 
 // Theme management
@@ -135,6 +137,12 @@ const state = {
     autoSend: true,
     mediaRecorder: null,
     audioChunks: [],
+    isPushToTalkActive: false,
+    silenceDetector: null,
+    silenceStartTime: null,
+    animationFrameId: null,
+    audioContext: null,
+    stream: null,
   },
   avatarSnapshotCache: new Map(),
   avatarBlobUrlCache: new Map(),
@@ -834,9 +842,51 @@ function setupEvents() {
     .getElementById("auto-tts-toggle-btn")
     .addEventListener("click", toggleThreadAutoTts);
   document.getElementById("stt-toggle-btn").innerHTML = ICONS.mic;
-  document
-    .getElementById("stt-toggle-btn")
-    .addEventListener("click", toggleSttRecording);
+  const sttBtn = document.getElementById("stt-toggle-btn");
+  
+  sttBtn.addEventListener("mousedown", (e) => {
+    if (state.settings.sttMode === "push-to-talk") {
+      e.preventDefault();
+      state.stt.isPushToTalkActive = true;
+      startSttRecording();
+    }
+  });
+  
+  sttBtn.addEventListener("mouseup", () => {
+    if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
+      state.stt.isPushToTalkActive = false;
+      stopSttRecording();
+    }
+  });
+  
+  sttBtn.addEventListener("mouseleave", () => {
+    if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
+      state.stt.isPushToTalkActive = false;
+      stopSttRecording();
+    }
+  });
+  
+  sttBtn.addEventListener("touchstart", (e) => {
+    if (state.settings.sttMode === "push-to-talk") {
+      e.preventDefault();
+      state.stt.isPushToTalkActive = true;
+      startSttRecording();
+    }
+  });
+  
+  sttBtn.addEventListener("touchend", () => {
+    if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
+      state.stt.isPushToTalkActive = false;
+      stopSttRecording();
+    }
+  });
+  
+  sttBtn.addEventListener("click", () => {
+    if (state.settings.sttMode === "auto-stop") {
+      toggleSttRecording();
+    }
+  });
+  
   document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#10148;";
   document
     .getElementById("stt-auto-send-toggle-btn")
@@ -2693,6 +2743,17 @@ async function setupSettingsControls() {
     if (!sttLanguageSelect.value) sttLanguageSelect.value = "en";
   }
 
+  const sttModeSelect = document.getElementById("stt-mode-select");
+  if (sttModeSelect) {
+    sttModeSelect.value = state.settings.sttMode || "push-to-talk";
+    if (!sttModeSelect.value) sttModeSelect.value = "push-to-talk";
+  }
+
+  const sttSilenceDuration = document.getElementById("stt-silence-duration");
+  if (sttSilenceDuration) {
+    sttSilenceDuration.value = state.settings.sttSilenceDuration || 2;
+  }
+
   const themeSelect = document.getElementById("theme-select");
   if (themeSelect) {
     await populateThemeDropdown();
@@ -3487,6 +3548,20 @@ async function setupSettingsControls() {
   if (sttLanguageSelect) {
     sttLanguageSelect.addEventListener("change", () => {
       state.settings.sttLanguage = sttLanguageSelect.value || "en";
+      saveSettings();
+    });
+  }
+  if (sttModeSelect) {
+    sttModeSelect.addEventListener("change", () => {
+      state.settings.sttMode = sttModeSelect.value || "push-to-talk";
+      saveSettings();
+      updateSttButtonForMode();
+    });
+  }
+  if (sttSilenceDuration) {
+    sttSilenceDuration.addEventListener("change", () => {
+      const val = parseInt(sttSilenceDuration.value, 10);
+      state.settings.sttSilenceDuration = (isFinite(val) && val >= 1 && val <= 10) ? val : 2;
       saveSettings();
     });
   }
@@ -12502,10 +12577,12 @@ async function toggleThreadAutoTts() {
 }
 
 async function toggleSttRecording() {
-  if (state.stt.isListening) {
-    await stopSttRecording();
-  } else {
-    await startSttRecording();
+  if (state.settings.sttMode === "auto-stop") {
+    if (state.stt.isListening) {
+      await stopSttRecording();
+    } else {
+      await startSttRecording();
+    }
   }
 }
 
@@ -12516,6 +12593,8 @@ async function startSttRecording() {
   }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.stt.stream = stream;
+    state.stt.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     state.stt.mediaRecorder = new MediaRecorder(stream);
     state.stt.audioChunks = [];
     
@@ -12526,9 +12605,16 @@ async function startSttRecording() {
     };
     
     state.stt.mediaRecorder.onstop = async () => {
+      stopSilenceDetection();
       const audioBlob = new Blob(state.stt.audioChunks, { type: "audio/webm" });
-      const stream = state.stt.mediaRecorder.stream;
-      stream.getTracks().forEach(track => track.stop());
+      if (state.stt.stream) {
+        state.stt.stream.getTracks().forEach(track => track.stop());
+        state.stt.stream = null;
+      }
+      if (state.stt.audioContext) {
+        await state.stt.audioContext.close();
+        state.stt.audioContext = null;
+      }
       state.stt.mediaRecorder = null;
       
       if (audioBlob.size > 0) {
@@ -12538,18 +12624,77 @@ async function startSttRecording() {
     
     state.stt.mediaRecorder.start();
     state.stt.isListening = true;
+    state.stt.silenceStartTime = null;
     updateSttToggleButton();
-    showToast(t("sttListening"), "info");
+    
+    if (state.settings.sttMode === "push-to-talk") {
+      showToast(t("sttHoldToTalk"), "info");
+    } else {
+      showToast(t("sttListeningAutoStop"), "info");
+      if (typeof createSilenceDetector === "function") {
+        startSilenceDetection();
+      }
+    }
   } catch (e) {
     console.error("STT recording failed:", e);
     showToast(t("sttErrorMic"), "error");
   }
 }
 
+function startSilenceDetection() {
+  if (!state.stt.audioContext || !state.stt.stream) return;
+  
+  state.stt.silenceDetector = createSilenceDetector(
+    state.stt.audioContext,
+    state.stt.stream,
+    onSilenceDetected
+  );
+  
+  checkSilence();
+}
+
+function checkSilence() {
+  if (!state.stt.isListening || !state.stt.silenceDetector) return;
+  
+  const level = state.stt.silenceDetector.getAudioLevel();
+  const silenceThreshold = -40;
+  const silenceDuration = state.settings.sttSilenceDuration || 2;
+  
+  if (level < silenceThreshold) {
+    if (!state.stt.silenceStartTime) {
+      state.stt.silenceStartTime = Date.now();
+    } else if (Date.now() - state.stt.silenceStartTime > silenceDuration * 1000) {
+      onSilenceDetected();
+      return;
+    }
+  } else {
+    state.stt.silenceStartTime = null;
+  }
+  
+  state.stt.animationFrameId = requestAnimationFrame(checkSilence);
+}
+
+function stopSilenceDetection() {
+  if (state.stt.animationFrameId) {
+    cancelAnimationFrame(state.stt.animationFrameId);
+    state.stt.animationFrameId = null;
+  }
+  state.stt.silenceDetector = null;
+  state.stt.silenceStartTime = null;
+}
+
+function onSilenceDetected() {
+  stopSilenceDetection();
+  showToast(t("sttSilenceDetected"), "info");
+  stopSttRecording();
+}
+
 async function stopSttRecording() {
   if (state.stt.mediaRecorder && state.stt.isListening) {
+    stopSilenceDetection();
     state.stt.mediaRecorder.stop();
     state.stt.isListening = false;
+    state.stt.isPushToTalkActive = false;
     updateSttToggleButton();
   }
 }
@@ -12595,16 +12740,21 @@ function updateSttToggleButton() {
   if (!btn) return;
   
   if (state.stt.isListening) {
-    btn.classList.add("is-active");
+    btn.classList.add("is-active", "stt-recording");
     btn.setAttribute("data-i18n-title", "sttTitleOn");
-    btn.title = "STT: On";
+    btn.title = state.settings.sttMode === "push-to-talk" ? t("sttHoldToTalk") : t("sttListeningAutoStop");
     btn.innerHTML = ICONS.micFilled;
   } else {
-    btn.classList.remove("is-active");
+    btn.classList.remove("is-active", "stt-recording");
     btn.setAttribute("data-i18n-title", "sttTitleOff");
-    btn.title = "STT: Off";
+    btn.title = state.settings.sttMode === "push-to-talk" ? t("sttPushToTalkHint") : t("sttAutoStopHint");
     btn.innerHTML = ICONS.mic;
   }
+}
+
+function updateSttButtonForMode() {
+  updateSttToggleButton();
+  updateSttAutoSendButton();
 }
 
 function toggleSttAutoSend() {

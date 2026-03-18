@@ -860,6 +860,17 @@
                 <option value="pt-BR">Portugues (Brasil)</option>
               </select>
             </div>
+            <div class="form-field">
+              <span data-i18n="sttModeLabel">STT Mode</span>
+              <select id="stt-mode-select">
+                <option value="push-to-talk" data-i18n="sttModePushToTalk">Push-to-Talk</option>
+                <option value="auto-stop" data-i18n="sttModeAutoStop">Auto-Stop on Silence</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="sttSilenceDurationLabel">Silence Duration (seconds)</span>
+              <input type="number" id="stt-silence-duration" min="1" max="10" value="2" />
+            </div>
              <div class="form-field">
                <span data-i18n="themeLabel">Theme</span>
                <select id="theme-select">

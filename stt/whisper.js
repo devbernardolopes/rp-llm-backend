@@ -82,6 +82,28 @@ function resampleAudio(channelData, fromSampleRate, toSampleRate = 16000) {
   return result;
 }
 
+function createSilenceDetector(audioContext, stream, onSilenceDetected) {
+  const analyser = audioContext.createAnalyser();
+  const source = audioContext.createMediaStreamSource(stream);
+  source.connect(analyser);
+  analyser.fftSize = 256;
+  
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  
+  function getAudioLevel() {
+    analyser.getByteFrequencyData(dataArray);
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      sum += dataArray[i] * dataArray[i];
+    }
+    const rms = Math.sqrt(sum / dataArray.length);
+    if (rms === 0) return -100;
+    return 20 * Math.log10(rms / 255);
+  }
+  
+  return { analyser, getAudioLevel };
+}
+
 function writeString(view, offset, string) {
   for (let i = 0; i < string.length; i++) {
     view.setUint8(offset + i, string.charCodeAt(i));
