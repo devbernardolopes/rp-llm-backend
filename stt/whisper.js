@@ -39,8 +39,11 @@ async function transcribeAudio(audioBlob, language = "en") {
 
   try {
     const arrayBuffer = await audioBlob.arrayBuffer();
+    console.log("STT: Audio blob size:", audioBlob.size, "type:", audioBlob.type);
+    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    console.log("STT: Decoded audioBuffer sampleRate:", audioBuffer.sampleRate, "length:", audioBuffer.length, "channels:", audioBuffer.numberOfChannels);
     
     const targetSampleRate = 16000;
     let channelData = audioBuffer.getChannelData(0);
@@ -49,17 +52,17 @@ async function transcribeAudio(audioBlob, language = "en") {
       channelData = resampleAudio(channelData, audioBuffer.sampleRate, targetSampleRate);
     }
     
+    // Ensure it's a proper Float32Array
+    let audioArray = new Float32Array(channelData);
+    console.log("STT: Audio array type:", audioArray.constructor.name, "length:", audioArray.length);
+    
     const langCode = language === "pt-BR" ? "pt" : language.split("-")[0];
     console.log("STT: Using language code:", langCode);
     
-    const audioInput = {
-      array: channelData,
-      sampling_rate: targetSampleRate
-    };
-    
-    const result = await window.sttModel(audioInput, { 
+    const result = await window.sttModel(audioArray, { 
       language: langCode,
-      task: "transcribe"
+      task: "transcribe",
+      sampling_rate: targetSampleRate
     });
     console.log("STT: Transcription result:", result.text.trim());
     return result.text.trim();
