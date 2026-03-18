@@ -115,9 +115,8 @@ async function loadSttModel() {
   }
 
   sttWorkerInitializing = true;
+  const worker = getWorker();
   sttInitPromise = new Promise((resolve) => {
-    const worker = getWorker();
-    
     const checkReady = setInterval(() => {
       if (sttWorkerReady) {
         clearInterval(checkReady);
