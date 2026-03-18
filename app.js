@@ -12711,6 +12711,7 @@ async function processSttAudio(audioBlob) {
     }
     
     const language = state.settings.sttLanguage || "en";
+    console.log("STT Processing: Language from settings:", language);
     const text = await transcribeAudio(audioBlob, language);
     
     if (text) {

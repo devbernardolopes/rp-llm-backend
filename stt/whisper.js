@@ -50,11 +50,18 @@ async function transcribeAudio(audioBlob, language = "en") {
     }
     
     const langCode = language === "pt-BR" ? "pt" : language.split("-")[0];
+    console.log("STT: Using language code:", langCode);
     
-    const result = await window.sttModel(channelData, { 
-      language: langCode,
+    const audioInput = {
+      array: channelData,
       sampling_rate: targetSampleRate
+    };
+    
+    const result = await window.sttModel(audioInput, { 
+      language: langCode,
+      task: "transcribe"
     });
+    console.log("STT: Transcription result:", result.text.trim());
     return result.text.trim();
   } catch (e) {
     console.error("STT transcription failed:", e);
