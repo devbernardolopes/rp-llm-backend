@@ -15021,6 +15021,9 @@ async function sendOocInquiry(text) {
     } else {
       pendingAssistant.generationError = "";
     }
+    pendingAssistant.systemMessages = formatOocSystemMessageEntries(
+      result.systemMessages,
+    );
     pendingAssistant.generationStatus = "";
   } catch (err) {
     pendingAssistant.generationStatus = "";
