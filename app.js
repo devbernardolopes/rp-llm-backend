@@ -12283,6 +12283,7 @@ async function deleteThread(threadId) {
     updateAutoTtsToggleButton();
   }
   await renderThreads();
+  await renderCharacters();
   showToast(t("threadDeleted"), "success");
 }
 
