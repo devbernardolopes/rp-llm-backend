@@ -14791,6 +14791,16 @@ function getOocPromptForUserMessage(message) {
   return raw;
 }
 
+function formatOocSystemPromptText(text) {
+  const normalized = String(text || "").trim();
+  if (!normalized) return "";
+  const prefixRemoved = normalized
+    .replace(/^\s*SYSTEM,?\s*/i, "")
+    .trim();
+  const inner = prefixRemoved || normalized;
+  return `((OOC: SYSTEM, ${inner}))`;
+}
+
 async function buildOocSystemPrompt() {
   const threshold = state.settings.autoUnloadThreshold || 0;
   const unloadState = currentThread?.unloadState;
@@ -14849,8 +14859,9 @@ async function buildOocSystemPrompt() {
     memorySection,
     messageSection,
   ].filter(Boolean);
+  const rawSystemPrompt = systemPromptParts.join("\n\n").trim();
   return {
-    systemPrompt: systemPromptParts.join("\n\n").trim(),
+    systemPrompt: formatOocSystemPromptText(rawSystemPrompt) || rawSystemPrompt,
     contextMessages,
     memoryContext,
   };
@@ -15251,7 +15262,8 @@ async function generateBotReply() {
         role === "user" &&
         state.settings.personaPrefixEnabled &&
         m.senderName &&
-        m.senderName !== "You"
+        m.senderName !== "You" &&
+        currentThread?.oocModeEnabled !== true
       ) {
         content = `(As ${m.senderName}): ${content}`;
       }
@@ -15639,7 +15651,8 @@ async function regenerateMessage(index) {
           role === "user" &&
           state.settings.personaPrefixEnabled &&
           m.senderName &&
-          m.senderName !== "You"
+          m.senderName !== "You" &&
+          currentThread?.oocModeEnabled !== true
         ) {
           content = `(As ${m.senderName}): ${content}`;
         }
@@ -19829,7 +19842,8 @@ async function updateThreadBudgetIndicator() {
         role === "user" &&
         state.settings.personaPrefixEnabled &&
         m.senderName &&
-        m.senderName !== "You"
+        m.senderName !== "You" &&
+        currentThread?.oocModeEnabled !== true
       ) {
         content = `(As ${m.senderName}): ${content}`;
       }
@@ -19851,7 +19865,8 @@ async function updateThreadBudgetIndicator() {
     if (
       state.settings.personaPrefixEnabled &&
       currentPersona?.name &&
-      currentPersona.name !== "You"
+      currentPersona.name !== "You" &&
+      currentThread?.oocModeEnabled !== true
     ) {
       pendingContent = `(As ${currentPersona.name}): ${pendingInput}`;
     }
