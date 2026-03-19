@@ -15269,7 +15269,8 @@ async function generateBotReply() {
         state.settings.personaPrefixEnabled &&
         m.senderName &&
         m.senderName !== "You" &&
-        currentThread?.oocModeEnabled !== true
+        currentThread?.oocModeEnabled !== true &&
+        m.ooc !== true
       ) {
         content = `(As ${m.senderName}): ${content}`;
       }
@@ -15658,7 +15659,8 @@ async function regenerateMessage(index) {
           state.settings.personaPrefixEnabled &&
           m.senderName &&
           m.senderName !== "You" &&
-          currentThread?.oocModeEnabled !== true
+          currentThread?.oocModeEnabled !== true &&
+          m.ooc !== true
         ) {
           content = `(As ${m.senderName}): ${content}`;
         }
@@ -19849,7 +19851,8 @@ async function updateThreadBudgetIndicator() {
         state.settings.personaPrefixEnabled &&
         m.senderName &&
         m.senderName !== "You" &&
-        currentThread?.oocModeEnabled !== true
+        currentThread?.oocModeEnabled !== true &&
+        m.ooc !== true
       ) {
         content = `(As ${m.senderName}): ${content}`;
       }
