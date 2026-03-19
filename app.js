@@ -13867,16 +13867,11 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     ? displayHistory
     : conversationHistory;
   const resolvedIndex = historyForDisplay.indexOf(message);
+  const effectiveIndex = resolvedIndex >= 0 ? resolvedIndex : historyForDisplay.length;
   const displayIndex = message?.isInitial
     ? (cachedInitialMessageDisplayIndex ??
-      getMessageDisplayIndex(
-        resolvedIndex >= 0 ? resolvedIndex : index,
-        historyForDisplay,
-      ))
-    : getMessageDisplayIndex(
-        resolvedIndex >= 0 ? resolvedIndex : index,
-        historyForDisplay,
-      );
+      getMessageDisplayIndex(effectiveIndex, historyForDisplay))
+    : getMessageDisplayIndex(effectiveIndex, historyForDisplay);
   const offset = getThreadDisplayOffset();
   const numberedIndex = displayIndex + offset;
   messageIndex.textContent = isOocMessage ? `OOC #${numberedIndex}` : `#${numberedIndex}`;
