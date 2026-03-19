@@ -15006,7 +15006,16 @@ async function sendOocInquiry(text) {
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
     const assistantText = result.content || pendingAssistant.content || "";
-    pendingAssistant.content = assistantText || "(No content returned)";
+    const trimmedText = assistantText.trim();
+    let wrappedContent = "(No content returned)";
+    if (trimmedText) {
+      if (trimmedText.startsWith("((OOC:") && trimmedText.endsWith("))")) {
+        wrappedContent = trimmedText;
+      } else {
+        wrappedContent = `((OOC: ${trimmedText}))`;
+      }
+    }
+    pendingAssistant.content = wrappedContent;
     pendingAssistant.finishReason = String(result.finishReason || "");
     pendingAssistant.nativeFinishReason = String(
       result.nativeFinishReason || "",
@@ -15030,24 +15039,15 @@ async function sendOocInquiry(text) {
     const errorMessage = String(err?.message || err || "OOC request failed");
     pendingAssistant.generationError = errorMessage;
     pendingAssistant.content =
-      pendingAssistant.content || `OOC request failed: ${errorMessage}`;
+      pendingAssistant.content || `((OOC: OOC request failed: ${errorMessage}))`;
     showToast(`OOC request failed: ${errorMessage}`, "error");
-  } finally {
-    const liveRow = ensureMessageRowExists(pendingIndex);
-    if (liveRow) {
-      liveRow.dataset.streaming = "0";
-      const liveContent = liveRow.querySelector(".message-content");
-      if (liveContent) {
-        renderMessageContent(liveContent, pendingAssistant);
-      }
-    }
-    await persistCurrentThread();
-    if (isViewing) {
-      renderChat();
-      scrollChatToBottom();
-    }
-    await renderThreads();
   }
+  await persistCurrentThread();
+  if (isViewing) {
+    renderChat();
+    scrollChatToBottom();
+  }
+  await renderThreads();
 }
 
 async function regenerateOocMessage(index) {
