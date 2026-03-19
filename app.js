@@ -1360,6 +1360,8 @@ function setupEvents() {
   paginationPrev?.addEventListener("click", () => {
     if (state.characterPage <= 1) return;
     state.characterPage -= 1;
+    const grid = document.getElementById("character-grid");
+    if (grid) grid.scrollTo({ top: 0 });
     renderCharacters();
   });
 
@@ -1367,6 +1369,8 @@ function setupEvents() {
     const maxPages = Math.max(1, state.characterTotalPages || 1);
     if (state.characterPage >= maxPages) return;
     state.characterPage += 1;
+    const grid = document.getElementById("character-grid");
+    if (grid) grid.scrollTo({ top: 0 });
     renderCharacters();
   });
 
@@ -1376,6 +1380,8 @@ function setupEvents() {
     state.characterCardsPerPage = value;
     state.characterPage = 1;
     saveUiState();
+    const grid = document.getElementById("character-grid");
+    if (grid) grid.scrollTo({ top: 0 });
     await renderCharacters();
   });
   const chatOpacityOverlay = document.getElementById("chat-opacity-overlay");
@@ -5556,6 +5562,8 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
     btn.addEventListener("click", () => {
       if (pageNum === state.characterPage) return;
       state.characterPage = pageNum;
+      const grid = document.getElementById("character-grid");
+      if (grid) grid.scrollTo({ top: 0 });
       renderCharacters();
     });
     fragment.appendChild(btn);
