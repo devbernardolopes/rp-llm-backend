@@ -14182,6 +14182,7 @@ function ensureMessageRowExists(index) {
 
 function refreshLatestAssistantRowContent() {
   if (!conversationHistory.length) return;
+  const displayHistory = getFilteredConversationHistoryForThread();
   const unloadState = currentThread?.unloadState;
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
   for (let idx = conversationHistory.length - 1; idx >= 0; idx -= 1) {
@@ -14195,7 +14196,12 @@ function refreshLatestAssistantRowContent() {
     const status = String(message?.generationStatus || "").trim();
     const isStreamingStatus = STREAMING_STATUSES.has(status);
     const isStreaming = isStreamingStatus;
-    const newRow = buildMessageRow(message, originalIndex, isStreaming);
+    const newRow = buildMessageRow(
+      message,
+      originalIndex,
+      isStreaming,
+      displayHistory,
+    );
     oldRow.replaceWith(newRow);
     refreshMessageControlStates();
     refreshAllSpeakerButtons();
