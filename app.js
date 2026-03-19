@@ -14800,11 +14800,32 @@ function getOocPromptForUserMessage(message) {
 function formatOocSystemPromptText(text) {
   const normalized = String(text || "").trim();
   if (!normalized) return "";
+  if (normalized.startsWith("((OOC:")) {
+    return normalized;
+  }
   const prefixRemoved = normalized
     .replace(/^\s*SYSTEM,?\s*/i, "")
     .trim();
   const inner = prefixRemoved || normalized;
   return `((OOC: SYSTEM, ${inner}))`;
+}
+
+function formatOocSystemMessageEntries(entries) {
+  const list = Array.isArray(entries) ? entries : [];
+  const formatted = [];
+  for (const entry of list) {
+    if (!entry) continue;
+    const role = String(entry.role || "").toLowerCase();
+    const content = String(entry.content || "").trim();
+    if (!content) continue;
+    if (role !== "system") {
+      formatted.push({ ...entry, content });
+      continue;
+    }
+    const wrapped = formatOocSystemPromptText(content) || content;
+    formatted.push({ ...entry, content: wrapped });
+  }
+  return formatted;
 }
 
 async function buildOocSystemPrompt() {
@@ -15121,11 +15142,9 @@ async function regenerateOocMessage(index) {
     target.temperature = Number(state.settings.temperature) || 0;
     target.generationError = "";
     target.generationStatus = "";
-    target.systemMessages = Array.isArray(result.systemMessages)
-      ? result.systemMessages.filter(
-          (entry) => entry && String(entry.content || "").trim(),
-        )
-      : [];
+    target.systemMessages = formatOocSystemMessageEntries(
+      result.systemMessages,
+    );
     messagesToSave[index] = { ...target };
     if (!isViewing) {
       target.unreadAt = Date.now();
@@ -15748,11 +15767,14 @@ async function regenerateMessage(index) {
     messagesToSave[index].model = target.model;
     target.temperature = Number(state.settings.temperature) || 0;
     messagesToSave[index].temperature = target.temperature;
-    target.systemMessages = Array.isArray(result.systemMessages)
-      ? result.systemMessages.filter(
-          (entry) => entry && String(entry.content || "").trim(),
-        )
-      : [];
+    target.systemMessages =
+      target.ooc === true
+        ? formatOocSystemMessageEntries(result.systemMessages)
+        : Array.isArray(result.systemMessages)
+          ? result.systemMessages.filter(
+              (entry) => entry && String(entry.content || "").trim(),
+            )
+          : [];
     messagesToSave[index].systemMessages = target.systemMessages;
     target.generationError = "";
     target.generationStatus = "";
