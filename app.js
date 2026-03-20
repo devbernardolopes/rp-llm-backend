@@ -1316,6 +1316,9 @@ function setupEvents() {
   });
   input.addEventListener("dblclick", openPromptHistory);
   input.addEventListener("pointerup", onInputPointerUp);
+  let scrollLoadTimeout = null;
+  const SCROLL_LOAD_THRESHOLD = 100; // pixels from top to trigger load
+
   chatLog.addEventListener("scroll", () => {
     if (state.sending) {
       state.chatAutoScroll = isChatNearBottom();
@@ -1328,6 +1331,18 @@ function setupEvents() {
         `rp-thread-scroll-${currentThread.id}`,
         chatLog.scrollTop,
       );
+    }
+    // Auto-load more messages when scrolled near top
+    const threshold = state.settings.autoUnloadThreshold || 0;
+    if (threshold > 0 && chatLog.scrollTop < SCROLL_LOAD_THRESHOLD) {
+      const vis = computeVisibleMessageIndices();
+      if (vis.hiddenCount > 0) {
+        // Debounce auto-load to avoid too many rapid loads
+        if (scrollLoadTimeout) clearTimeout(scrollLoadTimeout);
+        scrollLoadTimeout = setTimeout(() => {
+          toggleUnloadBatch().catch(() => {});
+        }, 300);
+      }
     }
   });
   requestAnimationFrame(() => adjustUserInputElementHeight(input));
@@ -13254,6 +13269,7 @@ function computeVisibleMessageIndices() {
       loadLimit: 0,
       startActive: 0,
       hiddenCount: 0,
+      totalHiddenCount: 0,
       totalMessages,
       loadedStartIndex: 0,
     };
@@ -13262,6 +13278,7 @@ function computeVisibleMessageIndices() {
   const startActive = totalMessages - threshold;
   const loadLimit = unloadState?.loadLimit || 0;
   const clampedLoadLimit = Math.max(0, Math.min(loadLimit, startActive));
+  const totalHidden = startActive;
 
   const visible = [];
   for (let i = startActive - clampedLoadLimit; i < startActive; i++) {
@@ -13282,6 +13299,7 @@ function computeVisibleMessageIndices() {
     loadLimit: clampedLoadLimit,
     startActive,
     hiddenCount: startActive - clampedLoadLimit,
+    totalHiddenCount: totalHidden,
     totalMessages,
     loadedStartIndex,
   };
@@ -13320,15 +13338,22 @@ function updateUnloadButtonVisibility() {
     btn.classList.add("hidden");
     return;
   }
-  // Show only when scrolled near top
-  if (log.scrollTop > 50) {
+  // Always show button when there are hidden messages to load
+  // Only hide when user has loaded messages and scrolled away from top
+  const isScrolledAway = log.scrollTop > 200;
+  if (hiddenCount === 0 && isScrolledAway) {
     btn.classList.add("hidden");
     return;
   }
   btn.classList.remove("hidden");
   if (hiddenCount > 0) {
     const count = Math.min(threshold, hiddenCount);
-    btn.textContent = tf("unloadThresholdLoadButton", { count });
+    const totalHidden = vis.totalHiddenCount || hiddenCount;
+    if (totalHidden > count) {
+      btn.textContent = tf("unloadThresholdLoadButton", { count }) + ` (${totalHidden} hidden)`;
+    } else {
+      btn.textContent = tf("unloadThresholdLoadButton", { count });
+    }
     btn.dataset.action = "load";
   } else if (loadLimit > 0) {
     btn.textContent = t("unloadThresholdHideButton");
@@ -13420,6 +13445,9 @@ function releaseAllChatRowResources(log) {
 }
 
 function renderChat(startIdx, endIdx) {
+  const perfStart = performance.now();
+  const perfMarks = { clear: 0, build: 0, append: 0, total: 0 };
+  
   const log = document.getElementById("chat-log");
   const previousScrollTop = log.scrollTop;
   const previousScrollHeight = log.scrollHeight;
@@ -13442,9 +13470,11 @@ function renderChat(startIdx, endIdx) {
   const isFullRender = arguments.length === 0;
 
   if (isFullRender) {
+    const clearStart = performance.now();
     releaseAllChatRowResources(log);
     log.innerHTML = "";
     state.editingMessageIndex = null;
+    perfMarks.clear = performance.now() - clearStart;
   }
 
   if (!currentThread) return;
@@ -13503,7 +13533,11 @@ function renderChat(startIdx, endIdx) {
     }
   }
 
-  // Render messages in range
+  // Build all rows first, then batch insert
+  const buildStart = performance.now();
+  const rowsToAppend = [];
+  let domNodesCreated = 0;
+  
   for (let i of indicesToRender) {
     const message = conversationHistory[i];
     if (!message) continue;
@@ -13529,11 +13563,24 @@ function renderChat(startIdx, endIdx) {
       releaseMessageRowResources(existingRow);
       existingRow.replaceWith(newRow);
     } else {
-      log.appendChild(
-        buildMessageRow(message, originalIndex, rowStreaming, displayHistory),
+      rowsToAppend.push(
+        buildMessageRow(message, originalIndex, rowStreaming, displayHistory)
       );
+      domNodesCreated++;
     }
   }
+  perfMarks.build = performance.now() - buildStart;
+
+  // Batch insert using DocumentFragment for better performance
+  const appendStart = performance.now();
+  if (rowsToAppend.length > 0) {
+    const fragment = document.createDocumentFragment();
+    for (const row of rowsToAppend) {
+      fragment.appendChild(row);
+    }
+    log.appendChild(fragment);
+  }
+  perfMarks.append = performance.now() - appendStart;
 
   if (isFullRender) {
     if (hasSavedScroll && !state.sending) {
@@ -13543,6 +13590,17 @@ function renderChat(startIdx, endIdx) {
     } else if (!state.sending && isAtBottom) {
       log.scrollTop = log.scrollHeight;
     }
+  }
+
+  perfMarks.total = performance.now() - perfStart;
+  
+  // Log performance metrics in development
+  if (state.settings?.debugMode || perfMarks.total > 50) {
+    console.debug(
+      `[renderChat] ${indicesToRender.length} messages, ${domNodesCreated} new DOM nodes | ` +
+      `clear: ${perfMarks.clear.toFixed(1)}ms, build: ${perfMarks.build.toFixed(1)}ms, ` +
+      `append: ${perfMarks.append.toFixed(1)}ms, total: ${perfMarks.total.toFixed(1)}ms`
+    );
   }
 
   ensureUnloadButton();
