@@ -1965,9 +1965,21 @@ function autoExpandTextarea(textarea) {
     lineHeight * baseRows,
   );
   textarea.dataset.minHeight = minHeight;
-  const newHeight = Math.max(textarea.scrollHeight, minHeight);
-  textarea.style.height = `${newHeight}px`;
-  if (scrollContainer) {
+  const applyHeight = () => {
+    const newHeight = Math.max(textarea.scrollHeight, minHeight);
+    textarea.style.height = `${newHeight}px`;
+  };
+  applyHeight();
+  if (textarea.scrollHeight === 0) {
+    requestAnimationFrame(() => {
+      applyHeight();
+      if (scrollContainer) {
+        requestAnimationFrame(() => {
+          scrollContainer.scrollTop = scrollTop;
+        });
+      }
+    });
+  } else if (scrollContainer) {
     requestAnimationFrame(() => {
       scrollContainer.scrollTop = scrollTop;
     });
@@ -3721,6 +3733,19 @@ function setupSettingsTabsLayout() {
       panels.forEach((panel, key) => {
         panel.classList.toggle("hidden", key !== tab);
       });
+      if (tab === "prompting") {
+        requestAnimationFrame(() => {
+          const panel = panels.get("prompting");
+          if (panel) {
+            panel.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+              const entry = textareaCollapseStates.get(textarea);
+              if (entry && entry.header.getAttribute("aria-expanded") === "true") {
+                autoExpandTextarea(textarea);
+              }
+            });
+          }
+        });
+      }
     });
   });
   body.dataset.tabsReady = "1";
