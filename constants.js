@@ -589,8 +589,7 @@ const I18N = {
     generationErrorLine3:
       "You can regenerate this message, switch model, or continue the chat.",
     threadQueueBadgeTitle: "Queued for generation (position {position})",
-    threadAutoTitleEnabled: "Enable Auto-titling for Threads",
-    threadAutoTitleMinMessages: "Min. Messages",
+
     chatMessageAlignment: "Message Alignment",
     messageAlignmentLeft: "Left (Default)",
     messageAlignmentCenter: "Center",

@@ -43,8 +43,6 @@ const DEFAULT_SETTINGS = {
   botCardAvatarEffect: "none",
   botCardAvatarTransitionDelay: 4,
   completionCooldown: 2,
-  threadAutoTitleEnabled: true,
-  threadAutoTitleMinMessages: 5,
   lockMemoryMessages: false,
   summaryThreshold: 20,
   memoryMessagesToKeep: 3,
@@ -2723,12 +2721,6 @@ async function setupSettingsControls() {
   const marqueeBehaviorSelect = document.getElementById(
     "marquee-behavior-select",
   );
-  const threadAutoTitleEnabled = document.getElementById(
-    "thread-autotitle-enabled",
-  );
-  const threadAutoTitleMinMessages = document.getElementById(
-    "thread-autotitle-min-messages",
-  );
   const lockMemoryMessages = document.getElementById("lock-memory-messages");
   const personaPrefixEnabled = document.getElementById(
     "persona-prefix-enabled",
@@ -2877,15 +2869,6 @@ async function setupSettingsControls() {
   allowMessageHtml.checked = state.settings.allowMessageHtml === true;
   streamEnabled.checked = state.settings.streamEnabled !== false;
   autopairEnabled.checked = state.settings.autoPairEnabled !== false;
-  threadAutoTitleEnabled.checked =
-    state.settings.threadAutoTitleEnabled !== false;
-  const minMessages = Math.max(
-    5,
-    Math.min(10, Number(state.settings.threadAutoTitleMinMessages) || 5),
-  );
-  state.settings.threadAutoTitleMinMessages = minMessages;
-  threadAutoTitleMinMessages.value = String(minMessages);
-  threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
   if (lockMemoryMessages) {
     lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
   }
@@ -3214,22 +3197,6 @@ async function setupSettingsControls() {
 
   autopairEnabled.addEventListener("change", () => {
     state.settings.autoPairEnabled = autopairEnabled.checked;
-    saveSettings();
-  });
-  threadAutoTitleEnabled?.addEventListener("change", () => {
-    state.settings.threadAutoTitleEnabled = threadAutoTitleEnabled.checked;
-    if (threadAutoTitleMinMessages) {
-      threadAutoTitleMinMessages.disabled = !threadAutoTitleEnabled.checked;
-    }
-    saveSettings();
-  });
-  threadAutoTitleMinMessages?.addEventListener("change", () => {
-    const value = Math.max(
-      5,
-      Math.min(10, Number(threadAutoTitleMinMessages.value) || 5),
-    );
-    state.settings.threadAutoTitleMinMessages = value;
-    threadAutoTitleMinMessages.value = String(value);
     saveSettings();
   });
   lockMemoryMessages?.addEventListener("change", () => {
@@ -3641,8 +3608,6 @@ function getSettingsGroupForNode(node) {
     has("#allow-message-html") ||
     has("#stream-enabled") ||
     has("#autopair-enabled") ||
-    has("#thread-autotitle-enabled") ||
-    has("#thread-autotitle-min-messages") ||
     has("#lock-memory-messages") ||
     has("#markdown-custom-css") ||
     has("#postprocess-rules-json") ||
@@ -3692,8 +3657,6 @@ function getSettingsGroupForNode(node) {
     id === "allow-message-html" ||
     id === "stream-enabled" ||
     id === "autopair-enabled" ||
-    id === "thread-autotitle-enabled" ||
-    id === "thread-autotitle-min-messages" ||
     id === "lock-memory-messages" ||
     id === "markdown-custom-css" ||
     id === "postprocess-rules-json" ||

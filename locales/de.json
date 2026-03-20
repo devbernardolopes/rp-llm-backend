@@ -179,7 +179,6 @@
   "topPLabel": "Top P",
   "frequencyPenaltyLabel": "Frequenzstrafe",
   "presencePenaltyLabel": "Anwesenheitsstrafe",
-  "threadAutoTitleEnabled": "Auto-Titel",
   "chatMessageAlignment": "Nachrichtenausrichtung",
   "messageAlignmentLeft": "Links (Standard)",
   "messageAlignmentCenter": "Mitte",

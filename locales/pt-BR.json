@@ -179,7 +179,6 @@
   "topPLabel": "Top P",
   "frequencyPenaltyLabel": "Penalidade de Frequência",
   "presencePenaltyLabel": "Penalidade de Presença",
-  "threadAutoTitleEnabled": "Auto-titulação",
   "chatMessageAlignment": "Alinhamento de mensagens",
   "messageAlignmentLeft": "Esquerda (padrão)",
   "messageAlignmentCenter": "Centro",
