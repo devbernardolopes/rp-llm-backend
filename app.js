@@ -12422,9 +12422,16 @@ async function openThread(threadId) {
     }
   }
   state.unreadNeedsUserScrollThreadId = null;
-  await persistThreadMessagesById(Number(threadId), thread.messages || [], {
+  const unloadStateToSave = currentThread.unloadState || {
+    loadLimit: 0,
+    totalMessageCount: conversationHistory.length,
+    loadedStartIndex: 0,
+    displayIndexOffset: 0,
+  };
+  await persistThreadMessagesById(Number(threadId), conversationHistory, {
     _skipUpdatedAt: true,
     _retainConversationHistory: true,
+    unloadState: unloadStateToSave,
   });
   renderChat();
   const input = document.getElementById("user-input");
@@ -18254,7 +18261,11 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
   }
 
   let messagesToSave = msgs;
-  if (unloadState && unloadState.loadedStartIndex > 0) {
+  if (
+    unloadState &&
+    unloadState.loadedStartIndex > 0 &&
+    isActiveThread
+  ) {
     const thread = await db.threads.get(threadId);
     const existingMessages = Array.isArray(thread?.messages)
       ? thread.messages
