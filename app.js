@@ -27,7 +27,6 @@ const DEFAULT_SETTINGS = {
   summarySystemPrompt: "You are a helpful summarization assistant.",
   personaInjectionTemplate:
     "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
-  personaPrefixEnabled: false,
   writingInstructionsInjectionWhen: "always",
   markdownCustomCss:
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
@@ -2722,9 +2721,6 @@ async function setupSettingsControls() {
     "marquee-behavior-select",
   );
   const lockMemoryMessages = document.getElementById("lock-memory-messages");
-  const personaPrefixEnabled = document.getElementById(
-    "persona-prefix-enabled",
-  );
   const summaryThresholdInput = document.getElementById("summary-threshold");
   const memoryMessagesToKeepInput = document.getElementById(
     "memory-messages-to-keep",
@@ -2871,9 +2867,6 @@ async function setupSettingsControls() {
   autopairEnabled.checked = state.settings.autoPairEnabled !== false;
   if (lockMemoryMessages) {
     lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
-  }
-  if (personaPrefixEnabled) {
-    personaPrefixEnabled.checked = state.settings.personaPrefixEnabled === true;
   }
   if (summaryThresholdInput) {
     const threshold =
@@ -3203,12 +3196,6 @@ async function setupSettingsControls() {
     state.settings.lockMemoryMessages = lockMemoryMessages.checked;
     saveSettings();
   });
-  if (personaPrefixEnabled) {
-    personaPrefixEnabled.addEventListener("change", () => {
-      state.settings.personaPrefixEnabled = personaPrefixEnabled.checked;
-      saveSettings();
-    });
-  }
   const crossWindowSyncEnabled = document.getElementById(
     "cross-window-sync-enabled",
   );
@@ -7275,6 +7262,8 @@ async function openCharacterModal(
   document.getElementById("char-auto-title-min-messages").value = String(
     Number(character?.autoTitleMinMessages) || 10,
   );
+  document.getElementById("char-persona-prefix").checked =
+    character?.personaPrefixEnabled !== false;
   document.getElementById("char-include-ooc").checked =
     character?.includeOocInCompletions === true;
   document.getElementById("char-avatar-scale").value = String(
@@ -7434,6 +7423,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
     autoTitleMinMessages:
       Number(document.getElementById("char-auto-title-min-messages").value) ||
       10,
+    personaPrefixEnabled: document.getElementById("char-persona-prefix").checked,
     includeOocInCompletions:
       document.getElementById("char-include-ooc").checked,
     personaInjectionPlacement: String(
@@ -15253,7 +15243,7 @@ async function generateBotReply() {
       let content = removeImageLinksFromContent(m.content);
       if (
         role === "user" &&
-        state.settings.personaPrefixEnabled &&
+        currentCharacter?.personaPrefixEnabled !== false &&
         m.senderName &&
         m.senderName !== "You" &&
         currentThread?.oocModeEnabled !== true &&
@@ -15643,7 +15633,7 @@ async function regenerateMessage(index) {
         let content = m.content;
         if (
           role === "user" &&
-          state.settings.personaPrefixEnabled &&
+          currentCharacter?.personaPrefixEnabled !== false &&
           m.senderName &&
           m.senderName !== "You" &&
           currentThread?.oocModeEnabled !== true &&
@@ -19838,7 +19828,7 @@ async function updateThreadBudgetIndicator() {
       let content = m.content;
       if (
         role === "user" &&
-        state.settings.personaPrefixEnabled &&
+        currentCharacter?.personaPrefixEnabled !== false &&
         m.senderName &&
         m.senderName !== "You" &&
         currentThread?.oocModeEnabled !== true &&
@@ -19862,7 +19852,7 @@ async function updateThreadBudgetIndicator() {
   if (pendingInput) {
     let pendingContent = pendingInput;
     if (
-      state.settings.personaPrefixEnabled &&
+      currentCharacter?.personaPrefixEnabled !== false &&
       currentPersona?.name &&
       currentPersona.name !== "You" &&
       currentThread?.oocModeEnabled !== true
