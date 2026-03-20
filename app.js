@@ -7143,7 +7143,10 @@ async function loadActiveCharacterDefinitionToForm() {
     def.oneTimeExtraPrompt || "";
   document.getElementById("char-writing-instructions").value =
     def.writingInstructions || "";
-  await populateCharWritingInstructionsSelect(def.writingInstructionId);
+  await populateCharWritingInstructionsSelect(
+    def.writingInstructionId,
+    def.writingInstructions,
+  );
   updateCharWritingInstructionsVisibility();
   if (!Array.isArray(def.initialMessages)) {
     def.initialMessages = [];
@@ -7624,7 +7627,10 @@ function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
   voiceSelect.value = hasPreferred ? preferredVoice : names[0];
 }
 
-async function populateCharWritingInstructionsSelect(preferredId = "") {
+async function populateCharWritingInstructionsSelect(
+  preferredId = "",
+  customInstructions = "",
+) {
   const select = document.getElementById("char-writing-instructions-select");
   const textarea = document.getElementById("char-writing-instructions");
   if (!select || !textarea) return;
@@ -7651,7 +7657,8 @@ async function populateCharWritingInstructionsSelect(preferredId = "") {
   });
   const hasPreferred = matchingWi.some((wi) => String(wi.id) === preferredId);
   const isCustomPreferred = preferredId === "";
-  if (isCustomPreferred) {
+  const hasCustomContent = String(customInstructions || "").trim().length > 0;
+  if (isCustomPreferred && hasCustomContent) {
     select.value = "";
   } else if (hasPreferred) {
     select.value = preferredId;
