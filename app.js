@@ -1523,6 +1523,7 @@ function setupEvents() {
     "#char-auto-trigger-first-ai",
     "#char-auto-title",
     "#char-auto-title-min-messages",
+    "#char-persona-prefix",
     "#char-include-ooc",
     "#char-avatar-scale",
     "#char-lore-cooldown",
