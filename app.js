@@ -385,6 +385,7 @@ const handleVisibilityChange = debounce(() => {
     queueMicrotask(() => {
       clearChatUnreadStyling();
       refreshLatestAssistantRowContent();
+      refreshInitialMessageRowVisibility();
     });
   }
 }, 150);
@@ -434,6 +435,7 @@ const handleFocus = debounce(() => {
   queueMicrotask(() => {
     clearChatUnreadStyling();
     refreshLatestAssistantRowContent();
+    refreshInitialMessageRowVisibility();
   });
 }, 150);
 
