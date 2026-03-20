@@ -12441,6 +12441,9 @@ async function openThread(threadId) {
   await renderShortcutsBar();
   await renderThreads();
   setSendingState();
+  ensureUnloadButton();
+  updateUnloadButtonVisibility();
+  updateScrollBottomButtonVisibility();
   showChatView();
   const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
   const log = document.getElementById("chat-log");
@@ -12449,9 +12452,6 @@ async function openThread(threadId) {
   } else if (log) {
     log.scrollTop = log.scrollHeight;
   }
-  ensureUnloadButton();
-  updateUnloadButtonVisibility();
-  updateScrollBottomButtonVisibility();
   broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
   if (thread.pendingGenerationReason) {
     const id = Number(thread.id);
@@ -13271,6 +13271,7 @@ function computeVisibleMessageIndices() {
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
 
   if (threshold === 0 || totalMessages <= threshold) {
+    console.debug("[computeVisible] Early return: threshold=0 or total <= threshold", { threshold, totalMessages });
     return {
       indices: Array.from({ length: conversationHistory.length }, (_, i) => i),
       loadLimit: 0,
@@ -13286,6 +13287,7 @@ function computeVisibleMessageIndices() {
   const loadLimit = unloadState?.loadLimit || 0;
   const clampedLoadLimit = Math.max(0, Math.min(loadLimit, startActive));
   const totalHidden = startActive;
+  console.debug("[computeVisible]", { threshold, totalMessages, startActive, loadLimit, clampedLoadLimit, totalHidden });
 
   const visible = [];
   for (let i = startActive - clampedLoadLimit; i < startActive; i++) {
@@ -13314,7 +13316,10 @@ function computeVisibleMessageIndices() {
 
 function ensureUnloadButton() {
   const log = document.getElementById("chat-log");
-  if (!log) return;
+  if (!log) {
+    console.debug("[unloadButton] ensureUnloadButton: no log found");
+    return;
+  }
   let btn = document.getElementById("unload-oldest-btn");
   if (!btn) {
     btn = document.createElement("button");
@@ -13323,6 +13328,9 @@ function ensureUnloadButton() {
     btn.classList.add("unload-oldest-btn");
     btn.addEventListener("click", toggleUnloadBatch);
     log.insertBefore(btn, log.firstChild);
+    console.debug("[unloadButton] ensureUnloadButton: created new button");
+  } else {
+    console.debug("[unloadButton] ensureUnloadButton: button already exists");
   }
 }
 
@@ -13331,11 +13339,13 @@ function updateUnloadButtonVisibility() {
   const btn = document.getElementById("unload-oldest-btn");
   if (!log || !btn || !currentThread) {
     if (btn) btn.classList.add("hidden");
+    console.debug("[unloadButton] Early return: missing log, btn, or currentThread", { hasLog: !!log, hasBtn: !!btn, hasThread: !!currentThread });
     return;
   }
   const threshold = state.settings.autoUnloadThreshold || 0;
   if (threshold === 0) {
     btn.classList.add("hidden");
+    console.debug("[unloadButton] Hidden: threshold is 0");
     return;
   }
   const vis = computeVisibleMessageIndices();
@@ -13343,6 +13353,7 @@ function updateUnloadButtonVisibility() {
   const loadLimit = vis.loadLimit || 0;
   if (hiddenCount === 0 && loadLimit === 0) {
     btn.classList.add("hidden");
+    console.debug("[unloadButton] Hidden: no hiddenCount and no loadLimit", { hiddenCount, loadLimit });
     return;
   }
   // Always show button when there are hidden messages to load
@@ -13350,6 +13361,7 @@ function updateUnloadButtonVisibility() {
   const isScrolledAway = log.scrollTop > 200;
   if (hiddenCount === 0 && isScrolledAway) {
     btn.classList.add("hidden");
+    console.debug("[unloadButton] Hidden: scrolled away", { scrollTop: log.scrollTop });
     return;
   }
   btn.classList.remove("hidden");
@@ -13368,6 +13380,7 @@ function updateUnloadButtonVisibility() {
   } else {
     btn.classList.add("hidden");
   }
+  console.debug("[unloadButton] Shown:", { hiddenCount, loadLimit, threshold, scrollTop: log.scrollTop });
 }
 
 async function toggleUnloadBatch() {
@@ -13456,6 +13469,12 @@ function renderChat(startIdx, endIdx) {
   const perfMarks = { clear: 0, build: 0, append: 0, total: 0 };
   
   const log = document.getElementById("chat-log");
+  console.debug("[renderChat] Called", { 
+    threadId: currentThread?.id, 
+    historyLength: conversationHistory.length,
+    threshold: state.settings.autoUnloadThreshold,
+    hasUnloadState: !!currentThread?.unloadState 
+  });
   const previousScrollTop = log.scrollTop;
   const previousScrollHeight = log.scrollHeight;
   const isAtBottom =
