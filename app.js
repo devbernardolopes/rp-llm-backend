@@ -19008,7 +19008,6 @@ async function callAIHorde(
 
   const hordeRequest = {
     prompt,
-    apikey: hordeApiKey || "0000000000",
     models,
     params: {
       n: 1,
@@ -19035,6 +19034,7 @@ async function callAIHorde(
       headers: {
         "Content-Type": "application/json",
         "Client-Agent": "rp-llm-backend:1.0:0",
+        "apikey": hordeApiKey || "0000000000",
       },
       body: JSON.stringify(hordeRequest),
       signal,
@@ -19052,7 +19052,7 @@ async function callAIHorde(
       throw new Error("No request ID returned from AI Horde");
     }
 
-    const result = await pollAIHordeResult(requestId, baseUrl, signal);
+    const result = await pollAIHordeResult(requestId, baseUrl, hordeApiKey, signal);
 
     const generatedText = result.generations?.[0]?.text || "";
     const usedModel = result.generations?.[0]?.model || hordeModel || "unknown";
@@ -19135,7 +19135,7 @@ function messagesToHordePrompt(messages) {
   return prompt.trim();
 }
 
-async function pollAIHordeResult(requestId, baseUrl, signal) {
+async function pollAIHordeResult(requestId, baseUrl, apiKey, signal) {
   const startTime = Date.now();
   const pollInterval = 2000;
   const timeoutMs = 120000;
@@ -19152,6 +19152,7 @@ async function pollAIHordeResult(requestId, baseUrl, signal) {
       {
         headers: {
           "Client-Agent": "rp-llm-backend:1.0:0",
+          "apikey": apiKey || "0000000000",
         },
         signal,
       },
