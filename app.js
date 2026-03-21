@@ -17163,7 +17163,7 @@ async function fetchOpenRouterModelCatalog(signal) {
 }
 
 async function fetchAIHordeModelCatalog(signal) {
-  const res = await fetch("https://stablehorde.net/api/v2/status/models", {
+  const res = await fetch("https://stablehorde.net/api/v2/status/models?type=text", {
     method: "GET",
     headers: {
       "Client-Agent": "rp-llm-backend:1.0:0",
@@ -17184,11 +17184,8 @@ async function fetchAIHordeModelCatalog(signal) {
 
   const payload = await res.json();
   const models = Array.isArray(payload) ? payload : [];
-  const textModels = models.filter(
-    (m) => String(m.type || "").toLowerCase() === "text",
-  );
 
-  const normalized = textModels
+  const normalized = models
     .map((model) => normalizeHordeModelItem(model))
     .filter(Boolean);
 
