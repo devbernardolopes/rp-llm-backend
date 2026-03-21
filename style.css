@@ -2825,19 +2825,16 @@ textarea {
   flex-direction: column;
   gap: 10px;
 }
-.initial-messages-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.initial-messages-actions {
+.initial-messages-header-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 .initial-messages-hint {
   font-size: 0.85rem;
   color: var(--muted);
+  display: block;
 }
 .initial-messages-list {
   display: flex;

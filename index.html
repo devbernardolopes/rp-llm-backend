@@ -1946,25 +1946,23 @@
               placeholder="Appended only for the first assistant generation."
             ></textarea>
           </div>
-          <div class="full lang-field">
-            <span data-i18n="initialMessages">Initial Messages</span>
+          <div class="full lang-field initial-messages-field">
+            <div class="initial-messages-header-row">
+              <span data-i18n="initialMessages">Initial Messages</span>
+              <button
+                id="add-initial-message-btn"
+                type="button"
+                class="icon-btn small"
+                data-i18n-title="addInitialMessage"
+              >
+                <span class="visually-hidden" data-i18n="addInitialMessage"></span>
+              </button>
+            </div>
+            <span
+              class="muted initial-messages-hint"
+              data-i18n="initialMessagesHint"
+            ></span>
             <div class="initial-messages-editor">
-              <div class="initial-messages-controls">
-                <div class="initial-messages-actions">
-                  <button
-                    id="add-initial-message-btn"
-                    type="button"
-                    class="icon-btn small"
-                    data-i18n-title="addInitialMessage"
-                  >
-                    <span class="visually-hidden" data-i18n="addInitialMessage"></span>
-                  </button>
-                </div>
-                <span
-                  class="muted initial-messages-hint"
-                  data-i18n="initialMessagesHint"
-                ></span>
-              </div>
               <div
                 id="char-initial-messages-list"
                 class="initial-messages-list"

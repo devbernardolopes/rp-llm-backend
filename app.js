@@ -6784,6 +6784,9 @@ function setCharacterModalTab(tab = "lang") {
   if (tagsBtn) tagsBtn.classList.toggle("active", showTags);
   const sfxBtn = document.getElementById("char-sfx-tab-btn");
   if (sfxBtn) sfxBtn.classList.toggle("active", showSfx);
+  document
+    .querySelectorAll(".initial-messages-hint")
+    .forEach((el) => el.classList.toggle("hidden", showLang));
 }
 
 function renderCharacterDefinitionTabs() {
@@ -7022,6 +7025,10 @@ function renderCharacterInitialMessagesList() {
   }
   const drafts = getInitialMessageDrafts(language);
   listRoot.innerHTML = "";
+  const container = listRoot.closest(".initial-messages-field");
+  if (container) {
+    container.classList.toggle("hidden", drafts.length === 0);
+  }
   drafts.forEach((messageText, index) => {
     const entry = buildInitialMessageEntry(messageText, index, language);
     listRoot.appendChild(entry);
