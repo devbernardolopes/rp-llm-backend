@@ -7,8 +7,6 @@
  * - Kokoro TTS integration (delegates to kokoro.js)
  */
 
-import { ttsState, getTtsState } from './index.js';
-
 const TTS_DEBUG = true;
 
 function ttsDebug(...args) {
@@ -39,7 +37,7 @@ function hasBrowserTtsSupport() {
 }
 
 function isActiveTtsProviderReady(provider = null) {
-  const state = getTtsState();
+  const state = window.ttsState;
   const active = provider || getActiveCharacterTtsProvider();
   if (active === "kokoro") {
     return !!state.kokoro.instance && !state.kokoro.loading;
@@ -69,7 +67,7 @@ function buildKokoroOptions(source = {}, rateFallback = DEFAULT_TTS_RATE) {
 }
 
 async function playTtsAudio(text, options = {}, playback = {}) {
-  const state = getTtsState();
+  const state = window.ttsState;
   const normalizedText = window.preprocessForTTS(text);
   if (!normalizedText) {
     ttsDebug("playTtsAudio:empty-text");
@@ -109,7 +107,7 @@ async function playTtsAudio(text, options = {}, playback = {}) {
 }
 
 async function playBrowserTts(normalizedText, options, playback = {}) {
-  const state = getTtsState();
+  const state = window.ttsState;
   if (!hasBrowserTtsSupport()) {
     throw new Error("Browser TTS is unavailable.");
   }
@@ -268,7 +266,7 @@ async function playBrowserTts(normalizedText, options, playback = {}) {
 }
 
 async function playKokoroTts(normalizedText, options, playback = {}) {
-  const state = getTtsState();
+  const state = window.ttsState;
   const messageIndex = Number.isInteger(playback?.messageIndex)
     ? playback.messageIndex
     : null;
@@ -490,7 +488,7 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
 }
 
 function stopTtsPlayback(options = {}) {
-  const state = getTtsState();
+  const state = window.ttsState;
   state.activeRequestId = state.activeRequestId + 1;
   const audioElement =
     state.audio instanceof HTMLAudioElement ? state.audio : null;
@@ -538,7 +536,7 @@ function stopTtsPlayback(options = {}) {
 }
 
 async function toggleMessageSpeech(index) {
-  const state = getTtsState();
+  const state = window.ttsState;
   ttsDebug("toggleMessageSpeech:enter", {
     index,
   });
@@ -656,7 +654,7 @@ async function toggleMessageSpeech(index) {
 }
 
 function getCurrentCharacterTtsOptions() {
-  const state = getTtsState();
+  const state = window.ttsState;
   const resolved = getResolvedTtsSelection(
     window.currentCharacter?.ttsLanguage,
     window.currentCharacter?.ttsVoice,
@@ -678,7 +676,7 @@ function getCurrentCharacterTtsOptions() {
 }
 
 function getTtsOptionsFromCharacterModal() {
-  const state = getTtsState();
+  const state = window.ttsState;
   const resolved = getResolvedCharTtsSelection();
   const provider = getCharModalTtsProviderSelection();
   const kokoroSource = {
@@ -737,7 +735,7 @@ function getCharModalTtsProviderSelection() {
 }
 
 function updateTtsSupportUi() {
-  const state = getTtsState();
+  const state = window.ttsState;
   const provider = getActiveCharacterTtsProvider();
   const supported = isActiveTtsProviderReady(provider);
   if (provider === "kokoro" && !supported && !state.kokoro.loading) {
@@ -767,7 +765,7 @@ function updateTtsSupportUi() {
 }
 
 function initBrowserTtsSupport() {
-  const state = getTtsState();
+  const state = window.ttsState;
   if (!hasBrowserTtsSupport()) {
     state.voiceSupportReady = false;
     updateTtsSupportUi();
@@ -788,7 +786,7 @@ function initBrowserTtsSupport() {
 }
 
 function updateMessageSpeakerButton(button, index) {
-  const state = getTtsState();
+  const state = window.ttsState;
   const conversationHistory = window.conversationHistory;
   const t = window.t;
   if (!button) return;

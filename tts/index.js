@@ -60,7 +60,7 @@ export {
 } from './engine.js';
 
 export {
-  initTts,
+  initTtsUi as initTts,
   updateAutoTtsToggleButton,
   refreshAllSpeakerButtons as refreshSpeakerButtons,
   updateAutoTtsToggleButton as updateAutoTts,
