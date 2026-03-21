@@ -14084,7 +14084,9 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
   applyPersonaColorToUserMessageBlock(block, message);
   row.append(avatar, block);
   if (message.role === "assistant") {
-    updateMessageSpeakerButton(speakerBtnForRow(row), index);
+    if (typeof window.updateMessageSpeakerButton === 'function') {
+      window.updateMessageSpeakerButton(speakerBtnForRow(row), index);
+    }
   }
   return row;
 }
@@ -14195,7 +14197,7 @@ function refreshLatestAssistantRowContent() {
     );
     oldRow.replaceWith(newRow);
     refreshMessageControlStates();
-    refreshAllSpeakerButtons();
+    window.refreshAllSpeakerButtons();
     break;
   }
 }
@@ -15372,7 +15374,7 @@ async function generateBotReply() {
           refreshLatestAssistantRowContent();
         }
         if (isViewingThread(threadId)) {
-          refreshAllSpeakerButtons();
+          window.refreshAllSpeakerButtons();
         }
       }
       await persistThreadMessagesById(threadId, generationHistory);
@@ -15388,7 +15390,7 @@ async function generateBotReply() {
         refreshLatestAssistantRowContent();
       }
       if (isViewingThread(threadId)) {
-        refreshAllSpeakerButtons();
+        window.refreshAllSpeakerButtons();
         refreshMessageControlStates();
       }
       await persistThreadMessagesById(threadId, generationHistory);
@@ -15704,7 +15706,7 @@ async function regenerateMessage(index) {
       }
       await persistThreadMessagesById(threadId, messagesToSave);
       renderChat();
-      refreshAllSpeakerButtons();
+      window.refreshAllSpeakerButtons();
       refreshMessageControlStates();
       await renderThreads();
       showToast(t("generationFailed"), "error");
@@ -16603,7 +16605,7 @@ function setSendingState(sending) {
     isBlockedByQueueOrCooldown ||
     hasTitleGeneratingMarker;
   refreshMessageControlStates();
-  refreshAllSpeakerButtons();
+  window.refreshAllSpeakerButtons();
   if (currentThreadGenerating) closePromptHistory();
   renderThreads().catch(() => {});
 }

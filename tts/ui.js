@@ -6,9 +6,6 @@
  * - Thread auto-TTS management
  */
 
-import { getTtsState } from './index.js';
-import { stopTtsPlayback } from './engine.js';
-
 function updateAutoTtsToggleButton() {
   const t = window.t;
   const ICONS = window.ICONS;
@@ -69,17 +66,7 @@ function refreshSpeakerButtons() {
 
 function initTtsUi() {
   window.updateAutoTtsToggleButton = updateAutoTtsToggleButton;
-  window.toggleThreadAutoTts = toggleThreadAutoTts;
   window.refreshSpeakerButtons = refreshSpeakerButtons;
-  
-  const btn = document.getElementById("auto-tts-toggle-btn");
-  if (btn) {
-    btn.addEventListener("click", () => {
-      if (typeof window.toggleThreadAutoTts === 'function') {
-        window.toggleThreadAutoTts();
-      }
-    });
-  }
 }
 
 export {

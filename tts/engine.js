@@ -814,11 +814,11 @@ function updateMessageSpeakerButton(button, index) {
     button.setAttribute("title", t ? t("msgSpeakLoadingTitle") : "Loading...");
     button.setAttribute("aria-label", t ? t("msgSpeakLoadingTitle") : "Loading...");
   } else if (isSpeaking) {
-    button.innerHTML = ICONS?.stop || "";
+    button.innerHTML = window.ICONS?.stop || "";
     button.setAttribute("title", t ? t("msgSpeakCancelTitle") : "Stop");
     button.setAttribute("aria-label", t ? t("msgSpeakCancelAria") : "Stop speaking");
   } else {
-    button.innerHTML = ICONS?.speaker || "";
+    button.innerHTML = window.ICONS?.speaker || "";
     button.setAttribute("title", t ? t("msgSpeakTitle") : "Speak");
     button.setAttribute("aria-label", t ? t("msgSpeakAria") : "Speak");
   }
