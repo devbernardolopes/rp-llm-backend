@@ -18993,7 +18993,7 @@ async function callAIHorde(
   );
 
   const hordeModel = resolvedModel.startsWith("aihorde/")
-    ? resolvedModel.slice(9)
+    ? resolvedModel.slice(8)
     : resolvedModel;
 
   const prompt = messagesToHordePrompt(promptMessages);
