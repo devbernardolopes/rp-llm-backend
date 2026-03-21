@@ -7505,7 +7505,8 @@ function populateCharTtsLanguageSelect(
 ) {
   const languageSelect = document.getElementById("char-tts-language");
   if (!languageSelect) return;
-  const voices = window.hasBrowserTtsSupport()
+  const hasBrowserSupport = typeof window.hasBrowserTtsSupport === 'function' && window.hasBrowserTtsSupport();
+  const voices = hasBrowserSupport
     ? window.speechSynthesis.getVoices?.() || []
     : [];
   const langs = Array.from(
@@ -7530,7 +7531,8 @@ function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
   const voiceSelect = document.getElementById("char-tts-voice");
   if (!languageSelect || !voiceSelect) return;
   const selectedLang = String(languageSelect.value || DEFAULT_TTS_LANGUAGE);
-  const voices = window.hasBrowserTtsSupport()
+  const hasBrowserSupport = typeof window.hasBrowserTtsSupport === 'function' && window.hasBrowserTtsSupport();
+  const voices = hasBrowserSupport
     ? window.speechSynthesis.getVoices?.() || []
     : [];
   const filtered = voices.filter(

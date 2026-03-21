@@ -48,7 +48,6 @@ export {
   isTtsCancelledError,
   makeTtsCancelledError,
   hasBrowserTtsSupport,
-  updateAutoTtsToggleButton,
   refreshAllSpeakerButtons,
   updateMessageSpeakerButton,
   updateTtsSupportUi,
@@ -62,6 +61,7 @@ export {
 
 export {
   initTts,
+  updateAutoTtsToggleButton,
   refreshAllSpeakerButtons as refreshSpeakerButtons,
   updateAutoTtsToggleButton as updateAutoTts,
   toggleThreadAutoTts,
