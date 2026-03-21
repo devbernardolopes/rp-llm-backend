@@ -858,6 +858,7 @@ export {
   isTtsCancelledError,
   makeTtsCancelledError,
   hasBrowserTtsSupport,
+  refreshAllSpeakerButtonsFromEngine,
   updateTtsSupportUi,
   initBrowserTtsSupport,
   isActiveTtsProviderReady,

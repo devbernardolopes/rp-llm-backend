@@ -48,7 +48,7 @@ export {
   isTtsCancelledError,
   makeTtsCancelledError,
   hasBrowserTtsSupport,
-  refreshAllSpeakerButtons,
+  refreshAllSpeakerButtonsFromEngine as refreshAllSpeakerButtons,
   updateMessageSpeakerButton,
   updateTtsSupportUi,
   initBrowserTtsSupport,
