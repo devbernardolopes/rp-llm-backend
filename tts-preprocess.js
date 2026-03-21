@@ -176,5 +176,3 @@ function chunkForTTS(text, maxLen = 180) {
 
   return chunks.filter(Boolean);
 }
-
-export { preprocessForTTS, chunkForTTS };

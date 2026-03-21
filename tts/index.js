@@ -42,8 +42,6 @@ export function getTtsState() {
 }
 
 export {
-  engine,
-  ui,
   playTtsAudio,
   stopTtsPlayback,
   toggleMessageSpeech,

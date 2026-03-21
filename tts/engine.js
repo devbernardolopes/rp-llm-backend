@@ -7,7 +7,6 @@
  * - Kokoro TTS integration (delegates to kokoro.js)
  */
 
-import { preprocessForTTS, chunkForTTS } from '../tts-preprocess.js';
 import { ttsState, getTtsState } from './index.js';
 
 const TTS_DEBUG = true;
@@ -71,7 +70,7 @@ function buildKokoroOptions(source = {}, rateFallback = DEFAULT_TTS_RATE) {
 
 async function playTtsAudio(text, options = {}, playback = {}) {
   const state = getTtsState();
-  const normalizedText = preprocessForTTS(text);
+  const normalizedText = window.preprocessForTTS(text);
   if (!normalizedText) {
     ttsDebug("playTtsAudio:empty-text");
     throw new Error("Text is empty.");
@@ -189,7 +188,7 @@ async function playBrowserTts(normalizedText, options, playback = {}) {
       );
       return byLangPrefix || voices[0] || null;
     };
-    const chunks = chunkForTTS(normalizedText);
+    const chunks = window.chunkForTTS(normalizedText);
 
     const speakChunk = (chunk) =>
       new Promise((resolve, reject) => {
@@ -316,7 +315,7 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
       options.kokoro.dtype,
     );
 
-    const chunks = chunkForTTS(normalizedText);
+    const chunks = window.chunkForTTS(normalizedText);
     if (chunks.length === 0) {
       return null;
     }
