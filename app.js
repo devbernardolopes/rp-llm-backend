@@ -3056,7 +3056,9 @@ async function setupSettingsControls() {
     state.settings.newCharacterShortcut ||
     DEFAULT_SETTINGS.newCharacterShortcut;
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
-  updateTtsSupportUi();
+  if (typeof window.updateTtsSupportUi === 'function') {
+    window.updateTtsSupportUi();
+  }
 
   openRouterApiKey.addEventListener("input", () => {
     state.settings.openRouterApiKey = openRouterApiKey.value.trim();
@@ -7503,7 +7505,7 @@ function populateCharTtsLanguageSelect(
 ) {
   const languageSelect = document.getElementById("char-tts-language");
   if (!languageSelect) return;
-  const voices = hasBrowserTtsSupport()
+  const voices = window.hasBrowserTtsSupport()
     ? window.speechSynthesis.getVoices?.() || []
     : [];
   const langs = Array.from(
@@ -7528,7 +7530,7 @@ function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
   const voiceSelect = document.getElementById("char-tts-voice");
   if (!languageSelect || !voiceSelect) return;
   const selectedLang = String(languageSelect.value || DEFAULT_TTS_LANGUAGE);
-  const voices = hasBrowserTtsSupport()
+  const voices = window.hasBrowserTtsSupport()
     ? window.speechSynthesis.getVoices?.() || []
     : [];
   const filtered = voices.filter(
@@ -15793,7 +15795,7 @@ async function playCharacterTtsTestFromModal() {
   try {
     await window.playTtsAudio(text, getTtsOptionsFromCharacterModal());
   } catch (err) {
-    if (isTtsCancelledError(err)) return;
+    if (window.isTtsCancelledError(err)) return;
     showToast(
       tf("ttsTestFailed", { error: err.message || t("unknownError") }),
       "error",
