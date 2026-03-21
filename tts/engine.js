@@ -841,6 +841,7 @@ function initTtsEngine() {
   window.getTtsOptionsFromCharacterModal = getTtsOptionsFromCharacterModal;
   window.refreshAllSpeakerButtons = refreshAllSpeakerButtonsFromEngine;
   window.updateMessageSpeakerButton = updateMessageSpeakerButton;
+  window.ttsDebug = ttsDebug;
 }
 
 function refreshAllSpeakerButtonsFromEngine() {

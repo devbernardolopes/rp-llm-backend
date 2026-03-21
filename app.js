@@ -13976,7 +13976,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     const speakerBtn = iconButton("speaker", t("msgSpeakTitle"), async (e) => {
       const clickedBtn = e?.currentTarget;
       const resolvedIndex = resolveMessageIndexFromButton(clickedBtn, index);
-      ttsDebug("bubble-click", {
+      if (window.ttsDebug) window.ttsDebug("bubble-click", {
         capturedIndex: index,
         resolvedIndex,
         datasetIndex: clickedBtn?.dataset?.messageIndex,
