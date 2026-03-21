@@ -107,27 +107,7 @@ const state = {
   activeShortcut: null,
   abortController: null,
   marqueeRefreshTimer: null,
-  tts: {
-    audio: null,
-    speakingMessageIndex: null,
-    loadingMessageIndex: null,
-    requestSeq: 0,
-    activeRequestId: 0,
-    voiceSupportReady: false,
-    kokoro: {
-      modulePromise: null,
-      instance: null,
-      config: {
-        device: "webgpu",
-        dtype: "auto",
-      },
-      loading: false,
-      fetchPatched: false,
-      voiceListLoaded: false,
-      selectedVoice: DEFAULT_KOKORO_VOICE,
-      cacheDisabled: false,
-    },
-  },
+  tts: null,
   stt: {
     isListening: false,
     isLoaded: false,
@@ -246,78 +226,8 @@ async function ensureMemoryFilterModelReady() {
 
 window.ensureMemoryFilterModelReady = ensureMemoryFilterModelReady;
 
-const TTS_DEBUG = true;
-
-function ttsDebug(...args) {
-  if (!TTS_DEBUG) return;
-  console.debug("[TTS]", ...args);
-}
-
-function makeTtsCancelledError(message = "TTS cancelled.") {
-  const err = new Error(message);
-  err.name = "TtsCancelledError";
-  return err;
-}
-
-function isTtsCancelledError(error) {
-  return error?.name === "TtsCancelledError";
-}
-
-// function preprocessForTTS(text) {
-//   const sanitized = String(text || "")
-//     .replace(/\*+/g, "")
-//     .replace(/`+/g, "")
-//     .replace(/#+\s?/g, "")
-//     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-//     .replace(/[_~]/g, "")
-//     .replace(/\s+/g, " ")
-//     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
-//     .trim();
-//   const normalized = normalizeForTTS(sanitized);
-//   return normalizeNumbersForTTS(normalized);
-// }
-
-// function preprocessForTTS(text) {
-//   const sanitized = String(text || "")
-//     .replace(/\*+/g, "")
-//     .replace(/`+/g, "")
-//     .replace(/#+\s?/g, "")
-//     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-//     .replace(/[_~]/g, "")
-//     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
-//     .replace(/\s+/g, " ")
-//     .trim();
-
-//   const noLabel = sanitized.replace(/^[A-Z][\w\s'-]{1,32}:\s*/u, "");
-
-//   const normalized = normalizeForTTS(noLabel);
-//   return normalizeNumbersForTTS(normalized);
-// }
-
-// function preprocessForTTS(text) {
-//   const sanitized = String(text || "")
-//     // remove status block lines
-//     .replace(/(^|\n)\s*>\s*\|\|.*$/gm, "")
-//     // markdown cleanup
-//     .replace(/\*+/g, "")
-//     .replace(/`+/g, "")
-//     .replace(/#+\s?/g, "")
-//     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-//     .replace(/[_~]/g, "")
-//     // emoji removal
-//     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
-//     // whitespace normalize
-//     .replace(/\s+/g, " ")
-//     .trim();
-
-//   // remove speaker label
-//   const noLabel = sanitized.replace(/^[A-Z][\w\s'-]{1,32}:\s*/u, "");
-
-//   const normalized = normalizeForTTS(noLabel);
-//   return normalizeNumbersForTTS(normalized);
-// }
-
 // TTS preprocessing functions - see tts-preprocess.js
+// TTS engine functions - see tts/
 
 // Debounce utility and processCardsInChunks - see ui-utils.js
 
@@ -372,9 +282,9 @@ const handleVisibilityChange = debounce(() => {
         if (
           lastUnreadAssistantIndex >= 0 &&
           currentThread.autoTtsEnabled === true &&
-          state.tts.voiceSupportReady
+          window.ttsState?.voiceSupportReady
         ) {
-          toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
+          window.toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
         }
       });
     }
@@ -422,9 +332,9 @@ const handleFocus = debounce(() => {
       if (
         lastUnreadAssistantIndex >= 0 &&
         currentThread.autoTtsEnabled === true &&
-        state.tts.voiceSupportReady
+        window.ttsState?.voiceSupportReady
       ) {
-        toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
+        window.toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
       }
     });
   }
@@ -452,7 +362,7 @@ async function init() {
   await setupSettingsControls();
   setupEvents();
   setupMemoryRegenerationControls();
-  initBrowserTtsSupport();
+  if (window.initBrowserTtsSupport) window.initBrowserTtsSupport();
   updateModelPill();
   await migrateLegacySessions();
   await hydrateGenerationQueue(null, false);
@@ -916,7 +826,7 @@ function setupEvents() {
   if (ttsProviderSelect) {
     ttsProviderSelect.addEventListener("change", () => {
       refreshCharTtsProviderFields();
-      updateTtsSupportUi();
+      if (window.updateTtsSupportUi) window.updateTtsSupportUi();
     });
   }
   const kokoroDeviceSelect = document.getElementById("char-tts-kokoro-device");
@@ -929,8 +839,8 @@ function setupEvents() {
   if (kokoroVoiceSelect) {
     kokoroVoiceSelect.addEventListener("change", (event) => {
       const value = String(event.target?.value || "").trim();
-      if (value) {
-        state.tts.kokoro.selectedVoice = value;
+      if (value && window.ttsState) {
+        window.ttsState.kokoro.selectedVoice = value;
       }
     });
   }
@@ -6245,7 +6155,7 @@ function showMainView() {
       db.threads.update(currentThread.id, { draftInput: draftValue });
     }
   }
-  stopTtsPlayback();
+  window.stopTtsPlayback();
   stopAllSfx();
   state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
@@ -7792,7 +7702,7 @@ function refreshCharTtsProviderFields() {
       return;
     }
     const preferred = kokoroVoice?.value || DEFAULT_KOKORO_VOICE;
-    if (state.tts.kokoro.voiceListLoaded) {
+    if (window.ttsState.kokoro.voiceListLoaded) {
       populateKokoroVoiceSelect(preferred, modalLanguage);
     } else {
       setKokoroVoiceLoadingPlaceholder();
@@ -12333,7 +12243,7 @@ async function openThread(threadId) {
       thread.initialMessageIndex;
   }
 
-  stopTtsPlayback();
+  window.stopTtsPlayback();
   stopAllSfx();
   const characterBase = await db.characters.get(thread.characterId);
   const character = characterBase
@@ -12668,7 +12578,7 @@ async function startSttRecording() {
     return;
   }
   
-  stopTtsPlayback();
+  window.stopTtsPlayback();
   state.stt.threadId = currentThread?.id || null;
   
   try {
@@ -12871,12 +12781,12 @@ function updateSttAutoSendButton() {
 
 async function maybeAutoSpeakAssistantMessage(messageIndex) {
   if (!currentThread || currentThread.autoTtsEnabled !== true) return;
-  if (!state.tts.voiceSupportReady) return;
+  if (!window.ttsState.voiceSupportReady) return;
   const msg = conversationHistory[messageIndex];
   if (!msg || msg.role !== "assistant") return;
   if (!String(msg.content || "").trim()) return;
   try {
-    await toggleMessageSpeech(messageIndex);
+    await window.toggleMessageSpeech(messageIndex);
   } catch {
     // keep silent for auto mode failures
   }
@@ -14067,7 +13977,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
         resolvedIndex,
         datasetIndex: clickedBtn?.dataset?.messageIndex,
       });
-      await toggleMessageSpeech(resolvedIndex);
+      await window.toggleMessageSpeech(resolvedIndex);
     });
     speakerBtn.classList.add("msg-tts-btn");
     speakerBtn.dataset.messageIndex = String(index);
@@ -14431,7 +14341,7 @@ function beginInlineMessageEdit(index, contentEl) {
     message.content = next;
     message.userEdited = true;
     message.summarized = false;
-    stopTtsPlayback();
+    window.stopTtsPlayback();
     renderMessageContent(contentEl, message);
     refreshMessageControlStates();
     await persistCurrentThread();
@@ -14473,7 +14383,6 @@ function cancelActiveMessageEdit() {
 function resolveMessageIndexFromButton(buttonEl, fallbackIndex) {
   const dataIndex = Number(buttonEl?.dataset?.messageIndex);
   if (Number.isInteger(dataIndex) && dataIndex >= 0) {
-    ttsDebug("resolve-index:dataset", { dataIndex, fallbackIndex });
     return dataIndex;
   }
   const row = buttonEl?.closest?.(".chat-row");
@@ -14481,125 +14390,14 @@ function resolveMessageIndexFromButton(buttonEl, fallbackIndex) {
   if (!row || !log) return fallbackIndex;
   const rowIndex = Array.from(log.children).indexOf(row);
   if (rowIndex >= 0) {
-    ttsDebug("resolve-index:row", { rowIndex, fallbackIndex });
     return rowIndex;
   }
-  ttsDebug("resolve-index:fallback", { fallbackIndex });
   return fallbackIndex;
-}
-
-function isTtsIndexMatch(ttsIndex, messageIndex) {
-  return Number.isInteger(ttsIndex) && ttsIndex === Number(messageIndex);
-}
-
-function hasBrowserTtsSupport() {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.SpeechSynthesisUtterance === "function" &&
-    typeof window.speechSynthesis !== "undefined"
-  );
-}
-
-function updateTtsSupportUi() {
-  const provider = getActiveCharacterTtsProvider();
-  const supported = isActiveTtsProviderReady(provider);
-  if (provider === "kokoro" && !supported && !state.tts.kokoro.loading) {
-    preloadKokoroForActiveCharacter();
-  }
-  const statusEl = document.getElementById("tts-test-status");
-  const playBtn = document.getElementById("tts-test-play-btn");
-  if (
-    statusEl &&
-    (!statusEl.textContent ||
-      statusEl.textContent.startsWith("TTS: unsupported"))
-  ) {
-    const fallbackText =
-      provider === "kokoro"
-        ? "TTS: Kokoro unavailable"
-        : "TTS: unsupported in this browser";
-    statusEl.textContent = supported ? "TTS: idle" : fallbackText;
-  }
-  if (playBtn) {
-    playBtn.disabled = !supported;
-  }
-  refreshAllSpeakerButtons();
-}
-
-function initBrowserTtsSupport() {
-  if (!hasBrowserTtsSupport()) {
-    state.tts.voiceSupportReady = false;
-    updateTtsSupportUi();
-    return;
-  }
-  const synth = window.speechSynthesis;
-  const refresh = () => {
-    const voices = synth.getVoices?.() || [];
-    state.tts.voiceSupportReady = voices.length > 0;
-    if (state.activeModalId === "character-modal") {
-      const currentLang = String(
-        document.getElementById("char-tts-language")?.value ||
-          DEFAULT_TTS_LANGUAGE,
-      );
-      const currentVoice = String(
-        document.getElementById("char-tts-voice")?.value || DEFAULT_TTS_VOICE,
-      );
-      populateCharTtsLanguageSelect(currentLang);
-      populateCharTtsVoiceSelect(currentVoice);
-    }
-    updateTtsSupportUi();
-  };
-  refresh();
-  if (typeof synth.addEventListener === "function") {
-    synth.addEventListener("voiceschanged", refresh);
-  }
-  window.setTimeout(refresh, 250);
-  window.setTimeout(refresh, 1000);
-}
-
-function updateMessageSpeakerButton(button, index) {
-  if (!button) return;
-  const msg = conversationHistory[index];
-  const isAssistant = msg?.role === "assistant";
-  const row = button.closest(".chat-row");
-  const streaming = row?.dataset?.streaming === "1";
-  const hasContent = !!String(msg?.content || "").trim();
-  const isLoading = isTtsIndexMatch(state.tts.loadingMessageIndex, index);
-  const isSpeaking = isTtsIndexMatch(state.tts.speakingMessageIndex, index);
-  const ttsReady = isActiveTtsProviderReady();
-  button.disabled = !isAssistant || streaming || !hasContent || !ttsReady;
-  button.classList.toggle("tts-loading", isLoading);
-  button.classList.toggle("tts-speaking", isSpeaking);
-  if (!ttsReady) {
-    button.innerHTML = ICONS.speaker;
-    button.setAttribute("title", t("msgVoiceUnavailableTitle"));
-    button.setAttribute("aria-label", t("msgVoiceUnavailableAria"));
-    return;
-  }
-  if (isLoading) {
-    button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>';
-    button.setAttribute("title", t("msgSpeakLoadingTitle"));
-    button.setAttribute("aria-label", t("msgSpeakLoadingTitle"));
-  } else if (isSpeaking) {
-    button.innerHTML = ICONS.stop;
-    button.setAttribute("title", t("msgSpeakCancelTitle"));
-    button.setAttribute("aria-label", t("msgSpeakCancelTitle"));
-  } else {
-    button.innerHTML = ICONS.speaker;
-    button.setAttribute("title", t("msgSpeakTitle"));
-    button.setAttribute("aria-label", t("msgSpeakTitle"));
-  }
-}
-
-function refreshAllSpeakerButtons() {
-  document.querySelectorAll(".msg-tts-btn").forEach((btn) => {
-    const index = Number(btn.dataset.messageIndex);
-    updateMessageSpeakerButton(btn, index);
-  });
 }
 
 async function sendMessage(options = {}) {
   if (!currentThread || !currentCharacter) return;
-  stopTtsPlayback();
+  window.stopTtsPlayback();
   const pendingState = getThreadPendingGenerationState(
     Number(currentThread.id),
     conversationHistory,
@@ -15138,7 +14936,7 @@ async function regenerateOocMessage(index) {
   const userMessage = conversationHistory[userIndex];
   if (!userMessage || !userMessage.content) return;
 
-  stopTtsPlayback();
+  window.stopTtsPlayback();
   state.sending = true;
   state.chatAutoScroll = true;
   state.abortController = new AbortController();
@@ -15603,7 +15401,7 @@ async function deleteMessageAt(index) {
   if (!currentThread) return;
   if (index < 0 || index >= conversationHistory.length) return;
 
-  stopTtsPlayback();
+  window.stopTtsPlayback();
   const target = conversationHistory[index];
   const targetRole = normalizeApiRole(target?.apiRole || target?.role);
   if (state.settings.lockMemoryMessages && target?.summarized) {
@@ -15729,7 +15527,7 @@ async function regenerateMessage(index) {
   const originalContent = String(target.content || "");
   const messagesToSave = conversationHistory.map((m) => ({ ...m }));
 
-  stopTtsPlayback();
+  window.stopTtsPlayback();
   state.sending = true;
   state.chatAutoScroll = true;
   state.abortController = new AbortController();
@@ -15982,7 +15780,7 @@ function updateCharTtsTestButtonState() {
 
 async function playCharacterTtsTestFromModal() {
   if (state.charModalTtsTestPlaying) {
-    stopTtsPlayback({ silent: true });
+    window.stopTtsPlayback({ silent: true });
     state.charModalTtsTestPlaying = false;
     updateCharTtsTestButtonState();
     return;
@@ -15993,7 +15791,7 @@ async function playCharacterTtsTestFromModal() {
   state.charModalTtsTestPlaying = true;
   updateCharTtsTestButtonState();
   try {
-    await playTtsAudio(text, getTtsOptionsFromCharacterModal());
+    await window.playTtsAudio(text, getTtsOptionsFromCharacterModal());
   } catch (err) {
     if (isTtsCancelledError(err)) return;
     showToast(
@@ -16064,592 +15862,6 @@ function setupKokoroDownloadCancel() {
     };
   }
 }
-
-async function playTtsAudio(text, options = {}, playback = {}) {
-  const normalizedText = preprocessForTTS(text);
-  if (!normalizedText) {
-    ttsDebug("playTtsAudio:empty-text");
-    throw new Error("Text is empty.");
-  }
-  const provider = String(
-    (
-      options.provider ||
-      getActiveCharacterTtsProvider() ||
-      "browser"
-    ).toLowerCase(),
-  );
-  const resolvedRate = Math.max(
-    0.5,
-    Math.min(2, Number(options?.rate || DEFAULT_TTS_RATE)),
-  );
-  const resolvedPitch = Math.max(0, Math.min(2, Number(options?.pitch || 1.1)));
-  const kokoroSettings = {
-    device: String(options?.kokoro?.device || "webgpu"),
-    dtype: String(options?.kokoro?.dtype || "auto"),
-    voice: String(options?.kokoro?.voice || DEFAULT_KOKORO_VOICE),
-    speed: Number.isFinite(Number(options?.kokoro?.speed))
-      ? Number(options.kokoro.speed)
-      : resolvedRate,
-  };
-  const normalizedOptions = {
-    ...options,
-    provider,
-    rate: resolvedRate,
-    pitch: resolvedPitch,
-    kokoro: kokoroSettings,
-  };
-  if (provider === "kokoro") {
-    return playKokoroTts(normalizedText, normalizedOptions, playback);
-  }
-  return playBrowserTts(normalizedText, normalizedOptions, playback);
-}
-
-async function playBrowserTts(normalizedText, options, playback = {}) {
-  if (!hasBrowserTtsSupport()) {
-    throw new Error("Browser TTS is unavailable.");
-  }
-  const synth = window.speechSynthesis;
-  const voices = synth.getVoices?.() || [];
-  if (!voices.length) {
-    throw new Error("No browser voices are available yet.");
-  }
-  const messageIndex = Number.isInteger(playback?.messageIndex)
-    ? playback.messageIndex
-    : null;
-  const requestId = state.tts.requestSeq + 1;
-  state.tts.requestSeq = requestId;
-  state.tts.activeRequestId = requestId;
-  ttsDebug("playBrowserTts:start", {
-    requestId,
-    messageIndex,
-    textLength: normalizedText.length,
-    options,
-  });
-  stopTtsPlayback();
-  state.tts.activeRequestId = requestId;
-  if (messageIndex !== null) {
-    state.tts.loadingMessageIndex = messageIndex;
-    refreshAllSpeakerButtons();
-  }
-  let utterance = null;
-  let finalized = false;
-  const finalizeLoadingState = () => {
-    if (finalized) return;
-    finalized = true;
-    if (
-      messageIndex !== null &&
-      state.tts.activeRequestId === requestId &&
-      isTtsIndexMatch(state.tts.loadingMessageIndex, messageIndex)
-    ) {
-      state.tts.loadingMessageIndex = null;
-      refreshAllSpeakerButtons();
-    }
-  };
-
-  try {
-    if (requestId !== state.tts.activeRequestId) {
-      ttsDebug("playBrowserTts:stale-request", {
-        requestId,
-        active: state.tts.activeRequestId,
-      });
-      throw makeTtsCancelledError();
-    }
-
-    const desiredVoice = String(options?.voice || DEFAULT_TTS_VOICE).trim();
-    const desiredLang = String(
-      options?.language || DEFAULT_TTS_LANGUAGE,
-    ).trim();
-    const desiredRate = Math.max(0.5, Math.min(2, Number(options?.rate) || 1));
-    const desiredPitch = Math.max(0, Math.min(2, Number(options?.pitch) || 1));
-    const voiceMatcher = () => {
-      const byExactName = voices.find(
-        (v) =>
-          String(v.name || "").toLowerCase() === desiredVoice.toLowerCase(),
-      );
-      if (byExactName) return byExactName;
-      const byLangExact = voices.find(
-        (v) => String(v.lang || "").toLowerCase() === desiredLang.toLowerCase(),
-      );
-      if (byLangExact) return byLangExact;
-      const baseLang = desiredLang.split("-")[0]?.toLowerCase() || "";
-      const byLangPrefix = voices.find((v) =>
-        String(v.lang || "")
-          .toLowerCase()
-          .startsWith(baseLang),
-      );
-      return byLangPrefix || voices[0] || null;
-    };
-    const chunks = chunkForTTS(normalizedText);
-
-    const speakChunk = (chunk) =>
-      new Promise((resolve, reject) => {
-        const utterance = new SpeechSynthesisUtterance(chunk);
-        utterance.voice = voiceMatcher();
-        utterance.lang = desiredLang || DEFAULT_TTS_LANGUAGE;
-        utterance.rate = desiredRate;
-        utterance.pitch = desiredPitch;
-        utterance.onend = () => {
-          if (requestId !== state.tts.activeRequestId) {
-            ttsDebug("playBrowserTts:cancelled-on-end", { chunk });
-            reject(makeTtsCancelledError());
-            return;
-          }
-          ttsDebug("playBrowserTts:chunk-ended", { chunk });
-          if (state.tts.audio === utterance) {
-            state.tts.audio = null;
-          }
-          resolve();
-        };
-        utterance.onerror = (event) => {
-          ttsDebug("playBrowserTts:error", { event });
-          if (state.tts.audio === utterance) {
-            state.tts.audio = null;
-          }
-          const interrupted =
-            requestId !== state.tts.activeRequestId ||
-            String(event?.error || "").toLowerCase() === "interrupted" ||
-            String(event?.error || "").toLowerCase() === "canceled";
-          if (interrupted) {
-            reject(makeTtsCancelledError());
-            return;
-          }
-          reject(new Error("Browser TTS playback failed."));
-        };
-        ttsDebug("playBrowserTts:speak", {
-          voice: utterance.voice?.name || "",
-          lang: utterance.lang,
-        });
-        state.tts.audio = utterance;
-        synth.speak(utterance);
-      });
-
-    if (chunks.length === 0) {
-      return null;
-    }
-
-    state.tts.loadingMessageIndex = null;
-    finalized = true;
-    if (messageIndex !== null) {
-      state.tts.speakingMessageIndex = messageIndex;
-    }
-    refreshAllSpeakerButtons();
-
-    for (const chunk of chunks) {
-      if (requestId !== state.tts.activeRequestId) {
-        ttsDebug("playBrowserTts:stale-request", { requestId });
-        throw makeTtsCancelledError();
-      }
-      await speakChunk(chunk);
-    }
-    if (
-      messageIndex !== null &&
-      isTtsIndexMatch(state.tts.speakingMessageIndex, messageIndex)
-    ) {
-      state.tts.speakingMessageIndex = null;
-      refreshAllSpeakerButtons();
-    }
-    return null;
-  } finally {
-    finalizeLoadingState();
-  }
-}
-
-async function playKokoroTts(normalizedText, options, playback = {}) {
-  const messageIndex = Number.isInteger(playback?.messageIndex)
-    ? playback.messageIndex
-    : null;
-  const requestId = state.tts.requestSeq + 1;
-  state.tts.requestSeq = requestId;
-  state.tts.activeRequestId = requestId;
-  ttsDebug("playKokoroTts:start", {
-    requestId,
-    messageIndex,
-    textLength: normalizedText.length,
-    kokoro: options.kokoro,
-  });
-  stopTtsPlayback();
-  state.tts.activeRequestId = requestId;
-  if (messageIndex !== null) {
-    state.tts.loadingMessageIndex = messageIndex;
-    refreshAllSpeakerButtons();
-  }
-  let finalized = false;
-  const finalizeLoadingState = () => {
-    if (finalized) return;
-    finalized = true;
-    if (
-      messageIndex !== null &&
-      state.tts.activeRequestId === requestId &&
-      isTtsIndexMatch(state.tts.loadingMessageIndex, messageIndex)
-    ) {
-      state.tts.loadingMessageIndex = null;
-      refreshAllSpeakerButtons();
-    }
-  };
-
-  try {
-    const kokoro = await ensureKokoroInstance(
-      options.kokoro.device,
-      options.kokoro.dtype,
-    );
-
-    const chunks = chunkForTTS(normalizedText);
-    if (chunks.length === 0) {
-      return null;
-    }
-
-    const voice = options.kokoro.voice || DEFAULT_KOKORO_VOICE;
-    const speed = Number.isFinite(Number(options.kokoro.speed))
-      ? Number(options.kokoro.speed)
-      : options.rate || 1;
-
-    // Generates a single chunk into a BufferSource (or null on failure).
-    // Yields to the browser first via setTimeout so the main thread
-    // doesn't freeze during WASM inference.
-    const generateBufferSource = async (chunk) => {
-      await new Promise((r) => setTimeout(r, 0));
-      if (requestId !== state.tts.activeRequestId) {
-        throw makeTtsCancelledError();
-      }
-      ttsDebug("playKokoroTts:generate", { chunk });
-      const raw = await kokoro.generate(chunk, { voice, speed });
-      const blob = await raw.toBlob();
-      const arrayBuffer = await blob.arrayBuffer();
-      const bufferSource = await createKokoroBufferSource(arrayBuffer);
-      if (bufferSource) return bufferSource;
-
-      // Fallback: AudioContext not available, use HTMLAudioElement
-      const url = URL.createObjectURL(blob);
-      return { _fallbackUrl: url, _fallbackBlob: blob };
-    };
-
-    // Plays a resolved bufferSource (or fallback Audio element).
-    // Returns a Promise that resolves when the chunk finishes playing.
-    const playResolved = (resolved) => {
-      if (requestId !== state.tts.activeRequestId) {
-        throw makeTtsCancelledError();
-      }
-
-      // HTMLAudioElement fallback path
-      if (resolved?._fallbackUrl) {
-        const { _fallbackUrl: url } = resolved;
-        const audioEl = new Audio(url);
-        state.tts.audio = audioEl;
-        return new Promise((resolve, reject) => {
-          audioEl.onended = () => {
-            if (requestId !== state.tts.activeRequestId) {
-              ttsDebug("playKokoroTts:cancelled-on-ended-fallback");
-              URL.revokeObjectURL(url);
-              reject(makeTtsCancelledError());
-              return;
-            }
-            ttsDebug("playKokoroTts:chunk-ended-fallback");
-            if (state.tts.audio === audioEl) state.tts.audio = null;
-            URL.revokeObjectURL(url);
-            resolve();
-          };
-          audioEl.onerror = () => {
-            ttsDebug("playKokoroTts:error-fallback");
-            if (state.tts.audio === audioEl) state.tts.audio = null;
-            URL.revokeObjectURL(url);
-            if (requestId !== state.tts.activeRequestId) {
-              reject(makeTtsCancelledError());
-              return;
-            }
-            reject(new Error("Kokoro TTS playback failed."));
-          };
-          audioEl.play().catch((err) => {
-            if (state.tts.audio === audioEl) state.tts.audio = null;
-            URL.revokeObjectURL(url);
-            if (requestId !== state.tts.activeRequestId) {
-              reject(makeTtsCancelledError());
-              return;
-            }
-            reject(err);
-          });
-        });
-      }
-
-      // Normal AudioBufferSourceNode path
-      const bufferSource = resolved;
-      state.tts.audio = bufferSource;
-      return new Promise((resolve, reject) => {
-        bufferSource.onended = () => {
-          if (requestId !== state.tts.activeRequestId) {
-            ttsDebug("playKokoroTts:cancelled-on-ended");
-            try {
-              bufferSource.disconnect();
-            } catch {
-              /* ignore */
-            }
-            reject(makeTtsCancelledError());
-            return;
-          }
-          ttsDebug("playKokoroTts:chunk-ended", { voice });
-          if (state.tts.audio === bufferSource) state.tts.audio = null;
-          try {
-            bufferSource.disconnect();
-          } catch {
-            /* ignore */
-          }
-          resolve();
-        };
-        try {
-          bufferSource.start();
-        } catch (err) {
-          try {
-            bufferSource.disconnect();
-          } catch {
-            /* ignore */
-          }
-          reject(err);
-        }
-      });
-    };
-
-    if (requestId !== state.tts.activeRequestId) {
-      ttsDebug("playKokoroTts:stale-request", {
-        requestId,
-        active: state.tts.activeRequestId,
-      });
-      throw makeTtsCancelledError();
-    }
-
-    // Transition from loading → speaking state before first chunk starts
-    state.tts.loadingMessageIndex = null;
-    finalized = true;
-    if (messageIndex !== null) {
-      state.tts.speakingMessageIndex = messageIndex;
-    }
-    refreshAllSpeakerButtons();
-
-    const voiceName = options.kokoro.voice || DEFAULT_KOKORO_VOICE;
-    const needsDownload =
-      typeof window.isVoiceDownloaded === "function"
-        ? !window.isVoiceDownloaded(voiceName)
-        : true;
-    let showedDownloadProgress = false;
-
-    if (needsDownload) {
-      showKokoroDownloadProgress();
-      setupKokoroDownloadCancel();
-      startKokoroDownloadProgressMonitor();
-      showedDownloadProgress = true;
-    }
-
-    // Pipeline: begin generating chunk[i+1] while chunk[i] is playing,
-    // so there is minimal silence between chunks and no cumulative freeze.
-    let nextGenPromise = generateBufferSource(chunks[0]);
-
-    for (let i = 0; i < chunks.length; i++) {
-      // Kick off the next generation in parallel, chained off the current
-      // generation completing (not off playback finishing) so we don't
-      // start a second heavy WASM call while the first is still running.
-      let followingGenPromise = null;
-      if (i + 1 < chunks.length) {
-        followingGenPromise = nextGenPromise.then(
-          () => generateBufferSource(chunks[i + 1]),
-          () => null, // if current gen failed/cancelled, don't chain
-        );
-      }
-
-      const resolved = await nextGenPromise;
-      nextGenPromise = followingGenPromise;
-
-      if (i === 0 && showedDownloadProgress) {
-        stopKokoroDownloadProgressMonitor();
-        hideKokoroDownloadProgress();
-      }
-
-      if (resolved === null) {
-        // Cancelled or failed during generation — stop pipeline
-        break;
-      }
-
-      await playResolved(resolved);
-
-      if (requestId !== state.tts.activeRequestId) {
-        ttsDebug("playKokoroTts:stale-after-chunk", {
-          requestId,
-          active: state.tts.activeRequestId,
-        });
-        break;
-      }
-    }
-
-    if (
-      messageIndex !== null &&
-      isTtsIndexMatch(state.tts.speakingMessageIndex, messageIndex)
-    ) {
-      state.tts.speakingMessageIndex = null;
-      refreshAllSpeakerButtons();
-    }
-    return null;
-  } catch (err) {
-    stopKokoroDownloadProgressMonitor();
-    hideKokoroDownloadProgress();
-    throw err;
-  } finally {
-    finalizeLoadingState();
-  }
-}
-
-function stopTtsPlayback(options = {}) {
-  state.tts.activeRequestId = state.tts.activeRequestId + 1;
-  const audioElement =
-    state.tts.audio instanceof HTMLAudioElement ? state.tts.audio : null;
-  if (audioElement) {
-    try {
-      audioElement.pause();
-      audioElement.currentTime = 0;
-      const srcUrl = audioElement.currentSrc || audioElement.src;
-      if (typeof srcUrl === "string" && srcUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(srcUrl);
-      }
-    } catch {
-      // ignore
-    }
-  }
-  const bufferSource =
-    typeof AudioBufferSourceNode !== "undefined" &&
-    state.tts.audio instanceof AudioBufferSourceNode
-      ? state.tts.audio
-      : null;
-  if (bufferSource) {
-    try {
-      bufferSource.stop();
-    } catch {
-      // ignore
-    }
-    try {
-      bufferSource.disconnect();
-    } catch {
-      // ignore
-    }
-  } else if (hasBrowserTtsSupport()) {
-    try {
-      window.speechSynthesis.cancel();
-    } catch {
-      // ignore
-    }
-  }
-  state.tts.audio = null;
-  state.tts.speakingMessageIndex = null;
-  state.tts.loadingMessageIndex = null;
-  state.charModalTtsTestPlaying = false;
-  if (!options?.silent) {
-    updateCharTtsTestButtonState();
-    refreshAllSpeakerButtons();
-  }
-}
-
-async function toggleMessageSpeech(index) {
-  ttsDebug("toggleMessageSpeech:enter", {
-    index,
-    historyLen: conversationHistory.length,
-  });
-  if (!currentThread || !currentCharacter) {
-    ttsDebug("toggleMessageSpeech:blocked-no-thread-or-character", {
-      hasThread: !!currentThread,
-      hasCharacter: !!currentCharacter,
-    });
-    showToast(t("openThreadFirst"), "error");
-    return;
-  }
-  const message = conversationHistory[index];
-  if (!message || message.role !== "assistant") {
-    ttsDebug("toggleMessageSpeech:blocked-not-assistant", {
-      index,
-      role: message?.role,
-      hasMessage: !!message,
-    });
-    showToast(t("ttsAssistantOnly"), "error");
-    return;
-  }
-  if (!String(message.content || "").trim()) {
-    ttsDebug("toggleMessageSpeech:blocked-empty-message", { index });
-    showToast(t("messageEmpty"), "error");
-    return;
-  }
-
-  const audioElement =
-    state.tts.audio instanceof HTMLAudioElement ? state.tts.audio : null;
-  const hasAudioObject = !!state.tts.audio;
-  const audioIsPlaying = audioElement
-    ? !audioElement.paused && !audioElement.ended
-    : hasBrowserTtsSupport()
-      ? !!(window.speechSynthesis.speaking || window.speechSynthesis.pending)
-      : false;
-  if (!hasAudioObject && state.tts.speakingMessageIndex !== null) {
-    ttsDebug("toggleMessageSpeech:clear-stale-speaking", {
-      staleSpeakingIndex: state.tts.speakingMessageIndex,
-    });
-    state.tts.speakingMessageIndex = null;
-  }
-  const isActive =
-    isTtsIndexMatch(state.tts.speakingMessageIndex, index) ||
-    isTtsIndexMatch(state.tts.loadingMessageIndex, index);
-  const isActuallyActive =
-    isTtsIndexMatch(state.tts.loadingMessageIndex, index) ||
-    (isTtsIndexMatch(state.tts.speakingMessageIndex, index) &&
-      hasAudioObject &&
-      audioIsPlaying);
-  ttsDebug("toggleMessageSpeech:active-check", {
-    index,
-    isActive,
-    isActuallyActive,
-    loadingIndex: state.tts.loadingMessageIndex,
-    speakingIndex: state.tts.speakingMessageIndex,
-    hasAudioObject,
-    audioIsPlaying,
-  });
-  const isCurrentlySpeaking = state.tts.speakingMessageIndex !== null;
-  const isCurrentlyLoading = state.tts.loadingMessageIndex !== null;
-  if (isCurrentlySpeaking || isCurrentlyLoading) {
-    ttsDebug("toggleMessageSpeech:stop-active", {
-      index,
-      isCurrentlySpeaking,
-      isCurrentlyLoading,
-    });
-    stopTtsPlayback();
-    return;
-  }
-
-  stopTtsPlayback();
-
-  try {
-    ttsDebug("toggleMessageSpeech:play", {
-      index,
-      contentLength: String(message.content || "").length,
-    });
-    await playTtsAudio(message.content, getCurrentCharacterTtsOptions(), {
-      messageIndex: index,
-    });
-    ttsDebug("toggleMessageSpeech:success", { index });
-  } catch (err) {
-    if (isTtsCancelledError(err)) {
-      ttsDebug("toggleMessageSpeech:cancelled", { index });
-      return;
-    }
-    ttsDebug("toggleMessageSpeech:error", {
-      index,
-      error: String(err?.message || err || ""),
-    });
-    if (isTtsIndexMatch(state.tts.loadingMessageIndex, index)) {
-      state.tts.loadingMessageIndex = null;
-    }
-    if (isTtsIndexMatch(state.tts.speakingMessageIndex, index)) {
-      state.tts.speakingMessageIndex = null;
-      state.tts.audio = null;
-    }
-    refreshAllSpeakerButtons();
-    showToast(
-      tf("ttsFailed", { error: err.message || t("unknownError") }),
-      "error",
-    );
-  }
-}
-
 function openPromptHistory() {
   if (!currentThread || state.sending) return;
   if (state.chatOpacityOverlayVisible) return;

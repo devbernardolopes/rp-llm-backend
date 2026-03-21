@@ -20,7 +20,7 @@
  *    - Patches fetch to intercept voice and model file downloads (patchKokoroVoiceFetch)
  *    - Loads model from HuggingFace (KOKORO_MODEL_ID)
  *    - Patches _validate_voice to allow all KOKORO_VOICE_OPTIONS
- *    - Stores instance in state.tts.kokoro.instance
+ *    - Stores instance in window.ttsState.kokoro.instance
  *
  * 3. VOICE & MODEL CACHING (patchKokoroVoiceFetch)
  *    - Intercepts fetch() calls for:
@@ -48,7 +48,7 @@
  * STATE MANAGEMENT
  * ============================================================================
  *
- * state.tts.kokoro:
+ * window.ttsState.kokoro:
  *   - instance: KokoroTTS engine instance (null until loaded)
  *   - config: { device: 'webgpu'|'wasm', dtype: 'auto'|'fp16'|'fp32' }
  *   - loading: boolean (true during model load)
@@ -244,7 +244,7 @@ function resetKokoroVoiceDownloadProgress() {
 }
 
 async function patchKokoroVoiceFetch() {
-  if (state.tts.kokoro.fetchPatched) return;
+  if (window.ttsState.kokoro.fetchPatched) return;
   if (typeof window === "undefined" || typeof window.fetch !== "function")
     return;
   const originalFetch = window.fetch.bind(window);
@@ -360,7 +360,7 @@ async function patchKokoroVoiceFetch() {
     }
     return originalFetch(input, init);
   };
-  state.tts.kokoro.fetchPatched = true;
+  window.ttsState.kokoro.fetchPatched = true;
 }
 
 function cancelKokoroVoiceDownload() {
@@ -416,7 +416,7 @@ async function cacheKokoroVoice(voiceName, voiceBlob) {
   } catch (err) {
     if (err.name === 'QuotaExceededError') {
       console.error("kokoro:cache:quota-exceeded-voice", voiceName);
-      state.tts.kokoro.cacheDisabled = true;
+      window.ttsState.kokoro.cacheDisabled = true;
       showToast("Storage full: Kokoro voices will not be cached", "warning");
     } else {
       console.warn("kokoro:cache:voice-save-failed", voiceName, err);
@@ -454,7 +454,7 @@ async function cacheKokoroModelFile(filename, blob) {
   } catch (err) {
     if (err.name === 'QuotaExceededError') {
       console.error("kokoro:cache:quota-exceeded-model-file", filename);
-      state.tts.kokoro.cacheDisabled = true;
+      window.ttsState.kokoro.cacheDisabled = true;
       showToast("Storage full: Kokoro model files will not be cached", "warning");
     } else {
       console.warn("kokoro:cache:model-file-save-failed", filename, err);
@@ -489,7 +489,7 @@ async function cacheKokoroModel(modelBlob) {
   } catch (err) {
     if (err.name === 'QuotaExceededError') {
       console.error("kokoro:cache:quota-exceeded-model");
-      state.tts.kokoro.cacheDisabled = true;
+      window.ttsState.kokoro.cacheDisabled = true;
       showToast("Storage full: Kokoro model will not be cached", "warning");
     } else {
       console.warn("kokoro:cache:model-save-failed", err);
@@ -511,12 +511,12 @@ async function clearKokoroCache() {
 }
 
 function isKokoroCacheDisabled() {
-  return state.tts?.kokoro?.cacheDisabled === true;
+  return window.ttsState?.kokoro?.cacheDisabled === true;
 }
 
 function enableKokoroCache() {
-  if (state.tts?.kokoro) {
-    state.tts.kokoro.cacheDisabled = false;
+  if (window.ttsState?.kokoro) {
+    window.ttsState.kokoro.cacheDisabled = false;
   }
 }
 
@@ -529,8 +529,8 @@ function isKokoroSupportedForLanguage(language = "") {
 }
 
 async function loadKokoroModule() {
-  if (state.tts.kokoro.modulePromise) return state.tts.kokoro.modulePromise;
-  state.tts.kokoro.modulePromise = (async () => {
+  if (window.ttsState.kokoro.modulePromise) return window.ttsState.kokoro.modulePromise;
+  window.ttsState.kokoro.modulePromise = (async () => {
     for (const path of KOKORO_MODULE_PATHS) {
       try {
         return await import(path);
@@ -540,7 +540,7 @@ async function loadKokoroModule() {
     }
     throw new Error("Unable to load Kokoro.js module.");
   })();
-  return state.tts.kokoro.modulePromise;
+  return window.ttsState.kokoro.modulePromise;
 }
 
 async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
@@ -551,22 +551,22 @@ async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
 
   // Return existing instance if same config
   if (
-    state.tts.kokoro.instance &&
-    state.tts.kokoro.config.device === normalizedDevice &&
-    state.tts.kokoro.config.dtype === normalizedDtype
+    window.ttsState.kokoro.instance &&
+    window.ttsState.kokoro.config.device === normalizedDevice &&
+    window.ttsState.kokoro.config.dtype === normalizedDtype
   ) {
-    return state.tts.kokoro.instance;
+    return window.ttsState.kokoro.instance;
   }
 
   // Clean up old instance if different config
-  if (state.tts.kokoro.instance) {
-    if (state.tts.kokoro.config.device === 'wasm') {
+  if (window.ttsState.kokoro.instance) {
+    if (window.ttsState.kokoro.config.device === 'wasm') {
       terminateKokoroWorker();
     }
-    state.tts.kokoro.instance = null;
+    window.ttsState.kokoro.instance = null;
   }
 
-  state.tts.kokoro.loading = true;
+  window.ttsState.kokoro.loading = true;
 
   try {
     // WASM: use worker-based inference
@@ -576,13 +576,13 @@ async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
         throw new Error("Failed to initialize Kokoro worker");
       }
       const proxy = new WorkerProxy(normalizedDevice, normalizedDtype);
-      state.tts.kokoro.instance = proxy;
-      state.tts.kokoro.config.device = normalizedDevice;
-      state.tts.kokoro.config.dtype = normalizedDtype;
-      state.tts.kokoro.loading = false;
+      window.ttsState.kokoro.instance = proxy;
+      window.ttsState.kokoro.config.device = normalizedDevice;
+      window.ttsState.kokoro.config.dtype = normalizedDtype;
+      window.ttsState.kokoro.loading = false;
       const preferredVoice =
-        state.tts.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE;
-      if (!state.tts.kokoro.voiceListLoaded) {
+        window.ttsState.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE;
+      if (!window.ttsState.kokoro.voiceListLoaded) {
         populateKokoroVoiceSelect(preferredVoice, state.charModalActiveLanguage);
       }
       updateTtsSupportUi();
@@ -611,18 +611,18 @@ async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
       return voice;
     };
 
-    state.tts.kokoro.instance = instance;
-    state.tts.kokoro.config.device = normalizedDevice;
-    state.tts.kokoro.config.dtype = normalizedDtype;
-    state.tts.kokoro.loading = false;
+    window.ttsState.kokoro.instance = instance;
+    window.ttsState.kokoro.config.device = normalizedDevice;
+    window.ttsState.kokoro.config.dtype = normalizedDtype;
+    window.ttsState.kokoro.loading = false;
     const preferredVoice =
-      state.tts.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE;
-    if (!state.tts.kokoro.voiceListLoaded) {
+      window.ttsState.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE;
+    if (!window.ttsState.kokoro.voiceListLoaded) {
       populateKokoroVoiceSelect(preferredVoice, state.charModalActiveLanguage);
     }
     return instance;
   } catch (err) {
-    state.tts.kokoro.loading = false;
+    window.ttsState.kokoro.loading = false;
     throw err;
   } finally {
     updateTtsSupportUi();
@@ -637,9 +637,9 @@ function getActiveCharacterTtsProvider() {
 function isActiveTtsProviderReady(provider = null) {
   const active = provider || getActiveCharacterTtsProvider();
   if (active === "kokoro") {
-    return !!state.tts.kokoro.instance && !state.tts.kokoro.loading;
+    return !!window.ttsState.kokoro.instance && !window.ttsState.kokoro.loading;
   }
-  return hasBrowserTtsSupport() && state.tts.voiceSupportReady === true;
+  return hasBrowserTtsSupport() && window.ttsState.voiceSupportReady === true;
 }
 
 function preloadKokoroForActiveCharacter() {
@@ -647,12 +647,12 @@ function preloadKokoroForActiveCharacter() {
   const device =
     (currentCharacter?.kokoroDevice &&
       String(currentCharacter.kokoroDevice).trim()) ||
-    state.tts.kokoro.config.device ||
+    window.ttsState.kokoro.config.device ||
     "webgpu";
   const dtype =
     (currentCharacter?.kokoroDtype &&
       String(currentCharacter.kokoroDtype).trim()) ||
-    state.tts.kokoro.config.dtype ||
+    window.ttsState.kokoro.config.dtype ||
     "auto";
   ensureKokoroInstance(device, dtype).catch((err) => {
     console.warn("kokoro:preload", err);
@@ -678,7 +678,7 @@ function buildKokoroOptions(source = {}, rateFallback = DEFAULT_TTS_RATE) {
 function setKokoroVoiceLoadingPlaceholder() {
   const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
   if (!kokoroVoice) return;
-  state.tts.kokoro.voiceListLoaded = false;
+  window.ttsState.kokoro.voiceListLoaded = false;
   kokoroVoice.innerHTML = "";
   const placeholder = document.createElement("option");
   placeholder.value = "";
@@ -688,7 +688,7 @@ function setKokoroVoiceLoadingPlaceholder() {
 }
 
 function populateKokoroVoiceSelect(
-  preferred = state.tts.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE,
+  preferred = window.ttsState.kokoro.selectedVoice || DEFAULT_KOKORO_VOICE,
   language = state.charModalActiveLanguage,
 ) {
   const select = document.getElementById("char-tts-kokoro-voice");
@@ -701,8 +701,8 @@ function populateKokoroVoiceSelect(
     placeholder.textContent = t("kokoroVoicesUnavailable");
     select.appendChild(placeholder);
     select.disabled = true;
-    state.tts.kokoro.voiceListLoaded = true;
-    state.tts.kokoro.selectedVoice = DEFAULT_KOKORO_VOICE;
+    window.ttsState.kokoro.voiceListLoaded = true;
+    window.ttsState.kokoro.selectedVoice = DEFAULT_KOKORO_VOICE;
     return;
   }
   filtered.forEach((voice) => {
@@ -714,8 +714,8 @@ function populateKokoroVoiceSelect(
   const available = filtered.includes(preferred) ? preferred : filtered[0];
   select.value = available;
   select.disabled = state.charModalTtsTestPlaying === true;
-  state.tts.kokoro.voiceListLoaded = true;
-  state.tts.kokoro.selectedVoice = available;
+  window.ttsState.kokoro.voiceListLoaded = true;
+  window.ttsState.kokoro.selectedVoice = available;
 }
 
 let sharedKokoroAudioContext = null;
@@ -999,11 +999,44 @@ class WorkerProxy {
 }
 
 if (typeof window !== "undefined") {
+  // Initialize window.ttsState if not already set (by tts/index.js module)
+  if (!window.ttsState) {
+    window.ttsState = {
+      audio: null,
+      speakingMessageIndex: null,
+      loadingMessageIndex: null,
+      requestSeq: 0,
+      activeRequestId: 0,
+      voiceSupportReady: false,
+      kokoro: {
+        modulePromise: null,
+        instance: null,
+        config: {
+          device: "webgpu",
+          dtype: "auto",
+        },
+        loading: false,
+        fetchPatched: false,
+        voiceListLoaded: false,
+        selectedVoice: DEFAULT_KOKORO_VOICE,
+        cacheDisabled: false,
+      },
+    };
+  }
+
   window.getKokoroVoiceDownloadProgress = getKokoroVoiceDownloadProgress;
   window.resetKokoroVoiceDownloadProgress = resetKokoroVoiceDownloadProgress;
   window.cancelKokoroVoiceDownload = cancelKokoroVoiceDownload;
   window.isVoiceDownloaded = isVoiceDownloaded;
   window.clearKokoroCache = clearKokoroCache;
+
+  // Expose TTS engine functions for tts/engine.js
+  window.ensureKokoroInstance = ensureKokoroInstance;
+  window.createKokoroBufferSource = createKokoroBufferSource;
+  window.getActiveCharacterTtsProvider = getActiveCharacterTtsProvider;
+  window.isActiveTtsProviderReady = isActiveTtsProviderReady;
+  window.preloadKokoroForActiveCharacter = preloadKokoroForActiveCharacter;
+  window.buildKokoroOptions = buildKokoroOptions;
 
   // Expose worker management functions
   window.initKokoroWorker = initKokoroWorker;
