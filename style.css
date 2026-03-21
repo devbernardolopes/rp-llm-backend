@@ -3134,6 +3134,14 @@ textarea {
   font-size: 13px;
 }
 
+.char-tags-sticky-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel-2);
+  padding: 6px 0;
+}
+
 .settings-hint {
   font-size: 11px;
   color: #888;
