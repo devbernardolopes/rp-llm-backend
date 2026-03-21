@@ -2168,6 +2168,17 @@ textarea {
   word-break: break-word;
 }
 
+.message-content img {
+  cursor: pointer;
+  max-width: 100%;
+  border-radius: 6px;
+  transition: opacity 0.2s;
+}
+
+.message-content img:hover {
+  opacity: 0.85;
+}
+
 .message-editor {
   width: 100%;
   min-height: 90px;

@@ -1284,6 +1284,12 @@ function setupEvents() {
       }
     }
   });
+  chatLog.addEventListener("click", (e) => {
+    const img = e.target.closest(".message-content img");
+    if (img && img.src) {
+      openImagePreview(img.src);
+    }
+  });
   requestAnimationFrame(() => adjustUserInputElementHeight(input));
   window.addEventListener("resize", () => {
     if (state.promptHistoryOpen) positionPromptHistoryPopover();
