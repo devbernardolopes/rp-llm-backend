@@ -671,6 +671,14 @@
           >
             Shortcuts
           </button>
+          <button
+            class="settings-tab-btn"
+            type="button"
+            data-settings-tab-btn="defaults"
+            data-i18n="tabDefaults"
+          >
+            Defaults
+          </button>
         </div>
          <div class="modal-body" id="settings-modal-body">
            <form id="settings-form" novalidate onsubmit="return false;">
@@ -1189,29 +1197,63 @@
                <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
              </span>
            </div>
-          <div data-settings-group="shortcuts" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="cancelGenerationShortcut"
-                >Cancel Generation Shortcut</span
-              >
-              <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
-            </div>
-            <div class="form-field">
-              <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
-              <input id="home-shortcut" type="text" placeholder="Alt+H" />
-            </div>
-            <div class="form-field">
-              <span data-i18n="newCharacterShortcut"
-                >New Character Shortcut</span
-              >
-              <input
-                id="new-character-shortcut"
-                type="text"
-                placeholder="Alt+N"
-              />
-            </div>
-          </div>
-        </div>
+           <div data-settings-group="shortcuts" class="settings-group">
+             <div class="form-field">
+               <span data-i18n="cancelGenerationShortcut"
+                 >Cancel Generation Shortcut</span
+               >
+               <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
+             </div>
+             <div class="form-field">
+               <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
+               <input id="home-shortcut" type="text" placeholder="Alt+H" />
+             </div>
+             <div class="form-field">
+               <span data-i18n="newCharacterShortcut"
+                 >New Character Shortcut</span
+               >
+               <input
+                 id="new-character-shortcut"
+                 type="text"
+                 placeholder="Alt+N"
+               />
+             </div>
+           </div>
+           <div data-settings-group="defaults" class="settings-group">
+             <div class="form-field">
+               <span data-i18n="defaultPersonaInjectionPlacement"
+                 >Default Persona Injection Placement</span
+               >
+               <select id="default-persona-injection-placement">
+                 <option value="none" data-i18n="personaInjectionNone">None</option>
+                 <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
+                 <option value="once" data-i18n="personaInjectionOnce">Once</option>
+                 <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
+               </select>
+             </div>
+             <div class="form-field">
+               <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
+               <select id="default-tts-provider">
+                 <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
+                 <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
+               </select>
+             </div>
+             <div class="form-field">
+               <div class="label-inline">
+                 <span data-i18n="defaultTtsRate">Default TTS Rate</span>
+                 <span id="default-tts-rate-value" class="muted"></span>
+               </div>
+               <input
+                 id="default-tts-rate"
+                 type="range"
+                 min="0.5"
+                 max="2"
+                 step="0.1"
+                 value="1"
+               />
+             </div>
+           </div>
+         </div>
       </div>
     </div>
 

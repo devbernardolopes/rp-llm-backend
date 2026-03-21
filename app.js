@@ -80,6 +80,9 @@ const DEFAULT_SETTINGS = {
   sttAutoSend: true,
   sttMode: "push-to-talk",
   sttSilenceDuration: 2,
+  defaultPersonaInjectionPlacement: "end_system_prompt",
+  defaultTtsProvider: "kokoro",
+  defaultTtsRate: 1,
 };
 
 // Theme management
@@ -3088,6 +3091,14 @@ async function setupSettingsControls() {
   newCharacterShortcut.value =
     state.settings.newCharacterShortcut ||
     DEFAULT_SETTINGS.newCharacterShortcut;
+  const defaultPersonaInjectionPlacement = document.getElementById("default-persona-injection-placement");
+  const defaultTtsProvider = document.getElementById("default-tts-provider");
+  const defaultTtsRate = document.getElementById("default-tts-rate");
+  const defaultTtsRateValue = document.getElementById("default-tts-rate-value");
+  defaultPersonaInjectionPlacement.value = state.settings.defaultPersonaInjectionPlacement || DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+  defaultTtsProvider.value = state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+  defaultTtsRate.value = String(state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate);
+  if (defaultTtsRateValue) defaultTtsRateValue.textContent = String(defaultTtsRate.value);
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
   aiProviderSelect.value = state.settings.aiProvider || "openrouter";
@@ -3498,6 +3509,26 @@ async function setupSettingsControls() {
     newCharacterShortcut.value = state.settings.newCharacterShortcut;
     saveSettings();
   });
+  if (defaultPersonaInjectionPlacement) {
+    defaultPersonaInjectionPlacement.addEventListener("change", () => {
+      state.settings.defaultPersonaInjectionPlacement = defaultPersonaInjectionPlacement.value;
+      saveSettings();
+    });
+  }
+  if (defaultTtsProvider) {
+    defaultTtsProvider.addEventListener("change", () => {
+      state.settings.defaultTtsProvider = defaultTtsProvider.value;
+      saveSettings();
+    });
+  }
+  if (defaultTtsRate) {
+    defaultTtsRate.addEventListener("input", () => {
+      const value = Number(defaultTtsRate.value);
+      state.settings.defaultTtsRate = value;
+      if (defaultTtsRateValue) defaultTtsRateValue.textContent = String(value);
+      saveSettings();
+    });
+  }
   if (uiLanguageSelect) {
     uiLanguageSelect.addEventListener("change", async () => {
       state.settings.uiLanguage = uiLanguageSelect.value || "auto";
@@ -3687,7 +3718,7 @@ function setupSettingsTabsLayout() {
   const tabs = document.querySelectorAll("[data-settings-tab-btn]");
   if (!body || tabs.length === 0 || body.dataset.tabsReady === "1") return;
 
-  const groups = ["api", "appearance", "threads", "prompting", "shortcuts"];
+  const groups = ["api", "appearance", "threads", "prompting", "shortcuts", "defaults"];
   const panels = new Map();
 
   // Use the form as container if available, otherwise body
@@ -6617,16 +6648,16 @@ function createEmptyCharacterDefinition(language = "en") {
     writingInstructionId: "none",
     initialMessagesRaw: "",
     initialMessages: [],
-    personaInjectionPlacement: "end_system_prompt",
+    personaInjectionPlacement: state.settings.defaultPersonaInjectionPlacement || "end_system_prompt",
     ttsVoice: DEFAULT_TTS_VOICE,
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
-    ttsRate: DEFAULT_TTS_RATE,
+    ttsRate: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
     ttsPitch: 1.1,
-    ttsProvider: "kokoro",
+    ttsProvider: state.settings.defaultTtsProvider || "kokoro",
     kokoroDevice: "webgpu",
     kokoroDtype: "auto",
     kokoroVoice: DEFAULT_KOKORO_VOICE,
-    kokoroSpeed: DEFAULT_TTS_RATE,
+    kokoroSpeed: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
     preferLoreBooksMatchingLanguage: true,
     lorebookIds: [],
     sfx: [],
@@ -6652,7 +6683,7 @@ function normalizeCharacterDefinitions(character = null) {
         ...createEmptyCharacterDefinition(d?.language || "en"),
         ...d,
         language: normalizeBotLanguageCode(d?.language || "en"),
-        ttsProvider: d?.ttsProvider || "kokoro",
+        ttsProvider: d?.ttsProvider || state.settings.defaultTtsProvider || "kokoro",
         kokoroDevice: d?.kokoroDevice || "webgpu",
         kokoroDtype: d?.kokoroDtype || "auto",
         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
@@ -6660,7 +6691,7 @@ function normalizeCharacterDefinitions(character = null) {
           ? Number(d.kokoroSpeed)
           : Number.isFinite(Number(d?.ttsRate))
             ? Number(d.ttsRate)
-            : DEFAULT_TTS_RATE,
+            : (state.settings.defaultTtsRate || DEFAULT_TTS_RATE),
         preferLoreBooksMatchingLanguage:
           d?.preferLoreBooksMatchingLanguage !== false,
         lorebookIds: Array.isArray(d?.lorebookIds)
@@ -6693,16 +6724,16 @@ function normalizeCharacterDefinitions(character = null) {
     ? character.initialMessages
     : [];
   fallback.personaInjectionPlacement =
-    character?.personaInjectionPlacement || "end_system_prompt";
+    character?.personaInjectionPlacement || state.settings.defaultPersonaInjectionPlacement || "end_system_prompt";
   fallback.ttsVoice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
   fallback.ttsLanguage = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   fallback.ttsRate = Number.isFinite(Number(character?.ttsRate))
     ? Number(character.ttsRate)
-    : DEFAULT_TTS_RATE;
+    : (state.settings.defaultTtsRate || DEFAULT_TTS_RATE);
   fallback.ttsPitch = Number.isFinite(Number(character?.ttsPitch))
     ? Number(character.ttsPitch)
     : 1.1;
-  fallback.ttsProvider = character?.ttsProvider || "kokoro";
+  fallback.ttsProvider = character?.ttsProvider || state.settings.defaultTtsProvider || "kokoro";
   fallback.kokoroDevice = character?.kokoroDevice || "webgpu";
   fallback.kokoroDtype = character?.kokoroDtype || "auto";
   fallback.kokoroVoice = String(character?.kokoroVoice || DEFAULT_KOKORO_VOICE);
@@ -6710,7 +6741,7 @@ function normalizeCharacterDefinitions(character = null) {
     ? Number(character.kokoroSpeed)
     : Number.isFinite(Number(character?.ttsRate))
       ? Number(character.ttsRate)
-      : DEFAULT_TTS_RATE;
+      : (state.settings.defaultTtsRate || DEFAULT_TTS_RATE);
   fallback.preferLoreBooksMatchingLanguage =
     character?.preferLoreBooksMatchingLanguage !== false;
   fallback.lorebookIds = Array.isArray(character?.lorebookIds)
@@ -7342,12 +7373,12 @@ async function saveCharacterFromModal({ close = true } = {}) {
     def.oneTimeExtraPrompt = String(def.oneTimeExtraPrompt || "").trim();
     def.writingInstructions = String(def.writingInstructions || "").trim();
     def.personaInjectionPlacement =
-      def.personaInjectionPlacement || "end_system_prompt";
+      def.personaInjectionPlacement || state.settings.defaultPersonaInjectionPlacement || "end_system_prompt";
     def.ttsVoice = String(def.ttsVoice || DEFAULT_TTS_VOICE);
     def.ttsLanguage = String(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
     def.ttsRate = Math.max(
       0.5,
-      Math.min(2, Number(def.ttsRate) || DEFAULT_TTS_RATE),
+      Math.min(2, Number(def.ttsRate) || (state.settings.defaultTtsRate ?? DEFAULT_TTS_RATE)),
     );
     def.ttsPitch = Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1));
     def.preferLoreBooksMatchingLanguage =
