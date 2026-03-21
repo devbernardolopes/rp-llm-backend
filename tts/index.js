@@ -62,7 +62,7 @@ export {
 export {
   initTtsUi as initTts,
   updateAutoTtsToggleButton,
-  refreshAllSpeakerButtons as refreshSpeakerButtons,
+  refreshSpeakerButtons,
   updateAutoTtsToggleButton as updateAutoTts,
   toggleThreadAutoTts,
 } from './ui.js';
