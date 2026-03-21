@@ -4,9 +4,18 @@ let conversationHistory = [];
 let currentPersona = null;
 
 // Expose to window for TTS module access (using getters for live values)
-Object.defineProperty(window, 'currentCharacter', { get: () => currentCharacter, configurable: true });
-Object.defineProperty(window, 'currentThread', { get: () => currentThread, configurable: true });
-Object.defineProperty(window, 'conversationHistory', { get: () => conversationHistory, configurable: true });
+Object.defineProperty(window, "currentCharacter", {
+  get: () => currentCharacter,
+  configurable: true,
+});
+Object.defineProperty(window, "currentThread", {
+  get: () => currentThread,
+  configurable: true,
+});
+Object.defineProperty(window, "conversationHistory", {
+  get: () => conversationHistory,
+  configurable: true,
+});
 
 const DEFAULT_SETTINGS = {
   uiLanguage: "auto",
@@ -758,7 +767,7 @@ function setupEvents() {
     .addEventListener("click", toggleThreadAutoTts);
   document.getElementById("stt-toggle-btn").innerHTML = ICONS.mic;
   const sttBtn = document.getElementById("stt-toggle-btn");
-  
+
   sttBtn.addEventListener("mousedown", (e) => {
     if (state.settings.sttMode === "push-to-talk") {
       e.preventDefault();
@@ -766,21 +775,27 @@ function setupEvents() {
       startSttRecording();
     }
   });
-  
+
   sttBtn.addEventListener("mouseup", () => {
-    if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
+    if (
+      state.settings.sttMode === "push-to-talk" &&
+      state.stt.isPushToTalkActive
+    ) {
       state.stt.isPushToTalkActive = false;
       stopSttRecording();
     }
   });
-  
+
   sttBtn.addEventListener("mouseleave", () => {
-    if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
+    if (
+      state.settings.sttMode === "push-to-talk" &&
+      state.stt.isPushToTalkActive
+    ) {
       state.stt.isPushToTalkActive = false;
       stopSttRecording();
     }
   });
-  
+
   sttBtn.addEventListener("touchstart", (e) => {
     if (state.settings.sttMode === "push-to-talk") {
       e.preventDefault();
@@ -788,20 +803,23 @@ function setupEvents() {
       startSttRecording();
     }
   });
-  
+
   sttBtn.addEventListener("touchend", () => {
-    if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
+    if (
+      state.settings.sttMode === "push-to-talk" &&
+      state.stt.isPushToTalkActive
+    ) {
       state.stt.isPushToTalkActive = false;
       stopSttRecording();
     }
   });
-  
+
   sttBtn.addEventListener("click", () => {
     if (state.settings.sttMode === "auto-stop") {
       toggleSttRecording();
     }
   });
-  
+
   document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#10148;";
   document
     .getElementById("stt-auto-send-toggle-btn")
@@ -1609,7 +1627,8 @@ function setupModalTextareas(root = document) {
       icon.textContent = expanded ? "▾" : "▴";
     };
     const scrollContainer =
-      textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
+      textarea.closest(".system-prompt-list") ||
+      textarea.closest(".modal-body");
     entry.setExpanded = (next) => {
       const current = header.getAttribute("aria-expanded") === "true";
       if (next === current) {
@@ -2841,7 +2860,7 @@ async function setupSettingsControls() {
     const slots =
       typeof window.getMemorySlotsValue === "function"
         ? window.getMemorySlotsValue(state.settings.memorySlots)
-    : Math.max(1, Math.min(10, Number(state.settings.memorySlots) || 5));
+        : Math.max(1, Math.min(10, Number(state.settings.memorySlots) || 5));
     state.settings.memorySlots = slots;
     memorySlotsInput.value = String(slots);
   }
@@ -2899,9 +2918,7 @@ async function setupSettingsControls() {
       saveSettings();
     });
   }
-  const loreMatchingMode = document.getElementById(
-    "lore-matching-mode",
-  );
+  const loreMatchingMode = document.getElementById("lore-matching-mode");
   const loreSemanticThresholdContainer = document.getElementById(
     "lore-semantic-threshold-container",
   );
@@ -2911,8 +2928,11 @@ async function setupSettingsControls() {
   if (loreMatchingMode) {
     loreMatchingMode.value = state.settings.loreMatchingMode || "keyword";
     loreMatchingMode.addEventListener("change", () => {
-      const mode = String(loreMatchingMode.value || "").trim().toLowerCase();
-      state.settings.loreMatchingMode = mode === "semantic" ? "semantic" : "keyword";
+      const mode = String(loreMatchingMode.value || "")
+        .trim()
+        .toLowerCase();
+      state.settings.loreMatchingMode =
+        mode === "semantic" ? "semantic" : "keyword";
       if (loreSemanticThresholdContainer) {
         loreSemanticThresholdContainer.classList.toggle(
           "hidden",
@@ -2942,7 +2962,10 @@ async function setupSettingsControls() {
     loreSemanticThresholdInput.value = String(threshold);
     loreSemanticThresholdInput.addEventListener("change", () => {
       const val = Number(loreSemanticThresholdInput.value);
-      const clamped = Math.max(0, Math.min(1, Number.isFinite(val) ? val : 0.5));
+      const clamped = Math.max(
+        0,
+        Math.min(1, Number.isFinite(val) ? val : 0.5),
+      );
       state.settings.loreSemanticThreshold = clamped;
       loreSemanticThresholdInput.value = String(clamped);
       saveSettings();
@@ -3061,7 +3084,7 @@ async function setupSettingsControls() {
     state.settings.newCharacterShortcut ||
     DEFAULT_SETTINGS.newCharacterShortcut;
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
-  if (typeof window.updateTtsSupportUi === 'function') {
+  if (typeof window.updateTtsSupportUi === "function") {
     window.updateTtsSupportUi();
   }
 
@@ -3482,7 +3505,8 @@ async function setupSettingsControls() {
   if (sttSilenceDuration) {
     sttSilenceDuration.addEventListener("change", () => {
       const val = parseInt(sttSilenceDuration.value, 10);
-      state.settings.sttSilenceDuration = (isFinite(val) && val >= 1 && val <= 10) ? val : 2;
+      state.settings.sttSilenceDuration =
+        isFinite(val) && val >= 1 && val <= 10 ? val : 2;
       saveSettings();
     });
   }
@@ -3669,12 +3693,17 @@ function setupSettingsTabsLayout() {
         requestAnimationFrame(() => {
           const panel = panels.get("prompting");
           if (panel) {
-            panel.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
-              const entry = textareaCollapseStates.get(textarea);
-              if (entry && entry.header.getAttribute("aria-expanded") === "true") {
-                autoExpandTextarea(textarea);
-              }
-            });
+            panel
+              .querySelectorAll(".textarea-collapse textarea")
+              .forEach((textarea) => {
+                const entry = textareaCollapseStates.get(textarea);
+                if (
+                  entry &&
+                  entry.header.getAttribute("aria-expanded") === "true"
+                ) {
+                  autoExpandTextarea(textarea);
+                }
+              });
           }
         });
       }
@@ -5519,8 +5548,9 @@ function updateDocumentTitleWithUnread() {
     }
     let title = "Scenara";
     let suffix = "";
-    const chatActive =
-      document.getElementById("chat-view")?.classList.contains("active");
+    const chatActive = document
+      .getElementById("chat-view")
+      ?.classList.contains("active");
     if (state.activeModalId === "character-modal" && currentCharacter?.name) {
       suffix = currentCharacter.name;
     } else if (chatActive && currentThread?.title) {
@@ -5545,9 +5575,7 @@ function updateThreadMessageCount(threadId, messages) {
   const msgCountEl = row.querySelector(".thread-msg-count");
   if (msgCountEl) {
     const hasInitialMessages = (messages || []).some((m) => m.isInitial);
-    const nonInitialCount = (messages || []).filter(
-      (m) => !m.isInitial,
-    ).length;
+    const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
     msgCountEl.textContent = `${nonInitialCount + (hasInitialMessages ? 1 : 0)}`;
   }
   if (
@@ -5556,9 +5584,7 @@ function updateThreadMessageCount(threadId, messages) {
     currentThread.unloadState
   ) {
     const hasInitialMessages = (messages || []).some((m) => m.isInitial);
-    const nonInitialCount = (messages || []).filter(
-      (m) => !m.isInitial,
-    ).length;
+    const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
     currentThread.unloadState.totalMessageCount =
       nonInitialCount + (hasInitialMessages ? 1 : 0);
   }
@@ -7384,7 +7410,8 @@ async function saveCharacterFromModal({ close = true } = {}) {
     autoTitleMinMessages:
       Number(document.getElementById("char-auto-title-min-messages").value) ||
       10,
-    personaPrefixEnabled: document.getElementById("char-persona-prefix").checked,
+    personaPrefixEnabled: document.getElementById("char-persona-prefix")
+      .checked,
     includeOocInCompletions:
       document.getElementById("char-include-ooc").checked,
     personaInjectionPlacement: String(
@@ -7510,7 +7537,9 @@ function populateCharTtsLanguageSelect(
 ) {
   const languageSelect = document.getElementById("char-tts-language");
   if (!languageSelect) return;
-  const hasBrowserSupport = typeof window.hasBrowserTtsSupport === 'function' && window.hasBrowserTtsSupport();
+  const hasBrowserSupport =
+    typeof window.hasBrowserTtsSupport === "function" &&
+    window.hasBrowserTtsSupport();
   const voices = hasBrowserSupport
     ? window.speechSynthesis.getVoices?.() || []
     : [];
@@ -7536,7 +7565,9 @@ function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
   const voiceSelect = document.getElementById("char-tts-voice");
   if (!languageSelect || !voiceSelect) return;
   const selectedLang = String(languageSelect.value || DEFAULT_TTS_LANGUAGE);
-  const hasBrowserSupport = typeof window.hasBrowserTtsSupport === 'function' && window.hasBrowserTtsSupport();
+  const hasBrowserSupport =
+    typeof window.hasBrowserTtsSupport === "function" &&
+    window.hasBrowserTtsSupport();
   const voices = hasBrowserSupport
     ? window.speechSynthesis.getVoices?.() || []
     : [];
@@ -8622,7 +8653,9 @@ function openLoreEditor(lorebook = null) {
   const injectionModeField = document.getElementById("lore-injection-mode");
   if (injectionModeField)
     injectionModeField.value = normalized?.injectionMode || "cooldown";
-  const suppressionWindowField = document.getElementById("lore-suppression-window");
+  const suppressionWindowField = document.getElementById(
+    "lore-suppression-window",
+  );
   if (suppressionWindowField)
     suppressionWindowField.value = String(normalized?.suppressionWindow || 10);
   toggleSuppressionWindowField();
@@ -8991,9 +9024,8 @@ function buildLorebookExportPayload(lorebook) {
         .map((value) => String(value || "").trim())
         .filter(Boolean);
       if (keys.length === 0) return;
-      const secondaryKeys = (Array.isArray(entry.secondaryKeys)
-        ? entry.secondaryKeys
-        : []
+      const secondaryKeys = (
+        Array.isArray(entry.secondaryKeys) ? entry.secondaryKeys : []
       )
         .map((value) => String(value || "").trim())
         .filter(Boolean);
@@ -11304,17 +11336,11 @@ function mapImportedLorebookPayload(payload, fallbackName = "") {
   ).trim();
   const scanDepth = Math.max(
     5,
-    Math.min(
-      100,
-      Number(payload.scan_depth ?? payload.scanDepth) || 50,
-    ),
+    Math.min(100, Number(payload.scan_depth ?? payload.scanDepth) || 50),
   );
   const tokenBudget = Math.max(
     100,
-    Math.min(
-      1000,
-      Number(payload.token_budget ?? payload.tokenBudget) || 200,
-    ),
+    Math.min(1000, Number(payload.token_budget ?? payload.tokenBudget) || 200),
   );
   const description = String(payload.description || "").trim();
   const recursiveScanning =
@@ -12586,28 +12612,30 @@ async function startSttRecording() {
     showToast(t("sttNoThread"), "error");
     return;
   }
-  
+
   window.stopTtsPlayback();
   state.stt.threadId = currentThread?.id || null;
-  
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     state.stt.stream = stream;
-    state.stt.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    state.stt.audioContext = new (
+      window.AudioContext || window.webkitAudioContext
+    )();
     state.stt.mediaRecorder = new MediaRecorder(stream);
     state.stt.audioChunks = [];
-    
+
     state.stt.mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
         state.stt.audioChunks.push(e.data);
       }
     };
-    
+
     state.stt.mediaRecorder.onstop = async () => {
       stopSilenceDetection();
       const audioBlob = new Blob(state.stt.audioChunks, { type: "audio/webm" });
       if (state.stt.stream) {
-        state.stt.stream.getTracks().forEach(track => track.stop());
+        state.stt.stream.getTracks().forEach((track) => track.stop());
         state.stt.stream = null;
       }
       if (state.stt.audioContext) {
@@ -12615,17 +12643,17 @@ async function startSttRecording() {
         state.stt.audioContext = null;
       }
       state.stt.mediaRecorder = null;
-      
+
       if (audioBlob.size > 0) {
         await processSttAudio(audioBlob);
       }
     };
-    
+
     state.stt.mediaRecorder.start();
     state.stt.isListening = true;
     state.stt.silenceStartTime = null;
     updateSttToggleButton();
-    
+
     if (state.settings.sttMode === "push-to-talk") {
       showToast(t("sttHoldToTalk"), "info");
     } else {
@@ -12642,34 +12670,37 @@ async function startSttRecording() {
 
 function startSilenceDetection() {
   if (!state.stt.audioContext || !state.stt.stream) return;
-  
+
   state.stt.silenceDetector = createSilenceDetector(
     state.stt.audioContext,
     state.stt.stream,
-    onSilenceDetected
+    onSilenceDetected,
   );
-  
+
   checkSilence();
 }
 
 function checkSilence() {
   if (!state.stt.isListening || !state.stt.silenceDetector) return;
-  
+
   const level = state.stt.silenceDetector.getAudioLevel();
   const silenceThreshold = -40;
   const silenceDuration = state.settings.sttSilenceDuration || 2;
-  
+
   if (level < silenceThreshold) {
     if (!state.stt.silenceStartTime) {
       state.stt.silenceStartTime = Date.now();
-    } else if (Date.now() - state.stt.silenceStartTime > silenceDuration * 1000) {
+    } else if (
+      Date.now() - state.stt.silenceStartTime >
+      silenceDuration * 1000
+    ) {
       onSilenceDetected();
       return;
     }
   } else {
     state.stt.silenceStartTime = null;
   }
-  
+
   state.stt.animationFrameId = requestAnimationFrame(checkSilence);
 }
 
@@ -12701,33 +12732,33 @@ async function stopSttRecording() {
 async function processSttAudio(audioBlob) {
   const input = document.getElementById("user-input");
   if (!input) return;
-  
+
   const originalThreadId = state.stt.threadId;
   state.stt.threadId = null;
-  
+
   showToast(t("sttProcessing"), "info");
-  
+
   try {
     if (!window.sttReady) {
       await loadSttModel();
     }
-    
+
     const language = state.settings.sttLanguage || "en";
     console.log("STT Processing: Language from settings:", language);
     const text = await transcribeAudio(audioBlob, language);
-    
+
     if (text) {
       if (currentThread?.id !== originalThreadId) {
         showToast(t("sttWrongThread"), "warn");
         return;
       }
-      
+
       const existingText = input.value.trim();
       input.value = existingText ? `${existingText} ${text}` : text;
       input.dispatchEvent(new Event("input", { bubbles: true }));
-      
+
       showToast(t("sttTranscribed"), "success");
-      
+
       if (state.stt.autoSend) {
         setTimeout(() => {
           const sendBtn = document.getElementById("send-btn");
@@ -12746,16 +12777,22 @@ async function processSttAudio(audioBlob) {
 function updateSttToggleButton() {
   const btn = document.getElementById("stt-toggle-btn");
   if (!btn) return;
-  
+
   if (state.stt.isListening) {
     btn.classList.add("is-active", "stt-recording");
     btn.setAttribute("data-i18n-title", "sttTitleOn");
-    btn.title = state.settings.sttMode === "push-to-talk" ? t("sttHoldToTalk") : t("sttListeningAutoStop");
+    btn.title =
+      state.settings.sttMode === "push-to-talk"
+        ? t("sttHoldToTalk")
+        : t("sttListeningAutoStop");
     btn.innerHTML = ICONS.micFilled;
   } else {
     btn.classList.remove("is-active", "stt-recording");
     btn.setAttribute("data-i18n-title", "sttTitleOff");
-    btn.title = state.settings.sttMode === "push-to-talk" ? t("sttPushToTalkHint") : t("sttAutoStopHint");
+    btn.title =
+      state.settings.sttMode === "push-to-talk"
+        ? t("sttPushToTalkHint")
+        : t("sttAutoStopHint");
     btn.innerHTML = ICONS.mic;
   }
 }
@@ -12770,13 +12807,16 @@ function toggleSttAutoSend() {
   state.settings.sttAutoSend = state.stt.autoSend;
   saveSettings();
   updateSttAutoSendButton();
-  showToast(state.stt.autoSend ? t("sttAutoSendEnabled") : t("sttAutoSendDisabled"), "success");
+  showToast(
+    state.stt.autoSend ? t("sttAutoSendEnabled") : t("sttAutoSendDisabled"),
+    "success",
+  );
 }
 
 function updateSttAutoSendButton() {
   const btn = document.getElementById("stt-auto-send-toggle-btn");
   if (!btn) return;
-  
+
   if (state.stt.autoSend) {
     btn.classList.add("is-active");
     btn.setAttribute("data-i18n-title", "sttAutoSendOn");
@@ -13190,7 +13230,10 @@ function computeVisibleMessageIndices() {
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
 
   if (threshold === 0 || totalMessages <= threshold) {
-    console.debug("[computeVisible] Early return: threshold=0 or total <= threshold", { threshold, totalMessages });
+    console.debug(
+      "[computeVisible] Early return: threshold=0 or total <= threshold",
+      { threshold, totalMessages },
+    );
     return {
       indices: Array.from({ length: conversationHistory.length }, (_, i) => i),
       loadLimit: 0,
@@ -13206,7 +13249,14 @@ function computeVisibleMessageIndices() {
   const loadLimit = unloadState?.loadLimit || 0;
   const clampedLoadLimit = Math.max(0, Math.min(loadLimit, startActive));
   const totalHidden = startActive;
-  console.debug("[computeVisible]", { threshold, totalMessages, startActive, loadLimit, clampedLoadLimit, totalHidden });
+  console.debug("[computeVisible]", {
+    threshold,
+    totalMessages,
+    startActive,
+    loadLimit,
+    clampedLoadLimit,
+    totalHidden,
+  });
 
   const visible = [];
   for (let i = startActive - clampedLoadLimit; i < startActive; i++) {
@@ -13258,7 +13308,10 @@ function updateUnloadButtonVisibility() {
   const btn = document.getElementById("unload-oldest-btn");
   if (!log || !btn || !currentThread) {
     if (btn) btn.classList.add("hidden");
-    console.debug("[unloadButton] Early return: missing log, btn, or currentThread", { hasLog: !!log, hasBtn: !!btn, hasThread: !!currentThread });
+    console.debug(
+      "[unloadButton] Early return: missing log, btn, or currentThread",
+      { hasLog: !!log, hasBtn: !!btn, hasThread: !!currentThread },
+    );
     return;
   }
   const threshold = state.settings.autoUnloadThreshold || 0;
@@ -13272,7 +13325,10 @@ function updateUnloadButtonVisibility() {
   const loadLimit = vis.loadLimit || 0;
   if (hiddenCount === 0 && loadLimit === 0) {
     btn.classList.add("hidden");
-    console.debug("[unloadButton] Hidden: no hiddenCount and no loadLimit", { hiddenCount, loadLimit });
+    console.debug("[unloadButton] Hidden: no hiddenCount and no loadLimit", {
+      hiddenCount,
+      loadLimit,
+    });
     return;
   }
   // Always show button when there are hidden messages to load
@@ -13280,7 +13336,9 @@ function updateUnloadButtonVisibility() {
   const isScrolledAway = log.scrollTop > 200;
   if (hiddenCount === 0 && isScrolledAway) {
     btn.classList.add("hidden");
-    console.debug("[unloadButton] Hidden: scrolled away", { scrollTop: log.scrollTop });
+    console.debug("[unloadButton] Hidden: scrolled away", {
+      scrollTop: log.scrollTop,
+    });
     return;
   }
   btn.classList.remove("hidden");
@@ -13288,7 +13346,8 @@ function updateUnloadButtonVisibility() {
     const count = Math.min(threshold, hiddenCount);
     const totalHidden = vis.totalHiddenCount || hiddenCount;
     if (totalHidden > count) {
-      btn.textContent = tf("unloadThresholdLoadButton", { count }) + ` (${totalHidden} hidden)`;
+      btn.textContent =
+        tf("unloadThresholdLoadButton", { count }) + ` (${totalHidden} hidden)`;
     } else {
       btn.textContent = tf("unloadThresholdLoadButton", { count });
     }
@@ -13299,7 +13358,12 @@ function updateUnloadButtonVisibility() {
   } else {
     btn.classList.add("hidden");
   }
-  console.debug("[unloadButton] Shown:", { hiddenCount, loadLimit, threshold, scrollTop: log.scrollTop });
+  console.debug("[unloadButton] Shown:", {
+    hiddenCount,
+    loadLimit,
+    threshold,
+    scrollTop: log.scrollTop,
+  });
 }
 
 async function toggleUnloadBatch() {
@@ -13386,13 +13450,13 @@ function releaseAllChatRowResources(log) {
 function renderChat(startIdx, endIdx) {
   const perfStart = performance.now();
   const perfMarks = { clear: 0, build: 0, append: 0, total: 0 };
-  
+
   const log = document.getElementById("chat-log");
-  console.debug("[renderChat] Called", { 
-    threadId: currentThread?.id, 
+  console.debug("[renderChat] Called", {
+    threadId: currentThread?.id,
     historyLength: conversationHistory.length,
     threshold: state.settings.autoUnloadThreshold,
-    hasUnloadState: !!currentThread?.unloadState 
+    hasUnloadState: !!currentThread?.unloadState,
   });
   const previousScrollTop = log.scrollTop;
   const previousScrollHeight = log.scrollHeight;
@@ -13482,7 +13546,7 @@ function renderChat(startIdx, endIdx) {
   const buildStart = performance.now();
   const rowsToAppend = [];
   let domNodesCreated = 0;
-  
+
   for (let i of indicesToRender) {
     const message = conversationHistory[i];
     if (!message) continue;
@@ -13509,7 +13573,7 @@ function renderChat(startIdx, endIdx) {
       existingRow.replaceWith(newRow);
     } else {
       rowsToAppend.push(
-        buildMessageRow(message, originalIndex, rowStreaming, displayHistory)
+        buildMessageRow(message, originalIndex, rowStreaming, displayHistory),
       );
       domNodesCreated++;
     }
@@ -13538,13 +13602,13 @@ function renderChat(startIdx, endIdx) {
   }
 
   perfMarks.total = performance.now() - perfStart;
-  
+
   // Log performance metrics in development
   if (state.settings?.debugMode || perfMarks.total > 50) {
     console.debug(
       `[renderChat] ${indicesToRender.length} messages, ${domNodesCreated} new DOM nodes | ` +
-      `clear: ${perfMarks.clear.toFixed(1)}ms, build: ${perfMarks.build.toFixed(1)}ms, ` +
-      `append: ${perfMarks.append.toFixed(1)}ms, total: ${perfMarks.total.toFixed(1)}ms`
+        `clear: ${perfMarks.clear.toFixed(1)}ms, build: ${perfMarks.build.toFixed(1)}ms, ` +
+        `append: ${perfMarks.append.toFixed(1)}ms, total: ${perfMarks.total.toFixed(1)}ms`,
     );
   }
 
@@ -13858,14 +13922,17 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     ? displayHistory
     : conversationHistory;
   const resolvedIndex = historyForDisplay.indexOf(message);
-  const effectiveIndex = resolvedIndex >= 0 ? resolvedIndex : historyForDisplay.length;
+  const effectiveIndex =
+    resolvedIndex >= 0 ? resolvedIndex : historyForDisplay.length;
   const displayIndex = message?.isInitial
     ? (cachedInitialMessageDisplayIndex ??
       getMessageDisplayIndex(effectiveIndex, historyForDisplay))
     : getMessageDisplayIndex(effectiveIndex, historyForDisplay);
   const offset = getThreadDisplayOffset();
   const numberedIndex = displayIndex + offset;
-  messageIndex.textContent = isOocMessage ? `OOC #${numberedIndex}` : `#${numberedIndex}`;
+  messageIndex.textContent = isOocMessage
+    ? `OOC #${numberedIndex}`
+    : `#${numberedIndex}`;
   const isTruncated = message.truncatedByFilter === true;
   const hasGenerationError = !!String(message.generationError || "").trim();
   const isLockedMemoryMessage = isMessageLockedByMemory(message);
@@ -13981,11 +14048,12 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     const speakerBtn = iconButton("speaker", t("msgSpeakTitle"), async (e) => {
       const clickedBtn = e?.currentTarget;
       const resolvedIndex = resolveMessageIndexFromButton(clickedBtn, index);
-      if (window.ttsDebug) window.ttsDebug("bubble-click", {
-        capturedIndex: index,
-        resolvedIndex,
-        datasetIndex: clickedBtn?.dataset?.messageIndex,
-      });
+      if (window.ttsDebug)
+        window.ttsDebug("bubble-click", {
+          capturedIndex: index,
+          resolvedIndex,
+          datasetIndex: clickedBtn?.dataset?.messageIndex,
+        });
       await window.toggleMessageSpeech(resolvedIndex);
     });
     speakerBtn.classList.add("msg-tts-btn");
@@ -14084,7 +14152,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
   applyPersonaColorToUserMessageBlock(block, message);
   row.append(avatar, block);
   if (message.role === "assistant") {
-    if (typeof window.updateMessageSpeakerButton === 'function') {
+    if (typeof window.updateMessageSpeakerButton === "function") {
       window.updateMessageSpeakerButton(speakerBtnForRow(row), index);
     }
   }
@@ -14684,9 +14752,7 @@ function formatOocSystemPromptText(text) {
   if (normalized.startsWith("((OOC:")) {
     return normalized;
   }
-  const prefixRemoved = normalized
-    .replace(/^\s*SYSTEM,?\s*/i, "")
-    .trim();
+  const prefixRemoved = normalized.replace(/^\s*SYSTEM,?\s*/i, "").trim();
   const inner = prefixRemoved || normalized;
   return `((OOC: SYSTEM, ${inner}))`;
 }
@@ -14920,7 +14986,8 @@ async function sendOocInquiry(text) {
     const errorMessage = String(err?.message || err || "OOC request failed");
     pendingAssistant.generationError = errorMessage;
     pendingAssistant.content =
-      pendingAssistant.content || `((OOC: OOC request failed: ${errorMessage}))`;
+      pendingAssistant.content ||
+      `((OOC: OOC request failed: ${errorMessage}))`;
     showToast(`OOC request failed: ${errorMessage}`, "error");
   }
   await persistCurrentThread();
@@ -17503,11 +17570,7 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
   }
 
   let messagesToSave = msgs;
-  if (
-    unloadState &&
-    unloadState.loadedStartIndex > 0 &&
-    isActiveThread
-  ) {
+  if (unloadState && unloadState.loadedStartIndex > 0 && isActiveThread) {
     const thread = await db.threads.get(threadId);
     const existingMessages = Array.isArray(thread?.messages)
       ? thread.messages
@@ -18646,8 +18709,10 @@ async function callOpenRouter(
       : null;
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const summaryModel = "arcee-ai/trinity-large-preview:free";
-  const titleModel = "arcee-ai/trinity-large-preview:free";
+  const summaryModel = "stepfun/step-3.5-flash:free";
+  // const summaryModel = "arcee-ai/trinity-large-preview:free";
+  // const titleModel = "arcee-ai/trinity-large-preview:free";
+  const titleModel = "stepfun/step-3.5-flash:free";
   const body = {
     model: isTitleGeneration
       ? titleModel
