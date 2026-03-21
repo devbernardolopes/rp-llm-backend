@@ -790,6 +790,7 @@ function updateMessageSpeakerButton(button, index) {
   const conversationHistory = window.conversationHistory;
   const t = window.t;
   if (!button) return;
+  if (!conversationHistory || !conversationHistory[index]) return;
   const msg = conversationHistory[index];
   const isAssistant = msg?.role === "assistant";
   const row = button.closest(".chat-row");
