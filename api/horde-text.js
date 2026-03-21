@@ -6,11 +6,11 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.HORDE_API_KEY || "0000000000";
-  const baseUrl = "https://stablehorde.net/api/v2";
+  const baseUrl = "https://stablehorde.net";
 
   try {
     const body = req.body || {};
+    const apiKey = body.hordeApiKey || process.env.HORDE_API_KEY || "0000000000";
     const messages = body.messages || [];
     const model = body.model || "auto";
     const maxTokens = body.max_completion_tokens || 1024;
@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
       },
     };
 
-    const asyncRes = await fetch(`${baseUrl}/generate/text/async`, {
+    const asyncRes = await fetch(`${baseUrl}/api/v2/generate/text/async`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -149,7 +149,7 @@ async function pollForResult(requestId, baseUrl, apiKey, timeoutMs) {
     await sleep(pollInterval);
 
     const statusRes = await fetch(
-      `${baseUrl}/generate/text/status/${requestId}`,
+      `${baseUrl}/api/v2/generate/text/status/${requestId}`,
       {
         headers: {
           "Client-Agent": "rp-llm-backend:1.0:0",
