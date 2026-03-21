@@ -18996,72 +18996,100 @@ async function callAIHorde(
     ? resolvedModel.slice(9)
     : resolvedModel;
 
-  const body = {
-    model: hordeModel,
-    messages: promptMessages,
-    max_completion_tokens: effectiveMaxTokens,
-    temperature: clampTemperature(state.settings.temperature),
-    top_p: Number(state.settings.topP) || 1,
-    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
-    presence_penalty: Number(state.settings.presencePenalty) || 0,
-    stream: false,
-  };
-
-  state.currentRequestMessages = body.messages;
+  const prompt = messagesToHordePrompt(promptMessages);
+  state.currentRequestMessages = promptMessages;
 
   const localKey = String(state.settings.hordeApiKey || "").trim();
   const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
   const hordeApiKey = localKey || fallbackKey;
 
+  const baseUrl = "https://stablehorde.net";
+  const models = hordeModel === "auto" || !hordeModel ? [] : [hordeModel];
+
+  const hordeRequest = {
+    prompt,
+    apikey: hordeApiKey || "0000000000",
+    models,
+    params: {
+      n: 1,
+      max_length: effectiveMaxTokens,
+      temperature: clampTemperature(state.settings.temperature),
+      top_p: Number(state.settings.topP) || 1,
+      top_k: 0,
+      typical: 0,
+      tfs: 0.9,
+      rep_pen: 1.1,
+      rep_pen_range: 256,
+      rep_pen_slope: 0,
+      samp_pen: [],
+      genmd: true,
+      quiet: false,
+      filter_nsfw: false,
+      cache_prompt: true,
+    },
+  };
+
   try {
-    const res = await fetch("/api/horde-text", {
+    const asyncRes = await fetch(`${baseUrl}/api/v2/generate/text/async`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Client-Agent": "rp-llm-backend:1.0:0",
       },
-      body: JSON.stringify({ ...body, hordeApiKey }),
+      body: JSON.stringify(hordeRequest),
       signal,
     });
 
-    if (!res.ok) {
-      let msg = res.statusText;
-      try {
-        const err = await res.json();
-        msg = err?.error?.message || msg;
-      } catch {
-        // ignore parse error
-      }
-      throw new Error(msg || `HTTP ${res.status}`);
+    if (!asyncRes.ok) {
+      const errorText = await asyncRes.text();
+      throw new Error(`AI Horde request failed: ${asyncRes.status} - ${errorText}`);
     }
 
-    const data = await res.json();
-    const content = data?.choices?.[0]?.message?.content || "";
-    const hordeMeta = data?.horde_metadata || {};
+    const asyncData = await asyncRes.json();
+    const requestId = asyncData.id;
+
+    if (!requestId) {
+      throw new Error("No request ID returned from AI Horde");
+    }
+
+    const result = await pollAIHordeResult(requestId, baseUrl, signal);
+
+    const generatedText = result.generations?.[0]?.text || "";
+    const usedModel = result.generations?.[0]?.model || hordeModel || "unknown";
+    const seed = result.generations?.[0]?.seed || 0;
 
     if (typeof onChunk === "function") {
-      let accumulated = "";
-      for (const char of content) {
-        accumulated += char;
+      for (const char of generatedText) {
         onChunk(char);
         await new Promise((r) => setTimeout(r, 5));
       }
     }
 
     return {
-      content,
-      model: data?.model || hordeModel,
+      content: generatedText,
+      model: usedModel,
       provider: "AI Horde",
-      generationId: data?.id || "",
+      generationId: requestId,
       completionMeta: {
-        id: data?.id || "",
-        created: data?.created || Math.floor(Date.now() / 1000),
-        object: data?.object || "chat.completion",
-        usage: data?.usage || null,
+        id: requestId,
+        created: Math.floor(Date.now() / 1000),
+        object: "chat.completion",
+        usage: {
+          prompt_tokens: estimateTokens(prompt),
+          completion_tokens: estimateTokens(generatedText),
+          total_tokens: estimateTokens(prompt) + estimateTokens(generatedText),
+        },
       },
-      finishReason: data?.choices?.[0]?.finish_reason || "stop",
+      finishReason: "stop",
       nativeFinishReason: "",
       truncatedByFilter: false,
-      hordeMetadata: hordeMeta,
+      hordeMetadata: {
+        request_id: requestId,
+        worker_id: result.generations?.[0]?.worker_id,
+        worker_name: result.generations?.[0]?.worker_name,
+        seed,
+        kudos: result.generations?.[0]?.kudos,
+      },
       generationInfo: null,
       systemMessages,
     };
@@ -19069,6 +19097,87 @@ async function callAIHorde(
     if (err?.name === "AbortError") throw err;
     throw new Error(`AI Horde request failed: ${err?.message || "Unknown error"}`);
   }
+}
+
+function messagesToHordePrompt(messages) {
+  const systemMessages = [];
+  const conversationMessages = [];
+
+  for (const msg of messages) {
+    if (msg.role === "system") {
+      systemMessages.push(msg.content);
+    } else if (msg.role === "user") {
+      conversationMessages.push({ role: "user", content: msg.content });
+    } else if (msg.role === "assistant") {
+      conversationMessages.push({ role: "assistant", content: msg.content });
+    }
+  }
+
+  let prompt = "";
+
+  if (systemMessages.length > 0) {
+    prompt += `### Instruction:\n${systemMessages.join("\n\n")}\n\n`;
+  }
+
+  for (let i = 0; i < conversationMessages.length; i++) {
+    const msg = conversationMessages[i];
+    if (msg.role === "user") {
+      if (i === conversationMessages.length - 1) {
+        prompt += `### Input:\n${msg.content}\n\n### Response:\n`;
+      } else {
+        prompt += `### Input:\n${msg.content}\n\n`;
+      }
+    } else if (msg.role === "assistant") {
+      prompt += `${msg.content}\n\n`;
+    }
+  }
+
+  return prompt.trim();
+}
+
+async function pollAIHordeResult(requestId, baseUrl, signal) {
+  const startTime = Date.now();
+  const pollInterval = 2000;
+  const timeoutMs = 120000;
+
+  while (Date.now() - startTime < timeoutMs) {
+    await new Promise((r) => setTimeout(r, pollInterval));
+
+    if (signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
+    const statusRes = await fetch(
+      `${baseUrl}/api/v2/generate/text/status/${requestId}`,
+      {
+        headers: {
+          "Client-Agent": "rp-llm-backend:1.0:0",
+        },
+        signal,
+      },
+    );
+
+    if (!statusRes.ok) {
+      throw new Error(`AI Horde status check failed: ${statusRes.status}`);
+    }
+
+    const statusData = await statusRes.json();
+
+    if (statusData.done === true) {
+      return statusData;
+    }
+
+    if (statusData.faulted === true) {
+      throw new Error(`AI Horde request faulted: ${statusData.errors?.join(", ") || "Unknown error"}`);
+    }
+  }
+
+  throw new Error("AI Horde request timed out");
+}
+
+function estimateTokens(text) {
+  if (!text) return 0;
+  return Math.ceil(text.length / 4);
 }
 
 function resolveModelForRequest(model) {
