@@ -7385,8 +7385,10 @@ async function saveCharacterFromModal({ close = true } = {}) {
         formatInitialMessagesForEditor(collectedMessages);
     }
     const savedRaw = String(def.initialMessagesRaw || "");
-    setInitialMessageDrafts(def.language, drafts, { loadedRaw: savedRaw });
+    const filteredDrafts = drafts.filter((draft) => String(draft || "").trim());
+    setInitialMessageDrafts(def.language, filteredDrafts, { loadedRaw: savedRaw });
   }
+  renderCharacterInitialMessagesList();
 
   if (missingNameLanguages.length > 0) {
     await openInfoDialog(
