@@ -3,6 +3,11 @@ let currentThread = null;
 let conversationHistory = [];
 let currentPersona = null;
 
+// Expose to window for TTS module access (using getters for live values)
+Object.defineProperty(window, 'currentCharacter', { get: () => currentCharacter, configurable: true });
+Object.defineProperty(window, 'currentThread', { get: () => currentThread, configurable: true });
+Object.defineProperty(window, 'conversationHistory', { get: () => conversationHistory, configurable: true });
+
 const DEFAULT_SETTINGS = {
   uiLanguage: "auto",
   openRouterApiKey: "",
