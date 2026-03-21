@@ -6,6 +6,11 @@ const CONFIG = {
       window.ENV &&
       window.ENV.OPENROUTER_API_KEY) ||
     "",
+  hordeApiKey:
+    (typeof window !== "undefined" &&
+      window.ENV &&
+      window.ENV.HORDE_API_KEY) ||
+    "",
   model: "openrouter/free",
   maxTokens: 1024,
   temperature: 0.8,

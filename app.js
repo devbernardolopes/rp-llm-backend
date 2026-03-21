@@ -19,7 +19,9 @@ Object.defineProperty(window, "conversationHistory", {
 
 const DEFAULT_SETTINGS = {
   uiLanguage: "auto",
+  aiProvider: "openrouter",
   openRouterApiKey: "",
+  hordeApiKey: "",
   model: "arcee-ai/trinity-large-preview:free",
   markdownEnabled: true,
   allowMessageHtml: false,
@@ -188,6 +190,7 @@ const state = {
     entries: [],
   },
   modelCatalog: [],
+  hordeModelCatalog: [],
   modelLoad: {
     controller: null,
     requestId: 0,
@@ -2652,7 +2655,9 @@ async function setupSettingsControls() {
   }
 
   const uiLanguageSelect = document.getElementById("ui-language-select");
+  const aiProviderSelect = document.getElementById("ai-provider-select");
   const openRouterApiKey = document.getElementById("openrouter-api-key");
+  const hordeApiKey = document.getElementById("horde-api-key");
   const modelSelect = document.getElementById("model-select");
   const modelPricingFilter = document.getElementById("model-pricing-filter");
   const modelModalityFilter = document.getElementById("model-modality-filter");
@@ -3084,14 +3089,30 @@ async function setupSettingsControls() {
     state.settings.newCharacterShortcut ||
     DEFAULT_SETTINGS.newCharacterShortcut;
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
+  hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
+  aiProviderSelect.value = state.settings.aiProvider || "openrouter";
+  updateProviderVisibility();
   if (typeof window.updateTtsSupportUi === "function") {
     window.updateTtsSupportUi();
   }
+
+  aiProviderSelect.addEventListener("change", () => {
+    state.settings.aiProvider = aiProviderSelect.value;
+    updateProviderVisibility();
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
 
   openRouterApiKey.addEventListener("input", () => {
     state.settings.openRouterApiKey = openRouterApiKey.value.trim();
     saveSettings();
     populateSettingsModels().catch(() => {});
+  });
+
+  hordeApiKey.addEventListener("input", () => {
+    state.settings.hordeApiKey = hordeApiKey.value.trim();
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
   });
 
   modelSelect.addEventListener("change", () => {
@@ -3547,7 +3568,11 @@ function getSettingsGroupForNode(node) {
   const id = node.id || "";
   const has = (selector) => !!node.querySelector?.(selector);
   if (
+    has("#ai-provider-select") ||
     has("#openrouter-api-key") ||
+    has("#horde-api-key") ||
+    has("#openrouter-api-key-container") ||
+    has("#horde-api-key-container") ||
     has("#model-select") ||
     has("#model-pricing-filter") ||
     has("#model-modality-filter") ||
@@ -3592,7 +3617,11 @@ function getSettingsGroupForNode(node) {
     return "appearance";
   const text = `${node.textContent || ""}`.toLowerCase();
   if (
+    id === "ai-provider-select" ||
     id === "openrouter-api-key" ||
+    id === "horde-api-key" ||
+    id === "openrouter-api-key-container" ||
+    id === "horde-api-key-container" ||
     id === "model-select" ||
     id === "model-selected-meta" ||
     id === "model-roleplay-warning" ||
@@ -3604,7 +3633,9 @@ function getSettingsGroupForNode(node) {
     id === "model-refresh-btn" ||
     id === "completion-cooldown-slider" ||
     id === "completion-cooldown-value" ||
-    text.includes("openrouter api key")
+    text.includes("openrouter api key") ||
+    text.includes("ai horde api key") ||
+    text.includes("ai provider")
   ) {
     return "api";
   }
@@ -16761,6 +16792,7 @@ async function populateSettingsModels(options = {}) {
   const modelSelect = document.getElementById("model-select");
   if (!modelSelect) return;
   const force = options?.force === true;
+  const provider = state.settings.aiProvider || "openrouter";
 
   if (state.modelLoad.controller) {
     state.modelLoad.controller.abort();
@@ -16778,24 +16810,45 @@ async function populateSettingsModels(options = {}) {
   modelSelect.disabled = true;
 
   try {
-    if (force || state.modelCatalog.length === 0) {
-      const remoteCatalog = await fetchOpenRouterModelCatalog(
-        controller.signal,
-      );
-      if (requestId !== state.modelLoad.requestId) return;
-      state.modelCatalog = remoteCatalog;
+    if (provider === "aihorde") {
+      if (force || state.hordeModelCatalog.length === 0) {
+        const remoteCatalog = await fetchAIHordeModelCatalog(
+          controller.signal,
+        );
+        if (requestId !== state.modelLoad.requestId) return;
+        state.hordeModelCatalog = remoteCatalog;
+      }
+    } else {
+      if (force || state.modelCatalog.length === 0) {
+        const remoteCatalog = await fetchOpenRouterModelCatalog(
+          controller.signal,
+        );
+        if (requestId !== state.modelLoad.requestId) return;
+        state.modelCatalog = remoteCatalog;
+      }
     }
     renderSettingsModelOptions();
   } catch (err) {
     if (isAbortError(err)) return;
-    if (state.modelCatalog.length === 0) {
-      state.modelCatalog = getFallbackModelCatalog();
+    if (provider === "aihorde") {
+      if (state.hordeModelCatalog.length === 0) {
+        state.hordeModelCatalog = getHordeFallbackModelCatalog();
+      }
+      renderSettingsModelOptions();
+      showToast(
+        `Failed to load model list from AI Horde: ${err?.message || "using fallback list."}`,
+        "error",
+      );
+    } else {
+      if (state.modelCatalog.length === 0) {
+        state.modelCatalog = getFallbackModelCatalog();
+      }
+      renderSettingsModelOptions();
+      showToast(
+        `Failed to load model list from OpenRouter: ${err?.message || "using fallback list."}`,
+        "error",
+      );
     }
-    renderSettingsModelOptions();
-    showToast(
-      `Failed to load model list from OpenRouter: ${err?.message || "using fallback list."}`,
-      "error",
-    );
   } finally {
     if (requestId === state.modelLoad.requestId) {
       state.modelLoad.controller = null;
@@ -16808,10 +16861,20 @@ function renderSettingsModelOptions() {
   const modelSelect = document.getElementById("model-select");
   if (!modelSelect) return;
   const targetModel = String(state.settings.model || "").trim();
-  const catalog =
-    state.modelCatalog.length > 0
-      ? state.modelCatalog
-      : getFallbackModelCatalog();
+  const provider = state.settings.aiProvider || "openrouter";
+
+  let catalog;
+  if (provider === "aihorde") {
+    catalog =
+      state.hordeModelCatalog.length > 0
+        ? state.hordeModelCatalog
+        : getHordeFallbackModelCatalog();
+  } else {
+    catalog =
+      state.modelCatalog.length > 0
+        ? state.modelCatalog
+        : getFallbackModelCatalog();
+  }
 
   const pricingFilter =
     state.settings.modelPricingFilter === "free" ||
@@ -17099,6 +17162,105 @@ async function fetchOpenRouterModelCatalog(signal) {
   return Array.from(byId.values());
 }
 
+async function fetchAIHordeModelCatalog(signal) {
+  const res = await fetch("https://stablehorde.net/api/v2/status/models", {
+    method: "GET",
+    headers: {
+      "Client-Agent": "rp-llm-backend:1.0:0",
+    },
+    signal,
+  });
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const payload = await res.json();
+      const msg = String(payload?.error?.message || "").trim();
+      if (msg) errorMessage = `${errorMessage}: ${msg}`;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(errorMessage);
+  }
+
+  const payload = await res.json();
+  const models = Array.isArray(payload) ? payload : [];
+  const textModels = models.filter(
+    (m) => String(m.type || "").toLowerCase() === "text",
+  );
+
+  const normalized = textModels
+    .map((model) => normalizeHordeModelItem(model))
+    .filter(Boolean);
+
+  const byId = new Map(normalized.map((m) => [m.id, m]));
+
+  if (!byId.has("aihorde/auto")) {
+    byId.set("aihorde/auto", {
+      id: "aihorde/auto",
+      name: "Auto (Any available model)",
+      created: 0,
+      modality: "text->text",
+      promptPrice: 0,
+      completionPrice: 0,
+      requestPrice: 0,
+      imagePrice: 0,
+      contextLength: 8192,
+      topContextLength: 8192,
+      maxCompletionTokens: 1024,
+      isModerated: false,
+    });
+  }
+
+  return Array.from(byId.values());
+}
+
+function normalizeHordeModelItem(model) {
+  const id = String(model?.name || model?.id || "").trim();
+  if (!id) return null;
+  const name = String(model?.name || model?.id || "").trim();
+  const maxContext = Number(model?.max_context_length || 8192);
+  const maxLength = Number(model?.max_length || 1024);
+  return {
+    id: `aihorde/${id}`,
+    name: name,
+    created: 0,
+    modality: "text->text",
+    promptPrice: 0,
+    completionPrice: 0,
+    requestPrice: 0,
+    imagePrice: 0,
+    contextLength: maxContext,
+    topContextLength: maxContext,
+    maxCompletionTokens: maxLength,
+    isModerated: false,
+    hordeStats: {
+      workers: model?.workers || 0,
+      queued: model?.queued || 0,
+      speed: model?.speed || 0,
+      eta: model?.eta || 0,
+    },
+  };
+}
+
+function getHordeFallbackModelCatalog() {
+  return [
+    {
+      id: "aihorde/auto",
+      name: "Auto (Any available model)",
+      created: 0,
+      modality: "text->text",
+      promptPrice: 0,
+      completionPrice: 0,
+      requestPrice: 0,
+      imagePrice: 0,
+      contextLength: 8192,
+      topContextLength: 8192,
+      maxCompletionTokens: 1024,
+      isModerated: false,
+    },
+  ];
+}
+
 function normalizeModelCatalogItem(model) {
   const id = String(model?.id || "").trim();
   if (!id) return null;
@@ -17195,6 +17357,26 @@ function isLowContextRoleplayModel(model) {
   const completionLimited = maxCompletion > 0 && maxCompletion <= 16000;
   const contextLimited = context > 0 && context <= 16000;
   return completionLimited || contextLimited;
+}
+
+function updateProviderVisibility() {
+  const provider = state.settings.aiProvider || "openrouter";
+  const openrouterContainer = document.getElementById("openrouter-api-key-container");
+  const hordeContainer = document.getElementById("horde-api-key-container");
+  if (openrouterContainer) {
+    if (provider === "openrouter") {
+      openrouterContainer.classList.remove("hidden");
+    } else {
+      openrouterContainer.classList.add("hidden");
+    }
+  }
+  if (hordeContainer) {
+    if (provider === "aihorde") {
+      hordeContainer.classList.remove("hidden");
+    } else {
+      hordeContainer.classList.add("hidden");
+    }
+  }
 }
 
 function refreshSelectedModelMeta(element = null) {
@@ -18676,6 +18858,12 @@ async function callOpenRouter(
   signal = null,
   options = {},
 ) {
+  const provider = state.settings.aiProvider || "openrouter";
+
+  if (provider === "aihorde") {
+    return callAIHorde(systemPrompt, history, model, onChunk, signal, options);
+  }
+
   const resolvedModel = resolveModelForRequest(model);
   const fallbackModel = getFallbackModel(resolvedModel, model);
   const promptMessages = [
@@ -18770,6 +18958,119 @@ async function callOpenRouter(
       signal,
     );
     return { ...fallbackResponse, systemMessages };
+  }
+}
+
+async function callAIHorde(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const resolvedModel = resolveModelForRequest(model);
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    promptMessages,
+  );
+
+  const hordeModel = resolvedModel.startsWith("aihorde/")
+    ? resolvedModel.slice(9)
+    : resolvedModel;
+
+  const body = {
+    model: hordeModel,
+    messages: promptMessages,
+    max_completion_tokens: effectiveMaxTokens,
+    temperature: clampTemperature(state.settings.temperature),
+    top_p: Number(state.settings.topP) || 1,
+    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    stream: false,
+  };
+
+  state.currentRequestMessages = body.messages;
+
+  const localKey = String(state.settings.hordeApiKey || "").trim();
+  const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
+  const hordeApiKey = localKey || fallbackKey;
+
+  try {
+    const res = await fetch("/api/horde-text", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...body, hordeApiKey }),
+      signal,
+    });
+
+    if (!res.ok) {
+      let msg = res.statusText;
+      try {
+        const err = await res.json();
+        msg = err?.error?.message || msg;
+      } catch {
+        // ignore parse error
+      }
+      throw new Error(msg || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content || "";
+    const hordeMeta = data?.horde_metadata || {};
+
+    if (typeof onChunk === "function") {
+      let accumulated = "";
+      for (const char of content) {
+        accumulated += char;
+        onChunk(char);
+        await new Promise((r) => setTimeout(r, 5));
+      }
+    }
+
+    return {
+      content,
+      model: data?.model || hordeModel,
+      provider: "AI Horde",
+      generationId: data?.id || "",
+      completionMeta: {
+        id: data?.id || "",
+        created: data?.created || Math.floor(Date.now() / 1000),
+        object: data?.object || "chat.completion",
+        usage: data?.usage || null,
+      },
+      finishReason: data?.choices?.[0]?.finish_reason || "stop",
+      nativeFinishReason: "",
+      truncatedByFilter: false,
+      hordeMetadata: hordeMeta,
+      generationInfo: null,
+      systemMessages,
+    };
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(`AI Horde request failed: ${err?.message || "Unknown error"}`);
   }
 }
 

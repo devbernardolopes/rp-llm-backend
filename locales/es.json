@@ -577,5 +577,9 @@
   "lorebookInjectionMode": "Modo de inyeccion",
   "lorebookCooldown": "Tiempo de espera",
   "lorebookOncePerContext": "Una vez por contexto",
-  "lorebookSuppressionWindow": "Ventana de supresion (mensajes)"
+  "lorebookSuppressionWindow": "Ventana de supresion (mensajes)",
+  "aiProviderLabel": "Proveedor de IA",
+  "aiHordeApiKey": "Clave API de AI Horde",
+  "providerOpenRouter": "OpenRouter",
+  "providerAIHorde": "AI Horde"
 }

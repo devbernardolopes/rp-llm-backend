@@ -577,5 +577,9 @@
   "lorebookInjectionMode": "Injektionsmodus",
   "lorebookCooldown": "Abkuehlzeit",
   "lorebookOncePerContext": "Einmal pro Kontext",
-  "lorebookSuppressionWindow": "Unterdrueckungsfenster (Nachrichten)"
+  "lorebookSuppressionWindow": "Unterdrueckungsfenster (Nachrichten)",
+  "aiProviderLabel": "KI-Anbieter",
+  "aiHordeApiKey": "AI Horde API-Schluessel",
+  "providerOpenRouter": "OpenRouter",
+  "providerAIHorde": "AI Horde"
 }

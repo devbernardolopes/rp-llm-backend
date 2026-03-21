@@ -676,11 +676,28 @@
            <form id="settings-form" novalidate onsubmit="return false;">
            <div data-settings-group="api" class="settings-group">
             <div class="form-field">
+              <span data-i18n="aiProviderLabel">AI Provider</span>
+              <select id="ai-provider-select">
+                <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
+                <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
+              </select>
+            </div>
+            <div class="form-field" id="openrouter-api-key-container">
               <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
               <input
                 id="openrouter-api-key"
                 type="password"
                 placeholder="sk-or-v1-..."
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="form-field hidden" id="horde-api-key-container">
+              <span data-i18n="aiHordeApiKey">AI Horde API Key</span>
+              <input
+                id="horde-api-key"
+                type="password"
+                placeholder="0000000000 or your API key"
                 autocomplete="off"
                 spellcheck="false"
               />
