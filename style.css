@@ -1020,7 +1020,9 @@ textarea {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .pagination-arrow,
@@ -1035,6 +1037,12 @@ textarea {
   min-width: 36px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pagination-pages .pagination-page-btn {
+  flex: 1 1 auto;
+  min-width: 36px;
+  max-width: 60px;
 }
 
 .pagination-arrow:disabled,

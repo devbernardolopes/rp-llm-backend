@@ -156,6 +156,7 @@ const state = {
   characterPage: 1,
   characterCardsPerPage: 0,
   characterTotalPages: 0,
+  characterTotalItems: 0,
   tagManagerEditingTag: null,
   characterSortMode: "updated_desc",
   expandedCharacterTagIds: new Set(),
@@ -5469,6 +5470,7 @@ async function renderCharacters() {
   });
 
   updateCharacterPaginationControls(totalCharacters, totalPages);
+  initPaginationResizeObserver();
 
   carouselStates.forEach((state, charId) => {
     const card = grid.querySelector(
@@ -5532,6 +5534,7 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   const hasCharacters = totalItems > 0;
   container.classList.toggle("hidden", !hasCharacters);
   state.characterTotalPages = totalPages;
+  state.characterTotalItems = totalItems;
 
   prevBtn.disabled = !hasCharacters || state.characterPage <= 1;
   nextBtn.disabled =
@@ -5547,10 +5550,11 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   pagesContainer.innerHTML = "";
   if (!hasCharacters || totalPages <= 0) return;
 
+  const windowSize = getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn);
   const pageRange = getCharacterPaginationRange(
     state.characterPage,
     totalPages,
-    CHARACTER_PAGE_BUTTON_WINDOW,
+    windowSize,
   );
   const fragment = document.createDocumentFragment();
   pageRange.forEach((pageNum) => {
@@ -5576,6 +5580,31 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
     fragment.appendChild(btn);
   });
   pagesContainer.appendChild(fragment);
+}
+
+function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn) {
+  const MIN_BUTTON_WIDTH = 36;
+  const BUTTON_GAP = 6;
+  const BUTTON_PADDING = 20;
+  const availableWidth = pagesContainer.parentElement.clientWidth -
+    prevBtn.offsetWidth - nextBtn.offsetWidth - (BUTTON_GAP * 2);
+  const maxButtons = Math.floor(availableWidth / (MIN_BUTTON_WIDTH + BUTTON_PADDING));
+  return Math.max(3, Math.min(maxButtons, 11));
+}
+
+let paginationResizeObserver = null;
+function initPaginationResizeObserver() {
+  const container = document.getElementById("character-pagination");
+  if (!container) return;
+  if (paginationResizeObserver) {
+    paginationResizeObserver.disconnect();
+  }
+  paginationResizeObserver = new ResizeObserver(() => {
+    if (state.characterTotalItems > 0) {
+      updateCharacterPaginationControls(state.characterTotalItems, state.characterTotalPages);
+    }
+  });
+  paginationResizeObserver.observe(container);
 }
 
 function updateThreadBulkBar() {
