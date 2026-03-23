@@ -135,10 +135,10 @@ class Model3DLoader {
         const scale = 2 / maxDim;
 
         this.vrm.scene.scale.setScalar(scale);
-        this.vrm.scene.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+        this.vrm.scene.position.set(-center.x * scale, 0, -center.z * scale);
 
-        this.controls.target.set(0, center.y * scale, 0);
-        this.camera.position.set(0, center.y * scale + 0.5, 3);
+        this.controls.target.set(0, (size.y * scale) / 2, 0);
+        this.camera.position.set(0, (size.y * scale) / 2 + 0.5, 3);
       }
 
       if (loadingEl) loadingEl.classList.add('hidden');
