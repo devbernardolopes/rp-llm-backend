@@ -85,6 +85,14 @@ const DEFAULT_SETTINGS = {
   defaultTtsProvider: "kokoro",
   defaultTtsRate: 1,
   autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
+  autoTitleProvider: "openrouter",
+  autoTitleModel: "stepfun/step-3.5-flash:free",
+  autoTitleTemperature: 0.25,
+  autoTitleTopP: 0.9,
+  summaryProvider: "openrouter",
+  summaryModel: "stepfun/step-3.5-flash:free",
+  summaryTemperature: 0.25,
+  summaryTopP: 0.9,
 };
 
 // Theme management
@@ -3126,6 +3134,44 @@ async function setupSettingsControls() {
   );
   if (defaultTtsRateValue)
     defaultTtsRateValue.textContent = String(defaultTtsRate.value);
+  const autoTitleProvider = document.getElementById("default-auto-title-provider");
+  const autoTitleModel = document.getElementById("default-auto-title-model");
+  const autoTitleTemp = document.getElementById("default-auto-title-temp");
+  const autoTitleTempValue = document.getElementById("default-auto-title-temp-value");
+  const summaryProvider = document.getElementById("default-summary-provider");
+  const summaryModel = document.getElementById("default-summary-model");
+  const summaryTemp = document.getElementById("default-summary-temp");
+  const summaryTempValue = document.getElementById("default-summary-temp-value");
+  if (autoTitleProvider) {
+    autoTitleProvider.value =
+      state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  }
+  if (autoTitleModel) {
+    autoTitleModel.value =
+      state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
+  }
+  if (autoTitleTemp) {
+    autoTitleTemp.value = String(
+      state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature,
+    );
+    if (autoTitleTempValue)
+      autoTitleTempValue.textContent = autoTitleTemp.value;
+  }
+  if (summaryProvider) {
+    summaryProvider.value =
+      state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+  }
+  if (summaryModel) {
+    summaryModel.value =
+      state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
+  }
+  if (summaryTemp) {
+    summaryTemp.value = String(
+      state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature,
+    );
+    if (summaryTempValue)
+      summaryTempValue.textContent = summaryTemp.value;
+  }
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
   lmstudioBaseUrl.value = state.settings.lmstudioBaseUrl || "http://localhost:1234";
@@ -3566,6 +3612,48 @@ async function setupSettingsControls() {
       const value = Number(defaultTtsRate.value);
       state.settings.defaultTtsRate = value;
       if (defaultTtsRateValue) defaultTtsRateValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  if (autoTitleProvider) {
+    autoTitleProvider.addEventListener("change", () => {
+      state.settings.autoTitleProvider = autoTitleProvider.value;
+      saveSettings();
+      populateAutoTitleSummaryModels().catch(() => {});
+    });
+  }
+  if (autoTitleModel) {
+    autoTitleModel.addEventListener("change", () => {
+      state.settings.autoTitleModel = autoTitleModel.value;
+      saveSettings();
+    });
+  }
+  if (autoTitleTemp) {
+    autoTitleTemp.addEventListener("input", () => {
+      const value = Number(autoTitleTemp.value);
+      state.settings.autoTitleTemperature = value;
+      if (autoTitleTempValue) autoTitleTempValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  if (summaryProvider) {
+    summaryProvider.addEventListener("change", () => {
+      state.settings.summaryProvider = summaryProvider.value;
+      saveSettings();
+      populateAutoTitleSummaryModels().catch(() => {});
+    });
+  }
+  if (summaryModel) {
+    summaryModel.addEventListener("change", () => {
+      state.settings.summaryModel = summaryModel.value;
+      saveSettings();
+    });
+  }
+  if (summaryTemp) {
+    summaryTemp.addEventListener("input", () => {
+      const value = Number(summaryTemp.value);
+      state.settings.summaryTemperature = value;
+      if (summaryTempValue) summaryTempValue.textContent = String(value);
       saveSettings();
     });
   }
@@ -6410,6 +6498,7 @@ function openModal(modalId) {
     }
     updateToastDelayDisplay();
     populateSettingsModels().catch(() => {});
+    populateAutoTitleSummaryModels().catch(() => {});
   } else if (modalId === "shortcuts-modal") {
     document.getElementById("shortcuts-raw").value =
       state.settings.shortcutsRaw || "";
@@ -17171,6 +17260,79 @@ function renderSettingsModelOptions() {
   refreshSelectedModelMeta();
 }
 
+async function populateAutoTitleSummaryModels() {
+  const autoTitleModel = document.getElementById("default-auto-title-model");
+  const summaryModel = document.getElementById("default-summary-model");
+  if (!autoTitleModel || !summaryModel) return;
+
+  const autoTitleProvider =
+    state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  const summaryProvider =
+    state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+
+  const autoTitleCatalog = await getModelCatalogForProvider(autoTitleProvider);
+  const summaryCatalog = await getModelCatalogForProvider(summaryProvider);
+
+  renderModelSelectOptions(autoTitleModel, autoTitleCatalog, state.settings.autoTitleModel);
+  renderModelSelectOptions(summaryModel, summaryCatalog, state.settings.summaryModel);
+}
+
+async function getModelCatalogForProvider(provider) {
+  if (provider === "aihorde") {
+    if (state.hordeModelCatalog.length === 0) {
+      try {
+        state.hordeModelCatalog = await fetchAIHordeModelCatalog();
+      } catch {
+        state.hordeModelCatalog = getHordeFallbackModelCatalog();
+      }
+    }
+    return state.hordeModelCatalog;
+  } else if (provider === "lmstudio") {
+    if (state.lmstudioModelCatalog.length === 0) {
+      try {
+        state.lmstudioModelCatalog = await fetchLMStudioModelCatalog();
+      } catch {
+        state.lmstudioModelCatalog = [];
+      }
+    }
+    return state.lmstudioModelCatalog;
+  } else {
+    if (state.modelCatalog.length === 0) {
+      try {
+        state.modelCatalog = await fetchOpenRouterModelCatalog();
+      } catch {
+        state.modelCatalog = getFallbackModelCatalog();
+      }
+    }
+    return state.modelCatalog;
+  }
+}
+
+function renderModelSelectOptions(selectEl, catalog, selectedModel) {
+  if (!selectEl || !catalog) return;
+  selectEl.innerHTML = "";
+  const targetModel = String(selectedModel || "").trim();
+  catalog.forEach((m) => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = `${m.name} (${m.id})`;
+    selectEl.appendChild(opt);
+  });
+  const exists = Array.from(selectEl.options).some(
+    (opt) => String(opt.value || "").trim() === targetModel,
+  );
+  if (!exists && targetModel) {
+    const fromCatalog = catalog.find((m) => m.id === targetModel);
+    const opt = document.createElement("option");
+    opt.value = targetModel;
+    opt.textContent = fromCatalog
+      ? `${fromCatalog.name} (${targetModel})`
+      : `${targetModel} (custom)`;
+    selectEl.appendChild(opt);
+  }
+  selectEl.value = targetModel || "";
+}
+
 function renderModelCustomDropdown(models, catalog, selectedModel) {
   const dropdownOptions = document.getElementById("model-dropdown-options");
   const dropdown = document.getElementById("model-custom-dropdown");
@@ -19135,12 +19297,37 @@ async function callOpenRouter(
 ) {
   const provider = state.settings.aiProvider || "openrouter";
 
-  if (provider === "aihorde") {
-    return callAIHorde(systemPrompt, history, model, onChunk, signal, options);
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+  const summaryModel =
+    state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
+  const titleModel =
+    state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
+  const titleProvider =
+    state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  const summaryProvider =
+    state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+
+  const effectiveProvider = isTitleGeneration || isSummarization
+    ? (isTitleGeneration ? titleProvider : summaryProvider)
+    : provider;
+
+  if (effectiveProvider === "aihorde") {
+    const effectiveModel = isTitleGeneration
+      ? titleModel
+      : isSummarization
+        ? summaryModel
+        : model;
+    return callAIHorde(systemPrompt, history, effectiveModel, onChunk, signal, options);
   }
 
-  if (provider === "lmstudio") {
-    return callLMStudio(systemPrompt, history, model, onChunk, signal, options);
+  if (effectiveProvider === "lmstudio") {
+    const effectiveModel = isTitleGeneration
+      ? titleModel
+      : isSummarization
+        ? summaryModel
+        : model;
+    return callLMStudio(systemPrompt, history, effectiveModel, onChunk, signal, options);
   }
 
   const resolvedModel = resolveModelForRequest(model);
@@ -19174,12 +19361,6 @@ async function callOpenRouter(
     options && Object.prototype.hasOwnProperty.call(options, "forceStream")
       ? Boolean(options.forceStream)
       : null;
-  const isSummarization = options?.isSummarization === true;
-  const isTitleGeneration = options?.isTitleGeneration === true;
-  // const summaryModel = "arcee-ai/trinity-large-preview:free";
-  // const titleModel = "arcee-ai/trinity-large-preview:free";
-  const summaryModel = "stepfun/step-3.5-flash:free";
-  const titleModel = "stepfun/step-3.5-flash:free";
   const body = {
     model: isTitleGeneration
       ? titleModel
@@ -19189,9 +19370,11 @@ async function callOpenRouter(
     messages: promptMessages,
     max_completion_tokens: effectiveMaxTokens,
     temperature: isTitleGeneration
-      ? 0.25
+      ? (state.settings.autoTitleTemperature ??
+        DEFAULT_SETTINGS.autoTitleTemperature)
       : isSummarization
-        ? 0.25
+        ? (state.settings.summaryTemperature ??
+          DEFAULT_SETTINGS.summaryTemperature)
         : clampTemperature(state.settings.temperature),
     top_p: isTitleGeneration
       ? 0.9
@@ -19274,6 +19457,8 @@ async function callLMStudio(
     promptMessages,
   );
 
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
   const lmstudioModel = resolvedModel.startsWith("lmstudio/")
     ? resolvedModel.slice(9)
     : resolvedModel;
@@ -19290,7 +19475,13 @@ async function callLMStudio(
     model: lmstudioModel,
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
-    temperature: clampTemperature(state.settings.temperature),
+    temperature: isTitleGeneration
+      ? (state.settings.autoTitleTemperature ??
+        DEFAULT_SETTINGS.autoTitleTemperature)
+      : isSummarization
+        ? (state.settings.summaryTemperature ??
+          DEFAULT_SETTINGS.summaryTemperature)
+        : clampTemperature(state.settings.temperature),
     top_p: Number(state.settings.topP) || 1,
     frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
     presence_penalty: Number(state.settings.presencePenalty) || 0,
@@ -19455,6 +19646,8 @@ async function callAIHorde(
     promptMessages,
   );
 
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
   const hordeModel = resolvedModel.startsWith("aihorde/")
     ? resolvedModel.slice(8)
     : resolvedModel;
@@ -19475,7 +19668,13 @@ async function callAIHorde(
     params: {
       n: 1,
       max_length: effectiveMaxTokens,
-      temperature: clampTemperature(state.settings.temperature),
+      temperature: isTitleGeneration
+        ? (state.settings.autoTitleTemperature ??
+          DEFAULT_SETTINGS.autoTitleTemperature)
+        : isSummarization
+          ? (state.settings.summaryTemperature ??
+            DEFAULT_SETTINGS.summaryTemperature)
+          : clampTemperature(state.settings.temperature),
       top_p: Number(state.settings.topP) || 1,
       top_k: 0,
       typical: 0,

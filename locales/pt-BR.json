@@ -589,5 +589,11 @@
   "providerAIHorde": "AI Horde",
   "providerLMStudio": "LM Studio",
   "lmStudioBaseUrl": "LM Studio Base URL",
-  "autoTitleSystemPrompt": "Prompt do Sistema de Auto-Titulo"
+  "autoTitleSystemPrompt": "Prompt do Sistema de Auto-Titulo",
+  "autoTitleProvider": "Provedor de Auto-Titulo",
+  "autoTitleModel": "Modelo de Auto-Titulo",
+  "autoTitleTemperature": "Temperatura de Auto-Titulo",
+  "summaryProvider": "Provedor de Resumo",
+  "summaryModel": "Modelo de Resumo",
+  "summaryTemperature": "Temperatura de Resumo"
 }
