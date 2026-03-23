@@ -19509,7 +19509,6 @@ async function callLMStudio(
     body = {
       model: lmstudioModel,
       input: historyText,
-      max_tokens: effectiveMaxTokens,
       temperature: isTitleGeneration
         ? (state.settings.autoTitleTemperature ??
           DEFAULT_SETTINGS.autoTitleTemperature)
