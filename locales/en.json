@@ -599,5 +599,11 @@
   "autoTitleTemperature": "Auto-Title Temperature",
   "summaryProvider": "Summary Provider",
   "summaryModel": "Summary Model",
-  "summaryTemperature": "Summary Temperature"
+  "summaryTemperature": "Summary Temperature",
+  "sectionHeadersTitle": "Section Headers",
+  "sectionHeaderMemoryContext": "Memory Context Header",
+  "sectionHeaderCharacterPrompt": "Character Prompt Header",
+  "sectionHeaderMessagesSoFar": "Messages So Far Header",
+  "sectionHeaderMessages": "Messages Header",
+  "sectionHeaderMemoryLevelContext": "Memory Level Context Header"
 }

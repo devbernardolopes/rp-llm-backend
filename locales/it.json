@@ -598,5 +598,11 @@
   "autoTitleTemperature": "Temperatura Auto-Titolo",
   "summaryProvider": "Provider Riassunto",
   "summaryModel": "Modello Riassunto",
-  "summaryTemperature": "Temperatura Riassunto"
+  "summaryTemperature": "Temperatura Riassunto",
+  "sectionHeadersTitle": "Intestazioni di sezione",
+  "sectionHeaderMemoryContext": "Intestazione Memory Context",
+  "sectionHeaderCharacterPrompt": "Intestazione Character Prompt",
+  "sectionHeaderMessagesSoFar": "Intestazione Messages So Far",
+  "sectionHeaderMessages": "Intestazione Messages",
+  "sectionHeaderMemoryLevelContext": "Intestazione Memory Level Context"
 }

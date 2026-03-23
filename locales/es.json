@@ -598,5 +598,11 @@
   "autoTitleTemperature": "Temperatura de Auto-Titulo",
   "summaryProvider": "Proveedor de Resumen",
   "summaryModel": "Modelo de Resumen",
-  "summaryTemperature": "Temperatura de Resumen"
+  "summaryTemperature": "Temperatura de Resumen",
+  "sectionHeadersTitle": "Encabezados de seccion",
+  "sectionHeaderMemoryContext": "Encabezado Memory Context",
+  "sectionHeaderCharacterPrompt": "Encabezado Character Prompt",
+  "sectionHeaderMessagesSoFar": "Encabezado Messages So Far",
+  "sectionHeaderMessages": "Encabezado Messages",
+  "sectionHeaderMemoryLevelContext": "Encabezado Memory Level Context"
 }

@@ -598,5 +598,11 @@
   "autoTitleTemperature": "Temperatura de Auto-Titulo",
   "summaryProvider": "Provedor de Resumo",
   "summaryModel": "Modelo de Resumo",
-  "summaryTemperature": "Temperatura de Resumo"
+  "summaryTemperature": "Temperatura de Resumo",
+  "sectionHeadersTitle": "Cabecalhos de secao",
+  "sectionHeaderMemoryContext": "Cabecalho Memory Context",
+  "sectionHeaderCharacterPrompt": "Cabecalho Character Prompt",
+  "sectionHeaderMessagesSoFar": "Cabecalho Messages So Far",
+  "sectionHeaderMessages": "Cabecalho Messages",
+  "sectionHeaderMemoryLevelContext": "Cabecalho Memory Level Context"
 }

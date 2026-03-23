@@ -598,5 +598,11 @@
   "autoTitleTemperature": "Temperature Auto-Titre",
   "summaryProvider": "Fournisseur Resume",
   "summaryModel": "Modele Resume",
-  "summaryTemperature": "Temperature Resume"
+  "summaryTemperature": "Temperature Resume",
+  "sectionHeadersTitle": "En-tetes de section",
+  "sectionHeaderMemoryContext": "En-tete Memory Context",
+  "sectionHeaderCharacterPrompt": "En-tete Character Prompt",
+  "sectionHeaderMessagesSoFar": "En-tete Messages So Far",
+  "sectionHeaderMessages": "En-tete Messages",
+  "sectionHeaderMemoryLevelContext": "En-tete Memory Level Context"
 }

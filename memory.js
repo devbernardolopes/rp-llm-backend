@@ -373,13 +373,13 @@ async function summarizeMemory(character) {
     );
     const formattedEntries = formatMemoryEntries(levelEntries);
     if (formattedEntries) {
-      previousLevelContext = `***MEMORY LEVEL ${previousLevel} CONTEXT***\n\n${formattedEntries}`;
+      previousLevelContext = `${getSectionHeader("sectionHeaderMemoryLevelContext")} ${previousLevel} CONTEXT***\n\n${formattedEntries}`;
     }
   }
 
   const storedMemorySummary = await getMemorySummary(character.id, threadId);
   const memoryContextSection = storedMemorySummary
-    ? `***MEMORY CONTEXT***\n\n${storedMemorySummary}`
+    ? `${getSectionHeader("sectionHeaderMemoryContext")}\n\n${storedMemorySummary}`
     : "";
 
   const userPromptText =
@@ -668,9 +668,27 @@ function normalizeSummaryRoleLabels(text) {
     .replace(/(^|\n)user:/gi, "$1[USER]:");
 }
 
+function getSectionHeader(key) {
+  if (typeof window.getSectionHeader === "function") {
+    return window.getSectionHeader(key);
+  }
+  const defaults = {
+    sectionHeaderMemoryContext: "***MEMORY CONTEXT***",
+    sectionHeaderCharacterPrompt: "***CHARACTER PROMPT***",
+    sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
+    sectionHeaderMessages: "***MESSAGES***",
+    sectionHeaderMemoryLevelContext: "***MEMORY LEVEL",
+  };
+  return (
+    (window.state?.settings?.[key] || "") ||
+    defaults[key] ||
+    ""
+  );
+}
+
 function buildSummaryMessagesSection(entries) {
   if (!entries || entries.length === 0) return "";
-  return `***MESSAGES***\n\n${entries.join("\n\n")}`;
+  return `${getSectionHeader("sectionHeaderMessages")}\n\n${entries.join("\n\n")}`;
 }
 
 // Expose functions globally for app.js to use

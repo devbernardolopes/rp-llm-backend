@@ -94,7 +94,22 @@ const DEFAULT_SETTINGS = {
   summaryModel: "stepfun/step-3.5-flash:free",
   summaryTemperature: 0.25,
   summaryTopP: 0.9,
+  sectionHeaderMemoryContext: "***MEMORY CONTEXT***",
+  sectionHeaderCharacterPrompt: "***CHARACTER PROMPT***",
+  sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
+  sectionHeaderMessages: "***MESSAGES***",
+  sectionHeaderMemoryLevelContext: "***MEMORY LEVEL",
 };
+
+function getSectionHeader(key) {
+  return (
+    state.settings[key] ||
+    DEFAULT_SETTINGS[key] ||
+    ""
+  );
+}
+
+window.getSectionHeader = getSectionHeader;
 
 // Theme management
 
@@ -2854,6 +2869,21 @@ async function setupSettingsControls() {
     "auto-title-system-prompt",
   );
   const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
+  const sectionHeaderMemoryContext = document.getElementById(
+    "section-header-memory-context",
+  );
+  const sectionHeaderCharacterPrompt = document.getElementById(
+    "section-header-character-prompt",
+  );
+  const sectionHeaderMessagesSoFar = document.getElementById(
+    "section-header-messages-so-far",
+  );
+  const sectionHeaderMessages = document.getElementById(
+    "section-header-messages",
+  );
+  const sectionHeaderMemoryLevelContext = document.getElementById(
+    "section-header-memory-level-context",
+  );
   markdownCheck.checked = !!state.settings.markdownEnabled;
   unreadSoundEnabled.checked = state.settings.unreadSoundEnabled !== false;
   allowMessageHtml.checked = state.settings.allowMessageHtml === true;
@@ -3112,6 +3142,31 @@ async function setupSettingsControls() {
     autoTitleSystemPrompt.value =
       state.settings.autoTitleSystemPrompt ||
       DEFAULT_SETTINGS.autoTitleSystemPrompt;
+  }
+  if (sectionHeaderMemoryContext) {
+    sectionHeaderMemoryContext.value =
+      state.settings.sectionHeaderMemoryContext ||
+      DEFAULT_SETTINGS.sectionHeaderMemoryContext;
+  }
+  if (sectionHeaderCharacterPrompt) {
+    sectionHeaderCharacterPrompt.value =
+      state.settings.sectionHeaderCharacterPrompt ||
+      DEFAULT_SETTINGS.sectionHeaderCharacterPrompt;
+  }
+  if (sectionHeaderMessagesSoFar) {
+    sectionHeaderMessagesSoFar.value =
+      state.settings.sectionHeaderMessagesSoFar ||
+      DEFAULT_SETTINGS.sectionHeaderMessagesSoFar;
+  }
+  if (sectionHeaderMessages) {
+    sectionHeaderMessages.value =
+      state.settings.sectionHeaderMessages ||
+      DEFAULT_SETTINGS.sectionHeaderMessages;
+  }
+  if (sectionHeaderMemoryLevelContext) {
+    sectionHeaderMemoryLevelContext.value =
+      state.settings.sectionHeaderMemoryLevelContext ||
+      DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
   }
   cancelShortcut.value =
     state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
@@ -3543,6 +3598,35 @@ async function setupSettingsControls() {
 
   autoTitleSystemPrompt?.addEventListener("input", () => {
     state.settings.autoTitleSystemPrompt = autoTitleSystemPrompt.value;
+    saveSettings();
+  });
+
+  sectionHeaderMemoryContext?.addEventListener("input", () => {
+    state.settings.sectionHeaderMemoryContext =
+      sectionHeaderMemoryContext.value;
+    saveSettings();
+  });
+
+  sectionHeaderCharacterPrompt?.addEventListener("input", () => {
+    state.settings.sectionHeaderCharacterPrompt =
+      sectionHeaderCharacterPrompt.value;
+    saveSettings();
+  });
+
+  sectionHeaderMessagesSoFar?.addEventListener("input", () => {
+    state.settings.sectionHeaderMessagesSoFar =
+      sectionHeaderMessagesSoFar.value;
+    saveSettings();
+  });
+
+  sectionHeaderMessages?.addEventListener("input", () => {
+    state.settings.sectionHeaderMessages = sectionHeaderMessages.value;
+    saveSettings();
+  });
+
+  sectionHeaderMemoryLevelContext?.addEventListener("input", () => {
+    state.settings.sectionHeaderMemoryLevelContext =
+      sectionHeaderMemoryLevelContext.value;
     saveSettings();
   });
 
@@ -15131,7 +15215,7 @@ async function buildOocSystemPrompt() {
     currentThread.id,
   );
   const memorySection = memoryContext
-    ? `***MEMORY CONTEXT***\n\n${String(memoryContext || "").trim()}`
+    ? `${getSectionHeader("sectionHeaderMemoryContext")}\n\n${String(memoryContext || "").trim()}`
     : "";
   const charPersonaName =
     currentThread?.initialUserName || currentPersona?.name || "You";
@@ -15147,9 +15231,9 @@ async function buildOocSystemPrompt() {
     charName,
   ).trim();
   const characterPromptSection = characterPrompt
-    ? `***CHARACTER PROMPT***\n\n${characterPrompt}`
+    ? `${getSectionHeader("sectionHeaderCharacterPrompt")}\n\n${characterPrompt}`
     : "";
-  const messageSection = `***MESSAGES SO FAR***\n\n${contextMessages.join(
+  const messageSection = `${getSectionHeader("sectionHeaderMessagesSoFar")}\n\n${contextMessages.join(
     "\n\n",
   )}`;
   const systemPromptParts = [
@@ -19059,7 +19143,7 @@ async function buildSystemPrompt(character, options = {}) {
     );
   }
   if (memory) {
-    contextSections.push(`***MEMORY CONTEXT***\n\n${memory}`);
+    contextSections.push(`${getSectionHeader("sectionHeaderMemoryContext")}\n\n${memory}`);
   }
 
   const prompt = [systemPromptWithPersona, ...contextSections]

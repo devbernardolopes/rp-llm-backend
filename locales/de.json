@@ -598,5 +598,11 @@
   "autoTitleTemperature": "Auto-Titel Temperatur",
   "summaryProvider": "Zusammenfassung Anbieter",
   "summaryModel": "Zusammenfassung Modell",
-  "summaryTemperature": "Zusammenfassung Temperatur"
+  "summaryTemperature": "Zusammenfassung Temperatur",
+  "sectionHeadersTitle": "Abschnittsüberschriften",
+  "sectionHeaderMemoryContext": "Memory Context Überschrift",
+  "sectionHeaderCharacterPrompt": "Character Prompt Überschrift",
+  "sectionHeaderMessagesSoFar": "Messages So Far Überschrift",
+  "sectionHeaderMessages": "Messages Überschrift",
+  "sectionHeaderMemoryLevelContext": "Memory Level Context Überschrift"
 }
