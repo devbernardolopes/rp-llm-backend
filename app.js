@@ -11538,6 +11538,46 @@ async function importLorebookFromFile(e) {
   }
 }
 
+function applyCharacterSettingsDefaults(character) {
+  if (!character) return;
+  if (character.useMemory === undefined) character.useMemory = true;
+  if (character.usePostProcessing === undefined) character.usePostProcessing = true;
+  if (character.autoTriggerAiFirstMessage === undefined) character.autoTriggerAiFirstMessage = true;
+  if (character.autoTitleEnabled === undefined) character.autoTitleEnabled = true;
+  if (character.autoTitleMinMessages === undefined) character.autoTitleMinMessages = 10;
+  if (character.personaPrefixEnabled === undefined) character.personaPrefixEnabled = true;
+  if (character.includeOocInCompletions === undefined) character.includeOocInCompletions = false;
+  if (character.avatarScale === undefined) character.avatarScale = 4;
+  if (character.loreCooldown === undefined) character.loreCooldown = 20;
+
+  if (Array.isArray(character.definitions)) {
+    const defaultPlacement =
+      state.settings.defaultPersonaInjectionPlacement ||
+      DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+    const defaultTtsProvider =
+      state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+    const defaultTtsRate =
+      state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
+
+    character.definitions.forEach((def) => {
+      if (def) {
+        if (!def.personaInjectionPlacement) {
+          def.personaInjectionPlacement = defaultPlacement;
+        }
+        if (!def.ttsProvider) {
+          def.ttsProvider = defaultTtsProvider;
+        }
+        if (def.ttsRate === undefined || def.ttsRate === null) {
+          def.ttsRate = defaultTtsRate;
+        }
+        if (!def.kokoroDtype) {
+          def.kokoroDtype = "auto";
+        }
+      }
+    });
+  }
+}
+
 async function importCharacterFromFile(e) {
   const file = e.target.files?.[0];
   e.target.value = "";
@@ -11608,6 +11648,13 @@ async function importCharacterFromFile(e) {
       mergeTagsIntoCatalog(tags);
       const prompt = [description, personality].filter(Boolean).join("\n\n");
       const language = "en";
+      const defaultPlacement =
+        state.settings.defaultPersonaInjectionPlacement ||
+        DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+      const defaultTtsProvider =
+        state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+      const defaultTtsRate =
+        state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
       character = {
         name,
         selectedCardLanguage: language,
@@ -11626,12 +11673,12 @@ async function importCharacterFromFile(e) {
             writingInstructionId: String(writingInstructionId || ""),
             initialMessagesRaw: initialMessagesRaw,
             initialMessages: initialMessages,
-            personaInjectionPlacement: "end_system_prompt",
+            personaInjectionPlacement: defaultPlacement,
             ttsVoice: DEFAULT_TTS_VOICE,
             ttsLanguage: DEFAULT_TTS_LANGUAGE,
-            ttsRate: DEFAULT_TTS_RATE,
+            ttsRate: defaultTtsRate,
             ttsPitch: 1.1,
-            ttsProvider: "kokoro",
+            ttsProvider: defaultTtsProvider,
             kokoroDevice: "webgpu",
             kokoroDtype: "auto",
             kokoroVoice: DEFAULT_KOKORO_VOICE,
@@ -11718,6 +11765,9 @@ async function importCharacterFromFile(e) {
     }
 
     if (!character.name) throw new Error("Character name is required in file");
+
+    applyCharacterSettingsDefaults(character);
+
     renderCharacters();
     showToast(t("characterImported"), "success");
     openCharacterModal(character, null, true);
