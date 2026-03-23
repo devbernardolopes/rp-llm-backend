@@ -6531,19 +6531,43 @@ function togglePane() {
   const importBtn = document.getElementById("import-character-btn");
   const homeBtn = document.getElementById("home-btn");
   const overlayToggle = document.getElementById("pane-overlay-toggle");
+  const wasCollapsed = pane.classList.contains("collapsed");
   pane.classList.toggle("collapsed");
+  const isCollapsed = pane.classList.contains("collapsed");
   shell.classList.toggle(
     "pane-collapsed",
-    pane.classList.contains("collapsed"),
+    isCollapsed,
   );
   if (overlayToggle) {
     overlayToggle.classList.toggle(
       "collapsed",
-      pane.classList.contains("collapsed"),
+      isCollapsed,
     );
   }
+
+  if (wasCollapsed && !isCollapsed) {
+    const expandedPaneWidth = 360;
+    const collapsedPaneWidth = 84;
+    const widthDiff = expandedPaneWidth - collapsedPaneWidth;
+    adjustModel3DPanelForPaneChange(-widthDiff);
+  } else if (!wasCollapsed && isCollapsed) {
+    const expandedPaneWidth = 360;
+    const collapsedPaneWidth = 84;
+    const widthDiff = expandedPaneWidth - collapsedPaneWidth;
+    adjustModel3DPanelForPaneChange(widthDiff);
+  }
+
   updateCarouselForPaneState();
   setTimeout(constrainModel3DPanelPosition, 250);
+}
+
+function adjustModel3DPanelForPaneChange(deltaX) {
+  const panel = document.getElementById('model3d-panel');
+  if (!panel || panel.classList.contains('hidden')) return;
+
+  let currentLeft = parseFloat(panel.style.left) || 0;
+  currentLeft += deltaX;
+  panel.style.left = currentLeft + 'px';
 }
 
 function showMainView() {
