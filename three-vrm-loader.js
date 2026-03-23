@@ -47,9 +47,11 @@ class Model3DLoader {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.1;
     this.controls.enableZoom = true;
-    this.controls.enablePan = false;
-    this.enableRotate = true;
+    this.controls.enablePan = true;
+    this.controls.enableRotate = true;
     this.controls.target.set(0, 1.3, 0);
+    this.controls.panSpeed = 0.8;
+    this.controls.screenSpacePanning = false;
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     this.scene.add(ambientLight);
