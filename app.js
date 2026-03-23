@@ -11329,6 +11329,7 @@ let model3dPanelState = {
   startHeight: 0,
   startLeft: 0,
   startTop: 0,
+  hasMoved: false,
 };
 
 function initModel3DPanelDragResize() {
@@ -11346,11 +11347,8 @@ function initModel3DPanelDragResize() {
     const rect = panel.getBoundingClientRect();
     model3dPanelState.startLeft = rect.left;
     model3dPanelState.startTop = rect.top;
+    model3dPanelState.hasMoved = false;
     document.body.style.cursor = 'move';
-    panel.style.left = model3dPanelState.startLeft + 'px';
-    panel.style.top = model3dPanelState.startTop + 'px';
-    panel.style.right = 'auto';
-    panel.style.bottom = 'auto';
   });
 
   resizeHandle.addEventListener('mousedown', (e) => {
@@ -11370,13 +11368,22 @@ function initModel3DPanelDragResize() {
       e.preventDefault();
       const dx = e.clientX - model3dPanelState.startX;
       const dy = e.clientY - model3dPanelState.startY;
-      const newLeft = model3dPanelState.startLeft + dx;
-      const newTop = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, model3dPanelState.startTop + dy));
-      const maxLeft = window.innerWidth - panel.offsetWidth;
-      panel.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + 'px';
-      panel.style.top = newTop + 'px';
-      panel.style.right = 'auto';
-      panel.style.bottom = 'auto';
+
+      if (!model3dPanelState.hasMoved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+        model3dPanelState.hasMoved = true;
+        panel.style.left = model3dPanelState.startLeft + 'px';
+        panel.style.top = model3dPanelState.startTop + 'px';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+      }
+
+      if (model3dPanelState.hasMoved) {
+        const newLeft = model3dPanelState.startLeft + dx;
+        const newTop = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, model3dPanelState.startTop + dy));
+        const maxLeft = window.innerWidth - panel.offsetWidth;
+        panel.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + 'px';
+        panel.style.top = newTop + 'px';
+      }
     }
 
     if (model3dPanelState.isResizing) {
