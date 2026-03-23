@@ -1192,12 +1192,22 @@
                 </option>
                </select>
              </div>
-             <span class="checkbox-line">
-               <input type="checkbox" id="use-local-summarization" />
-               <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
-             </span>
-           </div>
-           <div data-settings-group="shortcuts" class="settings-group">
+              <span class="checkbox-line">
+                <input type="checkbox" id="use-local-summarization" />
+                <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
+              </span>
+              <details class="settings-collapse">
+                <summary data-i18n="autoTitleSystemPrompt">Auto-Title System Prompt</summary>
+                <div class="settings-collapse-body">
+                  <textarea
+                    id="auto-title-system-prompt"
+                    rows="3"
+                    placeholder="System prompt for auto-titling threads."
+                  ></textarea>
+                </div>
+              </details>
+            </div>
+            <div data-settings-group="shortcuts" class="settings-group">
              <div class="form-field">
                <span data-i18n="cancelGenerationShortcut"
                  >Cancel Generation Shortcut</span

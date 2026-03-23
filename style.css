@@ -3219,6 +3219,60 @@ textarea {
   align-items: center;
 }
 
+.settings-collapse {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.settings-collapse summary {
+  padding: 10px 14px;
+  background: var(--panel-2);
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+}
+
+.settings-collapse summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-collapse summary::before {
+  content: "▸";
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.settings-collapse[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.settings-collapse summary:hover {
+  background: var(--panel-1);
+}
+
+.settings-collapse-body {
+  padding: 12px;
+  background: var(--panel-bg);
+}
+
+.settings-collapse-body textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 6px;
+  background: var(--panel-1);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  color: var(--text);
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 80px;
+}
+
 .writing-instructions-header {
   display: flex;
   align-items: center;

@@ -83,6 +83,8 @@ const DEFAULT_SETTINGS = {
   defaultPersonaInjectionPlacement: "end_system_prompt",
   defaultTtsProvider: "kokoro",
   defaultTtsRate: 1,
+  autoTitleSystemPrompt:
+    "You create concise, descriptive chat thread titles.",
 };
 
 // Theme management
@@ -2836,6 +2838,7 @@ async function setupSettingsControls() {
     "writing-instructions-injection-when",
   );
   const shortcutsRaw = document.getElementById("shortcuts-raw");
+  const autoTitleSystemPrompt = document.getElementById("auto-title-system-prompt");
   const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
   markdownCheck.checked = !!state.settings.markdownEnabled;
   unreadSoundEnabled.checked = state.settings.unreadSoundEnabled !== false;
@@ -3091,6 +3094,11 @@ async function setupSettingsControls() {
     writingInstructionsInjectionWhen.value = writingWhen;
   }
   shortcutsRaw.value = state.settings.shortcutsRaw || "";
+  if (autoTitleSystemPrompt) {
+    autoTitleSystemPrompt.value =
+      state.settings.autoTitleSystemPrompt ||
+      DEFAULT_SETTINGS.autoTitleSystemPrompt;
+  }
   cancelShortcut.value =
     state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
   homeShortcut.value =
@@ -3456,6 +3464,11 @@ async function setupSettingsControls() {
   memorySummarizerUserPrompt?.addEventListener("input", () => {
     state.settings.memorySummarizerUserPrompt =
       memorySummarizerUserPrompt.value;
+    saveSettings();
+  });
+
+  autoTitleSystemPrompt?.addEventListener("input", () => {
+    state.settings.autoTitleSystemPrompt = autoTitleSystemPrompt.value;
     saveSettings();
   });
 
@@ -13176,7 +13189,7 @@ async function maybeGenerateTitleBeforeBotReply() {
 
   try {
     const result = await callOpenRouter(
-      "You create concise, descriptive chat thread titles.",
+      state.settings.autoTitleSystemPrompt || DEFAULT_SETTINGS.autoTitleSystemPrompt,
       [{ role: "user", content: titlePrompt }],
       state.settings.model,
       null,

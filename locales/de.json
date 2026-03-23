@@ -586,5 +586,6 @@
   "aiProviderLabel": "KI-Anbieter",
   "aiHordeApiKey": "AI Horde API-Schluessel",
   "providerOpenRouter": "OpenRouter",
-  "providerAIHorde": "AI Horde"
+  "providerAIHorde": "AI Horde",
+  "autoTitleSystemPrompt": "Auto-Titel System-Prompt"
 }

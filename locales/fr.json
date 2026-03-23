@@ -586,5 +586,6 @@
   "aiProviderLabel": "Fournisseur IA",
   "aiHordeApiKey": "Cle API AI Horde",
   "providerOpenRouter": "OpenRouter",
-  "providerAIHorde": "AI Horde"
+  "providerAIHorde": "AI Horde",
+  "autoTitleSystemPrompt": "Prompt Systeme Auto-Titre"
 }
