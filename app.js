@@ -679,8 +679,14 @@ function setupEvents() {
   });
   document.getElementById("model3d-close-btn")?.addEventListener("click", () => {
     const panel = document.getElementById("model3d-panel");
+    const btn = document.getElementById("toggle-model3d-panel-btn");
     if (panel) {
       panel.classList.add("hidden");
+      btn?.classList.remove("is-active");
+      persistModel3DPanelState(currentThread?.id, { visible: false });
+      if (window.disposeModel3D) {
+        window.disposeModel3D();
+      }
     }
   });
   document.getElementById("toggle-model3d-panel-btn")?.addEventListener("click", () => {
@@ -11290,26 +11296,32 @@ function removeModel3D() {
 
 function toggleModel3DPanel() {
   const panel = document.getElementById('model3d-panel');
+  const btn = document.getElementById('toggle-model3d-panel-btn');
   if (!panel) return;
 
   const isHidden = panel.classList.contains('hidden');
   panel.classList.toggle('hidden');
+  btn?.classList.toggle('is-active', !isHidden);
 
   if (isHidden) {
     if (currentCharacter?.model3d?.data) {
       loadModel3DFromCharacter(currentCharacter);
     }
+    persistModel3DPanelState(currentThread?.id, { visible: true });
   } else {
     if (window.disposeModel3D) {
       window.disposeModel3D();
     }
+    persistModel3DPanelState(currentThread?.id, { visible: false });
   }
 }
 
 function showModel3DPanel() {
   const panel = document.getElementById('model3d-panel');
+  const btn = document.getElementById('toggle-model3d-panel-btn');
   if (!panel) return;
   panel.classList.remove('hidden');
+  btn?.classList.add('is-active');
   if (currentCharacter?.model3d) {
     loadModel3DFromCharacter(currentCharacter);
   }
@@ -11317,10 +11329,90 @@ function showModel3DPanel() {
 
 function hideModel3DPanel() {
   const panel = document.getElementById('model3d-panel');
+  const btn = document.getElementById('toggle-model3d-panel-btn');
   if (!panel) return;
   panel.classList.add('hidden');
+  btn?.classList.remove('is-active');
   if (window.disposeModel3D) {
     window.disposeModel3D();
+  }
+}
+
+async function persistModel3DPanelState(threadId, updates = {}) {
+  if (!Number.isInteger(Number(threadId))) return;
+
+  try {
+    const thread = await db.threads.get(threadId);
+    if (!thread) return;
+
+    const model3dPanel = thread.model3dPanel || {};
+    const panel = document.getElementById('model3d-panel');
+    const btn = document.getElementById('toggle-model3d-panel-btn');
+
+    if (updates.visible !== undefined) {
+      model3dPanel.visible = updates.visible;
+    }
+
+    if (panel && !panel.classList.contains('hidden')) {
+      model3dPanel.left = parseFloat(panel.style.left) || 0;
+      model3dPanel.top = parseFloat(panel.style.top) || 0;
+      model3dPanel.width = panel.offsetWidth;
+      model3dPanel.height = panel.offsetHeight;
+      model3dPanel.chatViewWidth = panel.parentElement?.clientWidth || 0;
+    }
+
+    if (window.getModel3DCameraState && updates.camera !== false) {
+      model3dPanel.camera = window.getModel3DCameraState();
+    }
+
+    await db.threads.update(threadId, { model3dPanel });
+  } catch (err) {
+    console.warn("Failed to persist model3d panel state:", err);
+  }
+}
+
+async function restoreModel3DPanelState(threadId) {
+  if (!Number.isInteger(Number(threadId))) return;
+
+  try {
+    const thread = await db.threads.get(threadId);
+    if (!thread?.model3dPanel) return;
+
+    const panel = document.getElementById('model3d-panel');
+    const btn = document.getElementById('toggle-model3d-panel-btn');
+    if (!panel) return;
+
+    const state = thread.model3dPanel;
+    const chatViewWidth = panel.parentElement?.clientWidth || 0;
+
+    if (state.visible && currentCharacter?.model3d?.data) {
+      if (state.chatViewWidth && Math.abs(state.chatViewWidth - chatViewWidth) > 100) {
+        return;
+      }
+
+      if (state.width && state.height) {
+        panel.style.width = state.width + 'px';
+        panel.style.height = state.height + 'px';
+      }
+
+      if (state.left !== undefined && state.top !== undefined) {
+        const maxLeft = chatViewWidth - panel.offsetWidth;
+        const maxTop = panel.parentElement?.clientHeight - panel.offsetHeight || 0;
+        panel.style.left = Math.max(0, Math.min(maxLeft, state.left)) + 'px';
+        panel.style.top = Math.max(0, Math.min(maxTop, state.top)) + 'px';
+      }
+
+      panel.classList.remove('hidden');
+      btn?.classList.add('is-active');
+
+      await loadModel3DFromCharacter(currentCharacter);
+
+      if (state.camera && window.restoreModel3DCameraState) {
+        window.restoreModel3DCameraState(state.camera);
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to restore model3d panel state:", err);
   }
 }
 
@@ -11452,6 +11544,7 @@ function initModel3DPanelDragResize() {
       model3dPanelState.isDragging = false;
       model3dPanelState.isResizing = false;
       document.body.style.cursor = '';
+      persistModel3DPanelState(currentThread?.id);
     }
   });
 }
@@ -13114,6 +13207,7 @@ async function openThread(threadId) {
   updateModelPill();
   hideModel3DPanel();
   updateModel3DToggleButton();
+  restoreModel3DPanelState(thread.id);
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
   for (const msg of conversationHistory) {

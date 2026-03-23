@@ -261,10 +261,46 @@ export function resizeModel3D(width, height) {
   model3dLoader.resize(width, height);
 }
 
+export function getModel3DCameraState() {
+  if (!model3dLoader.camera || !model3dLoader.controls) return null;
+  return {
+    position: {
+      x: model3dLoader.camera.position.x,
+      y: model3dLoader.camera.position.y,
+      z: model3dLoader.camera.position.z,
+    },
+    target: {
+      x: model3dLoader.controls.target.x,
+      y: model3dLoader.controls.target.y,
+      z: model3dLoader.controls.target.z,
+    },
+  };
+}
+
+export function restoreModel3DCameraState(cameraState) {
+  if (!model3dLoader.camera || !model3dLoader.controls || !cameraState) return;
+  if (cameraState.position) {
+    model3dLoader.camera.position.set(
+      cameraState.position.x,
+      cameraState.position.y,
+      cameraState.position.z,
+    );
+  }
+  if (cameraState.target) {
+    model3dLoader.controls.target.set(
+      cameraState.target.x,
+      cameraState.target.y,
+      cameraState.target.z,
+    );
+  }
+}
+
 window.loadModel3D = loadModel3D;
 window.setModel3DVisible = setModel3DVisible;
 window.disposeModel3D = disposeModel3D;
 window.resizeModel3D = resizeModel3D;
+window.getModel3DCameraState = getModel3DCameraState;
+window.restoreModel3DCameraState = restoreModel3DCameraState;
 
 window.addEventListener('resize', () => {
   const panel = document.getElementById('model3d-panel');

@@ -662,6 +662,12 @@ body {
   color: #d4f8df;
 }
 
+#toggle-model3d-panel-btn.is-active {
+  background: #2f4f6f;
+  border-color: #5a85c6;
+  color: #fff;
+}
+
 #stt-toggle-btn.stt-recording {
   background: #3a2222;
   border-color: #d44;
