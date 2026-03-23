@@ -11383,8 +11383,17 @@ function initModel3DPanelDragResize() {
       }
 
       if (model3dPanelState.hasMoved) {
-        const newLeft = model3dPanelState.startLeft + dx;
-        const newTop = model3dPanelState.startTop + dy;
+        const parent = panel.parentElement;
+        const parentRect = parent.getBoundingClientRect();
+        const panelWidth = panel.offsetWidth;
+        const panelHeight = panel.offsetHeight;
+
+        let newLeft = model3dPanelState.startLeft + dx;
+        let newTop = model3dPanelState.startTop + dy;
+
+        newLeft = Math.max(0, Math.min(parentRect.width - panelWidth, newLeft));
+        newTop = Math.max(0, Math.min(parentRect.height - panelHeight, newTop));
+
         panel.style.left = newLeft + 'px';
         panel.style.top = newTop + 'px';
       }
