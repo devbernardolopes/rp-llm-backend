@@ -5861,15 +5861,18 @@ function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn) {
   const MIN_BUTTON_WIDTH = 36;
   const BUTTON_GAP = 6;
   const BUTTON_PADDING = 20;
+  const parent = pagesContainer.parentElement;
+  if (!parent) return 3;
   const availableWidth =
-    pagesContainer.parentElement.clientWidth -
+    parent.clientWidth -
     prevBtn.offsetWidth -
     nextBtn.offsetWidth -
     BUTTON_GAP * 2;
+  if (availableWidth <= 0) return 3;
   const maxButtons = Math.floor(
     availableWidth / (MIN_BUTTON_WIDTH + BUTTON_PADDING),
   );
-  return Math.max(3, Math.min(maxButtons, 11));
+  return Math.max(3, maxButtons);
 }
 
 let paginationResizeObserver = null;

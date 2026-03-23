@@ -1021,14 +1021,17 @@ textarea {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .pagination-pages {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: nowrap;
-  overflow: hidden;
+  flex-wrap: wrap;
+  overflow: visible;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -1047,7 +1050,7 @@ textarea {
 }
 
 .pagination-pages .pagination-page-btn {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 36px;
   max-width: 60px;
 }
