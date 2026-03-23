@@ -83,8 +83,7 @@ const DEFAULT_SETTINGS = {
   defaultPersonaInjectionPlacement: "end_system_prompt",
   defaultTtsProvider: "kokoro",
   defaultTtsRate: 1,
-  autoTitleSystemPrompt:
-    "You create concise, descriptive chat thread titles.",
+  autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
 };
 
 // Theme management
@@ -2838,7 +2837,9 @@ async function setupSettingsControls() {
     "writing-instructions-injection-when",
   );
   const shortcutsRaw = document.getElementById("shortcuts-raw");
-  const autoTitleSystemPrompt = document.getElementById("auto-title-system-prompt");
+  const autoTitleSystemPrompt = document.getElementById(
+    "auto-title-system-prompt",
+  );
   const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
   markdownCheck.checked = !!state.settings.markdownEnabled;
   unreadSoundEnabled.checked = state.settings.unreadSoundEnabled !== false;
@@ -3106,14 +3107,22 @@ async function setupSettingsControls() {
   newCharacterShortcut.value =
     state.settings.newCharacterShortcut ||
     DEFAULT_SETTINGS.newCharacterShortcut;
-  const defaultPersonaInjectionPlacement = document.getElementById("default-persona-injection-placement");
+  const defaultPersonaInjectionPlacement = document.getElementById(
+    "default-persona-injection-placement",
+  );
   const defaultTtsProvider = document.getElementById("default-tts-provider");
   const defaultTtsRate = document.getElementById("default-tts-rate");
   const defaultTtsRateValue = document.getElementById("default-tts-rate-value");
-  defaultPersonaInjectionPlacement.value = state.settings.defaultPersonaInjectionPlacement || DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
-  defaultTtsProvider.value = state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
-  defaultTtsRate.value = String(state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate);
-  if (defaultTtsRateValue) defaultTtsRateValue.textContent = String(defaultTtsRate.value);
+  defaultPersonaInjectionPlacement.value =
+    state.settings.defaultPersonaInjectionPlacement ||
+    DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+  defaultTtsProvider.value =
+    state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+  defaultTtsRate.value = String(
+    state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate,
+  );
+  if (defaultTtsRateValue)
+    defaultTtsRateValue.textContent = String(defaultTtsRate.value);
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
   aiProviderSelect.value = state.settings.aiProvider || "openrouter";
@@ -3531,7 +3540,8 @@ async function setupSettingsControls() {
   });
   if (defaultPersonaInjectionPlacement) {
     defaultPersonaInjectionPlacement.addEventListener("change", () => {
-      state.settings.defaultPersonaInjectionPlacement = defaultPersonaInjectionPlacement.value;
+      state.settings.defaultPersonaInjectionPlacement =
+        defaultPersonaInjectionPlacement.value;
       saveSettings();
     });
   }
@@ -3738,7 +3748,14 @@ function setupSettingsTabsLayout() {
   const tabs = document.querySelectorAll("[data-settings-tab-btn]");
   if (!body || tabs.length === 0 || body.dataset.tabsReady === "1") return;
 
-  const groups = ["api", "appearance", "threads", "prompting", "shortcuts", "defaults"];
+  const groups = [
+    "api",
+    "appearance",
+    "threads",
+    "prompting",
+    "shortcuts",
+    "defaults",
+  ];
   const panels = new Map();
 
   // Use the form as container if available, otherwise body
@@ -5599,9 +5616,14 @@ function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn) {
   const MIN_BUTTON_WIDTH = 36;
   const BUTTON_GAP = 6;
   const BUTTON_PADDING = 20;
-  const availableWidth = pagesContainer.parentElement.clientWidth -
-    prevBtn.offsetWidth - nextBtn.offsetWidth - (BUTTON_GAP * 2);
-  const maxButtons = Math.floor(availableWidth / (MIN_BUTTON_WIDTH + BUTTON_PADDING));
+  const availableWidth =
+    pagesContainer.parentElement.clientWidth -
+    prevBtn.offsetWidth -
+    nextBtn.offsetWidth -
+    BUTTON_GAP * 2;
+  const maxButtons = Math.floor(
+    availableWidth / (MIN_BUTTON_WIDTH + BUTTON_PADDING),
+  );
   return Math.max(3, Math.min(maxButtons, 11));
 }
 
@@ -5614,7 +5636,10 @@ function initPaginationResizeObserver() {
   }
   paginationResizeObserver = new ResizeObserver(() => {
     if (state.characterTotalItems > 0) {
-      updateCharacterPaginationControls(state.characterTotalItems, state.characterTotalPages);
+      updateCharacterPaginationControls(
+        state.characterTotalItems,
+        state.characterTotalPages,
+      );
     }
   });
   paginationResizeObserver.observe(container);
@@ -6696,7 +6721,8 @@ function createEmptyCharacterDefinition(language = "en") {
     writingInstructionId: "none",
     initialMessagesRaw: "",
     initialMessages: [],
-    personaInjectionPlacement: state.settings.defaultPersonaInjectionPlacement || "end_system_prompt",
+    personaInjectionPlacement:
+      state.settings.defaultPersonaInjectionPlacement || "end_system_prompt",
     ttsVoice: DEFAULT_TTS_VOICE,
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
     ttsRate: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
@@ -6731,7 +6757,8 @@ function normalizeCharacterDefinitions(character = null) {
         ...createEmptyCharacterDefinition(d?.language || "en"),
         ...d,
         language: normalizeBotLanguageCode(d?.language || "en"),
-        ttsProvider: d?.ttsProvider || state.settings.defaultTtsProvider || "kokoro",
+        ttsProvider:
+          d?.ttsProvider || state.settings.defaultTtsProvider || "kokoro",
         kokoroDevice: d?.kokoroDevice || "webgpu",
         kokoroDtype: d?.kokoroDtype || "auto",
         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
@@ -6739,7 +6766,7 @@ function normalizeCharacterDefinitions(character = null) {
           ? Number(d.kokoroSpeed)
           : Number.isFinite(Number(d?.ttsRate))
             ? Number(d.ttsRate)
-            : (state.settings.defaultTtsRate || DEFAULT_TTS_RATE),
+            : state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
         preferLoreBooksMatchingLanguage:
           d?.preferLoreBooksMatchingLanguage !== false,
         lorebookIds: Array.isArray(d?.lorebookIds)
@@ -6772,16 +6799,19 @@ function normalizeCharacterDefinitions(character = null) {
     ? character.initialMessages
     : [];
   fallback.personaInjectionPlacement =
-    character?.personaInjectionPlacement || state.settings.defaultPersonaInjectionPlacement || "end_system_prompt";
+    character?.personaInjectionPlacement ||
+    state.settings.defaultPersonaInjectionPlacement ||
+    "end_system_prompt";
   fallback.ttsVoice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
   fallback.ttsLanguage = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   fallback.ttsRate = Number.isFinite(Number(character?.ttsRate))
     ? Number(character.ttsRate)
-    : (state.settings.defaultTtsRate || DEFAULT_TTS_RATE);
+    : state.settings.defaultTtsRate || DEFAULT_TTS_RATE;
   fallback.ttsPitch = Number.isFinite(Number(character?.ttsPitch))
     ? Number(character.ttsPitch)
     : 1.1;
-  fallback.ttsProvider = character?.ttsProvider || state.settings.defaultTtsProvider || "kokoro";
+  fallback.ttsProvider =
+    character?.ttsProvider || state.settings.defaultTtsProvider || "kokoro";
   fallback.kokoroDevice = character?.kokoroDevice || "webgpu";
   fallback.kokoroDtype = character?.kokoroDtype || "auto";
   fallback.kokoroVoice = String(character?.kokoroVoice || DEFAULT_KOKORO_VOICE);
@@ -6789,7 +6819,7 @@ function normalizeCharacterDefinitions(character = null) {
     ? Number(character.kokoroSpeed)
     : Number.isFinite(Number(character?.ttsRate))
       ? Number(character.ttsRate)
-      : (state.settings.defaultTtsRate || DEFAULT_TTS_RATE);
+      : state.settings.defaultTtsRate || DEFAULT_TTS_RATE;
   fallback.preferLoreBooksMatchingLanguage =
     character?.preferLoreBooksMatchingLanguage !== false;
   fallback.lorebookIds = Array.isArray(character?.lorebookIds)
@@ -7421,12 +7451,18 @@ async function saveCharacterFromModal({ close = true } = {}) {
     def.oneTimeExtraPrompt = String(def.oneTimeExtraPrompt || "").trim();
     def.writingInstructions = String(def.writingInstructions || "").trim();
     def.personaInjectionPlacement =
-      def.personaInjectionPlacement || state.settings.defaultPersonaInjectionPlacement || "end_system_prompt";
+      def.personaInjectionPlacement ||
+      state.settings.defaultPersonaInjectionPlacement ||
+      "end_system_prompt";
     def.ttsVoice = String(def.ttsVoice || DEFAULT_TTS_VOICE);
     def.ttsLanguage = String(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
     def.ttsRate = Math.max(
       0.5,
-      Math.min(2, Number(def.ttsRate) || (state.settings.defaultTtsRate ?? DEFAULT_TTS_RATE)),
+      Math.min(
+        2,
+        Number(def.ttsRate) ||
+          (state.settings.defaultTtsRate ?? DEFAULT_TTS_RATE),
+      ),
     );
     def.ttsPitch = Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1));
     def.preferLoreBooksMatchingLanguage =
@@ -7465,7 +7501,9 @@ async function saveCharacterFromModal({ close = true } = {}) {
     }
     const savedRaw = String(def.initialMessagesRaw || "");
     const filteredDrafts = drafts.filter((draft) => String(draft || "").trim());
-    setInitialMessageDrafts(def.language, filteredDrafts, { loadedRaw: savedRaw });
+    setInitialMessageDrafts(def.language, filteredDrafts, {
+      loadedRaw: savedRaw,
+    });
   }
   renderCharacterInitialMessagesList();
 
@@ -13189,7 +13227,8 @@ async function maybeGenerateTitleBeforeBotReply() {
 
   try {
     const result = await callOpenRouter(
-      state.settings.autoTitleSystemPrompt || DEFAULT_SETTINGS.autoTitleSystemPrompt,
+      state.settings.autoTitleSystemPrompt ||
+        DEFAULT_SETTINGS.autoTitleSystemPrompt,
       [{ role: "user", content: titlePrompt }],
       state.settings.model,
       null,
@@ -16900,9 +16939,7 @@ async function populateSettingsModels(options = {}) {
   try {
     if (provider === "aihorde") {
       if (force || state.hordeModelCatalog.length === 0) {
-        const remoteCatalog = await fetchAIHordeModelCatalog(
-          controller.signal,
-        );
+        const remoteCatalog = await fetchAIHordeModelCatalog(controller.signal);
         if (requestId !== state.modelLoad.requestId) return;
         state.hordeModelCatalog = remoteCatalog;
       }
@@ -17251,13 +17288,16 @@ async function fetchOpenRouterModelCatalog(signal) {
 }
 
 async function fetchAIHordeModelCatalog(signal) {
-  const res = await fetch("https://stablehorde.net/api/v2/status/models?type=text", {
-    method: "GET",
-    headers: {
-      "Client-Agent": "rp-llm-backend:1.0:0",
+  const res = await fetch(
+    "https://stablehorde.net/api/v2/status/models?type=text",
+    {
+      method: "GET",
+      headers: {
+        "Client-Agent": "rp-llm-backend:1.0:0",
+      },
+      signal,
     },
-    signal,
-  });
+  );
   if (!res.ok) {
     let errorMessage = `HTTP ${res.status}`;
     try {
@@ -17446,7 +17486,9 @@ function isLowContextRoleplayModel(model) {
 
 function updateProviderVisibility() {
   const provider = state.settings.aiProvider || "openrouter";
-  const openrouterContainer = document.getElementById("openrouter-api-key-container");
+  const openrouterContainer = document.getElementById(
+    "openrouter-api-key-container",
+  );
   const hordeContainer = document.getElementById("horde-api-key-container");
   if (openrouterContainer) {
     if (provider === "openrouter") {
@@ -18982,10 +19024,10 @@ async function callOpenRouter(
       : null;
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const summaryModel = "stepfun/step-3.5-flash:free";
-  // const summaryModel = "arcee-ai/trinity-large-preview:free";
-  // const titleModel = "arcee-ai/trinity-large-preview:free";
-  const titleModel = "stepfun/step-3.5-flash:free";
+  // const summaryModel = "stepfun/step-3.5-flash:free";
+  const summaryModel = "arcee-ai/trinity-large-preview:free";
+  const titleModel = "arcee-ai/trinity-large-preview:free";
+  // const titleModel = "stepfun/step-3.5-flash:free";
   const body = {
     model: isTitleGeneration
       ? titleModel
@@ -19122,7 +19164,7 @@ async function callAIHorde(
       headers: {
         "Content-Type": "application/json",
         "Client-Agent": "rp-llm-backend:1.0:0",
-        "apikey": hordeApiKey || "0000000000",
+        apikey: hordeApiKey || "0000000000",
       },
       body: JSON.stringify(hordeRequest),
       signal,
@@ -19130,7 +19172,9 @@ async function callAIHorde(
 
     if (!asyncRes.ok) {
       const errorText = await asyncRes.text();
-      throw new Error(`AI Horde request failed: ${asyncRes.status} - ${errorText}`);
+      throw new Error(
+        `AI Horde request failed: ${asyncRes.status} - ${errorText}`,
+      );
     }
 
     const asyncData = await asyncRes.json();
@@ -19140,7 +19184,12 @@ async function callAIHorde(
       throw new Error("No request ID returned from AI Horde");
     }
 
-    const result = await pollAIHordeResult(requestId, baseUrl, hordeApiKey, signal);
+    const result = await pollAIHordeResult(
+      requestId,
+      baseUrl,
+      hordeApiKey,
+      signal,
+    );
 
     const generatedText = result.generations?.[0]?.text || "";
     const usedModel = result.generations?.[0]?.model || hordeModel || "unknown";
@@ -19183,7 +19232,9 @@ async function callAIHorde(
     };
   } catch (err) {
     if (err?.name === "AbortError") throw err;
-    throw new Error(`AI Horde request failed: ${err?.message || "Unknown error"}`);
+    throw new Error(
+      `AI Horde request failed: ${err?.message || "Unknown error"}`,
+    );
   }
 }
 
@@ -19240,7 +19291,7 @@ async function pollAIHordeResult(requestId, baseUrl, apiKey, signal) {
       {
         headers: {
           "Client-Agent": "rp-llm-backend:1.0:0",
-          "apikey": apiKey || "0000000000",
+          apikey: apiKey || "0000000000",
         },
         signal,
       },
@@ -19257,7 +19308,9 @@ async function pollAIHordeResult(requestId, baseUrl, apiKey, signal) {
     }
 
     if (statusData.faulted === true) {
-      throw new Error(`AI Horde request faulted: ${statusData.errors?.join(", ") || "Unknown error"}`);
+      throw new Error(
+        `AI Horde request faulted: ${statusData.errors?.join(", ") || "Unknown error"}`,
+      );
     }
   }
 
