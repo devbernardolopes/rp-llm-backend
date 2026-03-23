@@ -11541,12 +11541,18 @@ async function importLorebookFromFile(e) {
 function applyCharacterSettingsDefaults(character) {
   if (!character) return;
   if (character.useMemory === undefined) character.useMemory = true;
-  if (character.usePostProcessing === undefined) character.usePostProcessing = true;
-  if (character.autoTriggerAiFirstMessage === undefined) character.autoTriggerAiFirstMessage = true;
-  if (character.autoTitleEnabled === undefined) character.autoTitleEnabled = true;
-  if (character.autoTitleMinMessages === undefined) character.autoTitleMinMessages = 10;
-  if (character.personaPrefixEnabled === undefined) character.personaPrefixEnabled = true;
-  if (character.includeOocInCompletions === undefined) character.includeOocInCompletions = false;
+  if (character.usePostProcessing === undefined)
+    character.usePostProcessing = true;
+  if (character.autoTriggerAiFirstMessage === undefined)
+    character.autoTriggerAiFirstMessage = true;
+  if (character.autoTitleEnabled === undefined)
+    character.autoTitleEnabled = true;
+  if (character.autoTitleMinMessages === undefined)
+    character.autoTitleMinMessages = 10;
+  if (character.personaPrefixEnabled === undefined)
+    character.personaPrefixEnabled = true;
+  if (character.includeOocInCompletions === undefined)
+    character.includeOocInCompletions = false;
   if (character.avatarScale === undefined) character.avatarScale = 4;
   if (character.loreCooldown === undefined) character.loreCooldown = 20;
 
@@ -11652,7 +11658,8 @@ async function importCharacterFromFile(e) {
         state.settings.defaultPersonaInjectionPlacement ||
         DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
       const defaultTtsProvider =
-        state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+        state.settings.defaultTtsProvider ||
+        DEFAULT_SETTINGS.defaultTtsProvider;
       const defaultTtsRate =
         state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
       character = {
@@ -19074,10 +19081,10 @@ async function callOpenRouter(
       : null;
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  // const summaryModel = "stepfun/step-3.5-flash:free";
-  const summaryModel = "arcee-ai/trinity-large-preview:free";
-  const titleModel = "arcee-ai/trinity-large-preview:free";
-  // const titleModel = "stepfun/step-3.5-flash:free";
+  // const summaryModel = "arcee-ai/trinity-large-preview:free";
+  // const titleModel = "arcee-ai/trinity-large-preview:free";
+  const summaryModel = "stepfun/step-3.5-flash:free";
+  const titleModel = "stepfun/step-3.5-flash:free";
   const body = {
     model: isTitleGeneration
       ? titleModel
