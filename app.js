@@ -11339,6 +11339,7 @@ function initModel3DPanelDragResize() {
 
   header.addEventListener('mousedown', (e) => {
     if (e.target.closest('button')) return;
+    e.preventDefault();
     model3dPanelState.isDragging = true;
     model3dPanelState.startX = e.clientX;
     model3dPanelState.startY = e.clientY;
@@ -11346,9 +11347,14 @@ function initModel3DPanelDragResize() {
     model3dPanelState.startLeft = rect.left;
     model3dPanelState.startTop = rect.top;
     document.body.style.cursor = 'move';
+    panel.style.left = model3dPanelState.startLeft + 'px';
+    panel.style.top = model3dPanelState.startTop + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
   });
 
   resizeHandle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
     model3dPanelState.isResizing = true;
     model3dPanelState.startX = e.clientX;
     model3dPanelState.startY = e.clientY;
@@ -11361,17 +11367,20 @@ function initModel3DPanelDragResize() {
 
   document.addEventListener('mousemove', (e) => {
     if (model3dPanelState.isDragging) {
+      e.preventDefault();
       const dx = e.clientX - model3dPanelState.startX;
       const dy = e.clientY - model3dPanelState.startY;
-      const newLeft = Math.max(0, model3dPanelState.startLeft + dx);
-      const newTop = Math.max(0, model3dPanelState.startTop + dy);
-      panel.style.left = newLeft + 'px';
+      const newLeft = model3dPanelState.startLeft + dx;
+      const newTop = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, model3dPanelState.startTop + dy));
+      const maxLeft = window.innerWidth - panel.offsetWidth;
+      panel.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + 'px';
       panel.style.top = newTop + 'px';
       panel.style.right = 'auto';
       panel.style.bottom = 'auto';
     }
 
     if (model3dPanelState.isResizing) {
+      e.preventDefault();
       const dx = e.clientX - model3dPanelState.startX;
       const dy = e.clientY - model3dPanelState.startY;
       const newWidth = Math.max(200, model3dPanelState.startWidth + dx);
@@ -13027,6 +13036,7 @@ async function openThread(threadId) {
   updateAutoTtsToggleButton();
   updateChatInputToggles();
   updateModelPill();
+  hideModel3DPanel();
   updateModel3DToggleButton();
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
