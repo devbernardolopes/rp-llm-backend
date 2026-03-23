@@ -21090,6 +21090,9 @@ function renderMessageHtml(content, role = "assistant") {
   if (role === "assistant" && currentCharacter?.usePostProcessing !== false) {
     raw = applyPostProcessingRules(raw);
   }
+  if (role === "assistant") {
+    raw = trimTrailingWhitespacePerLine(raw);
+  }
   if (!state.settings.markdownEnabled) {
     return state.settings.allowMessageHtml
       ? escapeHtml(raw).replace(/\n/g, "<br>")
@@ -21105,6 +21108,11 @@ function renderMessageHtml(content, role = "assistant") {
     return md.render(raw);
   }
   return markdownToHtml(raw);
+}
+
+function trimTrailingWhitespacePerLine(value) {
+  if (value == null) return "";
+  return String(value).replace(/[ \t]+$/gm, "");
 }
 
 function markdownToHtml(input) {
