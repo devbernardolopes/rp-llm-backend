@@ -682,7 +682,7 @@ function setupEvents() {
     const btn = document.getElementById("toggle-model3d-panel-btn");
     if (panel) {
       panel.classList.add("hidden");
-      btn?.classList.remove("is-active");
+      btn?.classList.add("is-active");
       persistModel3DPanelState(currentThread?.id, { visible: false });
       if (window.disposeModel3D) {
         window.disposeModel3D();
@@ -11301,7 +11301,7 @@ function toggleModel3DPanel() {
 
   const isHidden = panel.classList.contains('hidden');
   panel.classList.toggle('hidden');
-  btn?.classList.toggle('is-active', !isHidden);
+  btn?.classList.toggle('is-active', isHidden);
 
   if (isHidden) {
     if (currentCharacter?.model3d?.data) {
@@ -11321,7 +11321,7 @@ function showModel3DPanel() {
   const btn = document.getElementById('toggle-model3d-panel-btn');
   if (!panel) return;
   panel.classList.remove('hidden');
-  btn?.classList.add('is-active');
+  btn?.classList.remove('is-active');
   if (currentCharacter?.model3d) {
     loadModel3DFromCharacter(currentCharacter);
   }
@@ -11332,7 +11332,7 @@ function hideModel3DPanel() {
   const btn = document.getElementById('toggle-model3d-panel-btn');
   if (!panel) return;
   panel.classList.add('hidden');
-  btn?.classList.remove('is-active');
+  btn?.classList.add('is-active');
   if (window.disposeModel3D) {
     window.disposeModel3D();
   }
@@ -11403,7 +11403,7 @@ async function restoreModel3DPanelState(threadId) {
       }
 
       panel.classList.remove('hidden');
-      btn?.classList.add('is-active');
+      btn?.classList.remove('is-active');
 
       await loadModel3DFromCharacter(currentCharacter);
 

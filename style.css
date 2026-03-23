@@ -663,8 +663,9 @@ body {
 }
 
 #toggle-model3d-panel-btn.is-active {
-  background: #2f4f6f;
+  background: #3a5a8f;
   border-color: #5a85c6;
+  box-shadow: 0 0 8px rgba(90, 133, 198, 0.5);
   color: #fff;
 }
 
