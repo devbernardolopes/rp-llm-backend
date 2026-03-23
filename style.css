@@ -4663,10 +4663,35 @@ textarea {
 
 .model3d-resize-handle {
   position: absolute;
-  bottom: 0;
-  right: 0;
   width: 16px;
   height: 16px;
+  z-index: 10;
+}
+
+.model3d-resize-handle-se {
+  bottom: 0;
+  right: 0;
   cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--line) 50%);
+}
+
+.model3d-resize-handle-sw {
+  bottom: 0;
+  left: 0;
+  cursor: sw-resize;
+  background: linear-gradient(135deg, var(--line) 50%, transparent 50%);
+}
+
+.model3d-resize-handle-ne {
+  top: 0;
+  right: 0;
+  cursor: ne-resize;
+  background: linear-gradient(135deg, var(--line) 50%, transparent 50%);
+}
+
+.model3d-resize-handle-nw {
+  top: 0;
+  left: 0;
+  cursor: nw-resize;
   background: linear-gradient(135deg, transparent 50%, var(--line) 50%);
 }
