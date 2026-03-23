@@ -11,6 +11,7 @@ const CONFIG = {
       window.ENV &&
       window.ENV.HORDE_API_KEY) ||
     "",
+  lmstudioBaseUrl: "http://localhost:1234",
   model: "openrouter/free",
   maxTokens: 1024,
   temperature: 0.8,

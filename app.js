@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS = {
   aiProvider: "openrouter",
   openRouterApiKey: "",
   hordeApiKey: "",
+  lmstudioBaseUrl: "http://localhost:1234",
   model: "arcee-ai/trinity-large-preview:free",
   markdownEnabled: true,
   allowMessageHtml: false,
@@ -196,6 +197,7 @@ const state = {
   },
   modelCatalog: [],
   hordeModelCatalog: [],
+  lmstudioModelCatalog: [],
   modelLoad: {
     controller: null,
     requestId: 0,
@@ -2669,6 +2671,7 @@ async function setupSettingsControls() {
   const aiProviderSelect = document.getElementById("ai-provider-select");
   const openRouterApiKey = document.getElementById("openrouter-api-key");
   const hordeApiKey = document.getElementById("horde-api-key");
+  const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
   const modelSelect = document.getElementById("model-select");
   const modelPricingFilter = document.getElementById("model-pricing-filter");
   const modelModalityFilter = document.getElementById("model-modality-filter");
@@ -3125,6 +3128,7 @@ async function setupSettingsControls() {
     defaultTtsRateValue.textContent = String(defaultTtsRate.value);
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
+  lmstudioBaseUrl.value = state.settings.lmstudioBaseUrl || "http://localhost:1234";
   aiProviderSelect.value = state.settings.aiProvider || "openrouter";
   updateProviderVisibility();
   if (typeof window.updateTtsSupportUi === "function") {
@@ -3146,6 +3150,12 @@ async function setupSettingsControls() {
 
   hordeApiKey.addEventListener("input", () => {
     state.settings.hordeApiKey = hordeApiKey.value.trim();
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  lmstudioBaseUrl.addEventListener("input", () => {
+    state.settings.lmstudioBaseUrl = lmstudioBaseUrl.value.trim();
     saveSettings();
     populateSettingsModels({ force: true }).catch(() => {});
   });
@@ -3632,8 +3642,10 @@ function getSettingsGroupForNode(node) {
     has("#ai-provider-select") ||
     has("#openrouter-api-key") ||
     has("#horde-api-key") ||
+    has("#lmstudio-base-url") ||
     has("#openrouter-api-key-container") ||
     has("#horde-api-key-container") ||
+    has("#lmstudio-base-url-container") ||
     has("#model-select") ||
     has("#model-pricing-filter") ||
     has("#model-modality-filter") ||
@@ -17000,6 +17012,12 @@ async function populateSettingsModels(options = {}) {
         if (requestId !== state.modelLoad.requestId) return;
         state.hordeModelCatalog = remoteCatalog;
       }
+    } else if (provider === "lmstudio") {
+      if (force || state.lmstudioModelCatalog.length === 0) {
+        const remoteCatalog = await fetchLMStudioModelCatalog(controller.signal);
+        if (requestId !== state.modelLoad.requestId) return;
+        state.lmstudioModelCatalog = remoteCatalog;
+      }
     } else {
       if (force || state.modelCatalog.length === 0) {
         const remoteCatalog = await fetchOpenRouterModelCatalog(
@@ -17019,6 +17037,15 @@ async function populateSettingsModels(options = {}) {
       renderSettingsModelOptions();
       showToast(
         `Failed to load model list from AI Horde: ${err?.message || "using fallback list."}`,
+        "error",
+      );
+    } else if (provider === "lmstudio") {
+      if (state.lmstudioModelCatalog.length === 0) {
+        state.lmstudioModelCatalog = [];
+      }
+      renderSettingsModelOptions();
+      showToast(
+        `Failed to load model list from LM Studio: ${err?.message || "using empty list."}`,
         "error",
       );
     } else {
@@ -17051,6 +17078,8 @@ function renderSettingsModelOptions() {
       state.hordeModelCatalog.length > 0
         ? state.hordeModelCatalog
         : getHordeFallbackModelCatalog();
+  } else if (provider === "lmstudio") {
+    catalog = state.lmstudioModelCatalog || [];
   } else {
     catalog =
       state.modelCatalog.length > 0
@@ -17344,6 +17373,60 @@ async function fetchOpenRouterModelCatalog(signal) {
   return Array.from(byId.values());
 }
 
+async function fetchLMStudioModelCatalog(signal) {
+  const baseUrl = getLMStudioBaseUrl();
+  const res = await fetch(`${baseUrl}/v1/models`, {
+    method: "GET",
+    signal,
+  });
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const payload = await res.json();
+      const msg = String(payload?.error?.message || "").trim();
+      if (msg) errorMessage = `${errorMessage}: ${msg}`;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(errorMessage);
+  }
+
+  const payload = await res.json();
+  const models = Array.isArray(payload.data) ? payload.data : [];
+
+  const normalized = models
+    .map((model) => normalizeLMStudioModelItem(model))
+    .filter(Boolean);
+
+  return normalized;
+}
+
+function normalizeLMStudioModelItem(model) {
+  const id = String(model?.id || "").trim();
+  if (!id) return null;
+  const name = String(model?.id || "").trim();
+  return {
+    id: `lmstudio/${id}`,
+    name: name,
+    created: Number(model?.created) || 0,
+    modality: "text->text",
+    promptPrice: 0,
+    completionPrice: 0,
+    requestPrice: 0,
+    imagePrice: 0,
+    contextLength: Number(model?.context_length || 8192),
+    topContextLength: Number(model?.context_length || 8192),
+    maxCompletionTokens: Number(model?.max_completion_tokens || 4096),
+    isModerated: false,
+  };
+}
+
+function getLMStudioBaseUrl() {
+  const input = document.getElementById("lmstudio-base-url");
+  const defaultUrl = "http://localhost:1234";
+  return input?.value?.trim() || state.settings.lmstudioBaseUrl || defaultUrl;
+}
+
 async function fetchAIHordeModelCatalog(signal) {
   const res = await fetch(
     "https://stablehorde.net/api/v2/status/models?type=text",
@@ -17547,6 +17630,7 @@ function updateProviderVisibility() {
     "openrouter-api-key-container",
   );
   const hordeContainer = document.getElementById("horde-api-key-container");
+  const lmstudioContainer = document.getElementById("lmstudio-base-url-container");
   if (openrouterContainer) {
     if (provider === "openrouter") {
       openrouterContainer.classList.remove("hidden");
@@ -17559,6 +17643,13 @@ function updateProviderVisibility() {
       hordeContainer.classList.remove("hidden");
     } else {
       hordeContainer.classList.add("hidden");
+    }
+  }
+  if (lmstudioContainer) {
+    if (provider === "lmstudio") {
+      lmstudioContainer.classList.remove("hidden");
+    } else {
+      lmstudioContainer.classList.add("hidden");
     }
   }
 }
@@ -19048,6 +19139,10 @@ async function callOpenRouter(
     return callAIHorde(systemPrompt, history, model, onChunk, signal, options);
   }
 
+  if (provider === "lmstudio") {
+    return callLMStudio(systemPrompt, history, model, onChunk, signal, options);
+  }
+
   const resolvedModel = resolveModelForRequest(model);
   const fallbackModel = getFallbackModel(resolvedModel, model);
   const promptMessages = [
@@ -19142,6 +19237,187 @@ async function callOpenRouter(
       signal,
     );
     return { ...fallbackResponse, systemMessages };
+  }
+}
+
+async function callLMStudio(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const resolvedModel = resolveModelForRequest(model);
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    promptMessages,
+  );
+
+  const lmstudioModel = resolvedModel.startsWith("lmstudio/")
+    ? resolvedModel.slice(9)
+    : resolvedModel;
+
+  state.currentRequestMessages = promptMessages;
+
+  const baseUrl = getLMStudioBaseUrl();
+  const streamEnabled =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : !!state.settings.streamEnabled;
+
+  const body = {
+    model: lmstudioModel,
+    messages: promptMessages,
+    max_tokens: effectiveMaxTokens,
+    temperature: clampTemperature(state.settings.temperature),
+    top_p: Number(state.settings.topP) || 1,
+    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    stream: streamEnabled,
+  };
+
+  try {
+    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const payload = await response.json();
+        const msg = String(payload?.error?.message || "").trim();
+        if (msg) errorMessage = `${errorMessage}: ${msg}`;
+      } catch {
+        // ignore
+      }
+      throw new Error(errorMessage);
+    }
+
+    if (streamEnabled) {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("No response stream available");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let content = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
+          const data = trimmed.slice(6);
+          if (data === "[DONE]") {
+            return {
+              content,
+              model: lmstudioModel,
+              provider: "LM Studio",
+              completionMeta: null,
+              finishReason: "stop",
+              nativeFinishReason: "stop",
+              truncatedByFilter: false,
+              generationInfo: null,
+              systemMessages,
+            };
+          }
+
+          try {
+            const json = JSON.parse(data);
+            const delta = json?.choices?.[0]?.delta?.content || "";
+            content += delta;
+            if (typeof onChunk === "function") {
+              onChunk(delta);
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+      }
+
+      return {
+        content,
+        model: lmstudioModel,
+        provider: "LM Studio",
+        completionMeta: null,
+        finishReason: "stop",
+        nativeFinishReason: "stop",
+        truncatedByFilter: false,
+        generationInfo: null,
+        systemMessages,
+      };
+    } else {
+      const json = await response.json();
+      const content = json?.choices?.[0]?.message?.content || "";
+      const finishReason = json?.choices?.[0]?.finish_reason || "stop";
+      const usage = json?.usage || {};
+
+      if (typeof onChunk === "function") {
+        for (const char of content) {
+          onChunk(char);
+          await new Promise((r) => setTimeout(r, 5));
+        }
+      }
+
+      return {
+        content,
+        model: json?.model || lmstudioModel,
+        provider: "LM Studio",
+        completionMeta: {
+          id: json?.id || `lmstudio-${Date.now()}`,
+          created: Math.floor(Date.now() / 1000),
+          object: "chat.completion",
+          usage: {
+            prompt_tokens: usage?.prompt_tokens || 0,
+            completion_tokens: usage?.completion_tokens || 0,
+            total_tokens: usage?.total_tokens || 0,
+          },
+        },
+        finishReason,
+        nativeFinishReason: finishReason,
+        truncatedByFilter: false,
+        generationInfo: null,
+        systemMessages,
+      };
+    }
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(
+      `LM Studio request failed: ${err?.message || "Unknown error"}`,
+    );
   }
 }
 

@@ -688,6 +688,7 @@
               <select id="ai-provider-select">
                 <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
                 <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
+                <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
               </select>
             </div>
             <div class="form-field" id="openrouter-api-key-container">
@@ -706,6 +707,16 @@
                 id="horde-api-key"
                 type="password"
                 placeholder="0000000000 or your API key"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="form-field hidden" id="lmstudio-base-url-container">
+              <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span>
+              <input
+                id="lmstudio-base-url"
+                type="text"
+                placeholder="http://localhost:1234"
                 autocomplete="off"
                 spellcheck="false"
               />

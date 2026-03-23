@@ -587,5 +587,7 @@
   "aiHordeApiKey": "Chiave API AI Horde",
   "providerOpenRouter": "OpenRouter",
   "providerAIHorde": "AI Horde",
+  "providerLMStudio": "LM Studio",
+  "lmStudioBaseUrl": "LM Studio Base URL",
   "autoTitleSystemPrompt": "Prompt di Sistema Auto-Titolo"
 }
