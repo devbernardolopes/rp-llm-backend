@@ -19517,9 +19517,6 @@ async function callLMStudio(
           ? (state.settings.summaryTemperature ??
             DEFAULT_SETTINGS.summaryTemperature)
           : clampTemperature(state.settings.temperature),
-      top_p: Number(state.settings.topP) || 1,
-      frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
-      presence_penalty: Number(state.settings.presencePenalty) || 0,
       stream: streamEnabled,
     };
   } else {
