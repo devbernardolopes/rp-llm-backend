@@ -11330,6 +11330,8 @@ let model3dPanelState = {
   startLeft: 0,
   startTop: 0,
   hasMoved: false,
+  initialLeft: 0,
+  initialTop: 0,
 };
 
 function initModel3DPanelDragResize() {
@@ -11345,8 +11347,11 @@ function initModel3DPanelDragResize() {
     model3dPanelState.startX = e.clientX;
     model3dPanelState.startY = e.clientY;
     const rect = panel.getBoundingClientRect();
-    model3dPanelState.startLeft = rect.left;
-    model3dPanelState.startTop = rect.top;
+    const parentRect = panel.parentElement.getBoundingClientRect();
+    model3dPanelState.startLeft = rect.left - parentRect.left;
+    model3dPanelState.startTop = rect.top - parentRect.top;
+    model3dPanelState.initialLeft = model3dPanelState.startLeft;
+    model3dPanelState.initialTop = model3dPanelState.startTop;
     model3dPanelState.hasMoved = false;
     document.body.style.cursor = 'move';
   });
@@ -11379,9 +11384,8 @@ function initModel3DPanelDragResize() {
 
       if (model3dPanelState.hasMoved) {
         const newLeft = model3dPanelState.startLeft + dx;
-        const newTop = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, model3dPanelState.startTop + dy));
-        const maxLeft = window.innerWidth - panel.offsetWidth;
-        panel.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + 'px';
+        const newTop = model3dPanelState.startTop + dy;
+        panel.style.left = newLeft + 'px';
         panel.style.top = newTop + 'px';
       }
     }
