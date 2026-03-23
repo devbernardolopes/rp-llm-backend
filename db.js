@@ -407,3 +407,24 @@ db.version(22)
       }
     });
   });
+
+db.version(23)
+  .stores({
+    characters: "++id, name, pinned",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories: "++id, characterId, summary, createdAt, slotNumber, levelNumber, summarySystemContent, summaryUserContent, embedding",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+    themes: "id, name, isBuiltIn, createdAt",
+  })
+  .upgrade(async (tx) => {
+    const chars = tx.table("characters");
+    await chars.toCollection().modify((char) => {
+      if (!Object.prototype.hasOwnProperty.call(char, "model3d")) {
+        char.model3d = null;
+      }
+    });
+  });

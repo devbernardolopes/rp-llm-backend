@@ -200,6 +200,7 @@ const state = {
     "text-input-modal": false,
   },
   charModalTtsTestPlaying: false,
+  charModalCache: {},
   imagePreview: {
     scale: 1,
     minScale: 0.2,
@@ -410,6 +411,7 @@ async function init() {
   await setupSettingsControls();
   setupEvents();
   setupMemoryRegenerationControls();
+  initModel3DPanelDragResize();
   if (window.initBrowserTtsSupport) window.initBrowserTtsSupport();
   updateModelPill();
   await migrateLegacySessions();
@@ -629,6 +631,11 @@ function setupEvents() {
     renderCharacterDefinitionTabs();
     renderSfxList();
   });
+  document.getElementById("char-model3d-tab-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    setCharacterModalTab("model3d");
+    renderCharacterDefinitionTabs();
+  });
   document.getElementById("char-add-lang-btn").addEventListener("click", () => {
     saveActiveCharacterDefinitionFromForm();
     populateCharacterLanguageSelectOptions();
@@ -639,6 +646,44 @@ function setupEvents() {
   document.getElementById("add-sfx-btn").addEventListener("click", () => {
     saveActiveCharacterDefinitionFromForm();
     openAssetSelectorForSfx();
+  });
+  document.getElementById("add-model3d-btn").addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".vrm,.glb,.gltf";
+    input.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleModel3DUpload(file);
+      }
+    };
+    input.click();
+  });
+  document.getElementById("remove-model3d-btn")?.addEventListener("click", () => {
+    removeModel3D();
+  });
+  document.getElementById("model3d-toggle-visibility-btn")?.addEventListener("click", () => {
+    if (window.setModel3DVisible) {
+      const panel = document.getElementById("model3d-panel");
+      const btn = document.getElementById("model3d-toggle-visibility-btn");
+      if (panel && btn) {
+        const isVisible = !panel.dataset.hidden === true;
+        window.setModel3DVisible(!isVisible);
+        panel.dataset.hidden = isVisible;
+        btn.innerHTML = isVisible
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+      }
+    }
+  });
+  document.getElementById("model3d-close-btn")?.addEventListener("click", () => {
+    const panel = document.getElementById("model3d-panel");
+    if (panel) {
+      panel.classList.add("hidden");
+    }
+  });
+  document.getElementById("toggle-model3d-panel-btn")?.addEventListener("click", () => {
+    toggleModel3DPanel();
   });
   document
     .getElementById("char-writing-instructions-select")
@@ -7063,12 +7108,15 @@ function setCharacterModalTab(tab = "lang") {
         ? "tags"
         : tab === "sfx"
           ? "sfx"
-          : "lang";
+          : tab === "model3d"
+            ? "model3d"
+            : "lang";
   state.charModalActiveTab = normalized;
   const showLang = normalized === "lang";
   const showConfig = normalized === "config";
   const showTags = normalized === "tags";
   const showSfx = normalized === "sfx";
+  const showModel3d = normalized === "model3d";
   document
     .querySelectorAll(".lang-field")
     .forEach((el) => el.classList.toggle("hidden", !showLang));
@@ -7081,12 +7129,17 @@ function setCharacterModalTab(tab = "lang") {
   document
     .querySelectorAll(".sfx-field")
     .forEach((el) => el.classList.toggle("hidden", !showSfx));
+  document
+    .querySelectorAll(".model3d-field")
+    .forEach((el) => el.classList.toggle("hidden", !showModel3d));
   const configBtn = document.getElementById("char-config-tab-btn");
   if (configBtn) configBtn.classList.toggle("active", showConfig);
   const tagsBtn = document.getElementById("char-tags-tab-btn");
   if (tagsBtn) tagsBtn.classList.toggle("active", showTags);
   const sfxBtn = document.getElementById("char-sfx-tab-btn");
   if (sfxBtn) sfxBtn.classList.toggle("active", showSfx);
+  const model3dBtn = document.getElementById("char-model3d-tab-btn");
+  if (model3dBtn) model3dBtn.classList.toggle("active", showModel3d);
   document
     .querySelectorAll(".initial-messages-hint")
     .forEach((el) => el.classList.toggle("hidden", showLang));
@@ -7537,12 +7590,14 @@ async function openCharacterModal(
   state.editingCharacterId = character?.id || null;
   if (character?.id) {
     state.charModalDraftNamespace = `char-${character.id}`;
+    state.charModalCache[character.id] = { ...character };
   } else {
     state.nextCharModalDraftNamespace =
       Number(state.nextCharModalDraftNamespace || 0) + 1;
     state.charModalDraftNamespace = `new-${state.nextCharModalDraftNamespace}`;
   }
   setupKokoroDownloadCancel();
+  renderModel3DPreview();
 
   const hasAvatars =
     character?.avatars &&
@@ -11121,6 +11176,207 @@ async function saveSfxEntryFromEditor() {
   return await saveSfxEntry({ close: true });
 }
 
+function renderModel3DPreview() {
+  const preview = document.getElementById('char-model3d-preview');
+  const info = document.getElementById('char-model3d-info');
+  const nameEl = document.getElementById('char-model3d-name');
+  if (!preview || !info || !nameEl) return;
+
+  const char = state.editingCharacterId
+    ? state.charModalCache?.[state.editingCharacterId]
+    : null;
+  const model3d = char?.model3d;
+
+  if (!model3d) {
+    preview.classList.remove('hidden');
+    info.classList.add('hidden');
+  } else {
+    preview.classList.add('hidden');
+    info.classList.remove('hidden');
+    nameEl.textContent = model3d.name || '3D Model';
+  }
+}
+
+function updateModel3DToggleButton() {
+  const btn = document.getElementById('toggle-model3d-panel-btn');
+  if (!btn) return;
+
+  const hasModel = currentCharacter?.model3d?.data;
+  btn.classList.toggle('hidden', !hasModel);
+}
+
+async function handleModel3DUpload(file) {
+  if (!file) return;
+
+  const validTypes = ['.vrm', '.glb', '.gltf'];
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!validTypes.includes(ext)) {
+    await openInfoDialog(
+      t('error'),
+      tf('unsupportedFileType', { types: validTypes.join(', ') }),
+    );
+    return;
+  }
+
+  const model3d = {
+    name: file.name,
+    type: ext.slice(1),
+    size: file.size,
+  };
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    model3d.data = e.target.result;
+
+    let char = state.editingCharacterId
+      ? state.charModalCache?.[state.editingCharacterId]
+      : null;
+    if (!char) {
+      char = {
+        id: state.editingCharacterId ? Number(state.editingCharacterId) : undefined,
+        model3d: null,
+      };
+    }
+    char.model3d = model3d;
+
+    setModalDirtyState('character-modal', true);
+    renderModel3DPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeModel3D() {
+  let char = state.editingCharacterId
+    ? state.charModalCache?.[state.editingCharacterId]
+    : null;
+  if (!char) return;
+
+  char.model3d = null;
+  setModalDirtyState('character-modal', true);
+  renderModel3DPreview();
+}
+
+function toggleModel3DPanel() {
+  const panel = document.getElementById('model3d-panel');
+  if (!panel) return;
+
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) {
+    if (currentCharacter?.model3d) {
+      loadModel3DFromCharacter(currentCharacter);
+    }
+  }
+}
+
+function showModel3DPanel() {
+  const panel = document.getElementById('model3d-panel');
+  if (!panel) return;
+  panel.classList.remove('hidden');
+  if (currentCharacter?.model3d) {
+    loadModel3DFromCharacter(currentCharacter);
+  }
+}
+
+function hideModel3DPanel() {
+  const panel = document.getElementById('model3d-panel');
+  if (!panel) return;
+  panel.classList.add('hidden');
+}
+
+async function loadModel3DFromCharacter(character) {
+  if (!character?.model3d?.data) return;
+
+  try {
+    const base64 = character.model3d.data;
+    const binary = atob(base64.split(',')[1]);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'model/gltf-binary' });
+
+    await window.loadModel3D(blob);
+  } catch (error) {
+    console.error('Failed to load 3D model:', error);
+    await openInfoDialog(t('error'), t('failedToLoadModel3d'));
+  }
+}
+
+let model3dPanelState = {
+  isDragging: false,
+  isResizing: false,
+  startX: 0,
+  startY: 0,
+  startWidth: 0,
+  startHeight: 0,
+  startLeft: 0,
+  startTop: 0,
+};
+
+function initModel3DPanelDragResize() {
+  const panel = document.getElementById('model3d-panel');
+  const header = document.getElementById('model3d-panel-header');
+  const resizeHandle = document.getElementById('model3d-resize-handle');
+  if (!panel || !header || !resizeHandle) return;
+
+  header.addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) return;
+    model3dPanelState.isDragging = true;
+    model3dPanelState.startX = e.clientX;
+    model3dPanelState.startY = e.clientY;
+    const rect = panel.getBoundingClientRect();
+    model3dPanelState.startLeft = rect.left;
+    model3dPanelState.startTop = rect.top;
+    document.body.style.cursor = 'move';
+  });
+
+  resizeHandle.addEventListener('mousedown', (e) => {
+    model3dPanelState.isResizing = true;
+    model3dPanelState.startX = e.clientX;
+    model3dPanelState.startY = e.clientY;
+    const rect = panel.getBoundingClientRect();
+    model3dPanelState.startWidth = rect.width;
+    model3dPanelState.startHeight = rect.height;
+    document.body.style.cursor = 'se-resize';
+    e.stopPropagation();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (model3dPanelState.isDragging) {
+      const dx = e.clientX - model3dPanelState.startX;
+      const dy = e.clientY - model3dPanelState.startY;
+      const newLeft = Math.max(0, model3dPanelState.startLeft + dx);
+      const newTop = Math.max(0, model3dPanelState.startTop + dy);
+      panel.style.left = newLeft + 'px';
+      panel.style.top = newTop + 'px';
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+    }
+
+    if (model3dPanelState.isResizing) {
+      const dx = e.clientX - model3dPanelState.startX;
+      const dy = e.clientY - model3dPanelState.startY;
+      const newWidth = Math.max(200, model3dPanelState.startWidth + dx);
+      const newHeight = Math.max(200, model3dPanelState.startHeight + dy);
+      panel.style.width = newWidth + 'px';
+      panel.style.height = newHeight + 'px';
+
+      const container = document.getElementById('model3d-canvas-container');
+      if (container) {
+        window.resizeModel3D(container.clientWidth, container.clientHeight);
+      }
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (model3dPanelState.isDragging || model3dPanelState.isResizing) {
+      model3dPanelState.isDragging = false;
+      model3dPanelState.isResizing = false;
+      document.body.style.cursor = '';
+    }
+  });
+}
+
 function getThreadWritingInstructionsTurnCount(thread = currentThread) {
   const raw = Number(thread?.writingInstructionsTurnCount);
   if (Number.isInteger(raw) && raw >= 0) return raw;
@@ -12753,6 +13009,7 @@ async function openThread(threadId) {
   updateAutoTtsToggleButton();
   updateChatInputToggles();
   updateModelPill();
+  updateModel3DToggleButton();
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
 
   for (const msg of conversationHistory) {

@@ -604,5 +604,16 @@
   "sectionHeaderCharacterPrompt": "Character Prompt Überschrift",
   "sectionHeaderMessagesSoFar": "Messages So Far Überschrift",
   "sectionHeaderMessages": "Messages Überschrift",
-  "sectionHeaderMemoryLevelContext": "Memory Level Context Überschrift"
+  "sectionHeaderMemoryLevelContext": "Memory Level Context Überschrift",
+  "model3dTab": "3D",
+  "addModel3d": "+ 3D-Modell hinzufügen",
+  "noModel3dSelected": "Kein 3D-Modell ausgewählt. Klicke auf '3D-Modell hinzufügen', um eine VRM-Datei hochzuladen.",
+  "removeModel3d": "3D-Modell entfernen",
+  "model3dPanelTitle": "3D-Modell",
+  "toggleModel3dPanel": "3D-Modell umschalten",
+  "toggleModel3dVisibility": "Modell anzeigen/ausblenden",
+  "closeModel3dPanel": "Panel schließen",
+  "loadingModel3d": "Modell wird geladen...",
+  "failedToLoadModel3d": "3D-Modell konnte nicht geladen werden.",
+  "unsupportedFileType": "Nicht unterstützter Dateityp. Verwende {types} Dateien."
 }

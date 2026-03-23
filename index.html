@@ -25,6 +25,15 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+        "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="app-shell">
@@ -279,6 +288,20 @@
       <section id="chat-view" class="view">
         <header class="chat-header">
           <div id="chat-title">Thread</div>
+          <button
+            id="toggle-model3d-panel-btn"
+            class="icon-btn small"
+            type="button"
+            data-i18n-title="toggleModel3dPanel"
+            title="Toggle 3D Model"
+            style="margin-left: auto;"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </button>
         </header>
 
         <div
@@ -317,6 +340,30 @@
         </div>
 
         <div id="chat-log" class="chat-log"></div>
+
+        <div id="model3d-panel" class="model3d-panel hidden">
+          <div id="model3d-panel-header" class="model3d-panel-header">
+            <span data-i18n="model3dPanelTitle">3D Model</span>
+            <div class="model3d-panel-controls">
+              <button id="model3d-toggle-visibility-btn" class="icon-btn small" type="button" data-i18n-title="toggleModel3dVisibility" title="Show/Hide">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+              <button id="model3d-close-btn" class="icon-btn small danger-icon-btn" type="button" data-i18n-title="closeModel3dPanel" title="Close">
+                &times;
+              </button>
+            </div>
+          </div>
+          <div id="model3d-canvas-container" class="model3d-canvas-container">
+            <canvas id="model3d-canvas"></canvas>
+            <div id="model3d-loading" class="model3d-loading hidden">
+              <span data-i18n="loadingModel3d">Loading model...</span>
+            </div>
+          </div>
+          <div id="model3d-resize-handle" class="model3d-resize-handle"></div>
+        </div>
         <button
           id="scroll-bottom-btn"
           class="icon-btn hidden"
@@ -2063,6 +2110,14 @@
             >
               Tags
             </button>
+            <button
+              id="char-model3d-tab-btn"
+              class="settings-tab-btn"
+              type="button"
+              data-i18n="model3dTab"
+            >
+              3D
+            </button>
             <span class="char-def-tabs-divider"></span>
             <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
             <button
@@ -2383,6 +2438,33 @@
                </button>
              </div>
              <div id="char-sfx-list" class="asset-list"></div>
+           </div>
+           <div class="full model3d-field hidden">
+             <div class="model3d-toolbar">
+               <button
+                 id="add-model3d-btn"
+                 class="primary-btn"
+                 type="button"
+                 data-i18n="addModel3d"
+               >
+                 + Add 3D Model
+               </button>
+             </div>
+             <div id="char-model3d-preview" class="model3d-preview">
+               <span class="muted" data-i18n="noModel3dSelected">No 3D model selected</span>
+             </div>
+             <div id="char-model3d-info" class="model3d-info hidden">
+               <span id="char-model3d-name" class="model3d-name"></span>
+               <button
+                 id="remove-model3d-btn"
+                 class="icon-btn danger-icon-btn"
+                 type="button"
+                 data-i18n-title="removeModel3d"
+                 title="Remove 3D model"
+               >
+                 &times;
+               </button>
+             </div>
            </div>
         </div>
         <div class="modal-footer">
@@ -3056,6 +3138,7 @@
     <script src="stt/whisper.js"></script>
     <script src="tts/kokoro.js"></script>
     <script type="module" src="tts/index.js"></script>
+    <script type="module" src="three-vrm-loader.js"></script>
   </body>
 <style>
 #assets-modal .modal-body {

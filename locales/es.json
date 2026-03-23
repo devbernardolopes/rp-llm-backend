@@ -604,5 +604,16 @@
   "sectionHeaderCharacterPrompt": "Encabezado Character Prompt",
   "sectionHeaderMessagesSoFar": "Encabezado Messages So Far",
   "sectionHeaderMessages": "Encabezado Messages",
-  "sectionHeaderMemoryLevelContext": "Encabezado Memory Level Context"
+  "sectionHeaderMemoryLevelContext": "Encabezado Memory Level Context",
+  "model3dTab": "3D",
+  "addModel3d": "+ Agregar Modelo 3D",
+  "noModel3dSelected": "No hay modelo 3D seleccionado. Haz clic en 'Agregar Modelo 3D' para cargar un archivo VRM.",
+  "removeModel3d": "Eliminar modelo 3D",
+  "model3dPanelTitle": "Modelo 3D",
+  "toggleModel3dPanel": "Alternar Modelo 3D",
+  "toggleModel3dVisibility": "Mostrar/Ocultar modelo",
+  "closeModel3dPanel": "Cerrar panel",
+  "loadingModel3d": "Cargando modelo...",
+  "failedToLoadModel3d": "Error al cargar el modelo 3D.",
+  "unsupportedFileType": "Tipo de archivo no compatible. Usa archivos {types}."
 }

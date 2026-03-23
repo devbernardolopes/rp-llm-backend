@@ -604,5 +604,16 @@
   "sectionHeaderCharacterPrompt": "Cabecalho Character Prompt",
   "sectionHeaderMessagesSoFar": "Cabecalho Messages So Far",
   "sectionHeaderMessages": "Cabecalho Messages",
-  "sectionHeaderMemoryLevelContext": "Cabecalho Memory Level Context"
+  "sectionHeaderMemoryLevelContext": "Cabecalho Memory Level Context",
+  "model3dTab": "3D",
+  "addModel3d": "+ Adicionar Modelo 3D",
+  "noModel3dSelected": "Nenhum modelo 3D selecionado. Clique em 'Adicionar Modelo 3D' para carregar um arquivo VRM.",
+  "removeModel3d": "Remover modelo 3D",
+  "model3dPanelTitle": "Modelo 3D",
+  "toggleModel3dPanel": "Alternar Modelo 3D",
+  "toggleModel3dVisibility": "Mostrar/Ocultar modelo",
+  "closeModel3dPanel": "Fechar painel",
+  "loadingModel3d": "Carregando modelo...",
+  "failedToLoadModel3d": "Falha ao carregar modelo 3D.",
+  "unsupportedFileType": "Tipo de arquivo nao suportado. Use arquivos {types}."
 }

@@ -604,5 +604,16 @@
   "sectionHeaderCharacterPrompt": "En-tete Character Prompt",
   "sectionHeaderMessagesSoFar": "En-tete Messages So Far",
   "sectionHeaderMessages": "En-tete Messages",
-  "sectionHeaderMemoryLevelContext": "En-tete Memory Level Context"
+  "sectionHeaderMemoryLevelContext": "En-tete Memory Level Context",
+  "model3dTab": "3D",
+  "addModel3d": "+ Ajouter Modele 3D",
+  "noModel3dSelected": "Aucun modele 3D selectionne. Cliquez sur 'Ajouter Modele 3D' pour charger un fichier VRM.",
+  "removeModel3d": "Supprimer le modele 3D",
+  "model3dPanelTitle": "Modele 3D",
+  "toggleModel3dPanel": "Basculer Modele 3D",
+  "toggleModel3dVisibility": "Afficher/Masquer le modele",
+  "closeModel3dPanel": "Fermer le panneau",
+  "loadingModel3d": "Chargement du modele...",
+  "failedToLoadModel3d": "Echec du chargement du modele 3D.",
+  "unsupportedFileType": "Type de fichier non pris en charge. Utilisez des fichiers {types}."
 }

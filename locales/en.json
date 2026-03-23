@@ -605,5 +605,16 @@
   "sectionHeaderCharacterPrompt": "Character Prompt Header",
   "sectionHeaderMessagesSoFar": "Messages So Far Header",
   "sectionHeaderMessages": "Messages Header",
-  "sectionHeaderMemoryLevelContext": "Memory Level Context Header"
+  "sectionHeaderMemoryLevelContext": "Memory Level Context Header",
+  "model3dTab": "3D",
+  "addModel3d": "+ Add 3D Model",
+  "noModel3dSelected": "No 3D model selected. Click 'Add 3D Model' to upload a VRM file.",
+  "removeModel3d": "Remove 3D model",
+  "model3dPanelTitle": "3D Model",
+  "toggleModel3dPanel": "Toggle 3D Model",
+  "toggleModel3dVisibility": "Show/Hide model",
+  "closeModel3dPanel": "Close panel",
+  "loadingModel3d": "Loading model...",
+  "failedToLoadModel3d": "Failed to load 3D model.",
+  "unsupportedFileType": "Unsupported file type. Please use {types} files."
 }
