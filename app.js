@@ -7887,6 +7887,13 @@ async function saveCharacterFromModal({ close = true } = {}) {
         personaId: null,
       };
       renderChat();
+      updateModel3DToggleButton();
+      const panel = document.getElementById('model3d-panel');
+      if (!currentCharacter?.model3d?.data) {
+        hideModel3DPanel();
+      } else if (panel && !panel.classList.contains('hidden')) {
+        loadModel3DFromCharacter(currentCharacter);
+      }
     }
     showToast(t("characterUpdated"), "success");
   } else {
