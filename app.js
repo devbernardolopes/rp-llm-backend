@@ -6543,6 +6543,7 @@ function togglePane() {
     );
   }
   updateCarouselForPaneState();
+  setTimeout(constrainModel3DPanelPosition, 250);
 }
 
 function showMainView() {
@@ -11423,6 +11424,30 @@ function initModel3DPanelDragResize() {
     }
   });
 }
+
+function constrainModel3DPanelPosition() {
+  const panel = document.getElementById('model3d-panel');
+  if (!panel || panel.classList.contains('hidden')) return;
+
+  const parent = panel.parentElement;
+  if (!parent) return;
+
+  const parentWidth = parent.clientWidth;
+  const parentHeight = parent.clientHeight;
+  const panelWidth = panel.offsetWidth;
+  const panelHeight = panel.offsetHeight;
+
+  let left = parseFloat(panel.style.left) || 0;
+  let top = parseFloat(panel.style.top) || 0;
+
+  left = Math.max(0, Math.min(parentWidth - panelWidth, left));
+  top = Math.max(0, Math.min(parentHeight - panelHeight, top));
+
+  panel.style.left = left + 'px';
+  panel.style.top = top + 'px';
+}
+
+window.addEventListener('resize', constrainModel3DPanelPosition);
 
 function getThreadWritingInstructionsTurnCount(thread = currentThread) {
   const raw = Number(thread?.writingInstructionsTurnCount);
