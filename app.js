@@ -201,6 +201,7 @@ const state = {
   },
   charModalTtsTestPlaying: false,
   charModalCache: {},
+  charModalModel3d: null,
   imagePreview: {
     scale: 1,
     minScale: 0.2,
@@ -6756,6 +6757,8 @@ async function closeActiveModal() {
     }
     saveCharModalTextareaCollapseStates();
     state.charModalPendingThreadDeleteIds = [];
+    state.charModalModel3d = null;
+    state.charModalCache = {};
   }
   state.activeModalId = null;
   setModalDirtyState(closingId, false);
@@ -7597,6 +7600,7 @@ async function openCharacterModal(
     state.charModalDraftNamespace = `new-${state.nextCharModalDraftNamespace}`;
   }
   setupKokoroDownloadCancel();
+  state.charModalModel3d = character?.model3d || null;
   renderModel3DPreview();
 
   const hasAvatars =
@@ -7845,6 +7849,9 @@ async function saveCharacterFromModal({ close = true } = {}) {
       state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
     avatars:
       state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [],
+    model3d: state.charModalModel3d ||
+      (state.editingCharacterId ? state.charModalCache?.[state.editingCharacterId]?.model3d : null) ||
+      null,
     updatedAt: Date.now(),
   };
 
@@ -11182,10 +11189,8 @@ function renderModel3DPreview() {
   const nameEl = document.getElementById('char-model3d-name');
   if (!preview || !info || !nameEl) return;
 
-  const char = state.editingCharacterId
-    ? state.charModalCache?.[state.editingCharacterId]
-    : null;
-  const model3d = char?.model3d;
+  const model3d = state.charModalModel3d ||
+    (state.editingCharacterId ? state.charModalCache?.[state.editingCharacterId]?.model3d : null);
 
   if (!model3d) {
     preview.classList.remove('hidden');
@@ -11227,17 +11232,14 @@ async function handleModel3DUpload(file) {
   const reader = new FileReader();
   reader.onload = async (e) => {
     model3d.data = e.target.result;
+    state.charModalModel3d = model3d;
 
-    let char = state.editingCharacterId
-      ? state.charModalCache?.[state.editingCharacterId]
-      : null;
-    if (!char) {
-      char = {
-        id: state.editingCharacterId ? Number(state.editingCharacterId) : undefined,
-        model3d: null,
-      };
+    if (state.editingCharacterId) {
+      if (!state.charModalCache[state.editingCharacterId]) {
+        state.charModalCache[state.editingCharacterId] = {};
+      }
+      state.charModalCache[state.editingCharacterId].model3d = model3d;
     }
-    char.model3d = model3d;
 
     setModalDirtyState('character-modal', true);
     renderModel3DPreview();
@@ -11246,12 +11248,10 @@ async function handleModel3DUpload(file) {
 }
 
 function removeModel3D() {
-  let char = state.editingCharacterId
-    ? state.charModalCache?.[state.editingCharacterId]
-    : null;
-  if (!char) return;
-
-  char.model3d = null;
+  state.charModalModel3d = null;
+  if (state.editingCharacterId && state.charModalCache[state.editingCharacterId]) {
+    state.charModalCache[state.editingCharacterId].model3d = null;
+  }
   setModalDirtyState('character-modal', true);
   renderModel3DPreview();
 }
@@ -11260,10 +11260,16 @@ function toggleModel3DPanel() {
   const panel = document.getElementById('model3d-panel');
   if (!panel) return;
 
+  const isHidden = panel.classList.contains('hidden');
   panel.classList.toggle('hidden');
-  if (!panel.classList.contains('hidden')) {
-    if (currentCharacter?.model3d) {
+
+  if (isHidden) {
+    if (currentCharacter?.model3d?.data) {
       loadModel3DFromCharacter(currentCharacter);
+    }
+  } else {
+    if (window.disposeModel3D) {
+      window.disposeModel3D();
     }
   }
 }
@@ -11281,6 +11287,9 @@ function hideModel3DPanel() {
   const panel = document.getElementById('model3d-panel');
   if (!panel) return;
   panel.classList.add('hidden');
+  if (window.disposeModel3D) {
+    window.disposeModel3D();
+  }
 }
 
 async function loadModel3DFromCharacter(character) {
@@ -11288,12 +11297,21 @@ async function loadModel3DFromCharacter(character) {
 
   try {
     const base64 = character.model3d.data;
-    const binary = atob(base64.split(',')[1]);
+    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+    const binary = atob(base64Data);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
     }
-    const blob = new Blob([bytes], { type: 'model/gltf-binary' });
+
+    let mimeType = 'application/octet-stream';
+    if (character.model3d.type === 'glb') {
+      mimeType = 'model/gltf-binary';
+    } else if (character.model3d.type === 'gltf') {
+      mimeType = 'model/gltf+json';
+    }
+
+    const blob = new Blob([bytes], { type: mimeType });
 
     await window.loadModel3D(blob);
   } catch (error) {

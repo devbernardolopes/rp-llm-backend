@@ -250,6 +250,11 @@ export function resizeModel3D(width, height) {
   model3dLoader.resize(width, height);
 }
 
+window.loadModel3D = loadModel3D;
+window.setModel3DVisible = setModel3DVisible;
+window.disposeModel3D = disposeModel3D;
+window.resizeModel3D = resizeModel3D;
+
 window.addEventListener('resize', () => {
   const panel = document.getElementById('model3d-panel');
   if (panel && !panel.classList.contains('hidden')) {
