@@ -51,7 +51,7 @@ class Model3DLoader {
     this.controls.enableRotate = true;
     this.controls.target.set(0, 1.3, 0);
     this.controls.panSpeed = 0.8;
-    this.controls.screenSpacePanning = false;
+    this.controls.screenSpacePanning = true;
     this.controls.mouseButtons = {
       LEFT: THREE.MOUSE.ROTATE,
       MIDDLE: THREE.MOUSE.DOLLY,
