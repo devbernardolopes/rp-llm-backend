@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS = {
   openRouterApiKey: "",
   hordeApiKey: "",
   lmstudioBaseUrl: "http://localhost:1234",
+  lmstudioApiMethod: "openai",
   model: "arcee-ai/trinity-large-preview:free",
   markdownEnabled: true,
   allowMessageHtml: false,
@@ -2680,6 +2681,7 @@ async function setupSettingsControls() {
   const openRouterApiKey = document.getElementById("openrouter-api-key");
   const hordeApiKey = document.getElementById("horde-api-key");
   const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
+  const lmstudioApiMethod = document.getElementById("lmstudio-api-method");
   const modelSelect = document.getElementById("model-select");
   const modelPricingFilter = document.getElementById("model-pricing-filter");
   const modelModalityFilter = document.getElementById("model-modality-filter");
@@ -3175,6 +3177,7 @@ async function setupSettingsControls() {
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
   lmstudioBaseUrl.value = state.settings.lmstudioBaseUrl || "http://localhost:1234";
+  lmstudioApiMethod.value = state.settings.lmstudioApiMethod || "openai";
   aiProviderSelect.value = state.settings.aiProvider || "openrouter";
   updateProviderVisibility();
   if (typeof window.updateTtsSupportUi === "function") {
@@ -3202,6 +3205,12 @@ async function setupSettingsControls() {
 
   lmstudioBaseUrl.addEventListener("input", () => {
     state.settings.lmstudioBaseUrl = lmstudioBaseUrl.value.trim();
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  lmstudioApiMethod.addEventListener("change", () => {
+    state.settings.lmstudioApiMethod = lmstudioApiMethod.value;
     saveSettings();
     populateSettingsModels({ force: true }).catch(() => {});
   });
@@ -17537,7 +17546,10 @@ async function fetchOpenRouterModelCatalog(signal) {
 
 async function fetchLMStudioModelCatalog(signal) {
   const baseUrl = getLMStudioBaseUrl();
-  const res = await fetch(`${baseUrl}/v1/models`, {
+  const apiMethod = state.settings.lmstudioApiMethod || "openai";
+  const endpoint = apiMethod === "native" ? "/api/v1/models" : "/v1/models";
+  
+  const res = await fetch(`${baseUrl}${endpoint}`, {
     method: "GET",
     signal,
   });
@@ -17554,7 +17566,13 @@ async function fetchLMStudioModelCatalog(signal) {
   }
 
   const payload = await res.json();
-  const models = Array.isArray(payload.data) ? payload.data : [];
+  let models = [];
+  
+  if (apiMethod === "native") {
+    models = Array.isArray(payload.models) ? payload.models : [];
+  } else {
+    models = Array.isArray(payload.data) ? payload.data : [];
+  }
 
   const normalized = models
     .map((model) => normalizeLMStudioModelItem(model))
@@ -17793,6 +17811,7 @@ function updateProviderVisibility() {
   );
   const hordeContainer = document.getElementById("horde-api-key-container");
   const lmstudioContainer = document.getElementById("lmstudio-base-url-container");
+  const lmstudioApiMethodContainer = document.getElementById("lmstudio-api-method-container");
   if (openrouterContainer) {
     if (provider === "openrouter") {
       openrouterContainer.classList.remove("hidden");
@@ -17812,6 +17831,13 @@ function updateProviderVisibility() {
       lmstudioContainer.classList.remove("hidden");
     } else {
       lmstudioContainer.classList.add("hidden");
+    }
+  }
+  if (lmstudioApiMethodContainer) {
+    if (provider === "lmstudio") {
+      lmstudioApiMethodContainer.classList.remove("hidden");
+    } else {
+      lmstudioApiMethodContainer.classList.add("hidden");
     }
   }
 }
@@ -19466,30 +19492,58 @@ async function callLMStudio(
   state.currentRequestMessages = promptMessages;
 
   const baseUrl = getLMStudioBaseUrl();
+  const apiMethod = state.settings.lmstudioApiMethod || "openai";
   const streamEnabled =
     options && Object.prototype.hasOwnProperty.call(options, "forceStream")
       ? Boolean(options.forceStream)
       : !!state.settings.streamEnabled;
 
-  const body = {
-    model: lmstudioModel,
-    messages: promptMessages,
-    max_tokens: effectiveMaxTokens,
-    temperature: isTitleGeneration
-      ? (state.settings.autoTitleTemperature ??
-        DEFAULT_SETTINGS.autoTitleTemperature)
-      : isSummarization
-        ? (state.settings.summaryTemperature ??
-          DEFAULT_SETTINGS.summaryTemperature)
-        : clampTemperature(state.settings.temperature),
-    top_p: Number(state.settings.topP) || 1,
-    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
-    presence_penalty: Number(state.settings.presencePenalty) || 0,
-    stream: streamEnabled,
-  };
+  let endpoint, body;
+
+  if (apiMethod === "native") {
+    endpoint = "/api/v1/chat";
+    const historyText = promptMessages
+      .filter((m) => m.role !== "system")
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n");
+    body = {
+      model: lmstudioModel,
+      input: historyText,
+      max_tokens: effectiveMaxTokens,
+      temperature: isTitleGeneration
+        ? (state.settings.autoTitleTemperature ??
+          DEFAULT_SETTINGS.autoTitleTemperature)
+        : isSummarization
+          ? (state.settings.summaryTemperature ??
+            DEFAULT_SETTINGS.summaryTemperature)
+          : clampTemperature(state.settings.temperature),
+      top_p: Number(state.settings.topP) || 1,
+      frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+      presence_penalty: Number(state.settings.presencePenalty) || 0,
+      stream: streamEnabled,
+    };
+  } else {
+    endpoint = "/v1/chat/completions";
+    body = {
+      model: lmstudioModel,
+      messages: promptMessages,
+      max_tokens: effectiveMaxTokens,
+      temperature: isTitleGeneration
+        ? (state.settings.autoTitleTemperature ??
+          DEFAULT_SETTINGS.autoTitleTemperature)
+        : isSummarization
+          ? (state.settings.summaryTemperature ??
+            DEFAULT_SETTINGS.summaryTemperature)
+          : clampTemperature(state.settings.temperature),
+      top_p: Number(state.settings.topP) || 1,
+      frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+      presence_penalty: Number(state.settings.presencePenalty) || 0,
+      stream: streamEnabled,
+    };
+  }
 
   try {
-    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -19548,7 +19602,12 @@ async function callLMStudio(
 
           try {
             const json = JSON.parse(data);
-            const delta = json?.choices?.[0]?.delta?.content || "";
+            let delta = "";
+            if (apiMethod === "native") {
+              delta = json?.output?.[0]?.content || "";
+            } else {
+              delta = json?.choices?.[0]?.delta?.content || "";
+            }
             content += delta;
             if (typeof onChunk === "function") {
               onChunk(delta);
@@ -19572,9 +19631,17 @@ async function callLMStudio(
       };
     } else {
       const json = await response.json();
-      const content = json?.choices?.[0]?.message?.content || "";
-      const finishReason = json?.choices?.[0]?.finish_reason || "stop";
-      const usage = json?.usage || {};
+      let content, finishReason, usage;
+      
+      if (apiMethod === "native") {
+        content = json?.output?.[0]?.content || "";
+        finishReason = json?.output?.[0]?.finish_reason || "stop";
+        usage = json?.usage || {};
+      } else {
+        content = json?.choices?.[0]?.message?.content || "";
+        finishReason = json?.choices?.[0]?.finish_reason || "stop";
+        usage = json?.usage || {};
+      }
 
       if (typeof onChunk === "function") {
         for (const char of content) {
