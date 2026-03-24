@@ -361,9 +361,6 @@ async function summarizeMemory(character) {
   const threshold = getCurrentSummaryThreshold();
   if (threshold <= 0 || unsummarizedCount < threshold) return true;
 
-  const previousProtectedEntries = candidateMessages.filter(
-    (entry) => entry.message.summaryProtected === true,
-  );
   const newCandidateEntries = candidateMessages.filter(
     (entry) => entry.message.summaryProtected !== true,
   );
@@ -398,29 +395,15 @@ async function summarizeMemory(character) {
   if (previousLevelContext) {
     summarySections.push(previousLevelContext);
   }
+  const allEntriesForContent = [...newCandidateEntries];
   const keepSetting = getCurrentMemoryMessagesToKeep();
   const keepCount = Math.min(keepSetting, newCandidateEntries.length);
   const markCount = Math.max(0, newCandidateEntries.length - keepCount);
   if (newCandidateEntries.length === 0) return true;
-  const toSummarizeEntries = newCandidateEntries
-    .slice(0, markCount)
-    .map((entry) => entry.message)
-    .filter(Boolean);
-  const toKeepEntries = newCandidateEntries
-    .slice(markCount)
-    .map((entry) => entry.message)
-    .filter(Boolean);
   const personaPrefixEnabled = character?.personaPrefixEnabled !== false;
-  const messageEntriesToSummarize = toSummarizeEntries
-    .map((m) => buildMessageEntryForSummary(m, personaPrefixEnabled))
-    .filter(Boolean);
-  const previousProtectedMessages = previousProtectedEntries
+  const allMessageEntries = allEntriesForContent
     .map((entry) => buildMessageEntryForSummary(entry.message, personaPrefixEnabled))
     .filter(Boolean);
-  const keptMessages = toKeepEntries
-    .map((m) => buildMessageEntryForSummary(m, personaPrefixEnabled))
-    .filter(Boolean);
-  const allMessageEntries = [...previousProtectedMessages, ...keptMessages, ...messageEntriesToSummarize];
   if (allMessageEntries.length === 0) {
     return true;
   }
