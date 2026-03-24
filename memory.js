@@ -361,6 +361,12 @@ async function summarizeMemory(character) {
   const threshold = getCurrentSummaryThreshold();
   if (threshold <= 0 || unsummarizedCount < threshold) return true;
 
+  const previousProtectedEntries = candidateMessages.filter(
+    (entry) => entry.message.summaryProtected === true,
+  );
+  const newCandidateEntries = candidateMessages.filter(
+    (entry) => entry.message.summaryProtected !== true,
+  );
   const upcomingSlotInfo = await getNextMemorySlotInfo(character.id, threadId);
   const shouldIncludePreviousLevel =
     upcomingSlotInfo.slot === 1 && upcomingSlotInfo.level > 1;
@@ -393,22 +399,26 @@ async function summarizeMemory(character) {
     summarySections.push(previousLevelContext);
   }
   const keepSetting = getCurrentMemoryMessagesToKeep();
-  const keepCount = Math.min(keepSetting, candidateMessages.length);
-  const markCount = Math.max(0, candidateMessages.length - keepCount);
-  if (markCount === 0) return true;
-  const toSummarizeEntries = candidateMessages
+  const keepCount = Math.min(keepSetting, newCandidateEntries.length);
+  const markCount = Math.max(0, newCandidateEntries.length - keepCount);
+  if (markCount === 0 && previousProtectedEntries.length === 0) return true;
+  const toSummarizeEntries = newCandidateEntries
     .slice(0, markCount)
     .map((entry) => entry.message)
     .filter(Boolean);
-  if (toSummarizeEntries.length === 0) return true;
+  if (toSummarizeEntries.length === 0 && previousProtectedEntries.length === 0) return true;
   const personaPrefixEnabled = character?.personaPrefixEnabled !== false;
-  const messageEntries = toSummarizeEntries
+  const messageEntriesToSummarize = toSummarizeEntries
     .map((m) => buildMessageEntryForSummary(m, personaPrefixEnabled))
     .filter(Boolean);
-  if (messageEntries.length === 0) {
+  const previousProtectedMessages = previousProtectedEntries
+    .map((entry) => buildMessageEntryForSummary(entry.message, personaPrefixEnabled))
+    .filter(Boolean);
+  const allMessageEntries = [...previousProtectedMessages, ...messageEntriesToSummarize];
+  if (allMessageEntries.length === 0) {
     return true;
   }
-  const messagesSection = buildSummaryMessagesSection(messageEntries);
+  const messagesSection = buildSummaryMessagesSection(allMessageEntries);
   if (messagesSection) {
     summarySections.push(messagesSection);
   }
@@ -551,30 +561,30 @@ async function summarizeMemory(character) {
        })();
      }
 
-     for (let i = 0; i < markCount; i += 1) {
-       const entry = candidateMessages[i];
-       const idx = entry?.idx;
-       if (
-         Number.isInteger(idx) &&
-         conversationHistory[idx] &&
-         conversationHistory[idx].summarized !== true
-       ) {
-         conversationHistory[idx].summarized = true;
-         conversationHistory[idx].summaryId = memoryId;
-         conversationHistory[idx].summaryProtected = false;
-       }
-     }
-     for (let i = markCount; i < candidateMessages.length; i += 1) {
-       const entry = candidateMessages[i];
-       const idx = entry?.idx;
-       if (
-         Number.isInteger(idx) &&
-         conversationHistory[idx] &&
-         conversationHistory[idx].summarized !== true
-       ) {
-         conversationHistory[idx].summaryProtected = memoryId;
-       }
-     }
+      for (let i = 0; i < markCount; i += 1) {
+        const entry = newCandidateEntries[i];
+        const idx = entry?.idx;
+        if (
+          Number.isInteger(idx) &&
+          conversationHistory[idx] &&
+          conversationHistory[idx].summarized !== true
+        ) {
+          conversationHistory[idx].summarized = true;
+          conversationHistory[idx].summaryId = memoryId;
+          conversationHistory[idx].summaryProtected = false;
+        }
+      }
+      for (let i = markCount; i < newCandidateEntries.length; i += 1) {
+        const entry = newCandidateEntries[i];
+        const idx = entry?.idx;
+        if (
+          Number.isInteger(idx) &&
+          conversationHistory[idx] &&
+          conversationHistory[idx].summarized !== true
+        ) {
+          conversationHistory[idx].summaryProtected = memoryId;
+        }
+      }
 
     conversationHistory.pop();
 
