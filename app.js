@@ -85,6 +85,8 @@ const DEFAULT_SETTINGS = {
   defaultPersonaInjectionPlacement: "end_system_prompt",
   defaultTtsProvider: "kokoro",
   defaultTtsRate: 1,
+  defaultIncludeOocInCompletions: false,
+  defaultAvatarScale: 4,
   autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
   autoTitleProvider: "openrouter",
   autoTitleModel: "stepfun/step-3.5-flash:free",
@@ -3279,6 +3281,18 @@ async function setupSettingsControls() {
   );
   if (defaultTtsRateValue)
     defaultTtsRateValue.textContent = String(defaultTtsRate.value);
+  const defaultIncludeOoc = document.getElementById("default-include-ooc");
+  const defaultAvatarScale = document.getElementById("default-avatar-scale");
+  if (defaultIncludeOoc) {
+    defaultIncludeOoc.checked =
+      state.settings.defaultIncludeOocInCompletions ??
+      DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
+  }
+  if (defaultAvatarScale) {
+    defaultAvatarScale.value = String(
+      state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale,
+    );
+  }
   const autoTitleProvider = document.getElementById("default-auto-title-provider");
   const autoTitleModel = document.getElementById("default-auto-title-model");
   const autoTitleTemp = document.getElementById("default-auto-title-temp");
@@ -3793,6 +3807,19 @@ async function setupSettingsControls() {
       const value = Number(defaultTtsRate.value);
       state.settings.defaultTtsRate = value;
       if (defaultTtsRateValue) defaultTtsRateValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  if (defaultIncludeOoc) {
+    defaultIncludeOoc.addEventListener("change", () => {
+      state.settings.defaultIncludeOocInCompletions = defaultIncludeOoc.checked;
+      saveSettings();
+    });
+  }
+  if (defaultAvatarScale) {
+    defaultAvatarScale.addEventListener("change", () => {
+      const value = Number(defaultAvatarScale.value);
+      state.settings.defaultAvatarScale = value;
       saveSettings();
     });
   }
@@ -12377,8 +12404,12 @@ function applyCharacterSettingsDefaults(character) {
   if (character.personaPrefixEnabled === undefined)
     character.personaPrefixEnabled = true;
   if (character.includeOocInCompletions === undefined)
-    character.includeOocInCompletions = false;
-  if (character.avatarScale === undefined) character.avatarScale = 4;
+    character.includeOocInCompletions =
+      state.settings.defaultIncludeOocInCompletions ??
+      DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
+  if (character.avatarScale === undefined)
+    character.avatarScale =
+      state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale;
   if (character.loreCooldown === undefined) character.loreCooldown = 20;
 
   if (Array.isArray(character.definitions)) {

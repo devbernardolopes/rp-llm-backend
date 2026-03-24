@@ -619,5 +619,7 @@
   "model3dExpressionsLabel": "Ausdrücke",
   "model3dExpressionNeutral": "Neutral",
   "model3dExpressionSmile": "Lächeln",
-  "model3dExpressionSurprised": "Überrascht"
+  "model3dExpressionSurprised": "Überrascht",
+  "defaultIncludeOocInCompletions": "OOC-Nachrichten in Completions einschließen",
+  "defaultAvatarScale": "Standard-Avatar-Skala (Im Chat)"
 }
