@@ -3,8 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="assets/favicon/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="assets/favicon/favicon-16x16.png"
+    />
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png" />
     <link rel="manifest" href="assets/favicon/site.webmanifest" />
     <title>Scenara</title>
@@ -26,13 +36,13 @@
     />
     <link rel="stylesheet" href="style.css" />
     <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
-        "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js"
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+          "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js"
+        }
       }
-    }
     </script>
   </head>
   <body>
@@ -275,7 +285,9 @@
               class="pagination-size-select"
               aria-label="Cards per page"
             >
-              <option value="0" data-i18n="paginationUnlimited">Unlimited</option>
+              <option value="0" data-i18n="paginationUnlimited">
+                Unlimited
+              </option>
               <option value="5">5</option>
               <option value="10">10</option>
               <option value="20">20</option>
@@ -294,12 +306,17 @@
             type="button"
             data-i18n-title="toggleModel3dPanel"
             title="Toggle 3D Model"
-            style="margin-left: auto;"
+            style="margin-left: auto"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
             </svg>
           </button>
         </header>
@@ -334,7 +351,15 @@
         <div id="active-sfx-panel" class="active-sfx-panel hidden">
           <div class="active-sfx-header">
             <span data-i18n="activeSfx">Active SFX</span>
-            <button id="evict-all-sfx-btn" class="icon-btn danger-icon-btn" title="${t("evictAllSfx") || "Stop all"}">&times;</button>
+            <button
+              id="evict-all-sfx-btn"
+              class="icon-btn danger-icon-btn"
+              data-i18n-title="evictAllSfx"
+              title="Stop all"
+              aria-label="Stop all"
+            >
+              &times;
+            </button>
           </div>
           <div class="active-sfx-list"></div>
         </div>
@@ -345,19 +370,42 @@
           <div id="model3d-panel-header" class="model3d-panel-header">
             <span data-i18n="model3dPanelTitle">3D Model</span>
             <div class="model3d-panel-controls">
-              <button id="model3d-toggle-visibility-btn" class="icon-btn small" type="button" data-i18n-title="toggleModel3dVisibility" title="Show/Hide">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
+              <button
+                id="model3d-toggle-visibility-btn"
+                class="icon-btn small"
+                type="button"
+                data-i18n-title="toggleModel3dVisibility"
+                title="Show/Hide"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
                 </svg>
               </button>
-              <button id="model3d-close-btn" class="icon-btn small danger-icon-btn" type="button" data-i18n-title="closeModel3dPanel" title="Close">
+              <button
+                id="model3d-close-btn"
+                class="icon-btn small danger-icon-btn"
+                type="button"
+                data-i18n-title="closeModel3dPanel"
+                title="Close"
+              >
                 &times;
               </button>
             </div>
           </div>
-          <div id="model3d-expression-controls" class="model3d-expression-controls">
-            <span data-i18n="model3dExpressionsLabel" class="model3d-expression-label">
+          <div
+            id="model3d-expression-controls"
+            class="model3d-expression-controls"
+          >
+            <span
+              data-i18n="model3dExpressionsLabel"
+              class="model3d-expression-label"
+            >
               Expressions
             </span>
             <div class="model3d-expression-buttons">
@@ -393,10 +441,22 @@
               <span data-i18n="loadingModel3d">Loading model...</span>
             </div>
           </div>
-          <div id="model3d-resize-handle-nw" class="model3d-resize-handle model3d-resize-handle-nw"></div>
-          <div id="model3d-resize-handle-ne" class="model3d-resize-handle model3d-resize-handle-ne"></div>
-          <div id="model3d-resize-handle-sw" class="model3d-resize-handle model3d-resize-handle-sw"></div>
-          <div id="model3d-resize-handle-se" class="model3d-resize-handle model3d-resize-handle-se"></div>
+          <div
+            id="model3d-resize-handle-nw"
+            class="model3d-resize-handle model3d-resize-handle-nw"
+          ></div>
+          <div
+            id="model3d-resize-handle-ne"
+            class="model3d-resize-handle model3d-resize-handle-ne"
+          ></div>
+          <div
+            id="model3d-resize-handle-sw"
+            class="model3d-resize-handle model3d-resize-handle-sw"
+          ></div>
+          <div
+            id="model3d-resize-handle-se"
+            class="model3d-resize-handle model3d-resize-handle-se"
+          ></div>
         </div>
         <button
           id="scroll-bottom-btn"
@@ -439,98 +499,112 @@
                 data-i18n-title="attachFile"
                 title="Attach file (coming soon)"
                 aria-label="Attach file"
-              >+</button>
-               <div class="input-footer-right">
-                 <div id="chat-model-pill" class="model-pill small" data-i18n="modelPill">
-                   Model: -
-                 </div>
-                 <div id="chat-budget-pill" class="model-pill small">Max out: -</div>
-                 <button
-                   id="memory-command-btn"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="memoryCommandButtonTitle"
-                   title="Memory command"
-                   aria-label="Memory command"
-                 ></button>
-                  <button
-                    id="auto-tts-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="autoTtsTitleOff"
-                    title="Auto TTS: Off"
-                    aria-label="Toggle auto TTS"
-                  ></button>
-                  <button
-                    id="stt-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="sttTitleOff"
-                    title="STT: Off"
-                    aria-label="Toggle STT"
-                  ></button>
-                  <button
-                    id="stt-auto-send-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="sttAutoSendOn"
-                    title="STT Auto-send: On"
-                    aria-label="Toggle STT auto-send"
-                  ></button>
-                   <button
-                    id="ooc-mode-toggle"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="oocModeTitleOff"
-                    title="OOC mode: Off"
-                    aria-label="Enable OOC mode"
+              >
+                +
+              </button>
+              <div class="input-footer-right">
+                <div
+                  id="chat-model-pill"
+                  class="model-pill small"
+                  data-i18n="modelPill"
+                >
+                  Model: -
+                </div>
+                <div id="chat-budget-pill" class="model-pill small">
+                  Max out: -
+                </div>
+                <button
+                  id="memory-command-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="memoryCommandButtonTitle"
+                  title="Memory command"
+                  aria-label="Memory command"
+                ></button>
+                <button
+                  id="auto-tts-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="autoTtsTitleOff"
+                  title="Auto TTS: Off"
+                  aria-label="Toggle auto TTS"
+                ></button>
+                <button
+                  id="stt-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="sttTitleOff"
+                  title="STT: Off"
+                  aria-label="Toggle STT"
+                ></button>
+                <button
+                  id="stt-auto-send-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="sttAutoSendOn"
+                  title="STT Auto-send: On"
+                  aria-label="Toggle STT auto-send"
+                ></button>
+                <button
+                  id="ooc-mode-toggle"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="oocModeTitleOff"
+                  title="OOC mode: Off"
+                  aria-label="Enable OOC mode"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                      <ellipse cx="8" cy="10" rx="2" ry="3"></ellipse>
-                      <ellipse cx="16" cy="10" rx="2" ry="3"></ellipse>
-                      <path d="M6 14c2-2 6-2 12 0"></path>
-                    </svg>
-                  </button>
-                 <button
-                   id="auto-reply-enabled"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="autoReply"
-                   title="Auto-reply"
-                   aria-label="Auto-reply"
-                 >
-                   🤖
-                 </button>
-                 <button
-                   id="enter-to-send-enabled"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="enterToSend"
-                   title="ENTER to send"
-                   aria-label="ENTER to send"
-                 >
-                   ⏎
-                 </button>
-                 <button
-                   id="shortcuts-toggle-btn"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="showShortcuts"
-                   title="Show shortcuts"
-                   aria-label="Show shortcuts"
-                 >
-                   ⌨
-                 </button>
-                 <button
-                   id="chat-opacity-toggle-btn"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="chatOpacityToggle"
-                   aria-label="Adjust transparency"
-                   title="Adjust transparency"
-                 >
-                   α
-                 </button>
+                    <ellipse cx="8" cy="10" rx="2" ry="3"></ellipse>
+                    <ellipse cx="16" cy="10" rx="2" ry="3"></ellipse>
+                    <path d="M6 14c2-2 6-2 12 0"></path>
+                  </svg>
+                </button>
+                <button
+                  id="auto-reply-enabled"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="autoReply"
+                  title="Auto-reply"
+                  aria-label="Auto-reply"
+                >
+                  🤖
+                </button>
+                <button
+                  id="enter-to-send-enabled"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="enterToSend"
+                  title="ENTER to send"
+                  aria-label="ENTER to send"
+                >
+                  ⏎
+                </button>
+                <button
+                  id="shortcuts-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="showShortcuts"
+                  title="Show shortcuts"
+                  aria-label="Show shortcuts"
+                >
+                  ⌨
+                </button>
+                <button
+                  id="chat-opacity-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="chatOpacityToggle"
+                  aria-label="Adjust transparency"
+                  title="Adjust transparency"
+                >
+                  α
+                </button>
                 <img
                   id="persona-selected-avatar"
                   class="persona-selected-avatar small"
@@ -761,405 +835,437 @@
             Defaults
           </button>
         </div>
-         <div class="modal-body" id="settings-modal-body">
-           <div id="settings-form" class="settings-form">
-           <div data-settings-group="api" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="aiProviderLabel">AI Provider</span>
-              <select id="ai-provider-select">
-                <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
-                <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
-                <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
-              </select>
-            </div>
-            <div class="form-field" id="openrouter-api-key-container">
-              <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
-              <input
-                id="openrouter-api-key"
-                type="password"
-                placeholder="sk-or-v1-..."
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </div>
-            <div class="form-field hidden" id="horde-api-key-container">
-              <span data-i18n="aiHordeApiKey">AI Horde API Key</span>
-              <input
-                id="horde-api-key"
-                type="password"
-                placeholder="0000000000 or your API key"
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </div>
-            <div class="form-field hidden" id="lmstudio-base-url-container">
-              <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span>
-              <input
-                id="lmstudio-base-url"
-                type="text"
-                placeholder="http://localhost:1234"
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </div>
-            <div class="form-field hidden" id="lmstudio-api-method-container">
-              <span data-i18n="lmStudioApiMethod">LM Studio API Method</span>
-              <select id="lmstudio-api-method">
-                <option value="openai" data-i18n="lmStudioApiMethodOpenai">OpenAI-Compatible</option>
-                <option value="native" data-i18n="lmStudioApiMethodNative">Native REST API</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="modelLabel">Model</span>
-              <div class="model-select-wrapper">
-                <select id="model-select"></select>
-                <div id="model-select-display" class="model-select-display">
-                  Loading...
-                </div>
-                <div
-                  id="model-custom-dropdown"
-                  class="model-custom-dropdown hidden"
-                >
+        <div class="modal-body" id="settings-modal-body">
+          <div id="settings-form" class="settings-form">
+            <div data-settings-group="api" class="settings-group">
+              <div class="form-field">
+                <span data-i18n="aiProviderLabel">AI Provider</span>
+                <select id="ai-provider-select">
+                  <option value="openrouter" data-i18n="providerOpenRouter">
+                    OpenRouter
+                  </option>
+                  <option value="aihorde" data-i18n="providerAIHorde">
+                    AI Horde
+                  </option>
+                  <option value="lmstudio" data-i18n="providerLMStudio">
+                    LM Studio
+                  </option>
+                </select>
+              </div>
+              <div class="form-field" id="openrouter-api-key-container">
+                <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
+                <input
+                  id="openrouter-api-key"
+                  type="password"
+                  placeholder="sk-or-v1-..."
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="form-field hidden" id="horde-api-key-container">
+                <span data-i18n="aiHordeApiKey">AI Horde API Key</span>
+                <input
+                  id="horde-api-key"
+                  type="password"
+                  placeholder="0000000000 or your API key"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="form-field hidden" id="lmstudio-base-url-container">
+                <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span>
+                <input
+                  id="lmstudio-base-url"
+                  type="text"
+                  placeholder="http://localhost:1234"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="form-field hidden" id="lmstudio-api-method-container">
+                <span data-i18n="lmStudioApiMethod">LM Studio API Method</span>
+                <select id="lmstudio-api-method">
+                  <option value="openai" data-i18n="lmStudioApiMethodOpenai">
+                    OpenAI-Compatible
+                  </option>
+                  <option value="native" data-i18n="lmStudioApiMethodNative">
+                    Native REST API
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <span data-i18n="modelLabel">Model</span>
+                <div class="model-select-wrapper">
+                  <select id="model-select"></select>
+                  <div id="model-select-display" class="model-select-display">
+                    Loading...
+                  </div>
                   <div
-                    id="model-dropdown-options"
-                    class="model-dropdown-options"
-                  ></div>
+                    id="model-custom-dropdown"
+                    class="model-custom-dropdown hidden"
+                  >
+                    <div
+                      id="model-dropdown-options"
+                      class="model-dropdown-options"
+                    ></div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="settings-inline-row model-filter-row">
-              <div class="form-field">
-                <span data-i18n="pricingLabel">Pricing</span>
-                <select id="model-pricing-filter">
-                  <option value="all" data-i18n="all">All</option>
-                  <option value="free" data-i18n="free">Free</option>
-                  <option value="paid" data-i18n="paid">Paid</option>
-                </select>
+              <div class="settings-inline-row model-filter-row">
+                <div class="form-field">
+                  <span data-i18n="pricingLabel">Pricing</span>
+                  <select id="model-pricing-filter">
+                    <option value="all" data-i18n="all">All</option>
+                    <option value="free" data-i18n="free">Free</option>
+                    <option value="paid" data-i18n="paid">Paid</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <span data-i18n="modalityLabel">Modality</span>
+                  <select id="model-modality-filter">
+                    <option value="text-only" data-i18n="textToText">
+                      Text - Text
+                    </option>
+                    <option value="all" data-i18n="all">All</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <span data-i18n="orderLabel">Order</span>
+                  <select id="model-sort-order">
+                    <option value="name_asc" data-i18n="nameAsc">
+                      Name A-Z
+                    </option>
+                    <option value="name_desc" data-i18n="nameDesc">
+                      Name Z-A
+                    </option>
+                    <option value="created_desc" data-i18n="createdNewest">
+                      Created Newest
+                    </option>
+                    <option value="created_asc" data-i18n="createdOldest">
+                      Created Oldest
+                    </option>
+                  </select>
+                </div>
+                <button
+                  id="model-refresh-btn"
+                  class="secondary-btn"
+                  type="button"
+                  data-i18n="reload"
+                >
+                  Reload
+                </button>
+              </div>
+              <div id="model-selected-meta" class="muted"></div>
+              <div id="model-roleplay-warning" class="model-warning hidden">
+                <span data-i18n="modelNotRecommendedRoleplay">
+                  This model is NOT recommended for roleplaying.
+                </span>
               </div>
               <div class="form-field">
-                <span data-i18n="modalityLabel">Modality</span>
-                <select id="model-modality-filter">
-                  <option value="text-only" data-i18n="textToText">
-                    Text - Text
-                  </option>
-                  <option value="all" data-i18n="all">All</option>
-                </select>
+                <div class="label-inline">
+                  <span data-i18n="maxTokensLabel">Max Completion Tokens</span>
+                  <span id="max-tokens-value" class="muted"></span>
+                </div>
+                <input
+                  id="max-tokens-slider"
+                  type="range"
+                  min="512"
+                  max="8192"
+                  step="64"
+                />
               </div>
               <div class="form-field">
-                <span data-i18n="orderLabel">Order</span>
-                <select id="model-sort-order">
-                  <option value="name_asc" data-i18n="nameAsc">Name A-Z</option>
-                  <option value="name_desc" data-i18n="nameDesc">
-                    Name Z-A
-                  </option>
-                  <option value="created_desc" data-i18n="createdNewest">
-                    Created Newest
-                  </option>
-                  <option value="created_asc" data-i18n="createdOldest">
-                    Created Oldest
-                  </option>
-                </select>
+                <div class="label-inline">
+                  <span data-i18n="temperatureLabel">Temperature</span>
+                  <span id="temperature-value" class="muted"></span>
+                </div>
+                <input
+                  id="temperature-slider"
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.05"
+                />
               </div>
-              <button
-                id="model-refresh-btn"
-                class="secondary-btn"
-                type="button"
-                data-i18n="reload"
-              >
-                Reload
-              </button>
-            </div>
-            <div id="model-selected-meta" class="muted"></div>
-            <div id="model-roleplay-warning" class="model-warning hidden">
-              <span data-i18n="modelNotRecommendedRoleplay">
-                This model is NOT recommended for roleplaying.
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="topPLabel">Top P</span>
+                  <span id="top-p-value" class="muted"></span>
+                </div>
+                <input
+                  id="top-p-slider"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="frequencyPenaltyLabel"
+                    >Frequency Penalty</span
+                  >
+                  <span id="frequency-penalty-value" class="muted"></span>
+                </div>
+                <input
+                  id="frequency-penalty-slider"
+                  type="range"
+                  min="-2"
+                  max="2"
+                  step="0.1"
+                />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="presencePenaltyLabel">Presence Penalty</span>
+                  <span id="presence-penalty-value" class="muted"></span>
+                </div>
+                <input
+                  id="presence-penalty-slider"
+                  type="range"
+                  min="-2"
+                  max="2"
+                  step="0.1"
+                />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="completionCooldownLabel"
+                    >Completion Cooldown</span
+                  >
+                  <span id="completion-cooldown-value" class="muted"></span>
+                </div>
+                <input
+                  id="completion-cooldown-slider"
+                  type="range"
+                  min="0"
+                  max="15"
+                  step="1"
+                />
+              </div>
+              <span class="checkbox-line">
+                <input type="checkbox" id="stream-enabled" checked />
+                <span data-i18n="streamMessages">Stream Messages</span>
               </span>
             </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="maxTokensLabel">Max Completion Tokens</span>
-                <span id="max-tokens-value" class="muted"></span>
+            <div data-settings-group="appearance" class="settings-group">
+              <div class="form-field">
+                <span data-i18n="languageLabel">Interface Language</span>
+                <select id="ui-language-select">
+                  <option value="auto">Auto (browser)</option>
+                  <option value="en">English</option>
+                  <option value="fr">Francais</option>
+                  <option value="it">Italiano</option>
+                  <option value="de">Deutsch</option>
+                  <option value="es">Espanol</option>
+                  <option value="pt-BR">Portugues (Brasil)</option>
+                </select>
               </div>
-              <input
-                id="max-tokens-slider"
-                type="range"
-                min="512"
-                max="8192"
-                step="64"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="temperatureLabel">Temperature</span>
-                <span id="temperature-value" class="muted"></span>
-              </div>
-              <input
-                id="temperature-slider"
-                type="range"
-                min="0"
-                max="2"
-                step="0.05"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="topPLabel">Top P</span>
-                <span id="top-p-value" class="muted"></span>
-              </div>
-              <input
-                id="top-p-slider"
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span>
-                <span id="frequency-penalty-value" class="muted"></span>
-              </div>
-              <input
-                id="frequency-penalty-slider"
-                type="range"
-                min="-2"
-                max="2"
-                step="0.1"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="presencePenaltyLabel">Presence Penalty</span>
-                <span id="presence-penalty-value" class="muted"></span>
-              </div>
-              <input
-                id="presence-penalty-slider"
-                type="range"
-                min="-2"
-                max="2"
-                step="0.1"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="completionCooldownLabel"
-                  >Completion Cooldown</span
+              <div class="form-field">
+                <span data-i18n="sttLanguageLabel"
+                  >Speech-to-Text Language</span
                 >
-                <span id="completion-cooldown-value" class="muted"></span>
+                <select id="stt-language-select">
+                  <option value="en">English</option>
+                  <option value="fr">Francais</option>
+                  <option value="it">Italiano</option>
+                  <option value="de">Deutsch</option>
+                  <option value="es">Espanol</option>
+                  <option value="pt-BR">Portugues (Brasil)</option>
+                </select>
               </div>
-              <input
-                id="completion-cooldown-slider"
-                type="range"
-                min="0"
-                max="15"
-                step="1"
-              />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="stream-enabled" checked />
-              <span data-i18n="streamMessages">Stream Messages</span>
-            </span>
-          </div>
-          <div data-settings-group="appearance" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="languageLabel">Interface Language</span>
-              <select id="ui-language-select">
-                <option value="auto">Auto (browser)</option>
-                <option value="en">English</option>
-                <option value="fr">Francais</option>
-                <option value="it">Italiano</option>
-                <option value="de">Deutsch</option>
-                <option value="es">Espanol</option>
-                <option value="pt-BR">Portugues (Brasil)</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="sttLanguageLabel">Speech-to-Text Language</span>
-              <select id="stt-language-select">
-                <option value="en">English</option>
-                <option value="fr">Francais</option>
-                <option value="it">Italiano</option>
-                <option value="de">Deutsch</option>
-                <option value="es">Espanol</option>
-                <option value="pt-BR">Portugues (Brasil)</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="sttModeLabel">STT Mode</span>
-              <select id="stt-mode-select">
-                <option value="push-to-talk" data-i18n="sttModePushToTalk">Push-to-Talk</option>
-                <option value="auto-stop" data-i18n="sttModeAutoStop">Auto-Stop on Silence</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="sttSilenceDurationLabel">Silence Duration (seconds)</span>
-              <input type="number" id="stt-silence-duration" min="1" max="10" value="2" />
-            </div>
-             <div class="form-field">
-               <span data-i18n="themeLabel">Theme</span>
-               <select id="theme-select">
-               </select>
-             </div>
-            <div class="form-field">
-              <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
-              <select id="marquee-behavior-select">
-                <option value="disabled" data-i18n="marqueeBehaviorDisabled">
-                  Disabled
-                </option>
-                <option value="hover" data-i18n="marqueeBehaviorOnHover">
-                  On Hover
-                </option>
-                <option value="always" data-i18n="marqueeBehaviorAlways">
-                  Always
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="botCardAvatarEffectLabel"
-                >BOT Card Avatar Effect</span
-              >
-              <select id="bot-card-avatar-effect">
-                <option value="none" data-i18n="botCardAvatarEffectNone">
-                  None
-                </option>
-                <option
-                  value="carousel"
-                  data-i18n="botCardAvatarEffectCarousel"
+              <div class="form-field">
+                <span data-i18n="sttModeLabel">STT Mode</span>
+                <select id="stt-mode-select">
+                  <option value="push-to-talk" data-i18n="sttModePushToTalk">
+                    Push-to-Talk
+                  </option>
+                  <option value="auto-stop" data-i18n="sttModeAutoStop">
+                    Auto-Stop on Silence
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <span data-i18n="sttSilenceDurationLabel"
+                  >Silence Duration (seconds)</span
                 >
-                  Carousel
-                </option>
-                <option
-                  value="hover"
-                  data-i18n="botCardAvatarEffectHover"
+                <input
+                  type="number"
+                  id="stt-silence-duration"
+                  min="1"
+                  max="10"
+                  value="2"
+                />
+              </div>
+              <div class="form-field">
+                <span data-i18n="themeLabel">Theme</span>
+                <select id="theme-select"></select>
+              </div>
+              <div class="form-field">
+                <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
+                <select id="marquee-behavior-select">
+                  <option value="disabled" data-i18n="marqueeBehaviorDisabled">
+                    Disabled
+                  </option>
+                  <option value="hover" data-i18n="marqueeBehaviorOnHover">
+                    On Hover
+                  </option>
+                  <option value="always" data-i18n="marqueeBehaviorAlways">
+                    Always
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <span data-i18n="botCardAvatarEffectLabel"
+                  >BOT Card Avatar Effect</span
                 >
-                  On Hover
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="botCardAvatarTransitionDelayLabel"
-                  >Transition Delay</span
+                <select id="bot-card-avatar-effect">
+                  <option value="none" data-i18n="botCardAvatarEffectNone">
+                    None
+                  </option>
+                  <option
+                    value="carousel"
+                    data-i18n="botCardAvatarEffectCarousel"
+                  >
+                    Carousel
+                  </option>
+                  <option value="hover" data-i18n="botCardAvatarEffectHover">
+                    On Hover
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="botCardAvatarTransitionDelayLabel"
+                    >Transition Delay</span
+                  >
+                  <span
+                    id="bot-card-avatar-transition-delay-value"
+                    class="muted"
+                  ></span>
+                </div>
+                <input
+                  id="bot-card-avatar-transition-delay-slider"
+                  type="range"
+                  min="4"
+                  max="30"
+                  step="1"
+                  disabled
+                />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="toastDelayLabel">Toast Delay</span>
+                  <span id="toast-delay-value" class="muted"></span>
+                </div>
+                <input
+                  id="toast-delay-slider"
+                  type="range"
+                  min="1000"
+                  max="10000"
+                  step="200"
+                />
+              </div>
+              <span class="checkbox-line">
+                <input type="checkbox" id="unread-sound-enabled" />
+                <span data-i18n="unreadSoundEnabled"
+                  >Play sound for unread messages</span
                 >
-                <span
-                  id="bot-card-avatar-transition-delay-value"
-                  class="muted"
-                ></span>
-              </div>
-              <input
-                id="bot-card-avatar-transition-delay-slider"
-                type="range"
-                min="4"
-                max="30"
-                step="1"
-                disabled
-              />
+              </span>
             </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="toastDelayLabel">Toast Delay</span>
-                <span id="toast-delay-value" class="muted"></span>
+            <div data-settings-group="threads" class="settings-group">
+              <div class="form-field">
+                <span data-i18n="oocSystemAvatarLabel">OOC System Avatar</span>
+                <div
+                  id="ooc-system-avatar-dropzone"
+                  class="char-avatar-dropzone"
+                  tabindex="0"
+                  aria-label="Upload OOC avatar"
+                >
+                  <img id="ooc-system-avatar-preview" class="hidden" />
+                  <span class="dropzone-plus">+</span>
+                  <span class="dropzone-hint">Drag & drop or click</span>
+                  <button
+                    type="button"
+                    id="ooc-system-avatar-remove"
+                    class="avatar-remove-btn hidden"
+                    title="Remove"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  id="ooc-system-avatar-file-input"
+                  accept="image/*"
+                  class="hidden"
+                />
               </div>
-              <input
-                id="toast-delay-slider"
-                type="range"
-                min="1000"
-                max="10000"
-                step="200"
-              />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="unread-sound-enabled" />
-              <span data-i18n="unreadSoundEnabled"
-                >Play sound for unread messages</span
-              >
-            </span>
-          </div>
-          <div data-settings-group="threads" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="oocSystemAvatarLabel">OOC System Avatar</span>
-              <div
-                id="ooc-system-avatar-dropzone"
-                class="char-avatar-dropzone"
-                tabindex="0"
-                aria-label="Upload OOC avatar"
-              >
-                <img id="ooc-system-avatar-preview" class="hidden" />
-                <span class="dropzone-plus">+</span>
-                <span class="dropzone-hint">Drag & drop or click</span>
-                <button
-                  type="button"
-                  id="ooc-system-avatar-remove"
-                  class="avatar-remove-btn hidden"
-                  title="Remove"
-                >&times;</button>
-              </div>
-              <input
-                type="file"
-                id="ooc-system-avatar-file-input"
-                accept="image/*"
-                class="hidden"
-              />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="autopair-enabled" checked />
-              <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="markdown-enabled" />
-              <span data-i18n="renderMarkdown"
-                >Render Markdown in messages</span
-              >
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="allow-message-html" />
-              <span data-i18n="allowRawHtml">Allow raw HTML in messages</span>
-            </span>
+              <span class="checkbox-line">
+                <input type="checkbox" id="autopair-enabled" checked />
+                <span data-i18n="autoPairSymbols"
+                  >Auto-pair editor symbols</span
+                >
+              </span>
+              <span class="checkbox-line">
+                <input type="checkbox" id="markdown-enabled" />
+                <span data-i18n="renderMarkdown"
+                  >Render Markdown in messages</span
+                >
+              </span>
+              <span class="checkbox-line">
+                <input type="checkbox" id="allow-message-html" />
+                <span data-i18n="allowRawHtml">Allow raw HTML in messages</span>
+              </span>
 
-            <span class="checkbox-line">
-              <input type="checkbox" id="lock-memory-messages" />
-              <span data-i18n="lockMemoryMessages">Lock Memory Messages</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="cross-window-sync-enabled" />
-              <span data-i18n="crossWindowSync">Sync threads across tabs</span>
-            </span>
-            <div class="form-field">
-              <span data-i18n="summaryThresholdLabel">Summary Threshold</span>
-              <input
-                id="summary-threshold"
-                type="number"
-                min="5"
-                max="100"
-                step="1"
-              />
-            </div>
-            <div class="form-field">
-              <span data-i18n="memoryMessagesToKeepLabel"
-                >Amount of Messages to Keep</span
-              >
-               <input
-                 id="memory-messages-to-keep"
-                 type="number"
-                 min="0"
-                 max="30"
-                 step="1"
-                 value="3"
+              <span class="checkbox-line">
+                <input type="checkbox" id="lock-memory-messages" />
+                <span data-i18n="lockMemoryMessages">Lock Memory Messages</span>
+              </span>
+              <span class="checkbox-line">
+                <input type="checkbox" id="cross-window-sync-enabled" />
+                <span data-i18n="crossWindowSync"
+                  >Sync threads across tabs</span
+                >
+              </span>
+              <div class="form-field">
+                <span data-i18n="summaryThresholdLabel">Summary Threshold</span>
+                <input
+                  id="summary-threshold"
+                  type="number"
+                  min="5"
+                  max="100"
+                  step="1"
+                />
+              </div>
+              <div class="form-field">
+                <span data-i18n="memoryMessagesToKeepLabel"
+                  >Amount of Messages to Keep</span
+                >
+                <input
+                  id="memory-messages-to-keep"
+                  type="number"
+                  min="0"
+                  max="30"
+                  step="1"
+                  value="3"
                 />
               </div>
               <div class="form-field">
                 <span data-i18n="memorySlotsLabel">Memory Slots</span>
-              <input
-                id="memory-slots"
-                type="number"
-                min="1"
-                max="10"
-                step="1"
-                value="5"
-              />
-             </div>
+                <input
+                  id="memory-slots"
+                  type="number"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value="5"
+                />
+              </div>
               <div class="form-field">
-                <span data-i18n="unloadThresholdLabel">Message to Keep (0 = all)</span>
+                <span data-i18n="unloadThresholdLabel"
+                  >Message to Keep (0 = all)</span
+                >
                 <input
                   id="auto-unload-threshold"
                   type="number"
@@ -1180,8 +1286,13 @@
                   </option>
                 </select>
               </div>
-              <div class="form-field hidden" id="lore-semantic-threshold-container">
-                <span data-i18n="loreSemanticThreshold">Semantic Threshold</span>
+              <div
+                class="form-field hidden"
+                id="lore-semantic-threshold-container"
+              >
+                <span data-i18n="loreSemanticThreshold"
+                  >Semantic Threshold</span
+                >
                 <input
                   id="lore-semantic-threshold"
                   type="number"
@@ -1190,113 +1301,122 @@
                   step="0.05"
                   value="0.5"
                 />
-                <span class="settings-hint" data-i18n="loreSemanticThresholdHint">Higher = stricter matching (0.5-0.7 recommended)</span>
+                <span
+                  class="settings-hint"
+                  data-i18n="loreSemanticThresholdHint"
+                  >Higher = stricter matching (0.5-0.7 recommended)</span
+                >
               </div>
-             <div class="form-field">
-               <span data-i18n="chatMessageAlignment">Message Alignment</span>
-              <select id="chat-message-alignment">
-                <option value="left" data-i18n="messageAlignmentLeft">
-                  Left (Default)
-                </option>
-                <option value="center" data-i18n="messageAlignmentCenter">
-                  Center
-                </option>
-              </select>
+              <div class="form-field">
+                <span data-i18n="chatMessageAlignment">Message Alignment</span>
+                <select id="chat-message-alignment">
+                  <option value="left" data-i18n="messageAlignmentLeft">
+                    Left (Default)
+                  </option>
+                  <option value="center" data-i18n="messageAlignmentCenter">
+                    Center
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <span data-i18n="postprocessRules"
+                  >Post-processing Rules (JSON)</span
+                >
+                <!-- prettier-ignore -->
+                <textarea
+                  id="postprocess-rules-json"
+                  rows="8"
+                  placeholder="[{&quot;pattern&quot;:&quot;^«([\\s\\S]*)»$&quot;,&quot;flags&quot;:&quot;gm&quot;,&quot;replacement&quot;:&quot;<span style=&quot;color:#E6D97A&quot;>«$1»</span>&quot;}]"
+                ></textarea>
+              </div>
             </div>
-            <div class="form-field">
-              <span data-i18n="postprocessRules"
-                >Post-processing Rules (JSON)</span
-              >
-              <textarea
-                id="postprocess-rules-json"
-                rows="8"
-                placeholder='[{"pattern":"^«([\\s\\S]*)»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">«$1»</span>"}]'
-              ></textarea>
-            </div>
-          </div>
-          <div data-settings-group="prompting" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="defaultCharacterPrompt"
-                >Default Character Prompt</span
-              >
-              <textarea
-                id="global-prompt-template"
-                rows="7"
-                placeholder="Used when a character prompt is empty."
-              ></textarea>
-            </div>
-            <div class="form-field">
-              <span data-i18n="memorySummarizerPrompt"
-                >Memory Summarizer System Prompt</span
-              >
-              <textarea
-                id="summary-system-prompt"
-                rows="3"
-                placeholder="System prompt for memory summarization."
-              ></textarea>
-            </div>
-            <div class="form-field">
-              <span data-i18n="memorySummarizerUserPrompt"
-                >User Prompt for Memory Summarization</span
-              >
-              <textarea
-                id="memory-summarizer-user-prompt"
-                rows="3"
-                placeholder="User prompt for memory summarization"
-              ></textarea>
-            </div>
-            <div class="form-field">
-              <span data-i18n="summaryMessagesPreProcessingJson"
-                >Summary Messages Pre-processing (JSON)</span
-              >
-              <textarea
-                id="summary-messages-preprocessing-json"
-                rows="5"
-                placeholder="JSON array of regex replacements"
-              ></textarea>
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="memory-relevance-filter-enabled" />
-              <span data-i18n="memoryRelevanceFilterToggle"
-                >Use memory relevance filter</span
-              >
-            </span>
-            <div class="form-field">
-              <span data-i18n="personaInjectionTemplate"
-                >Persona Injection Template</span
-              >
-              <textarea
-                id="persona-injection-template"
-                rows="5"
-                placeholder="Template for active persona injection."
-              ></textarea>
-            </div>
-            <div class="form-field">
-              <span data-i18n="writingInstructionsInjectionTiming"
-                >Writing Instructions Injection Timing</span
-              >
-              <select id="writing-instructions-injection-when">
-                <option value="always" data-i18n="always">Always</option>
-                <option value="every_other" data-i18n="everyOther">
-                  Every Other
-                </option>
-                <option value="every_second" data-i18n="everySecond">
-                  Every Second
-                </option>
-                <option value="every_third" data-i18n="everyThird">
-                  Every Third
-                </option>
-                <option value="every_fourth" data-i18n="everyFourth">
-                  Every Fourth
-                </option>
-               </select>
-             </div>
+            <div data-settings-group="prompting" class="settings-group">
+              <div class="form-field">
+                <span data-i18n="defaultCharacterPrompt"
+                  >Default Character Prompt</span
+                >
+                <textarea
+                  id="global-prompt-template"
+                  rows="7"
+                  placeholder="Used when a character prompt is empty."
+                ></textarea>
+              </div>
+              <div class="form-field">
+                <span data-i18n="memorySummarizerPrompt"
+                  >Memory Summarizer System Prompt</span
+                >
+                <textarea
+                  id="summary-system-prompt"
+                  rows="3"
+                  placeholder="System prompt for memory summarization."
+                ></textarea>
+              </div>
+              <div class="form-field">
+                <span data-i18n="memorySummarizerUserPrompt"
+                  >User Prompt for Memory Summarization</span
+                >
+                <textarea
+                  id="memory-summarizer-user-prompt"
+                  rows="3"
+                  placeholder="User prompt for memory summarization"
+                ></textarea>
+              </div>
+              <div class="form-field">
+                <span data-i18n="summaryMessagesPreProcessingJson"
+                  >Summary Messages Pre-processing (JSON)</span
+                >
+                <textarea
+                  id="summary-messages-preprocessing-json"
+                  rows="5"
+                  placeholder="JSON array of regex replacements"
+                ></textarea>
+              </div>
+              <span class="checkbox-line">
+                <input type="checkbox" id="memory-relevance-filter-enabled" />
+                <span data-i18n="memoryRelevanceFilterToggle"
+                  >Use memory relevance filter</span
+                >
+              </span>
+              <div class="form-field">
+                <span data-i18n="personaInjectionTemplate"
+                  >Persona Injection Template</span
+                >
+                <textarea
+                  id="persona-injection-template"
+                  rows="5"
+                  placeholder="Template for active persona injection."
+                ></textarea>
+              </div>
+              <div class="form-field">
+                <span data-i18n="writingInstructionsInjectionTiming"
+                  >Writing Instructions Injection Timing</span
+                >
+                <select id="writing-instructions-injection-when">
+                  <option value="always" data-i18n="always">Always</option>
+                  <option value="every_other" data-i18n="everyOther">
+                    Every Other
+                  </option>
+                  <option value="every_second" data-i18n="everySecond">
+                    Every Second
+                  </option>
+                  <option value="every_third" data-i18n="everyThird">
+                    Every Third
+                  </option>
+                  <option value="every_fourth" data-i18n="everyFourth">
+                    Every Fourth
+                  </option>
+                </select>
+              </div>
               <span class="checkbox-line">
                 <input type="checkbox" id="use-local-summarization" />
-                <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
+                <span data-i18n="useLocalSummarization"
+                  >Use Local Summarization (faster, no API cost)</span
+                >
               </span>
               <details class="settings-collapse">
-                <summary data-i18n="autoTitleSystemPrompt">Auto-Title System Prompt</summary>
+                <summary data-i18n="autoTitleSystemPrompt">
+                  Auto-Title System Prompt
+                </summary>
                 <div class="settings-collapse-body">
                   <textarea
                     id="auto-title-system-prompt"
@@ -1306,10 +1426,14 @@
                 </div>
               </details>
               <details class="settings-collapse">
-                <summary data-i18n="sectionHeadersTitle">Section Headers</summary>
+                <summary data-i18n="sectionHeadersTitle">
+                  Section Headers
+                </summary>
                 <div class="settings-collapse-body">
                   <div class="form-field">
-                    <span data-i18n="sectionHeaderMemoryContext">Memory Context Header</span>
+                    <span data-i18n="sectionHeaderMemoryContext"
+                      >Memory Context Header</span
+                    >
                     <input
                       id="section-header-memory-context"
                       type="text"
@@ -1317,7 +1441,9 @@
                     />
                   </div>
                   <div class="form-field">
-                    <span data-i18n="sectionHeaderCharacterPrompt">Character Prompt Header</span>
+                    <span data-i18n="sectionHeaderCharacterPrompt"
+                      >Character Prompt Header</span
+                    >
                     <input
                       id="section-header-character-prompt"
                       type="text"
@@ -1325,7 +1451,9 @@
                     />
                   </div>
                   <div class="form-field">
-                    <span data-i18n="sectionHeaderMessagesSoFar">Messages So Far Header</span>
+                    <span data-i18n="sectionHeaderMessagesSoFar"
+                      >Messages So Far Header</span
+                    >
                     <input
                       id="section-header-messages-so-far"
                       type="text"
@@ -1333,7 +1461,9 @@
                     />
                   </div>
                   <div class="form-field">
-                    <span data-i18n="sectionHeaderMessages">Messages Header</span>
+                    <span data-i18n="sectionHeaderMessages"
+                      >Messages Header</span
+                    >
                     <input
                       id="section-header-messages"
                       type="text"
@@ -1341,7 +1471,9 @@
                     />
                   </div>
                   <div class="form-field">
-                    <span data-i18n="sectionHeaderMemoryLevelContext">Memory Level Context Header</span>
+                    <span data-i18n="sectionHeaderMemoryLevelContext"
+                      >Memory Level Context Header</span
+                    >
                     <input
                       id="section-header-memory-level-context"
                       type="text"
@@ -1352,68 +1484,87 @@
               </details>
             </div>
             <div data-settings-group="shortcuts" class="settings-group">
-             <div class="form-field">
-               <span data-i18n="cancelGenerationShortcut"
-                 >Cancel Generation Shortcut</span
-               >
-               <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
-             </div>
-             <div class="form-field">
-               <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
-               <input id="home-shortcut" type="text" placeholder="Alt+H" />
-             </div>
-             <div class="form-field">
-               <span data-i18n="newCharacterShortcut"
-                 >New Character Shortcut</span
-               >
-               <input
-                 id="new-character-shortcut"
-                 type="text"
-                 placeholder="Alt+N"
-               />
-             </div>
-           </div>
-           <div data-settings-group="defaults" class="settings-group">
-             <div class="form-field">
-               <span data-i18n="defaultPersonaInjectionPlacement"
-                 >Default Persona Injection Placement</span
-               >
-               <select id="default-persona-injection-placement">
-                 <option value="none" data-i18n="personaInjectionNone">None</option>
-                 <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
-                 <option value="once" data-i18n="personaInjectionOnce">Once</option>
-                 <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
-               </select>
-             </div>
-             <div class="form-field">
-               <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
-               <select id="default-tts-provider">
-                 <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
-                 <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
-               </select>
-             </div>
-               <div class="form-field">
-                 <div class="label-inline">
-                   <span data-i18n="defaultTtsRate">Default TTS Rate</span>
-                   <span id="default-tts-rate-value" class="muted"></span>
-                 </div>
-                 <input
-                   id="default-tts-rate"
-                   type="range"
-                   min="0.5"
-                   max="2"
-                   step="0.1"
-                   value="1"
-                 />
-               </div>
+              <div class="form-field">
+                <span data-i18n="cancelGenerationShortcut"
+                  >Cancel Generation Shortcut</span
+                >
+                <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
+              </div>
+              <div class="form-field">
+                <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
+                <input id="home-shortcut" type="text" placeholder="Alt+H" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="newCharacterShortcut"
+                  >New Character Shortcut</span
+                >
+                <input
+                  id="new-character-shortcut"
+                  type="text"
+                  placeholder="Alt+N"
+                />
+              </div>
+            </div>
+            <div data-settings-group="defaults" class="settings-group">
+              <div class="form-field">
+                <span data-i18n="defaultPersonaInjectionPlacement"
+                  >Default Persona Injection Placement</span
+                >
+                <select id="default-persona-injection-placement">
+                  <option value="none" data-i18n="personaInjectionNone">
+                    None
+                  </option>
+                  <option
+                    value="end_system_prompt"
+                    data-i18n="atEndCharacterPrompt"
+                  >
+                    At End of Character Prompt
+                  </option>
+                  <option value="once" data-i18n="personaInjectionOnce">
+                    Once
+                  </option>
+                  <option value="end_messages" data-i18n="atEndOfMessages">
+                    At End of Messages
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
+                <select id="default-tts-provider">
+                  <option value="kokoro" data-i18n="ttsProviderKokoro">
+                    Kokoro.js (local)
+                  </option>
+                  <option value="browser" data-i18n="ttsProviderBrowser">
+                    Browser (speechSynthesis)
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="defaultTtsRate">Default TTS Rate</span>
+                  <span id="default-tts-rate-value" class="muted"></span>
+                </div>
+                <input
+                  id="default-tts-rate"
+                  type="range"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value="1"
+                />
+              </div>
               <div class="form-field">
                 <label class="checkbox-label">
                   <input type="checkbox" id="default-include-ooc" />
-                  <span data-i18n="defaultIncludeOocInCompletions">Include OOC messages in completions</span>
+                  <span data-i18n="defaultIncludeOocInCompletions"
+                    >Include OOC messages in completions</span
+                  >
                 </label>
               </div>
               <div class="form-field">
-                <span data-i18n="defaultAvatarScale">Default Avatar Scale (In Chat)</span>
+                <span data-i18n="defaultAvatarScale"
+                  >Default Avatar Scale (In Chat)</span
+                >
                 <input
                   id="default-avatar-scale"
                   type="number"
@@ -1422,13 +1573,19 @@
                   step="1"
                   value="4"
                 />
-               </div>
+              </div>
               <div class="form-field">
                 <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
                 <select id="default-auto-title-provider">
-                  <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
-                  <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
-                  <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
+                  <option value="openrouter" data-i18n="providerOpenRouter">
+                    OpenRouter
+                  </option>
+                  <option value="aihorde" data-i18n="providerAIHorde">
+                    AI Horde
+                  </option>
+                  <option value="lmstudio" data-i18n="providerLMStudio">
+                    LM Studio
+                  </option>
                 </select>
               </div>
               <div class="form-field">
@@ -1437,7 +1594,9 @@
               </div>
               <div class="form-field">
                 <div class="label-inline">
-                  <span data-i18n="autoTitleTemperature">Auto-Title Temperature</span>
+                  <span data-i18n="autoTitleTemperature"
+                    >Auto-Title Temperature</span
+                  >
                   <span id="default-auto-title-temp-value" class="muted"></span>
                 </div>
                 <input
@@ -1452,9 +1611,15 @@
               <div class="form-field">
                 <span data-i18n="summaryProvider">Summary Provider</span>
                 <select id="default-summary-provider">
-                  <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
-                  <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
-                  <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
+                  <option value="openrouter" data-i18n="providerOpenRouter">
+                    OpenRouter
+                  </option>
+                  <option value="aihorde" data-i18n="providerAIHorde">
+                    AI Horde
+                  </option>
+                  <option value="lmstudio" data-i18n="providerLMStudio">
+                    LM Studio
+                  </option>
                 </select>
               </div>
               <div class="form-field">
@@ -1463,7 +1628,9 @@
               </div>
               <div class="form-field">
                 <div class="label-inline">
-                  <span data-i18n="summaryTemperature">Summary Temperature</span>
+                  <span data-i18n="summaryTemperature"
+                    >Summary Temperature</span
+                  >
                   <span id="default-summary-temp-value" class="muted"></span>
                 </div>
                 <input
@@ -1476,1670 +1643,1887 @@
                 />
               </div>
             </div>
-         </div>
-      </div>
-    </div>
-
-    <div
-      id="assets-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="assets-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="assets-title" data-i18n="assetsManager">Assets Manager</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+          </div>
         </div>
-        <div class="modal-body">
-          <div id="assets-dropzone-section">
-            <button
-              type="button"
-              id="assets-dropzone"
-              class="assets-dropzone"
-              tabindex="0"
-              aria-label="Upload asset"
-            >
-              <span class="dropzone-plus">+</span>
-              <span class="dropzone-hint" data-i18n="assetsDropzoneHint"
-                >Drag & drop or click to add assets</span
+      </div>
+
+      <div
+        id="assets-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="assets-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="assets-title" data-i18n="assetsManager">Assets Manager</h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="assets-dropzone-section">
+              <button
+                type="button"
+                id="assets-dropzone"
+                class="assets-dropzone"
+                tabindex="0"
+                aria-label="Upload asset"
               >
-            </button>
-            <input
-              type="file"
-              id="assets-file-input"
-              accept="image/*,video/*,audio/*"
-              multiple
-              class="visually-hidden"
-            />
-          </div>
-          <div id="assets-list" class="lorebook-list"></div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="memory-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="memory-modal-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="memory-modal-title" data-i18n="memoryModalTitle">
-            Memory entries
-          </h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <p id="memory-modal-status" class="muted"></p>
-          <div id="memory-modal-entries"></div>
-        </div>
-        <div class="modal-footer">
-          <button
-            id="memory-modal-save"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="memory-regenerate-prompt-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="memory-regenerate-prompt-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3
-            id="memory-regenerate-prompt-title"
-            data-i18n="memoryRegeneratePromptTitle"
-          >
-            Regenerate Memory Entry
-          </h3>
-          <button
-            type="button"
-            class="icon-btn modal-close"
-            data-memory-regenerate-prompt-close
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="memory-regenerate-prompt-info">
-            <p id="memory-regenerate-prompt-entry-label" class="muted"></p>
-            <p
-              id="memory-regenerate-prompt-description"
-              class="muted"
-              data-i18n="memoryRegeneratePromptDescription"
-            >
-              Edit the USER prompt that generated this summary before regenerating.
-            </p>
-          </div>
-          <textarea
-            id="memory-regenerate-prompt-input"
-            rows="8"
-            placeholder=""
-          ></textarea>
-          <span
-            id="memory-regenerate-prompt-input-count"
-            class="textarea-collapse-count memory-regenerate-word-count"
-          ></span>
-        </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="secondary-btn"
-            data-memory-regenerate-prompt-close
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="primary-btn"
-            id="memory-regenerate-prompt-submit"
-            data-i18n="memoryEntryRegenerate"
-          >
-            Regenerate
-          </button>
-        </div>
-      </div>
-    </div>
-    <div
-      id="memory-regenerate-progress-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="memory-regenerate-progress-title"
-    >
-      <div class="modal-card medium">
-        <div class="modal-header">
-          <h3
-            id="memory-regenerate-progress-title"
-            data-i18n="memoryRegenerateProgressTitle"
-          >
-            Summary regeneration
-          </h3>
-          <button
-            type="button"
-            class="icon-btn modal-close"
-            data-memory-regenerate-progress-close-btn
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="chat-row chat-row-ooc memory-regenerate-progress-row">
-            <img
-              id="memory-regenerate-progress-avatar"
-              class="chat-avatar"
-              src=""
-              alt="SYSTEM avatar"
-            />
-            <div class="message-block">
-              <div class="message-header">
-                <span data-i18n="systemRoleName">SYSTEM</span>
-                <span
-                  id="memory-regenerate-progress-entry-label"
-                  class="muted"
-                ></span>
-              </div>
-              <div class="message-content memory-regenerate-progress-content">
-                <span
-                  class="spinner memory-regenerate-progress-spinner"
-                  aria-hidden="true"
-                ></span>
-                <span
-                  id="memory-regenerate-progress-status"
-                  data-i18n="memoryRegenerateProgressPending"
+                <span class="dropzone-plus">+</span>
+                <span class="dropzone-hint" data-i18n="assetsDropzoneHint"
+                  >Drag & drop or click to add assets</span
                 >
-                  Regenerating summary...
-                </span>
-              </div>
+              </button>
+              <input
+                type="file"
+                id="assets-file-input"
+                accept="image/*,video/*,audio/*"
+                multiple
+                class="visually-hidden"
+              />
             </div>
+            <div id="assets-list" class="lorebook-list"></div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="primary-btn"
-            id="memory-regenerate-progress-close"
-            data-memory-regenerate-progress-close-btn
-            data-i18n="memoryRegenerateProgressClose"
-          >
-            Close
-          </button>
         </div>
       </div>
-    </div>
 
-    <div
-      id="asset-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="asset-editor-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="asset-editor-title" data-i18n="assetEditor">Asset Editor</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-field">
-            <div class="label-inline">
-              <span data-i18n="nameLabel">Name</span>
-              <span id="asset-name-count" class="muted">0/128</span>
-            </div>
-            <input id="asset-name" type="text" maxlength="128" />
-          </div>
-          <div class="form-field">
-            <span data-i18n="assetOriginalName">Original Filename</span>
-            <input id="asset-original-name" type="text" disabled />
-          </div>
-          <div class="form-field">
-            <span data-i18n="assetType">Type</span>
-            <input id="asset-type" type="text" disabled />
-          </div>
-          <div
-            id="asset-preview-container"
-            class="asset-preview-container"
-          ></div>
-          <div id="asset-audio-controls" class="asset-audio-controls hidden">
-            <button
-              id="asset-play-btn"
-              class="icon-btn"
-              type="button"
-              title="Play"
-            >
-              &#9654;
-            </button>
-            <button
-              id="asset-pause-btn"
-              class="icon-btn"
-              type="button"
-              title="Pause"
-            >
-              &#10074;&#10074;
-            </button>
-            <button
-              id="asset-stop-btn"
-              class="icon-btn"
-              type="button"
-              title="Stop"
-            >
-              &#9632;
+      <div
+        id="memory-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="memory-modal-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="memory-modal-title" data-i18n="memoryModalTitle">
+              Memory entries
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
             </button>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            id="cancel-asset-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="apply-asset-editor-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-            disabled
-          >
-            Apply
-          </button>
-          <button
-            id="save-asset-editor-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="personas-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="personas-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="personas-title" data-i18n="personaManager">Persona Manager</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="lore-toolbar">
+          <div class="modal-body">
+            <p id="memory-modal-status" class="muted"></p>
+            <div id="memory-modal-entries"></div>
+          </div>
+          <div class="modal-footer">
             <button
-              id="create-persona-btn"
+              id="memory-modal-save"
               class="primary-btn"
               type="button"
-              data-i18n="newPersona"
+              data-i18n="save"
+              disabled
             >
-              + New Persona
+              Save
             </button>
           </div>
-          <div id="persona-list" class="lorebook-list"></div>
         </div>
       </div>
-      <!-- Hidden legacy form fields for backward compatibility -->
-      <input id="persona-name" type="hidden" />
-      <input id="persona-avatar" type="hidden" />
-      <input id="persona-avatar-file" type="hidden" />
-      <textarea id="persona-description" class="hidden"></textarea>
-      <textarea id="persona-internal-description" class="hidden"></textarea>
-      <input id="persona-is-default" type="hidden" />
-      <span id="persona-name-count" class="hidden">0/64</span>
-      <span id="persona-description-count" class="hidden">0/100</span>
-    </div>
 
-    <div
-      id="lore-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="lore-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="lore-title" data-i18n="loreBookManagement">
-            Lorebook Management
-          </h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div id="lore-list-view">
-            <div class="lore-toolbar">
-              <button
-                id="create-lorebook-btn"
-                class="primary-btn"
-                type="button"
-                data-i18n="createLoreBook"
+      <div
+        id="memory-regenerate-prompt-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="memory-regenerate-prompt-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3
+              id="memory-regenerate-prompt-title"
+              data-i18n="memoryRegeneratePromptTitle"
+            >
+              Regenerate Memory Entry
+            </h3>
+            <button
+              type="button"
+              class="icon-btn modal-close"
+              data-memory-regenerate-prompt-close
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="memory-regenerate-prompt-info">
+              <p id="memory-regenerate-prompt-entry-label" class="muted"></p>
+              <p
+                id="memory-regenerate-prompt-description"
+                class="muted"
+                data-i18n="memoryRegeneratePromptDescription"
               >
-                + Create Lorebook
+                Edit the USER prompt that generated this summary before
+                regenerating.
+              </p>
+            </div>
+            <textarea
+              id="memory-regenerate-prompt-input"
+              rows="8"
+              placeholder=""
+            ></textarea>
+            <span
+              id="memory-regenerate-prompt-input-count"
+              class="textarea-collapse-count memory-regenerate-word-count"
+            ></span>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="secondary-btn"
+              data-memory-regenerate-prompt-close
+              data-i18n="cancel"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="primary-btn"
+              id="memory-regenerate-prompt-submit"
+              data-i18n="memoryEntryRegenerate"
+            >
+              Regenerate
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        id="memory-regenerate-progress-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="memory-regenerate-progress-title"
+      >
+        <div class="modal-card medium">
+          <div class="modal-header">
+            <h3
+              id="memory-regenerate-progress-title"
+              data-i18n="memoryRegenerateProgressTitle"
+            >
+              Summary regeneration
+            </h3>
+            <button
+              type="button"
+              class="icon-btn modal-close"
+              data-memory-regenerate-progress-close-btn
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="chat-row chat-row-ooc memory-regenerate-progress-row">
+              <img
+                id="memory-regenerate-progress-avatar"
+                class="chat-avatar"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E"
+                alt="SYSTEM avatar"
+              />
+              <div class="message-block">
+                <div class="message-header">
+                  <span data-i18n="systemRoleName">SYSTEM</span>
+                  <span
+                    id="memory-regenerate-progress-entry-label"
+                    class="muted"
+                  ></span>
+                </div>
+                <div class="message-content memory-regenerate-progress-content">
+                  <span
+                    class="spinner memory-regenerate-progress-spinner"
+                    aria-hidden="true"
+                  ></span>
+                  <span
+                    id="memory-regenerate-progress-status"
+                    data-i18n="memoryRegenerateProgressPending"
+                  >
+                    Regenerating summary...
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="primary-btn"
+              id="memory-regenerate-progress-close"
+              data-memory-regenerate-progress-close-btn
+              data-i18n="memoryRegenerateProgressClose"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="asset-editor-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="asset-editor-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="asset-editor-title" data-i18n="assetEditor">
+              Asset Editor
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="nameLabel">Name</span>
+                <span id="asset-name-count" class="muted">0/128</span>
+              </div>
+              <input id="asset-name" type="text" maxlength="128" />
+            </div>
+            <div class="form-field">
+              <span data-i18n="assetOriginalName">Original Filename</span>
+              <input id="asset-original-name" type="text" disabled />
+            </div>
+            <div class="form-field">
+              <span data-i18n="assetType">Type</span>
+              <input id="asset-type" type="text" disabled />
+            </div>
+            <div
+              id="asset-preview-container"
+              class="asset-preview-container"
+            ></div>
+            <div id="asset-audio-controls" class="asset-audio-controls hidden">
+              <button
+                id="asset-play-btn"
+                class="icon-btn"
+                type="button"
+                title="Play"
+              >
+                &#9654;
               </button>
               <button
-                id="import-lorebook-btn"
-                class="secondary-btn"
+                id="asset-pause-btn"
+                class="icon-btn"
                 type="button"
-                data-i18n="importLoreBook"
+                title="Pause"
               >
-                ^ Import Lorebook
+                &#10074;&#10074;
+              </button>
+              <button
+                id="asset-stop-btn"
+                class="icon-btn"
+                type="button"
+                title="Stop"
+              >
+                &#9632;
               </button>
             </div>
-            <div id="lorebook-list" class="lorebook-list"></div>
           </div>
-
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="lore-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="lore-editor-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="lore-editor-title" data-i18n="loreBookEditor">
-            Lorebook Editor
-          </h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="lore-toolbar">
+          <div class="modal-footer">
             <button
-              id="lore-editor-back-btn"
+              id="cancel-asset-btn"
               class="secondary-btn"
               type="button"
-              data-i18n="backToList"
+              data-i18n="cancel"
             >
-              Back to List
+              Cancel
+            </button>
+            <button
+              id="apply-asset-editor-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="apply"
+              disabled
+            >
+              Apply
+            </button>
+            <button
+              id="save-asset-editor-btn"
+              class="primary-btn"
+              type="button"
+              data-i18n="save"
+              disabled
+            >
+              Save
             </button>
           </div>
-          <div class="two-col lore-editor-grid">
-            <div class="form-field">
-              <span data-i18n="nameLabel">Name</span>
-              <input id="lore-name" type="text" minlength="2" maxlength="128" />
+        </div>
+      </div>
+
+      <div
+        id="personas-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="personas-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="personas-title" data-i18n="personaManager">
+              Persona Manager
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="lore-toolbar">
+              <button
+                id="create-persona-btn"
+                class="primary-btn"
+                type="button"
+                data-i18n="newPersona"
+              >
+                + New Persona
+              </button>
             </div>
-            <div class="form-field">
-              <span data-i18n="avatarUrlOptional">Avatar URL (optional)</span>
-              <input id="lore-avatar" type="text" placeholder="optional" />
+            <div id="persona-list" class="lorebook-list"></div>
+          </div>
+        </div>
+        <!-- Hidden legacy form fields for backward compatibility -->
+        <input id="persona-name" type="hidden" />
+        <input id="persona-avatar" type="hidden" />
+        <input id="persona-avatar-file" type="hidden" />
+        <textarea id="persona-description" class="hidden"></textarea>
+        <textarea id="persona-internal-description" class="hidden"></textarea>
+        <input id="persona-is-default" type="hidden" />
+        <span id="persona-name-count" class="hidden">0/64</span>
+        <span id="persona-description-count" class="hidden">0/100</span>
+      </div>
+
+      <div
+        id="lore-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="lore-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="lore-title" data-i18n="loreBookManagement">
+              Lorebook Management
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="lore-list-view">
+              <div class="lore-toolbar">
+                <button
+                  id="create-lorebook-btn"
+                  class="primary-btn"
+                  type="button"
+                  data-i18n="createLoreBook"
+                >
+                  + Create Lorebook
+                </button>
+                <button
+                  id="import-lorebook-btn"
+                  class="secondary-btn"
+                  type="button"
+                  data-i18n="importLoreBook"
+                >
+                  ^ Import Lorebook
+                </button>
+              </div>
+              <div id="lorebook-list" class="lorebook-list"></div>
             </div>
-            <div class="form-field full">
-              <span data-i18n="descriptionOptional">
-                Description (optional)
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="lore-editor-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="lore-editor-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="lore-editor-title" data-i18n="loreBookEditor">
+              Lorebook Editor
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="lore-toolbar">
+              <button
+                id="lore-editor-back-btn"
+                class="secondary-btn"
+                type="button"
+                data-i18n="backToList"
+              >
+                Back to List
+              </button>
+            </div>
+            <div class="two-col lore-editor-grid">
+              <div class="form-field">
+                <span data-i18n="nameLabel">Name</span>
+                <input
+                  id="lore-name"
+                  type="text"
+                  minlength="2"
+                  maxlength="128"
+                />
+              </div>
+              <div class="form-field">
+                <span data-i18n="avatarUrlOptional">Avatar URL (optional)</span>
+                <input id="lore-avatar" type="text" placeholder="optional" />
+              </div>
+              <div class="form-field full">
+                <span data-i18n="descriptionOptional">
+                  Description (optional)
+                </span>
+                <textarea
+                  id="lore-description"
+                  rows="3"
+                  maxlength="512"
+                ></textarea>
+              </div>
+              <div class="form-field">
+                <span data-i18n="scanDepth">Scan Depth</span>
+                <input
+                  id="lore-scan-depth"
+                  type="number"
+                  min="5"
+                  max="100"
+                  step="1"
+                />
+              </div>
+              <div class="form-field">
+                <span data-i18n="tokenBudget">Token Budget</span>
+                <input
+                  id="lore-token-budget"
+                  type="number"
+                  min="100"
+                  max="1000"
+                  step="10"
+                />
+              </div>
+              <span class="checkbox-line">
+                <input id="lore-recursive-scanning" type="checkbox" />
+                <span data-i18n="recursiveScanning">Recursive Scanning</span>
               </span>
+              <div class="form-field">
+                <span data-i18n="lorebookInjectionMode">Injection Mode</span>
+                <select id="lore-injection-mode">
+                  <option value="cooldown" data-i18n="lorebookCooldown">
+                    Cooldown
+                  </option>
+                  <option
+                    value="once_per_context"
+                    data-i18n="lorebookOncePerContext"
+                  >
+                    Once per Context
+                  </option>
+                </select>
+              </div>
+              <div class="form-field" id="lore-suppression-window-field">
+                <span data-i18n="lorebookSuppressionWindow"
+                  >Suppression Window (messages)</span
+                >
+                <input
+                  id="lore-suppression-window"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="1"
+                  value="10"
+                />
+              </div>
+            </div>
+            <div class="lore-entry-head">
+              <h4 id="lore-entries-title">Entries</h4>
+              <button
+                id="add-lore-entry-btn"
+                class="secondary-btn"
+                type="button"
+                data-i18n="addEntry"
+              >
+                + Add Entry
+              </button>
+            </div>
+            <div id="lore-entries-list" class="lore-entries-list"></div>
+          </div>
+          <div class="modal-footer">
+            <button
+              id="cancel-lore-editor-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="cancel"
+            >
+              Cancel
+            </button>
+            <button
+              id="save-lorebook-btn"
+              class="primary-btn"
+              type="button"
+              data-i18n="saveLoreBook"
+            >
+              Save Lorebook
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <input
+        id="import-lorebook-input"
+        type="file"
+        accept=".json,application/json"
+        class="hidden"
+      />
+
+      <div
+        id="shortcuts-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shortcuts-title"
+      >
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="shortcuts-title" data-i18n="shortcuts">Shortcuts</h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-field">
+              <span data-i18n="shortcutEntries">Shortcut Entries</span>
+              <textarea id="shortcuts-raw" rows="14"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="secondary-btn"
+              type="button"
+              data-close-modal
+              data-i18n="cancel"
+            >
+              Cancel
+            </button>
+            <button
+              id="apply-shortcuts-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="apply"
+              disabled
+            >
+              Apply
+            </button>
+            <button
+              id="save-shortcuts-btn"
+              class="primary-btn"
+              type="button"
+              data-i18n="save"
+              disabled
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="database-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="database-title"
+      >
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="database-title" data-i18n="databaseManagement">
+              Database Management
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <button id="export-db-btn" class="primary-btn" type="button">
+              Export Database
+            </button>
+            <button id="import-db-btn" class="secondary-btn" type="button">
+              Import Database
+            </button>
+            <button
+              id="reset-db-btn"
+              class="secondary-btn danger-btn"
+              type="button"
+              data-i18n="resetAppData"
+            >
+              Reset App Data
+            </button>
+            <input
+              id="import-db-input"
+              type="file"
+              accept=".json,application/json"
+              class="hidden"
+            />
+            <p id="database-hint" class="muted">
+              Import will overwrite the current local data (characters, threads,
+              settings, UI state, and more).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="tags-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tags-title"
+      >
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="tags-title" data-i18n="tagManager">Tag Manager</h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="tag-manager-input-row">
+              <input
+                id="tag-manager-input"
+                type="text"
+                data-i18n-placeholder="tagInputPlaceholder"
+                placeholder="New tag"
+              />
+              <button
+                id="add-tag-btn"
+                class="primary-btn"
+                type="button"
+                disabled
+              >
+                +
+              </button>
+            </div>
+            <div id="tag-manager-list" class="tag-manager-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="character-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="character-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="character-title">BOT</h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div id="char-avatars-section" class="char-avatars-section">
+            <div id="char-avatars-container" class="char-avatars-container">
+              <button
+                type="button"
+                id="char-avatar-dropzone"
+                class="char-avatar-dropzone"
+                tabindex="0"
+                aria-label="Upload avatar"
+              >
+                <span class="dropzone-plus">+</span>
+                <span class="dropzone-hint">Drag & drop or click</span>
+              </button>
+              <input
+                type="file"
+                id="char-avatar-file-input"
+                accept="image/*,video/mp4"
+                multiple
+                class="visually-hidden"
+              />
+            </div>
+          </div>
+          <div id="char-def-tabs" class="settings-tabs">
+            <div class="char-def-tabs-row">
+              <button
+                id="char-config-tab-btn"
+                class="settings-tab-btn"
+                type="button"
+                data-i18n="botConfiguration"
+              >
+                Config
+              </button>
+              <button
+                id="char-sfx-tab-btn"
+                class="settings-tab-btn"
+                type="button"
+                data-i18n="sfxTab"
+              >
+                SFX
+              </button>
+              <button
+                id="char-tags-tab-btn"
+                class="settings-tab-btn"
+                type="button"
+                data-i18n="tagsTab"
+              >
+                Tags
+              </button>
+              <button
+                id="char-model3d-tab-btn"
+                class="settings-tab-btn"
+                type="button"
+                data-i18n="model3dTab"
+              >
+                3D
+              </button>
+              <span class="char-def-tabs-divider"></span>
+              <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
+              <button
+                id="char-add-lang-btn"
+                class="settings-tab-btn"
+                type="button"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <div class="modal-body two-col">
+            <div class="full lang-field">
+              <div class="label-inline">
+                <span data-i18n="nameLabel">Name</span>
+                <span id="char-name-count" class="muted">0/128</span>
+              </div>
+              <input id="char-name" type="text" maxlength="128" />
+            </div>
+            <div class="full lang-field">
+              <div class="label-inline">
+                <span data-i18n="taglineLabel">Tagline</span>
+                <span id="char-tagline-count" class="muted">0/128</span>
+              </div>
+              <input id="char-tagline" type="text" maxlength="128" />
+            </div>
+            <div class="full lang-field">
+              <span data-i18n="characterPrompt">Character Prompt</span>
+              <textarea id="char-system-prompt" rows="8"></textarea>
+            </div>
+            <div class="full lang-field">
+              <span data-i18n="writingInstructions">Writing Instructions</span>
+              <select id="char-writing-instructions-select"></select>
               <textarea
-                id="lore-description"
-                rows="3"
-                maxlength="512"
+                id="char-writing-instructions"
+                rows="4"
+                placeholder="Reserved for future implementation."
               ></textarea>
             </div>
-            <div class="form-field">
-              <span data-i18n="scanDepth">Scan Depth</span>
-              <input
-                id="lore-scan-depth"
-                type="number"
-                min="5"
-                max="100"
-                step="1"
-              />
+            <div class="full lang-field">
+              <span data-i18n="oneTimeExtraPrompt"
+                >One-time only Extra System/Character Prompt</span
+              >
+              <textarea
+                id="char-one-time-extra-prompt"
+                rows="4"
+                placeholder="Appended only for the first assistant generation."
+              ></textarea>
             </div>
-            <div class="form-field">
-              <span data-i18n="tokenBudget">Token Budget</span>
-              <input
-                id="lore-token-budget"
-                type="number"
-                min="100"
-                max="1000"
-                step="10"
-              />
+            <div class="full lang-field initial-messages-field">
+              <div class="initial-messages-header-row">
+                <span data-i18n="initialMessages">Initial Messages</span>
+                <button
+                  id="add-initial-message-btn"
+                  type="button"
+                  class="icon-btn small"
+                  data-i18n-title="addInitialMessage"
+                >
+                  <span
+                    class="visually-hidden"
+                    data-i18n="addInitialMessage"
+                  ></span>
+                </button>
+              </div>
+              <span
+                class="muted initial-messages-hint"
+                data-i18n="initialMessagesHint"
+              ></span>
+              <div class="initial-messages-editor">
+                <div
+                  id="char-initial-messages-list"
+                  class="initial-messages-list"
+                ></div>
+              </div>
             </div>
-            <span class="checkbox-line">
-              <input id="lore-recursive-scanning" type="checkbox" />
-              <span data-i18n="recursiveScanning">Recursive Scanning</span>
-            </span>
-            <div class="form-field">
-              <span data-i18n="lorebookInjectionMode">Injection Mode</span>
-              <select id="lore-injection-mode">
-                <option value="cooldown" data-i18n="lorebookCooldown">Cooldown</option>
-                <option value="once_per_context" data-i18n="lorebookOncePerContext">Once per Context</option>
+            <div class="full tags-field hidden">
+              <div class="char-tags-sticky-wrapper">
+                <span data-i18n="tagsCommaSeparated"
+                  >Tags (comma-separated)</span
+                >
+                <input
+                  id="char-tags-input"
+                  list="tag-presets"
+                  type="text"
+                  placeholder="Roleplay, Female, Hero"
+                />
+              </div>
+              <div id="char-tags-presets" class="tag-presets-list"></div>
+            </div>
+            <div class="full lang-field hidden persona-injection-field">
+              <span data-i18n="personaInjectionPlacement"
+                >Persona Injection Placement</span
+              >
+              <select id="char-persona-injection-placement">
+                <option value="none" data-i18n="personaInjectionNone">
+                  None
+                </option>
+                <option
+                  value="end_system_prompt"
+                  data-i18n="atEndCharacterPrompt"
+                >
+                  At End of Character Prompt
+                </option>
+                <option value="once" data-i18n="personaInjectionOnce">
+                  Once
+                </option>
+                <option value="end_messages" data-i18n="atEndOfMessages">
+                  At End of Messages
+                </option>
               </select>
             </div>
-            <div class="form-field" id="lore-suppression-window-field">
-              <span data-i18n="lorebookSuppressionWindow">Suppression Window (messages)</span>
+            <div class="global-field full">
+              <span class="checkbox-line">
+                <input id="char-use-memory" type="checkbox" />
+                <span data-i18n="enableMemory">Enable Memory</span>
+              </span>
+            </div>
+            <div class="global-field full">
+              <span class="checkbox-line">
+                <input id="char-use-postprocess" type="checkbox" checked />
+                <span data-i18n="enablePostprocess"
+                  >Enable Post-processing Rules</span
+                >
+              </span>
+            </div>
+            <div class="global-field full">
+              <span class="checkbox-line">
+                <input
+                  id="char-auto-trigger-first-ai"
+                  type="checkbox"
+                  checked
+                />
+                <span data-i18n="autoTriggerAiFirst"
+                  >Auto-trigger AI first message</span
+                >
+              </span>
+            </div>
+            <div class="global-field full">
+              <span class="checkbox-line">
+                <input id="char-auto-title" type="checkbox" checked />
+                <span data-i18n="autoTitleThreads"
+                  >Auto-generate thread titles</span
+                >
+              </span>
+            </div>
+            <div class="global-field full">
+              <span class="checkbox-line">
+                <input id="char-persona-prefix" type="checkbox" checked />
+                <span data-i18n="prefixUserMessagesWithPersona"
+                  >Prefix user messages with active persona</span
+                >
+              </span>
+            </div>
+            <div class="global-field full">
+              <span data-i18n="autoTitleMinMessages"
+                >Min. messages for auto-title</span
+              >
               <input
-                id="lore-suppression-window"
+                id="char-auto-title-min-messages"
                 type="number"
                 min="1"
-                max="100"
-                step="1"
+                max="50"
                 value="10"
               />
             </div>
-          </div>
-          <div class="lore-entry-head">
-            <h4 id="lore-entries-title">Entries</h4>
-            <button
-              id="add-lore-entry-btn"
-              class="secondary-btn"
-              type="button"
-              data-i18n="addEntry"
-            >
-              + Add Entry
-            </button>
-          </div>
-          <div id="lore-entries-list" class="lore-entries-list"></div>
-        </div>
-        <div class="modal-footer">
-          <button
-            id="cancel-lore-editor-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="save-lorebook-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="saveLoreBook"
-          >
-            Save Lorebook
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <input
-      id="import-lorebook-input"
-      type="file"
-      accept=".json,application/json"
-      class="hidden"
-    />
-
-    <div
-      id="shortcuts-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="shortcuts-title"
-    >
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 id="shortcuts-title" data-i18n="shortcuts">Shortcuts</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-field">
-            <span data-i18n="shortcutEntries">Shortcut Entries</span>
-            <textarea id="shortcuts-raw" rows="14"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            class="secondary-btn"
-            type="button"
-            data-close-modal
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="apply-shortcuts-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-            disabled
-          >
-            Apply
-          </button>
-          <button
-            id="save-shortcuts-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="database-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="database-title"
-    >
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 id="database-title" data-i18n="databaseManagement">
-            Database Management
-          </h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <button id="export-db-btn" class="primary-btn" type="button">
-            Export Database
-          </button>
-          <button id="import-db-btn" class="secondary-btn" type="button">
-            Import Database
-          </button>
-          <button
-            id="reset-db-btn"
-            class="secondary-btn danger-btn"
-            type="button"
-            data-i18n="resetAppData"
-          >
-            Reset App Data
-          </button>
-          <input
-            id="import-db-input"
-            type="file"
-            accept=".json,application/json"
-            class="hidden"
-          />
-          <p id="database-hint" class="muted">
-            Import will overwrite the current local data (characters, threads,
-            settings, UI state, and more).
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="tags-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="tags-title"
-    >
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 id="tags-title" data-i18n="tagManager">Tag Manager</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="tag-manager-input-row">
-            <input
-              id="tag-manager-input"
-              type="text"
-              data-i18n-placeholder="tagInputPlaceholder"
-              placeholder="New tag"
-            />
-            <button id="add-tag-btn" class="primary-btn" type="button" disabled>
-              +
-            </button>
-          </div>
-          <div id="tag-manager-list" class="tag-manager-list"></div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="character-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="character-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="character-title">BOT</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div id="char-avatars-section" class="char-avatars-section">
-          <div id="char-avatars-container" class="char-avatars-container">
-            <button
-              type="button"
-              id="char-avatar-dropzone"
-              class="char-avatar-dropzone"
-              tabindex="0"
-              aria-label="Upload avatar"
-            >
-              <span class="dropzone-plus">+</span>
-              <span class="dropzone-hint">Drag & drop or click</span>
-            </button>
-            <input
-              type="file"
-              id="char-avatar-file-input"
-              accept="image/*,video/mp4"
-              multiple
-              class="visually-hidden"
-            />
-          </div>
-        </div>
-        <div id="char-def-tabs" class="settings-tabs">
-          <div class="char-def-tabs-row">
-            <button
-              id="char-config-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="botConfiguration"
-            >
-              Config
-            </button>
-            <button
-              id="char-sfx-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="sfxTab"
-            >
-              SFX
-            </button>
-            <button
-              id="char-tags-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="tagsTab"
-            >
-              Tags
-            </button>
-            <button
-              id="char-model3d-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="model3dTab"
-            >
-              3D
-            </button>
-            <span class="char-def-tabs-divider"></span>
-            <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
-            <button
-              id="char-add-lang-btn"
-              class="settings-tab-btn"
-              type="button"
-            >
-              +
-            </button>
-          </div>
-        </div>
-        <div class="modal-body two-col">
-          <div class="full lang-field">
-            <div class="label-inline">
-              <span data-i18n="nameLabel">Name</span>
-              <span id="char-name-count" class="muted">0/128</span>
+            <div class="global-field full">
+              <span class="checkbox-line">
+                <input id="char-include-ooc" type="checkbox" />
+                <span data-i18n="includeOocMessages"
+                  >Include OOC messages in completions</span
+                >
+              </span>
             </div>
-            <input id="char-name" type="text" maxlength="128" />
-          </div>
-          <div class="full lang-field">
-            <div class="label-inline">
-              <span data-i18n="taglineLabel">Tagline</span>
-              <span id="char-tagline-count" class="muted">0/128</span>
+            <div class="global-field full">
+              <span data-i18n="avatarScaleInChat">Avatar Scale (In Chat)</span>
+              <select id="char-avatar-scale">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+              </select>
             </div>
-            <input id="char-tagline" type="text" maxlength="128" />
-          </div>
-          <div class="full lang-field">
-            <span data-i18n="characterPrompt">Character Prompt</span>
-            <textarea id="char-system-prompt" rows="8"></textarea>
-          </div>
-          <div class="full lang-field">
-            <span data-i18n="writingInstructions">Writing Instructions</span>
-            <select id="char-writing-instructions-select"></select>
-            <textarea
-              id="char-writing-instructions"
-              rows="4"
-              placeholder="Reserved for future implementation."
-            ></textarea>
-          </div>
-          <div class="full lang-field">
-            <span data-i18n="oneTimeExtraPrompt"
-              >One-time only Extra System/Character Prompt</span
-            >
-            <textarea
-              id="char-one-time-extra-prompt"
-              rows="4"
-              placeholder="Appended only for the first assistant generation."
-            ></textarea>
-          </div>
-          <div class="full lang-field initial-messages-field">
-            <div class="initial-messages-header-row">
-              <span data-i18n="initialMessages">Initial Messages</span>
-              <button
-                id="add-initial-message-btn"
-                type="button"
-                class="icon-btn small"
-                data-i18n-title="addInitialMessage"
-              >
-                <span class="visually-hidden" data-i18n="addInitialMessage"></span>
-              </button>
-            </div>
-            <span
-              class="muted initial-messages-hint"
-              data-i18n="initialMessagesHint"
-            ></span>
-            <div class="initial-messages-editor">
-              <div
-                id="char-initial-messages-list"
-                class="initial-messages-list"
-              ></div>
-            </div>
-          </div>
-          <div class="full tags-field hidden">
-            <div class="char-tags-sticky-wrapper">
-              <span data-i18n="tagsCommaSeparated">Tags (comma-separated)</span>
-              <input
-                id="char-tags-input"
-                list="tag-presets"
-                type="text"
-                placeholder="Roleplay, Female, Hero"
-              />
-            </div>
-            <div id="char-tags-presets" class="tag-presets-list"></div>
-          </div>
-          <div class="full lang-field hidden persona-injection-field">
-            <span data-i18n="personaInjectionPlacement"
-              >Persona Injection Placement</span
-            >
-            <select id="char-persona-injection-placement">
-              <option
-                value="none"
-                data-i18n="personaInjectionNone"
-              >
-                None
-              </option>
-              <option
-                value="end_system_prompt"
-                data-i18n="atEndCharacterPrompt"
-              >
-                At End of Character Prompt
-              </option>
-              <option value="once" data-i18n="personaInjectionOnce">
-                Once
-              </option>
-              <option value="end_messages" data-i18n="atEndOfMessages">
-                At End of Messages
-              </option>
-            </select>
-          </div>
-          <div class="global-field full">
-            <span class="checkbox-line">
-              <input id="char-use-memory" type="checkbox" />
-              <span data-i18n="enableMemory">Enable Memory</span>
-            </span>
-          </div>
-          <div class="global-field full">
-            <span class="checkbox-line">
-              <input id="char-use-postprocess" type="checkbox" checked />
-              <span data-i18n="enablePostprocess"
-                >Enable Post-processing Rules</span
-              >
-            </span>
-          </div>
-          <div class="global-field full">
-            <span class="checkbox-line">
-              <input id="char-auto-trigger-first-ai" type="checkbox" checked />
-              <span data-i18n="autoTriggerAiFirst"
-                >Auto-trigger AI first message</span
-              >
-            </span>
-          </div>
-          <div class="global-field full">
-            <span class="checkbox-line">
-              <input id="char-auto-title" type="checkbox" checked />
-              <span data-i18n="autoTitleThreads"
-                >Auto-generate thread titles</span
-              >
-            </span>
-          </div>
-          <div class="global-field full">
-            <span class="checkbox-line">
-              <input id="char-persona-prefix" type="checkbox" checked />
-              <span data-i18n="prefixUserMessagesWithPersona"
-                >Prefix user messages with active persona</span
-              >
-            </span>
-          </div>
-          <div class="global-field full">
-            <span data-i18n="autoTitleMinMessages"
-              >Min. messages for auto-title</span
-            >
-            <input
-              id="char-auto-title-min-messages"
-              type="number"
-              min="1"
-              max="50"
-              value="10"
-            />
-          </div>
-          <div class="global-field full">
-            <span class="checkbox-line">
-              <input id="char-include-ooc" type="checkbox" />
-              <span data-i18n="includeOocMessages"
-                >Include OOC messages in completions</span
-              >
-            </span>
-          </div>
-          <div class="global-field full">
-            <span data-i18n="avatarScaleInChat">Avatar Scale (In Chat)</span>
-            <select id="char-avatar-scale">
-              <option value="1">1x</option>
-              <option value="2">2x</option>
-              <option value="3">3x</option>
-              <option value="4">4x</option>
-            </select>
-          </div>
-          <div class="full lang-field">
-            <span data-i18n="ttsProvider">TTS Provider</span>
-            <select id="char-tts-provider">
-              <option value="kokoro" data-i18n="ttsProviderKokoro" selected>
-                Kokoro.js (local)
-              </option>
-              <option value="browser" data-i18n="ttsProviderBrowser">
-                Browser (speechSynthesis)
-              </option>
-            </select>
-          </div>
-          <div id="char-tts-kokoro-config" class="kokoro-config hidden">
             <div class="full lang-field">
-              <span data-i18n="kokoroDevice">Kokoro Device</span>
-              <select id="char-tts-kokoro-device">
-                <option value="webgpu" data-i18n="kokoroDeviceWebgpu">
-                  WebGPU
+              <span data-i18n="ttsProvider">TTS Provider</span>
+              <select id="char-tts-provider">
+                <option value="kokoro" data-i18n="ttsProviderKokoro" selected>
+                  Kokoro.js (local)
                 </option>
-                <option value="wasm" data-i18n="kokoroDeviceWasm">WASM</option>
+                <option value="browser" data-i18n="ttsProviderBrowser">
+                  Browser (speechSynthesis)
+                </option>
               </select>
             </div>
-            <div class="full lang-field">
-              <span data-i18n="kokoroDtype">Kokoro Quantization</span>
-              <select id="char-tts-kokoro-dtype">
-                <option value="fp16">FP16</option>
-                <option value="q8">Q8</option>
-                <option value="q4">Q4</option>
-                <option value="q4f16">Q4f16</option>
-                <option value="q8f16">Q8f16</option>
-                <option value="auto">AUTO</option>
-                <option value="uint8">UINT8</option>
-                <option value="uint8f16">UINT8F16</option>
-              </select>
-            </div>
-            <div class="full lang-field">
-              <span data-i18n="kokoroVoice">Kokoro Voice</span>
-              <div class="tts-control-row">
-                <select id="char-tts-kokoro-voice">
-                  <option data-i18n="kokoroVoicesLoading">
-                    Loading Kokoro voices...
+            <div id="char-tts-kokoro-config" class="kokoro-config hidden">
+              <div class="full lang-field">
+                <span data-i18n="kokoroDevice">Kokoro Device</span>
+                <select id="char-tts-kokoro-device">
+                  <option value="webgpu" data-i18n="kokoroDeviceWebgpu">
+                    WebGPU
+                  </option>
+                  <option value="wasm" data-i18n="kokoroDeviceWasm">
+                    WASM
                   </option>
                 </select>
-                <div class="tts-test-slot" data-slot="kokoro"></div>
+              </div>
+              <div class="full lang-field">
+                <span data-i18n="kokoroDtype">Kokoro Quantization</span>
+                <select id="char-tts-kokoro-dtype">
+                  <option value="fp16">FP16</option>
+                  <option value="q8">Q8</option>
+                  <option value="q4">Q4</option>
+                  <option value="q4f16">Q4f16</option>
+                  <option value="q8f16">Q8f16</option>
+                  <option value="auto">AUTO</option>
+                  <option value="uint8">UINT8</option>
+                  <option value="uint8f16">UINT8F16</option>
+                </select>
+              </div>
+              <div class="full lang-field">
+                <span data-i18n="kokoroVoice">Kokoro Voice</span>
+                <div class="tts-control-row">
+                  <select id="char-tts-kokoro-voice">
+                    <option data-i18n="kokoroVoicesLoading">
+                      Loading Kokoro voices...
+                    </option>
+                  </select>
+                  <div class="tts-test-slot" data-slot="kokoro"></div>
+                </div>
+              </div>
+              <div class="full lang-field hidden" id="char-tts-kokoro-download">
+                <div class="kokoro-download-row">
+                  <span
+                    id="kokoro-download-label"
+                    data-i18n="kokoroDownloadingVoice"
+                    >Downloading voice...</span
+                  >
+                  <span id="kokoro-download-percent">0%</span>
+                  <button
+                    id="kokoro-download-cancel"
+                    class="icon-btn"
+                    type="button"
+                    title="Cancel download"
+                  >
+                    &times;
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="full lang-field hidden" id="char-tts-kokoro-download">
-              <div class="kokoro-download-row">
-                <span
-                  id="kokoro-download-label"
-                  data-i18n="kokoroDownloadingVoice"
-                  >Downloading voice...</span
-                >
-                <span id="kokoro-download-percent">0%</span>
+            <div class="full lang-field">
+              <div class="label-inline">
+                <span data-i18n="ttsRate">TTS Rate</span>
+                <span id="char-tts-rate-value" class="muted"></span>
+              </div>
+              <input
+                id="char-tts-rate"
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value="1"
+              />
+            </div>
+            <div
+              class="full lang-field tts-extra-field"
+              id="char-tts-language-field"
+            >
+              <span data-i18n="ttsLanguage">TTS Language</span>
+              <select id="char-tts-language"></select>
+            </div>
+            <div
+              class="full lang-field tts-extra-field"
+              id="char-tts-voice-field"
+            >
+              <span data-i18n="ttsVoice">TTS Voice</span>
+              <div class="tts-control-row">
+                <select id="char-tts-voice"></select>
+                <div class="tts-test-slot" data-slot="tts">
+                  <button
+                    id="char-tts-test-btn"
+                    class="icon-btn tts-test-btn"
+                    type="button"
+                    data-i18n-title="testCharacterVoice"
+                  ></button>
+                </div>
+              </div>
+            </div>
+            <div
+              class="full lang-field tts-extra-field"
+              id="char-tts-pitch-field"
+            >
+              <div class="label-inline">
+                <span data-i18n="ttsPitch">TTS Pitch</span>
+                <span id="char-tts-pitch-value" class="muted"></span>
+              </div>
+              <input
+                id="char-tts-pitch"
+                type="range"
+                min="0"
+                max="2"
+                step="0.1"
+              />
+            </div>
+            <div class="full lang-field">
+              <span data-i18n="loreBooksForCharacter"
+                >Lorebooks for this character</span
+              >
+              <div
+                id="char-lorebooks-list"
+                class="check-list lorebook-list"
+              ></div>
+            </div>
+            <div class="full global-field">
+              <span data-i18n="loreCooldown"
+                >Lore re-injection cooldown (messages)</span
+              >
+              <input
+                id="char-lore-cooldown"
+                type="number"
+                min="0"
+                max="100"
+                value="20"
+              />
+            </div>
+            <div class="full sfx-field hidden">
+              <div class="sfx-toolbar">
                 <button
-                  id="kokoro-download-cancel"
-                  class="icon-btn"
+                  id="add-sfx-btn"
+                  class="primary-btn"
                   type="button"
-                  title="Cancel download"
+                  data-i18n="addSfx"
+                >
+                  + Add SFX
+                </button>
+              </div>
+              <div id="char-sfx-list" class="asset-list"></div>
+            </div>
+            <div class="full model3d-field hidden">
+              <div class="model3d-toolbar">
+                <button
+                  id="add-model3d-btn"
+                  class="primary-btn"
+                  type="button"
+                  data-i18n="addModel3d"
+                >
+                  + Add 3D Model
+                </button>
+              </div>
+              <div id="char-model3d-preview" class="model3d-preview">
+                <span class="muted" data-i18n="noModel3dSelected"
+                  >No 3D model selected</span
+                >
+              </div>
+              <div id="char-model3d-info" class="model3d-info hidden">
+                <span id="char-model3d-name" class="model3d-name"></span>
+                <button
+                  id="remove-model3d-btn"
+                  class="icon-btn danger-icon-btn"
+                  type="button"
+                  data-i18n-title="removeModel3d"
+                  title="Remove 3D model"
                 >
                   &times;
                 </button>
               </div>
             </div>
           </div>
-          <div class="full lang-field">
-            <div class="label-inline">
-              <span data-i18n="ttsRate">TTS Rate</span>
-              <span id="char-tts-rate-value" class="muted"></span>
-            </div>
-            <input
-              id="char-tts-rate"
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.1"
-              value="1"
-            />
-          </div>
-          <div
-            class="full lang-field tts-extra-field"
-            id="char-tts-language-field"
-          >
-            <span data-i18n="ttsLanguage">TTS Language</span>
-            <select id="char-tts-language"></select>
-          </div>
-          <div
-            class="full lang-field tts-extra-field"
-            id="char-tts-voice-field"
-          >
-            <span data-i18n="ttsVoice">TTS Voice</span>
-            <div class="tts-control-row">
-              <select id="char-tts-voice"></select>
-              <div class="tts-test-slot" data-slot="tts">
-                <button
-                  id="char-tts-test-btn"
-                  class="icon-btn tts-test-btn"
-                  type="button"
-                  data-i18n-title="testCharacterVoice"
-                ></button>
-              </div>
-            </div>
-          </div>
-          <div
-            class="full lang-field tts-extra-field"
-            id="char-tts-pitch-field"
-          >
-            <div class="label-inline">
-              <span data-i18n="ttsPitch">TTS Pitch</span>
-              <span id="char-tts-pitch-value" class="muted"></span>
-            </div>
-            <input
-              id="char-tts-pitch"
-              type="range"
-              min="0"
-              max="2"
-              step="0.1"
-            />
-          </div>
-          <div class="full lang-field">
-            <span data-i18n="loreBooksForCharacter">Lorebooks for this character</span>
-            <div id="char-lorebooks-list" class="check-list lorebook-list"></div>
-          </div>
-          <div class="full global-field">
-            <span data-i18n="loreCooldown">Lore re-injection cooldown (messages)</span>
-            <input
-              id="char-lore-cooldown"
-              type="number"
-              min="0"
-              max="100"
-              value="20"
-            />
-          </div>
-           <div class="full sfx-field hidden">
-             <div class="sfx-toolbar">
-               <button
-                 id="add-sfx-btn"
-                 class="primary-btn"
-                 type="button"
-                 data-i18n="addSfx"
-               >
-                 + Add SFX
-               </button>
-             </div>
-             <div id="char-sfx-list" class="asset-list"></div>
-           </div>
-           <div class="full model3d-field hidden">
-             <div class="model3d-toolbar">
-               <button
-                 id="add-model3d-btn"
-                 class="primary-btn"
-                 type="button"
-                 data-i18n="addModel3d"
-               >
-                 + Add 3D Model
-               </button>
-             </div>
-             <div id="char-model3d-preview" class="model3d-preview">
-               <span class="muted" data-i18n="noModel3dSelected">No 3D model selected</span>
-             </div>
-             <div id="char-model3d-info" class="model3d-info hidden">
-               <span id="char-model3d-name" class="model3d-name"></span>
-               <button
-                 id="remove-model3d-btn"
-                 class="icon-btn danger-icon-btn"
-                 type="button"
-                 data-i18n-title="removeModel3d"
-                 title="Remove 3D model"
-               >
-                 &times;
-               </button>
-             </div>
-           </div>
-        </div>
-        <div class="modal-footer">
-          <button class="secondary-btn" data-close-modal data-i18n="cancel">
-            Cancel
-          </button>
-          <button
-            id="apply-character-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-            disabled
-          >
-            Apply
-          </button>
-          <button
-            id="save-character-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="char-language-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="char-language-title"
-    >
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 id="char-language-title" data-i18n="addLanguage">Add Language</h3>
-          <button
-            class="icon-btn modal-close"
-            id="char-language-cancel-x"
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-field">
-            <select id="char-language-select"></select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            id="char-language-cancel"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="char-language-add"
-            class="primary-btn"
-            type="button"
-            data-i18n="add"
-          >
-            Add
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <datalist id="tag-presets"></datalist>
-
-    <div
-      id="image-preview-modal"
-      class="modal hidden image-preview-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Media preview"
-    >
-      <div class="modal-card image-preview-card">
-        <img id="image-preview-img" alt="Preview" />
-        <video id="image-preview-video" controls class="hidden"></video>
-      </div>
-      <div class="image-preview-controls">
-        <button
-          id="image-preview-download-btn"
-          class="icon-btn image-preview-download-btn"
-          type="button"
-          title="Download"
-          aria-label="Download"
-        >
-          v
-        </button>
-        <button
-          id="image-preview-close-btn"
-          class="icon-btn image-preview-close-btn"
-          type="button"
-          title="Close preview"
-          aria-label="Close preview"
-        >
-          ×
-        </button>
-      </div>
-    </div>
-
-    <!-- SFX Asset Selector Modal -->
-    <div
-      id="select-asset-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="select-asset-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="select-asset-title" data-i18n="selectAssetForSfx">Select Asset for SFX</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div id="select-asset-list" class="lorebook-list"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SFX Editor Modal -->
-    <div
-      id="sfx-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="sfx-editor-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="sfx-editor-title" data-i18n="sfxEditor">SFX Editor</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-field full">
-            <div id="sfx-asset-preview-container" class="asset-preview-container"></div>
-          </div>
-          <div class="form-field full">
-            <span data-i18n="sfxRuleName">Rule Name</span>
-            <input type="text" id="sfx-name" placeholder="e.g., Rainy mood, Door bell" />
-          </div>
-          <div class="form-field full">
-            <span data-i18n="sfxType">SFX Type</span>
-            <select id="sfx-type">
-              <option value="sound" data-i18n="sfxTypeSound">Sound Effect</option>
-              <option value="background" data-i18n="sfxTypeBackground">Background</option>
-              <option value="overlay" data-i18n="sfxTypeOverlay">Overlay</option>
-              <option value="avatar" data-i18n="sfxTypeAvatar">Avatar Swap</option>
-            </select>
-          </div>
-          <div class="form-field full">
-            <span data-i18n="triggerLabel">Trigger</span>
-            <select id="sfx-trigger">
-              <option value="start" data-i18n="triggerStart">Start</option>
-              <option value="keyword" data-i18n="triggerKeyword">Keyword</option>
-              <option value="action_pattern" data-i18n="triggerActionPattern">Action Pattern</option>
-              <option value="turn_interval" data-i18n="triggerTurnInterval">Every N Turns</option>
-              <option value="always" data-i18n="triggerAlways">Always</option>
-            </select>
-          </div>
-          <div class="form-field full hidden" id="sfx-keywords-field">
-            <span data-i18n="triggerKeywords">Trigger Keywords</span>
-            <input type="text" id="sfx-trigger-keywords" placeholder="rain, storm, thunder" />
-            <small class="muted" data-i18n="triggerKeywordsHelp">Comma-separated. Any match triggers.</small>
-          </div>
-          <div class="form-field full hidden" id="sfx-keywords-secondary-field">
-            <span data-i18n="triggerKeywordsSecondary">Secondary Keywords</span>
-            <input type="text" id="sfx-trigger-keywords-secondary" placeholder="dark, cloudy" />
-            <small class="muted" data-i18n="triggerKeywordsSecondaryHelp">All must match (optional).</small>
-          </div>
-          <div class="form-field full hidden" id="sfx-action-pattern-field">
-            <span data-i18n="triggerActionPatternLabel">Action Pattern (Regex)</span>
-            <input type="text" id="sfx-trigger-action-pattern" placeholder="\*.*(laugh|smile)\*" />
-            <small class="muted" data-i18n="triggerActionPatternHelp">Matches *action* text. Use regex format.</small>
-          </div>
-          <div class="form-field full hidden" id="sfx-turn-interval-field">
-            <span data-i18n="triggerTurnIntervalLabel">Every N Turns</span>
-            <input type="number" id="sfx-trigger-turn-interval" value="5" min="1" />
-          </div>
-          <div class="form-field full hidden" id="sfx-cooldown-field">
-            <span data-i18n="triggerCooldown">Cooldown (seconds)</span>
-            <input type="number" id="sfx-trigger-cooldown" value="0" min="0" />
-          </div>
-          <div class="form-field full">
-            <span data-i18n="evictionLabel">Eviction</span>
-            <select id="sfx-eviction">
-              <option value="never" data-i18n="evictionNever">Never</option>
-              <option value="keyword" data-i18n="evictionKeyword">Keyword</option>
-              <option value="message_count" data-i18n="evictionMessageCount">After N Messages</option>
-              <option value="manual" data-i18n="evictionManual">Manual</option>
-            </select>
-          </div>
-          <div class="form-field full hidden" id="sfx-eviction-keywords-field">
-            <span data-i18n="evictionKeywords">Eviction Keywords</span>
-            <input type="text" id="sfx-eviction-keywords" placeholder="sunny, clear, stop" />
-            <small class="muted" data-i18n="evictionKeywordsHelp">When these keywords appear, stop the SFX.</small>
-          </div>
-          <div class="form-field full hidden" id="sfx-eviction-message-count-field">
-            <span data-i18n="evictionMessageCountLabel">Stop after N messages</span>
-            <input type="number" id="sfx-eviction-message-count" value="10" min="1" />
-          </div>
-          <div class="form-field full hidden" id="sfx-playback-options">
-            <span data-i18n="playbackOptions">Playback Options</span>
-            <div class="checkbox-grid">
-              <label class="checkbox-line">
-                <input id="sfx-loop" type="checkbox" />
-                <span data-i18n="loopLabel">Loop</span>
-              </label>
-              <label class="checkbox-line">
-                <input id="sfx-match-case" type="checkbox" />
-                <span data-i18n="matchCase">Match Case</span>
-              </label>
-              <label class="checkbox-line">
-                <input id="sfx-match-whole-word" type="checkbox" />
-                <span data-i18n="matchWholeWord">Match Whole Word</span>
-              </label>
-            </div>
-          </div>
-          <div class="form-field half hidden" id="sfx-volume-field">
-            <span data-i18n="volumeLabel">Volume</span>
-            <input type="range" id="sfx-volume" min="0" max="1" step="0.1" value="1" />
-            <span id="sfx-volume-value">100%</span>
-          </div>
-          <div class="form-field half hidden" id="sfx-fade-in-field">
-            <span data-i18n="fadeInLabel">Fade In (ms)</span>
-            <input type="number" id="sfx-fade-in" value="0" min="0" step="100" />
-          </div>
-          <div class="form-field half hidden" id="sfx-fade-out-field">
-            <span data-i18n="fadeOutLabel">Fade Out (ms)</span>
-            <input type="number" id="sfx-fade-out" value="0" min="0" step="100" />
-          </div>
-          <div class="form-field half hidden" id="sfx-opacity-field">
-            <span data-i18n="opacityLabel">Opacity</span>
-            <input type="range" id="sfx-opacity" min="0" max="1" step="0.1" value="1" />
-            <span id="sfx-opacity-value">100%</span>
-          </div>
-          <div class="form-field half hidden" id="sfx-layer-field">
-            <span data-i18n="layerLabel">Layer (Z-Index)</span>
-            <input type="number" id="sfx-layer" value="100" min="0" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            id="cancel-sfx-editor-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="save-sfx-editor-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="message-metadata-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="message-metadata-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="message-metadata-title">Message Metadata</h3>
-          <button
-            class="icon-btn modal-close"
-            data-close-modal
-            aria-label="Close metadata"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <pre id="message-metadata-json" class="metadata-json"></pre>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="writing-instructions-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="writing-instructions-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3
-            id="writing-instructions-title"
-            data-i18n="writingInstructionsManager"
-          >
-            Writing Instructions Manager
-          </h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="lore-toolbar">
+          <div class="modal-footer">
+            <button class="secondary-btn" data-close-modal data-i18n="cancel">
+              Cancel
+            </button>
             <button
-              id="create-writing-instruction-btn"
+              id="apply-character-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="apply"
+              disabled
+            >
+              Apply
+            </button>
+            <button
+              id="save-character-btn"
               class="primary-btn"
               type="button"
-              data-i18n="addWritingInstruction"
+              data-i18n="save"
+              disabled
             >
-              + Add Writing Instruction
+              Save
             </button>
           </div>
-          <div id="writing-instructions-list" class="lorebook-list"></div>
         </div>
       </div>
-    </div>
 
-    <div
-      id="writing-instruction-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="writing-instruction-editor-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3
-            id="writing-instruction-editor-title"
-            data-i18n="writingInstructionEditor"
-          >
-            Writing Instruction Editor
-          </h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+      <div
+        id="char-language-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="char-language-title"
+      >
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="char-language-title" data-i18n="addLanguage">
+              Add Language
+            </h3>
+            <button
+              class="icon-btn modal-close"
+              id="char-language-cancel-x"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-field">
+              <select id="char-language-select"></select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              id="char-language-cancel"
+              class="secondary-btn"
+              type="button"
+              data-i18n="cancel"
+            >
+              Cancel
+            </button>
+            <button
+              id="char-language-add"
+              class="primary-btn"
+              type="button"
+              data-i18n="add"
+            >
+              Add
+            </button>
+          </div>
         </div>
-        <div class="modal-body">
-          <div class="two-col lore-editor-grid">
+      </div>
+
+      <datalist id="tag-presets"></datalist>
+
+      <div
+        id="image-preview-modal"
+        class="modal hidden image-preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Media preview"
+      >
+        <div class="modal-card image-preview-card">
+          <img id="image-preview-img" alt="Preview" />
+          <video id="image-preview-video" controls class="hidden"></video>
+        </div>
+        <div class="image-preview-controls">
+          <button
+            id="image-preview-download-btn"
+            class="icon-btn image-preview-download-btn"
+            type="button"
+            title="Download"
+            aria-label="Download"
+          >
+            v
+          </button>
+          <button
+            id="image-preview-close-btn"
+            class="icon-btn image-preview-close-btn"
+            type="button"
+            title="Close preview"
+            aria-label="Close preview"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+
+      <!-- SFX Asset Selector Modal -->
+      <div
+        id="select-asset-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="select-asset-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="select-asset-title" data-i18n="selectAssetForSfx">
+              Select Asset for SFX
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="select-asset-list" class="lorebook-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SFX Editor Modal -->
+      <div
+        id="sfx-editor-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sfx-editor-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="sfx-editor-title" data-i18n="sfxEditor">SFX Editor</h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
             <div class="form-field full">
-              <div class="label-inline">
-                <span data-i18n="nameLabel">Name</span>
-                <span
-                  id="writing-instruction-name-count"
-                  class="muted label-count"
-                  >0/64</span
-                >
-              </div>
+              <div
+                id="sfx-asset-preview-container"
+                class="asset-preview-container"
+              ></div>
+            </div>
+            <div class="form-field full">
+              <span data-i18n="sfxRuleName">Rule Name</span>
               <input
-                id="writing-instruction-name"
                 type="text"
-                minlength="1"
-                maxlength="64"
+                id="sfx-name"
+                placeholder="e.g., Rainy mood, Door bell"
               />
             </div>
-          </div>
-          <div id="writing-instruction-tabs" class="settings-tabs">
-            <div class="char-def-tabs-row">
-              <div
-                id="writing-instruction-tabs-left"
-                class="char-def-tabs-left"
-              ></div>
-              <button
-                id="writing-instruction-add-lang-btn"
-                class="settings-tab-btn"
-                type="button"
-                onclick="openWritingInstructionLanguageModal()"
+            <div class="form-field full">
+              <span data-i18n="sfxType">SFX Type</span>
+              <select id="sfx-type">
+                <option value="sound" data-i18n="sfxTypeSound">
+                  Sound Effect
+                </option>
+                <option value="background" data-i18n="sfxTypeBackground">
+                  Background
+                </option>
+                <option value="overlay" data-i18n="sfxTypeOverlay">
+                  Overlay
+                </option>
+                <option value="avatar" data-i18n="sfxTypeAvatar">
+                  Avatar Swap
+                </option>
+              </select>
+            </div>
+            <div class="form-field full">
+              <span data-i18n="triggerLabel">Trigger</span>
+              <select id="sfx-trigger">
+                <option value="start" data-i18n="triggerStart">Start</option>
+                <option value="keyword" data-i18n="triggerKeyword">
+                  Keyword
+                </option>
+                <option value="action_pattern" data-i18n="triggerActionPattern">
+                  Action Pattern
+                </option>
+                <option value="turn_interval" data-i18n="triggerTurnInterval">
+                  Every N Turns
+                </option>
+                <option value="always" data-i18n="triggerAlways">Always</option>
+              </select>
+            </div>
+            <div class="form-field full hidden" id="sfx-keywords-field">
+              <span data-i18n="triggerKeywords">Trigger Keywords</span>
+              <input
+                type="text"
+                id="sfx-trigger-keywords"
+                placeholder="rain, storm, thunder"
+              />
+              <small class="muted" data-i18n="triggerKeywordsHelp"
+                >Comma-separated. Any match triggers.</small
               >
-                +
+            </div>
+            <div
+              class="form-field full hidden"
+              id="sfx-keywords-secondary-field"
+            >
+              <span data-i18n="triggerKeywordsSecondary"
+                >Secondary Keywords</span
+              >
+              <input
+                type="text"
+                id="sfx-trigger-keywords-secondary"
+                placeholder="dark, cloudy"
+              />
+              <small class="muted" data-i18n="triggerKeywordsSecondaryHelp"
+                >All must match (optional).</small
+              >
+            </div>
+            <div class="form-field full hidden" id="sfx-action-pattern-field">
+              <span data-i18n="triggerActionPatternLabel"
+                >Action Pattern (Regex)</span
+              >
+              <input
+                type="text"
+                id="sfx-trigger-action-pattern"
+                placeholder="\*.*(laugh|smile)\*"
+              />
+              <small class="muted" data-i18n="triggerActionPatternHelp"
+                >Matches *action* text. Use regex format.</small
+              >
+            </div>
+            <div class="form-field full hidden" id="sfx-turn-interval-field">
+              <span data-i18n="triggerTurnIntervalLabel">Every N Turns</span>
+              <input
+                type="number"
+                id="sfx-trigger-turn-interval"
+                value="5"
+                min="1"
+              />
+            </div>
+            <div class="form-field full hidden" id="sfx-cooldown-field">
+              <span data-i18n="triggerCooldown">Cooldown (seconds)</span>
+              <input
+                type="number"
+                id="sfx-trigger-cooldown"
+                value="0"
+                min="0"
+              />
+            </div>
+            <div class="form-field full">
+              <span data-i18n="evictionLabel">Eviction</span>
+              <select id="sfx-eviction">
+                <option value="never" data-i18n="evictionNever">Never</option>
+                <option value="keyword" data-i18n="evictionKeyword">
+                  Keyword
+                </option>
+                <option value="message_count" data-i18n="evictionMessageCount">
+                  After N Messages
+                </option>
+                <option value="manual" data-i18n="evictionManual">
+                  Manual
+                </option>
+              </select>
+            </div>
+            <div
+              class="form-field full hidden"
+              id="sfx-eviction-keywords-field"
+            >
+              <span data-i18n="evictionKeywords">Eviction Keywords</span>
+              <input
+                type="text"
+                id="sfx-eviction-keywords"
+                placeholder="sunny, clear, stop"
+              />
+              <small class="muted" data-i18n="evictionKeywordsHelp"
+                >When these keywords appear, stop the SFX.</small
+              >
+            </div>
+            <div
+              class="form-field full hidden"
+              id="sfx-eviction-message-count-field"
+            >
+              <span data-i18n="evictionMessageCountLabel"
+                >Stop after N messages</span
+              >
+              <input
+                type="number"
+                id="sfx-eviction-message-count"
+                value="10"
+                min="1"
+              />
+            </div>
+            <div class="form-field full hidden" id="sfx-playback-options">
+              <span data-i18n="playbackOptions">Playback Options</span>
+              <div class="checkbox-grid">
+                <label class="checkbox-line">
+                  <input id="sfx-loop" type="checkbox" />
+                  <span data-i18n="loopLabel">Loop</span>
+                </label>
+                <label class="checkbox-line">
+                  <input id="sfx-match-case" type="checkbox" />
+                  <span data-i18n="matchCase">Match Case</span>
+                </label>
+                <label class="checkbox-line">
+                  <input id="sfx-match-whole-word" type="checkbox" />
+                  <span data-i18n="matchWholeWord">Match Whole Word</span>
+                </label>
+              </div>
+            </div>
+            <div class="form-field half hidden" id="sfx-volume-field">
+              <span data-i18n="volumeLabel">Volume</span>
+              <input
+                type="range"
+                id="sfx-volume"
+                min="0"
+                max="1"
+                step="0.1"
+                value="1"
+              />
+              <span id="sfx-volume-value">100%</span>
+            </div>
+            <div class="form-field half hidden" id="sfx-fade-in-field">
+              <span data-i18n="fadeInLabel">Fade In (ms)</span>
+              <input
+                type="number"
+                id="sfx-fade-in"
+                value="0"
+                min="0"
+                step="100"
+              />
+            </div>
+            <div class="form-field half hidden" id="sfx-fade-out-field">
+              <span data-i18n="fadeOutLabel">Fade Out (ms)</span>
+              <input
+                type="number"
+                id="sfx-fade-out"
+                value="0"
+                min="0"
+                step="100"
+              />
+            </div>
+            <div class="form-field half hidden" id="sfx-opacity-field">
+              <span data-i18n="opacityLabel">Opacity</span>
+              <input
+                type="range"
+                id="sfx-opacity"
+                min="0"
+                max="1"
+                step="0.1"
+                value="1"
+              />
+              <span id="sfx-opacity-value">100%</span>
+            </div>
+            <div class="form-field half hidden" id="sfx-layer-field">
+              <span data-i18n="layerLabel">Layer (Z-Index)</span>
+              <input type="number" id="sfx-layer" value="100" min="0" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              id="cancel-sfx-editor-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="cancel"
+            >
+              Cancel
+            </button>
+            <button
+              id="save-sfx-editor-btn"
+              class="primary-btn"
+              type="button"
+              data-i18n="save"
+              disabled
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="message-metadata-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="message-metadata-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="message-metadata-title">Message Metadata</h3>
+            <button
+              class="icon-btn modal-close"
+              data-close-modal
+              aria-label="Close metadata"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <pre id="message-metadata-json" class="metadata-json"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="writing-instructions-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="writing-instructions-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3
+              id="writing-instructions-title"
+              data-i18n="writingInstructionsManager"
+            >
+              Writing Instructions Manager
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="lore-toolbar">
+              <button
+                id="create-writing-instruction-btn"
+                class="primary-btn"
+                type="button"
+                data-i18n="addWritingInstruction"
+              >
+                + Add Writing Instruction
               </button>
             </div>
+            <div id="writing-instructions-list" class="lorebook-list"></div>
           </div>
-          <div id="writing-instruction-content-area" class="full lang-field">
-            <span data-i18n="writingInstructions">Writing Instructions</span>
-            <textarea
-              id="writing-instruction-text"
-              rows="8"
-              maxlength="20480"
-            ></textarea>
-            <span id="writing-instruction-text-count" class="muted"
-              >0/20480</span
-            >
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            id="cancel-writing-instruction-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="apply-writing-instructions-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-            disabled
-          >
-            Apply
-          </button>
-          <button
-            id="save-writing-instructions-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
         </div>
       </div>
-    </div>
 
-    <div
-      id="persona-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="persona-editor-title"
-    >
-      <div class="modal-card wide">
-        <div class="modal-header">
-          <h3 id="persona-editor-title" data-i18n="personaEditor">Persona Editor</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
-        </div>
-        <div class="modal-body">
-          <div id="persona-avatar-dropzone-container" class="form-field">
-            <div
-              id="persona-avatar-dropzone"
-              class="char-avatar-dropzone"
-              tabindex="0"
-              aria-label="Upload avatar"
+      <div
+        id="writing-instruction-editor-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="writing-instruction-editor-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3
+              id="writing-instruction-editor-title"
+              data-i18n="writingInstructionEditor"
             >
-              <img id="persona-avatar-preview" class="hidden" />
-              <span class="dropzone-plus">+</span>
-              <span class="dropzone-hint">Drag & drop or click</span>
-              <button
-                type="button"
-                id="persona-remove-avatar"
-                class="avatar-remove-btn hidden"
-                title="Remove"
-              >&times;</button>
-            </div>
-            <input
-              type="file"
-              id="persona-avatar-file-input"
-              accept="image/*"
-              class="hidden"
-            />
+              Writing Instruction Editor
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
           </div>
-          <div class="two-col lore-editor-grid">
-            <div class="form-field full">
-              <div class="label-inline">
-                <span data-i18n="nameLabel">Name</span>
-                <span id="persona-editor-name-count" class="muted label-count">0/64</span>
+          <div class="modal-body">
+            <div class="two-col lore-editor-grid">
+              <div class="form-field full">
+                <div class="label-inline">
+                  <span data-i18n="nameLabel">Name</span>
+                  <span
+                    id="writing-instruction-name-count"
+                    class="muted label-count"
+                    >0/64</span
+                  >
+                </div>
+                <input
+                  id="writing-instruction-name"
+                  type="text"
+                  minlength="1"
+                  maxlength="64"
+                />
               </div>
-              <input id="persona-editor-name" type="text" maxlength="64" />
+            </div>
+            <div id="writing-instruction-tabs" class="settings-tabs">
+              <div class="char-def-tabs-row">
+                <div
+                  id="writing-instruction-tabs-left"
+                  class="char-def-tabs-left"
+                ></div>
+                <button
+                  id="writing-instruction-add-lang-btn"
+                  class="settings-tab-btn"
+                  type="button"
+                  onclick="openWritingInstructionLanguageModal()"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div id="writing-instruction-content-area" class="full lang-field">
+              <span data-i18n="writingInstructions">Writing Instructions</span>
+              <textarea
+                id="writing-instruction-text"
+                rows="8"
+                maxlength="20480"
+              ></textarea>
+              <span id="writing-instruction-text-count" class="muted"
+                >0/20480</span
+              >
             </div>
           </div>
-          <div class="form-field">
-            <div class="label-inline">
-              <span data-i18n="personaDescription">Description (max 100 chars)</span>
-              <span id="persona-editor-description-count" class="muted label-count">0/100</span>
-            </div>
-            <textarea
-              id="persona-editor-description"
-              rows="3"
-              maxlength="100"
-            ></textarea>
+          <div class="modal-footer">
+            <button
+              id="cancel-writing-instruction-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="cancel"
+            >
+              Cancel
+            </button>
+            <button
+              id="apply-writing-instructions-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="apply"
+              disabled
+            >
+              Apply
+            </button>
+            <button
+              id="save-writing-instructions-btn"
+              class="primary-btn"
+              type="button"
+              data-i18n="save"
+              disabled
+            >
+              Save
+            </button>
           </div>
-          <div class="form-field">
-            <span data-i18n="personaInternalDescription">Internal Description (optional)</span>
-            <textarea id="persona-editor-internal-description" rows="4"></textarea>
-          </div>
-          <div class="form-field">
-            <span data-i18n="personaColor">Color</span>
-            <input id="persona-editor-color" type="color" value="#7c5cff" />
-          </div>
-          <span class="checkbox-line">
-            <input id="persona-editor-is-default" type="checkbox" />
-            <span data-i18n="setDefaultPersona">Set as default persona</span>
-          </span>
         </div>
-        <div class="modal-footer">
-          <button
-            id="cancel-persona-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="save-persona-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="savePersona"
-          >
-            Save
-          </button>
+      </div>
+
+      <div
+        id="persona-editor-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="persona-editor-title"
+      >
+        <div class="modal-card wide">
+          <div class="modal-header">
+            <h3 id="persona-editor-title" data-i18n="personaEditor">
+              Persona Editor
+            </h3>
+            <button class="icon-btn modal-close" data-close-modal>
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="persona-avatar-dropzone-container" class="form-field">
+              <div
+                id="persona-avatar-dropzone"
+                class="char-avatar-dropzone"
+                tabindex="0"
+                aria-label="Upload avatar"
+              >
+                <img id="persona-avatar-preview" class="hidden" />
+                <span class="dropzone-plus">+</span>
+                <span class="dropzone-hint">Drag & drop or click</span>
+                <button
+                  type="button"
+                  id="persona-remove-avatar"
+                  class="avatar-remove-btn hidden"
+                  title="Remove"
+                >
+                  &times;
+                </button>
+              </div>
+              <input
+                type="file"
+                id="persona-avatar-file-input"
+                accept="image/*"
+                class="hidden"
+              />
+            </div>
+            <div class="two-col lore-editor-grid">
+              <div class="form-field full">
+                <div class="label-inline">
+                  <span data-i18n="nameLabel">Name</span>
+                  <span id="persona-editor-name-count" class="muted label-count"
+                    >0/64</span
+                  >
+                </div>
+                <input id="persona-editor-name" type="text" maxlength="64" />
+              </div>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="personaDescription"
+                  >Description (max 100 chars)</span
+                >
+                <span
+                  id="persona-editor-description-count"
+                  class="muted label-count"
+                  >0/100</span
+                >
+              </div>
+              <textarea
+                id="persona-editor-description"
+                rows="3"
+                maxlength="100"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="personaInternalDescription"
+                >Internal Description (optional)</span
+              >
+              <textarea
+                id="persona-editor-internal-description"
+                rows="4"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="personaColor">Color</span>
+              <input id="persona-editor-color" type="color" value="#7c5cff" />
+            </div>
+            <span class="checkbox-line">
+              <input id="persona-editor-is-default" type="checkbox" />
+              <span data-i18n="setDefaultPersona">Set as default persona</span>
+            </span>
+          </div>
+          <div class="modal-footer">
+            <button
+              id="cancel-persona-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="cancel"
+            >
+              Cancel
+            </button>
+            <button
+              id="save-persona-btn"
+              class="primary-btn"
+              type="button"
+              data-i18n="savePersona"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="writing-instruction-language-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="writing-instruction-language-title"
+      >
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="writing-instruction-language-title" data-i18n="addLanguage">
+              Add Language
+            </h3>
+            <button
+              class="icon-btn modal-close"
+              id="writing-instruction-language-cancel-x"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-field">
+              <select id="writing-instruction-language-select"></select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              id="writing-instruction-language-cancel"
+              class="secondary-btn"
+              type="button"
+              data-i18n="cancel"
+            >
+              Cancel
+            </button>
+            <button
+              id="writing-instruction-language-add"
+              class="primary-btn"
+              type="button"
+              data-i18n="add"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="message-model-info-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="message-model-info-title"
+      >
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="message-model-info-title">Generation Parameters</h3>
+            <button
+              class="icon-btn modal-close"
+              data-close-modal
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="model-info-row">
+              <span class="model-info-label" data-i18n="modelLabel"></span
+              >:&nbsp;
+              <span
+                id="message-model-info-model"
+                class="model-info-value"
+              ></span>
+            </div>
+            <div class="model-info-row">
+              <span class="model-info-label" data-i18n="temperatureLabel"></span
+              >:&nbsp;
+              <span
+                id="message-model-info-temperature"
+                class="model-info-value"
+              ></span>
+            </div>
+            <div class="model-info-row">
+              <span class="model-info-label" data-i18n="maxTokensLabel"></span
+              >:&nbsp;
+              <span
+                id="message-model-info-max-tokens"
+                class="model-info-value"
+              ></span>
+            </div>
+            <div class="model-info-row">
+              <span class="model-info-label" data-i18n="topPLabel"></span
+              >:&nbsp;
+              <span
+                id="message-model-info-top-p"
+                class="model-info-value"
+              ></span>
+            </div>
+            <div class="model-info-row">
+              <span
+                class="model-info-label"
+                data-i18n="frequencyPenaltyLabel"
+              ></span
+              >:&nbsp;
+              <span
+                id="message-model-info-frequency-penalty"
+                class="model-info-value"
+              ></span>
+            </div>
+            <div class="model-info-row">
+              <span
+                class="model-info-label"
+                data-i18n="presencePenaltyLabel"
+              ></span
+              >:&nbsp;
+              <span
+                id="message-model-info-presence-penalty"
+                class="model-info-value"
+              ></span>
+            </div>
+            <div class="model-info-row">
+              <span class="model-info-label" data-i18n="streamLabel"></span
+              >:&nbsp;
+              <span
+                id="message-model-info-stream"
+                class="model-info-value"
+              ></span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
-    <div
-      id="writing-instruction-language-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="writing-instruction-language-title"
-    >
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 id="writing-instruction-language-title" data-i18n="addLanguage">
-            Add Language
-          </h3>
-          <button
-            class="icon-btn modal-close"
-            id="writing-instruction-language-cancel-x"
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-field">
-            <select id="writing-instruction-language-select"></select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            id="writing-instruction-language-cancel"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="writing-instruction-language-add"
-            class="primary-btn"
-            type="button"
-            data-i18n="add"
-          >
-            Add
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="message-model-info-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="message-model-info-title"
-    >
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 id="message-model-info-title">Generation Parameters</h3>
-          <button
-            class="icon-btn modal-close"
-            data-close-modal
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="model-info-row">
-            <span class="model-info-label" data-i18n="modelLabel"></span>:&nbsp;
-            <span id="message-model-info-model" class="model-info-value"></span>
-          </div>
-          <div class="model-info-row">
-            <span class="model-info-label" data-i18n="temperatureLabel"></span>:&nbsp;
-            <span
-              id="message-model-info-temperature"
-              class="model-info-value"
-            ></span>
-          </div>
-          <div class="model-info-row">
-            <span class="model-info-label" data-i18n="maxTokensLabel"></span>:&nbsp;
-            <span
-              id="message-model-info-max-tokens"
-              class="model-info-value"
-            ></span>
-          </div>
-          <div class="model-info-row">
-            <span class="model-info-label" data-i18n="topPLabel"></span>:&nbsp;
-            <span id="message-model-info-top-p" class="model-info-value"></span>
-          </div>
-          <div class="model-info-row">
-            <span class="model-info-label" data-i18n="frequencyPenaltyLabel"></span>:&nbsp;
-            <span
-              id="message-model-info-frequency-penalty"
-              class="model-info-value"
-            ></span>
-          </div>
-          <div class="model-info-row">
-            <span class="model-info-label" data-i18n="presencePenaltyLabel"></span>:&nbsp;
-            <span
-              id="message-model-info-presence-penalty"
-              class="model-info-value"
-            ></span>
-          </div>
-          <div class="model-info-row">
-            <span class="model-info-label" data-i18n="streamLabel"></span>:&nbsp;
-            <span
-              id="message-model-info-stream"
-              class="model-info-value"
-            ></span>
-           </div>
-          </div>
-         </div>
-       </div>
-     </div>
 
     <div
       id="message-system-prompt-modal"
@@ -3172,10 +3556,10 @@
 
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"></script>
-      <script src="embeddings.js"></script>
-      <script src="summarizer.js"></script>
-      <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"></script>
+    <script src="embeddings.js"></script>
+    <script src="summarizer.js"></script>
+    <script src="config.js"></script>
     <script src="db.js"></script>
     <script src="constants.js"></script>
     <script src="themes.js"></script>
@@ -3191,22 +3575,22 @@
     <script type="module" src="tts/index.js"></script>
     <script type="module" src="three-vrm-loader.js"></script>
   </body>
-<style>
-#assets-modal .modal-body {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-#assets-modal #assets-dropzone-section {
-  flex: 0 0 auto;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: transparent;
-}
-#assets-modal #assets-list {
-  flex: 1 1 auto;
-  overflow-y: auto;
-}
-</style>
+  <style>
+    #assets-modal .modal-body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #assets-modal #assets-dropzone-section {
+      flex: 0 0 auto;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: transparent;
+    }
+    #assets-modal #assets-list {
+      flex: 1 1 auto;
+      overflow-y: auto;
+    }
+  </style>
 </html>
