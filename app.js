@@ -18423,9 +18423,9 @@ async function fetchLMStudioModelCatalog(signal) {
 }
 
 function normalizeLMStudioModelItem(model) {
-  const id = String(model?.id || "").trim();
+  const id = String(model?.key || model?.id || "").trim();
   if (!id) return null;
-  const name = String(model?.id || "").trim();
+  const name = String(model?.display_name || model?.name || model?.id || "").trim();
   return {
     id: `lmstudio/${id}`,
     name: name,
@@ -18435,8 +18435,8 @@ function normalizeLMStudioModelItem(model) {
     completionPrice: 0,
     requestPrice: 0,
     imagePrice: 0,
-    contextLength: Number(model?.context_length || 8192),
-    topContextLength: Number(model?.context_length || 8192),
+    contextLength: Number(model?.max_context_length || model?.context_length || 8192),
+    topContextLength: Number(model?.max_context_length || model?.context_length || 8192),
     maxCompletionTokens: Number(model?.max_completion_tokens || 4096),
     isModerated: false,
   };
