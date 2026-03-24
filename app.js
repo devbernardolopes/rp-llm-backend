@@ -11443,7 +11443,7 @@ function toggleModel3DPanel() {
 
   if (isHidden) {
     if (currentCharacter?.model3d?.data) {
-      loadModel3DFromCharacter(currentCharacter);
+      scheduleModel3DLoad(currentCharacter);
     }
     persistModel3DPanelState(currentThread?.id, { visible: true });
   } else {
@@ -11461,7 +11461,7 @@ function showModel3DPanel() {
   panel.classList.remove('hidden');
   btn?.classList.remove('is-active');
   if (currentCharacter?.model3d) {
-    loadModel3DFromCharacter(currentCharacter);
+    scheduleModel3DLoad(currentCharacter);
   }
 }
 
@@ -11474,6 +11474,29 @@ function hideModel3DPanel() {
   if (window.disposeModel3D) {
     window.disposeModel3D();
   }
+}
+
+function scheduleModel3DLoad(character) {
+  if (!character?.model3d?.data) return;
+  if (window.requestAnimationFrame) {
+    window.requestAnimationFrame(() => {
+      loadModel3DFromCharacter(character);
+    });
+  } else {
+    setTimeout(() => {
+      loadModel3DFromCharacter(character);
+    }, 0);
+  }
+}
+
+function waitForNextPaint() {
+  return new Promise((resolve) => {
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(() => resolve(), 16);
+    }
+  });
 }
 
 async function persistModel3DPanelState(threadId, updates = {}) {
@@ -11556,6 +11579,7 @@ async function restoreModel3DPanelState(threadId) {
       panel.classList.remove('hidden');
       btn?.classList.remove('is-active');
 
+      await waitForNextPaint();
       await loadModel3DFromCharacter(currentCharacter);
 
       if (panelState.camera && window.restoreModel3DCameraState) {
