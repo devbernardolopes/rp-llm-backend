@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS = {
   hordeApiKey: "",
   lmstudioBaseUrl: "http://localhost:1234",
   lmstudioApiMethod: "openai",
+  lastModelsPerProvider: {},
   model: "arcee-ai/trinity-large-preview:free",
   markdownEnabled: true,
   allowMessageHtml: false,
@@ -3342,7 +3343,19 @@ async function setupSettingsControls() {
   }
 
   aiProviderSelect.addEventListener("change", () => {
-    state.settings.aiProvider = aiProviderSelect.value;
+    const oldProvider = state.settings.aiProvider || "openrouter";
+    const newProvider = aiProviderSelect.value;
+    if (oldProvider !== newProvider) {
+      const lastModels = state.settings.lastModelsPerProvider || {};
+      lastModels[oldProvider] = state.settings.model;
+      state.settings.lastModelsPerProvider = lastModels;
+    }
+    state.settings.aiProvider = newProvider;
+    const lastModels = state.settings.lastModelsPerProvider || {};
+    const savedModel = lastModels[newProvider];
+    if (savedModel) {
+      state.settings.model = savedModel;
+    }
     updateProviderVisibility();
     saveSettings();
     populateSettingsModels({ force: true }).catch(() => {});
@@ -3374,6 +3387,10 @@ async function setupSettingsControls() {
   });
 
   modelSelect.addEventListener("change", () => {
+    const provider = state.settings.aiProvider || "openrouter";
+    const lastModels = state.settings.lastModelsPerProvider || {};
+    lastModels[provider] = modelSelect.value;
+    state.settings.lastModelsPerProvider = lastModels;
     state.settings.model = modelSelect.value;
     const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
     state.settings.maxTokens = clampMaxTokens(
@@ -18040,16 +18057,22 @@ function renderSettingsModelOptions() {
   const exists = Array.from(modelSelect.options).some(
     (opt) => String(opt.value || "").trim() === targetModel,
   );
+  let finalModel = targetModel;
   if (!exists && targetModel) {
     const fromCatalog = catalog.find((m) => m.id === targetModel);
-    const opt = document.createElement("option");
-    opt.value = targetModel;
-    opt.textContent = fromCatalog
-      ? `${fromCatalog.name} (${targetModel})`
-      : `${targetModel} (custom)`;
-    modelSelect.appendChild(opt);
+    if (fromCatalog) {
+      const opt = document.createElement("option");
+      opt.value = targetModel;
+      opt.textContent = `${fromCatalog.name} (${targetModel})`;
+      modelSelect.appendChild(opt);
+    } else {
+      finalModel = catalog.length > 0 ? catalog[0].id : DEFAULT_SETTINGS.model;
+      const lastModels = state.settings.lastModelsPerProvider || {};
+      lastModels[provider] = finalModel;
+      state.settings.lastModelsPerProvider = lastModels;
+    }
   }
-  modelSelect.value = targetModel || DEFAULT_SETTINGS.model;
+  modelSelect.value = finalModel || DEFAULT_SETTINGS.model;
 
   renderModelCustomDropdown(filtered, catalog, targetModel);
 
@@ -18269,8 +18292,12 @@ function toggleModelFavorite(modelId) {
 
 function selectModelFromDropdown(modelId) {
   const modelSelect = document.getElementById("model-select");
+  const provider = state.settings.aiProvider || "openrouter";
   if (modelSelect) {
     modelSelect.value = modelId;
+    const lastModels = state.settings.lastModelsPerProvider || {};
+    lastModels[provider] = modelId;
+    state.settings.lastModelsPerProvider = lastModels;
     state.settings.model = modelId;
     saveSettings();
     refreshSelectedModelMeta();
@@ -18613,6 +18640,7 @@ function updateProviderVisibility() {
   const hordeContainer = document.getElementById("horde-api-key-container");
   const lmstudioContainer = document.getElementById("lmstudio-base-url-container");
   const lmstudioApiMethodContainer = document.getElementById("lmstudio-api-method-container");
+  const modelFilterRow = document.getElementById("model-filter-row");
   if (openrouterContainer) {
     if (provider === "openrouter") {
       openrouterContainer.classList.remove("hidden");
@@ -18639,6 +18667,13 @@ function updateProviderVisibility() {
       lmstudioApiMethodContainer.classList.remove("hidden");
     } else {
       lmstudioApiMethodContainer.classList.add("hidden");
+    }
+  }
+  if (modelFilterRow) {
+    if (provider === "openrouter") {
+      modelFilterRow.classList.remove("hidden");
+    } else {
+      modelFilterRow.classList.add("hidden");
     }
   }
 }
