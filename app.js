@@ -3368,6 +3368,7 @@ async function setupSettingsControls() {
 
   lmstudioApiMethod.addEventListener("change", () => {
     state.settings.lmstudioApiMethod = lmstudioApiMethod.value;
+    state.lmstudioModelCatalog = [];
     saveSettings();
     populateSettingsModels({ force: true }).catch(() => {});
   });
