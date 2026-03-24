@@ -20384,6 +20384,7 @@ async function callLMStudio(
       const decoder = new TextDecoder();
       let buffer = "";
       let content = "";
+      let currentEvent = "";
 
       while (true) {
         const { done, value } = await reader.read();
@@ -20395,6 +20396,10 @@ async function callLMStudio(
 
         for (const line of lines) {
           const trimmed = line.trim();
+          if (trimmed.startsWith("event:")) {
+            currentEvent = trimmed.slice(6).trim();
+            continue;
+          }
           if (!trimmed.startsWith("data: ")) continue;
           const data = trimmed.slice(6);
           if (data === "[DONE]") {
@@ -20415,12 +20420,8 @@ async function callLMStudio(
             const json = JSON.parse(data);
             let delta = "";
             if (apiMethod === "native") {
-              const output = json?.output || [];
-              for (const item of output) {
-                if (item?.type === "message") {
-                  delta = item?.content || "";
-                  break;
-                }
+              if (currentEvent === "message.delta") {
+                delta = json?.content || "";
               }
             } else {
               delta = json?.choices?.[0]?.delta?.content || "";
