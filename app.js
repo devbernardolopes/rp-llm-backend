@@ -18074,7 +18074,7 @@ function renderSettingsModelOptions() {
   }
   modelSelect.value = finalModel || DEFAULT_SETTINGS.model;
 
-  renderModelCustomDropdown(filtered, catalog, targetModel);
+  renderModelCustomDropdown(filtered, catalog, finalModel);
 
   const maxTokensSlider = document.getElementById("max-tokens-slider");
   const maxTokensValue = document.getElementById("max-tokens-value");
