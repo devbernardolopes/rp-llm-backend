@@ -36,6 +36,9 @@ const DEFAULT_SETTINGS = {
     ? Number(CONFIG.temperature)
     : 0.8,
   topP: 1,
+  topK: 0,
+  repeatPenalty: 1,
+  contextLength: 0,
   frequencyPenalty: 0,
   presencePenalty: 0,
   cancelShortcut: "Ctrl+.",
@@ -20299,13 +20302,20 @@ async function callLMStudio(
 
   if (apiMethod === "native") {
     endpoint = "/api/v1/chat";
-    const historyText = promptMessages
-      .filter((m) => m.role !== "system")
-      .map((m) => `${m.role}: ${m.content}`)
-      .join("\n");
+    const systemMessages = promptMessages.filter((m) => m.role === "system");
+    const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
+    const input = nonSystemMessages.map((m) => ({
+      type: "text",
+      content: `${m.role}: ${m.content}`,
+    }));
+    const topK = Number(state.settings.topK);
+    const repeatPenalty = Number(state.settings.repeatPenalty);
+    const contextLength = Number(state.settings.contextLength);
     body = {
       model: lmstudioModel,
-      input: historyText,
+      input,
+      system_prompt:
+        systemMessages.length > 0 ? systemMessages[0].content : undefined,
       temperature: isTitleGeneration
         ? (state.settings.autoTitleTemperature ??
           DEFAULT_SETTINGS.autoTitleTemperature)
@@ -20313,6 +20323,11 @@ async function callLMStudio(
           ? (state.settings.summaryTemperature ??
             DEFAULT_SETTINGS.summaryTemperature)
           : clampTemperature(state.settings.temperature),
+      top_p: Number(state.settings.topP) || 1,
+      top_k: isNaN(topK) ? undefined : topK,
+      repeat_penalty: isNaN(repeatPenalty) ? undefined : repeatPenalty,
+      max_output_tokens: effectiveMaxTokens,
+      context_length: isNaN(contextLength) ? undefined : contextLength,
       stream: streamEnabled,
     };
   } else {
@@ -20397,7 +20412,13 @@ async function callLMStudio(
             const json = JSON.parse(data);
             let delta = "";
             if (apiMethod === "native") {
-              delta = json?.output?.[0]?.content || "";
+              const output = json?.output || [];
+              for (const item of output) {
+                if (item?.type === "message") {
+                  delta = item?.content || "";
+                  break;
+                }
+              }
             } else {
               delta = json?.choices?.[0]?.delta?.content || "";
             }
@@ -20424,12 +20445,24 @@ async function callLMStudio(
       };
     } else {
       const json = await response.json();
-      let content, finishReason, usage;
-      
+      let content, finishReason, usage, stats;
+
       if (apiMethod === "native") {
-        content = json?.output?.[0]?.content || "";
-        finishReason = json?.output?.[0]?.finish_reason || "stop";
-        usage = json?.usage || {};
+        const output = json?.output || [];
+        for (const item of output) {
+          if (item?.type === "message") {
+            content = item?.content || "";
+            break;
+          }
+        }
+        content = content || "";
+        finishReason = "stop";
+        stats = json?.stats || {};
+        usage = {
+          prompt_tokens: stats?.input_tokens || 0,
+          completion_tokens: stats?.total_output_tokens || 0,
+          total_tokens: (stats?.input_tokens || 0) + (stats?.total_output_tokens || 0),
+        };
       } else {
         content = json?.choices?.[0]?.message?.content || "";
         finishReason = json?.choices?.[0]?.finish_reason || "stop";
