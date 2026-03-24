@@ -401,8 +401,9 @@ async function summarizeMemory(character) {
     .map((entry) => entry.message)
     .filter(Boolean);
   if (toSummarizeEntries.length === 0) return true;
+  const personaPrefixEnabled = character?.personaPrefixEnabled !== false;
   const messageEntries = toSummarizeEntries
-    .map((m) => buildMessageEntryForSummary(m))
+    .map((m) => buildMessageEntryForSummary(m, personaPrefixEnabled))
     .filter(Boolean);
   if (messageEntries.length === 0) {
     return true;
@@ -621,7 +622,7 @@ async function summarizeMemory(character) {
 }
 }
 
-function buildMessageEntryForSummary(message) {
+function buildMessageEntryForSummary(message, personaPrefixEnabled = true) {
   if (!message) return "";
   const rawContent = String(message.content || "");
   if (!rawContent.trim()) return "";
@@ -639,7 +640,7 @@ function buildMessageEntryForSummary(message) {
   }
   const labeled = `${message.role}: ${labelContent}`;
   const normalized = normalizeSummaryRoleLabels(labeled);
-  if (message.role === "user" && !isOoc) {
+  if (message.role === "user" && !isOoc && personaPrefixEnabled) {
     const personaName = String(message.senderName || "You");
     return normalized.replace(
       /^\[USER\]:/,
