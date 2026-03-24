@@ -20314,6 +20314,11 @@ async function callLMStudio(
     const topK = Number(state.settings.topK);
     const repeatPenalty = Number(state.settings.repeatPenalty);
     const contextLength = Number(state.settings.contextLength);
+    const autoTitleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+    const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+    const shouldDisableStore =
+      (isTitleGeneration && autoTitleProvider === "lmstudio" && apiMethod === "native") ||
+      (isSummarization && summaryProvider === "lmstudio" && apiMethod === "native");
     body = {
       model: lmstudioModel,
       input,
@@ -20332,6 +20337,7 @@ async function callLMStudio(
       max_output_tokens: effectiveMaxTokens,
       context_length: contextLength > 0 ? contextLength : undefined,
       stream: streamEnabled,
+      store: shouldDisableStore ? false : undefined,
     };
   } else {
     endpoint = "/v1/chat/completions";
