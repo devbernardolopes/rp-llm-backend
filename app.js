@@ -20304,10 +20304,13 @@ async function callLMStudio(
     endpoint = "/api/v1/chat";
     const systemMessages = promptMessages.filter((m) => m.role === "system");
     const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
-    const input = nonSystemMessages.map((m) => ({
+    let input = nonSystemMessages.map((m) => ({
       type: "text",
       content: `${m.role}: ${m.content}`,
     }));
+    if (input.length === 0) {
+      input = [{ type: "text", content: "user: " }];
+    }
     const topK = Number(state.settings.topK);
     const repeatPenalty = Number(state.settings.repeatPenalty);
     const contextLength = Number(state.settings.contextLength);
