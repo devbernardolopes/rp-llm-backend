@@ -3,8 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="assets/favicon/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="assets/favicon/favicon-16x16.png"
+    />
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png" />
     <link rel="manifest" href="assets/favicon/site.webmanifest" />
     <title>Scenara</title>
@@ -26,13 +36,13 @@
     />
     <link rel="stylesheet" href="style.css" />
     <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
-        "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js"
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+          "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js"
+        }
       }
-    }
     </script>
   </head>
   <body>
@@ -275,7 +285,9 @@
               class="pagination-size-select"
               aria-label="Cards per page"
             >
-              <option value="0" data-i18n="paginationUnlimited">Unlimited</option>
+              <option value="0" data-i18n="paginationUnlimited">
+                Unlimited
+              </option>
               <option value="5">5</option>
               <option value="10">10</option>
               <option value="20">20</option>
@@ -294,12 +306,17 @@
             type="button"
             data-i18n-title="toggleModel3dPanel"
             title="Toggle 3D Model"
-            style="margin-left: auto;"
+            style="margin-left: auto"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
             </svg>
           </button>
         </header>
@@ -334,7 +351,15 @@
         <div id="active-sfx-panel" class="active-sfx-panel hidden">
           <div class="active-sfx-header">
             <span data-i18n="activeSfx">Active SFX</span>
-            <button id="evict-all-sfx-btn" class="icon-btn danger-icon-btn" title="${t("evictAllSfx") || "Stop all"}">&times;</button>
+            <button
+              id="evict-all-sfx-btn"
+              class="icon-btn danger-icon-btn"
+              data-i18n-title="evictAllSfx"
+              title="Stop all"
+              aria-label="Stop all"
+            >
+              &times;
+            </button>
           </div>
           <div class="active-sfx-list"></div>
         </div>
@@ -345,19 +370,42 @@
           <div id="model3d-panel-header" class="model3d-panel-header">
             <span data-i18n="model3dPanelTitle">3D Model</span>
             <div class="model3d-panel-controls">
-              <button id="model3d-toggle-visibility-btn" class="icon-btn small" type="button" data-i18n-title="toggleModel3dVisibility" title="Show/Hide">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
+              <button
+                id="model3d-toggle-visibility-btn"
+                class="icon-btn small"
+                type="button"
+                data-i18n-title="toggleModel3dVisibility"
+                title="Show/Hide"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
                 </svg>
               </button>
-              <button id="model3d-close-btn" class="icon-btn small danger-icon-btn" type="button" data-i18n-title="closeModel3dPanel" title="Close">
+              <button
+                id="model3d-close-btn"
+                class="icon-btn small danger-icon-btn"
+                type="button"
+                data-i18n-title="closeModel3dPanel"
+                title="Close"
+              >
                 &times;
               </button>
             </div>
           </div>
-          <div id="model3d-expression-controls" class="model3d-expression-controls">
-            <span data-i18n="model3dExpressionsLabel" class="model3d-expression-label">
+          <div
+            id="model3d-expression-controls"
+            class="model3d-expression-controls"
+          >
+            <span
+              data-i18n="model3dExpressionsLabel"
+              class="model3d-expression-label"
+            >
               Expressions
             </span>
             <div class="model3d-expression-buttons">
@@ -393,10 +441,22 @@
               <span data-i18n="loadingModel3d">Loading model...</span>
             </div>
           </div>
-          <div id="model3d-resize-handle-nw" class="model3d-resize-handle model3d-resize-handle-nw"></div>
-          <div id="model3d-resize-handle-ne" class="model3d-resize-handle model3d-resize-handle-ne"></div>
-          <div id="model3d-resize-handle-sw" class="model3d-resize-handle model3d-resize-handle-sw"></div>
-          <div id="model3d-resize-handle-se" class="model3d-resize-handle model3d-resize-handle-se"></div>
+          <div
+            id="model3d-resize-handle-nw"
+            class="model3d-resize-handle model3d-resize-handle-nw"
+          ></div>
+          <div
+            id="model3d-resize-handle-ne"
+            class="model3d-resize-handle model3d-resize-handle-ne"
+          ></div>
+          <div
+            id="model3d-resize-handle-sw"
+            class="model3d-resize-handle model3d-resize-handle-sw"
+          ></div>
+          <div
+            id="model3d-resize-handle-se"
+            class="model3d-resize-handle model3d-resize-handle-se"
+          ></div>
         </div>
         <button
           id="scroll-bottom-btn"
@@ -439,98 +499,112 @@
                 data-i18n-title="attachFile"
                 title="Attach file (coming soon)"
                 aria-label="Attach file"
-              >+</button>
-               <div class="input-footer-right">
-                 <div id="chat-model-pill" class="model-pill small" data-i18n="modelPill">
-                   Model: -
-                 </div>
-                 <div id="chat-budget-pill" class="model-pill small">Max out: -</div>
-                 <button
-                   id="memory-command-btn"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="memoryCommandButtonTitle"
-                   title="Memory command"
-                   aria-label="Memory command"
-                 ></button>
-                  <button
-                    id="auto-tts-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="autoTtsTitleOff"
-                    title="Auto TTS: Off"
-                    aria-label="Toggle auto TTS"
-                  ></button>
-                  <button
-                    id="stt-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="sttTitleOff"
-                    title="STT: Off"
-                    aria-label="Toggle STT"
-                  ></button>
-                  <button
-                    id="stt-auto-send-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="sttAutoSendOn"
-                    title="STT Auto-send: On"
-                    aria-label="Toggle STT auto-send"
-                  ></button>
-                   <button
-                    id="ooc-mode-toggle"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="oocModeTitleOff"
-                    title="OOC mode: Off"
-                    aria-label="Enable OOC mode"
+              >
+                +
+              </button>
+              <div class="input-footer-right">
+                <div
+                  id="chat-model-pill"
+                  class="model-pill small"
+                  data-i18n="modelPill"
+                >
+                  Model: -
+                </div>
+                <div id="chat-budget-pill" class="model-pill small">
+                  Max out: -
+                </div>
+                <button
+                  id="memory-command-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="memoryCommandButtonTitle"
+                  title="Memory command"
+                  aria-label="Memory command"
+                ></button>
+                <button
+                  id="auto-tts-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="autoTtsTitleOff"
+                  title="Auto TTS: Off"
+                  aria-label="Toggle auto TTS"
+                ></button>
+                <button
+                  id="stt-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="sttTitleOff"
+                  title="STT: Off"
+                  aria-label="Toggle STT"
+                ></button>
+                <button
+                  id="stt-auto-send-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="sttAutoSendOn"
+                  title="STT Auto-send: On"
+                  aria-label="Toggle STT auto-send"
+                ></button>
+                <button
+                  id="ooc-mode-toggle"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="oocModeTitleOff"
+                  title="OOC mode: Off"
+                  aria-label="Enable OOC mode"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                      <ellipse cx="8" cy="10" rx="2" ry="3"></ellipse>
-                      <ellipse cx="16" cy="10" rx="2" ry="3"></ellipse>
-                      <path d="M6 14c2-2 6-2 12 0"></path>
-                    </svg>
-                  </button>
-                 <button
-                   id="auto-reply-enabled"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="autoReply"
-                   title="Auto-reply"
-                   aria-label="Auto-reply"
-                 >
-                   🤖
-                 </button>
-                 <button
-                   id="enter-to-send-enabled"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="enterToSend"
-                   title="ENTER to send"
-                   aria-label="ENTER to send"
-                 >
-                   ⏎
-                 </button>
-                 <button
-                   id="shortcuts-toggle-btn"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="showShortcuts"
-                   title="Show shortcuts"
-                   aria-label="Show shortcuts"
-                 >
-                   ⌨
-                 </button>
-                 <button
-                   id="chat-opacity-toggle-btn"
-                   class="option-btn send-toggle-btn small"
-                   type="button"
-                   data-i18n-title="chatOpacityToggle"
-                   aria-label="Adjust transparency"
-                   title="Adjust transparency"
-                 >
-                   α
-                 </button>
+                    <ellipse cx="8" cy="10" rx="2" ry="3"></ellipse>
+                    <ellipse cx="16" cy="10" rx="2" ry="3"></ellipse>
+                    <path d="M6 14c2-2 6-2 12 0"></path>
+                  </svg>
+                </button>
+                <button
+                  id="auto-reply-enabled"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="autoReply"
+                  title="Auto-reply"
+                  aria-label="Auto-reply"
+                >
+                  🤖
+                </button>
+                <button
+                  id="enter-to-send-enabled"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="enterToSend"
+                  title="ENTER to send"
+                  aria-label="ENTER to send"
+                >
+                  ⏎
+                </button>
+                <button
+                  id="shortcuts-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="showShortcuts"
+                  title="Show shortcuts"
+                  aria-label="Show shortcuts"
+                >
+                  ⌨
+                </button>
+                <button
+                  id="chat-opacity-toggle-btn"
+                  class="option-btn send-toggle-btn small"
+                  type="button"
+                  data-i18n-title="chatOpacityToggle"
+                  aria-label="Adjust transparency"
+                  title="Adjust transparency"
+                >
+                  α
+                </button>
                 <img
                   id="persona-selected-avatar"
                   class="persona-selected-avatar small"
@@ -761,15 +835,21 @@
             Defaults
           </button>
         </div>
-         <div class="modal-body" id="settings-modal-body">
-           <form id="settings-form" novalidate onsubmit="return false;">
-           <div data-settings-group="api" class="settings-group">
+        <div class="modal-body" id="settings-modal-body">
+          <!-- <form id="settings-form" novalidate onsubmit="return false;"> -->
+          <div data-settings-group="api" class="settings-group">
             <div class="form-field">
               <span data-i18n="aiProviderLabel">AI Provider</span>
               <select id="ai-provider-select">
-                <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
-                <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
-                <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
+                <option value="openrouter" data-i18n="providerOpenRouter">
+                  OpenRouter
+                </option>
+                <option value="aihorde" data-i18n="providerAIHorde">
+                  AI Horde
+                </option>
+                <option value="lmstudio" data-i18n="providerLMStudio">
+                  LM Studio
+                </option>
               </select>
             </div>
             <div class="form-field" id="openrouter-api-key-container">
@@ -805,8 +885,12 @@
             <div class="form-field hidden" id="lmstudio-api-method-container">
               <span data-i18n="lmStudioApiMethod">LM Studio API Method</span>
               <select id="lmstudio-api-method">
-                <option value="openai" data-i18n="lmStudioApiMethodOpenai">OpenAI-Compatible</option>
-                <option value="native" data-i18n="lmStudioApiMethodNative">Native REST API</option>
+                <option value="openai" data-i18n="lmStudioApiMethodOpenai">
+                  OpenAI-Compatible
+                </option>
+                <option value="native" data-i18n="lmStudioApiMethodNative">
+                  Native REST API
+                </option>
               </select>
             </div>
             <div class="form-field">
@@ -987,19 +1071,30 @@
             <div class="form-field">
               <span data-i18n="sttModeLabel">STT Mode</span>
               <select id="stt-mode-select">
-                <option value="push-to-talk" data-i18n="sttModePushToTalk">Push-to-Talk</option>
-                <option value="auto-stop" data-i18n="sttModeAutoStop">Auto-Stop on Silence</option>
+                <option value="push-to-talk" data-i18n="sttModePushToTalk">
+                  Push-to-Talk
+                </option>
+                <option value="auto-stop" data-i18n="sttModeAutoStop">
+                  Auto-Stop on Silence
+                </option>
               </select>
             </div>
             <div class="form-field">
-              <span data-i18n="sttSilenceDurationLabel">Silence Duration (seconds)</span>
-              <input type="number" id="stt-silence-duration" min="1" max="10" value="2" />
+              <span data-i18n="sttSilenceDurationLabel"
+                >Silence Duration (seconds)</span
+              >
+              <input
+                type="number"
+                id="stt-silence-duration"
+                min="1"
+                max="10"
+                value="2"
+              />
             </div>
-             <div class="form-field">
-               <span data-i18n="themeLabel">Theme</span>
-               <select id="theme-select">
-               </select>
-             </div>
+            <div class="form-field">
+              <span data-i18n="themeLabel">Theme</span>
+              <select id="theme-select"></select>
+            </div>
             <div class="form-field">
               <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
               <select id="marquee-behavior-select">
@@ -1028,10 +1123,7 @@
                 >
                   Carousel
                 </option>
-                <option
-                  value="hover"
-                  data-i18n="botCardAvatarEffectHover"
-                >
+                <option value="hover" data-i18n="botCardAvatarEffectHover">
                   On Hover
                 </option>
               </select>
@@ -1092,7 +1184,9 @@
                   id="ooc-system-avatar-remove"
                   class="avatar-remove-btn hidden"
                   title="Remove"
-                >&times;</button>
+                >
+                  &times;
+                </button>
               </div>
               <input
                 type="file"
@@ -1138,17 +1232,17 @@
               <span data-i18n="memoryMessagesToKeepLabel"
                 >Amount of Messages to Keep</span
               >
-               <input
-                 id="memory-messages-to-keep"
-                 type="number"
-                 min="0"
-                 max="30"
-                 step="1"
-                 value="3"
-                />
-              </div>
-              <div class="form-field">
-                <span data-i18n="memorySlotsLabel">Memory Slots</span>
+              <input
+                id="memory-messages-to-keep"
+                type="number"
+                min="0"
+                max="30"
+                step="1"
+                value="3"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="memorySlotsLabel">Memory Slots</span>
               <input
                 id="memory-slots"
                 type="number"
@@ -1157,43 +1251,50 @@
                 step="1"
                 value="5"
               />
-             </div>
-              <div class="form-field">
-                <span data-i18n="unloadThresholdLabel">Message to Keep (0 = all)</span>
-                <input
-                  id="auto-unload-threshold"
-                  type="number"
-                  min="0"
-                  max="1000"
-                  step="1"
-                  title=""
-                />
-              </div>
-              <div class="form-field">
-                <span data-i18n="loreMatchingMode">Lore Matching Mode</span>
-                <select id="lore-matching-mode">
-                  <option value="keyword" data-i18n="loreMatchingModeKeyword">
-                    Keyword (Word Boundary + Negative Keys + Proximity)
-                  </option>
-                  <option value="semantic" data-i18n="loreMatchingModeSemantic">
-                    Semantic (Uses Embeddings)
-                  </option>
-                </select>
-              </div>
-              <div class="form-field hidden" id="lore-semantic-threshold-container">
-                <span data-i18n="loreSemanticThreshold">Semantic Threshold</span>
-                <input
-                  id="lore-semantic-threshold"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value="0.5"
-                />
-                <span class="settings-hint" data-i18n="loreSemanticThresholdHint">Higher = stricter matching (0.5-0.7 recommended)</span>
-              </div>
-             <div class="form-field">
-               <span data-i18n="chatMessageAlignment">Message Alignment</span>
+            </div>
+            <div class="form-field">
+              <span data-i18n="unloadThresholdLabel"
+                >Message to Keep (0 = all)</span
+              >
+              <input
+                id="auto-unload-threshold"
+                type="number"
+                min="0"
+                max="1000"
+                step="1"
+                title=""
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="loreMatchingMode">Lore Matching Mode</span>
+              <select id="lore-matching-mode">
+                <option value="keyword" data-i18n="loreMatchingModeKeyword">
+                  Keyword (Word Boundary + Negative Keys + Proximity)
+                </option>
+                <option value="semantic" data-i18n="loreMatchingModeSemantic">
+                  Semantic (Uses Embeddings)
+                </option>
+              </select>
+            </div>
+            <div
+              class="form-field hidden"
+              id="lore-semantic-threshold-container"
+            >
+              <span data-i18n="loreSemanticThreshold">Semantic Threshold</span>
+              <input
+                id="lore-semantic-threshold"
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                value="0.5"
+              />
+              <span class="settings-hint" data-i18n="loreSemanticThresholdHint"
+                >Higher = stricter matching (0.5-0.7 recommended)</span
+              >
+            </div>
+            <div class="form-field">
+              <span data-i18n="chatMessageAlignment">Message Alignment</span>
               <select id="chat-message-alignment">
                 <option value="left" data-i18n="messageAlignmentLeft">
                   Left (Default)
@@ -1207,11 +1308,12 @@
               <span data-i18n="postprocessRules"
                 >Post-processing Rules (JSON)</span
               >
+              <!-- prettier-ignore -->
               <textarea
-                id="postprocess-rules-json"
-                rows="8"
-                placeholder='[{"pattern":"^«([\\s\\S]*)»$","flags":"gm","replacement":"<span style=\"color:#E6D97A\">«$1»</span>"}]'
-              ></textarea>
+                  id="postprocess-rules-json"
+                  rows="8"
+                  placeholder="[{&quot;pattern&quot;:&quot;^«([\\s\\S]*)»$&quot;,&quot;flags&quot;:&quot;gm&quot;,&quot;replacement&quot;:&quot;<span style=&quot;color:#E6D97A&quot;>«$1»</span>&quot;}]"
+                ></textarea>
             </div>
           </div>
           <div data-settings-group="prompting" class="settings-group">
@@ -1289,194 +1391,239 @@
                 <option value="every_fourth" data-i18n="everyFourth">
                   Every Fourth
                 </option>
-               </select>
-             </div>
-              <span class="checkbox-line">
-                <input type="checkbox" id="use-local-summarization" />
-                <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
-              </span>
-              <details class="settings-collapse">
-                <summary data-i18n="autoTitleSystemPrompt">Auto-Title System Prompt</summary>
-                <div class="settings-collapse-body">
-                  <textarea
-                    id="auto-title-system-prompt"
-                    rows="3"
-                    placeholder="System prompt for auto-titling threads."
-                  ></textarea>
-                </div>
-              </details>
-              <details class="settings-collapse">
-                <summary data-i18n="sectionHeadersTitle">Section Headers</summary>
-                <div class="settings-collapse-body">
-                  <div class="form-field">
-                    <span data-i18n="sectionHeaderMemoryContext">Memory Context Header</span>
-                    <input
-                      id="section-header-memory-context"
-                      type="text"
-                      placeholder="***MEMORY CONTEXT***"
-                    />
-                  </div>
-                  <div class="form-field">
-                    <span data-i18n="sectionHeaderCharacterPrompt">Character Prompt Header</span>
-                    <input
-                      id="section-header-character-prompt"
-                      type="text"
-                      placeholder="***CHARACTER PROMPT***"
-                    />
-                  </div>
-                  <div class="form-field">
-                    <span data-i18n="sectionHeaderMessagesSoFar">Messages So Far Header</span>
-                    <input
-                      id="section-header-messages-so-far"
-                      type="text"
-                      placeholder="***MESSAGES SO FAR***"
-                    />
-                  </div>
-                  <div class="form-field">
-                    <span data-i18n="sectionHeaderMessages">Messages Header</span>
-                    <input
-                      id="section-header-messages"
-                      type="text"
-                      placeholder="***MESSAGES***"
-                    />
-                  </div>
-                  <div class="form-field">
-                    <span data-i18n="sectionHeaderMemoryLevelContext">Memory Level Context Header</span>
-                    <input
-                      id="section-header-memory-level-context"
-                      type="text"
-                      placeholder="***MEMORY LEVEL"
-                    />
-                  </div>
-                </div>
-              </details>
+              </select>
             </div>
-            <div data-settings-group="shortcuts" class="settings-group">
-             <div class="form-field">
-               <span data-i18n="cancelGenerationShortcut"
-                 >Cancel Generation Shortcut</span
-               >
-               <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
-             </div>
-             <div class="form-field">
-               <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
-               <input id="home-shortcut" type="text" placeholder="Alt+H" />
-             </div>
-             <div class="form-field">
-               <span data-i18n="newCharacterShortcut"
-                 >New Character Shortcut</span
-               >
-               <input
-                 id="new-character-shortcut"
-                 type="text"
-                 placeholder="Alt+N"
-               />
-             </div>
-           </div>
-           <div data-settings-group="defaults" class="settings-group">
-             <div class="form-field">
-               <span data-i18n="defaultPersonaInjectionPlacement"
-                 >Default Persona Injection Placement</span
-               >
-               <select id="default-persona-injection-placement">
-                 <option value="none" data-i18n="personaInjectionNone">None</option>
-                 <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
-                 <option value="once" data-i18n="personaInjectionOnce">Once</option>
-                 <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
-               </select>
-             </div>
-             <div class="form-field">
-               <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
-               <select id="default-tts-provider">
-                 <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
-                 <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
-               </select>
-             </div>
-               <div class="form-field">
-                 <div class="label-inline">
-                   <span data-i18n="defaultTtsRate">Default TTS Rate</span>
-                   <span id="default-tts-rate-value" class="muted"></span>
-                 </div>
-                 <input
-                   id="default-tts-rate"
-                   type="range"
-                   min="0.5"
-                   max="2"
-                   step="0.1"
-                   value="1"
-                 />
-               </div>
-              <div class="form-field">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="default-include-ooc" />
-                  <span data-i18n="defaultIncludeOocInCompletions">Include OOC messages in completions</span>
-                </label>
+            <span class="checkbox-line">
+              <input type="checkbox" id="use-local-summarization" />
+              <span data-i18n="useLocalSummarization"
+                >Use Local Summarization (faster, no API cost)</span
+              >
+            </span>
+            <details class="settings-collapse">
+              <summary data-i18n="autoTitleSystemPrompt">
+                Auto-Title System Prompt
+              </summary>
+              <div class="settings-collapse-body">
+                <textarea
+                  id="auto-title-system-prompt"
+                  rows="3"
+                  placeholder="System prompt for auto-titling threads."
+                ></textarea>
               </div>
-              <div class="form-field">
-                <span data-i18n="defaultAvatarScale">Default Avatar Scale (In Chat)</span>
-                <input
-                  id="default-avatar-scale"
-                  type="number"
-                  min="1"
-                  max="10"
-                  step="1"
-                  value="4"
-                />
-               </div>
-              <div class="form-field">
-                <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
-                <select id="default-auto-title-provider">
-                  <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
-                  <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
-                  <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <span data-i18n="autoTitleModel">Auto-Title Model</span>
-                <select id="default-auto-title-model"></select>
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span data-i18n="autoTitleTemperature">Auto-Title Temperature</span>
-                  <span id="default-auto-title-temp-value" class="muted"></span>
+            </details>
+            <details class="settings-collapse">
+              <summary data-i18n="sectionHeadersTitle">Section Headers</summary>
+              <div class="settings-collapse-body">
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderMemoryContext"
+                    >Memory Context Header</span
+                  >
+                  <input
+                    id="section-header-memory-context"
+                    type="text"
+                    placeholder="***MEMORY CONTEXT***"
+                  />
                 </div>
-                <input
-                  id="default-auto-title-temp"
-                  type="range"
-                  min="0"
-                  max="2"
-                  step="0.05"
-                  value="0.25"
-                />
-              </div>
-              <div class="form-field">
-                <span data-i18n="summaryProvider">Summary Provider</span>
-                <select id="default-summary-provider">
-                  <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
-                  <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
-                  <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <span data-i18n="summaryModel">Summary Model</span>
-                <select id="default-summary-model"></select>
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span data-i18n="summaryTemperature">Summary Temperature</span>
-                  <span id="default-summary-temp-value" class="muted"></span>
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderCharacterPrompt"
+                    >Character Prompt Header</span
+                  >
+                  <input
+                    id="section-header-character-prompt"
+                    type="text"
+                    placeholder="***CHARACTER PROMPT***"
+                  />
                 </div>
-                <input
-                  id="default-summary-temp"
-                  type="range"
-                  min="0"
-                  max="2"
-                  step="0.05"
-                  value="0.25"
-                />
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderMessagesSoFar"
+                    >Messages So Far Header</span
+                  >
+                  <input
+                    id="section-header-messages-so-far"
+                    type="text"
+                    placeholder="***MESSAGES SO FAR***"
+                  />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderMessages">Messages Header</span>
+                  <input
+                    id="section-header-messages"
+                    type="text"
+                    placeholder="***MESSAGES***"
+                  />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderMemoryLevelContext"
+                    >Memory Level Context Header</span
+                  >
+                  <input
+                    id="section-header-memory-level-context"
+                    type="text"
+                    placeholder="***MEMORY LEVEL"
+                  />
+                </div>
               </div>
+            </details>
+          </div>
+          <div data-settings-group="shortcuts" class="settings-group">
+            <div class="form-field">
+              <span data-i18n="cancelGenerationShortcut"
+                >Cancel Generation Shortcut</span
+              >
+              <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
             </div>
-         </div>
+            <div class="form-field">
+              <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
+              <input id="home-shortcut" type="text" placeholder="Alt+H" />
+            </div>
+            <div class="form-field">
+              <span data-i18n="newCharacterShortcut"
+                >New Character Shortcut</span
+              >
+              <input
+                id="new-character-shortcut"
+                type="text"
+                placeholder="Alt+N"
+              />
+            </div>
+          </div>
+          <div data-settings-group="defaults" class="settings-group">
+            <div class="form-field">
+              <span data-i18n="defaultPersonaInjectionPlacement"
+                >Default Persona Injection Placement</span
+              >
+              <select id="default-persona-injection-placement">
+                <option value="none" data-i18n="personaInjectionNone">
+                  None
+                </option>
+                <option
+                  value="end_system_prompt"
+                  data-i18n="atEndCharacterPrompt"
+                >
+                  At End of Character Prompt
+                </option>
+                <option value="once" data-i18n="personaInjectionOnce">
+                  Once
+                </option>
+                <option value="end_messages" data-i18n="atEndOfMessages">
+                  At End of Messages
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
+              <select id="default-tts-provider">
+                <option value="kokoro" data-i18n="ttsProviderKokoro">
+                  Kokoro.js (local)
+                </option>
+                <option value="browser" data-i18n="ttsProviderBrowser">
+                  Browser (speechSynthesis)
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="defaultTtsRate">Default TTS Rate</span>
+                <span id="default-tts-rate-value" class="muted"></span>
+              </div>
+              <input
+                id="default-tts-rate"
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value="1"
+              />
+            </div>
+            <div class="form-field">
+              <label class="checkbox-label">
+                <input type="checkbox" id="default-include-ooc" />
+                <span data-i18n="defaultIncludeOocInCompletions"
+                  >Include OOC messages in completions</span
+                >
+              </label>
+            </div>
+            <div class="form-field">
+              <span data-i18n="defaultAvatarScale"
+                >Default Avatar Scale (In Chat)</span
+              >
+              <input
+                id="default-avatar-scale"
+                type="number"
+                min="1"
+                max="10"
+                step="1"
+                value="4"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
+              <select id="default-auto-title-provider">
+                <option value="openrouter" data-i18n="providerOpenRouter">
+                  OpenRouter
+                </option>
+                <option value="aihorde" data-i18n="providerAIHorde">
+                  AI Horde
+                </option>
+                <option value="lmstudio" data-i18n="providerLMStudio">
+                  LM Studio
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="autoTitleModel">Auto-Title Model</span>
+              <select id="default-auto-title-model"></select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="autoTitleTemperature"
+                  >Auto-Title Temperature</span
+                >
+                <span id="default-auto-title-temp-value" class="muted"></span>
+              </div>
+              <input
+                id="default-auto-title-temp"
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value="0.25"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="summaryProvider">Summary Provider</span>
+              <select id="default-summary-provider">
+                <option value="openrouter" data-i18n="providerOpenRouter">
+                  OpenRouter
+                </option>
+                <option value="aihorde" data-i18n="providerAIHorde">
+                  AI Horde
+                </option>
+                <option value="lmstudio" data-i18n="providerLMStudio">
+                  LM Studio
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="summaryModel">Summary Model</span>
+              <select id="default-summary-model"></select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="summaryTemperature">Summary Temperature</span>
+                <span id="default-summary-temp-value" class="muted"></span>
+              </div>
+              <input
+                id="default-summary-temp"
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value="0.25"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1583,7 +1730,8 @@
               class="muted"
               data-i18n="memoryRegeneratePromptDescription"
             >
-              Edit the USER prompt that generated this summary before regenerating.
+              Edit the USER prompt that generated this summary before
+              regenerating.
             </p>
           </div>
           <textarea
@@ -1784,7 +1932,9 @@
     >
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="personas-title" data-i18n="personaManager">Persona Manager</h3>
+          <h3 id="personas-title" data-i18n="personaManager">
+            Persona Manager
+          </h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
@@ -1848,7 +1998,6 @@
             </div>
             <div id="lorebook-list" class="lorebook-list"></div>
           </div>
-
         </div>
       </div>
     </div>
@@ -1924,12 +2073,21 @@
             <div class="form-field">
               <span data-i18n="lorebookInjectionMode">Injection Mode</span>
               <select id="lore-injection-mode">
-                <option value="cooldown" data-i18n="lorebookCooldown">Cooldown</option>
-                <option value="once_per_context" data-i18n="lorebookOncePerContext">Once per Context</option>
+                <option value="cooldown" data-i18n="lorebookCooldown">
+                  Cooldown
+                </option>
+                <option
+                  value="once_per_context"
+                  data-i18n="lorebookOncePerContext"
+                >
+                  Once per Context
+                </option>
               </select>
             </div>
             <div class="form-field" id="lore-suppression-window-field">
-              <span data-i18n="lorebookSuppressionWindow">Suppression Window (messages)</span>
+              <span data-i18n="lorebookSuppressionWindow"
+                >Suppression Window (messages)</span
+              >
               <input
                 id="lore-suppression-window"
                 type="number"
@@ -2227,7 +2385,10 @@
                 class="icon-btn small"
                 data-i18n-title="addInitialMessage"
               >
-                <span class="visually-hidden" data-i18n="addInitialMessage"></span>
+                <span
+                  class="visually-hidden"
+                  data-i18n="addInitialMessage"
+                ></span>
               </button>
             </div>
             <span
@@ -2258,10 +2419,7 @@
               >Persona Injection Placement</span
             >
             <select id="char-persona-injection-placement">
-              <option
-                value="none"
-                data-i18n="personaInjectionNone"
-              >
+              <option value="none" data-i18n="personaInjectionNone">
                 None
               </option>
               <option
@@ -2464,11 +2622,18 @@
             />
           </div>
           <div class="full lang-field">
-            <span data-i18n="loreBooksForCharacter">Lorebooks for this character</span>
-            <div id="char-lorebooks-list" class="check-list lorebook-list"></div>
+            <span data-i18n="loreBooksForCharacter"
+              >Lorebooks for this character</span
+            >
+            <div
+              id="char-lorebooks-list"
+              class="check-list lorebook-list"
+            ></div>
           </div>
           <div class="full global-field">
-            <span data-i18n="loreCooldown">Lore re-injection cooldown (messages)</span>
+            <span data-i18n="loreCooldown"
+              >Lore re-injection cooldown (messages)</span
+            >
             <input
               id="char-lore-cooldown"
               type="number"
@@ -2477,46 +2642,48 @@
               value="20"
             />
           </div>
-           <div class="full sfx-field hidden">
-             <div class="sfx-toolbar">
-               <button
-                 id="add-sfx-btn"
-                 class="primary-btn"
-                 type="button"
-                 data-i18n="addSfx"
-               >
-                 + Add SFX
-               </button>
-             </div>
-             <div id="char-sfx-list" class="asset-list"></div>
-           </div>
-           <div class="full model3d-field hidden">
-             <div class="model3d-toolbar">
-               <button
-                 id="add-model3d-btn"
-                 class="primary-btn"
-                 type="button"
-                 data-i18n="addModel3d"
-               >
-                 + Add 3D Model
-               </button>
-             </div>
-             <div id="char-model3d-preview" class="model3d-preview">
-               <span class="muted" data-i18n="noModel3dSelected">No 3D model selected</span>
-             </div>
-             <div id="char-model3d-info" class="model3d-info hidden">
-               <span id="char-model3d-name" class="model3d-name"></span>
-               <button
-                 id="remove-model3d-btn"
-                 class="icon-btn danger-icon-btn"
-                 type="button"
-                 data-i18n-title="removeModel3d"
-                 title="Remove 3D model"
-               >
-                 &times;
-               </button>
-             </div>
-           </div>
+          <div class="full sfx-field hidden">
+            <div class="sfx-toolbar">
+              <button
+                id="add-sfx-btn"
+                class="primary-btn"
+                type="button"
+                data-i18n="addSfx"
+              >
+                + Add SFX
+              </button>
+            </div>
+            <div id="char-sfx-list" class="asset-list"></div>
+          </div>
+          <div class="full model3d-field hidden">
+            <div class="model3d-toolbar">
+              <button
+                id="add-model3d-btn"
+                class="primary-btn"
+                type="button"
+                data-i18n="addModel3d"
+              >
+                + Add 3D Model
+              </button>
+            </div>
+            <div id="char-model3d-preview" class="model3d-preview">
+              <span class="muted" data-i18n="noModel3dSelected"
+                >No 3D model selected</span
+              >
+            </div>
+            <div id="char-model3d-info" class="model3d-info hidden">
+              <span id="char-model3d-name" class="model3d-name"></span>
+              <button
+                id="remove-model3d-btn"
+                class="icon-btn danger-icon-btn"
+                type="button"
+                data-i18n-title="removeModel3d"
+                title="Remove 3D model"
+              >
+                &times;
+              </button>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="secondary-btn" data-close-modal data-i18n="cancel">
@@ -2633,7 +2800,9 @@
     >
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="select-asset-title" data-i18n="selectAssetForSfx">Select Asset for SFX</h3>
+          <h3 id="select-asset-title" data-i18n="selectAssetForSfx">
+            Select Asset for SFX
+          </h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
@@ -2657,49 +2826,95 @@
         </div>
         <div class="modal-body">
           <div class="form-field full">
-            <div id="sfx-asset-preview-container" class="asset-preview-container"></div>
+            <div
+              id="sfx-asset-preview-container"
+              class="asset-preview-container"
+            ></div>
           </div>
           <div class="form-field full">
             <span data-i18n="sfxRuleName">Rule Name</span>
-            <input type="text" id="sfx-name" placeholder="e.g., Rainy mood, Door bell" />
+            <input
+              type="text"
+              id="sfx-name"
+              placeholder="e.g., Rainy mood, Door bell"
+            />
           </div>
           <div class="form-field full">
             <span data-i18n="sfxType">SFX Type</span>
             <select id="sfx-type">
-              <option value="sound" data-i18n="sfxTypeSound">Sound Effect</option>
-              <option value="background" data-i18n="sfxTypeBackground">Background</option>
-              <option value="overlay" data-i18n="sfxTypeOverlay">Overlay</option>
-              <option value="avatar" data-i18n="sfxTypeAvatar">Avatar Swap</option>
+              <option value="sound" data-i18n="sfxTypeSound">
+                Sound Effect
+              </option>
+              <option value="background" data-i18n="sfxTypeBackground">
+                Background
+              </option>
+              <option value="overlay" data-i18n="sfxTypeOverlay">
+                Overlay
+              </option>
+              <option value="avatar" data-i18n="sfxTypeAvatar">
+                Avatar Swap
+              </option>
             </select>
           </div>
           <div class="form-field full">
             <span data-i18n="triggerLabel">Trigger</span>
             <select id="sfx-trigger">
               <option value="start" data-i18n="triggerStart">Start</option>
-              <option value="keyword" data-i18n="triggerKeyword">Keyword</option>
-              <option value="action_pattern" data-i18n="triggerActionPattern">Action Pattern</option>
-              <option value="turn_interval" data-i18n="triggerTurnInterval">Every N Turns</option>
+              <option value="keyword" data-i18n="triggerKeyword">
+                Keyword
+              </option>
+              <option value="action_pattern" data-i18n="triggerActionPattern">
+                Action Pattern
+              </option>
+              <option value="turn_interval" data-i18n="triggerTurnInterval">
+                Every N Turns
+              </option>
               <option value="always" data-i18n="triggerAlways">Always</option>
             </select>
           </div>
           <div class="form-field full hidden" id="sfx-keywords-field">
             <span data-i18n="triggerKeywords">Trigger Keywords</span>
-            <input type="text" id="sfx-trigger-keywords" placeholder="rain, storm, thunder" />
-            <small class="muted" data-i18n="triggerKeywordsHelp">Comma-separated. Any match triggers.</small>
+            <input
+              type="text"
+              id="sfx-trigger-keywords"
+              placeholder="rain, storm, thunder"
+            />
+            <small class="muted" data-i18n="triggerKeywordsHelp"
+              >Comma-separated. Any match triggers.</small
+            >
           </div>
           <div class="form-field full hidden" id="sfx-keywords-secondary-field">
             <span data-i18n="triggerKeywordsSecondary">Secondary Keywords</span>
-            <input type="text" id="sfx-trigger-keywords-secondary" placeholder="dark, cloudy" />
-            <small class="muted" data-i18n="triggerKeywordsSecondaryHelp">All must match (optional).</small>
+            <input
+              type="text"
+              id="sfx-trigger-keywords-secondary"
+              placeholder="dark, cloudy"
+            />
+            <small class="muted" data-i18n="triggerKeywordsSecondaryHelp"
+              >All must match (optional).</small
+            >
           </div>
           <div class="form-field full hidden" id="sfx-action-pattern-field">
-            <span data-i18n="triggerActionPatternLabel">Action Pattern (Regex)</span>
-            <input type="text" id="sfx-trigger-action-pattern" placeholder="\*.*(laugh|smile)\*" />
-            <small class="muted" data-i18n="triggerActionPatternHelp">Matches *action* text. Use regex format.</small>
+            <span data-i18n="triggerActionPatternLabel"
+              >Action Pattern (Regex)</span
+            >
+            <input
+              type="text"
+              id="sfx-trigger-action-pattern"
+              placeholder="\*.*(laugh|smile)\*"
+            />
+            <small class="muted" data-i18n="triggerActionPatternHelp"
+              >Matches *action* text. Use regex format.</small
+            >
           </div>
           <div class="form-field full hidden" id="sfx-turn-interval-field">
             <span data-i18n="triggerTurnIntervalLabel">Every N Turns</span>
-            <input type="number" id="sfx-trigger-turn-interval" value="5" min="1" />
+            <input
+              type="number"
+              id="sfx-trigger-turn-interval"
+              value="5"
+              min="1"
+            />
           </div>
           <div class="form-field full hidden" id="sfx-cooldown-field">
             <span data-i18n="triggerCooldown">Cooldown (seconds)</span>
@@ -2709,19 +2924,39 @@
             <span data-i18n="evictionLabel">Eviction</span>
             <select id="sfx-eviction">
               <option value="never" data-i18n="evictionNever">Never</option>
-              <option value="keyword" data-i18n="evictionKeyword">Keyword</option>
-              <option value="message_count" data-i18n="evictionMessageCount">After N Messages</option>
+              <option value="keyword" data-i18n="evictionKeyword">
+                Keyword
+              </option>
+              <option value="message_count" data-i18n="evictionMessageCount">
+                After N Messages
+              </option>
               <option value="manual" data-i18n="evictionManual">Manual</option>
             </select>
           </div>
           <div class="form-field full hidden" id="sfx-eviction-keywords-field">
             <span data-i18n="evictionKeywords">Eviction Keywords</span>
-            <input type="text" id="sfx-eviction-keywords" placeholder="sunny, clear, stop" />
-            <small class="muted" data-i18n="evictionKeywordsHelp">When these keywords appear, stop the SFX.</small>
+            <input
+              type="text"
+              id="sfx-eviction-keywords"
+              placeholder="sunny, clear, stop"
+            />
+            <small class="muted" data-i18n="evictionKeywordsHelp"
+              >When these keywords appear, stop the SFX.</small
+            >
           </div>
-          <div class="form-field full hidden" id="sfx-eviction-message-count-field">
-            <span data-i18n="evictionMessageCountLabel">Stop after N messages</span>
-            <input type="number" id="sfx-eviction-message-count" value="10" min="1" />
+          <div
+            class="form-field full hidden"
+            id="sfx-eviction-message-count-field"
+          >
+            <span data-i18n="evictionMessageCountLabel"
+              >Stop after N messages</span
+            >
+            <input
+              type="number"
+              id="sfx-eviction-message-count"
+              value="10"
+              min="1"
+            />
           </div>
           <div class="form-field full hidden" id="sfx-playback-options">
             <span data-i18n="playbackOptions">Playback Options</span>
@@ -2742,20 +2977,46 @@
           </div>
           <div class="form-field half hidden" id="sfx-volume-field">
             <span data-i18n="volumeLabel">Volume</span>
-            <input type="range" id="sfx-volume" min="0" max="1" step="0.1" value="1" />
+            <input
+              type="range"
+              id="sfx-volume"
+              min="0"
+              max="1"
+              step="0.1"
+              value="1"
+            />
             <span id="sfx-volume-value">100%</span>
           </div>
           <div class="form-field half hidden" id="sfx-fade-in-field">
             <span data-i18n="fadeInLabel">Fade In (ms)</span>
-            <input type="number" id="sfx-fade-in" value="0" min="0" step="100" />
+            <input
+              type="number"
+              id="sfx-fade-in"
+              value="0"
+              min="0"
+              step="100"
+            />
           </div>
           <div class="form-field half hidden" id="sfx-fade-out-field">
             <span data-i18n="fadeOutLabel">Fade Out (ms)</span>
-            <input type="number" id="sfx-fade-out" value="0" min="0" step="100" />
+            <input
+              type="number"
+              id="sfx-fade-out"
+              value="0"
+              min="0"
+              step="100"
+            />
           </div>
           <div class="form-field half hidden" id="sfx-opacity-field">
             <span data-i18n="opacityLabel">Opacity</span>
-            <input type="range" id="sfx-opacity" min="0" max="1" step="0.1" value="1" />
+            <input
+              type="range"
+              id="sfx-opacity"
+              min="0"
+              max="1"
+              step="0.1"
+              value="1"
+            />
             <span id="sfx-opacity-value">100%</span>
           </div>
           <div class="form-field half hidden" id="sfx-layer-field">
@@ -2946,7 +3207,9 @@
     >
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="persona-editor-title" data-i18n="personaEditor">Persona Editor</h3>
+          <h3 id="persona-editor-title" data-i18n="personaEditor">
+            Persona Editor
+          </h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
@@ -2965,7 +3228,9 @@
                 id="persona-remove-avatar"
                 class="avatar-remove-btn hidden"
                 title="Remove"
-              >&times;</button>
+              >
+                &times;
+              </button>
             </div>
             <input
               type="file"
@@ -2978,15 +3243,23 @@
             <div class="form-field full">
               <div class="label-inline">
                 <span data-i18n="nameLabel">Name</span>
-                <span id="persona-editor-name-count" class="muted label-count">0/64</span>
+                <span id="persona-editor-name-count" class="muted label-count"
+                  >0/64</span
+                >
               </div>
               <input id="persona-editor-name" type="text" maxlength="64" />
             </div>
           </div>
           <div class="form-field">
             <div class="label-inline">
-              <span data-i18n="personaDescription">Description (max 100 chars)</span>
-              <span id="persona-editor-description-count" class="muted label-count">0/100</span>
+              <span data-i18n="personaDescription"
+                >Description (max 100 chars)</span
+              >
+              <span
+                id="persona-editor-description-count"
+                class="muted label-count"
+                >0/100</span
+              >
             </div>
             <textarea
               id="persona-editor-description"
@@ -2995,8 +3268,13 @@
             ></textarea>
           </div>
           <div class="form-field">
-            <span data-i18n="personaInternalDescription">Internal Description (optional)</span>
-            <textarea id="persona-editor-internal-description" rows="4"></textarea>
+            <span data-i18n="personaInternalDescription"
+              >Internal Description (optional)</span
+            >
+            <textarea
+              id="persona-editor-internal-description"
+              rows="4"
+            ></textarea>
           </div>
           <div class="form-field">
             <span data-i18n="personaColor">Color</span>
@@ -3098,14 +3376,16 @@
             <span id="message-model-info-model" class="model-info-value"></span>
           </div>
           <div class="model-info-row">
-            <span class="model-info-label" data-i18n="temperatureLabel"></span>:&nbsp;
+            <span class="model-info-label" data-i18n="temperatureLabel"></span
+            >:&nbsp;
             <span
               id="message-model-info-temperature"
               class="model-info-value"
             ></span>
           </div>
           <div class="model-info-row">
-            <span class="model-info-label" data-i18n="maxTokensLabel"></span>:&nbsp;
+            <span class="model-info-label" data-i18n="maxTokensLabel"></span
+            >:&nbsp;
             <span
               id="message-model-info-max-tokens"
               class="model-info-value"
@@ -3116,30 +3396,39 @@
             <span id="message-model-info-top-p" class="model-info-value"></span>
           </div>
           <div class="model-info-row">
-            <span class="model-info-label" data-i18n="frequencyPenaltyLabel"></span>:&nbsp;
+            <span
+              class="model-info-label"
+              data-i18n="frequencyPenaltyLabel"
+            ></span
+            >:&nbsp;
             <span
               id="message-model-info-frequency-penalty"
               class="model-info-value"
             ></span>
           </div>
           <div class="model-info-row">
-            <span class="model-info-label" data-i18n="presencePenaltyLabel"></span>:&nbsp;
+            <span
+              class="model-info-label"
+              data-i18n="presencePenaltyLabel"
+            ></span
+            >:&nbsp;
             <span
               id="message-model-info-presence-penalty"
               class="model-info-value"
             ></span>
           </div>
           <div class="model-info-row">
-            <span class="model-info-label" data-i18n="streamLabel"></span>:&nbsp;
+            <span class="model-info-label" data-i18n="streamLabel"></span
+            >:&nbsp;
             <span
               id="message-model-info-stream"
               class="model-info-value"
             ></span>
-           </div>
-          </form>
-         </div>
-       </div>
-     </div>
+          </div>
+          <!-- </form> -->
+        </div>
+      </div>
+    </div>
 
     <div
       id="message-system-prompt-modal"
@@ -3172,10 +3461,10 @@
 
     <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"></script>
-      <script src="embeddings.js"></script>
-      <script src="summarizer.js"></script>
-      <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.0"></script>
+    <script src="embeddings.js"></script>
+    <script src="summarizer.js"></script>
+    <script src="config.js"></script>
     <script src="db.js"></script>
     <script src="constants.js"></script>
     <script src="themes.js"></script>
@@ -3191,22 +3480,22 @@
     <script type="module" src="tts/index.js"></script>
     <script type="module" src="three-vrm-loader.js"></script>
   </body>
-<style>
-#assets-modal .modal-body {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-#assets-modal #assets-dropzone-section {
-  flex: 0 0 auto;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: transparent;
-}
-#assets-modal #assets-list {
-  flex: 1 1 auto;
-  overflow-y: auto;
-}
-</style>
+  <style>
+    #assets-modal .modal-body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #assets-modal #assets-dropzone-section {
+      flex: 0 0 auto;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: transparent;
+    }
+    #assets-modal #assets-list {
+      flex: 1 1 auto;
+      overflow-y: auto;
+    }
+  </style>
 </html>
