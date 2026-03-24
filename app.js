@@ -18184,6 +18184,15 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
   dropdownOptions.innerHTML = "";
 
+  if (favoriteModelsList.length === 0 && otherModelsList.length === 0) {
+    const emptyMsg = document.createElement("div");
+    emptyMsg.className = "model-dropdown-empty";
+    emptyMsg.textContent = "No models available";
+    dropdownOptions.appendChild(emptyMsg);
+    display.textContent = "No models available";
+    return;
+  }
+
   if (favoriteModelsList.length > 0) {
     const header = document.createElement("div");
     header.className = "model-dropdown-header";
