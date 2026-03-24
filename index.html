@@ -835,8 +835,14 @@
             Defaults
           </button>
         </div>
-        <div class="modal-body" id="settings-modal-body">
-          <div id="settings-form" class="settings-form">
+         <div class="modal-body" id="settings-modal-body">
+           <form
+             id="settings-form"
+             class="settings-form"
+             autocomplete="off"
+             novalidate
+             onsubmit="return false;"
+           >
             <div data-settings-group="api" class="settings-group">
               <div class="form-field">
                 <span data-i18n="aiProviderLabel">AI Provider</span>
@@ -854,23 +860,23 @@
               </div>
               <div class="form-field" id="openrouter-api-key-container">
                 <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
-                <input
-                  id="openrouter-api-key"
-                  type="password"
-                  placeholder="sk-or-v1-..."
-                  autocomplete="off"
-                  spellcheck="false"
-                />
+              <input
+                id="openrouter-api-key"
+                type="password"
+                placeholder="sk-or-v1-..."
+                autocomplete="new-password"
+                spellcheck="false"
+              />
               </div>
               <div class="form-field hidden" id="horde-api-key-container">
                 <span data-i18n="aiHordeApiKey">AI Horde API Key</span>
-                <input
-                  id="horde-api-key"
-                  type="password"
-                  placeholder="0000000000 or your API key"
-                  autocomplete="off"
-                  spellcheck="false"
-                />
+              <input
+                id="horde-api-key"
+                type="password"
+                placeholder="0000000000 or your API key"
+                autocomplete="new-password"
+                spellcheck="false"
+              />
               </div>
               <div class="form-field hidden" id="lmstudio-base-url-container">
                 <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span>
@@ -1643,7 +1649,7 @@
                 />
               </div>
             </div>
-          </div>
+          </form>
         </div>
       </div>
 
