@@ -3,6 +3,25 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRMLoaderPlugin } from '@pixiv/three-vrm';
 
+const MODEL3D_EXPRESSION_ALIAS_MAP = {
+  neutral: ['neutral', 'normal', 'base', 'Neutral', 'Normal'],
+  smile: ['smile', 'Smile', 'joy', 'Joy', 'happy', 'Happy', 'grin', 'Grin'],
+  surprised: [
+    'surprised',
+    'Surprised',
+    'surprise',
+    'Surprise',
+    'shock',
+    'Shock',
+    'oh',
+    'Oh',
+  ],
+};
+
+function normalizeExpressionKey(key) {
+  return (key || '').toString().trim().toLowerCase();
+}
+
 class Model3DLoader {
   constructor() {
     this.scene = null;
@@ -15,6 +34,9 @@ class Model3DLoader {
     this.isInitialized = false;
     this.isVisible = true;
     this.canvas = null;
+    this.expressionManager = null;
+    this.expressionNames = [];
+    this.expressionNameMap = new Map();
   }
 
   async init(canvasId) {
@@ -141,6 +163,9 @@ class Model3DLoader {
         this.camera.position.set(0, (size.y * scale) / 2 + 0.5, 3);
       }
 
+      this.updateExpressionInfo();
+      this.resetExpressions();
+
       if (loadingEl) loadingEl.classList.add('hidden');
 
       if (!this.animationId) {
@@ -153,6 +178,80 @@ class Model3DLoader {
       if (loadingEl) loadingEl.classList.add('hidden');
       return false;
     }
+  }
+
+  updateExpressionInfo() {
+    this.expressionManager = this.vrm?.expressionManager ?? null;
+    this.expressionNames = [];
+    this.expressionNameMap.clear();
+    if (this.expressionManager?.expressionMap) {
+      this.expressionNames = Object.keys(this.expressionManager.expressionMap).filter(
+        Boolean,
+      );
+      for (const name of this.expressionNames) {
+        const normalized = normalizeExpressionKey(name);
+        if (normalized) {
+          this.expressionNameMap.set(normalized, name);
+        }
+      }
+    }
+  }
+
+  findExpressionNameForPreset(preset) {
+    const normalizedPreset = normalizeExpressionKey(preset);
+    if (!normalizedPreset || !this.expressionManager) return null;
+    if (this.expressionNameMap.has(normalizedPreset)) {
+      return this.expressionNameMap.get(normalizedPreset);
+    }
+    const aliasList = MODEL3D_EXPRESSION_ALIAS_MAP[normalizedPreset];
+    if (Array.isArray(aliasList)) {
+      for (const alias of aliasList) {
+        const normalizedAlias = normalizeExpressionKey(alias);
+        if (normalizedAlias && this.expressionNameMap.has(normalizedAlias)) {
+          return this.expressionNameMap.get(normalizedAlias);
+        }
+      }
+    }
+    return null;
+  }
+
+  resetExpressions() {
+    if (!this.expressionManager) return false;
+    if (typeof this.expressionManager.resetValues === 'function') {
+      this.expressionManager.resetValues();
+      return true;
+    }
+    let cleared = false;
+    for (const name of this.expressionNames) {
+      this.expressionManager.setValue(name, 0);
+      cleared = true;
+    }
+    return cleared;
+  }
+
+  setExpressionByPreset(preset) {
+    if (!this.expressionManager) return false;
+    const normalizedPreset = normalizeExpressionKey(preset);
+    if (!normalizedPreset) {
+      return this.resetExpressions();
+    }
+
+    const targetName = this.findExpressionNameForPreset(normalizedPreset);
+    if (targetName) {
+      this.resetExpressions();
+      this.expressionManager.setValue(targetName, 1);
+      return true;
+    }
+
+    if (normalizedPreset === 'neutral') {
+      return this.resetExpressions();
+    }
+
+    return false;
+  }
+
+  getExpressionNames() {
+    return [...this.expressionNames];
   }
 
   startAnimationLoop() {
@@ -182,6 +281,12 @@ class Model3DLoader {
     }
   }
 
+  resetExpressionInfo() {
+    this.expressionManager = null;
+    this.expressionNames = [];
+    this.expressionNameMap.clear();
+  }
+
   disposeVRM() {
     if (this.vrm) {
       if (this.vrm.scene) {
@@ -203,6 +308,7 @@ class Model3DLoader {
         });
       }
       this.scene.remove(this.vrm.scene);
+      this.resetExpressionInfo();
       this.vrm = null;
     }
   }
@@ -261,6 +367,18 @@ export function resizeModel3D(width, height) {
   model3dLoader.resize(width, height);
 }
 
+export function setModel3DExpression(expressionKey) {
+  return model3dLoader.setExpressionByPreset(expressionKey);
+}
+
+export function resetModel3DExpressions() {
+  return model3dLoader.resetExpressions();
+}
+
+export function getModel3DExpressionNames() {
+  return model3dLoader.getExpressionNames();
+}
+
 export function getModel3DCameraState() {
   if (!model3dLoader.camera || !model3dLoader.controls) return null;
   return {
@@ -299,6 +417,9 @@ window.loadModel3D = loadModel3D;
 window.setModel3DVisible = setModel3DVisible;
 window.disposeModel3D = disposeModel3D;
 window.resizeModel3D = resizeModel3D;
+window.setModel3DExpression = setModel3DExpression;
+window.resetModel3DExpressions = resetModel3DExpressions;
+window.getModel3DExpressionNames = getModel3DExpressionNames;
 window.getModel3DCameraState = getModel3DCameraState;
 window.restoreModel3DCameraState = restoreModel3DCameraState;
 

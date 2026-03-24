@@ -616,5 +616,9 @@
   "closeModel3dPanel": "Close panel",
   "loadingModel3d": "Loading model...",
   "failedToLoadModel3d": "Failed to load 3D model.",
-  "unsupportedFileType": "Unsupported file type. Please use {types} files."
+  "unsupportedFileType": "Unsupported file type. Please use {types} files.",
+  "model3dExpressionsLabel": "Expressions",
+  "model3dExpressionNeutral": "Neutral",
+  "model3dExpressionSmile": "Smile",
+  "model3dExpressionSurprised": "Surprised"
 }

@@ -428,3 +428,26 @@ db.version(23)
       }
     });
   });
+
+db.version(24)
+  .stores({
+    characters: "++id, name, pinned",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories: "++id, characterId, summary, createdAt, slotNumber, levelNumber, summarySystemContent, summaryUserContent, embedding",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+    themes: "id, name, isBuiltIn, createdAt",
+  })
+  .upgrade(async (tx) => {
+    const threads = tx.table("threads");
+    await threads.toCollection().modify((thread) => {
+      const panel = thread.model3dPanel || {};
+      if (!Object.prototype.hasOwnProperty.call(panel, "expression")) {
+        panel.expression = null;
+      }
+      thread.model3dPanel = panel;
+    });
+  });

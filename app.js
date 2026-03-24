@@ -111,6 +111,25 @@ function getSectionHeader(key) {
 
 window.getSectionHeader = getSectionHeader;
 
+const MODEL3D_EXPRESSION_ALIAS_MAP = {
+  neutral: ['neutral', 'normal', 'base', 'default', 'Neutral', 'Normal'],
+  smile: ['smile', 'Smile', 'joy', 'Joy', 'happy', 'Happy', 'grin', 'Grin'],
+  surprised: [
+    'surprised',
+    'Surprised',
+    'surprise',
+    'Surprise',
+    'shock',
+    'Shock',
+    'oh',
+    'Oh',
+  ],
+};
+
+function normalizeExpressionKey(key) {
+  return (key || '').toString().trim().toLowerCase();
+}
+
 // Theme management
 
 // UI utilities - see ui-utils.js
@@ -148,6 +167,9 @@ const state = {
   confirmResolver: null,
   textInputResolver: null,
   confirmMode: "confirm",
+  model3dExpression: null,
+  model3dExpressionNames: [],
+  model3dExpressionNamesLoaded: false,
   unsavedResolver: null,
   activeShortcut: null,
   abortController: null,
@@ -692,6 +714,20 @@ function setupEvents() {
   document.getElementById("toggle-model3d-panel-btn")?.addEventListener("click", () => {
     toggleModel3DPanel();
   });
+  const expressionControls = document.getElementById(
+    "model3d-expression-controls",
+  );
+  expressionControls
+    ?.querySelectorAll("button[data-expression]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        const expression = button.dataset.expression;
+        if (expression) {
+          setModel3DExpression(expression);
+        }
+      });
+    });
+  renderModel3DExpressionControls();
   document
     .getElementById("char-writing-instructions-select")
     .addEventListener("change", () => {
@@ -11251,6 +11287,74 @@ function updateModel3DToggleButton() {
   btn.classList.toggle('hidden', !hasModel);
 }
 
+function isModel3DExpressionPresetSupported(expressionKey, namesSet) {
+  if (!expressionKey) return false;
+  if (expressionKey === 'neutral') return true;
+  if (!namesSet) return true;
+  if (namesSet.has(expressionKey)) return true;
+  const aliasList = MODEL3D_EXPRESSION_ALIAS_MAP[expressionKey] || [];
+  return aliasList.some((alias) => namesSet.has(normalizeExpressionKey(alias)));
+}
+
+function renderModel3DExpressionControls() {
+  const container = document.getElementById('model3d-expression-controls');
+  if (!container) return;
+  const hasModel = !!currentCharacter?.model3d?.data;
+  const expressionNamesSet = state.model3dExpressionNamesLoaded
+    ? new Set(state.model3dExpressionNames.map((name) => normalizeExpressionKey(name)))
+    : null;
+
+  container.querySelectorAll('button[data-expression]').forEach((button) => {
+    const key = normalizeExpressionKey(button.dataset.expression);
+    const supported = hasModel && isModel3DExpressionPresetSupported(key, expressionNamesSet);
+    button.disabled = !supported;
+    button.classList.toggle('active', state.model3dExpression === key);
+  });
+}
+
+function refreshModel3DExpressionCatalog() {
+  const names = window.getModel3DExpressionNames?.() ?? [];
+  state.model3dExpressionNames = Array.isArray(names) ? names.filter(Boolean) : [];
+  state.model3dExpressionNamesLoaded = true;
+  renderModel3DExpressionControls();
+}
+
+function setModel3DExpression(expressionKey, options = {}) {
+  if (!currentCharacter?.model3d?.data) return false;
+
+  const normalizedInput = normalizeExpressionKey(expressionKey);
+  const normalizedTarget = normalizedInput || 'neutral';
+  if (!options.force && state.model3dExpression === normalizedTarget) {
+    return false;
+  }
+
+  state.model3dExpression = normalizedTarget;
+  const setFn = window.setModel3DExpression;
+  const resetFn = window.resetModel3DExpressions;
+
+  let applied = false;
+  if (normalizedTarget === 'neutral') {
+    applied = resetFn?.() ?? false;
+  } else {
+    applied = setFn?.(normalizedTarget) ?? false;
+  }
+
+  if (!applied && normalizedTarget !== 'neutral') {
+    resetFn?.();
+    state.model3dExpression = 'neutral';
+  }
+
+  renderModel3DExpressionControls();
+
+  if (options.persist !== false) {
+    persistModel3DPanelState(currentThread?.id, {
+      expression: state.model3dExpression,
+    });
+  }
+
+  return applied;
+}
+
 async function handleModel3DUpload(file) {
   if (!file) return;
 
@@ -11368,6 +11472,10 @@ async function persistModel3DPanelState(threadId, updates = {}) {
       model3dPanel.camera = window.getModel3DCameraState();
     }
 
+    if (updates.expression !== undefined) {
+      model3dPanel.expression = updates.expression;
+    }
+
     await db.threads.update(threadId, { model3dPanel });
   } catch (err) {
     console.warn("Failed to persist model3d panel state:", err);
@@ -11385,24 +11493,31 @@ async function restoreModel3DPanelState(threadId) {
     const btn = document.getElementById('toggle-model3d-panel-btn');
     if (!panel) return;
 
-    const state = thread.model3dPanel;
+    const panelState = thread.model3dPanel;
+    state.model3dExpression = panelState.expression || null;
+    state.model3dExpressionNames = [];
+    state.model3dExpressionNamesLoaded = false;
+    renderModel3DExpressionControls();
     const chatViewWidth = panel.parentElement?.clientWidth || 0;
 
-    if (state.visible && currentCharacter?.model3d?.data) {
-      if (state.chatViewWidth && Math.abs(state.chatViewWidth - chatViewWidth) > 100) {
+    if (panelState.visible && currentCharacter?.model3d?.data) {
+      if (
+        panelState.chatViewWidth &&
+        Math.abs(panelState.chatViewWidth - chatViewWidth) > 100
+      ) {
         return;
       }
 
-      if (state.width && state.height) {
-        panel.style.width = state.width + 'px';
-        panel.style.height = state.height + 'px';
+      if (panelState.width && panelState.height) {
+        panel.style.width = panelState.width + 'px';
+        panel.style.height = panelState.height + 'px';
       }
 
-      if (state.left !== undefined && state.top !== undefined) {
+      if (panelState.left !== undefined && panelState.top !== undefined) {
         const maxLeft = chatViewWidth - panel.offsetWidth;
         const maxTop = panel.parentElement?.clientHeight - panel.offsetHeight || 0;
-        panel.style.left = Math.max(0, Math.min(maxLeft, state.left)) + 'px';
-        panel.style.top = Math.max(0, Math.min(maxTop, state.top)) + 'px';
+        panel.style.left = Math.max(0, Math.min(maxLeft, panelState.left)) + 'px';
+        panel.style.top = Math.max(0, Math.min(maxTop, panelState.top)) + 'px';
       }
 
       panel.classList.remove('hidden');
@@ -11410,8 +11525,8 @@ async function restoreModel3DPanelState(threadId) {
 
       await loadModel3DFromCharacter(currentCharacter);
 
-      if (state.camera && window.restoreModel3DCameraState) {
-        window.restoreModel3DCameraState(state.camera);
+      if (panelState.camera && window.restoreModel3DCameraState) {
+        window.restoreModel3DCameraState(panelState.camera);
       }
     }
   } catch (err) {
@@ -11421,6 +11536,10 @@ async function restoreModel3DPanelState(threadId) {
 
 async function loadModel3DFromCharacter(character) {
   if (!character?.model3d?.data) return;
+
+  state.model3dExpressionNamesLoaded = false;
+  state.model3dExpressionNames = [];
+  renderModel3DExpressionControls();
 
   try {
     const base64 = character.model3d.data;
@@ -11441,6 +11560,11 @@ async function loadModel3DFromCharacter(character) {
     const blob = new Blob([bytes], { type: mimeType });
 
     await window.loadModel3D(blob);
+    refreshModel3DExpressionCatalog();
+    setModel3DExpression(state.model3dExpression || 'neutral', {
+      persist: false,
+      force: true,
+    });
   } catch (error) {
     console.error('Failed to load 3D model:', error);
     await openInfoDialog(t('error'), t('failedToLoadModel3d'));

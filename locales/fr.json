@@ -615,5 +615,9 @@
   "closeModel3dPanel": "Fermer le panneau",
   "loadingModel3d": "Chargement du modele...",
   "failedToLoadModel3d": "Echec du chargement du modele 3D.",
-  "unsupportedFileType": "Type de fichier non pris en charge. Utilisez des fichiers {types}."
+  "unsupportedFileType": "Type de fichier non pris en charge. Utilisez des fichiers {types}.",
+  "model3dExpressionsLabel": "Expressions",
+  "model3dExpressionNeutral": "Neutre",
+  "model3dExpressionSmile": "Sourire",
+  "model3dExpressionSurprised": "Surpris"
 }
