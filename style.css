@@ -798,6 +798,17 @@ textarea {
   justify-content: center;
 }
 
+.option-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
+}
+
 .primary-btn {
   background: var(--primary);
   border-color: transparent;
@@ -2153,8 +2164,16 @@ textarea {
 }
 
 .message-controls .msg-tts-btn svg {
+  width: 12px;
+  height: 12px;
   display: block;
   margin: 0 auto;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
 }
 
 .message-controls .msg-tts-btn.tts-loading {
