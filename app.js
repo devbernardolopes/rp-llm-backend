@@ -11501,6 +11501,8 @@ async function persistModel3DPanelState(threadId, updates = {}) {
 
     if (updates.expression !== undefined) {
       model3dPanel.expression = updates.expression;
+    } else if (state.model3dExpression !== null && state.model3dExpression !== undefined) {
+      model3dPanel.expression = state.model3dExpression;
     }
 
     await db.threads.update(threadId, { model3dPanel });
