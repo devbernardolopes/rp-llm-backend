@@ -7749,9 +7749,13 @@ async function openCharacterModal(
   document.getElementById("char-persona-prefix").checked =
     character?.personaPrefixEnabled !== false;
   document.getElementById("char-include-ooc").checked =
-    character?.includeOocInCompletions === true;
+    character?.includeOocInCompletions ??
+    state.settings.defaultIncludeOocInCompletions ??
+    DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
   document.getElementById("char-avatar-scale").value = String(
-    Number(character?.avatarScale) || 4,
+    Number(character?.avatarScale) ??
+      state.settings.defaultAvatarScale ??
+      DEFAULT_SETTINGS.defaultAvatarScale,
   );
   setCharacterTagsInputValue(character?.tags || []);
   renderCharacterTagPresetButtons();
