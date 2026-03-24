@@ -18103,14 +18103,18 @@ async function populateAutoTitleSummaryModels() {
   const summaryProvider =
     state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
 
-  const autoTitleCatalog = await getModelCatalogForProvider(autoTitleProvider);
-  const summaryCatalog = await getModelCatalogForProvider(summaryProvider);
+  const autoTitleCatalog = await getModelCatalogForProvider(autoTitleProvider, true);
+  const summaryCatalog = await getModelCatalogForProvider(summaryProvider, true);
 
   renderModelSelectOptions(autoTitleModel, autoTitleCatalog, state.settings.autoTitleModel);
   renderModelSelectOptions(summaryModel, summaryCatalog, state.settings.summaryModel);
 }
 
-async function getModelCatalogForProvider(provider) {
+async function getModelCatalogForProvider(provider, skipMainProviderCheck = false) {
+  const mainProvider = state.settings.aiProvider || "openrouter";
+  if (!skipMainProviderCheck && provider !== mainProvider) {
+    return [];
+  }
   if (provider === "aihorde") {
     if (state.hordeModelCatalog.length === 0) {
       try {
