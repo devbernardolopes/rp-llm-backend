@@ -859,23 +859,25 @@
               </div>
               <div class="form-field" id="openrouter-api-key-container">
                 <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
-              <input
-                id="openrouter-api-key"
-                type="password"
-                placeholder="sk-or-v1-..."
-                autocomplete="new-password"
-                spellcheck="false"
-              />
+                <input
+                  id="openrouter-api-key"
+                  type="text"
+                  class="masked-secret-field"
+                  placeholder="sk-or-v1-..."
+                  autocomplete="off"
+                  spellcheck="false"
+                />
               </div>
               <div class="form-field hidden" id="horde-api-key-container">
                 <span data-i18n="aiHordeApiKey">AI Horde API Key</span>
-              <input
-                id="horde-api-key"
-                type="password"
-                placeholder="0000000000 or your API key"
-                autocomplete="new-password"
-                spellcheck="false"
-              />
+                <input
+                  id="horde-api-key"
+                  type="text"
+                  class="masked-secret-field"
+                  placeholder="0000000000 or your API key"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
               </div>
               <div class="form-field hidden" id="lmstudio-base-url-container">
                 <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span>
@@ -3597,6 +3599,15 @@
     #assets-modal #assets-list {
       flex: 1 1 auto;
       overflow-y: auto;
+    }
+    .masked-secret-field {
+      -webkit-text-security: disc;
+      text-security: disc;
+      font-family: inherit;
+    }
+    .masked-secret-field::placeholder {
+      color: #9ca3af;
+      text-security: none;
     }
   </style>
 </html>
