@@ -333,6 +333,11 @@ async function summarizeMemory(character) {
   const threadId = currentThread?.id;
   const isViewing = threadId && isViewingThread(threadId);
   const includeOoc = character?.includeOocInCompletions === true;
+  const selectedInitialMessageIndex = currentThread
+    ? Number.isInteger(currentThread.initialMessageIndex) && currentThread.initialMessageIndex >= 0
+      ? currentThread.initialMessageIndex
+      : 0
+    : null;
 
   const candidateMessages = conversationHistory
     .map((message, idx) => ({ message, idx }))
@@ -348,6 +353,14 @@ async function summarizeMemory(character) {
       }
       if (msg.role !== "assistant" && msg.role !== "user") {
         return false;
+      }
+      if (msg.isInitial) {
+        const msgIndex = Number.isInteger(Number(msg.initialMessageIndex))
+          ? Number(msg.initialMessageIndex)
+          : 0;
+        if (selectedInitialMessageIndex === null || msgIndex !== selectedInitialMessageIndex) {
+          return false;
+        }
       }
       return true;
     });
