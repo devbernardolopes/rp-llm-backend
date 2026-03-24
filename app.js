@@ -20327,10 +20327,10 @@ async function callLMStudio(
             DEFAULT_SETTINGS.summaryTemperature)
           : clampTemperature(state.settings.temperature),
       top_p: Number(state.settings.topP) || 1,
-      top_k: isNaN(topK) ? undefined : topK,
-      repeat_penalty: isNaN(repeatPenalty) ? undefined : repeatPenalty,
+      top_k: topK > 0 ? topK : undefined,
+      repeat_penalty: repeatPenalty !== 1 ? repeatPenalty : undefined,
       max_output_tokens: effectiveMaxTokens,
-      context_length: isNaN(contextLength) ? undefined : contextLength,
+      context_length: contextLength > 0 ? contextLength : undefined,
       stream: streamEnabled,
     };
   } else {
