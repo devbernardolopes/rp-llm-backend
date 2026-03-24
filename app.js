@@ -690,15 +690,12 @@ function setupEvents() {
   document.getElementById("model3d-toggle-visibility-btn")?.addEventListener("click", () => {
     if (window.setModel3DVisible) {
       const panel = document.getElementById("model3d-panel");
-      const btn = document.getElementById("model3d-toggle-visibility-btn");
-      if (panel && btn) {
-        const isVisible = !panel.dataset.hidden === true;
-        window.setModel3DVisible(!isVisible);
-        panel.dataset.hidden = isVisible;
-        btn.innerHTML = isVisible
-          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
-          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
-      }
+      if (!panel) return;
+      const currentlyHidden = panel.dataset.hidden === "true";
+      const nextHidden = !currentlyHidden;
+      window.setModel3DVisible(!nextHidden);
+      panel.dataset.hidden = nextHidden ? "true" : "false";
+      updateModel3DVisibilityButtonIcon(nextHidden);
     }
   });
   document.getElementById("model3d-close-btn")?.addEventListener("click", () => {
@@ -11439,6 +11436,9 @@ function toggleModel3DPanel() {
 
   const isHidden = panel.classList.contains('hidden');
   panel.classList.toggle('hidden');
+  const nowHidden = panel.classList.contains('hidden');
+  panel.dataset.hidden = nowHidden ? 'true' : 'false';
+  updateModel3DVisibilityButtonIcon(nowHidden);
   btn?.classList.toggle('is-active', isHidden);
 
   if (isHidden) {
@@ -11460,6 +11460,8 @@ function showModel3DPanel() {
   if (!panel) return;
   panel.classList.remove('hidden');
   btn?.classList.remove('is-active');
+  panel.dataset.hidden = 'false';
+  updateModel3DVisibilityButtonIcon(false);
   if (currentCharacter?.model3d) {
     scheduleModel3DLoad(currentCharacter);
   }
@@ -11471,6 +11473,8 @@ function hideModel3DPanel() {
   if (!panel) return;
   panel.classList.add('hidden');
   btn?.classList.add('is-active');
+  panel.dataset.hidden = 'true';
+  updateModel3DVisibilityButtonIcon(true);
   if (window.disposeModel3D) {
     window.disposeModel3D();
   }
@@ -11497,6 +11501,21 @@ function waitForNextPaint() {
       setTimeout(() => resolve(), 16);
     }
   });
+}
+
+const MODEL3D_VISIBILITY_ICONS = {
+  visible:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  hidden:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
+};
+
+function updateModel3DVisibilityButtonIcon(isHidden) {
+  const btn = document.getElementById("model3d-toggle-visibility-btn");
+  if (!btn) return;
+  btn.innerHTML = isHidden
+    ? MODEL3D_VISIBILITY_ICONS.hidden
+    : MODEL3D_VISIBILITY_ICONS.visible;
 }
 
 async function persistModel3DPanelState(threadId, updates = {}) {
@@ -11578,6 +11597,8 @@ async function restoreModel3DPanelState(threadId) {
 
       panel.classList.remove('hidden');
       btn?.classList.remove('is-active');
+      panel.dataset.hidden = 'false';
+      updateModel3DVisibilityButtonIcon(false);
 
       await waitForNextPaint();
       await loadModel3DFromCharacter(currentCharacter);
