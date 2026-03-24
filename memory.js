@@ -190,8 +190,8 @@ async function getMemorySummary(characterId, threadId) {
 function getSummaryThresholdValue(raw) {
   const num = Number(raw);
   if (!Number.isFinite(num)) return 20;
-  const stepped = Math.round(num / 5) * 5;
-  return Math.min(50, Math.max(5, stepped));
+  const stepped = Math.round(num);
+  return Math.min(100, Math.max(5, stepped));
 }
 
 function getMemoryMessagesToKeepValue(raw) {
