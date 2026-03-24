@@ -6211,12 +6211,9 @@ async function renderThreads() {
       !isGenerating &&
       String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
       isInCompletionCooldown();
-    const unreadCount =
-      currentThread &&
-      Number(currentThread.id) === Number(thread.id) &&
-      thread.messages
-        ? getUnreadAssistantCount(thread.messages)
-        : 0;
+    const unreadCount = thread.messages
+      ? getUnreadAssistantCount(thread.messages)
+      : 0;
     const threadId = Number(thread.id);
     const previousUnreadCount = state.threadUnreadCounts[threadId] || 0;
     if (unreadCount > previousUnreadCount) {
