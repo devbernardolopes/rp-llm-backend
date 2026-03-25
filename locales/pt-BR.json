@@ -179,6 +179,8 @@
   "topPLabel": "Top P",
   "frequencyPenaltyLabel": "Penalidade de Frequência",
   "presencePenaltyLabel": "Penalidade de Presença",
+  "stopStringsLabel": "Strings de Parada",
+  "stopStringsHint": "Separadas por vírgulas. Para a geração quando essas sequências aparecem.",
   "chatMessageAlignment": "Alinhamento de mensagens",
   "messageAlignmentLeft": "Esquerda (padrão)",
   "messageAlignmentCenter": "Centro",

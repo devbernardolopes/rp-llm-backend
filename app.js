@@ -43,6 +43,7 @@ const DEFAULT_SETTINGS = {
   contextLength: 0,
   frequencyPenalty: 0,
   presencePenalty: 0,
+  stopStrings: "",
   cancelShortcut: "Ctrl+.",
   homeShortcut: "Alt+H",
   newCharacterShortcut: "Alt+N",
@@ -2814,6 +2815,7 @@ async function setupSettingsControls() {
   const presencePenaltyValue = document.getElementById(
     "presence-penalty-value",
   );
+  const stopStringsInput = document.getElementById("stop-strings");
   const toastDelaySlider = document.getElementById("toast-delay-slider");
   const toastDelayValue = document.getElementById("toast-delay-value");
   const marqueeBehaviorSelect = document.getElementById(
@@ -3169,6 +3171,9 @@ async function setupSettingsControls() {
       Number(state.settings.presencePenalty) || 0,
     );
     presencePenaltyValue.textContent = presencePenaltySlider.value;
+  }
+  if (stopStringsInput) {
+    stopStringsInput.value = state.settings.stopStrings || "";
   }
   const completionCooldownSlider = document.getElementById(
     "completion-cooldown-slider",
@@ -3626,6 +3631,10 @@ async function setupSettingsControls() {
     const value = Number(presencePenaltySlider.value);
     state.settings.presencePenalty = value;
     presencePenaltyValue.textContent = value.toFixed(1);
+    saveSettings();
+  });
+  stopStringsInput?.addEventListener("input", () => {
+    state.settings.stopStrings = stopStringsInput.value.trim();
     saveSettings();
   });
   completionCooldownSlider?.addEventListener("input", () => {
@@ -20286,6 +20295,7 @@ async function callOpenRouter(
       : isSummarization
         ? 0
         : Number(state.settings.presencePenalty) || 0,
+    stop: getStopStrings(),
     stream: isTitleGeneration
       ? false
       : streamForced === null
@@ -20358,26 +20368,45 @@ async function callLMStudio(
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const hordeModel = resolvedModel.startsWith("aihorde/")
-    ? resolvedModel.slice(8)
+  const lmstudioModel = resolvedModel.startsWith("lmstudio/")
+    ? resolvedModel.slice(9)
     : resolvedModel;
 
-  const prompt = messagesToHordePrompt(promptMessages);
   state.currentRequestMessages = promptMessages;
 
-  const localKey = String(state.settings.hordeApiKey || "").trim();
-  const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
-  const hordeApiKey = localKey || fallbackKey;
+  const baseUrl = getLMStudioBaseUrl();
+  const apiMethod = state.settings.lmstudioApiMethod || "openai";
+  const streamEnabled =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : !!state.settings.streamEnabled;
 
-  const baseUrl = "https://stablehorde.net";
-  const models = hordeModel === "auto" || !hordeModel ? [] : [hordeModel];
+  let endpoint, body;
 
-  const hordeRequest = {
-    prompt,
-    models,
-    params: {
-      n: 1,
-      max_length: effectiveMaxTokens,
+  if (apiMethod === "native") {
+    endpoint = "/api/v1/chat";
+    const systemMessagesList = promptMessages.filter((m) => m.role === "system");
+    const nonSystemMsgs = promptMessages.filter((m) => m.role !== "system");
+    let input = nonSystemMsgs.map((m) => ({
+      type: "text",
+      content: `${m.role}: ${m.content}`,
+    }));
+    if (input.length === 0) {
+      input = [{ type: "text", content: "user: " }];
+    }
+    const topK = Number(state.settings.topK);
+    const repeatPenalty = Number(state.settings.repeatPenalty);
+    const contextLength = Number(state.settings.contextLength);
+    const autoTitleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+    const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+    const shouldDisableStore =
+      (isTitleGeneration && autoTitleProvider === "lmstudio" && apiMethod === "native") ||
+      (isSummarization && summaryProvider === "lmstudio" && apiMethod === "native");
+    body = {
+      model: lmstudioModel,
+      input,
+      system_prompt:
+        systemMessagesList.length > 0 ? systemMessagesList[0].content : undefined,
       temperature: isTitleGeneration
         ? (state.settings.autoTitleTemperature ??
           DEFAULT_SETTINGS.autoTitleTemperature)
@@ -20386,96 +20415,213 @@ async function callLMStudio(
             DEFAULT_SETTINGS.summaryTemperature)
           : clampTemperature(state.settings.temperature),
       top_p: Number(state.settings.topP) || 1,
-      top_k: 0,
-      typical: 0,
-      tfs: 0.9,
-      rep_pen: 1.1,
-      rep_pen_range: 256,
-      rep_pen_slope: 0,
-      samp_pen: [],
-      genmd: true,
-      quiet: false,
-      filter_nsfw: false,
-      cache_prompt: true,
-    },
-  };
+      top_k: topK > 0 ? topK : undefined,
+      repeat_penalty: repeatPenalty !== 1 ? repeatPenalty : undefined,
+      max_output_tokens: effectiveMaxTokens,
+      context_length: contextLength > 0 ? contextLength : undefined,
+      stream: streamEnabled,
+      store: shouldDisableStore ? false : undefined,
+    };
+  } else {
+    endpoint = "/v1/chat/completions";
+    const stopStrings = getStopStrings();
+    body = {
+      model: lmstudioModel,
+      messages: promptMessages,
+      max_tokens: effectiveMaxTokens,
+      temperature: isTitleGeneration
+        ? (state.settings.autoTitleTemperature ??
+          DEFAULT_SETTINGS.autoTitleTemperature)
+        : isSummarization
+          ? (state.settings.summaryTemperature ??
+            DEFAULT_SETTINGS.summaryTemperature)
+          : clampTemperature(state.settings.temperature),
+      top_p: Number(state.settings.topP) || 1,
+      frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+      presence_penalty: Number(state.settings.presencePenalty) || 0,
+      stop: stopStrings,
+      stream: streamEnabled,
+    };
+  }
 
   try {
-    const asyncRes = await fetch(`${baseUrl}/api/v2/generate/text/async`, {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Client-Agent": "rp-llm-backend:1.0:0",
-        apikey: hordeApiKey || "0000000000",
       },
-      body: JSON.stringify(hordeRequest),
+      body: JSON.stringify(body),
       signal,
     });
 
-    if (!asyncRes.ok) {
-      const errorText = await asyncRes.text();
-      throw new Error(
-        `AI Horde request failed: ${asyncRes.status} - ${errorText}`,
-      );
-    }
-
-    const asyncData = await asyncRes.json();
-    const requestId = asyncData.id;
-
-    if (!requestId) {
-      throw new Error("No request ID returned from AI Horde");
-    }
-
-    const result = await pollAIHordeResult(
-      requestId,
-      baseUrl,
-      hordeApiKey,
-      signal,
-    );
-
-    const generatedText = result.generations?.[0]?.text || "";
-    const usedModel = result.generations?.[0]?.model || hordeModel || "unknown";
-    const seed = result.generations?.[0]?.seed || 0;
-
-    if (typeof onChunk === "function") {
-      for (const char of generatedText) {
-        onChunk(char);
-        await new Promise((r) => setTimeout(r, 5));
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const payload = await response.json();
+        const msg = String(payload?.error?.message || "").trim();
+        if (msg) errorMessage = `${errorMessage}: ${msg}`;
+      } catch {
+        // ignore
       }
+      throw new Error(errorMessage);
     }
 
-    return {
-      content: generatedText,
-      model: usedModel,
-      provider: "AI Horde",
-      generationId: requestId,
-      completionMeta: {
-        id: requestId,
-        created: Math.floor(Date.now() / 1000),
-        object: "chat.completion",
-        usage: {
-          prompt_tokens: estimateTokens(prompt),
-          completion_tokens: estimateTokens(generatedText),
-          total_tokens: estimateTokens(prompt) + estimateTokens(generatedText),
+    if (streamEnabled) {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("No response stream available");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let content = "";
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+
+      while (true) {
+        if (stoppedByStopString) break;
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (stoppedByStopString) break;
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
+          const data = trimmed.slice(6);
+          if (data === "[DONE]") {
+            return {
+              content,
+              model: lmstudioModel,
+              provider: "LM Studio",
+              completionMeta: null,
+              finishReason: "stop",
+              nativeFinishReason: "stop",
+              truncatedByFilter: false,
+              stoppedByStopString,
+              generationInfo: null,
+              systemMessages,
+            };
+          }
+
+          try {
+            const json = JSON.parse(data);
+            let delta = "";
+            if (apiMethod === "native") {
+              delta = json?.content || "";
+            } else {
+              delta = json?.choices?.[0]?.delta?.content || "";
+            }
+            content += delta;
+            if (stopStrings && stopStrings.length > 0) {
+              const stopIdx = findStopStringIndex(content, stopStrings);
+              if (stopIdx !== -1) {
+                const beforeStop = content.slice(0, stopIdx);
+                content = beforeStop;
+                stoppedByStopString = true;
+                if (typeof onChunk === "function") {
+                  const addedContent = beforeStop.slice(beforeStop.length - delta.length);
+                  if (addedContent) {
+                    onChunk(addedContent.slice(0, stopIdx - (beforeStop.length - delta.length)));
+                  }
+                }
+                break;
+              }
+            }
+            if (typeof onChunk === "function") {
+              onChunk(delta);
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+      }
+
+      return {
+        content,
+        model: lmstudioModel,
+        provider: "LM Studio",
+        completionMeta: null,
+        finishReason: "stop",
+        nativeFinishReason: "stop",
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    } else {
+      const json = await response.json();
+      let content, finishReason, usage, stats;
+
+      if (apiMethod === "native") {
+        const output = json?.output || [];
+        for (const item of output) {
+          if (item?.type === "message") {
+            content = item?.content || "";
+            break;
+          }
+        }
+        content = content || "";
+        finishReason = "stop";
+        stats = json?.stats || {};
+        usage = {
+          prompt_tokens: stats?.input_tokens || 0,
+          completion_tokens: stats?.total_output_tokens || 0,
+          total_tokens: (stats?.input_tokens || 0) + (stats?.total_output_tokens || 0),
+        };
+      } else {
+        content = json?.choices?.[0]?.message?.content || "";
+        finishReason = json?.choices?.[0]?.finish_reason || "stop";
+        usage = json?.usage || {};
+      }
+
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+          finishReason = "stop";
+        }
+      }
+
+      if (typeof onChunk === "function") {
+        for (const char of content) {
+          onChunk(char);
+          await new Promise((r) => setTimeout(r, 5));
+        }
+      }
+
+      return {
+        content,
+        model: json?.model || lmstudioModel,
+        provider: "LM Studio",
+        completionMeta: {
+          id: json?.id || `lmstudio-${Date.now()}`,
+          created: Math.floor(Date.now() / 1000),
+          object: "chat.completion",
+          usage: {
+            prompt_tokens: usage?.prompt_tokens || 0,
+            completion_tokens: usage?.completion_tokens || 0,
+            total_tokens: usage?.total_tokens || 0,
+          },
         },
-      },
-      finishReason: "stop",
-      nativeFinishReason: "",
-      truncatedByFilter: false,
-      hordeMetadata: {
-        request_id: requestId,
-        worker_id: result.generations?.[0]?.worker_id,
-        worker_name: result.generations?.[0]?.worker_name,
-        seed,
-        kudos: result.generations?.[0]?.kudos,
-      },
-      generationInfo: null,
-      systemMessages,
-    };
+        finishReason,
+        nativeFinishReason: finishReason,
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    }
   } catch (err) {
     if (err?.name === "AbortError") throw err;
     throw new Error(
-      `AI Horde request failed: ${err?.message || "Unknown error"}`,
+      `LM Studio request failed: ${err?.message || "Unknown error"}`,
     );
   }
 }
@@ -20553,6 +20699,7 @@ async function callAIHordeOpenAI(
     top_p: Number(state.settings.topP) || 1,
     frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
     presence_penalty: Number(state.settings.presencePenalty) || 0,
+    stop: getStopStrings(),
     stream: streamEnabled,
   };
 
@@ -20585,8 +20732,11 @@ async function callAIHordeOpenAI(
       const decoder = new TextDecoder();
       let buffer = "";
       let content = "";
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
 
       while (true) {
+        if (stoppedByStopString) break;
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -20595,6 +20745,7 @@ async function callAIHordeOpenAI(
         buffer = lines.pop() || "";
 
         for (const line of lines) {
+          if (stoppedByStopString) break;
           const trimmed = line.trim();
           if (!trimmed.startsWith("data: ")) continue;
           const data = trimmed.slice(6);
@@ -20607,6 +20758,7 @@ async function callAIHordeOpenAI(
               finishReason: "stop",
               nativeFinishReason: "stop",
               truncatedByFilter: false,
+              stoppedByStopString,
               generationInfo: null,
               systemMessages,
             };
@@ -20616,6 +20768,21 @@ async function callAIHordeOpenAI(
             const json = JSON.parse(data);
             const delta = json?.choices?.[0]?.delta?.content || "";
             content += delta;
+            if (stopStrings && stopStrings.length > 0) {
+              const stopIdx = findStopStringIndex(content, stopStrings);
+              if (stopIdx !== -1) {
+                const beforeStop = content.slice(0, stopIdx);
+                content = beforeStop;
+                stoppedByStopString = true;
+                if (typeof onChunk === "function") {
+                  const addedContent = beforeStop.slice(beforeStop.length - delta.length);
+                  if (addedContent) {
+                    onChunk(addedContent.slice(0, stopIdx - (beforeStop.length - delta.length)));
+                  }
+                }
+                break;
+              }
+            }
             if (typeof onChunk === "function") {
               onChunk(delta);
             }
@@ -20633,13 +20800,24 @@ async function callAIHordeOpenAI(
         finishReason: "stop",
         nativeFinishReason: "stop",
         truncatedByFilter: false,
+        stoppedByStopString,
         generationInfo: null,
         systemMessages,
       };
     } else {
       const json = await response.json();
-      const content = json?.choices?.[0]?.message?.content || "";
-      const finishReason = json?.choices?.[0]?.finish_reason || "stop";
+      let content = json?.choices?.[0]?.message?.content || "";
+      let finishReason = json?.choices?.[0]?.finish_reason || "stop";
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+          finishReason = "stop";
+        }
+      }
       const usage = json?.usage || {};
 
       if (typeof onChunk === "function") {
@@ -20666,6 +20844,7 @@ async function callAIHordeOpenAI(
         finishReason,
         nativeFinishReason: finishReason,
         truncatedByFilter: false,
+        stoppedByStopString,
         generationInfo: null,
         systemMessages,
       };
@@ -20810,17 +20989,27 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
       }
 
       const data = await res.json();
-      const content = extractAssistantText(data);
+      let content = extractAssistantText(data);
       const finishMeta = extractFinishMeta(data);
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+        }
+      }
       if (content && content.trim()) {
         const generationId = String(data?.id || "");
         return {
           content,
           model: data?.model || body.model,
           provider: data?.provider || "",
-          finishReason: finishMeta.finishReason,
-          nativeFinishReason: finishMeta.nativeFinishReason,
+          finishReason: stoppedByStopString ? "stop" : finishMeta.finishReason,
+          nativeFinishReason: stoppedByStopString ? "stop" : finishMeta.nativeFinishReason,
           truncatedByFilter: finishMeta.truncatedByFilter,
+          stoppedByStopString,
           generationId,
           completionMeta: {
             id: generationId,
@@ -20934,15 +21123,18 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
   let finishReason = "";
   let nativeFinishReason = "";
   let truncatedByFilter = false;
+  let stoppedByStopString = false;
+  const stopStrings = getStopStrings();
 
   while (true) {
     const { done, value } = await reader.read();
-    if (done) break;
+    if (done || stoppedByStopString) break;
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
     buffer = lines.pop() || "";
 
     for (const rawLine of lines) {
+      if (stoppedByStopString) break;
       const line = rawLine.trim();
       if (!line.startsWith("data:")) continue;
       const data = line.slice(5).trim();
@@ -20971,6 +21163,23 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
         const piece = normalizeContentParts(json?.choices?.[0]?.delta?.content);
         if (piece) {
           content += piece;
+          if (stopStrings && stopStrings.length > 0) {
+            const stopIdx = findStopStringIndex(content, stopStrings);
+            if (stopIdx !== -1) {
+              const beforeStop = content.slice(0, stopIdx);
+              content = beforeStop;
+              stoppedByStopString = true;
+              finishReason = "stop";
+              nativeFinishReason = "stop";
+              if (typeof onChunk === "function") {
+                const addedContent = beforeStop.slice(beforeStop.length - piece.length);
+                if (addedContent) {
+                  onChunk(addedContent.slice(0, stopIdx - (beforeStop.length - piece.length)));
+                }
+              }
+              break;
+            }
+          }
           if (typeof onChunk === "function") onChunk(piece);
         }
       } catch {
@@ -21029,6 +21238,7 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
     finishReason,
     nativeFinishReason,
     truncatedByFilter,
+    stoppedByStopString,
   };
 }
 
@@ -21132,6 +21342,32 @@ function clampTemperature(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return DEFAULT_SETTINGS.temperature;
   return Math.max(0, Math.min(2, Number(n.toFixed(2))));
+}
+
+function getStopStrings() {
+  const raw = state.settings.stopStrings || "";
+  if (!raw.trim()) return null;
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function findStopStringIndex(content, stopStrings) {
+  if (!stopStrings || !Array.isArray(stopStrings) || stopStrings.length === 0) {
+    return -1;
+  }
+  let earliestIndex = -1;
+  for (const stop of stopStrings) {
+    const idx = content.indexOf(stop);
+    if (idx !== -1 && (earliestIndex === -1 || idx < earliestIndex)) {
+      earliestIndex = idx;
+    }
+  }
+  return earliestIndex;
+}
+
+function truncateAtStopString(content, stopStrings) {
+  const idx = findStopStringIndex(content, stopStrings);
+  if (idx === -1) return { content, stopped: false };
+  return { content: content.slice(0, idx), stopped: true };
 }
 
 function normalizeApiRole(role) {

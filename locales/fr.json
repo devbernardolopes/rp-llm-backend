@@ -179,6 +179,8 @@
   "topPLabel": "Top P",
   "frequencyPenaltyLabel": "Pénalité de fréquence",
   "presencePenaltyLabel": "Pénalité de présence",
+  "stopStringsLabel": "Chaînes d'arrêt",
+  "stopStringsHint": "Séparées par des virgules. Arrête la génération lorsque ces séquences apparaissent.",
   "chatMessageAlignment": "Alignement des messages",
   "messageAlignmentLeft": "Gauche (par défaut)",
   "messageAlignmentCenter": "Centre",

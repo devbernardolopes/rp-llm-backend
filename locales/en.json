@@ -179,6 +179,8 @@
   "topPLabel": "Top P",
   "frequencyPenaltyLabel": "Frequency Penalty",
   "presencePenaltyLabel": "Presence Penalty",
+  "stopStringsLabel": "Stop Strings",
+  "stopStringsHint": "Comma-separated. Stops generation when these sequences appear.",
   "chatMessageAlignment": "Message Alignment",
   "messageAlignmentLeft": "Left (Default)",
   "messageAlignmentCenter": "Center",
