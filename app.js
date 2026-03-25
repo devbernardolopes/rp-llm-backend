@@ -20784,11 +20784,22 @@ async function callAIHordeOpenAI(
 
   state.currentRequestMessages = promptMessages;
 
+  const localKey = String(state.settings.hordeApiKey || "").trim();
+  const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
+  const hordeApiKey = localKey || fallbackKey;
+
   const baseUrl = "https://oai.aihorde.net";
   const streamEnabled =
     options && Object.prototype.hasOwnProperty.call(options, "forceStream")
       ? Boolean(options.forceStream)
       : !!state.settings.streamEnabled;
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (hordeApiKey) {
+    headers["Authorization"] = `Bearer ${hordeApiKey}`;
+  }
 
   const body = {
     model: hordeModel,
@@ -20810,9 +20821,7 @@ async function callAIHordeOpenAI(
   try {
     const response = await fetch(`${baseUrl}/v1/chat/completions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify(body),
       signal,
     });
