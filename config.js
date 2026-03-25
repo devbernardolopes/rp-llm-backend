@@ -11,6 +11,7 @@ const CONFIG = {
       window.ENV &&
       window.ENV.HORDE_API_KEY) ||
     "",
+  hordeApiMethod: "native",
   lmstudioBaseUrl: "http://localhost:1234",
   lmstudioApiMethod: "openai",
   model: "openrouter/free",

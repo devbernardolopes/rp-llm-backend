@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS = {
   aiProvider: "openrouter",
   openRouterApiKey: "",
   hordeApiKey: "",
+  hordeApiMethod: "native",
   lmstudioBaseUrl: "http://localhost:1234",
   lmstudioApiMethod: "openai",
   lastModelsPerProvider: {},
@@ -2786,6 +2787,7 @@ async function setupSettingsControls() {
   const aiProviderSelect = document.getElementById("ai-provider-select");
   const openRouterApiKey = document.getElementById("openrouter-api-key");
   const hordeApiKey = document.getElementById("horde-api-key");
+  const hordeApiMethod = document.getElementById("horde-api-method");
   const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
   const lmstudioApiMethod = document.getElementById("lmstudio-api-method");
   const modelSelect = document.getElementById("model-select");
@@ -3334,6 +3336,7 @@ async function setupSettingsControls() {
   }
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
+  hordeApiMethod.value = state.settings.hordeApiMethod || "native";
   lmstudioBaseUrl.value = state.settings.lmstudioBaseUrl || "http://localhost:1234";
   lmstudioApiMethod.value = state.settings.lmstudioApiMethod || "openai";
   aiProviderSelect.value = state.settings.aiProvider || "openrouter";
@@ -3371,6 +3374,11 @@ async function setupSettingsControls() {
     state.settings.hordeApiKey = hordeApiKey.value.trim();
     saveSettings();
     populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  hordeApiMethod.addEventListener("change", () => {
+    state.settings.hordeApiMethod = hordeApiMethod.value;
+    saveSettings();
   });
 
   lmstudioBaseUrl.addEventListener("input", () => {
@@ -18651,6 +18659,7 @@ function updateProviderVisibility() {
     "openrouter-api-key-container",
   );
   const hordeContainer = document.getElementById("horde-api-key-container");
+  const hordeApiMethodContainer = document.getElementById("horde-api-method-container");
   const lmstudioContainer = document.getElementById("lmstudio-base-url-container");
   const lmstudioApiMethodContainer = document.getElementById("lmstudio-api-method-container");
   const modelFilterRow = document.getElementById("model-filter-row");
@@ -18666,6 +18675,13 @@ function updateProviderVisibility() {
       hordeContainer.classList.remove("hidden");
     } else {
       hordeContainer.classList.add("hidden");
+    }
+  }
+  if (hordeApiMethodContainer) {
+    if (provider === "aihorde") {
+      hordeApiMethodContainer.classList.remove("hidden");
+    } else {
+      hordeApiMethodContainer.classList.add("hidden");
     }
   }
   if (lmstudioContainer) {
@@ -20193,6 +20209,10 @@ async function callOpenRouter(
       : isSummarization
         ? summaryModel
         : model;
+    const apiMethod = state.settings.hordeApiMethod || "native";
+    if (apiMethod === "openai") {
+      return callAIHordeOpenAI(systemPrompt, history, effectiveModel, onChunk, signal, options);
+    }
     return callAIHorde(systemPrompt, history, effectiveModel, onChunk, signal, options);
   }
 
@@ -20718,6 +20738,195 @@ async function callAIHorde(
     if (err?.name === "AbortError") throw err;
     throw new Error(
       `AI Horde request failed: ${err?.message || "Unknown error"}`,
+    );
+  }
+}
+
+async function callAIHordeOpenAI(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const resolvedModel = resolveModelForRequest(model);
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    promptMessages,
+  );
+
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+  const hordeModel = resolvedModel.startsWith("aihorde/")
+    ? resolvedModel.slice(8)
+    : resolvedModel;
+
+  state.currentRequestMessages = promptMessages;
+
+  const baseUrl = "https://oai.aihorde.net";
+  const streamEnabled =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : !!state.settings.streamEnabled;
+
+  const body = {
+    model: hordeModel,
+    messages: promptMessages,
+    max_tokens: effectiveMaxTokens,
+    temperature: isTitleGeneration
+      ? (state.settings.autoTitleTemperature ??
+        DEFAULT_SETTINGS.autoTitleTemperature)
+      : isSummarization
+        ? (state.settings.summaryTemperature ??
+          DEFAULT_SETTINGS.summaryTemperature)
+        : clampTemperature(state.settings.temperature),
+    top_p: Number(state.settings.topP) || 1,
+    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    stream: streamEnabled,
+  };
+
+  try {
+    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const payload = await response.json();
+        const msg = String(payload?.error?.message || "").trim();
+        if (msg) errorMessage = `${errorMessage}: ${msg}`;
+      } catch {
+        // ignore
+      }
+      throw new Error(errorMessage);
+    }
+
+    if (streamEnabled) {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("No response stream available");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let content = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
+          const data = trimmed.slice(6);
+          if (data === "[DONE]") {
+            return {
+              content,
+              model: hordeModel,
+              provider: "AI Horde",
+              completionMeta: null,
+              finishReason: "stop",
+              nativeFinishReason: "stop",
+              truncatedByFilter: false,
+              generationInfo: null,
+              systemMessages,
+            };
+          }
+
+          try {
+            const json = JSON.parse(data);
+            const delta = json?.choices?.[0]?.delta?.content || "";
+            content += delta;
+            if (typeof onChunk === "function") {
+              onChunk(delta);
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+      }
+
+      return {
+        content,
+        model: hordeModel,
+        provider: "AI Horde",
+        completionMeta: null,
+        finishReason: "stop",
+        nativeFinishReason: "stop",
+        truncatedByFilter: false,
+        generationInfo: null,
+        systemMessages,
+      };
+    } else {
+      const json = await response.json();
+      const content = json?.choices?.[0]?.message?.content || "";
+      const finishReason = json?.choices?.[0]?.finish_reason || "stop";
+      const usage = json?.usage || {};
+
+      if (typeof onChunk === "function") {
+        for (const char of content) {
+          onChunk(char);
+          await new Promise((r) => setTimeout(r, 5));
+        }
+      }
+
+      return {
+        content,
+        model: json?.model || hordeModel,
+        provider: "AI Horde",
+        completionMeta: {
+          id: json?.id || `aihorde-${Date.now()}`,
+          created: Math.floor(Date.now() / 1000),
+          object: "chat.completion",
+          usage: {
+            prompt_tokens: usage?.prompt_tokens || 0,
+            completion_tokens: usage?.completion_tokens || 0,
+            total_tokens: usage?.total_tokens || 0,
+          },
+        },
+        finishReason,
+        nativeFinishReason: finishReason,
+        truncatedByFilter: false,
+        generationInfo: null,
+        systemMessages,
+      };
+    }
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(
+      `AI Horde OpenAI request failed: ${err?.message || "Unknown error"}`,
     );
   }
 }

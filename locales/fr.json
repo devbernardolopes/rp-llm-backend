@@ -621,5 +621,8 @@
   "model3dExpressionSmile": "Sourire",
   "model3dExpressionSurprised": "Surpris",
   "defaultIncludeOocInCompletions": "Inclure les messages OOC dans les completions",
-  "defaultAvatarScale": "Echelle d'avatar par defaut (En chat)"
+  "defaultAvatarScale": "Echelle d'avatar par defaut (En chat)",
+  "aiHordeApiMethod": "Methode API AI Horde",
+  "aiHordeApiMethodNative": "API REST Native",
+  "aiHordeApiMethodOpenai": "Compatible OpenAI"
 }
