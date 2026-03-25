@@ -20295,7 +20295,10 @@ async function callOpenRouter(
       : isSummarization
         ? 0
         : Number(state.settings.presencePenalty) || 0,
-    stop: getStopStrings(),
+    ...((() => {
+      const stopStrings = getStopStrings();
+      return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
+    })()),
     stream: isTitleGeneration
       ? false
       : streamForced === null
@@ -20439,7 +20442,7 @@ async function callLMStudio(
       top_p: Number(state.settings.topP) || 1,
       frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
       presence_penalty: Number(state.settings.presencePenalty) || 0,
-      stop: stopStrings,
+      ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
       stream: streamEnabled,
     };
   }
@@ -20699,7 +20702,10 @@ async function callAIHordeOpenAI(
     top_p: Number(state.settings.topP) || 1,
     frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
     presence_penalty: Number(state.settings.presencePenalty) || 0,
-    stop: getStopStrings(),
+    ...((() => {
+      const stopStrings = getStopStrings();
+      return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
+    })()),
     stream: streamEnabled,
   };
 
