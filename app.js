@@ -20656,6 +20656,10 @@ async function callAIHordeOpenAI(
         content: removeImageLinksFromContent(m.content),
       })),
   ];
+  const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
+  if (nonSystemMessages.length === 0) {
+    promptMessages.push({ role: "user", content: "Continue" });
+  }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
     .map((msg) => ({
@@ -20915,6 +20919,11 @@ async function callAIHorde(
         content: removeImageLinksFromContent(m.content),
       })),
   ];
+
+  const nonSystemMessages = messages.filter((m) => m.role !== "system");
+  if (nonSystemMessages.length === 0) {
+    messages.push({ role: "user", content: "Continue" });
+  }
 
   const prompt = messagesToHordePrompt(messages);
   const models = hordeModel && hordeModel !== "auto" ? [hordeModel] : [];
