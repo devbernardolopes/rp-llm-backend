@@ -20955,6 +20955,7 @@ async function callAIHorde(
       headers: {
         "Content-Type": "application/json",
         "Client-Agent": "rp-llm-backend:1.0:0",
+        "apikey": hordeApiKey || "0000000000",
       },
       body: JSON.stringify(hordeRequest),
       signal,
