@@ -20869,6 +20869,176 @@ async function callAIHordeOpenAI(
   }
 }
 
+async function callAIHorde(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const resolvedModel = resolveModelForRequest(model);
+  const hordeModel = resolvedModel.startsWith("aihorde/")
+    ? resolvedModel.slice(8)
+    : resolvedModel;
+
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+
+  const temperature = isTitleGeneration
+    ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
+    : isSummarization
+      ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
+      : clampTemperature(state.settings.temperature);
+
+  const effectiveMaxTokens = isTitleGeneration
+    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
+    : isSummarization
+      ? (state.settings.summaryMaxTokens ?? DEFAULT_SETTINGS.summaryMaxTokens)
+      : (state.settings.maxTokens ?? DEFAULT_SETTINGS.maxTokens);
+
+  const localKey = String(state.settings.hordeApiKey || "").trim();
+  const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
+  const hordeApiKey = localKey || fallbackKey;
+
+  const baseUrl = "https://stablehorde.net";
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+
+  const prompt = messagesToHordePrompt(messages);
+  const models = hordeModel && hordeModel !== "auto" ? [hordeModel] : [];
+
+  const hordeRequest = {
+    prompt,
+    apikey: hordeApiKey || "0000000000",
+    models,
+    params: {
+      n: 1,
+      max_length: effectiveMaxTokens,
+      temperature,
+      top_p: Number(state.settings.topP) || 1,
+      top_k: 0,
+      top_a: 0,
+      typical: 0,
+      tfs: 0.9,
+      rep_pen: 1.1,
+      rep_pen_range: 256,
+      rep_pen_slope: 0,
+      samp_pen: [],
+      pi_id: "",
+      genmd: true,
+      quiet: false,
+      filter_nsfw: false,
+      r2: false,
+      cache_prompt: true,
+      name: "rp-llm-backend",
+      model: hordeModel && hordeModel !== "auto" ? hordeModel : "",
+    },
+  };
+
+  try {
+    const asyncRes = await fetch(`${baseUrl}/api/v2/generate/text/async`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Client-Agent": "rp-llm-backend:1.0:0",
+      },
+      body: JSON.stringify(hordeRequest),
+      signal,
+    });
+
+    if (!asyncRes.ok) {
+      const errorText = await asyncRes.text();
+      throw new Error(`AI Horde request failed: ${asyncRes.status} - ${errorText}`);
+    }
+
+    const asyncData = await asyncRes.json();
+    const requestId = asyncData.id;
+
+    if (!requestId) {
+      throw new Error("No request ID returned from AI Horde");
+    }
+
+    const result = await pollAIHordeResult(requestId, baseUrl, hordeApiKey, signal);
+
+    const generatedText = result.generations?.[0]?.text || "";
+    const usedModel = result.generations?.[0]?.model || hordeModel || "unknown";
+    const seed = result.generations?.[0]?.seed || 0;
+    const kudos = result.generations?.[0]?.kudos || 0;
+    const workerId = result.generations?.[0]?.worker_id || "";
+    const workerName = result.generations?.[0]?.worker_name || "";
+
+    let content = generatedText;
+    let stoppedByStopString = false;
+    const stopStrings = getStopStrings();
+    if (stopStrings && stopStrings.length > 0) {
+      const truncation = truncateAtStopString(content, stopStrings);
+      if (truncation.stopped) {
+        content = truncation.content;
+        stoppedByStopString = true;
+      }
+    }
+
+    if (typeof onChunk === "function") {
+      for (const char of content) {
+        onChunk(char);
+        await new Promise((r) => setTimeout(r, 5));
+      }
+    }
+
+    const systemMessages = messages
+      .filter((msg) => msg.role === "system")
+      .map((msg) => ({ role: msg.role, content: msg.content }));
+
+    return {
+      content,
+      model: usedModel,
+      provider: "AI Horde",
+      completionMeta: {
+        id: `horde-${requestId}-${Date.now()}`,
+        created: Math.floor(Date.now() / 1000),
+        object: "chat.completion",
+        usage: {
+          prompt_tokens: estimateTokens(prompt),
+          completion_tokens: estimateTokens(content),
+          total_tokens: estimateTokens(prompt) + estimateTokens(content),
+        },
+      },
+      generationFetchDebug: [
+        {
+          type: "ai_horde_native",
+          request_id: requestId,
+          worker_id: workerId,
+          worker_name: workerName,
+          kudos,
+        },
+      ],
+      finishReason: "stop",
+      nativeFinishReason: "stop",
+      truncatedByFilter: false,
+      stoppedByStopString,
+      generationInfo: null,
+      systemMessages,
+    };
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(`AI Horde request failed: ${err?.message || "Unknown error"}`);
+  }
+}
+
 function messagesToHordePrompt(messages) {
   const systemMessages = [];
   const conversationMessages = [];
