@@ -16260,6 +16260,7 @@ async function regenerateOocMessage(index) {
     if (!isViewing) {
       target.unreadAt = Date.now();
       messagesToSave[index].unreadAt = target.unreadAt;
+      playUnreadMessageSound();
     }
     await persistThreadMessagesById(threadId, messagesToSave);
     renderChat();
@@ -16285,6 +16286,7 @@ async function regenerateOocMessage(index) {
     if (!isViewing) {
       target.unreadAt = Date.now();
       messagesToSave[index].unreadAt = target.unreadAt;
+      playUnreadMessageSound();
     }
     await persistThreadMessagesById(threadId, messagesToSave);
     renderChat();
@@ -16555,6 +16557,7 @@ async function generateBotReply() {
     pending.generationStatus = "";
     if (!isViewingThread(threadId)) {
       pending.unreadAt = Date.now();
+      playUnreadMessageSound();
     }
     if (pending.writingInstructionsCounted !== true) {
       pending.writingInstructionsCounted = true;
@@ -16904,6 +16907,7 @@ async function regenerateMessage(index) {
     if (!isViewingThread(threadId)) {
       target.unreadAt = Date.now();
       messagesToSave[index].unreadAt = target.unreadAt;
+      playUnreadMessageSound();
     }
     commitPendingPersonaInjectionMarker();
     await persistThreadMessagesById(threadId, messagesToSave);
@@ -16930,6 +16934,7 @@ async function regenerateMessage(index) {
       if (!isViewingThread(threadId)) {
         target.unreadAt = Date.now();
         messagesToSave[index].unreadAt = target.unreadAt;
+        playUnreadMessageSound();
       }
       await persistThreadMessagesById(threadId, messagesToSave);
       renderChat();
@@ -19383,6 +19388,7 @@ async function processNextQueuedThread() {
     pending.nativeFinishReason = result.nativeFinishReason || "";
     pending.generationStatus = "";
     pending.unreadAt = Date.now();
+    playUnreadMessageSound();
     pending.generationId = String(result.generationId || "");
     pending.completionMeta = result.completionMeta || null;
     pending.generationInfo = result.generationInfo || null;
