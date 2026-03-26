@@ -12608,7 +12608,6 @@ async function importCharacterFromFile(e) {
         name,
         selectedCardLanguage: language,
         tags,
-        avatarScale: 4,
         createdAt: Date.now(),
         updatedAt: Date.now(),
         definitions: [
@@ -12660,7 +12659,6 @@ async function importCharacterFromFile(e) {
         ...imported,
         name: String(imported.name || "").trim(),
         tags: normalizedTags,
-        avatarScale: 4,
         createdAt: Date.now(),
         updatedAt: Date.now(),
         personaInjectionPlacement: "end_system_prompt",
