@@ -1582,6 +1582,8 @@ function setupEvents() {
         hideMemoryRegeneratePromptModal();
       } else if (modal.id === "memory-regenerate-prompt-modal") {
         hideMemoryRegeneratePromptModal();
+      } else if (modal.id === "memory-regenerate-progress-modal") {
+        hideMemoryRegenerateProgressModal();
       } else {
         closeActiveModal();
       }
