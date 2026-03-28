@@ -12318,25 +12318,89 @@ async function exportCharacter(characterId) {
     showToast(t("characterNotFound"), "error");
     return;
   }
+
+  const safeName = (character.name || "character").replace(/[^\w-]+/g, "_");
+
+  const processedCharacter = { ...character };
+
+  if (Array.isArray(processedCharacter.avatars)) {
+    processedCharacter.avatars = await Promise.all(
+      processedCharacter.avatars.map(async (avatar) => {
+        if (avatar.data instanceof Blob) {
+          const base64 = await blobToBase64(avatar.data);
+          return { ...avatar, data: base64 };
+        }
+        return avatar;
+      })
+    );
+  }
+
+  if (
+    processedCharacter.avatar &&
+    processedCharacter.avatar instanceof Blob
+  ) {
+    processedCharacter.avatar = await blobToBase64(processedCharacter.avatar);
+  }
+
+  const uniqueWiIds = new Set();
+  const charWiId = processedCharacter.writingInstructionId;
+  if (charWiId && charWiId !== "none") {
+    uniqueWiIds.add(String(charWiId));
+  }
+  if (Array.isArray(processedCharacter.definitions)) {
+    for (const def of processedCharacter.definitions) {
+      const defWiId = def?.writingInstructionId;
+      if (defWiId && defWiId !== "none") {
+        uniqueWiIds.add(String(defWiId));
+      }
+    }
+  }
+
   const payload = {
     schema: "rp-character-export-v1",
     exportedAt: new Date().toISOString(),
-    character: { ...character },
+    character: processedCharacter,
   };
   delete payload.character.id;
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+
+  const charBlob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
+  downloadBlob(charBlob, `${safeName}.rpchar.json`);
+
+  let exportedWiCount = 0;
+  for (const wiId of uniqueWiIds) {
+    const wi = normalizeWritingInstructionRecord(
+      await db.writingInstructions.get(Number(wiId))
+    );
+    if (!wi) continue;
+
+    const interfaceLang = state.settings.interfaceLanguage || "en";
+    const content =
+      wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
+
+    const wiBlob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const wiSafeName = wi.name.replace(/[^a-z0-9]/gi, "_");
+    downloadBlob(wiBlob, `${safeName}_${wiSafeName}.md`);
+    exportedWiCount++;
+  }
+
+  let toastMsg = t("characterExported");
+  if (exportedWiCount > 0) {
+    toastMsg += ` (+${exportedWiCount} writing instruction${exportedWiCount > 1 ? "s" : ""})`;
+  }
+  showToast(toastMsg, "success");
+}
+
+function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const safeName = (character.name || "character").replace(/[^\w-]+/g, "_");
   a.href = url;
-  a.download = `${safeName}.rpchar.json`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-  showToast(t("characterExported"), "success");
 }
 
 function buildLegacyInitialMessagesFromPayload(source) {
