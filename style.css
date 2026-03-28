@@ -1627,6 +1627,22 @@ textarea {
     align-items: flex-start;
     gap: 4px;
   }
+
+  .thread-row .actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 4px;
+  }
+
+  .thread-row .actions .icon-btn {
+    width: 22px;
+    height: 22px;
+  }
+
+  .thread-row {
+    min-height: auto;
+    padding: 6px;
+  }
 }
 
 #chat-view {
