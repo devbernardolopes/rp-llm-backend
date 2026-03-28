@@ -474,6 +474,7 @@
   "memorySummarizationFailed": "Die Gedächtniszusammenfassung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst.",
   "autoTitleFailed": "Die automatische Titelgenerierung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst.",
   "useLocalSummarization": "Lokale Zusammenfassung verwenden (schneller, keine API-Kosten)",
+  "useLocalAutoTitle": "Lokalen automatischen Titel verwenden (schneller, keine API-Kosten)",
   "memoryRelevanceFilterToggle": "Relevanzfilter für Erinnerungen verwenden",
   "streamLabel": "Stream",
   "enabledLabel": "Aktiviert",

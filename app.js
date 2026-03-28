@@ -75,6 +75,7 @@ const DEFAULT_SETTINGS = {
   memoryRelevanceFilterEnabled: false,
   memorySlots: 5,
   useLocalSummarization: false,
+  useLocalAutoTitle: false,
   favoriteModels: [],
   chatMessageAlignment: "left",
   chatOpacity: 1,
@@ -3502,6 +3503,17 @@ async function setupSettingsControls() {
       state.settings.useLocalSummarization === true;
     useLocalSummarization.addEventListener("change", () => {
       state.settings.useLocalSummarization = useLocalSummarization.checked;
+      saveSettings();
+    });
+  }
+  const useLocalAutoTitle = document.getElementById(
+    "use-local-auto-title",
+  );
+  if (useLocalAutoTitle) {
+    useLocalAutoTitle.checked =
+      state.settings.useLocalAutoTitle === true;
+    useLocalAutoTitle.addEventListener("change", () => {
+      state.settings.useLocalAutoTitle = useLocalAutoTitle.checked;
       saveSettings();
     });
   }
@@ -14363,6 +14375,40 @@ async function maybeGenerateTitleBeforeBotReply() {
     "",
     transcript,
   ].join("\n");
+
+  if (state.settings.useLocalAutoTitle) {
+    if (isViewingThread(currentThread.id)) {
+      showToast("Using local auto-title...", "info");
+    }
+    const localTitle = await window.getLocalTitle(transcript);
+    if (localTitle) {
+      const updatedAt = Date.now();
+      await db.threads.update(currentThread.id, {
+        title: localTitle,
+        titleGenerated: true,
+        titleManual: false,
+        updatedAt,
+      });
+      currentThread.title = localTitle;
+      currentThread.titleGenerated = true;
+      currentThread.titleManual = false;
+      currentThread.updatedAt = updatedAt;
+      state.lastSyncSeenUpdatedAt = updatedAt;
+      updateChatTitle();
+      await renderThreads();
+      pendingTitleMessage.generationStatus = "generating";
+      await persistCurrentThread();
+      if (isViewingThread(currentThread.id)) {
+        renderChat();
+      }
+      setSendingState();
+      return true;
+    } else {
+      if (isViewingThread(currentThread.id)) {
+        showToast("Local auto-title failed, using API", "warning");
+      }
+    }
+  }
 
   try {
     const result = await callOpenRouter(

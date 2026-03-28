@@ -65,6 +65,40 @@ async function getLocalSummary(text) {
 }
 
 /**
+ * Generates a short title using the local model.
+ * @param {string} text - The text to generate title from
+ * @returns {Promise<string|null>} - Title text or null on failure
+ */
+async function getLocalTitle(text) {
+  const inputText = String(text || '').trim();
+  if (!inputText) return null;
+  
+  if (!window.localSummarizationReady || !window.localSummarizationModel) {
+    console.warn('Summarization model not ready');
+    return null;
+  }
+  
+  try {
+    const output = await window.localSummarizationModel(inputText, {
+      max_length: 40,
+      min_length: 5,
+      do_sample: false,
+    });
+    
+    if (output && output[0]?.summary_text) {
+      let title = output[0].summary_text.trim();
+      title = title.replace(/^["'`]+|["'`]+$/g, "");
+      title = title.replace(/\s+/g, " ").trim();
+      return title.slice(0, 128);
+    }
+    return null;
+  } catch (e) {
+    console.warn('Local auto-title failed:', e);
+    return null;
+  }
+}
+
+/**
  * Preloads the model if the local summarization setting is enabled.
  * Called from init() for faster first summarization.
  */
@@ -81,4 +115,5 @@ async function preloadSummarizationIfEnabled() {
 // Expose functions globally
 window.loadSummarizationModel = loadSummarizationModel;
 window.getLocalSummary = getLocalSummary;
+window.getLocalTitle = getLocalTitle;
 window.preloadSummarizationIfEnabled = preloadSummarizationIfEnabled;

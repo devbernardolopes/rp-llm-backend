@@ -474,6 +474,7 @@
   "memorySummarizationFailed": "A sumarização da memória falhou: {error}. Por favor, tente novamente antes de continuar.",
   "autoTitleFailed": "A geração do título automático falhou: {error}. Por favor, tente novamente antes de continuar.",
   "useLocalSummarization": "Usar Sumarização Local (mais rápido, sem custo de API)",
+  "useLocalAutoTitle": "Usar Título Automático Local (mais rápido, sem custo de API)",
   "memoryRelevanceFilterToggle": "Usar filtro de relevância da memória",
   "streamLabel": "Transmissão",
   "enabledLabel": "Habilitado",
