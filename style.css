@@ -4399,6 +4399,18 @@ textarea {
     align-items: stretch;
   }
 
+  #user-input-container {
+    min-height: 120px;
+  }
+
+  .input-footer {
+    flex-wrap: wrap;
+  }
+
+  .input-footer-right {
+    flex-wrap: wrap;
+  }
+
   .character-filters-row {
     flex-direction: column;
     align-items: stretch;
