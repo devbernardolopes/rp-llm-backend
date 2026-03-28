@@ -4404,6 +4404,11 @@ textarea {
 
   #chat-view {
     min-width: 0;
+    padding-bottom: calc(18px + 64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .chat-log {
+    padding-bottom: calc(152px + env(safe-area-inset-bottom, 0px));
   }
 
   .two-col {
@@ -4413,10 +4418,11 @@ textarea {
   .input-row {
     flex-direction: column;
     align-items: stretch;
+    padding-bottom: env(safe-area-inset-bottom, 12px);
   }
 
   #user-input-container {
-    min-height: 120px;
+    z-index: 1;
   }
 
   .input-footer {
