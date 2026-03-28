@@ -1616,6 +1616,17 @@ textarea {
     flex: 1 1 100%;
     order: -1;
   }
+
+  .message-controls {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .chat-row-assistant .message-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
 
 #chat-view {
