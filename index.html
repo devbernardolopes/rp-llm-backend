@@ -779,6 +779,30 @@
         <div class="modal-header">
           <h3 id="settings-title" data-i18n="settingsTitle">Settings</h3>
           <div class="settings-header-actions">
+            <button
+              id="settings-export-btn"
+              class="icon-btn small"
+              data-i18n-title="exportSettingsTitle"
+              title="Export settings"
+              aria-label="Export settings"
+            >
+              ⬇
+            </button>
+            <button
+              id="settings-import-btn"
+              class="icon-btn small"
+              data-i18n-title="importSettingsTitle"
+              title="Import settings"
+              aria-label="Import settings"
+            >
+              ⬆
+            </button>
+            <input
+              type="file"
+              id="settings-import-input"
+              accept=".json"
+              class="hidden"
+            />
             <span id="settings-version" class="muted settings-version"></span>
             <button class="icon-btn modal-close" data-close-modal>
               &times;

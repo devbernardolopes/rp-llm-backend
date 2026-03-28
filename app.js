@@ -612,6 +612,15 @@ function setupEvents() {
     .getElementById("import-db-input")
     .addEventListener("change", importDatabaseBackupFromFile);
   document
+    .getElementById("settings-export-btn")
+    .addEventListener("click", exportSettings);
+  document
+    .getElementById("settings-import-btn")
+    .addEventListener("click", importSettings);
+  document
+    .getElementById("settings-import-input")
+    .addEventListener("change", handleSettingsImport);
+  document
     .getElementById("reset-db-btn")
     ?.addEventListener("click", () =>
       showToast(t("resetAppDataSoon"), "success"),
@@ -4245,6 +4254,72 @@ function saveUiState() {
 
 function saveSettings() {
   localStorage.setItem("rp-settings", JSON.stringify(state.settings));
+}
+
+function exportSettings() {
+  const payload = {
+    schema: "rp-settings-export-v1",
+    exportedAt: new Date().toISOString(),
+    settings: { ...state.settings },
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const safeDate = new Date()
+    .toISOString()
+    .replace([":", ".", "T", "Z"], "-")
+    .slice(0, 16);
+  downloadBlob(blob, `settings_${safeDate}.json`);
+  showToast(t("settingsExported") || "Settings exported.", "success");
+}
+
+function importSettings() {
+  const input = document.getElementById("settings-import-input");
+  if (input) {
+    input.click();
+  }
+}
+
+function handleSettingsImport(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const content = e.target?.result;
+      if (typeof content !== "string") {
+        throw new Error("Invalid file content");
+      }
+      const parsed = JSON.parse(content);
+      if (!parsed?.settings || typeof parsed.settings !== "object") {
+        throw new Error("Invalid settings file format");
+      }
+      const confirmed = await openConfirmDialog(
+        t("importSettingsConfirmTitle") || "Import Settings",
+        t("importSettingsConfirmMessage") ||
+          "This will replace all your current settings. Are you sure?",
+      );
+      if (!confirmed) return;
+      const mergedSettings = { ...DEFAULT_SETTINGS, ...parsed.settings };
+      state.settings = mergedSettings;
+      saveSettings();
+      if (typeof window.applySettingsToUi === "function") {
+        window.applySettingsToUi();
+      }
+      showToast(t("settingsImported") || "Settings imported successfully.", "success");
+    } catch (err) {
+      console.error("Failed to import settings:", err);
+      showToast(
+        t("importSettingsFailed") || "Failed to import settings: " + err.message,
+        "error",
+      );
+    }
+  };
+  reader.onerror = () => {
+    showToast(t("importSettingsFailed") || "Failed to read settings file.", "error");
+  };
+  reader.readAsText(file);
 }
 
 function savePromptCommandHistory() {
