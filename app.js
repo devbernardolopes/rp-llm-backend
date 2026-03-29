@@ -95,6 +95,7 @@ const DEFAULT_SETTINGS = {
   defaultIncludeOocInCompletions: false,
   defaultAvatarScale: 4,
   autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
+  autoTitleUserPrompt: "Generate a concise roleplay thread title based on the following conversation:\n\n{{transcript}}\n\nProvide only the title, nothing else.",
   autoTitleProvider: "openrouter",
   autoTitleModel: "stepfun/step-3.5-flash:free",
   autoTitleTemperature: 0.25,
@@ -3251,6 +3252,12 @@ async function setupSettingsControls() {
       state.settings.autoTitleSystemPrompt ||
       DEFAULT_SETTINGS.autoTitleSystemPrompt;
   }
+  const autoTitleUserPrompt = document.getElementById("auto-title-user-prompt");
+  if (autoTitleUserPrompt) {
+    autoTitleUserPrompt.value =
+      state.settings.autoTitleUserPrompt ||
+      DEFAULT_SETTINGS.autoTitleUserPrompt;
+  }
   if (sectionHeaderMemoryContext) {
     sectionHeaderMemoryContext.value =
       state.settings.sectionHeaderMemoryContext ||
@@ -3756,6 +3763,11 @@ async function setupSettingsControls() {
 
   autoTitleSystemPrompt?.addEventListener("input", () => {
     state.settings.autoTitleSystemPrompt = autoTitleSystemPrompt.value;
+    saveSettings();
+  });
+
+  autoTitleUserPrompt?.addEventListener("input", () => {
+    state.settings.autoTitleUserPrompt = autoTitleUserPrompt.value;
     saveSettings();
   });
 
@@ -14364,17 +14376,12 @@ async function maybeGenerateTitleBeforeBotReply() {
         "en",
     ) || "en";
 
-  const titlePrompt = [
-    "Generate a concise roleplay thread title.",
-    `Generate the title in language code: ${languageCode}.`,
-    "Requirements:",
-    "- Maximum 128 characters.",
-    "- Plain text only.",
-    "- No surrounding quotes.",
-    "- Reflect main topic or scene from these messages.",
-    "",
-    transcript,
-  ].join("\n");
+  const userPromptTemplate =
+    state.settings.autoTitleUserPrompt ||
+    DEFAULT_SETTINGS.autoTitleUserPrompt;
+  const titlePrompt = userPromptTemplate
+    .replace(/\{\{transcript\}\}/g, transcript)
+    .replace(/\{\{languageCode\}\}/g, languageCode);
 
   if (state.settings.useLocalAutoTitle) {
     if (isViewingThread(currentThread.id)) {
