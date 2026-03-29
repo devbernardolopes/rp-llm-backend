@@ -18431,6 +18431,7 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
       const nameSpan = document.createElement("span");
       nameSpan.className = "model-name";
       nameSpan.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+      nameSpan.title = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
       nameSpan.style.color = "#ffd700";
 
       const starSpan = document.createElement("span");
@@ -18472,6 +18473,7 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
       const nameSpan = document.createElement("span");
       nameSpan.className = "model-name";
       nameSpan.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+      nameSpan.title = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
 
       const starSpan = document.createElement("span");
       starSpan.className = "model-star";
