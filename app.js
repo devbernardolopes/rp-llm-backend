@@ -14369,14 +14369,29 @@ async function maybeGenerateTitleBeforeBotReply() {
 
   const titleSlice = inSimulationHistory.slice(0, minMessages);
   const transcript = titleSlice
-    .map((m, i) => {
-      const role = m.role === "assistant" ? "Assistant" : "User";
-      const content = String(m.content || "")
-        .replace(/\s+/g, " ")
-        .trim();
-      return `${i + 1}. ${role}: ${content.slice(0, 600)}`;
+    .map((m) => {
+      const rawContent = String(m.content || "");
+      if (!rawContent.trim()) return "";
+      const isOoc = m.ooc === true;
+      const processed =
+        m.role === "assistant"
+          ? applySummaryMessagePreProcessing(rawContent)
+          : rawContent;
+      const trimmed = processed.trim();
+      if (!trimmed) return "";
+      let labelContent = trimmed;
+      if (isOoc) {
+        labelContent = `((OOC: ${labelContent}))`;
+      }
+      if (m.role === "assistant") {
+        return `[ASSISTANT]: ${labelContent}`;
+      } else {
+        const personaName = String(m.senderName || "You");
+        return `[USER (as ${personaName})]: ${labelContent}`;
+      }
     })
-    .join("\n");
+    .filter((entry) => entry !== "")
+    .join("\n\n");
   const languageCode =
     normalizeBotLanguageCode(
       currentThread.characterLanguage ||
