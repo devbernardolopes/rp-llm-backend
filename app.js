@@ -14368,6 +14368,7 @@ async function maybeGenerateTitleBeforeBotReply() {
   setSendingState();
 
   const titleSlice = inSimulationHistory.slice(0, minMessages);
+  const personaPrefixEnabled = currentCharacter?.personaPrefixEnabled !== false;
   const transcript = titleSlice
     .map((m) => {
       const rawContent = String(m.content || "");
@@ -14386,8 +14387,11 @@ async function maybeGenerateTitleBeforeBotReply() {
       if (m.role === "assistant") {
         return `[ASSISTANT]: ${labelContent}`;
       } else {
-        const personaName = String(m.senderName || "You");
-        return `[USER (as ${personaName})]: ${labelContent}`;
+        if (personaPrefixEnabled && m.senderName && m.senderName !== "You") {
+          const personaName = String(m.senderName);
+          return `[USER (as ${personaName})]: ${labelContent}`;
+        }
+        return `[USER]: ${labelContent}`;
       }
     })
     .filter((entry) => entry !== "")
