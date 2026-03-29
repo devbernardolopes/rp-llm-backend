@@ -14270,7 +14270,7 @@ async function maybeGenerateTitleBeforeBotReply() {
   }
   if (currentThread.titleManual === true) return true;
   const minMessages = Math.max(
-    5,
+    1,
     Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10),
   );
   const displayHistory = getFilteredConversationHistoryForThread(currentThread);
@@ -14503,7 +14503,7 @@ async function maybeGenerateThreadTitle() {
   if (currentThread.titleGenerated === true) return true;
   if (currentThread.titleManual === true) return;
   const minMessages = Math.max(
-    5,
+    1,
     Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10),
   );
   const inSimulationHistory = getInSimulationMessages(conversationHistory);
