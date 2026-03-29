@@ -99,15 +99,14 @@ async function getLocalTitle(text) {
 }
 
 /**
- * Preloads the model if the local summarization setting is enabled.
- * Called from init() for faster first summarization.
+ * Preloads the model if local summarization or auto-title is enabled.
+ * Called from init() for faster first summarization/title generation.
  */
 async function preloadSummarizationIfEnabled() {
-  const enabled = state?.settings?.useLocalSummarization === true;
-  if (enabled) {
-    // Start loading in background
+  const summarizationEnabled = state?.settings?.useLocalSummarization === true;
+  const autoTitleEnabled = state?.settings?.useLocalAutoTitle === true;
+  if (summarizationEnabled || autoTitleEnabled) {
     loadSummarizationModel().catch(() => {
-      // Silently fail - will fallback to API when needed
     });
   }
 }
