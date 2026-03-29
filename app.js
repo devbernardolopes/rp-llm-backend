@@ -95,7 +95,15 @@ const DEFAULT_SETTINGS = {
   defaultIncludeOocInCompletions: false,
   defaultAvatarScale: 4,
   autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
-  autoTitleUserPrompt: "Generate a concise roleplay thread title based on the following conversation:\n\n{{transcript}}\n\nProvide only the title, nothing else.",
+  autoTitleUserPrompt: `Generate a concise roleplay thread title.
+Generate the title in language code: {{languageCode}}.
+Requirements:
+- Maximum 128 characters.
+- Plain text only.
+- No surrounding quotes.
+- Reflect main topic or scene from these messages.
+
+{{transcript}}`,
   autoTitleProvider: "openrouter",
   autoTitleModel: "stepfun/step-3.5-flash:free",
   autoTitleTemperature: 0.25,
