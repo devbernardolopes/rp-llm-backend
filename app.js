@@ -630,6 +630,9 @@ function setupEvents() {
   document
     .getElementById("settings-import-input")
     .addEventListener("change", handleSettingsImport);
+  document.getElementById("settings-export-btn").innerHTML = ICONS.export;
+  document.getElementById("settings-import-btn").innerHTML =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V3"></path><path d="M8 9l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>';
   document
     .getElementById("reset-db-btn")
     ?.addEventListener("click", () =>
@@ -4291,10 +4294,19 @@ function saveSettings() {
 }
 
 function exportSettings() {
+  const promptHistoryRaw = localStorage.getItem(PROMPT_HISTORY_KEY);
+  const promptCommandHistoryRaw = localStorage.getItem(PROMPT_COMMAND_HISTORY_KEY);
+  const theme = localStorage.getItem("rp-theme");
+
   const payload = {
     schema: "rp-settings-export-v1",
     exportedAt: new Date().toISOString(),
     settings: { ...state.settings },
+    promptHistory: promptHistoryRaw ? JSON.parse(promptHistoryRaw) : [],
+    promptCommandHistory: promptCommandHistoryRaw
+      ? JSON.parse(promptCommandHistoryRaw)
+      : [],
+    theme: theme || "",
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
@@ -4340,6 +4352,42 @@ function handleSettingsImport(event) {
       saveSettings();
       if (typeof window.applySettingsToUi === "function") {
         window.applySettingsToUi();
+      }
+      if (Array.isArray(parsed.promptHistory)) {
+        try {
+          localStorage.setItem(
+            PROMPT_HISTORY_KEY,
+            JSON.stringify(parsed.promptHistory.slice(-PROMPT_HISTORY_MAX)),
+          );
+          state.promptHistory = parsed.promptHistory.slice(-PROMPT_HISTORY_MAX);
+        } catch (err) {
+          console.warn("Failed to restore prompt history:", err);
+        }
+      }
+      if (Array.isArray(parsed.promptCommandHistory)) {
+        try {
+          localStorage.setItem(
+            PROMPT_COMMAND_HISTORY_KEY,
+            JSON.stringify(
+              parsed.promptCommandHistory.slice(-PROMPT_COMMAND_HISTORY_MAX),
+            ),
+          );
+          state.promptCommandHistory = parsed.promptCommandHistory.slice(
+            -PROMPT_COMMAND_HISTORY_MAX,
+          );
+        } catch (err) {
+          console.warn("Failed to restore prompt command history:", err);
+        }
+      }
+      if (typeof parsed.theme === "string" && parsed.theme) {
+        try {
+          localStorage.setItem("rp-theme", parsed.theme);
+          if (typeof window.setTheme === "function") {
+            window.setTheme(parsed.theme);
+          }
+        } catch (err) {
+          console.warn("Failed to restore theme:", err);
+        }
       }
       showToast(t("settingsImported") || "Settings imported successfully.", "success");
     } catch (err) {
