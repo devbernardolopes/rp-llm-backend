@@ -15438,12 +15438,12 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       isLockedMemoryMessage;
     applyEditButtonEditedStyle(editBtn, message);
     controls.appendChild(editBtn);
-    const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
-      await openMessageMetadataModal(index);
+    const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
+      await copyMessage(message.content || "");
     });
-    infoBtn.classList.add("msg-info-btn");
-    applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
-    controls.appendChild(infoBtn);
+    copyBtn.classList.add("msg-copy-btn");
+    copyBtn.disabled = disableControlsForRow;
+    controls.appendChild(copyBtn);
   }
 
   const forkBtn = iconButton("fork", t("msgForkTitle"), async () => {
