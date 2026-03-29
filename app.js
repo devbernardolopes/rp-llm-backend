@@ -16200,26 +16200,37 @@ function formatOocSystemMessageEntries(entries) {
   return formatted;
 }
 
-async function buildOocSystemPrompt() {
-  const threshold = state.settings.autoUnloadThreshold || 0;
-  const unloadState = currentThread?.unloadState;
-  const hasUnloadedMessages =
-    threshold > 0 && unloadState && unloadState.loadedStartIndex > 0;
-
-  let historyForPrompt = conversationHistory;
-  if (hasUnloadedMessages) {
-    historyForPrompt = await getFullHistoryFromDb(Number(currentThread.id));
+function formatOocMessageEntry(message, personaPrefixEnabled = true) {
+  if (!message) return "";
+  const rawContent = String(message.content || "");
+  if (!rawContent.trim()) return "";
+  const isOoc = message.ooc === true;
+  let labelContent = rawContent.trim();
+  if (isOoc) {
+    labelContent = `((OOC: ${labelContent}))`;
   }
+  const labeled = `${message.role}: ${labelContent}`;
+  const normalized = labeled
+    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
+    .replace(/(^|\n)user:/gi, "$1[USER]:");
+  if (message.role === "user" && !isOoc && personaPrefixEnabled) {
+    const personaName = String(message.senderName || "You");
+    return normalized.replace(
+      /^\[USER\]:/,
+      `[USER (as ${personaName})]:`,
+    );
+  }
+  return normalized;
+}
 
-  const filteredHistory = getFilteredConversationHistoryForThread(
-    currentThread,
-    historyForPrompt,
-  );
-  const contextMessages = getInSimulationMessages(filteredHistory, {
+async function buildOocSystemPrompt() {
+  const displayHistory = getFilteredConversationHistoryForThread();
+  const personaPrefixEnabled = currentCharacter?.personaPrefixEnabled !== false;
+  const contextMessages = getInSimulationMessages(displayHistory, {
     includeOoc: true,
   })
     .filter((msg) => !isMessageLockedByMemory(msg))
-    .map(formatOocContextEntry)
+    .map((msg) => formatOocMessageEntry(msg, personaPrefixEnabled))
     .filter(Boolean);
   const rawMemory = await getMemorySummary(
     currentCharacter.id,
