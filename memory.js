@@ -377,22 +377,6 @@ async function summarizeMemory(character) {
   const newCandidateEntries = candidateMessages.filter(
     (entry) => entry.message.summaryProtected !== true,
   );
-  const upcomingSlotInfo = await getNextMemorySlotInfo(character.id, threadId);
-  const shouldIncludePreviousLevel =
-    upcomingSlotInfo.slot === 1 && upcomingSlotInfo.level > 1;
-  let previousLevelContext = "";
-  if (shouldIncludePreviousLevel) {
-    const previousLevel = upcomingSlotInfo.level - 1;
-    const previousEntries = await getMemoryEntries(character.id, threadId);
-    const levelEntries = previousEntries.filter(
-      (entry) => getEntryLevel(entry) === previousLevel,
-    );
-    const formattedEntries = formatMemoryEntries(levelEntries);
-    if (formattedEntries) {
-      previousLevelContext = `${getSectionHeader("sectionHeaderMemoryLevelContext")} ${previousLevel} CONTEXT***\n\n${formattedEntries}`;
-    }
-  }
-
   const storedMemorySummary = await getMemorySummary(character.id, threadId);
   const memoryContextSection = storedMemorySummary
     ? `${getSectionHeader("sectionHeaderMemoryContext")}\n\n${storedMemorySummary}`
@@ -404,9 +388,6 @@ async function summarizeMemory(character) {
   const summarySections = [];
   if (memoryContextSection) {
     summarySections.push(memoryContextSection);
-  }
-  if (previousLevelContext) {
-    summarySections.push(previousLevelContext);
   }
   const allEntriesForContent = [...newCandidateEntries];
   const keepSetting = getCurrentMemoryMessagesToKeep();
@@ -690,7 +671,6 @@ function getSectionHeader(key) {
     sectionHeaderCharacterPrompt: "***CHARACTER PROMPT***",
     sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
     sectionHeaderMessages: "***MESSAGES***",
-    sectionHeaderMemoryLevelContext: "***MEMORY LEVEL",
   };
   return (
     (window.state?.settings?.[key] || "") ||
