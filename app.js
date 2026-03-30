@@ -7940,9 +7940,10 @@ async function openCharacterModal(
     state.settings.defaultIncludeOocInCompletions ??
     DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
   document.getElementById("char-avatar-scale").value = String(
-    Number(character?.avatarScale) ??
-      state.settings.defaultAvatarScale ??
-      DEFAULT_SETTINGS.defaultAvatarScale,
+    character?.avatarScale != null
+      ? Number(character.avatarScale)
+      : state.settings.defaultAvatarScale ??
+        DEFAULT_SETTINGS.defaultAvatarScale,
   );
   setCharacterTagsInputValue(character?.tags || []);
   renderCharacterTagPresetButtons();
