@@ -377,6 +377,7 @@ async function summarizeMemory(character) {
   const newCandidateEntries = candidateMessages.filter(
     (entry) => entry.message.summaryProtected !== true,
   );
+  const upcomingSlotInfo = await getNextMemorySlotInfo(character.id, threadId);
   const storedMemorySummary = await getMemorySummary(character.id, threadId);
   const memoryContextSection = storedMemorySummary
     ? `${getSectionHeader("sectionHeaderMemoryContext")}\n\n${storedMemorySummary}`
