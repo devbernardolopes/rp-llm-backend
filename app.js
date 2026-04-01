@@ -9654,6 +9654,16 @@ async function renderLorebookManagementList() {
     actions.appendChild(deleteBtn);
 
     row.append(avatar, main, actions);
+    row.addEventListener("click", (e) => {
+      if (
+        e.target.closest(".lorebook-actions") ||
+        e.target.closest("button") ||
+        e.target.closest(".icon-btn")
+      ) {
+        return;
+      }
+      openLoreEditor(lorebook);
+    });
     list.appendChild(row);
   });
 }
