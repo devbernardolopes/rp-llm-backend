@@ -9,23 +9,16 @@ const summarizationPromises = new Map();
 let summarizationIdCounter = 0;
 
 function getWorkerPath() {
-  console.log('[summarizer] getWorkerPath() starting...');
   const scripts = document.getElementsByTagName('script');
-  console.log('[summarizer] Total script tags found:', scripts.length);
-  
   for (let i = 0; i < scripts.length; i++) {
     const script = scripts[i];
-    console.log(`[summarizer] Script ${i}: "${script.src}"`);
     if (script.src && script.src.includes('summarizer.js')) {
       const base = script.src.substring(0, script.src.lastIndexOf('/'));
-      console.log('[summarizer] MATCH! Found summarizer.js at base:', base);
-      return `${base}/summarizer-worker.js`;
+      return `${base}/summarizer-worker.js?v=${Date.now()}`;
     }
   }
   
-  console.log('[summarizer] No summarizer.js found in script tags');
-  console.log('[summarizer] Using HARDCODED fallback path');
-  return 'https://rp-llm-backend.vercel.app/summarizer/summarizer-worker.js';
+  return 'https://rp-llm-backend.vercel.app/summarizer/summarizer-worker.js?v=' + Date.now();
 }
 
 function getSummarizationWorker() {
