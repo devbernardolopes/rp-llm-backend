@@ -7801,6 +7801,9 @@ function buildInitialMessageEntry(text, index, language) {
   const body = document.createElement("div");
   body.className = "textarea-collapse-body";
 
+  rightGroup.append(removeBtn, icon);
+  header.append(title, rightGroup);
+
   const entryObj = { header, body, icon };
   entryObj.refresh = () => {
     const hasContent = String(textarea.value || "").trim().length > 0;
