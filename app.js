@@ -22648,20 +22648,26 @@ function stopAllSfx() {
   renderActiveSfxPanel();
 }
 
+const ENABLE_SFX_DEBUG_LOGS = false;
+
 async function playStartSfxForCharacter(character, thread) {
-  console.log("[SFX] playStartSfxForCharacter called", {
-    characterName: character?.name,
-    threadId: thread?.id,
-    messageCount: conversationHistory.length,
-  });
+  if (ENABLE_SFX_DEBUG_LOGS) {
+    console.log("[SFX] playStartSfxForCharacter called", {
+      characterName: character?.name,
+      threadId: thread?.id,
+      messageCount: conversationHistory.length,
+    });
+  }
   if (!character || !thread) {
-    console.log("[SFX] No character or thread, returning");
+    if (ENABLE_SFX_DEBUG_LOGS) {
+      console.log("[SFX] No character or thread, returning");
+    }
     return;
   }
   stopAllSfx();
 
   const lang = String(thread.characterLanguage || thread.language || "en");
-  console.log("[SFX] Thread language:", lang);
+  if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] Thread language:", lang);
   const defs = Array.isArray(character.definitions)
     ? character.definitions
     : [character].filter(Boolean);
@@ -22670,30 +22676,32 @@ async function playStartSfxForCharacter(character, thread) {
       (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
     ) || defs[0];
   const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
-  console.log("[SFX] SFX list:", sfxList);
+  if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] SFX list:", sfxList);
 
   if (sfxList.length === 0) {
-    console.log("[SFX] No SFX entries, returning");
+    if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] No SFX entries, returning");
     return;
   }
   if (conversationHistory.length > 1) {
-    console.log("[SFX] More than 1 message, not playing");
+    if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] More than 1 message, not playing");
     return;
   }
 
   const sfx = sfxList.find(
     (s) => s && String(s.trigger || "").toLowerCase() === "start",
   );
-  console.log("[SFX] First SFX with trigger=start:", sfx);
+  if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] First SFX with trigger=start:", sfx);
   if (!sfx) {
-    console.log("[SFX] No SFX with trigger Start, returning");
+    if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] No SFX with trigger Start, returning");
     return;
   }
 
   const entry = normalizeSfxEntry(sfx);
 
   if (isSfxEntryActive(entry.assetId)) {
-    console.log("[SFX] Same asset already playing, skipping");
+    if (ENABLE_SFX_DEBUG_LOGS) {
+      console.log("[SFX] Same asset already playing, skipping");
+    }
     return;
   }
 
@@ -22954,7 +22962,8 @@ async function activateSfxEntry(entry, thread) {
 async function playSfxSound(entry, asset) {
   if (!asset.data) return;
 
-  console.log("[SFX] playSfxSound called with entry:", entry);
+  if (ENABLE_SFX_DEBUG_LOGS)
+    console.log("[SFX] playSfxSound called with entry:", entry);
 
   const url = getAssetDataUrl(asset);
   if (!url) return;
@@ -22971,7 +22980,9 @@ async function playSfxSound(entry, asset) {
   const volume = Number(entry.volume);
   audio.volume =
     Number.isFinite(volume) && volume >= 0 && volume <= 1 ? volume : 1;
-  console.log("[SFX] Setting audio volume to:", audio.volume);
+    if (ENABLE_SFX_DEBUG_LOGS)
+    if (ENABLE_SFX_DEBUG_LOGS)
+      console.log("[SFX] Setting audio volume to:", audio.volume);
 
   if (entry.fadeInMs > 0) {
     audio.volume = 0;
