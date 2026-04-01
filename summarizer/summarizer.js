@@ -9,13 +9,18 @@ const summarizationPromises = new Map();
 let summarizationIdCounter = 0;
 
 function getWorkerPath() {
+  console.log('[summarizer] getWorkerPath called');
   const scripts = document.getElementsByTagName('script');
+  console.log('[summarizer] Total script tags:', scripts.length);
   for (let script of scripts) {
+    console.log('[summarizer] Checking script:', script.src);
     if (script.src && script.src.includes('summarizer.js')) {
       const base = script.src.substring(0, script.src.lastIndexOf('/'));
+      console.log('[summarizer] Found summarizer.js script, base:', base);
       return `${base}/summarizer-worker.js`;
     }
   }
+  console.log('[summarizer] No summarizer.js script found, using default');
   return 'summarizer/summarizer-worker.js';
 }
 
