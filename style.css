@@ -983,14 +983,13 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  overflow: hidden;
-  max-height: 24px;
+  max-height: 80px;
+  overflow-y: auto;
   width: 100%;
 }
 
 .filter-chips-overflow.expanded {
-  max-height: none;
-  overflow: visible;
+  max-height: 150px;
 }
 
 .filter-tag-more-btn {
