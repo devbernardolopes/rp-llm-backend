@@ -88,13 +88,16 @@ function getSummarizationWorker() {
 }
 
 async function initSummarizationWorker() {
+  console.log('[summarizer] Starting init...');
   const worker = getSummarizationWorker();
 
   if (summarizationWorkerReady) {
+    console.log('[summarizer] Already ready');
     return true;
   }
 
   if (summarizationWorkerInitializing) {
+    console.log('[summarizer] Already initializing, waiting...');
     await new Promise((resolve) => {
       const checkReady = setInterval(() => {
         if (!summarizationWorkerInitializing) {
@@ -103,10 +106,12 @@ async function initSummarizationWorker() {
         }
       }, 50);
     });
+    console.log('[summarizer] Wait complete, ready:', summarizationWorkerReady);
     return summarizationWorkerReady;
   }
 
   summarizationWorkerInitializing = true;
+  console.log('[summarizer] Posting init message to worker');
   worker.postMessage({ type: 'init' });
 
   await new Promise((resolve, reject) => {
@@ -224,11 +229,13 @@ async function getLocalTitle(text) {
 
   try {
     await ensureWorkerReady();
+    console.log('[summarizer] Worker ready, running title task...');
     const result = await runSummarizationTask('title', inputText);
+    console.log('[summarizer] Title task result:', result);
     await unloadSummarizationWorker();
     return result?.text || null;
   } catch (err) {
-    console.warn('Local auto-title failed:', err);
+    console.error('[summarizer] Local auto-title failed:', err);
     await unloadSummarizationWorker();
     return null;
   }

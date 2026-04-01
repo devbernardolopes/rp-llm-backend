@@ -26,7 +26,7 @@ const pendingRequests = new Map();
 
 function swDebug(...args) {
   // Uncomment for worker debugging:
-  // console.debug('[summarizer-worker]', ...args);
+  console.debug('[summarizer-worker]', ...args);
 }
 
 // ==================== IndexedDB Caching ====================
