@@ -1719,6 +1719,7 @@ function setupEvents() {
 }
 
 const textareaCollapseStates = new WeakMap();
+const initialMessageCollapseStateCache = new Map();
 
 function setupModalTextareas(root = document) {
   const scope = root || document;
@@ -1863,6 +1864,62 @@ function getCharModalCollapseStorageKey() {
   return `rp-char-collapse-${botId}-${lang}`;
 }
 
+function getInitialMessageCollapseStorageKey(language) {
+  if (!language) return null;
+  const namespace =
+    state.charModalDraftNamespace ||
+    (state.editingCharacterId
+      ? `char-${state.editingCharacterId}`
+      : "new");
+  return `rp-char-initial-msg-collapse-${namespace}-${language}`;
+}
+
+function loadInitialMessageCollapseStates(language) {
+  const key = getInitialMessageCollapseStorageKey(language);
+  if (!key) return [];
+  if (initialMessageCollapseStateCache.has(key)) {
+    return initialMessageCollapseStateCache.get(key);
+  }
+  let parsed = [];
+  const raw = localStorage.getItem(key);
+  if (raw) {
+    try {
+      const value = JSON.parse(raw);
+      if (Array.isArray(value)) {
+        parsed = value;
+      }
+    } catch {
+      parsed = [];
+    }
+  }
+  initialMessageCollapseStateCache.set(key, parsed);
+  return parsed;
+}
+
+function persistInitialMessageCollapseStates(language, states) {
+  const key = getInitialMessageCollapseStorageKey(language);
+  if (!key) return;
+  const normalized = Array.isArray(states) ? [...states] : [];
+  initialMessageCollapseStateCache.set(key, normalized);
+  localStorage.setItem(key, JSON.stringify(normalized));
+}
+
+function updateInitialMessageCollapseState(language, index, expanded) {
+  if (!language) return;
+  const states = loadInitialMessageCollapseStates(language);
+  states[index] = expanded;
+  persistInitialMessageCollapseStates(language, states);
+}
+
+function trimInitialMessageCollapseStates(language, length) {
+  if (!language || length < 0) return;
+  const states = loadInitialMessageCollapseStates(language);
+  if (states.length > length) {
+    states.length = length;
+    persistInitialMessageCollapseStates(language, states);
+  }
+}
+
 function saveCharModalTextareaCollapseStates() {
   const key = getCharModalCollapseStorageKey();
   const states = {};
@@ -1882,6 +1939,10 @@ function saveCharModalTextareaCollapseStates() {
   const modalBody = modal.querySelector(".modal-body");
   if (modalBody) {
     localStorage.setItem(`${key}-modal-scroll`, String(modalBody.scrollTop));
+  }
+  const language = state.charModalActiveLanguage;
+  if (language) {
+    persistInitialMessageCollapseStates(language, loadInitialMessageCollapseStates(language));
   }
 }
 
@@ -7726,6 +7787,7 @@ function renderCharacterInitialMessagesList() {
   if (container) {
     container.classList.toggle("hidden", drafts.length === 0);
   }
+  trimInitialMessageCollapseStates(language, drafts.length);
   drafts.forEach((messageText, index) => {
     const entry = buildInitialMessageEntry(messageText, index, language);
     listRoot.appendChild(entry);
@@ -7800,6 +7862,9 @@ function buildInitialMessageEntry(text, index, language) {
   const icon = document.createElement("span");
   icon.className = "textarea-collapse-icon";
 
+  rightGroup.append(removeBtn, icon);
+  header.append(title, rightGroup);
+
   const body = document.createElement("div");
   body.className = "textarea-collapse-body";
 
@@ -7832,6 +7897,7 @@ function buildInitialMessageEntry(text, index, language) {
     event.preventDefault();
     const isExpanded = header.getAttribute("aria-expanded") === "true";
     entryObj.setExpanded(!isExpanded);
+    updateInitialMessageCollapseState(language, index, !isExpanded);
   });
 
   wrapper.append(header, body);
@@ -7847,7 +7913,10 @@ function buildInitialMessageEntry(text, index, language) {
 
   requestAnimationFrame(() => {
     const hasContent = String(textarea.value || "").trim().length > 0;
-    entryObj.setExpanded(hasContent);
+    const storedStates = loadInitialMessageCollapseStates(language);
+    const storedExpanded =
+      storedStates[index] !== undefined ? storedStates[index] : hasContent;
+    entryObj.setExpanded(storedExpanded);
     autoExpandTextarea(textarea);
   });
 
@@ -7859,6 +7928,7 @@ function addInitialMessageDraft(language) {
   const drafts = getInitialMessageDrafts(language);
   const next = [...drafts, ""];
   setInitialMessageDrafts(language, next);
+  trimInitialMessageCollapseStates(language, next.length);
   renderCharacterInitialMessagesList();
   setModalDirtyState("character-modal", true);
 }
@@ -7872,6 +7942,7 @@ function removeInitialMessageDraft(language, index) {
     next.push("");
   }
   setInitialMessageDrafts(language, next);
+  trimInitialMessageCollapseStates(language, next.length);
   renderCharacterInitialMessagesList();
   setModalDirtyState("character-modal", true);
 }
