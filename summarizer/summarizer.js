@@ -46,6 +46,7 @@ function getSummarizationWorker() {
         break;
 
       case 'result':
+        console.log('[summarizer] Received result message:', id, text, task);
         const resultPromise = summarizationPromises.get(id);
         if (resultPromise) {
           resultPromise.resolve({ text, task });
@@ -235,9 +236,18 @@ async function getLocalTitle(text) {
     console.log('[summarizer] Calling ensureWorkerReady...');
     await ensureWorkerReady();
     console.log('[summarizer] Worker ready, running title task...');
-    const result = await runSummarizationTask('title', inputText);
-    console.log('[summarizer] Title task result:', result);
+    let result = null;
+    try {
+      result = await Promise.race([
+        runSummarizationTask('title', inputText),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Title task timed out')), 180000))
+      ]);
+      console.log('[summarizer] Title task result:', result);
+    } catch (taskErr) {
+      console.error('[summarizer] Title task failed:', taskErr);
+    }
     await unloadSummarizationWorker();
+    return result?.text || null;
     return result?.text || null;
   } catch (err) {
     console.error('[summarizer] Local auto-title failed:', err);
