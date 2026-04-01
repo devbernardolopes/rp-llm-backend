@@ -9,22 +9,23 @@ const summarizationPromises = new Map();
 let summarizationIdCounter = 0;
 
 function getWorkerPath() {
+  console.log('[summarizer] getWorkerPath() starting...');
   const scripts = document.getElementsByTagName('script');
+  console.log('[summarizer] Total script tags found:', scripts.length);
+  
   for (let i = 0; i < scripts.length; i++) {
     const script = scripts[i];
-    console.log(`[summarizer] Script ${i}: ${script.src}`);
+    console.log(`[summarizer] Script ${i}: "${script.src}"`);
     if (script.src && script.src.includes('summarizer.js')) {
       const base = script.src.substring(0, script.src.lastIndexOf('/'));
-      console.log('[summarizer] Found summarizer.js at:', base);
+      console.log('[summarizer] MATCH! Found summarizer.js at base:', base);
       return `${base}/summarizer-worker.js`;
     }
   }
-  console.log('[summarizer] No summarizer.js in DOM, using window.location');
-  const currentUrl = window.location.href;
-  const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-  const fallback = `${baseUrl}/summarizer/summarizer-worker.js`;
-  console.log('[summarizer] Fallback path:', fallback);
-  return fallback;
+  
+  console.log('[summarizer] No summarizer.js found in script tags');
+  console.log('[summarizer] Using HARDCODED fallback path');
+  return 'https://rp-llm-backend.vercel.app/summarizer/summarizer-worker.js';
 }
 
 function getSummarizationWorker() {
