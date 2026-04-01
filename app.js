@@ -3904,7 +3904,16 @@ async function setupSettingsControls() {
   }
   if (autoTitleProvider) {
     autoTitleProvider.addEventListener("change", () => {
-      state.settings.autoTitleProvider = autoTitleProvider.value;
+      const oldProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+      const newProvider = autoTitleProvider.value;
+      if (oldProvider !== newProvider) {
+        const lastModels = state.settings.lastModelsPerProvider || {};
+        if (state.settings.autoTitleModel) {
+          lastModels[oldProvider] = state.settings.autoTitleModel;
+        }
+        state.settings.lastModelsPerProvider = lastModels;
+      }
+      state.settings.autoTitleProvider = newProvider;
       saveSettings();
       populateAutoTitleSummaryModels().catch(() => {});
     });
@@ -3925,7 +3934,16 @@ async function setupSettingsControls() {
   }
   if (summaryProvider) {
     summaryProvider.addEventListener("change", () => {
-      state.settings.summaryProvider = summaryProvider.value;
+      const oldProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+      const newProvider = summaryProvider.value;
+      if (oldProvider !== newProvider) {
+        const lastModels = state.settings.lastModelsPerProvider || {};
+        if (state.settings.summaryModel) {
+          lastModels[oldProvider] = state.settings.summaryModel;
+        }
+        state.settings.lastModelsPerProvider = lastModels;
+      }
+      state.settings.summaryProvider = newProvider;
       saveSettings();
       populateAutoTitleSummaryModels().catch(() => {});
     });
@@ -18460,8 +18478,41 @@ async function populateAutoTitleSummaryModels() {
   const autoTitleCatalog = await getModelCatalogForProvider(autoTitleProvider, true);
   const summaryCatalog = await getModelCatalogForProvider(summaryProvider, true);
 
-  renderModelSelectOptions(autoTitleModel, autoTitleCatalog, state.settings.autoTitleModel);
-  renderModelSelectOptions(summaryModel, summaryCatalog, state.settings.summaryModel);
+  const lastModels = state.settings.lastModelsPerProvider || {};
+
+  const autoTitleSelectedModel = getBestModelForProvider(
+    autoTitleProvider,
+    state.settings.autoTitleModel,
+    autoTitleCatalog,
+    lastModels,
+  );
+  const summarySelectedModel = getBestModelForProvider(
+    summaryProvider,
+    state.settings.summaryModel,
+    summaryCatalog,
+    lastModels,
+  );
+
+  renderModelSelectOptions(autoTitleModel, autoTitleCatalog, autoTitleSelectedModel);
+  renderModelSelectOptions(summaryModel, summaryCatalog, summarySelectedModel);
+}
+
+function getBestModelForProvider(provider, currentModel, catalog, lastModels) {
+  if (!currentModel) {
+    return catalog.length > 0 ? catalog[0].id : "";
+  }
+  const existsInCatalog = catalog.some((m) => m.id === currentModel);
+  if (existsInCatalog) {
+    return currentModel;
+  }
+  const lastModel = lastModels[provider];
+  if (lastModel) {
+    const lastExists = catalog.some((m) => m.id === lastModel);
+    if (lastExists) {
+      return lastModel;
+    }
+  }
+  return catalog.length > 0 ? catalog[0].id : "";
 }
 
 async function getModelCatalogForProvider(provider, skipMainProviderCheck = false) {
