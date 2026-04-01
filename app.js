@@ -7710,11 +7710,27 @@ function buildInitialMessageEntry(text, index, language) {
   const entry = document.createElement("div");
   entry.className = "initial-message-card";
 
-  const headerRow = document.createElement("div");
-  headerRow.className = "initial-message-card-header-row";
+  const textarea = document.createElement("textarea");
+  textarea.id = `initial-message-textarea-${index}`;
+  textarea.className = "initial-message-entry-textarea";
+  textarea.rows = 3;
+  textarea.placeholder = t("initialMessageContentPlaceholder");
+  textarea.value = String(text || "");
+  const labelText = tf("initialMessageLabel", { number: index + 1 });
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "textarea-collapse";
+
+  const header = document.createElement("button");
+  header.type = "button";
+  header.className = "textarea-collapse-header";
+  header.setAttribute("aria-expanded", "true");
+
   const title = document.createElement("span");
-  title.className = "initial-message-card-header";
-  title.textContent = tf("initialMessageLabel", { number: index + 1 });
+  title.textContent = labelText;
+  const rightGroup = document.createElement("span");
+  rightGroup.className = "textarea-collapse-header-right";
+
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.className = "icon-btn small initial-message-remove-btn";
@@ -7726,20 +7742,58 @@ function buildInitialMessageEntry(text, index, language) {
     event.preventDefault();
     removeInitialMessageDraft(language, index);
   });
-  headerRow.append(title, removeBtn);
 
-  const textarea = document.createElement("textarea");
-  textarea.className = "initial-message-entry-textarea";
-  textarea.rows = 3;
-  textarea.placeholder = t("initialMessageContentPlaceholder");
-  textarea.value = String(text || "");
+  const icon = document.createElement("span");
+  icon.className = "textarea-collapse-icon";
+
+  const body = document.createElement("div");
+  body.className = "textarea-collapse-body";
+
+  const entryObj = { header, body, icon };
+  entryObj.refresh = () => {
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    header.classList.toggle("has-content", hasContent);
+    const expanded = header.getAttribute("aria-expanded") === "true";
+    icon.textContent = expanded ? "▾" : "▴";
+  };
+  entryObj.setExpanded = (next) => {
+    const current = header.getAttribute("aria-expanded") === "true";
+    if (next === current) {
+      entryObj.refresh();
+      if (next) autoExpandTextarea(textarea);
+      return;
+    }
+    header.setAttribute("aria-expanded", next ? "true" : "false");
+    body.classList.toggle("collapsed", !next);
+    if (next) autoExpandTextarea(textarea);
+    entryObj.refresh();
+  };
+  textareaCollapseStates.set(textarea, entryObj);
+
+  header.addEventListener("click", (event) => {
+    if (event.target.closest(".initial-message-remove-btn")) return;
+    event.preventDefault();
+    const isExpanded = header.getAttribute("aria-expanded") === "true";
+    entryObj.setExpanded(!isExpanded);
+  });
+
+  wrapper.append(header, body);
+  body.appendChild(textarea);
+
   textarea.addEventListener("input", (event) => {
     const drafts = getInitialMessageDrafts(language);
     drafts[index] = String(event.target.value || "");
     setModalDirtyState("character-modal", true);
   });
 
-  entry.append(headerRow, textarea);
+  entry.appendChild(wrapper);
+
+  requestAnimationFrame(() => {
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    entryObj.setExpanded(hasContent);
+    autoExpandTextarea(textarea);
+  });
+
   return entry;
 }
 
