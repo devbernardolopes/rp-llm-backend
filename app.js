@@ -187,6 +187,8 @@ const state = {
   model3dExpressionNames: [],
   model3dExpressionNamesLoaded: false,
   unsavedResolver: null,
+  importedCharacterLorebookId: null,
+  characterModalImportCancelled: false,
   activeShortcut: null,
   abortController: null,
   marqueeRefreshTimer: null,
@@ -6988,6 +6990,9 @@ async function closeActiveModal() {
     if (action === "back") return;
     if (action === "close") {
       setModalDirtyState(closingId, false);
+      if (closingId === "character-modal") {
+        state.characterModalImportCancelled = true;
+      }
     } else if (action === "save") {
       const saved = await handleModalSaveAction(closingId);
       if (!saved) return;
@@ -7061,6 +7066,14 @@ async function closeActiveModal() {
     state.charModalPendingThreadDeleteIds = [];
     state.charModalModel3d = null;
     state.charModalCache = {};
+    if (
+      state.characterModalImportCancelled &&
+      state.importedCharacterLorebookId
+    ) {
+      await db.lorebooks.delete(state.importedCharacterLorebookId);
+      state.importedCharacterLorebookId = null;
+    }
+    state.characterModalImportCancelled = false;
   }
   state.activeModalId = null;
   setModalDirtyState(closingId, false);
@@ -7947,6 +7960,7 @@ async function openCharacterModal(
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
+  state.characterModalImportCancelled = false;
   if (character?.id) {
     state.charModalDraftNamespace = `char-${character.id}`;
     state.charModalCache[character.id] = { ...character };
@@ -12932,6 +12946,46 @@ async function importCharacterFromFile(e) {
         character.avatar = avatarData;
         character.avatars = [{ type: "image", data: avatarData, name: "" }];
       }
+
+      if (data.character_book && typeof data.character_book === "object") {
+        const lorebookData = data.character_book;
+        const lorebookEntries = [];
+        if (Array.isArray(lorebookData.entries)) {
+          lorebookData.entries.forEach((entry) => {
+            if (entry && typeof entry === "object") {
+              const keys = Array.isArray(entry.keys)
+                ? entry.keys.map((k) => String(k || "").trim()).filter(Boolean)
+                : [];
+              const secondaryKeys = Array.isArray(entry.secondary_keys)
+                ? entry.secondary_keys.map((k) => String(k || "").trim()).filter(Boolean)
+                : [];
+              if (keys.length > 0) {
+                lorebookEntries.push({
+                  name: String(entry.name || "").trim(),
+                  keys: keys,
+                  secondaryKeys: secondaryKeys,
+                  content: String(entry.content || "").trim(),
+                });
+              }
+            }
+          });
+        }
+        if (lorebookEntries.length > 0) {
+          const lorebookPayload = {
+            name: String(lorebookData.name || `${name} Lorebook`).trim(),
+            description: String(lorebookData.description || "").trim(),
+            scanDepth: Math.max(5, Math.min(100, Number(lorebookData.scan_depth) || 50)),
+            tokenBudget: Math.max(0, Math.min(8192, Number(lorebookData.token_budget) || 2048)),
+            recursiveScanning: Boolean(lorebookData.recursive_scanning),
+            entries: lorebookEntries,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+          const newLorebookId = await db.lorebooks.add(lorebookPayload);
+          state.importedCharacterLorebookId = newLorebookId;
+          character.definitions[0].lorebookIds = [newLorebookId];
+        }
+      }
     } else {
       const imported = parsed?.character || parsed;
       if (!imported || typeof imported !== "object") {
@@ -13000,6 +13054,48 @@ async function importCharacterFromFile(e) {
             : def.writingInstructionId || "none";
           return updated;
         });
+      }
+
+      if (parsed.character_book && typeof parsed.character_book === "object") {
+        const lorebookData = parsed.character_book;
+        const lorebookEntries = [];
+        if (Array.isArray(lorebookData.entries)) {
+          lorebookData.entries.forEach((entry) => {
+            if (entry && typeof entry === "object") {
+              const keys = Array.isArray(entry.keys)
+                ? entry.keys.map((k) => String(k || "").trim()).filter(Boolean)
+                : [];
+              const secondaryKeys = Array.isArray(entry.secondary_keys)
+                ? entry.secondary_keys.map((k) => String(k || "").trim()).filter(Boolean)
+                : [];
+              if (keys.length > 0) {
+                lorebookEntries.push({
+                  name: String(entry.name || "").trim(),
+                  keys: keys,
+                  secondaryKeys: secondaryKeys,
+                  content: String(entry.content || "").trim(),
+                });
+              }
+            }
+          });
+        }
+        if (lorebookEntries.length > 0) {
+          const lorebookPayload = {
+            name: String(lorebookData.name || `${character.name} Lorebook`).trim(),
+            description: String(lorebookData.description || "").trim(),
+            scanDepth: Math.max(5, Math.min(100, Number(lorebookData.scan_depth) || 50)),
+            tokenBudget: Math.max(0, Math.min(8192, Number(lorebookData.token_budget) || 2048)),
+            recursiveScanning: Boolean(lorebookData.recursive_scanning),
+            entries: lorebookEntries,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+          const newLorebookId = await db.lorebooks.add(lorebookPayload);
+          state.importedCharacterLorebookId = newLorebookId;
+          if (Array.isArray(character.definitions) && character.definitions.length > 0) {
+            character.definitions[0].lorebookIds = [newLorebookId];
+          }
+        }
       }
     }
 
