@@ -208,6 +208,13 @@ body {
   line-height: 1;
 }
 
+#home-btn img {
+  width: 22px;
+  height: 22px;
+  display: block;
+  object-fit: contain;
+}
+
 .pane-title {
   margin: 0;
   font-size: 16px;
