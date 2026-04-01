@@ -530,6 +530,9 @@ function stopTtsPlayback(options = {}) {
   state.audio = null;
   state.speakingMessageIndex = null;
   state.loadingMessageIndex = null;
+  if (typeof window.refreshAllSpeakerButtons === "function") {
+    window.refreshAllSpeakerButtons();
+  }
   if (typeof window.onTtsStopped === 'function' && !options?.silent) {
     window.onTtsStopped();
   }
