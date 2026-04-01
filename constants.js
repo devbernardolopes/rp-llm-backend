@@ -70,6 +70,10 @@ const ICONS = {
     '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"></path><circle cx="12" cy="9" r="2"></circle></svg>',
 };
 
+if (typeof window !== "undefined") {
+  window.ICONS = ICONS;
+}
+
 const PROMPT_COMMAND_HISTORY_KEY = "rp-prompt-command-history";
 const PROMPT_COMMAND_HISTORY_MAX = 200;
 const PROMPT_HISTORY_KEY = "rp-prompt-history";
