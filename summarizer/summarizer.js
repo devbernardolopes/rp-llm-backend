@@ -9,20 +9,17 @@ const summarizationPromises = new Map();
 let summarizationIdCounter = 0;
 
 function getWorkerPath() {
-  console.log('[summarizer] getWorkerPath called - looking for summarizer.js');
   const scripts = document.getElementsByTagName('script');
-  console.log('[summarizer] Total script tags:', scripts.length);
   for (let i = 0; i < scripts.length; i++) {
     const script = scripts[i];
-    console.log(`[summarizer] Script ${i}:`, script.src);
     if (script.src && script.src.includes('summarizer.js')) {
       const base = script.src.substring(0, script.src.lastIndexOf('/'));
-      console.log('[summarizer] Found summarizer.js at base:', base);
       return `${base}/summarizer-worker.js`;
     }
   }
-  console.log('[summarizer] No summarizer.js found, using fallback');
-  return 'summarizer/summarizer-worker.js';
+  const currentUrl = window.location.href;
+  const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
+  return `${baseUrl}/summarizer/summarizer-worker.js`;
 }
 
 function getSummarizationWorker() {
@@ -36,70 +33,6 @@ function getSummarizationWorker() {
   const workerPath = getWorkerPath();
   console.log('[summarizer] Creating worker with path:', workerPath);
   summarizationWorker = new WorkerConstructor(workerPath, { type: 'module' });
-
-  summarizationWorkerReady = false;
-  summarizationWorkerInitializing = false;
-
-  summarizationWorker.onmessage = (event) => {
-    console.log('[summarizer] onmessage received, type:', event.data?.type);
-    const { type, id, text, task, success, error, message, loaded, total, percent } = event.data || {};
-
-    switch (type) {
-      case 'initialized':
-        console.log('[summarizer] Received initialized message, success:', success, 'error:', error);
-        summarizationWorkerReady = success;
-        summarizationWorkerInitializing = false;
-        if (!success) {
-          console.error('summarizer:worker:init-failed', error);
-        }
-        break;
-
-      case 'result':
-        console.log('[summarizer] Received result message:', id, text, task);
-        const resultPromise = summarizationPromises.get(id);
-        if (resultPromise) {
-          resultPromise.resolve({ text, task });
-          summarizationPromises.delete(id);
-        }
-        break;
-
-      case 'error':
-        const errorPromise = summarizationPromises.get(id);
-        if (errorPromise) {
-          errorPromise.reject(new Error(message || 'Summarization failed'));
-          summarizationPromises.delete(id);
-        }
-        break;
-
-      case 'unloaded':
-        summarizationWorkerReady = false;
-        break;
-
-      case 'download-progress':
-        break;
-
-      default:
-        break;
-    }
-  };
-
-  summarizationWorker.onerror = (err) => {
-    console.error('[summarizer] Worker error:', err.message, err);
-    summarizationWorkerReady = false;
-    summarizationWorkerInitializing = false;
-
-    for (const [id, promise] of summarizationPromises) {
-      promise.reject(new Error('Worker error: ' + err.message));
-      summarizationPromises.delete(id);
-    }
-  };
-
-  summarizationWorker.onmessageerror = (err) => {
-    console.error('[summarizer] Worker message error:', err);
-  };
-
-  console.log('[summarizer] Worker created, returning');
-  return summarizationWorker;
 }
 
 async function initSummarizationWorker() {
