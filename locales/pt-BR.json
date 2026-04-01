@@ -628,5 +628,6 @@
   "defaultAvatarScale": "Escala de avatar padrão (No chat)",
   "aiHordeApiMethod": "Metodo API AI Horde",
   "aiHordeApiMethodNative": "API REST Nativa",
-  "aiHordeApiMethodOpenai": "Compativel com OpenAI"
+  "aiHordeApiMethodOpenai": "Compativel com OpenAI",
+  "defaultAutoTitleMinMessages": "Minimo de mensagens padrao para auto-titulo"
 }

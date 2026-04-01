@@ -94,6 +94,7 @@ const DEFAULT_SETTINGS = {
   defaultTtsRate: 1,
   defaultIncludeOocInCompletions: false,
   defaultAvatarScale: 4,
+  defaultAutoTitleMinMessages: 10,
   autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
   autoTitleUserPrompt: `Generate a concise roleplay thread title.
 Generate the title in language code: {{languageCode}}.
@@ -3331,6 +3332,15 @@ async function setupSettingsControls() {
       state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale,
     );
   }
+  const defaultAutoTitleMinMessagesInput = document.getElementById(
+    "default-auto-title-min-messages",
+  );
+  if (defaultAutoTitleMinMessagesInput) {
+    defaultAutoTitleMinMessagesInput.value = String(
+      state.settings.defaultAutoTitleMinMessages ??
+        DEFAULT_SETTINGS.defaultAutoTitleMinMessages,
+    );
+  }
   const autoTitleProvider = document.getElementById("default-auto-title-provider");
   const autoTitleModel = document.getElementById("default-auto-title-model");
   const autoTitleTemp = document.getElementById("default-auto-title-temp");
@@ -3901,6 +3911,17 @@ async function setupSettingsControls() {
     defaultAvatarScale.addEventListener("change", () => {
       const value = Number(defaultAvatarScale.value);
       state.settings.defaultAvatarScale = value;
+      saveSettings();
+    });
+  }
+  if (defaultAutoTitleMinMessagesInput) {
+    defaultAutoTitleMinMessagesInput.addEventListener("input", () => {
+      const entered = Number(defaultAutoTitleMinMessagesInput.value);
+      const normalized = Number.isFinite(entered)
+        ? Math.min(Math.max(entered, 1), 50)
+        : DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
+      defaultAutoTitleMinMessagesInput.value = String(normalized);
+      state.settings.defaultAutoTitleMinMessages = normalized;
       saveSettings();
     });
   }
@@ -8016,9 +8037,20 @@ async function openCharacterModal(
     character?.autoTriggerAiFirstMessage !== false;
   document.getElementById("char-auto-title").checked =
     character?.autoTitleEnabled !== false;
-  document.getElementById("char-auto-title-min-messages").value = String(
-    Number(character?.autoTitleMinMessages) || 10,
+  const charAutoTitleMinMessagesInput = document.getElementById(
+    "char-auto-title-min-messages",
   );
+  if (charAutoTitleMinMessagesInput) {
+    const defaultCharAutoTitleMinMessages =
+      state.settings.defaultAutoTitleMinMessages ??
+      DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
+    const storedCharMin = Number(character?.autoTitleMinMessages);
+    const resolvedCharMin = Number.isFinite(storedCharMin)
+      ? storedCharMin
+      : defaultCharAutoTitleMinMessages;
+    const normalizedCharMin = Math.max(1, Math.min(50, resolvedCharMin));
+    charAutoTitleMinMessagesInput.value = String(normalizedCharMin);
+  }
   document.getElementById("char-persona-prefix").checked =
     character?.personaPrefixEnabled !== false;
   document.getElementById("char-include-ooc").checked =
@@ -12791,8 +12823,11 @@ function applyCharacterSettingsDefaults(character) {
     character.autoTriggerAiFirstMessage = true;
   if (character.autoTitleEnabled === undefined)
     character.autoTitleEnabled = true;
+  const resolvedAutoTitleMinMessages =
+    state.settings.defaultAutoTitleMinMessages ??
+    DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
   if (character.autoTitleMinMessages === undefined)
-    character.autoTitleMinMessages = 10;
+    character.autoTitleMinMessages = resolvedAutoTitleMinMessages;
   if (character.personaPrefixEnabled === undefined)
     character.personaPrefixEnabled = true;
   if (character.includeOocInCompletions === undefined)
