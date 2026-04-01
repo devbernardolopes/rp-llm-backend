@@ -117,7 +117,7 @@ async function initSummarizationWorker() {
       } else {
         resolve();
       }
-    }, 120000);
+    }, 300000);
 
     const checkReady = setInterval(() => {
       if (summarizationWorkerReady) {
@@ -170,7 +170,7 @@ async function runSummarizationTask(type, text, options = {}) {
         summarizationPromises.delete(id);
         reject(new Error('Summarization task timeout'));
       }
-    }, 60000);
+    }, 120000);
 
     summarizationPromises.set(id, {
       resolve: (result) => {

@@ -196,7 +196,7 @@ function patchFetchInWorker() {
 
         try {
           const blob = new Blob([allChunks]);
-          cacheAsset(cacheType, resourceName, blob);
+          await cacheAsset(cacheType, resourceName, blob);
           swDebug('summarizer:model:cached', resourceName);
         } catch (err) {
           swDebug('summarizer:model:cache-failed', resourceName, err);
