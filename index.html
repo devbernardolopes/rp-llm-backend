@@ -485,173 +485,175 @@
           <div id="prompt-history-list" class="prompt-history-list"></div>
         </div>
 
-        <div id="shortcuts-bar" class="shortcuts-bar"></div>
+        <div class="chat-input-wrapper">
+          <div id="shortcuts-bar" class="shortcuts-bar"></div>
 
-        <div class="input-row">
-          <div id="user-input-container">
-            <textarea
-              id="user-input"
-              rows="2"
-              data-i18n-placeholder="promptPlaceholder"
-              placeholder="What do you say or do? Enter to send, Shift+Enter for newline"
-            ></textarea>
-            <div class="input-footer">
-              <button
-                id="attach-btn"
-                class="icon-btn small"
-                disabled
-                data-i18n-title="attachFile"
-                title="Attach file (coming soon)"
-                aria-label="Attach file"
-              >
-                +
-              </button>
-              <div class="input-footer-right">
-                <div
-                  id="chat-model-pill"
-                  class="model-pill small"
-                  data-i18n="modelPill"
+          <div class="input-row">
+            <div id="user-input-container">
+              <textarea
+                id="user-input"
+                rows="2"
+                data-i18n-placeholder="promptPlaceholder"
+                placeholder="What do you say or do? Enter to send, Shift+Enter for newline"
+              ></textarea>
+              <div class="input-footer">
+                <button
+                  id="attach-btn"
+                  class="icon-btn small"
+                  disabled
+                  data-i18n-title="attachFile"
+                  title="Attach file (coming soon)"
+                  aria-label="Attach file"
                 >
-                  Model: -
-                </div>
-                <div id="chat-budget-pill" class="model-pill small">
-                  Max out: -
-                </div>
-                <button
-                  id="memory-command-btn"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="memoryCommandButtonTitle"
-                  title="Memory command"
-                  aria-label="Memory command"
-                ></button>
-                <button
-                  id="auto-tts-toggle-btn"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="autoTtsTitleOff"
-                  title="Auto TTS: Off"
-                  aria-label="Toggle auto TTS"
-                ></button>
-                <button
-                  id="stt-toggle-btn"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="sttTitleOff"
-                  title="STT: Off"
-                  aria-label="Toggle STT"
-                ></button>
-                <button
-                  id="stt-auto-send-toggle-btn"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="sttAutoSendOn"
-                  title="STT Auto-send: On"
-                  aria-label="Toggle STT auto-send"
-                ></button>
-                <button
-                  id="ooc-mode-toggle"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="oocModeTitleOff"
-                  title="OOC mode: Off"
-                  aria-label="Enable OOC mode"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                  +
+                </button>
+                <div class="input-footer-right">
+                  <div
+                    id="chat-model-pill"
+                    class="model-pill small"
+                    data-i18n="modelPill"
                   >
-                    <ellipse cx="8" cy="10" rx="2" ry="3"></ellipse>
-                    <ellipse cx="16" cy="10" rx="2" ry="3"></ellipse>
-                    <path d="M6 14c2-2 6-2 12 0"></path>
-                  </svg>
-                </button>
-                <button
-                  id="auto-reply-enabled"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="autoReply"
-                  title="Auto-reply"
-                  aria-label="Auto-reply"
-                >
-                  🤖
-                </button>
-                <button
-                  id="enter-to-send-enabled"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="enterToSend"
-                  title="ENTER to send"
-                  aria-label="ENTER to send"
-                >
-                  ⏎
-                </button>
-                <button
-                  id="shortcuts-toggle-btn"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="showShortcuts"
-                  title="Show shortcuts"
-                  aria-label="Show shortcuts"
-                >
-                  ⌨
-                </button>
-                <button
-                  id="chat-opacity-toggle-btn"
-                  class="option-btn send-toggle-btn small"
-                  type="button"
-                  data-i18n-title="chatOpacityToggle"
-                  aria-label="Adjust transparency"
-                  title="Adjust transparency"
-                >
-                  α
-                </button>
-                <img
-                  id="persona-selected-avatar"
-                  class="persona-selected-avatar small"
-                  data-i18n-title="selectedPersonaAvatar"
-                  alt="Persona avatar"
-                />
-                <select
-                  id="persona-select"
-                  data-i18n-title="selectPersona"
-                  aria-label="Select persona"
-                ></select>
-                <button id="send-btn" class="primary-btn"></button>
-              </div>
-            </div>
-            <div id="chat-opacity-overlay" class="chat-opacity-overlay hidden">
-              <div class="chat-opacity-overlay-content">
-                <div
-                  class="chat-opacity-overlay-title"
-                  data-i18n="chatOpacityTitle"
-                >
-                  Transparency
-                </div>
-                <div class="chat-opacity-slider-row">
-                  <input
-                    id="chat-opacity-slider"
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="1"
+                    Model: -
+                  </div>
+                  <div id="chat-budget-pill" class="model-pill small">
+                    Max out: -
+                  </div>
+                  <button
+                    id="memory-command-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="memoryCommandButtonTitle"
+                    title="Memory command"
+                    aria-label="Memory command"
+                  ></button>
+                  <button
+                    id="auto-tts-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="autoTtsTitleOff"
+                    title="Auto TTS: Off"
+                    aria-label="Toggle auto TTS"
+                  ></button>
+                  <button
+                    id="stt-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="sttTitleOff"
+                    title="STT: Off"
+                    aria-label="Toggle STT"
+                  ></button>
+                  <button
+                    id="stt-auto-send-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="sttAutoSendOn"
+                    title="STT Auto-send: On"
+                    aria-label="Toggle STT auto-send"
+                  ></button>
+                  <button
+                    id="ooc-mode-toggle"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="oocModeTitleOff"
+                    title="OOC mode: Off"
+                    aria-label="Enable OOC mode"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <ellipse cx="8" cy="10" rx="2" ry="3"></ellipse>
+                      <ellipse cx="16" cy="10" rx="2" ry="3"></ellipse>
+                      <path d="M6 14c2-2 6-2 12 0"></path>
+                    </svg>
+                  </button>
+                  <button
+                    id="auto-reply-enabled"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="autoReply"
+                    title="Auto-reply"
+                    aria-label="Auto-reply"
+                  >
+                    🤖
+                  </button>
+                  <button
+                    id="enter-to-send-enabled"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="enterToSend"
+                    title="ENTER to send"
+                    aria-label="ENTER to send"
+                  >
+                    ⏎
+                  </button>
+                  <button
+                    id="shortcuts-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="showShortcuts"
+                    title="Show shortcuts"
+                    aria-label="Show shortcuts"
+                  >
+                    ⌨
+                  </button>
+                  <button
+                    id="chat-opacity-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="chatOpacityToggle"
+                    aria-label="Adjust transparency"
+                    title="Adjust transparency"
+                  >
+                    α
+                  </button>
+                  <img
+                    id="persona-selected-avatar"
+                    class="persona-selected-avatar small"
+                    data-i18n-title="selectedPersonaAvatar"
+                    alt="Persona avatar"
                   />
-                  <span
-                    id="chat-opacity-value"
-                    class="chat-opacity-value"
-                  ></span>
+                  <select
+                    id="persona-select"
+                    data-i18n-title="selectPersona"
+                    aria-label="Select persona"
+                  ></select>
+                  <button id="send-btn" class="primary-btn"></button>
                 </div>
-                <button
-                  id="chat-opacity-overlay-close"
-                  type="button"
-                  class="secondary-btn"
-                  data-i18n="chatOpacityClose"
-                >
-                  Done
-                </button>
+              </div>
+              <div id="chat-opacity-overlay" class="chat-opacity-overlay hidden">
+                <div class="chat-opacity-overlay-content">
+                  <div
+                    class="chat-opacity-overlay-title"
+                    data-i18n="chatOpacityTitle"
+                  >
+                    Transparency
+                  </div>
+                  <div class="chat-opacity-slider-row">
+                    <input
+                      id="chat-opacity-slider"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                    />
+                    <span
+                      id="chat-opacity-value"
+                      class="chat-opacity-value"
+                    ></span>
+                  </div>
+                  <button
+                    id="chat-opacity-overlay-close"
+                    type="button"
+                    class="secondary-btn"
+                    data-i18n="chatOpacityClose"
+                  >
+                    Done
+                  </button>
+                </div>
               </div>
             </div>
           </div>
