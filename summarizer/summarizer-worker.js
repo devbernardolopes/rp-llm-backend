@@ -322,6 +322,7 @@ async function generateTitle(text) {
 // ==================== Message Handling ====================
 
 self.onmessage = async (event) => {
+  console.log('[summarizer-worker] onmessage received:', event.data?.type, event.data?.id);
   const { type, id, text, maxLength, minLength } = event.data || {};
 
   try {
@@ -329,6 +330,7 @@ self.onmessage = async (event) => {
       case 'init':
         swDebug('summarizer-worker:init-request');
         const initSuccess = await initSummarizer();
+        swDebug('summarizer-worker:init-complete, success:', initSuccess);
         self.postMessage({ type: 'initialized', success: initSuccess });
         break;
 
@@ -336,6 +338,7 @@ self.onmessage = async (event) => {
         try {
           swDebug('summarizer-worker:summarize-request', id);
           const result = await summarize(text, maxLength || 150, minLength || 30);
+          swDebug('summarizer-worker:summarize-complete', id, result?.substring(0, 50));
           self.postMessage({ type: 'result', id, text: result, task: 'summarize' });
         } catch (err) {
           swDebug('summarizer-worker:summarize-error', id, err.message);
@@ -345,8 +348,9 @@ self.onmessage = async (event) => {
 
       case 'title':
         try {
-          swDebug('summarizer-worker:title-request', id);
+          swDebug('summarizer-worker:title-request', id, 'text-length:', text?.length);
           const result = await generateTitle(text);
+          swDebug('summarizer-worker:title-complete', id, result?.substring(0, 50));
           self.postMessage({ type: 'result', id, text: result, task: 'title' });
         } catch (err) {
           swDebug('summarizer-worker:title-error', id, err.message);

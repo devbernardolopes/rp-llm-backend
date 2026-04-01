@@ -28,12 +28,14 @@ function getSummarizationWorker() {
   }
 
   const workerPath = getWorkerPath();
+  console.log('[summarizer] Creating worker with path:', workerPath);
   summarizationWorker = new WorkerConstructor(workerPath, { type: 'module' });
 
   summarizationWorkerReady = false;
   summarizationWorkerInitializing = false;
 
   summarizationWorker.onmessage = (event) => {
+    console.log('[summarizer] onmessage received, type:', event.data?.type);
     const { type, id, text, task, success, error, message, loaded, total, percent } = event.data || {};
 
     switch (type) {
@@ -197,7 +199,13 @@ async function runSummarizationTask(type, text, options = {}) {
     }
 
     console.log('[summarizer] Posting task message to worker:', type, id);
-    worker.postMessage(message);
+    try {
+      worker.postMessage(message);
+      console.log('[summarizer] Task message posted successfully');
+    } catch (postErr) {
+      console.error('[summarizer] Failed to post task message:', postErr);
+      reject(postErr);
+    }
   });
 }
 
