@@ -14752,6 +14752,7 @@ async function maybeGenerateTitleBeforeBotReply() {
     .replace(/\{\{languageCode\}\}/g, languageCode);
 
   if (state.settings.useLocalAutoTitle) {
+    console.log('[app] useLocalAutoTitle is TRUE, calling local title...');
     if (isViewingThread(currentThread.id)) {
       showToast("Using local auto-title...", "info");
     }

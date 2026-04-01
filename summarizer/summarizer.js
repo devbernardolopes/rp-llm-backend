@@ -224,10 +224,15 @@ async function getLocalSummary(text) {
 }
 
 async function getLocalTitle(text) {
+  console.log('[summarizer] getLocalTitle called, text length:', text?.length);
   const inputText = String(text || '').trim();
-  if (!inputText) return null;
+  if (!inputText) {
+    console.log('[summarizer] Empty input, returning null');
+    return null;
+  }
 
   try {
+    console.log('[summarizer] Calling ensureWorkerReady...');
     await ensureWorkerReady();
     console.log('[summarizer] Worker ready, running title task...');
     const result = await runSummarizationTask('title', inputText);
