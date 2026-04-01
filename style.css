@@ -716,6 +716,11 @@ body {
   vertical-align: middle;
 }
 
+#settings-import-btn {
+  transform: rotate(180deg);
+  transition: transform 150ms ease-in-out;
+}
+
 #left-pane.collapsed {
   overflow: visible;
   padding: 8px 0 4px;
