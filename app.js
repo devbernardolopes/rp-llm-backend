@@ -6938,7 +6938,12 @@ function startAllCarousels() {
   });
 }
 
-function openModal(modalId) {
+async function openModal(modalId) {
+  const needsPreload = modalId === "lore-modal";
+  if (needsPreload) {
+    resetLoreEditorState();
+    await renderLorebookManagementList();
+  }
   closeActiveModal();
   const modal = document.getElementById(modalId);
   if (!modal) return;
@@ -6966,9 +6971,6 @@ function openModal(modalId) {
   } else if (modalId === "shortcuts-modal") {
     document.getElementById("shortcuts-raw").value =
       state.settings.shortcutsRaw || "";
-  } else if (modalId === "lore-modal") {
-    resetLoreEditorState();
-    renderLorebookManagementList().catch(() => {});
   } else if (modalId === "tags-modal") {
     const input = document.getElementById("tag-manager-input");
     if (input) input.value = "";
@@ -9557,8 +9559,10 @@ function renderLoreEntryEditors() {
 async function renderLorebookManagementList() {
   const list = document.getElementById("lorebook-list");
   if (!list) return;
-  const lorebooks = await getAllLorebooks();
-  const characters = await db.characters.toArray();
+  const [lorebooks, characters] = await Promise.all([
+    getAllLorebooks(),
+    db.characters.toArray(),
+  ]);
   list.innerHTML = "";
   if (lorebooks.length === 0) {
     const empty = document.createElement("p");
