@@ -38,6 +38,7 @@ function getSummarizationWorker() {
 
     switch (type) {
       case 'initialized':
+        console.log('[summarizer] Received initialized message, success:', success, 'error:', error);
         summarizationWorkerReady = success;
         summarizationWorkerInitializing = false;
         if (!success) {
@@ -195,6 +196,7 @@ async function runSummarizationTask(type, text, options = {}) {
       message.minLength = options.minLength || 30;
     }
 
+    console.log('[summarizer] Posting task message to worker:', type, id);
     worker.postMessage(message);
   });
 }
