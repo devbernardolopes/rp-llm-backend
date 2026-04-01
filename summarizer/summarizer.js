@@ -12,18 +12,27 @@ function getWorkerPath() {
   const scripts = document.getElementsByTagName('script');
   for (let i = 0; i < scripts.length; i++) {
     const script = scripts[i];
+    console.log(`[summarizer] Script ${i}: ${script.src}`);
     if (script.src && script.src.includes('summarizer.js')) {
       const base = script.src.substring(0, script.src.lastIndexOf('/'));
+      console.log('[summarizer] Found summarizer.js at:', base);
       return `${base}/summarizer-worker.js`;
     }
   }
+  console.log('[summarizer] No summarizer.js in DOM, using window.location');
   const currentUrl = window.location.href;
   const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-  return `${baseUrl}/summarizer/summarizer-worker.js`;
+  const fallback = `${baseUrl}/summarizer/summarizer-worker.js`;
+  console.log('[summarizer] Fallback path:', fallback);
+  return fallback;
 }
 
 function getSummarizationWorker() {
-  if (summarizationWorker) return summarizationWorker;
+  console.log('[summarizer] getSummarizationWorker called, current worker:', !!summarizationWorker);
+  if (summarizationWorker) {
+    console.log('[summarizer] Returning cached worker');
+    return summarizationWorker;
+  }
 
   const WorkerConstructor = window.Worker || window.webkitWorker;
   if (!WorkerConstructor) {
@@ -31,8 +40,15 @@ function getSummarizationWorker() {
   }
 
   const workerPath = getWorkerPath();
-  console.log('[summarizer] Creating worker with path:', workerPath);
-  summarizationWorker = new WorkerConstructor(workerPath, { type: 'module' });
+  console.log('[summarizer] Creating new worker with path:', workerPath);
+  try {
+    summarizationWorker = new WorkerConstructor(workerPath, { type: 'module' });
+    console.log('[summarizer] Worker created successfully');
+    return summarizationWorker;
+  } catch (createErr) {
+    console.error('[summarizer] Failed to create worker:', createErr);
+    throw createErr;
+  }
 }
 
 async function initSummarizationWorker() {
