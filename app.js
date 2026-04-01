@@ -1514,7 +1514,14 @@ function setupEvents() {
   document.addEventListener("keydown", onGlobalKeyDown);
 
   document.querySelectorAll("[data-open-modal]").forEach((btn) => {
-    btn.addEventListener("click", () => openModal(btn.dataset.openModal));
+    btn.addEventListener("click", () => {
+      if (btn.dataset.openModal === "lore-modal") {
+        resetLoreEditorState();
+        renderLorebookManagementList().then(() => openModal(btn.dataset.openModal));
+      } else {
+        openModal(btn.dataset.openModal);
+      }
+    });
   });
 
   document.querySelectorAll("[data-close-modal]").forEach((btn) => {
@@ -6999,12 +7006,7 @@ function startAllCarousels() {
   });
 }
 
-async function openModal(modalId) {
-  const needsPreload = modalId === "lore-modal";
-  if (needsPreload) {
-    resetLoreEditorState();
-    await renderLorebookManagementList();
-  }
+function openModal(modalId) {
   closeActiveModal();
   const modal = document.getElementById(modalId);
   if (!modal) return;
@@ -9531,7 +9533,7 @@ async function closeLoreEditor() {
   await closeActiveModal();
 }
 
-function openLoreEditor(lorebook = null) {
+async function openLoreEditor(lorebook = null) {
   const normalized = normalizeLorebookRecord(lorebook || {});
   state.lore.editingId = normalized?.id || null;
   state.lore.entries = Array.isArray(normalized?.entries)
@@ -9565,10 +9567,10 @@ function openLoreEditor(lorebook = null) {
 
   if (state.lore.entries.length === 0) addLoreEntryEditor();
   renderLoreEntryEditors();
-  openModal("lore-editor-modal");
+  await openModal("lore-editor-modal");
   const editorModal = document.getElementById("lore-editor-modal");
   if (editorModal) {
-    setupModalTextareas(editorModal);
+    setTimeout(() => setupModalTextareas(editorModal), 0);
   }
 }
 
@@ -9624,7 +9626,6 @@ function renderLoreEntryEditors() {
     card.append(head, keysInput, secondaryInput, contentInput);
     root.appendChild(card);
   });
-  setupModalTextareas(root);
 }
 
 async function renderLorebookManagementList() {
