@@ -2359,7 +2359,8 @@ textarea {
 .message-content pre,
 .message-content pre code {
   overflow-x: auto;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
   max-width: 100%;
   display: block;
 }
