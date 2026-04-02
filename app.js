@@ -15941,6 +15941,7 @@ function renderMessageContent(contentEl, message) {
       message.content || "",
       message.role,
     );
+    decorateMessageCodeBlocks(contentEl);
   }
   if (message.truncatedByFilter === true) {
     contentEl.appendChild(buildTruncationNotice());
@@ -15948,6 +15949,33 @@ function renderMessageContent(contentEl, message) {
   if (String(message.generationError || "").trim()) {
     contentEl.appendChild(buildGenerationErrorNotice(message.generationError));
   }
+}
+
+function decorateMessageCodeBlocks(container) {
+  if (!container || !state.settings.markdownEnabled) return;
+  const codeBlocks = container.querySelectorAll("pre");
+  codeBlocks.forEach((pre) => {
+    if (pre.closest(".message-code-block-wrapper")) return;
+    const codeEl = pre.querySelector("code");
+    if (!codeEl) return;
+    const parent = pre.parentElement;
+    if (!parent) return;
+    const wrapper = document.createElement("div");
+    wrapper.className = "message-code-block-wrapper";
+    parent.replaceChild(wrapper, pre);
+    wrapper.appendChild(pre);
+    const copyBtn = iconButton(
+      "copy",
+      t("codeBlockCopyTitle"),
+      async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await copyCodeBlockText(codeEl.textContent ?? "");
+      },
+    );
+    copyBtn.classList.add("message-code-block-copy-btn");
+    wrapper.appendChild(copyBtn);
+  });
 }
 
 function ensureMessageRowExists(index) {
@@ -17530,13 +17558,21 @@ function commitPendingPersonaInjectionMarker() {
     state.pendingPersonaInjectionPersonaId;
 }
 
-async function copyMessage(text) {
+async function copyTextWithToast(text, successKey) {
   try {
-    await navigator.clipboard.writeText(text);
-    showToast(t("messageCopied"), "success");
+    await navigator.clipboard.writeText(String(text ?? ""));
+    showToast(t(successKey), "success");
   } catch {
     await openInfoDialog(t("copyFailedTitle"), t("copyFailedMessage"));
   }
+}
+
+async function copyMessage(text) {
+  return copyTextWithToast(text, "messageCopied");
+}
+
+async function copyCodeBlockText(text) {
+  return copyTextWithToast(text, "codeBlockCopied");
 }
 
 function getCurrentCharacterTtsOptions() {

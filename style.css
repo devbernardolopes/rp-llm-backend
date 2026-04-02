@@ -2386,6 +2386,27 @@ textarea {
   max-width: 100%;
 }
 
+.message-code-block-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.message-code-block-wrapper pre {
+  margin: 0;
+}
+
+.message-code-block-wrapper .message-code-block-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
 .input-row {
   display: flex;
   gap: 10px;

@@ -630,5 +630,7 @@
   "aiHordeApiMethod": "AI Horde API Method",
   "aiHordeApiMethodNative": "Native REST API",
   "aiHordeApiMethodOpenai": "OpenAI-Compatible",
-  "defaultAutoTitleMinMessages": "Default min. messages for auto-title"
+  "defaultAutoTitleMinMessages": "Default min. messages for auto-title",
+  "codeBlockCopyTitle": "Copy code block",
+  "codeBlockCopied": "Code block copied."
 }
