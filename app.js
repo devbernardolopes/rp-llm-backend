@@ -22219,8 +22219,38 @@ function buildOpenRouterErrorMessage(payload, fallbackMessage) {
   const providerName = payload?.error?.metadata?.provider_name;
   const parts = [base];
   if (raw) parts.push(raw);
+  const hordeDetail = getAiHordeOpenAiErrorDetail(payload);
+  if (hordeDetail) {
+    parts.push(`${hordeDetail.key}: ${hordeDetail.value}`);
+  }
   if (providerName) parts.push(`provider: ${providerName}`);
   return parts.join(" | ");
+}
+
+function getAiHordeOpenAiErrorDetail(payload) {
+  if (!payload) return null;
+  if (String(state.settings.aiProvider || "openrouter").toLowerCase() !== "aihorde") {
+    return null;
+  }
+  if (String(state.settings.hordeApiMethod || "native").toLowerCase() !== "openai") {
+    return null;
+  }
+  const candidates = [
+    { key: "details", value: payload.details },
+    { key: "detail", value: payload.detail },
+    { key: "details", value: payload.response?.details },
+    { key: "detail", value: payload.response?.detail },
+    { key: "details", value: payload?.error?.details },
+    { key: "detail", value: payload?.error?.detail },
+  ];
+  for (const candidate of candidates) {
+    if (!candidate.value) continue;
+    const normalized = String(candidate.value).trim();
+    if (normalized) {
+      return { key: candidate.key, value: normalized };
+    }
+  }
+  return null;
 }
 
 function updateModelPill() {
