@@ -22244,7 +22244,7 @@ function clampTemperature(value) {
 function getStopStrings() {
   const raw = state.settings.stopStrings || "";
   if (!raw.trim()) return null;
-  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+  return raw.split(",").map((s) => s.trimStart()).filter(Boolean);
 }
 
 function findStopStringIndex(content, stopStrings) {
