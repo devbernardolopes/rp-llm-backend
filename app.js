@@ -15430,7 +15430,14 @@ function getFilteredConversationHistoryForThread(
 ) {
   if (!thread) return history;
   const threadId = Number(thread.id);
-  return filterConversationHistoryForSelectedInitialMessage(threadId, history);
+  const filtered = filterConversationHistoryForSelectedInitialMessage(
+    threadId,
+    history,
+  );
+  if (thread.initialMessagesRemoved === true) {
+    return filtered.filter((msg) => !msg?.isInitial);
+  }
+  return filtered;
 }
 
 function updateInitialMessageControls() {
