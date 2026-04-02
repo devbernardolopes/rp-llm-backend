@@ -2250,6 +2250,10 @@ textarea {
   word-break: break-word;
 }
 
+.message-content :is(p, blockquote, ul, ol, pre):last-child {
+  margin-bottom: 0;
+}
+
 .message-content img {
   cursor: pointer;
   max-width: 100%;
