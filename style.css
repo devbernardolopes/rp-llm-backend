@@ -27,6 +27,7 @@
   --message-padding: 8px 10px;
   --avatar-bg: #253147;
   --avatar-border-radius: 8px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body {
@@ -856,7 +857,7 @@ textarea {
 }
 
 #main-view {
-  padding: 6px 20px 10px;
+  padding: 6px 20px calc(10px + var(--safe-area-bottom));
   gap: 6px;
   min-height: 0;
 }
@@ -1655,9 +1656,8 @@ textarea {
     padding: 6px;
   }
 }
-
 #chat-view {
-  padding: 18px 22px;
+  padding: 18px 22px calc(18px + var(--safe-area-bottom));
   position: relative;
   min-height: 0;
   overflow: hidden;

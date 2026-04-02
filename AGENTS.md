@@ -39,11 +39,8 @@ db.js → constants.js → themes.js → i18n.js → ui-utils.js → tts-preproc
 - New text in UI must have a respective JSON entry **appended** at the end of every `/locales` file, translated respectively.
 - The home screen shows BOT cards.
 - The left panel shows thread cards in the middle (when there are threads), system options in the bottom (buttons), and some main buttons at the top.
-- The system supports TTS (using Kokoro.js as well as native browser TTS).
 - The `<div>` with id = `character-modal` is the interface/UI that allows users to create and edit BOT definitions (may be reffered to as "BOT modal").
-- The BOTs have avatars, that is, images and/or videos representing them visually.
 - The `<section>` with id = `chat-view` is the window/screen that allows users to chat with a BOT (may be referred to as "chat or thread window/screen").
-- The `<div>` with id = `image-preview-modal` is used for displaying a modal with either an image or a video. It is triggered when the user clicks on an avatar.
 
 ## Agent Instructions
 
@@ -60,5 +57,4 @@ db.js → constants.js → themes.js → i18n.js → ui-utils.js → tts-preproc
 ## Git Rules
 
 - Never run `git commit`, `git push`, `git add`, or any other git commands that modify the repository.
-- After completing a task, always suggest a single-line, concise commit message in plain-text.
-- Output the suggested message in its own separate paragraph.
+- After completing a task, always suggest a single-line, concise commit message in plain-text in its own separate paragraph.
