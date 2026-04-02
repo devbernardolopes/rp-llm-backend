@@ -2330,21 +2330,20 @@ textarea {
   }
 }
 
-.message-content p {
-  margin: 0 0 4px;
+.message-content :is(p, blockquote, ul, ol, pre) {
+  margin: 0;
+}
+
+.message-content :is(p, blockquote, ul, ol, pre) + :is(p, blockquote, ul, ol, pre) {
+  margin-top: 4px;
 }
 
 .message-content p:empty {
   display: none;
 }
 
-.message-content p:last-child {
-  margin-bottom: 0;
-}
-
 .message-content ol,
 .message-content ul {
-  margin: 4px 0;
   padding-left: 24px;
 }
 
@@ -2355,7 +2354,6 @@ textarea {
 .message-content blockquote {
   border-left: 3px solid var(--muted);
   padding-left: 12px;
-  margin: 8px 0;
   color: var(--muted);
   font-style: italic;
 }
