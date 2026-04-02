@@ -632,5 +632,7 @@
   "defaultAutoTitleMinMessages": "Numero minimo di messaggi predefinito per il titolo automatico",
   "codeBlockCopyTitle": "Copia blocco di codice",
   "codeBlockCopied": "Blocco di codice copiato.",
-  "trimMessagesLabel": "Taglia i messaggi"
+  "trimMessagesLabel": "Taglia i messaggi",
+  "oocSystemPromptIntro": "Introduzione prompt sistema OOC",
+  "oocUserMessageFormat": "Formato messaggio utente OOC"
 }

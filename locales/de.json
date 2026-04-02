@@ -632,5 +632,7 @@
   "defaultAutoTitleMinMessages": "Standard-Mindestanzahl an Nachrichten fuer Auto-Titel",
   "codeBlockCopyTitle": "Codeblock kopieren",
   "codeBlockCopied": "Codeblock kopiert.",
-  "trimMessagesLabel": "Nachrichten trimmen"
+  "trimMessagesLabel": "Nachrichten trimmen",
+  "oocSystemPromptIntro": "OOC System-Prompt-Einfuehrung",
+  "oocUserMessageFormat": "OOC-Benutzernachrichten-Format"
 }

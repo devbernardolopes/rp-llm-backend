@@ -633,5 +633,7 @@
   "defaultAutoTitleMinMessages": "Default min. messages for auto-title",
   "codeBlockCopyTitle": "Copy code block",
   "codeBlockCopied": "Code block copied.",
-  "trimMessagesLabel": "Trim messages"
+  "trimMessagesLabel": "Trim messages",
+  "oocSystemPromptIntro": "OOC System Prompt Intro",
+  "oocUserMessageFormat": "OOC User Message Format"
 }

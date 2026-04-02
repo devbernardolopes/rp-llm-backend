@@ -117,6 +117,8 @@ Requirements:
   sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
   sectionHeaderMessages: "***MESSAGES***",
   sectionHeaderMemoryLevelContext: "***MEMORY LEVEL",
+  oocSystemPromptIntro: "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
+  oocUserMessageFormat: "((OOC: SYSTEM, reply in OOC manner. {content}))",
 };
 
 function getSectionHeader(key) {
@@ -3370,6 +3372,14 @@ async function setupSettingsControls() {
       state.settings.sectionHeaderMemoryLevelContext ||
       DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
   }
+  const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
+  const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
+  if (oocSystemPromptIntro) {
+    oocSystemPromptIntro.value = getSectionHeader("oocSystemPromptIntro");
+  }
+  if (oocUserMessageFormat) {
+    oocUserMessageFormat.value = getSectionHeader("oocUserMessageFormat");
+  }
   cancelShortcut.value =
     state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
   homeShortcut.value =
@@ -3911,6 +3921,16 @@ async function setupSettingsControls() {
   sectionHeaderMemoryLevelContext?.addEventListener("input", () => {
     state.settings.sectionHeaderMemoryLevelContext =
       sectionHeaderMemoryLevelContext.value;
+    saveSettings();
+  });
+
+  oocSystemPromptIntro?.addEventListener("input", () => {
+    state.settings.oocSystemPromptIntro = oocSystemPromptIntro.value;
+    saveSettings();
+  });
+
+  oocUserMessageFormat?.addEventListener("input", () => {
+    state.settings.oocUserMessageFormat = oocUserMessageFormat.value;
     saveSettings();
   });
 
@@ -16524,11 +16544,17 @@ function getOocPromptForUserMessage(message) {
   if (typeof message.oocPrompt === "string") return message.oocPrompt;
   const raw = String(message.content || "").trim();
   if (!raw) return "";
-  const match = raw.match(
-    /^\(\(OOC: SYSTEM, reply in OOC manner\. ([\s\S]+?)\)\)$/,
-  );
-  if (match && match[1]) {
-    return match[1].trim();
+  const defaultFormat = DEFAULT_SETTINGS.oocUserMessageFormat;
+  const userFormat = getSectionHeader("oocUserMessageFormat");
+  const patterns = [
+    defaultFormat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{content\\}", "([\\s\\S]+?)"),
+    userFormat !== defaultFormat ? userFormat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{content\\}", "([\\s\\S]+?)") : null,
+  ].filter(Boolean);
+  for (const pattern of patterns) {
+    const match = raw.match(new RegExp(`^\\(\\(OOC: SYSTEM, ${pattern}\\)\\)$`));
+    if (match && match[1]) {
+      return match[1].trim();
+    }
   }
   if (raw.startsWith("((OOC: SYSTEM, reply in OOC manner. ")) {
     return raw
@@ -16636,7 +16662,7 @@ async function buildOocSystemPrompt() {
     "\n\n",
   )}`;
   const systemPromptParts = [
-    "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
+    getSectionHeader("oocSystemPromptIntro"),
     characterPromptSection,
     memorySection,
     messageSection,
@@ -16659,9 +16685,10 @@ async function sendOocInquiry(text) {
   const displayHistory = getFilteredConversationHistoryForThread();
 
   const userIndex = conversationHistory.length;
+  const oocUserMessageFormatTemplate = getSectionHeader("oocUserMessageFormat");
   const userMsg = {
     role: "user",
-    content: `((OOC: SYSTEM, reply in OOC manner. ${text}))`,
+    content: oocUserMessageFormatTemplate.replace("{content}", text),
     oocPrompt: text,
     createdAt: Date.now(),
     senderName: currentPersona?.name || "You",
