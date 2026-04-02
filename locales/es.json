@@ -631,5 +631,6 @@
   "aiHordeApiMethodOpenai": "Compatible OpenAI",
   "defaultAutoTitleMinMessages": "Mensajes minimos predeterminados para el auto-titulo",
   "codeBlockCopyTitle": "Copiar bloque de código",
-  "codeBlockCopied": "Bloque de código copiado."
+  "codeBlockCopied": "Bloque de código copiado.",
+  "trimMessagesLabel": "Recortar mensajes"
 }

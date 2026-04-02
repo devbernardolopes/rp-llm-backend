@@ -631,5 +631,6 @@
   "aiHordeApiMethodOpenai": "OpenAI-Kompatibel",
   "defaultAutoTitleMinMessages": "Standard-Mindestanzahl an Nachrichten fuer Auto-Titel",
   "codeBlockCopyTitle": "Codeblock kopieren",
-  "codeBlockCopied": "Codeblock kopiert."
+  "codeBlockCopied": "Codeblock kopiert.",
+  "trimMessagesLabel": "Nachrichten trimmen"
 }

@@ -33,6 +33,7 @@ const DEFAULT_SETTINGS = {
   autoReplyEnabled: true,
   enterToSendEnabled: true,
   autoPairEnabled: true,
+  trimMessages: true,
   maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 8192,
   temperature: Number.isFinite(Number(CONFIG.temperature))
     ? Number(CONFIG.temperature)
@@ -3019,6 +3020,7 @@ async function setupSettingsControls() {
 
   const markdownCheck = document.getElementById("markdown-enabled");
   const allowMessageHtml = document.getElementById("allow-message-html");
+  const trimMessagesCheckbox = document.getElementById("trim-messages");
   const streamEnabled = document.getElementById("stream-enabled");
   const autopairEnabled = document.getElementById("autopair-enabled");
   const autoReplyEnabled = document.getElementById("auto-reply-enabled");
@@ -3076,6 +3078,9 @@ async function setupSettingsControls() {
   unreadSoundEnabled.checked = state.settings.unreadSoundEnabled !== false;
   allowMessageHtml.checked = state.settings.allowMessageHtml === true;
   streamEnabled.checked = state.settings.streamEnabled !== false;
+  if (trimMessagesCheckbox) {
+    trimMessagesCheckbox.checked = state.settings.trimMessages !== false;
+  }
   autopairEnabled.checked = state.settings.autoPairEnabled !== false;
   if (lockMemoryMessages) {
     lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
@@ -3572,6 +3577,24 @@ async function setupSettingsControls() {
     state.settings.streamEnabled = streamEnabled.checked;
     saveSettings();
   });
+
+  if (trimMessagesCheckbox) {
+    trimMessagesCheckbox.addEventListener("change", async () => {
+      state.settings.trimMessages = trimMessagesCheckbox.checked;
+      saveSettings();
+      normalizeAssistantMessages(conversationHistory);
+      if (currentThread) {
+        try {
+          await persistThreadMessagesById(currentThread.id, conversationHistory, {
+            _skipUpdatedAt: true,
+          });
+        } catch {
+          console.warn("Failed to persist trimmed assistant messages.");
+        }
+      }
+      renderChat();
+    });
+  }
 
   autopairEnabled.addEventListener("change", () => {
     state.settings.autoPairEnabled = autopairEnabled.checked;
@@ -4144,6 +4167,7 @@ function getSettingsGroupForNode(node) {
   if (
     has("#markdown-enabled") ||
     has("#allow-message-html") ||
+    has("#trim-messages") ||
     has("#stream-enabled") ||
     has("#autopair-enabled") ||
     has("#lock-memory-messages") ||
@@ -4199,6 +4223,7 @@ function getSettingsGroupForNode(node) {
   if (
     id === "markdown-enabled" ||
     id === "allow-message-html" ||
+    id === "trim-messages" ||
     id === "stream-enabled" ||
     id === "autopair-enabled" ||
     id === "lock-memory-messages" ||
@@ -19749,6 +19774,8 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
     messagesToSave = [...beforeLoaded, ...msgs];
   }
 
+  normalizeAssistantMessages(messagesToSave);
+
   const updated = {
     messages: messagesToSave,
     ...payload,
@@ -22464,6 +22491,20 @@ function renderMessageHtml(content, role = "assistant") {
 function trimTrailingWhitespacePerLine(value) {
   if (value == null) return "";
   return String(value).replace(/[ \t]+$/gm, "");
+}
+
+function trimAssistantMessageContent(value) {
+  const txt = String(value || "");
+  return txt.replace(/^[\s\r\n]+|[\s\r\n]+$/g, "");
+}
+
+function normalizeAssistantMessages(messages) {
+  if (state.settings.trimMessages !== true) return;
+  const list = Array.isArray(messages) ? messages : [];
+  for (const msg of list) {
+    if (!msg || msg.role !== "assistant") continue;
+    msg.content = trimAssistantMessageContent(msg.content);
+  }
 }
 
 function markdownToHtml(input) {
