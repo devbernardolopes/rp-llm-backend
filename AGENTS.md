@@ -5,14 +5,14 @@
 - This is an AI chat system that is STILL being built using vanilla JavaScript + HTML + CSS (with some Tailwind CSS). It is an on-going project.
 - It uses local storage with Dexie.js.
 - It allows users to create characters/scenarios (referred as BOTS) and chat with them, thus creating threads.
-- It connects to AI models via OpenRouter with the use of an API Key.
-- It makes requests via OpenRouter API following OpenAI-compatible format.
+- It connects to AI models via OpenRouter, AI Horde, or LM Studio with the use of an API Key.
+- It makes requests via OpenAI-compatible format (OpenRouter, LM Studio native) or custom API (AI Horde).
 - The main request is `completion` because it generates a BOT message (endpoint: `/api/v1/chat/completions`).
 - The main file is `index.html` and `app.js`, with supporting modules.
 
 ### Module Files
 
-- `app.js` - Main application logic (~20,400 lines)
+- `app.js` - Main application logic (~23,460 lines)
 - `constants.js` - Static constants (model options, icons, language options, etc.)
 - `themes.js` - Theme management (applyThemeVars, getThemeById, seedAdditionalThemes, etc.)
 - `i18n.js` - Internationalization (t(), tf(), loadLocaleBundle, applyInterfaceLanguage, etc.)
@@ -22,25 +22,40 @@
 - `memory.js` - Conversation memory: summarizes old messages to preserve context
 - `db.js` - Database schema using Dexie.js (characters, threads, lorebooks, memories, personas, sessions)
 - `tts/kokoro.js` - TTS functions using Kokoro.js for text-to-speech
+- `tts/kokoro-worker.js` - Web worker for TTS processing
+- `tts/engine.js` - TTS engine abstraction layer
+- `tts/ui.js` - TTS UI controls
+- `tts/index.js` - TTS module entry point (ES module)
+- `stt/whisper.js` - Speech-to-text using Whisper
+- `stt/whisper-worker.js` - Web worker for STT processing
 - `embeddings.js` - Text embeddings using transformers
-- `summarizer.js` - Text summarization
+- `summarizer/summarizer.js` - Text summarization
+- `summarizer/summarizer-worker.js` - Web worker for summarization
 - `memory-filter.js` - Memory relevance filtering
 - `config.js` - Application configuration
+- `three-vrm-loader.js` - 3D VRM model loader using Three.js
+- `api/chat-completions.js` - Chat completions API handler
+- `api/horde-text.js` - AI Horde API integration
 
 ### Script Loading Order (in index.html)
 
 ```plaintext
-db.js → constants.js → themes.js → i18n.js → ui-utils.js → tts-preprocess.js → lore.js → memory.js → app.js → memory-filter.js → tts/kokoro.js
+dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → config.js → db.js → constants.js → themes.js → i18n.js → ui-utils.js → tts-preprocess.js → memory.js → app.js → lore.js → memory-filter.js → stt/whisper.js → tts/kokoro.js → tts/index.js (module) → three-vrm-loader.js (module)
 ```
 
 ### UI Features
 
 - The UI supports multiple languages as JSON files at `/locales`.
 - New text in UI must have a respective JSON entry **appended** at the end of every `/locales` file, translated respectively.
-- The home screen shows BOT cards.
+- The home screen shows BOT cards with filtering, sorting, pagination, and tag chips.
 - The left panel shows thread cards in the middle (when there are threads), system options in the bottom (buttons), and some main buttons at the top.
-- The `<div>` with id = `character-modal` is the interface/UI that allows users to create and edit BOT definitions (may be reffered to as "BOT modal").
+- The `<div>` with id = `character-modal` is the interface/UI that allows users to create and edit BOT definitions (may be referred to as "BOT modal").
 - The `<section>` with id = `chat-view` is the window/screen that allows users to chat with a BOT (may be referred to as "chat or thread window/screen").
+- **3D Model Panel**: A resizable panel displaying VRM 3D avatars with expression controls.
+- **Tags System**: Character tagging and filtering.
+- **Assets Management**: Media/file management modal.
+- **Database Management**: Database export/import.
+- **Guide System**: Onboarding help.
 
 ## Agent Instructions
 
@@ -53,6 +68,7 @@ db.js → constants.js → themes.js → i18n.js → ui-utils.js → tts-preproc
 
 - No build steps or tests required.
 - When creating new modules, add them to the script loading order in `index.html` in the correct dependency order.
+- Use ES modules (`type="module"`) for new code that needs module support.
 
 ## Git Rules
 
