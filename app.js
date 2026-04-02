@@ -7824,6 +7824,7 @@ function renderCharacterInitialMessagesList() {
 async function refreshOpenThreadInitialMessagesForCharacter(characterId) {
   if (!currentThread || !Number.isInteger(Number(currentThread?.id))) return;
   if (Number(currentThread.characterId) !== Number(characterId)) return;
+  if (currentThread.initialMessagesRemoved === true) return;
   const characterRecord = await db.characters.get(characterId);
   if (!characterRecord) return;
   const resolvedCharacter = resolveCharacterForLanguage(
@@ -13459,6 +13460,7 @@ async function startNewThread(characterId, forcedPersonaId = null) {
     chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
     unloadState: { loadLimit: 0 },
     initialMessageIndex: 0,
+    initialMessagesRemoved: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -13734,6 +13736,7 @@ async function duplicateThread(threadId) {
     oocModeEnabled: source.oocModeEnabled === true,
     chatOpacity: getThreadChatOpacity(source),
     favorite: false,
+    initialMessagesRemoved: source.initialMessagesRemoved === true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -13960,6 +13963,19 @@ async function openThread(threadId) {
   delete state.threadUnreadCounts[Number(threadId)];
   const thread = await db.threads.get(threadId);
   if (!thread) return;
+  if (thread.initialMessagesRemoved === true) {
+    const rawMessages = Array.isArray(thread.messages) ? thread.messages : [];
+    const hasInitial = rawMessages.some((msg) => msg?.isInitial);
+    if (hasInitial) {
+      const filtered = rawMessages.filter((msg) => !msg?.isInitial);
+      thread.messages = filtered;
+      try {
+        await db.threads.update(threadId, { messages: filtered });
+      } catch (err) {
+        console.warn("Failed to remove persisted initial messages", err);
+      }
+    }
+  }
 
   if (
     Number.isInteger(thread.initialMessageIndex) &&
@@ -13978,6 +13994,7 @@ async function openThread(threadId) {
   currentThread = {
     ...thread,
     writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
+    initialMessagesRemoved: thread.initialMessagesRemoved === true,
   };
   if (!currentThread.unloadState) {
     const hasInitialMessages = (thread.messages || []).some((m) => m.isInitial);
@@ -17309,6 +17326,9 @@ async function deleteMessageAt(index) {
     const msgCount = conversationHistory.length;
     updateThreadMessageCount(currentThread.id, conversationHistory);
   }
+  if (target?.isInitial && currentThread) {
+    currentThread.initialMessagesRemoved = true;
+  }
 
   // After deletion, if the deleted message was an API assistant and no other API assistants remain, clear the once flag
   if (isApiAssistant) {
@@ -19727,6 +19747,13 @@ function isViewingThread(threadId) {
 async function persistThreadMessagesById(threadId, messages, extra = {}) {
   const msgs = Array.isArray(messages) ? messages : [];
   const payload = { ...extra };
+  if (
+    payload.initialMessagesRemoved === undefined &&
+    currentThread &&
+    Number(currentThread.id) === Number(threadId)
+  ) {
+    payload.initialMessagesRemoved = currentThread.initialMessagesRemoved === true;
+  }
   const explicitSkipUpdatedAt = payload._skipUpdatedAt === true;
   const explicitRetainFlag = payload._retainConversationHistory;
   delete payload._skipUpdatedAt;
@@ -20304,6 +20331,7 @@ async function persistCurrentThread(forceUpdate = false, options = {}) {
     writingInstructionsTurnCount:
       getThreadWritingInstructionsTurnCount(currentThread),
     oocModeEnabled: currentThread.oocModeEnabled === true,
+    initialMessagesRemoved: currentThread.initialMessagesRemoved === true,
     unloadState: currentThread.unloadState,
     _skipUpdatedAt: !shouldUpdateTimestamp,
     _retainConversationHistory: true,
@@ -20474,6 +20502,7 @@ async function migrateLegacySessions() {
       writingInstructionsTurnCount: 0,
       oocModeEnabled: false,
       chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
+      initialMessagesRemoved: session.initialMessagesRemoved === true,
       createdAt: session.updatedAt || Date.now(),
       updatedAt: session.updatedAt || Date.now(),
     });
