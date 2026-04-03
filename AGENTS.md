@@ -6,7 +6,7 @@
 - It uses local storage with Dexie.js.
 - It allows users to create characters/scenarios (referred as BOTS) and chat with them, thus creating threads.
 - It connects to AI models via OpenRouter, AI Horde, or LM Studio with the use of an API Key.
-- It makes requests via OpenAI-compatible format (OpenRouter, LM Studio native) or custom API (AI Horde).
+- It makes requests via OpenAI-compatible format (OpenRouter, LM Studio, AI Horde Proxy) or custom API (AI Horde, LM Studio native).
 - The main request is `completion` because it generates a BOT message (endpoint: `/api/v1/chat/completions`).
 - The main file is `index.html` and `app.js`, with supporting modules.
 

@@ -1,11 +1,13 @@
 # 3D VRM Model Support Implementation
 
 ## Overview
+
 Added support for 3D VRM/GLB/GLTF model display in chat view with a floating draggable/resizable panel.
 
 ## Files Modified
 
 ### index.html
+
 - Added import map for Three.js and three-vrm library
 - Added "3D" tab button in character modal (`char-model3d-tab-btn`)
 - Added `.model3d-field` section in modal body for uploading 3D models
@@ -15,6 +17,7 @@ Added support for 3D VRM/GLB/GLTF model display in chat view with a floating dra
 - Added script tag for `three-vrm-loader.js` module
 
 ### style.css
+
 - Added styles for `.model3d-field` section (toolbar, preview, info display)
 - Added styles for `#model3d-panel` (floating panel with drag handle)
 - Added styles for `.model3d-panel-header` (draggable header)
@@ -22,6 +25,7 @@ Added support for 3D VRM/GLB/GLTF model display in chat view with a floating dra
 - Added `.is-active` style for `#toggle-model3d-panel-btn` (highlighted state)
 
 ### app.js
+
 - Added `charModalCache` and `charModalModel3d` state variables
 - Added `model3dTabBtn` event listener for 3D tab
 - Added `model3d` field to save payload in `saveCharacterFromModal()`
@@ -45,9 +49,11 @@ Added support for 3D VRM/GLB/GLTF model display in chat view with a floating dra
 - Updated `closeActiveModal()` to reset modal 3D state
 
 ### db.js
+
 - Added database version 23 with `model3d` field migration for characters
 
 ### three-vrm-loader.js (NEW FILE)
+
 - ES module using Three.js + @pixiv/three-vrm
 - `Model3DLoader` class with:
   - `init(canvasId)` - initializes Three.js scene, camera, renderer, OrbitControls
@@ -61,7 +67,8 @@ Added support for 3D VRM/GLB/GLTF model display in chat view with a floating dra
 - Added: `getModel3DCameraState()`, `restoreModel3DCameraState()`
 - Window exposure of all functions for app.js access
 
-### locales/*.json (all language files)
+### locales/\*.json (all language files)
+
 - Added translation keys for 3D features:
   - `model3dTab`, `addModel3d`, `noModel3dSelected`
   - `removeModel3d`, `model3dPanelTitle`, `toggleModel3dPanel`
@@ -71,12 +78,14 @@ Added support for 3D VRM/GLB/GLTF model display in chat view with a floating dra
 ## Features Implemented
 
 ### 1. Character Modal - 3D Tab
+
 - Upload VRM/GLB/GLTF files via file input
 - Preview shows filename when model uploaded
 - Remove button to delete model
 - Model stored as base64 in character.model3d.data
 
 ### 2. Floating 3D Panel
+
 - Draggable by header (title bar)
 - Resizable from all four corners (NW, NE, SW, SE)
 - Position/size constrained within chat view bounds
@@ -85,7 +94,9 @@ Added support for 3D VRM/GLB/GLTF model display in chat view with a floating dra
 - Show/Hide model visibility button (eye icon)
 
 ### 3. Panel State Persistence (per thread)
+
 Stored in `thread.model3dPanel`:
+
 - `visible` - panel visibility state
 - `left`, `top` - panel position
 - `width`, `height` - panel size
@@ -93,6 +104,7 @@ Stored in `thread.model3dPanel`:
 - `camera` - camera position and target for restoration
 
 ### 4. Three.js/VRM Features
+
 - Orbit controls: Left-drag rotate, Right-drag pan, Scroll zoom
 - Ground plane for spatial reference
 - Ambient and directional lighting
@@ -100,6 +112,7 @@ Stored in `thread.model3dPanel`:
 - Proper resource cleanup on dispose
 
 ### 5. UI Behavior
+
 - Toggle button highlighted when panel is hidden (inverted visual cue)
 - Panel hides when switching threads
 - Panel position adjusts when left pane is collapsed/expanded
@@ -107,6 +120,7 @@ Stored in `thread.model3dPanel`:
 - Edit character modal changes reflect in real-time in chat
 
 ## Current Toggle Button Logic
+
 - **Button highlighted (blue glow)**: Panel is HIDDEN (3D enabled but not shown)
 - **Button normal**: Panel is VISIBLE (model displayed)
 - Clicking toggle: Opens panel, removes highlight
@@ -114,12 +128,14 @@ Stored in `thread.model3dPanel`:
 - Clicking visibility (eye): Shows/hides model without closing panel
 
 ## Known Behaviors
+
 1. Panel position stored relative to chat view (not viewport)
 2. If chat view width changes >100px, position not restored
 3. Camera state (rotation/zoom) persists per thread
 4. Four-corner resize handles with visual indicators
 
 ## Database Schema
+
 ```javascript
 // db.js version 23
 characters: {
@@ -148,13 +164,15 @@ threads: {
 ```
 
 ## Libraries (via CDN import map)
-```
+
+```markdown
 three: https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js
 three/addons/: https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/
 @pixiv/three-vrm: https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3/lib/three-vrm.module.min.js
 ```
 
 ## Future Enhancements (Not Implemented)
+
 - Animated model reactions to messages
 - Model expression control
 - Lighting adjustments
