@@ -12753,6 +12753,7 @@ async function duplicateCharacter(characterId) {
     tags: Array.isArray(source.tags) ? [...source.tags] : [],
     avatars: Array.isArray(source.avatars) ? [...source.avatars] : [],
     name: `${source.name} Copy`,
+    pinned: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

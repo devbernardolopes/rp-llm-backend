@@ -74,10 +74,3 @@ dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → c
 
 - Never run `git commit`, `git push`, `git add`, or any other git commands that modify the repository.
 - After completing a task, always suggest a single-line, concise commit message in plain-text in its own separate paragraph.
-- ALWAYS run the appropriate `npm` command below when a change is made to the code (choose ONE of the three):
-
-```bash
-npm run version:patch # For small fixes
-npm run version:minor # For new features
-npm run version:major # For breaking changes
-```
