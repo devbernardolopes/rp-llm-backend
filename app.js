@@ -1334,15 +1334,22 @@ function setupEvents() {
       saveActiveWritingInstructionFromForm();
       updateSaveWritingInstructionButton();
     });
-  document
-    .getElementById("writing-instruction-text")
-    .addEventListener("input", (e) => {
-      const textField = e.target;
-      autoExpandTextarea(textField);
+  const wiTextInput = document.getElementById("writing-instruction-text");
+  if (wiTextInput) {
+    wiTextInput.addEventListener("input", () => {
+      setTimeout(() => {
+        autoExpandTextarea(wiTextInput);
+      }, 0);
       updateWritingInstructionTextCount();
       saveActiveWritingInstructionFromForm();
       updateSaveWritingInstructionButton();
     });
+    wiTextInput.addEventListener("focus", () => {
+      setTimeout(() => {
+        autoExpandTextarea(wiTextInput);
+      }, 0);
+    });
+  }
   document
     .getElementById("confirm-yes-btn")
     .addEventListener("click", () => resolveConfirmDialog(true));
@@ -1711,31 +1718,6 @@ function setupEvents() {
   );
   updateToastDelayDisplay();
   setupSettingsTabsLayout();
-
-  // Writing Instruction Editor: update Save button on input
-  const wiNameInput = document.getElementById("writing-instruction-name");
-  if (wiNameInput) {
-    wiNameInput.addEventListener("input", () => {
-      updateWritingInstructionNameCount();
-      updateSaveWritingInstructionButton();
-    });
-  }
-  const wiTextInput = document.getElementById("writing-instruction-text");
-  if (wiTextInput) {
-    wiTextInput.addEventListener("input", () => {
-      const entry = textareaCollapseStates.get(wiTextInput);
-      if (entry && entry.header.getAttribute("aria-expanded") === "true") {
-        autoExpandTextarea(wiTextInput);
-      }
-      updateSaveWritingInstructionButton();
-    });
-    wiTextInput.addEventListener("focus", () => {
-      const entry = textareaCollapseStates.get(wiTextInput);
-      if (entry && entry.header.getAttribute("aria-expanded") === "true") {
-        autoExpandTextarea(wiTextInput);
-      }
-    });
-  }
 }
 
 const textareaCollapseStates = new WeakMap();
@@ -2195,7 +2177,6 @@ function autoExpandTextarea(textarea) {
   if (!textarea) return;
   const scrollContainer =
     textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
-  const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
   const textareaScrollTop = textarea.scrollTop;
   textarea.style.height = "auto";
   textarea.style.overflow = "hidden";
@@ -2213,23 +2194,6 @@ function autoExpandTextarea(textarea) {
     textarea.style.height = `${newHeight}px`;
   };
   applyHeight();
-  if (textarea.scrollHeight === 0) {
-    requestAnimationFrame(() => {
-      applyHeight();
-      if (scrollContainer) {
-        requestAnimationFrame(() => {
-          scrollContainer.scrollTop = scrollTop;
-        });
-      }
-      requestAnimationFrame(() => {
-        textarea.scrollTop = textareaScrollTop;
-      });
-    });
-  } else if (scrollContainer) {
-    requestAnimationFrame(() => {
-      scrollContainer.scrollTop = scrollTop;
-    });
-  }
   requestAnimationFrame(() => {
     textarea.scrollTop = textareaScrollTop;
   });
