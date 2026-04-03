@@ -1,15 +1,13 @@
 // config.js
 const CONFIG = {
-  version: "1.0.0",
+  version: "4.0.1",
   apiKey:
     (typeof window !== "undefined" &&
       window.ENV &&
       window.ENV.OPENROUTER_API_KEY) ||
     "",
   hordeApiKey:
-    (typeof window !== "undefined" &&
-      window.ENV &&
-      window.ENV.HORDE_API_KEY) ||
+    (typeof window !== "undefined" && window.ENV && window.ENV.HORDE_API_KEY) ||
     "",
   hordeApiMethod: "native",
   lmstudioBaseUrl: "http://localhost:1234",
