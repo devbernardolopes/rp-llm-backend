@@ -1334,22 +1334,13 @@ function setupEvents() {
       saveActiveWritingInstructionFromForm();
       updateSaveWritingInstructionButton();
     });
-  const wiTextInput = document.getElementById("writing-instruction-text");
-  if (wiTextInput) {
-    wiTextInput.addEventListener("input", () => {
-      setTimeout(() => {
-        autoExpandTextarea(wiTextInput);
-      }, 0);
+  document
+    .getElementById("writing-instruction-text")
+    .addEventListener("input", () => {
       updateWritingInstructionTextCount();
       saveActiveWritingInstructionFromForm();
       updateSaveWritingInstructionButton();
     });
-    wiTextInput.addEventListener("focus", () => {
-      setTimeout(() => {
-        autoExpandTextarea(wiTextInput);
-      }, 0);
-    });
-  }
   document
     .getElementById("confirm-yes-btn")
     .addEventListener("click", () => resolveConfirmDialog(true));
@@ -1853,6 +1844,7 @@ function resetModalTextareaCollapseStates(root = document) {
   const modal = root.matches?.(".modal") ? root : root.closest?.(".modal");
   if (modal?.id === "character-modal") return;
   if (modal?.id === "memory-modal") return;
+  if (modal?.id === "writing-instruction-editor-modal") return;
   root.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
     const state = textareaCollapseStates.get(textarea);
     if (!state) return;
@@ -2177,7 +2169,7 @@ function autoExpandTextarea(textarea) {
   if (!textarea) return;
   const scrollContainer =
     textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
-  const textareaScrollTop = textarea.scrollTop;
+  const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
   textarea.style.height = "auto";
   textarea.style.overflow = "hidden";
   textarea.style.resize = "none";
@@ -2194,9 +2186,20 @@ function autoExpandTextarea(textarea) {
     textarea.style.height = `${newHeight}px`;
   };
   applyHeight();
-  requestAnimationFrame(() => {
-    textarea.scrollTop = textareaScrollTop;
-  });
+  if (textarea.scrollHeight === 0) {
+    requestAnimationFrame(() => {
+      applyHeight();
+      if (scrollContainer) {
+        requestAnimationFrame(() => {
+          scrollContainer.scrollTop = scrollTop;
+        });
+      }
+    });
+  } else if (scrollContainer) {
+    requestAnimationFrame(() => {
+      scrollContainer.scrollTop = scrollTop;
+    });
+  }
 }
 
 function updateNameLengthCounter(inputId, counterId, maxLen = 128) {
