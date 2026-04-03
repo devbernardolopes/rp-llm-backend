@@ -988,6 +988,20 @@ function clearSfxBackground() {
   state.sfx.chatBackgroundAssetUrl = "";
 }
 
+function clearChatViewBackground() {
+  const chatView = document.getElementById("chat-view");
+  if (chatView) {
+    chatView.style.removeProperty("background-image");
+    chatView.style.removeProperty("background-size");
+    chatView.style.removeProperty("background-position");
+    chatView.style.removeProperty("background-repeat");
+    chatView.style.removeProperty("background-attachment");
+    chatView.style.removeProperty("background-color");
+  }
+  state.chatBackgroundAssetId = null;
+  state.chatBackgroundAssetUrl = "";
+}
+
 async function showSfxOverlay(entry, asset) {
   const overlayContainer = getOrCreateSfxOverlayContainer();
   if (!overlayContainer) return;
