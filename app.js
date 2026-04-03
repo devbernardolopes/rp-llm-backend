@@ -3547,10 +3547,21 @@ async function setupSettingsControls() {
     saveSettings();
   });
 
+  let lmstudioBaseUrlInitialValue = lmstudioBaseUrl.value.trim();
+  lmstudioBaseUrl.addEventListener("focus", () => {
+    lmstudioBaseUrlInitialValue = lmstudioBaseUrl.value.trim();
+  });
+  lmstudioBaseUrl.addEventListener("blur", () => {
+    const currentValue = lmstudioBaseUrl.value.trim();
+    if (currentValue !== lmstudioBaseUrlInitialValue) {
+      state.settings.lmstudioBaseUrl = currentValue;
+      saveSettings();
+      populateSettingsModels({ force: true }).catch(() => {});
+    }
+  });
   lmstudioBaseUrl.addEventListener("input", () => {
     state.settings.lmstudioBaseUrl = lmstudioBaseUrl.value.trim();
     saveSettings();
-    populateSettingsModels({ force: true }).catch(() => {});
   });
 
   lmstudioApiMethod.addEventListener("change", () => {
