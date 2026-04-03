@@ -17435,7 +17435,8 @@ async function regenerateMessage(index) {
     return;
   }
 
-  const prior = conversationHistory.slice(0, index);
+  const displayHistory = getFilteredConversationHistoryForThread();
+  const prior = displayHistory.slice(0, index);
   const includeOoc = currentCharacter?.includeOocInCompletions === true;
   const regenHistory = getInSimulationMessages(prior, { includeOoc });
   const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
@@ -17460,6 +17461,7 @@ async function regenerateMessage(index) {
       includeOneTimeExtraPrompt: includeOneTimeExtra,
       writingInstructionsTurnIndex: effectiveWritingTurnIndex,
       returnTrace: true,
+      historyOverride: regenHistory,
     });
     const systemPrompt = promptContext.prompt;
     const regenMessagesWithoutSystem = regenHistory
