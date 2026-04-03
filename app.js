@@ -5882,6 +5882,9 @@ async function renderCharacters() {
     const threadOverlay = document.createElement("span");
     threadOverlay.className = "character-avatar-threads";
     threadOverlay.textContent = String(threadCount);
+    if (threadCount === 0) {
+      threadOverlay.style.display = "none";
+    }
     avatarWrap.appendChild(threadOverlay);
 
     if (hoverEffectEnabled) {
