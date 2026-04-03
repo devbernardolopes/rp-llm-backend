@@ -73,6 +73,7 @@ body {
 }
 
 #left-pane.collapsed .pane-title,
+#left-pane.collapsed .pane-scenara-title,
 #left-pane.collapsed .thread-info,
 #left-pane.collapsed .thread-row .actions,
 #left-pane.collapsed .thread-meta-right {
@@ -194,6 +195,17 @@ body {
   padding-right: 8px;
   justify-content: center;
   align-items: center;
+}
+
+.pane-scenara-title {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--text-bright);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .pane-top-option-btn {
