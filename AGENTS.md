@@ -12,7 +12,7 @@
 
 ### Module Files
 
-- `app.js` - Main application logic (~23,460 lines)
+- `app.js` - Main application logic (~23,400 lines)
 - `constants.js` - Static constants (model options, icons, language options, etc.)
 - `themes.js` - Theme management (applyThemeVars, getThemeById, seedAdditionalThemes, etc.)
 - `i18n.js` - Internationalization (t(), tf(), loadLocaleBundle, applyInterfaceLanguage, etc.)
@@ -21,6 +21,7 @@
 - `lore.js` - Lorebooks: keyword-based fact lookup during chat
 - `memory.js` - Conversation memory: summarizes old messages to preserve context
 - `db.js` - Database schema using Dexie.js (characters, threads, lorebooks, memories, personas, sessions)
+- `sfx.js` - SFX (Sound Effects) management: trigger engine, playback, overlay handling
 - `tts/kokoro.js` - TTS functions using Kokoro.js for text-to-speech
 - `tts/kokoro-worker.js` - Web worker for TTS processing
 - `tts/engine.js` - TTS engine abstraction layer
@@ -40,7 +41,7 @@
 ### Script Loading Order (in index.html)
 
 ```plaintext
-dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → config.js → db.js → constants.js → themes.js → i18n.js → ui-utils.js → tts-preprocess.js → memory.js → app.js → lore.js → memory-filter.js → stt/whisper.js → tts/kokoro.js → tts/index.js (module) → three-vrm-loader.js (module)
+dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → config.js → db.js → constants.js → themes.js → i18n.js → ui-utils.js → tts-preprocess.js → memory.js → app.js → sfx.js → lore.js → memory-filter.js → stt/whisper.js → tts/kokoro.js → tts/index.js (module) → three-vrm-loader.js (module)
 ```
 
 ### UI Features
