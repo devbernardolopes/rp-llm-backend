@@ -21510,7 +21510,7 @@ async function callAIHordeOpenAI(
       let errorMessage = `HTTP ${response.status}`;
       try {
         const payload = await response.json();
-        const msg = String(payload?.error?.message || "").trim();
+        const msg = String(payload?.error?.message || payload?.detail || "").trim();
         if (msg) errorMessage = `${errorMessage}: ${msg}`;
       } catch {
         // ignore
