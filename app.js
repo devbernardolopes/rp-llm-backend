@@ -1829,6 +1829,8 @@ function setupModalTextareas(root = document) {
         saveFn = saveCharModalTextareaCollapseStates;
       } else if (modal.id === "writing-instruction-editor-modal") {
         saveFn = saveWiEditorTextareaCollapseStates;
+      } else if (modal.id === "settings-modal") {
+        saveFn = saveSettingsPromptingTextareaCollapseStates;
       }
     }
 
@@ -2035,6 +2037,58 @@ function restorePersonaEditorTextareaCollapseStates(personaId) {
       }
     } else {
       entry.setExpanded(hasContent);
+    }
+  });
+}
+
+function saveSettingsPromptingTextareaCollapseStates() {
+  const key = "rp-settings-prompting-collapse";
+  const states = {};
+  const scrollStates = {};
+  const modal = document.getElementById("settings-modal");
+  if (!modal) return;
+  const panel = modal.querySelector('[data-settings-tab-panel="prompting"]');
+  if (!panel) return;
+  panel.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    states[textarea.id] = expanded;
+    scrollStates[textarea.id] = textarea.scrollTop;
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+  localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
+}
+
+function restoreSettingsPromptingTextareaCollapseStates() {
+  const key = "rp-settings-prompting-collapse";
+  const raw = localStorage.getItem(key);
+  const scrollRaw = localStorage.getItem(`${key}-scroll`);
+  const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
+  const modal = document.getElementById("settings-modal");
+  if (!modal) return;
+  const panel = modal.querySelector('[data-settings-tab-panel="prompting"]');
+  if (!panel) return;
+  panel.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (raw) {
+      try {
+        const states = JSON.parse(raw);
+        if (states[textarea.id] !== undefined) {
+          entry.setExpanded(states[textarea.id]);
+        } else {
+          entry.setExpanded(hasContent);
+        }
+      } catch {
+        entry.setExpanded(hasContent);
+      }
+    } else {
+      entry.setExpanded(hasContent);
+    }
+    if (scrollStates[textarea.id] !== undefined) {
+      textarea.scrollTop = scrollStates[textarea.id];
     }
   });
 }
@@ -4333,6 +4387,7 @@ function setupSettingsTabsLayout() {
         requestAnimationFrame(() => {
           const panel = panels.get("prompting");
           if (panel) {
+            restoreSettingsPromptingTextareaCollapseStates();
             panel
               .querySelectorAll(".textarea-collapse textarea")
               .forEach((textarea) => {
