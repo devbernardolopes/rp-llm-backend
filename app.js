@@ -2196,6 +2196,7 @@ function autoExpandTextarea(textarea) {
   const scrollContainer =
     textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
   const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+  const textareaScrollTop = textarea.scrollTop;
   textarea.style.height = "auto";
   textarea.style.overflow = "hidden";
   textarea.style.resize = "none";
@@ -2220,12 +2221,18 @@ function autoExpandTextarea(textarea) {
           scrollContainer.scrollTop = scrollTop;
         });
       }
+      requestAnimationFrame(() => {
+        textarea.scrollTop = textareaScrollTop;
+      });
     });
   } else if (scrollContainer) {
     requestAnimationFrame(() => {
       scrollContainer.scrollTop = scrollTop;
     });
   }
+  requestAnimationFrame(() => {
+    textarea.scrollTop = textareaScrollTop;
+  });
 }
 
 function updateNameLengthCounter(inputId, counterId, maxLen = 128) {
