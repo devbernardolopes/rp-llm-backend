@@ -22273,6 +22273,20 @@ function fallbackAvatar(seed, width, height) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+function clearChatViewBackground() {
+  const chatView = document.getElementById("chat-view");
+  if (chatView) {
+    chatView.style.removeProperty("background-image");
+    chatView.style.removeProperty("background-size");
+    chatView.style.removeProperty("background-position");
+    chatView.style.removeProperty("background-repeat");
+    chatView.style.removeProperty("background-attachment");
+    chatView.style.removeProperty("background-color");
+  }
+  state.chatBackgroundAssetId = null;
+  state.chatBackgroundAssetUrl = "";
+}
+
 async function resolveThreadBackgroundCharacter(thread) {
   if (!thread?.characterId) return null;
   const base = await db.characters.get(Number(thread.characterId));
