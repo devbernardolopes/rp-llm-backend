@@ -1427,12 +1427,6 @@
                 placeholder="JSON array of regex replacements"
               ></textarea>
             </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="memory-relevance-filter-enabled" />
-              <span data-i18n="memoryRelevanceFilterToggle"
-                >Use memory relevance filter</span
-              >
-            </span>
             <div class="form-field">
               <span data-i18n="personaInjectionTemplate"
                 >Persona Injection Template</span
@@ -1443,38 +1437,6 @@
                 placeholder="Template for active persona injection."
               ></textarea>
             </div>
-            <div class="form-field">
-              <span data-i18n="writingInstructionsInjectionTiming"
-                >Writing Instructions Injection Timing</span
-              >
-              <select id="writing-instructions-injection-when">
-                <option value="always" data-i18n="always">Always</option>
-                <option value="every_other" data-i18n="everyOther">
-                  Every Other
-                </option>
-                <option value="every_second" data-i18n="everySecond">
-                  Every Second
-                </option>
-                <option value="every_third" data-i18n="everyThird">
-                  Every Third
-                </option>
-                <option value="every_fourth" data-i18n="everyFourth">
-                  Every Fourth
-                </option>
-              </select>
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="use-local-summarization" />
-              <span data-i18n="useLocalSummarization"
-                >Use Local Summarization (faster, no API cost)</span
-              >
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="use-local-auto-title" />
-              <span data-i18n="useLocalAutoTitle"
-                >Use Local Auto-Title (faster, no API cost)</span
-              >
-            </span>
             <div class="form-field">
               <span data-i18n="autoTitleSystemPrompt"
                 >Auto-title System Prompt</span
@@ -1540,6 +1502,44 @@
                 </div>
               </div>
             </details>
+            <span class="checkbox-line">
+              <input type="checkbox" id="memory-relevance-filter-enabled" />
+              <span data-i18n="memoryRelevanceFilterToggle"
+                >Use memory relevance filter</span
+              >
+            </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="use-local-summarization" />
+              <span data-i18n="useLocalSummarization"
+                >Use Local Summarization (faster, no API cost)</span
+              >
+            </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="use-local-auto-title" />
+              <span data-i18n="useLocalAutoTitle"
+                >Use Local Auto-Title (faster, no API cost)</span
+              >
+            </span>
+            <div class="form-field">
+              <span data-i18n="writingInstructionsInjectionTiming"
+                >Writing Instructions Injection Timing</span
+              >
+              <select id="writing-instructions-injection-when">
+                <option value="always" data-i18n="always">Always</option>
+                <option value="every_other" data-i18n="everyOther">
+                  Every Other
+                </option>
+                <option value="every_second" data-i18n="everySecond">
+                  Every Second
+                </option>
+                <option value="every_third" data-i18n="everyThird">
+                  Every Third
+                </option>
+                <option value="every_fourth" data-i18n="everyFourth">
+                  Every Fourth
+                </option>
+              </select>
+            </div>
           </div>
           <div data-settings-group="shortcuts" class="settings-group">
             <div class="form-field">
