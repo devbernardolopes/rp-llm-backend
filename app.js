@@ -16624,9 +16624,10 @@ async function buildOocSystemPrompt() {
   const displayHistory = getFilteredConversationHistoryForThread();
   const personaPrefixEnabled = currentCharacter?.personaPrefixEnabled !== false;
   const includeOoc = currentCharacter?.includeOocInCompletions === true;
-  const contextMessages = getInSimulationMessages(displayHistory, {
+  const inSimulationHistory = getInSimulationMessages(displayHistory, {
     includeOoc,
-  })
+  });
+  const contextMessages = inSimulationHistory
     .filter((msg) => !isMessageLockedByMemory(msg))
     .map((msg) => formatOocMessageEntry(msg, personaPrefixEnabled))
     .filter(Boolean);
