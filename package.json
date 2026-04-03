@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "scripts": {
     "version:patch": "npm version patch && node -e \"const fs=require('fs');let c=fs.readFileSync('config.js','utf8');c=c.replace(/version:\\s*['\\\"][^'\\\"]+['\\\"]/, 'version: \\\"'+process.env.npm_package_version+'\\\"');fs.writeFileSync('config.js',c)\"",
     "version:minor": "npm version minor && node -e \"const fs=require('fs');let c=fs.readFileSync('config.js','utf8');c=c.replace(/version:\\s*['\\\"][^'\\\"]+['\\\"]/, 'version: \\\"'+process.env.npm_package_version+'\\\"');fs.writeFileSync('config.js',c)\"",
