@@ -1723,7 +1723,17 @@ function setupEvents() {
   const wiTextInput = document.getElementById("writing-instruction-text");
   if (wiTextInput) {
     wiTextInput.addEventListener("input", () => {
+      const entry = textareaCollapseStates.get(wiTextInput);
+      if (entry && entry.header.getAttribute("aria-expanded") === "true") {
+        autoExpandTextarea(wiTextInput);
+      }
       updateSaveWritingInstructionButton();
+    });
+    wiTextInput.addEventListener("focus", () => {
+      const entry = textareaCollapseStates.get(wiTextInput);
+      if (entry && entry.header.getAttribute("aria-expanded") === "true") {
+        autoExpandTextarea(wiTextInput);
+      }
     });
   }
 }
