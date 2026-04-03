@@ -16629,6 +16629,7 @@ async function buildOocSystemPrompt() {
   });
   const contextMessages = inSimulationHistory
     .filter((msg) => !isMessageLockedByMemory(msg))
+    .filter((msg) => !msg.summarized)
     .map((msg) => formatOocMessageEntry(msg, personaPrefixEnabled))
     .filter(Boolean);
   const rawMemory = await getMemorySummary(
