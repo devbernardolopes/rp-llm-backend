@@ -5,6 +5,7 @@ This document describes the behavior and implementation details for collapsible 
 ## Overview
 
 Collapsible textareas are UI controls that can be expanded or collapsed to show/hide their content. They are used in various modals throughout the application, such as:
+
 - Shortcuts modal (`shortcuts-raw`)
 - Writing Instruction Editor modal (`writing-instruction-text`)
 - Character modal system prompts
@@ -40,6 +41,7 @@ setupModalTextareas(editorModal);
 ```
 
 The function automatically:
+
 - Wraps the textarea in a `.textarea-collapse` container
 - Creates a header with expand/collapse toggle
 - Adds input and focus event handlers that call `autoExpandTextarea`
@@ -69,12 +71,14 @@ The `writing-instruction-editor-modal` requires special handling because its tex
 **Problem**: When editing the textarea content, the modal-body's scroll position would jump to the top.
 
 **Solution**:
+
 1. Exclude the modal from `resetModalTextareaCollapseStates`
 2. Let `setupModalTextareas` handle the event binding when the modal opens (called in `openWritingInstructionEditor`)
 
 #### Shortcuts Modal
 
 The `shortcuts-raw` textarea works correctly with the standard implementation because:
+
 - `setupModalTextareas()` is called at initialization (line 1363)
 - The modal is opened/closed without going through `resetModalTextareaCollapseStates`
 
