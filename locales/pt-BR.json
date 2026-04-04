@@ -636,5 +636,7 @@
   "codeBlockCopied": "Bloco de código copiado.",
   "trimMessagesLabel": "Aparar mensagens",
   "oocSystemPromptIntro": "Introducao do prompt do sistema OOC",
-  "oocUserMessageFormat": "Formato da mensagem do usuario OOC"
+  "oocUserMessageFormat": "Formato da mensagem do usuario OOC",
+  "providerGroq": "Groq",
+  "groqApiKey": "Chave API Groq"
 }

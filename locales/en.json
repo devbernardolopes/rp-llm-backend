@@ -637,5 +637,7 @@
   "codeBlockCopied": "Code block copied.",
   "trimMessagesLabel": "Trim messages",
   "oocSystemPromptIntro": "OOC System Prompt Intro",
-  "oocUserMessageFormat": "OOC User Message Format"
+  "oocUserMessageFormat": "OOC User Message Format",
+  "providerGroq": "Groq",
+  "groqApiKey": "Groq API Key"
 }

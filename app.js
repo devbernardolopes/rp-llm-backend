@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS = {
   openRouterApiKey: "",
   hordeApiKey: "",
   hordeApiMethod: "native",
+  groqApiKey: "",
   lmstudioBaseUrl: "http://localhost:1234",
   lmstudioApiMethod: "openai",
   lastModelsPerProvider: {},
@@ -268,6 +269,7 @@ const state = {
   modelCatalog: [],
   hordeModelCatalog: [],
   lmstudioModelCatalog: [],
+  groqModelCatalog: [],
   modelLoad: {
     controller: null,
     requestId: 0,
@@ -2936,6 +2938,7 @@ async function setupSettingsControls() {
   const hordeApiMethod = document.getElementById("horde-api-method");
   const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
   const lmstudioApiMethod = document.getElementById("lmstudio-api-method");
+  const groqApiKey = document.getElementById("groq-api-key");
   const modelSelect = document.getElementById("model-select");
   const modelPricingFilter = document.getElementById("model-pricing-filter");
   const modelModalityFilter = document.getElementById("model-modality-filter");
@@ -3516,6 +3519,7 @@ async function setupSettingsControls() {
   hordeApiMethod.value = state.settings.hordeApiMethod || "native";
   lmstudioBaseUrl.value = state.settings.lmstudioBaseUrl || "http://localhost:1234";
   lmstudioApiMethod.value = state.settings.lmstudioApiMethod || "openai";
+  groqApiKey.value = state.settings.groqApiKey || "";
   aiProviderSelect.value = state.settings.aiProvider || "openrouter";
   updateProviderVisibility();
   if (typeof window.updateTtsSupportUi === "function") {
@@ -3578,6 +3582,12 @@ async function setupSettingsControls() {
   lmstudioApiMethod.addEventListener("change", () => {
     state.settings.lmstudioApiMethod = lmstudioApiMethod.value;
     state.lmstudioModelCatalog = [];
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  groqApiKey.addEventListener("input", () => {
+    state.settings.groqApiKey = groqApiKey.value.trim();
     saveSettings();
     populateSettingsModels({ force: true }).catch(() => {});
   });
@@ -18261,6 +18271,12 @@ async function populateSettingsModels(options = {}) {
         if (requestId !== state.modelLoad.requestId) return;
         state.lmstudioModelCatalog = remoteCatalog;
       }
+    } else if (provider === "groq") {
+      if (force || state.groqModelCatalog.length === 0) {
+        const remoteCatalog = await fetchGroqModelCatalog(controller.signal);
+        if (requestId !== state.modelLoad.requestId) return;
+        state.groqModelCatalog = remoteCatalog;
+      }
     } else {
       if (force || state.modelCatalog.length === 0) {
         const remoteCatalog = await fetchOpenRouterModelCatalog(
@@ -18289,6 +18305,15 @@ async function populateSettingsModels(options = {}) {
       renderSettingsModelOptions();
       showToast(
         `Failed to load model list from LM Studio: ${err?.message || "using empty list."}`,
+        "error",
+      );
+    } else if (provider === "groq") {
+      if (state.groqModelCatalog.length === 0) {
+        state.groqModelCatalog = [];
+      }
+      renderSettingsModelOptions();
+      showToast(
+        `Failed to load model list from Groq: ${err?.message || "using empty list."}`,
         "error",
       );
     } else {
@@ -18323,6 +18348,8 @@ function renderSettingsModelOptions() {
         : getHordeFallbackModelCatalog();
   } else if (provider === "lmstudio") {
     catalog = state.lmstudioModelCatalog || [];
+  } else if (provider === "groq") {
+    catalog = state.groqModelCatalog || [];
   } else {
     catalog =
       state.modelCatalog.length > 0
@@ -18862,6 +18889,61 @@ async function fetchAIHordeModelCatalog(signal) {
   return Array.from(byId.values());
 }
 
+async function fetchGroqModelCatalog(signal) {
+  const apiKey = state.settings.groqApiKey;
+  if (!apiKey) {
+    throw new Error("Missing Groq API key");
+  }
+
+  const res = await fetch("https://api.groq.com/openai/v1/models", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+    signal,
+  });
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const payload = await res.json();
+      const msg = String(payload?.error?.message || "").trim();
+      if (msg) errorMessage = `${errorMessage}: ${msg}`;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(errorMessage);
+  }
+
+  const payload = await res.json();
+  const models = Array.isArray(payload.data) ? payload.data : [];
+
+  const normalized = models
+    .filter(m => m.active)
+    .map((model) => normalizeGroqModelItem(model))
+    .filter(Boolean);
+
+  return normalized;
+}
+
+function normalizeGroqModelItem(model) {
+  const id = String(model?.id || "").trim();
+  if (!id) return null;
+  return {
+    id: `groq/${id}`,
+    name: id,
+    created: Number(model?.created) || 0,
+    modality: "text->text",
+    promptPrice: 0,
+    completionPrice: 0,
+    requestPrice: 0,
+    imagePrice: 0,
+    contextLength: Number(model?.context_window) || 8192,
+    topContextLength: Number(model?.context_window) || 8192,
+    maxCompletionTokens: Number(model?.max_completion_tokens) || 8192,
+    isModerated: false,
+  };
+}
+
 function normalizeHordeModelItem(model) {
   const id = String(model?.name || model?.id || "").trim();
   if (!id) return null;
@@ -19016,6 +19098,7 @@ function updateProviderVisibility() {
   const hordeApiMethodContainer = document.getElementById("horde-api-method-container");
   const lmstudioContainer = document.getElementById("lmstudio-base-url-container");
   const lmstudioApiMethodContainer = document.getElementById("lmstudio-api-method-container");
+  const groqContainer = document.getElementById("groq-api-key-container");
   const modelFilterRow = document.getElementById("model-filter-row");
   if (openrouterContainer) {
     if (provider === "openrouter") {
@@ -19050,6 +19133,13 @@ function updateProviderVisibility() {
       lmstudioApiMethodContainer.classList.remove("hidden");
     } else {
       lmstudioApiMethodContainer.classList.add("hidden");
+    }
+  }
+  if (groqContainer) {
+    if (provider === "groq") {
+      groqContainer.classList.remove("hidden");
+    } else {
+      groqContainer.classList.add("hidden");
     }
   }
   if (modelFilterRow) {
@@ -20591,6 +20681,15 @@ async function callOpenRouter(
     return callLMStudio(systemPrompt, history, effectiveModel, onChunk, signal, options);
   }
 
+  if (effectiveProvider === "groq") {
+    const effectiveModel = isTitleGeneration
+      ? titleModel
+      : isSummarization
+        ? summaryModel
+        : model;
+    return callGroq(systemPrompt, history, effectiveModel, onChunk, signal, options);
+  }
+
   const resolvedModel = resolveModelForRequest(model);
   const fallbackModel = getFallbackModel(resolvedModel, model);
   const promptMessages = [
@@ -20982,6 +21081,221 @@ async function callLMStudio(
     if (err?.name === "AbortError") throw err;
     throw new Error(
       `LM Studio request failed: ${err?.message || "Unknown error"}`,
+    );
+  }
+}
+
+async function callGroq(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const apiKey = state.settings.groqApiKey;
+  if (!apiKey) {
+    throw new Error("Missing Groq API key. Set it in Settings.");
+  }
+
+  const resolvedModel = resolveModelForRequest(model);
+  const groqModel = resolvedModel.startsWith("groq/")
+    ? resolvedModel.slice(5)
+    : resolvedModel;
+
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+  const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
+  if (nonSystemMessages.length === 0) {
+    promptMessages.push({ role: "user", content: "Continue" });
+  }
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    promptMessages,
+  );
+
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+
+  state.currentRequestMessages = promptMessages;
+
+  const baseUrl = "https://api.groq.com/openai/v1";
+  const streamEnabled =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : !!state.settings.streamEnabled;
+
+  const stopStrings = getStopStrings();
+  const body = {
+    model: groqModel,
+    messages: promptMessages,
+    max_tokens: effectiveMaxTokens,
+    temperature: isTitleGeneration
+      ? (state.settings.autoTitleTemperature ??
+        DEFAULT_SETTINGS.autoTitleTemperature)
+      : isSummarization
+        ? (state.settings.summaryTemperature ??
+          DEFAULT_SETTINGS.summaryTemperature)
+        : clampTemperature(state.settings.temperature),
+    top_p: Number(state.settings.topP) || 1,
+    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
+    stream: streamEnabled,
+  };
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const payload = await response.json();
+        const msg = String(payload?.error?.message || "").trim();
+        if (msg) errorMessage = `${errorMessage}: ${msg}`;
+      } catch {
+        // ignore json parse errors
+      }
+      throw new Error(errorMessage);
+    }
+
+    if (streamEnabled) {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Response body is not readable");
+      }
+
+      const decoder = new TextDecoder();
+      let content = "";
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data: ")) continue;
+            const dataStr = trimmed.slice(6);
+            if (dataStr === "[DONE]") continue;
+
+            try {
+              const data = JSON.parse(dataStr);
+              const delta = data?.choices?.[0]?.delta?.content || "";
+              if (delta) {
+                content += delta;
+                if (typeof onChunk === "function") {
+                  onChunk(delta);
+                }
+              }
+            } catch {
+              // ignore parse errors
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      let stoppedByStopString = false;
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+        }
+      }
+
+      return {
+        content,
+        model: groqModel,
+        provider: "Groq",
+        completionMeta: null,
+        finishReason: "stop",
+        nativeFinishReason: "stop",
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    } else {
+      const json = await response.json();
+      let content = json?.choices?.[0]?.message?.content || "";
+      const finishReason = json?.choices?.[0]?.finish_reason || "stop";
+      const usage = json?.usage || {};
+
+      let stoppedByStopString = false;
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+        }
+      }
+
+      if (typeof onChunk === "function") {
+        for (const char of content) {
+          onChunk(char);
+          await new Promise((r) => setTimeout(r, 5));
+        }
+      }
+
+      return {
+        content,
+        model: json?.model || groqModel,
+        provider: "Groq",
+        completionMeta: {
+          id: json?.id || `groq-${Date.now()}`,
+          created: Math.floor(Date.now() / 1000),
+          object: "chat.completion",
+          usage: {
+            prompt_tokens: usage?.prompt_tokens || 0,
+            completion_tokens: usage?.completion_tokens || 0,
+            total_tokens: usage?.total_tokens || 0,
+          },
+        },
+        finishReason,
+        nativeFinishReason: finishReason,
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    }
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(
+      `Groq request failed: ${err?.message || "Unknown error"}`,
     );
   }
 }
