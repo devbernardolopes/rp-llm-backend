@@ -469,6 +469,8 @@
   "memoryRegenerateProgressTitle": "Régénération du résumé",
   "memoryRegenerateProgressPending": "Régénération du résumé en cours...",
   "memoryRegenerateProgressClose": "Fermer",
+  "memoryRegenerateProgressCancel": "Annuler",
+  "memoryRegenerateProgressCancelConfirm": "Êtes-vous sûr de vouloir annuler la régénération du résumé ?",
   "memoryRegenerateProgressFailed": "Échec de la régénération : {error}",
   "botCardAvatarEffectHover": "Au survol",
   "memorySummarizationFailed": "La synthèse de la mémoire a échoué : {error}. Veuillez réessayer avant de continuer.",

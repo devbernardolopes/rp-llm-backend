@@ -470,6 +470,8 @@
   "memoryRegenerateProgressTitle": "Summary regeneration",
   "memoryRegenerateProgressPending": "Regenerating summary...",
   "memoryRegenerateProgressClose": "Close",
+  "memoryRegenerateProgressCancel": "Cancel",
+  "memoryRegenerateProgressCancelConfirm": "Are you sure you want to cancel the summary regeneration?",
   "memoryRegenerateProgressFailed": "Regeneration failed: {error}",
   "botCardAvatarEffectHover": "On Hover",
   "memorySummarizationFailed": "Memory summarization failed: {error}. Please retry before continuing.",

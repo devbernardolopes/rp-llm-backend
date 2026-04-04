@@ -469,6 +469,8 @@
   "memoryRegenerateProgressTitle": "Regeneración de resumen",
   "memoryRegenerateProgressPending": "Regenerando resumen...",
   "memoryRegenerateProgressClose": "Cerrar",
+  "memoryRegenerateProgressCancel": "Cancelar",
+  "memoryRegenerateProgressCancelConfirm": "¿Está seguro de que desea cancelar la regeneración del resumen?",
   "memoryRegenerateProgressFailed": "Error al regenerar: {error}",
   "botCardAvatarEffectHover": "Al pasar el cursor",
   "memorySummarizationFailed": "La generación de resumen de memoria falló: {error}. Por favor, inténtalo de nuevo antes de continuar.",

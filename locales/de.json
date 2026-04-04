@@ -469,6 +469,8 @@
   "memoryRegenerateProgressTitle": "Zusammenfassungsregeneration",
   "memoryRegenerateProgressPending": "Zusammenfassung wird regeneriert...",
   "memoryRegenerateProgressClose": "Schließen",
+  "memoryRegenerateProgressCancel": "Abbrechen",
+  "memoryRegenerateProgressCancelConfirm": "Sind Sie sicher, dass Sie die Zusammenfassungsregeneration abbrechen möchten?",
   "memoryRegenerateProgressFailed": "Regeneration fehlgeschlagen: {error}",
   "botCardAvatarEffectHover": "Beim Überfahren",
   "memorySummarizationFailed": "Die Gedächtniszusammenfassung ist fehlgeschlagen: {error}. Bitte erneut versuchen, bevor du fortfährst.",

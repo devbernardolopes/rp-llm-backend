@@ -1607,7 +1607,18 @@ function setupEvents() {
       } else if (modal.id === "memory-regenerate-prompt-modal") {
         hideMemoryRegeneratePromptModal();
       } else if (modal.id === "memory-regenerate-progress-modal") {
-        hideMemoryRegenerateProgressModal();
+        if (memoryRegenerationInFlight) {
+          openConfirmDialog(
+            t("confirm"),
+            t("memoryRegenerateProgressCancelConfirm"),
+          ).then((confirmed) => {
+            if (confirmed) {
+              hideMemoryRegenerateProgressModal();
+            }
+          });
+        } else {
+          hideMemoryRegenerateProgressModal();
+        }
       } else {
         closeActiveModal();
       }
@@ -17993,7 +18004,7 @@ async function runMemoryRegeneration(entryId, promptText, level, slot) {
     }
     spinner?.classList.add("hidden");
     if (statusEl) {
-      statusEl.innerHTML = renderMessageHtml(summary, "assistant");
+      statusEl.textContent = summary;
     }
     showToast(t("memoryModalSaveSuccess"), "success");
     await renderMemoryModalEntries();
@@ -18033,6 +18044,23 @@ function setupMemoryRegenerationControls() {
         hideMemoryRegenerateProgressModal();
       });
     });
+  const cancelBtn = document.getElementById(
+    "memory-regenerate-progress-cancel",
+  );
+  cancelBtn?.addEventListener("click", () => {
+    if (!memoryRegenerationInFlight) {
+      hideMemoryRegenerateProgressModal();
+      return;
+    }
+    openConfirmDialog(
+      t("confirm"),
+      t("memoryRegenerateProgressCancelConfirm"),
+    ).then((confirmed) => {
+      if (confirmed) {
+        hideMemoryRegenerateProgressModal();
+      }
+    });
+  });
 }
 
 function positionPromptHistoryPopover() {

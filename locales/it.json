@@ -469,6 +469,8 @@
   "memoryRegenerateProgressTitle": "Rigenerazione del riassunto",
   "memoryRegenerateProgressPending": "Rigenerazione del riassunto in corso...",
   "memoryRegenerateProgressClose": "Chiudi",
+  "memoryRegenerateProgressCancel": "Annulla",
+  "memoryRegenerateProgressCancelConfirm": "Sei sicuro di voler annullare la rigenerazione del riassunto?",
   "memoryRegenerateProgressFailed": "Rigenerazione fallita: {error}",
   "botCardAvatarEffectHover": "Al passaggio del mouse",
   "memorySummarizationFailed": "La sintesi della memoria non è riuscita: {error}. Riprova prima di continuare.",
