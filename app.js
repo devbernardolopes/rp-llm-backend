@@ -15027,7 +15027,7 @@ function filterConversationHistoryForSelectedInitialMessage(
       ? Number(msg.initialMessageIndex)
       : 0;
     return msgIndex === selectedIndex;
-  });
+  }).filter((msg) => msg?.generationStatus !== "regenerating");
 }
 
 function getFilteredConversationHistoryForThread(
@@ -15043,7 +15043,7 @@ function getFilteredConversationHistoryForThread(
   if (thread.initialMessagesRemoved === true) {
     return filtered.filter((msg) => !msg?.isInitial);
   }
-  return filtered;
+  return filtered.filter((msg) => msg?.generationStatus !== "regenerating");
 }
 
 function updateInitialMessageControls() {
