@@ -22537,8 +22537,11 @@ function trimTrailingWhitespacePerLine(value) {
 }
 
 function trimAssistantMessageContent(value) {
-  const txt = String(value || "");
-  return txt.replace(/^[\s\r\n]+|[\s\r\n]+$/g, "");
+  if (state.settings.trimMessages !== true) return value;
+  let txt = String(value || "");
+  txt = trimTrailingWhitespacePerLine(txt);
+  txt = txt.replace(/^[\s\r\n]+|[\s\r\n]+$/g, "");
+  return txt;
 }
 
 function normalizeAssistantMessages(messages) {
