@@ -17016,6 +17016,7 @@ async function regenerateMessage(index) {
     return;
   }
   target.placeholder = false;
+  target.generationStatus = "regenerating";
   if (state.settings.lockMemoryMessages && target?.summarized) {
     showToast(t("memoryMessageLockedNotice"), "warning");
     return;
