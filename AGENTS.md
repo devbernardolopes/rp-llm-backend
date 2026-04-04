@@ -74,4 +74,4 @@ dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → c
 ## Git Rules
 
 - Never run `git commit`, `git push`, `git add`, or any other git commands that modify the repository.
-- After completing a task, always suggest a single-line, concise commit message in plain-text in its own separate paragraph.
+- After completing a task where any file whas changed, always suggest a single-line, concise commit message in plain-text in its own separate paragraph.
