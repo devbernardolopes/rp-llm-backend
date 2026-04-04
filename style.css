@@ -2788,7 +2788,7 @@ textarea {
 }
 
 #confirm-modal {
-  z-index: 220;
+  z-index: 250;
 }
 
 #text-input-modal {
