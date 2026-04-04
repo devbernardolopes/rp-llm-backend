@@ -566,8 +566,6 @@ function stopAllSfx() {
   renderActiveSfxPanel();
 }
 
-const ENABLE_SFX_DEBUG_LOGS = false;
-
 async function playStartSfxForCharacter(character, thread) {
   if (ENABLE_SFX_DEBUG_LOGS) {
     console.log("[SFX] playStartSfxForCharacter called", {
