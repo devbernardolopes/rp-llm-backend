@@ -5,7 +5,7 @@
 - This is an AI chat system that is STILL being built using vanilla JavaScript + HTML + CSS (with some Tailwind CSS). It is an on-going project.
 - It uses local storage with Dexie.js.
 - It allows users to create characters/scenarios (referred as BOTS) and chat with them, thus creating threads.
-- It connects to AI models via OpenRouter, AI Horde, or LM Studio with the use of an API Key.
+- It connects to AI models via OpenRouter, AI Horde, LM Studio, or Groq with the use of an API Key.
 - It makes requests via OpenAI-compatible format (OpenRouter, LM Studio, AI Horde Proxy) or custom API (AI Horde, LM Studio native).
 - The main request is `completion` because it generates a BOT message (endpoint: `/api/v1/chat/completions`).
 - The main file is `index.html` and `app.js`, with supporting modules.
@@ -70,6 +70,44 @@ dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → c
 - No build steps or tests required.
 - When creating new modules, add them to the script loading order in `index.html` in the correct dependency order.
 - Use ES modules (`type="module"`) for new code that needs module support.
+
+### AI Providers
+
+The system supports multiple AI providers. Each provider requires:
+
+1. **UI Elements (index.html)**:
+   - Add option to `ai-provider-select` dropdown
+   - Add API key/settings container (use `hidden` class for conditional visibility)
+   - Add to Auto-Title and Summary provider dropdowns if supported
+
+2. **Settings (app.js)**:
+   - Add default setting to `DEFAULT_SETTINGS`
+   - Add state property for model catalog (e.g., `groqModelCatalog: []`)
+   - Add element initialization in `initSettings()`
+   - Add event listener for input/change handling
+   - Update `updateProviderVisibility()` to show/hide provider-specific inputs
+
+3. **Model Catalog (app.js)**:
+   - Implement `fetch{Provider}ModelCatalog(signal)` function
+   - Implement `normalize{Provider}ModelItem(model)` function
+   - Add provider case in `populateSettingsModels()`
+   - Add catalog selection in `renderSettingsModelOptions()`
+
+4. **API Implementation (app.js)**:
+   - Implement `call{Provider}()` function following existing patterns
+   - Support streaming via Server-Sent Events
+   - Handle stop strings, temperature, and other parameters
+   - Add routing in `callOpenRouter()` for the provider
+
+5. **Localization (locales/*.json)**:
+   - Add provider name and API key labels to all locale files
+
+#### Existing Providers
+
+- **OpenRouter**: OpenAI-compatible API with extensive model catalog
+- **AI Horde**: Distributed AI inference network (native and OpenAI-compatible modes)
+- **LM Studio**: Local LLM inference (OpenAI-compatible and native modes)
+- **Groq**: Fast LPU-based inference (OpenAI-compatible, dynamic model catalog)
 
 ## Git Rules
 
