@@ -737,7 +737,7 @@ body {
 }
 
 #settings-import-btn {
-  transform: rotate(180deg);
+  transform: scaleY(-1);
   transition: transform 150ms ease-in-out;
 }
 
