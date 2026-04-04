@@ -20999,6 +20999,25 @@ async function callLMStudio(
         }
       }
 
+      if (buffer && buffer.startsWith("data:")) {
+        const data = buffer.slice(6).trim();
+        if (data && data !== "[DONE]") {
+          try {
+            const json = JSON.parse(data);
+            let delta = "";
+            if (apiMethod === "native") {
+              delta = json?.content || "";
+            } else {
+              delta = json?.choices?.[0]?.delta?.content || "";
+            }
+            if (delta) {
+              content += delta;
+              if (typeof onChunk === "function") onChunk(delta);
+            }
+          } catch { /* ignore malformed final line */ }
+        }
+      }
+
       return {
         content,
         model: lmstudioModel,
@@ -21225,6 +21244,20 @@ async function callGroq(
         }
       } finally {
         reader.releaseLock();
+      }
+
+      if (buffer && buffer.startsWith("data:")) {
+        const dataStr = buffer.slice(6).trim();
+        if (dataStr && dataStr !== "[DONE]") {
+          try {
+            const data = JSON.parse(dataStr);
+            const delta = data?.choices?.[0]?.delta?.content || "";
+            if (delta) {
+              content += delta;
+              if (typeof onChunk === "function") onChunk(delta);
+            }
+          } catch { /* ignore malformed final line */ }
+        }
       }
 
       let stoppedByStopString = false;
@@ -21470,6 +21503,20 @@ async function callAIHordeOpenAI(
           } catch {
             // ignore parse errors
           }
+        }
+      }
+
+      if (buffer && buffer.startsWith("data:")) {
+        const data = buffer.slice(6).trim();
+        if (data && data !== "[DONE]") {
+          try {
+            const json = JSON.parse(data);
+            const delta = json?.choices?.[0]?.delta?.content || "";
+            if (delta) {
+              content += delta;
+              if (typeof onChunk === "function") onChunk(delta);
+            }
+          } catch { /* ignore malformed final line */ }
         }
       }
 
