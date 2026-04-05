@@ -12955,6 +12955,18 @@ async function buildDatabaseBackupPayload() {
   for (const table of db.tables) {
     tables[table.name] = await table.toArray();
   }
+
+  if (tables.memories) {
+    tables.memories = tables.memories.map(({ embedding, ...rest }) => rest);
+  }
+
+  if (tables.assets) {
+    const validAssetTypes = ["image", "video", "sound"];
+    tables.assets = tables.assets.filter(
+      (asset) => asset.type && validAssetTypes.includes(asset.type),
+    );
+  }
+
   const localState = {};
   for (let i = 0; i < localStorage.length; i += 1) {
     const key = localStorage.key(i);
@@ -12985,6 +12997,7 @@ function validateDatabaseBackupPayload(payload) {
 
 async function restoreDatabaseBackupPayload(payload) {
   const tableMap = new Map(db.tables.map((table) => [table.name, table]));
+  const validAssetTypes = ["image", "video", "sound"];
   await db.transaction("rw", ...db.tables, async () => {
     for (const table of db.tables) {
       await table.clear();
@@ -12992,7 +13005,16 @@ async function restoreDatabaseBackupPayload(payload) {
     for (const [tableName, rows] of Object.entries(payload.tables || {})) {
       const table = tableMap.get(tableName);
       if (!table || !Array.isArray(rows) || rows.length === 0) continue;
-      await table.bulkPut(rows);
+      let rowsToInsert = rows;
+      if (tableName === "assets") {
+        rowsToInsert = rows.filter(
+          (asset) =>
+            asset.type && validAssetTypes.includes(asset.type),
+        );
+      }
+      if (rowsToInsert.length > 0) {
+        await table.bulkPut(rowsToInsert);
+      }
     }
   });
 
