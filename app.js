@@ -4496,16 +4496,24 @@ function setupSettingsTabsLayout() {
   // Move settings-group elements into their corresponding panels
   // Look inside the placeholder divs (e.g., settings-api-content)
   const placeholders = container.querySelectorAll("[id$='-content']");
+  console.log("Found placeholders:", placeholders.length);
   placeholders.forEach((placeholder) => {
+    console.log("Processing placeholder:", placeholder.id, "children:", placeholder.children.length);
     const id = placeholder.id;
     // Extract group name from id like "settings-api-content" -> "api"
     const group = id.replace("settings-", "").replace("-content", "");
     const target = panels.get(group) || panels.get("appearance");
+    if (!target) {
+      console.log("No target panel for group:", group);
+      return;
+    }
+    console.log("Moving content from", id, "to group:", group);
     // Move all children from placeholder to the target panel
     while (placeholder.firstChild) {
       target.appendChild(placeholder.firstChild);
     }
   });
+  console.log("Container children after move:", container.children.length);
 
   tabs.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -4515,8 +4523,13 @@ function setupSettingsTabsLayout() {
       tabs.forEach((b) => b.classList.toggle("active", b === btn));
       panels.forEach((panel, key) => {
         const shouldShow = key === tab;
-        console.log("Panel", key, "show:", shouldShow, "has hidden:", panel.classList.contains("hidden"));
-        panel.classList.toggle("hidden", !shouldShow);
+        console.log("Panel", key, "show:", shouldShow, "before hidden:", panel.classList.contains("hidden"));
+        if (shouldShow) {
+          panel.classList.remove("hidden");
+        } else {
+          panel.classList.add("hidden");
+        }
+        console.log("Panel", key, "after hidden:", panel.classList.contains("hidden"));
       });
       if (tab === "prompting") {
         requestAnimationFrame(() => {
