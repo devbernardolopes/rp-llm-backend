@@ -7219,8 +7219,11 @@ function openModal(modalId) {
     } else if (modalId === "personas-modal") {
       renderPersonaModalList();
     } else if (modalId === "shortcuts-modal") {
-      document.getElementById("shortcuts-raw").value =
-        state.settings.shortcutsRaw || "";
+      const textarea = document.getElementById("shortcuts-raw");
+      if (textarea) {
+        textarea.value = state.settings.shortcutsRaw || "";
+        setupModalTextareas(modal);
+      }
     } else if (modalId === "tags-modal") {
       const input = document.getElementById("tag-manager-input");
       if (input) input.value = "";
