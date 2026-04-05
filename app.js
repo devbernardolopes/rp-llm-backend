@@ -4498,37 +4498,34 @@ function setupSettingsTabsLayout() {
     target.appendChild(node);
   });
 
+  // Initialize: show only first tab, hide others
+  const firstGroup = groups[0];
+  container.querySelectorAll("[data-settings-group]").forEach(g => {
+    const group = g.getAttribute("data-settings-group");
+    if (group === firstGroup) {
+      g.classList.remove("hidden");
+    } else {
+      g.classList.add("hidden");
+    }
+  });
+
   tabs.forEach((btn) => {
     btn.addEventListener("click", () => {
       const tab = btn.getAttribute("data-settings-tab-btn") || "appearance";
       localStorage.setItem("rp-settings-last-tab", tab);
       tabs.forEach((b) => b.classList.toggle("active", b === btn));
-      panels.forEach((panel, key) => {
-        if (key === tab) {
-          panel.classList.remove("hidden");
+      
+      // Get all settings-group elements directly
+      const allGroups = container.querySelectorAll("[data-settings-group]");
+      console.log("All groups found:", allGroups.length);
+      allGroups.forEach(g => {
+        const group = g.getAttribute("data-settings-group");
+        if (group === tab) {
+          g.classList.remove("hidden");
         } else {
-          panel.classList.add("hidden");
+          g.classList.add("hidden");
         }
       });
-      if (tab === "prompting") {
-        requestAnimationFrame(() => {
-          const panel = panels.get("prompting");
-          if (panel) {
-            restoreSettingsPromptingTextareaCollapseStates();
-            panel
-              .querySelectorAll(".textarea-collapse textarea")
-              .forEach((textarea) => {
-                const entry = textareaCollapseStates.get(textarea);
-                if (
-                  entry &&
-                  entry.header.getAttribute("aria-expanded") === "true"
-                ) {
-                  autoExpandTextarea(textarea);
-                }
-              });
-          }
-        });
-      }
     });
   });
   body.dataset.tabsReady = "1";
