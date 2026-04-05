@@ -1,14 +1,3603 @@
+﻿let currentCharacter = null;
+let currentThread = null;
+let conversationHistory = [];
+let currentPersona = null;
+
+// Expose to window for TTS module access (using getters for live values)
+Object.defineProperty(window, "currentCharacter", {
+  get: () => currentCharacter,
+  configurable: true,
+});
+Object.defineProperty(window, "currentThread", {
+  get: () => currentThread,
+  configurable: true,
+});
+Object.defineProperty(window, "conversationHistory", {
+  get: () => conversationHistory,
+  configurable: true,
+});
+
+const DEFAULT_SETTINGS = {
+  uiLanguage: "auto",
+  aiProvider: "openrouter",
+  openRouterApiKey: "",
+  hordeApiKey: "",
+  hordeApiMethod: "native",
+  groqApiKey: "",
+  lmstudioBaseUrl: "http://localhost:1234",
+  lmstudioApiMethod: "openai",
+  lastModelsPerProvider: {},
+  model: "arcee-ai/trinity-large-preview:free",
+  markdownEnabled: true,
+  allowMessageHtml: false,
+  streamEnabled: true,
+  autoReplyEnabled: true,
+  enterToSendEnabled: true,
+  autoPairEnabled: true,
+  trimMessages: true,
+  maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 8192,
+  temperature: Number.isFinite(Number(CONFIG.temperature))
+    ? Number(CONFIG.temperature)
+    : 0.8,
+  topP: 1,
+  topK: 0,
+  repeatPenalty: 1,
+  contextLength: 0,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
+  stopStrings: "",
+  cancelShortcut: "Ctrl+.",
+  homeShortcut: "Alt+H",
+  newCharacterShortcut: "Alt+N",
+  globalPromptTemplate: "Stay in character and respond naturally.",
+  summarySystemPrompt: "You are a helpful summarization assistant.",
+  personaInjectionTemplate:
+    "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
+  writingInstructionsInjectionWhen: "always",
+  markdownCustomCss:
+    ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
+  postprocessRulesJson: "[]",
+  shortcutsRaw: "",
+  tagsInitialized: false,
+  customTags: [],
+  modelPricingFilter: "free",
+  modelModalityFilter: "text-only",
+  modelSortOrder: "created_desc",
+  toastDurationMs: 2600,
+  marqueeBehavior: "disabled",
+  botCardAvatarEffect: "none",
+  botCardAvatarTransitionDelay: 4,
+  completionCooldown: 2,
+  lockMemoryMessages: false,
+  summaryThreshold: 20,
+  memoryMessagesToKeep: 3,
+  memorySummarizerUserPrompt:
+    "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
+  summaryMessagesPreProcessingJson: "[]",
+  memoryRelevanceFilterEnabled: false,
+  memorySlots: 5,
+  useLocalSummarization: false,
+  useLocalAutoTitle: false,
+  favoriteModels: [],
+  chatMessageAlignment: "left",
+  chatOpacity: 1,
+  unreadSoundEnabled: true,
+  oocSystemAvatar: "",
+  crossWindowSyncEnabled: true,
+  autoUnloadThreshold: 0,
+  loreMatchingMode: "keyword",
+  loreSemanticThreshold: 0.5,
+  sttLanguage: "en",
+  sttAutoSend: true,
+  sttMode: "push-to-talk",
+  sttSilenceDuration: 2,
+  defaultPersonaInjectionPlacement: "end_system_prompt",
+  defaultTtsProvider: "kokoro",
+  defaultTtsRate: 1,
+  defaultIncludeOocInCompletions: false,
+  defaultAvatarScale: 4,
+  defaultAutoTitleMinMessages: 10,
+  defaultAutoTitleStream: false,
+  autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
+  autoTitleUserPrompt: `Generate a concise roleplay thread title.
+Generate the title in language code: {{languageCode}}.
+Requirements:
+- Maximum 128 characters.
+- Plain text only.
+- No surrounding quotes.
+- Reflect main topic or scene from these messages.
+
+{{transcript}}`,
+  autoTitleProvider: "openrouter",
+  autoTitleModel: "stepfun/step-3.5-flash:free",
+  autoTitleTemperature: 0.25,
+  autoTitleTopP: 0.9,
+  defaultSummaryStream: false,
+  summaryMaxTokens: 1024,
+  autoTitleMaxTokens: 64,
+  sectionHeaderMemoryContext: "***MEMORY CONTEXT***",
+  sectionHeaderCharacterPrompt: "***CHARACTER PROMPT***",
+  sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
+  sectionHeaderMessages: "***MESSAGES***",
+  sectionHeaderMemoryLevelContext: "***MEMORY LEVEL",
+  oocSystemPromptIntro: "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
+  oocUserMessageFormat: "((OOC: SYSTEM, reply in OOC manner. {content}))",
+};
+
+function getSectionHeader(key) {
+  return (
+    state.settings[key] ||
+    DEFAULT_SETTINGS[key] ||
+    ""
+  );
+}
+
+window.getSectionHeader = getSectionHeader;
+
+const MODEL3D_EXPRESSION_ALIAS_MAP = {
+  neutral: ['neutral', 'normal', 'base', 'default', 'Neutral', 'Normal'],
+  smile: ['smile', 'Smile', 'joy', 'Joy', 'happy', 'Happy', 'grin', 'Grin'],
+  surprised: [
+    'surprised',
+    'Surprised',
+    'surprise',
+    'Surprise',
+    'shock',
+    'Shock',
+    'oh',
+    'Oh',
+  ],
+};
+
+function normalizeExpressionKey(key) {
+  return (key || '').toString().trim().toLowerCase();
+}
+
+// Theme management
+
+// UI utilities - see ui-utils.js
+
+// HTML Snippet Map - maps modal IDs to their snippet files
+const SNIPPET_MAP = {
+  "shortcuts-modal": ["shortcuts.html"],
+  "settings-modal": [
+    "settings-api.html",
+    "settings-appearance.html",
+    "settings-threads.html",
+    "settings-prompting.html",
+    "settings-shortcuts.html",
+    "settings-defaults.html",
+  ],
+};
+
+const snippetCache = new Map();
+
+async function fetchSnippet(filename) {
+  if (snippetCache.has(filename)) {
+    return snippetCache.get(filename);
+  }
+  try {
+    const response = await fetch(`snippets/${filename}`);
+    if (!response.ok) {
+      console.warn(`Snippet not found: snippets/${filename}`);
+      return null;
+    }
+    const html = await response.text();
+    snippetCache.set(filename, html);
+    return html;
+  } catch (err) {
+    console.warn(`Failed to load snippet: snippets/${filename}`, err);
+    return null;
+  }
+}
+
+async function loadSnippetsForModal(modalId) {
+  const snippets = SNIPPET_MAP[modalId];
+  if (!snippets) return;
+  
+  // For settings-modal, each snippet goes into its own placeholder
+  if (modalId === "settings-modal") {
+    const body = document.getElementById("settings-modal-body");
+    if (!body || body.dataset.snippetsLoaded === "1") return;
+    body.dataset.snippetsLoaded = "1";
+    
+    for (const snippet of snippets) {
+      // Extract group from filename like "settings-api.html" -> "api"
+      const group = snippet.replace("settings-", "").replace(".html", "");
+      const placeholder = document.getElementById(`settings-${group}-content`);
+      if (!placeholder) continue;
+      const html = await fetchSnippet(snippet);
+      if (html) {
+        placeholder.insertAdjacentHTML("beforeend", html);
+      }
+    }
+    return;
+  }
+}
+
 function populateSettingsTabValues() {
   const openRouterApiKey = document.getElementById("openrouter-api-key");
+  if (!openRouterApiKey) return;
   const hordeApiKey = document.getElementById("horde-api-key");
   const hordeApiMethod = document.getElementById("horde-api-method");
   const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
   const lmstudioApiMethod = document.getElementById("lmstudio-api-method");
   const groqApiKey = document.getElementById("groq-api-key");
   const aiProviderSelect = document.getElementById("ai-provider-select");
+
+  openRouterApiKey.value = state.settings.openRouterApiKey || "";
+  if (hordeApiKey) hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
+  if (hordeApiMethod) hordeApiMethod.value = state.settings.hordeApiMethod || "native";
+  if (lmstudioBaseUrl) lmstudioBaseUrl.value = state.settings.lmstudioBaseUrl || "http://localhost:1234";
+  if (lmstudioApiMethod) lmstudioApiMethod.value = state.settings.lmstudioApiMethod || "openai";
+  if (groqApiKey) groqApiKey.value = state.settings.groqApiKey || "";
+  if (aiProviderSelect) aiProviderSelect.value = state.settings.aiProvider || "openrouter";
+  updateProviderVisibility();
+}
+
+const state = {
+  settings: { ...DEFAULT_SETTINGS },
+  localeBundles: {},
+  i18nLang: "en",
+  shortcutsVisible: false,
+  editingCharacterId: null,
+  editingPersonaId: null,
+  currentPersonaAvatarBlob: null,
+  activeModalId: null,
+  promptHistoryOpen: false,
+  promptHistory: [],
+  promptCommandHistory: [],
+  chatAutoScroll: true,
+  chatOpacityOverlayVisible: false,
+  chatBackgroundAssetId: null,
+  chatBackgroundAssetUrl: "",
+  lastUsedModel: "",
+  lastUsedProvider: "",
+  lastCompletionTime: 0,
+  draggingPersonaId: null,
+  threadUnreadCounts: {},
+  initialMessageIndexByThread: {},
+  charModalDraftNamespace: "",
+  nextCharModalDraftNamespace: 0,
+  initialMessageDraftsByKey: {},
+  initialMessageDraftsMetaByKey: {},
+  tabId: `tab-${Math.random().toString(36).slice(2)}`,
+  syncChannel: null,
+  syncTimerId: null,
+  lastSyncSeenUpdatedAt: 0,
+  confirmResolver: null,
+  textInputResolver: null,
+  confirmMode: "confirm",
+  model3dExpression: null,
+  model3dExpressionNames: [],
+  model3dExpressionNamesLoaded: false,
+  unsavedResolver: null,
+  importedCharacterLorebookId: null,
+  characterModalImportCancelled: false,
+  activeShortcut: null,
+  abortController: null,
+  marqueeRefreshTimer: null,
+  tts: null,
+  stt: {
+    isListening: false,
+    isLoaded: false,
+    autoSend: true,
+    mediaRecorder: null,
+    audioChunks: [],
+    isPushToTalkActive: false,
+    silenceDetector: null,
+    silenceStartTime: null,
+    animationFrameId: null,
+    audioContext: null,
+    stream: null,
+    threadId: null,
+  },
+  avatarSnapshotCache: new Map(),
+  avatarBlobUrlCache: new Map(),
+  assetBlobUrlCache: new Map(),
+  cachedChatBotAvatar: { url: null, characterId: null, personaId: null },
+  editingMessageIndex: null,
+  pendingPersonaInjectionPersonaId: null,
+  activeGenerationThreadId: null,
+  currentRequestMessages: null,
+  generationQueue: [],
+  summarizationInProgress: new Set(),
+  selectedThreadIds: new Set(),
+  characterTagFilters: [],
+  characterPage: 1,
+  characterCardsPerPage: 0,
+  characterTotalPages: 0,
+  characterTotalItems: 0,
+  tagManagerEditingTag: null,
+  characterSortMode: "updated_desc",
+  expandedCharacterTagIds: new Set(),
+  expandedCharacterTagFilters: false,
+  modalDirty: {
+    "character-modal": false,
+    "personas-modal": false,
+    "shortcuts-modal": false,
+    "tags-modal": false,
+    "lore-modal": false,
+    "lore-editor-modal": false,
+    "writing-instructions-modal": false,
+    "writing-instruction-editor-modal": false,
+    "memory-modal": false,
+    "text-input-modal": false,
+  },
+  charModalTtsTestPlaying: false,
+  charModalCache: {},
+  charModalModel3d: null,
+  imagePreview: {
+    scale: 1,
+    minScale: 0.2,
+    maxScale: 6,
+    src: "",
+    isVideo: false,
+    panX: 0,
+    panY: 0,
+    panning: false,
+    pointerId: null,
+    startX: 0,
+    startY: 0,
+    startPanX: 0,
+    startPanY: 0,
+  },
+  lore: {
+    editingId: null,
+    entries: [],
+  },
+  modelCatalog: [],
+  hordeModelCatalog: [],
+  lmstudioModelCatalog: [],
+  groqModelCatalog: [],
+  modelLoad: {
+    controller: null,
+    requestId: 0,
+  },
+  budgetIndicator: {
+    timerId: null,
+    seq: 0,
+  },
+  characterCardSlide: null,
+  renderThreadsSeq: 0,
+  cooldownToastTimerId: null,
+  cooldownQueueTickInFlight: false,
+  unreadNeedsUserScrollThreadId: null,
+  charModalDefinitions: [],
+  charModalActiveLanguage: "",
+  charModalActiveTab: "lang",
+  charModalPendingThreadDeleteIds: [],
+  charModalAvatars: [],
+  sfx: {
+    currentAudio: null,
+    playingAssetId: null,
+    activeEntries: [],
+    lastTriggered: {},
+    messageCount: {},
+    chatBackgroundAssetId: null,
+    chatBackgroundAssetUrl: "",
+  },
+  characterCache: {
+    data: new Map(),
+    timestamp: 0,
+    ttl: 5000, // 5 seconds cache TTL
+  },
+};
+
+let cachedInitialMessageDisplayIndex = null;
+
+async function ensureMemoryFilterModelReady() {
+  if (!state?.settings?.memoryRelevanceFilterEnabled) {
+    return Boolean(window.memoryEmbeddingReady);
+  }
+  if (window.memoryEmbeddingReady) return true;
+  if (typeof window.loadEmbeddingModel !== "function") return false;
+  try {
+    await window.loadEmbeddingModel();
+  } catch (error) {
+    console.warn("Failed to load memory embedding model:", error);
+  }
+  return Boolean(window.memoryEmbeddingReady);
+}
+
+window.ensureMemoryFilterModelReady = ensureMemoryFilterModelReady;
+
+// TTS preprocessing functions - see tts-preprocess.js
+// TTS engine functions - see tts/
+
+// Debounce utility and processCardsInChunks - see ui-utils.js
+
+window.addEventListener("DOMContentLoaded", init);
+
+// Debounced visibility change handler (150ms)
+const handleVisibilityChange = debounce(() => {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const cards = grid.querySelectorAll(".character-card");
+  const mainView = document.getElementById("main-view");
+  const isMainViewActive = mainView && mainView.classList.contains("active");
+
+  if (document.hidden) {
+    // Process video save in chunks to avoid blocking
+    const cardArray = Array.from(cards);
+    processCardsInChunks(cardArray, (card) => {
+      if (card._saveVideoTimes) card._saveVideoTimes();
+    });
+  } else if (isMainViewActive) {
+    // Process video restore/start in chunks
+    const cardArray = Array.from(cards);
+    processCardsInChunks(cardArray, (card) => {
+      if (card._restoreVideoTimes) card._restoreVideoTimes();
+      if (card._startCarousel) card._startCarousel();
+    });
+  }
+
+  if (
+    !document.hidden &&
+    currentThread &&
+    document.getElementById("chat-view")?.classList.contains("active")
+  ) {
+    let changed = false;
+    let lastUnreadAssistantIndex = -1;
+    for (let i = 0; i < conversationHistory.length; i++) {
+      const msg = conversationHistory[i];
+      if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+        msg.unreadAt = 0;
+        changed = true;
+        lastUnreadAssistantIndex = i;
+      }
+    }
+    if (changed) {
+      state.unreadNeedsUserScrollThreadId = null;
+      persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
+        _skipUpdatedAt: true,
+      }).catch(() => {});
+      // Defer heavy renders to avoid blocking
+      queueMicrotask(() => {
+        renderThreads().catch(() => {});
+        if (
+          lastUnreadAssistantIndex >= 0 &&
+          currentThread.autoTtsEnabled === true &&
+          window.ttsState?.voiceSupportReady
+        ) {
+          window.toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
+        }
+      });
+    }
+    // Defer lightweight unread styling clear + latest message refresh
+    queueMicrotask(() => {
+      clearChatUnreadStyling();
+      refreshLatestAssistantRowContent();
+      refreshInitialMessageRowVisibility();
+    });
+  }
+}, 150);
+
+document.addEventListener("visibilitychange", handleVisibilityChange);
+
+// Debounced focus handler (150ms)
+let lastFocusTime = 0;
+const handleFocus = debounce(() => {
+  const now = Date.now();
+  if (now - lastFocusTime < 200) return;
+  lastFocusTime = now;
+  if (
+    !currentThread ||
+    !document.getElementById("chat-view")?.classList.contains("active")
+  ) {
+    return;
+  }
+  let changed = false;
+  let lastUnreadAssistantIndex = -1;
+  for (let i = 0; i < conversationHistory.length; i++) {
+    const msg = conversationHistory[i];
+    if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+      msg.unreadAt = 0;
+      changed = true;
+      lastUnreadAssistantIndex = i;
+    }
+  }
+  if (changed) {
+    state.unreadNeedsUserScrollThreadId = null;
+    persistThreadMessagesById(Number(currentThread.id), conversationHistory, {
+      _skipUpdatedAt: true,
+    }).catch(() => {});
+    // Defer heavy renders to avoid blocking
+    queueMicrotask(() => {
+      renderThreads().catch(() => {});
+      if (
+        lastUnreadAssistantIndex >= 0 &&
+        currentThread.autoTtsEnabled === true &&
+        window.ttsState?.voiceSupportReady
+      ) {
+        window.toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
+      }
+    });
+  }
+  // Defer lightweight unread styling clear + latest message refresh
+  queueMicrotask(() => {
+    clearChatUnreadStyling();
+    refreshLatestAssistantRowContent();
+    refreshInitialMessageRowVisibility();
+  });
+}, 150);
+
+window.addEventListener("focus", handleFocus);
+
+function updateCarouselForPaneState() {}
+
+async function init() {
+  loadSettings();
+  applyChatOpacitySetting();
+  ensureTagCatalogInitialized();
+  await applyInterfaceLanguage();
+  loadUiState();
+  loadPromptHistory();
+  loadPromptCommandHistory();
+  renderTagPresetsDataList();
+  await setupSettingsControls();
+  setupEvents();
+  setupMemoryRegenerationControls();
+  initModel3DPanelDragResize();
+  if (window.initBrowserTtsSupport) window.initBrowserTtsSupport();
+  updateModelPill();
+  await migrateLegacySessions();
+  await hydrateGenerationQueue(null, false);
+  await ensurePersonasInitialized();
+  await renderAll();
+  applyCrossWindowSyncSetting();
+  preloadSummarizationIfEnabled();
+  // applyMarkdownCustomCss(); // Disabled - using markdown-it library
+  applyChatMessageAlignment();
+  renderCharacterTagFilterChips();
+  updateThreadRenameButtonState();
+  updateScrollBottomButtonVisibility();
+  updateCooldownPinnedToast();
+  updateDocumentTitleWithUnread();
+  if (state.cooldownToastTimerId) {
+    window.clearInterval(state.cooldownToastTimerId);
+  }
+  state.cooldownToastTimerId = window.setInterval(async () => {
+    if (state.cooldownQueueTickInFlight) return;
+    state.cooldownQueueTickInFlight = true;
+    try {
+      const seconds = getCooldownRemainingSeconds();
+      updateCooldownPinnedToast(seconds);
+      refreshCurrentThreadCooldownBubble(seconds);
+      await tickQueueCooldownState();
+    } finally {
+      state.cooldownQueueTickInFlight = false;
+    }
+  }, 250);
+}
+
+async function hydrateGenerationQueue(
+  threads = null,
+  loadFullMessages = false,
+) {
+  let list;
+  if (Array.isArray(threads)) {
+    list = [...threads];
+  } else if (loadFullMessages) {
+    list = await db.threads.toArray();
+  } else {
+    list = await loadThreadsMetadataOnly();
+  }
+  const queued = list
+    .filter((t) => String(t.pendingGenerationReason || "").trim())
+    .sort(
+      (a, b) =>
+        Number(a.pendingGenerationQueuedAt || 0) -
+        Number(b.pendingGenerationQueuedAt || 0),
+    );
+  state.generationQueue = queued
+    .map((t) => Number(t.id))
+    .filter(Number.isInteger);
+  return list;
+}
+
+async function loadThreadsMetadataOnly() {
+  const threads = await db.threads.toArray();
+  return threads.map((thread) => {
+    const { messages, ...meta } = thread;
+    if (!meta.unloadState) {
+      const hasInitialMessages = (messages || []).some((m) => m.isInitial);
+      const nonInitialCount = (messages || []).filter(
+        (m) => !m.isInitial,
+      ).length;
+      meta.unloadState = {
+        loadLimit: 0,
+        totalMessageCount: nonInitialCount + (hasInitialMessages ? 1 : 0),
+      };
+    }
+    return meta;
+  });
+}
+
+function ensureTagCatalogInitialized() {
+  if (state.settings.tagsInitialized === true) return;
+  state.settings.customTags = [...PREDEFINED_CHARACTER_TAGS];
+  state.settings.tagsInitialized = true;
+  saveSettings();
+}
+
+// Color and chat opacity utilities - see ui-utils.js
+
+function applyChatOpacitySetting(value = null) {
+  const raw = value !== null ? value : state.settings.chatOpacity;
+  const normalized = normalizeChatOpacityValue(raw);
+  document.documentElement.style.setProperty(
+    "--chat-opacity",
+    String(normalized),
+  );
+  const slider = document.getElementById("chat-opacity-slider");
+  if (slider && document.activeElement !== slider) {
+    slider.value = String(Math.round(normalized * 100));
+  }
+  const label = document.getElementById("chat-opacity-value");
+  if (label) {
+    label.textContent = `${Math.round(normalized * 100)}%`;
+  }
+}
+
+function setChatOpacityFromPercent(percent) {
+  const clamped = Math.min(100, Math.max(0, Number(percent) || 0));
+  const normalized = clamped / 100;
+  if (currentThread) {
+    currentThread.chatOpacity = normalized;
+    persistThreadChatOpacityValue(currentThread.id, normalized);
+  } else {
+    state.settings.chatOpacity = normalized;
+    saveSettings();
+  }
+  applyChatOpacitySetting(normalized);
+  return normalized;
+}
+
+async function toggleChatOpacityOverlay(force = null) {
+  const overlay = document.getElementById("chat-opacity-overlay");
+  if (!overlay) return;
+  const currentlyActive = overlay.classList.contains("is-active");
+  const shouldShow =
+    force === true ? true : force === false ? false : !currentlyActive;
+  if (shouldShow === currentlyActive) return;
+  const input = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+  const toggleBtn = document.getElementById("chat-opacity-toggle-btn");
+
+  if (shouldShow) {
+    overlay.classList.remove("hidden");
+    overlay.classList.add("is-active");
+    state.chatOpacityOverlayVisible = true;
+    toggleBtn?.classList.add("is-active");
+    if (input) input.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    closePromptHistory();
+    await closeShortcutsForOverlay();
+    const slider = document.getElementById("chat-opacity-slider");
+    slider?.focus();
+  } else {
+    overlay.classList.add("hidden");
+    overlay.classList.remove("is-active");
+    state.chatOpacityOverlayVisible = false;
+    toggleBtn?.classList.remove("is-active");
+    if (input) input.disabled = false;
+    setSendingState(state.sending);
+  }
+}
+
+function setupEvents() {
+  document
+    .getElementById("create-character-btn")
+    .addEventListener("click", () => openCharacterModal());
+  document
+    .getElementById("import-character-btn")
+    .addEventListener("click", () =>
+      document.getElementById("import-character-input").click(),
+    );
+  document
+    .getElementById("import-character-input")
+    .addEventListener("change", importCharacterFromFile);
+  document
+    .getElementById("export-db-btn")
+    .addEventListener("click", exportDatabaseBackup);
+  document
+    .getElementById("import-db-btn")
+    .addEventListener("click", () =>
+      document.getElementById("import-db-input").click(),
+    );
+  document
+    .getElementById("import-db-input")
+    .addEventListener("change", importDatabaseBackupFromFile);
+  document
+    .getElementById("settings-export-btn")
+    .addEventListener("click", exportSettings);
+  document
+    .getElementById("settings-import-btn")
+    .addEventListener("click", importSettings);
+  document
+    .getElementById("settings-import-input")
+    .addEventListener("change", handleSettingsImport);
+  document.getElementById("settings-export-btn").innerHTML = ICONS.export;
+  document.getElementById("settings-import-btn").innerHTML =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V3"></path><path d="M8 9l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>';
+  document
+    .getElementById("reset-db-btn")
+    ?.addEventListener("click", () =>
+      showToast(t("resetAppDataSoon"), "success"),
+    );
+  document
+    .getElementById("guide-btn")
+    ?.addEventListener("click", () =>
+      showToast(t("guideComingSoon"), "success"),
+    );
+  document
+    .getElementById("save-character-btn")
+    .addEventListener("click", () => saveCharacterFromModal());
+  document
+    .getElementById("apply-character-btn")
+    ?.addEventListener("click", () => applyCharacterFromModal());
+  document
+    .getElementById("char-tts-test-btn")
+    .addEventListener("click", playCharacterTtsTestFromModal);
+  updateCharTtsTestButtonState();
+  document.getElementById("send-btn").addEventListener("click", sendMessage);
+  document
+    .getElementById("shortcuts-toggle-btn")
+    .addEventListener("click", toggleShortcutsVisibility);
+  document.getElementById("home-btn").addEventListener("click", showMainView);
+  document
+    .getElementById("chat-title")
+    ?.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      renameCurrentThread();
+    });
+  document
+    .getElementById("char-config-tab-btn")
+    .addEventListener("click", () => {
+      saveActiveCharacterDefinitionFromForm();
+      setCharacterModalTab("config");
+      renderCharacterDefinitionTabs();
+    });
+  document.getElementById("char-tags-tab-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    setCharacterModalTab("tags");
+    renderCharacterDefinitionTabs();
+  });
+  document.getElementById("char-sfx-tab-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    setCharacterModalTab("sfx");
+    renderCharacterDefinitionTabs();
+    renderSfxList();
+  });
+  document.getElementById("char-model3d-tab-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    setCharacterModalTab("model3d");
+    renderCharacterDefinitionTabs();
+  });
+  document.getElementById("char-add-lang-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    populateCharacterLanguageSelectOptions();
+    const modal = document.getElementById("char-language-modal");
+    if (!modal) return;
+    modal.classList.remove("hidden");
+  });
+  document.getElementById("add-sfx-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    openAssetSelectorForSfx();
+  });
+  document.getElementById("add-model3d-btn").addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".vrm,.glb,.gltf";
+    input.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleModel3DUpload(file);
+      }
+    };
+    input.click();
+  });
+  document.getElementById("remove-model3d-btn")?.addEventListener("click", () => {
+    removeModel3D();
+  });
+  document.getElementById("model3d-toggle-visibility-btn")?.addEventListener("click", () => {
+    if (window.setModel3DVisible) {
+      const panel = document.getElementById("model3d-panel");
+      if (!panel) return;
+      const currentlyHidden = panel.dataset.hidden === "true";
+      const nextHidden = !currentlyHidden;
+      window.setModel3DVisible(!nextHidden);
+      panel.dataset.hidden = nextHidden ? "true" : "false";
+      updateModel3DVisibilityButtonIcon(nextHidden);
+    }
+  });
+  document.getElementById("model3d-close-btn")?.addEventListener("click", () => {
+    const panel = document.getElementById("model3d-panel");
+    const btn = document.getElementById("toggle-model3d-panel-btn");
+    if (panel) {
+      panel.classList.add("hidden");
+      btn?.classList.add("is-active");
+      persistModel3DPanelState(currentThread?.id, { visible: false });
+      if (window.disposeModel3D) {
+        window.disposeModel3D();
+      }
+    }
+  });
+  document.getElementById("toggle-model3d-panel-btn")?.addEventListener("click", () => {
+    toggleModel3DPanel();
+  });
+  const expressionControls = document.getElementById(
+    "model3d-expression-controls",
+  );
+  expressionControls
+    ?.querySelectorAll("button[data-expression]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        const expression = button.dataset.expression;
+        if (expression) {
+          setModel3DExpression(expression);
+        }
+      });
+    });
+  renderModel3DExpressionControls();
+  document
+    .getElementById("char-writing-instructions-select")
+    .addEventListener("change", () => {
+      setModalDirtyState("character-modal", true);
+      updateCharWritingInstructionsVisibility();
+    });
+  const addInitialMessageBtn = document.getElementById(
+    "add-initial-message-btn",
+  );
+  if (addInitialMessageBtn) {
+    addInitialMessageBtn.innerHTML = ICONS.plus;
+    addInitialMessageBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      addInitialMessageDraft(state.charModalActiveLanguage);
+    });
+  }
+  document
+    .getElementById("char-language-cancel")
+    .addEventListener("click", () => {
+      document.getElementById("char-language-modal")?.classList.add("hidden");
+    });
+  document
+    .getElementById("char-language-cancel-x")
+    .addEventListener("click", () => {
+      document.getElementById("char-language-modal")?.classList.add("hidden");
+    });
+  document
+    .getElementById("char-language-add")
+    .addEventListener("click", async () => {
+      const select = document.getElementById("char-language-select");
+      const code = normalizeBotLanguageCode(select?.value || "");
+      if (!code) return;
+      if (state.charModalDefinitions.some((d) => d.language === code)) return;
+      const primaryName = String(
+        state.charModalDefinitions[0]?.name || "",
+      ).trim();
+      const newDefinition = createEmptyCharacterDefinition(code);
+      if (primaryName) {
+        newDefinition.name = primaryName;
+      }
+      state.charModalDefinitions.push(newDefinition);
+      state.charModalActiveLanguage = code;
+      setModalDirtyState("character-modal", true);
+      document.getElementById("char-language-modal")?.classList.add("hidden");
+      await loadActiveCharacterDefinitionToForm();
+      setCharacterModalTab("lang");
+      renderCharacterDefinitionTabs();
+      restoreCharModalTextareaCollapseStates();
+    });
+  document
+    .getElementById("cancel-sfx-editor-btn")
+    ?.addEventListener("click", () => {
+      closeActiveModal();
+    });
+  document
+    .getElementById("save-sfx-editor-btn")
+    ?.addEventListener("click", async () => {
+      await saveSfxEntryFromEditor();
+    });
+
+  // SFX editor field change handlers
+  document.getElementById("sfx-trigger")?.addEventListener("change", () => {
+    updateSfxEditorFields();
+    setModalDirtyState("sfx-editor-modal", true);
+  });
+  document.getElementById("sfx-eviction")?.addEventListener("change", () => {
+    updateSfxEditorFields();
+    setModalDirtyState("sfx-editor-modal", true);
+  });
+  document.getElementById("sfx-type")?.addEventListener("change", () => {
+    updateSfxEditorFields();
+    setModalDirtyState("sfx-editor-modal", true);
+  });
+
+  // Volume and opacity slider value displays
+  document.getElementById("sfx-volume")?.addEventListener("input", (e) => {
+    const valueDisplay = document.getElementById("sfx-volume-value");
+    if (valueDisplay) {
+      valueDisplay.textContent = Math.round(e.target.value * 100) + "%";
+    }
+  });
+  document.getElementById("sfx-opacity")?.addEventListener("input", (e) => {
+    const valueDisplay = document.getElementById("sfx-opacity-value");
+    if (valueDisplay) {
+      valueDisplay.textContent = Math.round(e.target.value * 100) + "%";
+    }
+  });
+
+  // Active SFX panel evict all button
+  document
+    .getElementById("evict-all-sfx-btn")
+    ?.addEventListener("click", async () => {
+      await evictAllSfx();
+    });
+
+  document
+    .getElementById("pane-toggle-chat")
+    ?.addEventListener("click", togglePane);
+  document
+    .getElementById("scroll-bottom-btn")
+    .addEventListener("click", () => scrollChatToBottom(true));
+  document
+    .getElementById("initial-message-prev-btn")
+    ?.addEventListener("click", () => cycleInitialMessagePreview(-1));
+  document
+    .getElementById("initial-message-next-btn")
+    ?.addEventListener("click", () => cycleInitialMessagePreview(1));
+  document
+    .getElementById("image-preview-download-btn")
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      downloadImagePreview();
+    });
+  document
+    .getElementById("image-preview-close-btn")
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeImagePreview();
+    });
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("wheel", onImagePreviewWheel, { passive: false });
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("dragstart", (e) => e.preventDefault());
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("pointerdown", onImagePreviewPointerDown);
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("pointermove", onImagePreviewPointerMove);
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("pointerup", onImagePreviewPointerEnd);
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("pointercancel", onImagePreviewPointerEnd);
+  document
+    .getElementById("image-preview-img")
+    .addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      resetImagePreviewZoom();
+    });
+  document
+    .getElementById("pane-overlay-toggle")
+    .addEventListener("click", togglePane);
+  const memoryCommandBtn = document.getElementById("memory-command-btn");
+  if (memoryCommandBtn) {
+    memoryCommandBtn.innerHTML = ICONS.brain;
+    memoryCommandBtn.addEventListener("click", () => {
+      const input = document.getElementById("user-input");
+      if (!input) return;
+      handleMemoryCommandFromInput(input, "/mem");
+    });
+  }
+  if (document.getElementById("auto-tts-toggle-btn")) {
+    document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
+    document
+      .getElementById("auto-tts-toggle-btn")
+      .addEventListener("click", toggleThreadAutoTts);
+  }
+  if (document.getElementById("stt-toggle-btn")) {
+    document.getElementById("stt-toggle-btn").innerHTML = ICONS.mic;
+    const sttBtn = document.getElementById("stt-toggle-btn");
+
+    sttBtn.addEventListener("mousedown", (e) => {
+      if (state.settings.sttMode === "push-to-talk") {
+        e.preventDefault();
+        state.stt.isPushToTalkActive = true;
+        startSttRecording();
+      }
+    });
+
+    sttBtn.addEventListener("mouseup", () => {
+      if (
+        state.settings.sttMode === "push-to-talk" &&
+        state.stt.isPushToTalkActive
+      ) {
+        state.stt.isPushToTalkActive = false;
+        stopSttRecording();
+      }
+    });
+
+    sttBtn.addEventListener("mouseleave", () => {
+      if (
+        state.settings.sttMode === "push-to-talk" &&
+        state.stt.isPushToTalkActive
+      ) {
+        state.stt.isPushToTalkActive = false;
+        stopSttRecording();
+      }
+    });
+
+    sttBtn.addEventListener("touchstart", (e) => {
+      if (state.settings.sttMode === "push-to-talk") {
+        e.preventDefault();
+        state.stt.isPushToTalkActive = true;
+        startSttRecording();
+      }
+    });
+
+    sttBtn.addEventListener("touchend", () => {
+      if (
+        state.settings.sttMode === "push-to-talk" &&
+        state.stt.isPushToTalkActive
+      ) {
+        state.stt.isPushToTalkActive = false;
+        stopSttRecording();
+      }
+    });
+
+    sttBtn.addEventListener("click", () => {
+      if (state.settings.sttMode === "auto-stop") {
+        toggleSttRecording();
+      }
+    });
+  }
+  if (document.getElementById("stt-auto-send-toggle-btn")) {
+    document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#10148;";
+    document
+      .getElementById("stt-auto-send-toggle-btn")
+      .addEventListener("click", toggleSttAutoSend);
+    state.stt.autoSend = state.settings.sttAutoSend;
+    updateSttAutoSendButton();
+  }
+  setupCharAvatarDropzone();
+  ["char-system-prompt", "char-one-time-extra-prompt"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("dragover", onTextAreaFileDragOver);
+    el.addEventListener("drop", onTextAreaFileDrop);
+  });
+  document
+    .getElementById("char-tags-input")
+    .addEventListener("input", renderCharacterTagPresetButtons);
+  document
+    .getElementById("char-tts-language")
+    .addEventListener("change", () => populateCharTtsVoiceSelect());
+  document
+    .getElementById("char-tts-rate")
+    .addEventListener("input", updateCharTtsRatePitchLabels);
+  document
+    .getElementById("char-tts-pitch")
+    .addEventListener("input", updateCharTtsRatePitchLabels);
+  const ttsProviderSelect = document.getElementById("char-tts-provider");
+  if (ttsProviderSelect) {
+    ttsProviderSelect.addEventListener("change", () => {
+      refreshCharTtsProviderFields();
+      if (window.updateTtsSupportUi) window.updateTtsSupportUi();
+    });
+  }
+  const kokoroDeviceSelect = document.getElementById("char-tts-kokoro-device");
+  if (kokoroDeviceSelect) {
+    kokoroDeviceSelect.addEventListener("change", () => {
+      updateKokoroDtypeOptionsForDevice(kokoroDeviceSelect.value || "webgpu");
+    });
+  }
+  const kokoroVoiceSelect = document.getElementById("char-tts-kokoro-voice");
+  if (kokoroVoiceSelect) {
+    kokoroVoiceSelect.addEventListener("change", (event) => {
+      const value = String(event.target?.value || "").trim();
+      if (value && window.ttsState) {
+        window.ttsState.kokoro.selectedVoice = value;
+      }
+    });
+  }
+  refreshCharTtsProviderFields();
+  document
+    .getElementById("save-persona-btn")
+    .addEventListener("click", savePersonaFromEditor);
+  document
+    .getElementById("cancel-persona-btn")
+    .addEventListener("click", () => {
+      state.activeModalId = "persona-editor-modal";
+      closeActiveModal();
+    });
+  document
+    .getElementById("create-persona-btn")
+    .addEventListener("click", () => openPersonaEditor(null));
+  document
+    .getElementById("persona-avatar-file-input")
+    .addEventListener("change", onPersonaAvatarFileChange);
+  document
+    .getElementById("persona-remove-avatar")
+    .addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      state.currentPersonaAvatarBlob = null;
+      const dropzone = document.getElementById("persona-avatar-dropzone");
+      const preview = document.getElementById("persona-avatar-preview");
+      const removeBtn = document.getElementById("persona-remove-avatar");
+      preview.classList.add("hidden");
+      dropzone.classList.remove("has-avatar");
+      removeBtn.classList.add("hidden");
+    });
+  document
+    .getElementById("persona-avatar-dropzone")
+    .addEventListener("click", () => {
+      document.getElementById("persona-avatar-file-input").click();
+    });
+  document
+    .getElementById("persona-avatar-dropzone")
+    .addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  document
+    .getElementById("persona-avatar-dropzone")
+    .addEventListener("drop", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith("image/")) {
+          const blob = new Blob([await file.arrayBuffer()], {
+            type: file.type,
+          });
+          state.currentPersonaAvatarBlob = blob;
+          const preview = document.getElementById("persona-avatar-preview");
+          const dropzone = document.getElementById("persona-avatar-dropzone");
+          const removeBtn = document.getElementById("persona-remove-avatar");
+          preview.src = URL.createObjectURL(blob);
+          preview.classList.remove("hidden");
+          dropzone.classList.add("has-avatar");
+          removeBtn.classList.remove("hidden");
+        }
+      }
+    });
+  const oocDropzone = document.getElementById("ooc-system-avatar-dropzone");
+  const oocFileInput = document.getElementById("ooc-system-avatar-file-input");
+  const oocRemoveBtn = document.getElementById("ooc-system-avatar-remove");
+  renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
+  oocFileInput?.addEventListener("change", async (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await handleOocSystemAvatarFile(files[0]);
+    }
+    oocFileInput.value = "";
+  });
+  oocRemoveBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOocSystemAvatarData("");
+  });
+  oocDropzone?.addEventListener("click", () => {
+    oocFileInput?.click();
+  });
+  oocDropzone?.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  oocDropzone?.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      await handleOocSystemAvatarFile(files[0]);
+    }
+  });
+  document
+    .getElementById("persona-select")
+    .addEventListener("change", onPersonaSelectChange);
+  document
+    .getElementById("persona-selected-avatar")
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      showChatPersonaDropdown();
+    });
+  document.getElementById("char-name").addEventListener("input", () => {
+    updateNameLengthCounter("char-name", "char-name-count", 128);
+    const titleEl = document.getElementById("character-title");
+    if (titleEl) {
+      titleEl.textContent = document.getElementById("char-name").value || "BOT";
+    }
+    updateDocumentTitleWithUnread();
+  });
+  document.getElementById("char-tagline").addEventListener("input", () => {
+    updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
+  });
+  document.getElementById("persona-name").addEventListener("input", () => {
+    updateNameLengthCounter("persona-name", "persona-name-count", 64);
+  });
+  document
+    .getElementById("persona-description")
+    .addEventListener("input", () => {
+      updateNameLengthCounter(
+        "persona-description",
+        "persona-description-count",
+        100,
+      );
+    });
+  document
+    .getElementById("character-tag-filter-clear")
+    .addEventListener("click", async () => {
+      state.characterTagFilters = [];
+      state.expandedCharacterTagIds.clear();
+      saveUiState();
+      renderCharacterTagFilterChips();
+      state.characterPage = 1;
+      await renderCharacters();
+    });
+  const sortBtn = document.getElementById("character-sort-btn");
+  if (sortBtn) {
+    sortBtn.addEventListener("click", async () => {
+      const parts = getCharacterSortParts(state.characterSortMode);
+      const nextBase = getNextCharacterSortBase(parts.base);
+      state.characterSortMode = `${nextBase}_${parts.dir}`;
+      saveUiState();
+      renderCharacterTagFilterChips();
+      state.characterPage = 1;
+      await renderCharacters();
+    });
+  }
+  document
+    .getElementById("character-sort-dir-btn")
+    .addEventListener("click", async () => {
+      const parts = getCharacterSortParts(state.characterSortMode);
+      state.characterSortMode =
+        parts.dir === "desc" ? `${parts.base}_asc` : `${parts.base}_desc`;
+      saveUiState();
+      renderCharacterTagFilterChips();
+      state.characterPage = 1;
+      await renderCharacters();
+    });
+  const filters = document.getElementById("character-filters");
+  filters?.addEventListener("click", (e) => {
+    if (filters.classList.contains("collapsed")) {
+      filters.classList.remove("collapsed");
+      localStorage.setItem("rp-filters-collapsed", "false");
+      updateCharacterFiltersToggleUi();
+      requestAnimationFrame(() => {
+        renderCharacterTagFilterChips();
+      });
+      return;
+    }
+    const target = e.target;
+    const isInteractive =
+      target.closest?.("button, a, input, select, textarea") ||
+      target.closest?.(".tag-chip");
+    if (isInteractive) return;
+    filters.classList.add("collapsed");
+    localStorage.setItem("rp-filters-collapsed", "true");
+    updateCharacterFiltersToggleUi();
+  });
+  document
+    .getElementById("character-filters-toggle")
+    .addEventListener("click", (e) => {
+      e.stopPropagation();
+      const filters = document.getElementById("character-filters");
+      filters.classList.toggle("collapsed");
+      localStorage.setItem(
+        "rp-filters-collapsed",
+        filters.classList.contains("collapsed"),
+      );
+      updateCharacterFiltersToggleUi();
+      if (!filters.classList.contains("collapsed")) {
+        requestAnimationFrame(() => {
+          renderCharacterTagFilterChips();
+        });
+      }
+    });
+  document
+    .getElementById("save-shortcuts-btn")
+    .addEventListener("click", saveShortcutsFromModal);
+  document
+    .getElementById("apply-shortcuts-btn")
+    ?.addEventListener("click", () => saveShortcutsFromModal({ close: false }));
+  document
+    .getElementById("add-tag-btn")
+    .addEventListener("click", addTagFromManagerInput);
+  document
+    .getElementById("tag-manager-input")
+    .addEventListener("input", updateTagManagerAddButtonState);
+  document
+    .getElementById("tag-manager-input")
+    .addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      if (!document.getElementById("add-tag-btn").disabled) {
+        addTagFromManagerInput().catch(() => {});
+      }
+    });
+  document
+    .getElementById("create-lorebook-btn")
+    .addEventListener("click", () => openLoreEditor());
+  document
+    .getElementById("import-lorebook-btn")
+    .addEventListener("click", () =>
+      document.getElementById("import-lorebook-input").click(),
+    );
+  document
+    .getElementById("import-lorebook-input")
+    .addEventListener("change", importLorebookFromFile);
+  document
+    .getElementById("lore-editor-back-btn")
+    .addEventListener("click", closeLoreEditor);
+  document
+    .getElementById("cancel-lore-editor-btn")
+    .addEventListener("click", closeLoreEditor);
+  document
+    .getElementById("add-lore-entry-btn")
+    .addEventListener("click", () => {
+      addLoreEntryEditor();
+      renderLoreEntryEditors();
+    });
+  document
+    .getElementById("save-lorebook-btn")
+    .addEventListener("click", () => saveLorebookFromEditor({ close: true }));
+  document
+    .getElementById("lore-injection-mode")
+    ?.addEventListener("change", toggleSuppressionWindowField);
+
+  function toggleSuppressionWindowField() {
+    const field = document.getElementById("lore-suppression-window-field");
+    const select = document.getElementById("lore-injection-mode");
+    if (field && select) {
+      field.classList.toggle("hidden", select.value !== "once_per_context");
+    }
+  }
+  window.toggleSuppressionWindowField = toggleSuppressionWindowField;
+
+  document
+    .getElementById("create-writing-instruction-btn")
+    .addEventListener("click", () => openWritingInstructionEditor());
+  document
+    .getElementById("cancel-writing-instruction-btn")
+    .addEventListener("click", async () => {
+      if (state.modalDirty["writing-instruction-editor-modal"]) {
+        const action = await openUnsavedChangesDialog();
+        if (action === "back") return;
+        if (action === "close") {
+          setModalDirtyState("writing-instruction-editor-modal", false);
+          closeActiveModal();
+          const parentModal = document.getElementById(
+            "writing-instructions-modal",
+          );
+          if (parentModal) {
+            parentModal.classList.remove("hidden");
+            state.activeModalId = "writing-instructions-modal";
+          }
+          return;
+        }
+        if (action === "save") {
+          const saved = await saveWritingInstruction({ close: true });
+          if (!saved) return;
+        }
+      }
+      closeActiveModal();
+      const parentModal = document.getElementById("writing-instructions-modal");
+      if (parentModal) {
+        parentModal.classList.remove("hidden");
+        state.activeModalId = "writing-instructions-modal";
+      }
+    });
+  document
+    .getElementById("apply-writing-instructions-btn")
+    .addEventListener("click", () => saveWritingInstruction({ close: false }));
+  document
+    .getElementById("save-writing-instructions-btn")
+    .addEventListener("click", () => saveWritingInstruction({ close: true }));
+  document
+    .getElementById("writing-instruction-add-lang-btn")
+    .addEventListener("click", openWritingInstructionLanguageModal);
+  document
+    .getElementById("writing-instruction-language-cancel")
+    .addEventListener("click", closeWritingInstructionLanguageModal);
+  document
+    .getElementById("writing-instruction-language-cancel-x")
+    .addEventListener("click", closeWritingInstructionLanguageModal);
+  document
+    .getElementById("writing-instruction-language-add")
+    .addEventListener("click", addWritingInstructionLanguage);
+  document
+    .getElementById("writing-instruction-name")
+    .addEventListener("input", () => {
+      updateWritingInstructionNameCount();
+      saveActiveWritingInstructionFromForm();
+      updateSaveWritingInstructionButton();
+    });
+  document
+    .getElementById("writing-instruction-text")
+    .addEventListener("input", () => {
+      updateWritingInstructionTextCount();
+      saveActiveWritingInstructionFromForm();
+      updateSaveWritingInstructionButton();
+    });
+  document
+    .getElementById("confirm-yes-btn")
+    .addEventListener("click", () => resolveConfirmDialog(true));
+  document
+    .getElementById("confirm-no-btn")
+    .addEventListener("click", () => resolveConfirmDialog(false));
+  document
+    .getElementById("confirm-cancel-btn")
+    .addEventListener("click", () => resolveConfirmDialog(false));
+  document
+    .getElementById("text-input-save")
+    .addEventListener("click", () => resolveTextInputDialog(true));
+  document
+    .getElementById("text-input-cancel")
+    .addEventListener("click", () => closeActiveModal());
+  document
+    .getElementById("text-input-cancel-x")
+    .addEventListener("click", () => closeActiveModal());
+
+  setupModalTextareas();
+
+  document
+    .getElementById("memory-modal-save")
+    ?.addEventListener("click", async () => {
+      try {
+        const saved = await handleMemoryModalSave();
+        if (saved) {
+          closeActiveModal();
+        }
+      } catch {
+        // errors are handled inside handleMemoryModalSave
+      }
+    });
+
+  const input = document.getElementById("user-input");
+  const chatLog = document.getElementById("chat-log");
+  input.addEventListener("keydown", onInputKeyDown);
+  input.addEventListener("input", () => {
+    if (state.promptHistoryOpen) closePromptHistory();
+    if (
+      state.activeShortcut &&
+      input.value !== state.activeShortcut.initialValue
+    ) {
+      state.activeShortcut = null;
+    }
+    scheduleThreadBudgetIndicatorUpdate();
+    requestAnimationFrame(() => adjustUserInputElementHeight(input));
+  });
+  input.addEventListener("blur", () => {
+    resetUserInputElementHeight(input);
+  });
+  input.addEventListener("focus", () => {
+    requestAnimationFrame(() => adjustUserInputElementHeight(input));
+  });
+  input.addEventListener("click", () => {
+    if (state.promptHistoryOpen) closePromptHistory();
+  });
+  input.addEventListener("dblclick", openPromptHistory);
+  input.addEventListener("pointerup", onInputPointerUp);
+  let scrollLoadTimeout = null;
+  const SCROLL_LOAD_THRESHOLD = 100; // pixels from top to trigger load
+
+  chatLog.addEventListener("scroll", () => {
+    if (state.sending) {
+      state.chatAutoScroll = isChatNearBottom();
+    }
+    maybeProcessUnreadMessagesSeen(true).catch(() => {});
+    updateScrollBottomButtonVisibility();
+    updateUnloadButtonVisibility();
+    if (currentThread) {
+      localStorage.setItem(
+        `rp-thread-scroll-${currentThread.id}`,
+        chatLog.scrollTop,
+      );
+    }
+    // Auto-load more messages when scrolled near top
+    const threshold = state.settings.autoUnloadThreshold || 0;
+    if (threshold > 0 && chatLog.scrollTop < SCROLL_LOAD_THRESHOLD) {
+      const vis = computeVisibleMessageIndices();
+      if (vis.hiddenCount > 0) {
+        // Debounce auto-load to avoid too many rapid loads
+        if (scrollLoadTimeout) clearTimeout(scrollLoadTimeout);
+        scrollLoadTimeout = setTimeout(() => {
+          toggleUnloadBatch().catch(() => {});
+        }, 300);
+      }
+    }
+  });
+  chatLog.addEventListener("click", (e) => {
+    const img = e.target.closest(".message-content img");
+    if (img && img.src) {
+      openImagePreview(img.src);
+    }
+  });
+  requestAnimationFrame(() => adjustUserInputElementHeight(input));
+  window.addEventListener("resize", () => {
+    if (state.promptHistoryOpen) positionPromptHistoryPopover();
+    clearTimeout(state.marqueeRefreshTimer);
+    state.marqueeRefreshTimer = setTimeout(() => {
+      refreshAllHoverMarquees();
+    }, 100);
+  });
+  if (typeof ResizeObserver !== "undefined") {
+    const ro = new ResizeObserver(() => {
+      if (state.promptHistoryOpen) positionPromptHistoryPopover();
+    });
+    ro.observe(input);
+  }
+
+  const chatOpacityToggleBtn = document.getElementById(
+    "chat-opacity-toggle-btn",
+  );
+  chatOpacityToggleBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleChatOpacityOverlay().catch(() => {});
+  });
+  const paginationPrev = document.getElementById("character-pagination-prev");
+  const paginationNext = document.getElementById("character-pagination-next");
+  const paginationSize = document.getElementById("character-pagination-size");
+
+  paginationPrev?.addEventListener("click", () => {
+    if (state.characterPage <= 1) return;
+    state.characterPage -= 1;
+    const grid = document.getElementById("character-grid");
+    if (grid) grid.scrollTo({ top: 0 });
+    renderCharacters();
+  });
+
+  paginationNext?.addEventListener("click", () => {
+    const maxPages = Math.max(1, state.characterTotalPages || 1);
+    if (state.characterPage >= maxPages) return;
+    state.characterPage += 1;
+    const grid = document.getElementById("character-grid");
+    if (grid) grid.scrollTo({ top: 0 });
+    renderCharacters();
+  });
+
+  paginationSize?.addEventListener("change", async (event) => {
+    const value = Number(event.target?.value);
+    if (!CHARACTER_PAGE_SIZES.includes(value)) return;
+    state.characterCardsPerPage = value;
+    state.characterPage = 1;
+    saveUiState();
+    const grid = document.getElementById("character-grid");
+    if (grid) grid.scrollTo({ top: 0 });
+    await renderCharacters();
+  });
+  const chatOpacityOverlay = document.getElementById("chat-opacity-overlay");
+  chatOpacityOverlay?.addEventListener("click", (e) => {
+    if (e.target === chatOpacityOverlay) {
+      e.stopPropagation();
+      toggleChatOpacityOverlay(false).catch(() => {});
+    } else {
+      e.stopPropagation();
+    }
+  });
+  document
+    .getElementById("chat-opacity-overlay-close")
+    ?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleChatOpacityOverlay(false).catch(() => {});
+    });
+  document
+    .getElementById("chat-opacity-slider")
+    ?.addEventListener("input", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const value = Number(target.value);
+      setChatOpacityFromPercent(value);
+    });
+  document.addEventListener("click", onGlobalClick);
+  document.addEventListener("keydown", onGlobalKeyDown);
+
+  document.querySelectorAll("[data-open-modal]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.openModal === "lore-modal") {
+        resetLoreEditorState();
+        renderLorebookManagementList().then(() => openModal(btn.dataset.openModal));
+      } else {
+        openModal(btn.dataset.openModal);
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-close-modal]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const modal = e.target.closest(".modal");
+      if (modal?.id === "writing-instruction-editor-modal") {
+        if (state.modalDirty["writing-instruction-editor-modal"]) {
+          openUnsavedChangesDialog().then((action) => {
+            if (action === "back") return;
+            if (action === "close") {
+              setModalDirtyState("writing-instruction-editor-modal", false);
+              closeActiveModal();
+              const parentModal = document.getElementById(
+                "writing-instructions-modal",
+              );
+              if (parentModal) {
+                parentModal.classList.remove("hidden");
+                state.activeModalId = "writing-instructions-modal";
+              }
+            }
+            if (action === "save") {
+              saveWritingInstruction({ close: true });
+            }
+          });
+        } else {
+          closeActiveModal();
+          const parentModal = document.getElementById(
+            "writing-instructions-modal",
+          );
+          if (parentModal) {
+            parentModal.classList.remove("hidden");
+            state.activeModalId = "writing-instructions-modal";
+          }
+        }
+      } else if (modal?.id === "asset-editor-modal") {
+        if (state.modalDirty["asset-editor-modal"]) {
+          openUnsavedChangesDialog().then((action) => {
+            if (action === "back") return;
+            if (action === "close") {
+              setModalDirtyState("asset-editor-modal", false);
+              closeActiveModal();
+              const parentModal = document.getElementById("assets-modal");
+              if (parentModal) {
+                parentModal.classList.remove("hidden");
+                state.activeModalId = "assets-modal";
+              }
+            }
+            if (action === "save") {
+              saveAssetFromEditor();
+            }
+          });
+        } else {
+          closeActiveModal();
+          const parentModal = document.getElementById("assets-modal");
+          if (parentModal) {
+            parentModal.classList.remove("hidden");
+            state.activeModalId = "assets-modal";
+          }
+        }
+      } else {
+        closeActiveModal();
+      }
+    });
+  });
+
+  document.querySelectorAll(".modal").forEach((modal) => {
+    modal.addEventListener("click", (e) => {
+      if (e.target !== modal) return;
+      if (modal.id === "image-preview-modal") {
+        closeImagePreview();
+      } else if (modal.id === "char-language-modal") {
+        modal.classList.add("hidden");
+      } else if (modal.id === "confirm-modal") {
+        resolveConfirmDialog(false);
+      } else if (modal.id === "unsaved-modal") {
+        resolveUnsavedDialog("back");
+      } else if (
+        modal.id === "memory-modal" &&
+        isMemoryRegeneratePromptOpen()
+      ) {
+        hideMemoryRegeneratePromptModal();
+      } else if (modal.id === "memory-regenerate-prompt-modal") {
+        hideMemoryRegeneratePromptModal();
+      } else if (modal.id === "memory-regenerate-progress-modal") {
+        if (memoryRegenerationInFlight) {
+          openConfirmDialog(
+            t("confirm"),
+            t("memoryRegenerateProgressCancelConfirm"),
+          ).then((confirmed) => {
+            if (confirmed) {
+              hideMemoryRegenerateProgressModal();
+            }
+          });
+        } else {
+          hideMemoryRegenerateProgressModal();
+        }
+      } else {
+        closeActiveModal();
+      }
+    });
+  });
+
+  document
+    .getElementById("unsaved-back-btn")
+    ?.addEventListener("click", () => resolveUnsavedDialog("back"));
+  document
+    .getElementById("unsaved-close-btn")
+    ?.addEventListener("click", () => resolveUnsavedDialog("close"));
+  document
+    .getElementById("unsaved-save-btn")
+    ?.addEventListener("click", () => resolveUnsavedDialog("save"));
+
+  markModalDirtyOnInput("character-modal", [
+    "#char-name",
+    "#char-tagline",
+    "#char-system-prompt",
+    "#char-one-time-extra-prompt",
+    "#char-writing-instructions",
+    "#char-writing-instructions-select",
+    "#char-persona-injection-placement",
+    "#char-use-memory",
+    "#char-use-postprocess",
+    "#char-auto-trigger-first-ai",
+    "#char-auto-title",
+    "#char-auto-title-min-messages",
+    "#char-persona-prefix",
+    "#char-include-ooc",
+    "#char-avatar-scale",
+    "#char-lore-cooldown",
+    "#char-tags-input",
+    "#char-tts-voice",
+    "#char-tts-language",
+    "#char-tts-rate",
+    "#char-tts-pitch",
+    "#char-tts-provider",
+    "#char-tts-kokoro-device",
+    "#char-tts-kokoro-dtype",
+    "#char-tts-kokoro-voice",
+  ]);
+  markModalDirtyOnInput("personas-modal", [
+    "#persona-name",
+    "#persona-avatar",
+    "#persona-description",
+    "#persona-internal-description",
+    "#persona-is-default",
+  ]);
+  markModalDirtyOnInput("persona-editor-modal", [
+    "#persona-editor-name",
+    "#persona-editor-description",
+    "#persona-editor-internal-description",
+    "#persona-editor-is-default",
+    "#persona-editor-color",
+  ]);
+  markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
+  markModalDirtyOnInput("writing-instruction-editor-modal", [
+    "#writing-instruction-name",
+    "#writing-instruction-text",
+  ]);
+  markModalDirtyOnInput("lore-editor-modal", [
+    "#lore-name",
+    "#lore-avatar",
+    "#lore-description",
+    "#lore-scan-depth",
+    "#lore-token-budget",
+    "#lore-recursive-scanning",
+  ]);
+  markModalDirtyOnInput("sfx-editor-modal", [
+    "#sfx-name",
+    "#sfx-type",
+    "#sfx-trigger",
+    "#sfx-eviction",
+    "#sfx-loop",
+    "#sfx-trigger-keywords",
+    "#sfx-trigger-keywords-secondary",
+    "#sfx-trigger-action-pattern",
+    "#sfx-trigger-turn-interval",
+    "#sfx-trigger-cooldown",
+    "#sfx-eviction-keywords",
+    "#sfx-eviction-message-count",
+    "#sfx-volume",
+    "#sfx-fade-in",
+    "#sfx-fade-out",
+    "#sfx-opacity",
+    "#sfx-layer",
+    "#sfx-match-case",
+    "#sfx-match-whole-word",
+  ]);
+  updateModalActionButtons("character-modal");
+  updateNameLengthCounter("char-name", "char-name-count", 128);
+  updateNameLengthCounter("persona-name", "persona-name-count", 64);
+  updateNameLengthCounter(
+    "persona-description",
+    "persona-description-count",
+    100,
+  );
+  updateToastDelayDisplay();
+  setupSettingsTabsLayout();
+}
+
+const textareaCollapseStates = new WeakMap();
+const initialMessageCollapseStateCache = new Map();
+
+function setupModalTextareas(root = document) {
+  const scope = root || document;
+  const selector = scope === document ? ".modal textarea" : "textarea";
+  const textareas = Array.from(scope.querySelectorAll(selector)).filter(
+    (textarea) =>
+      textarea.closest(".modal") && !textarea.classList.contains("hidden"),
+  );
+  textareas.forEach((textarea) => {
+    const baseRows = Number(textarea.getAttribute("rows") || 3);
+    textarea.dataset.baseRows = baseRows;
+    const forceCollapsed = textarea.dataset.forceCollapsed === "1";
+    if (textarea.dataset.collapsible === "1") {
+      autoExpandTextarea(textarea);
+      const stored = textareaCollapseStates.get(textarea);
+      if (stored) {
+        const hasContent = String(textarea.value || "").trim().length > 0;
+        const nextState = forceCollapsed ? false : hasContent;
+        stored.setExpanded(nextState);
+      }
+      return;
+    }
+    textarea.dataset.collapsible = "1";
+    const labelInfo = captureTextareaLabel(textarea);
+    const labelText =
+      labelInfo?.text ||
+      textarea.getAttribute("placeholder") ||
+      textarea.getAttribute("title") ||
+      "Input";
+    if (labelInfo?.element) {
+      labelInfo.element.style.display = "none";
+    }
+    const parent = textarea.parentElement;
+    if (!parent) return;
+    const wrapper = document.createElement("div");
+    wrapper.className = "textarea-collapse";
+    const header = document.createElement("button");
+    header.type = "button";
+    header.className = "textarea-collapse-header";
+    header.setAttribute("aria-expanded", "true");
+    const title = document.createElement("span");
+    title.textContent = labelText;
+    const rightGroup = document.createElement("span");
+    rightGroup.className = "textarea-collapse-header-right";
+    const countEl =
+      textarea.id && document.getElementById(`${textarea.id}-count`);
+    if (countEl) {
+      rightGroup.appendChild(countEl);
+    }
+    const icon = document.createElement("span");
+    icon.className = "textarea-collapse-icon";
+    rightGroup.appendChild(icon);
+    header.append(title, rightGroup);
+    const body = document.createElement("div");
+    body.className = "textarea-collapse-body";
+    parent.insertBefore(wrapper, textarea);
+    wrapper.append(header, body);
+    body.appendChild(textarea);
+    const entry = { header, body, icon };
+    entry.refresh = () => {
+      const hasContent = String(textarea.value || "").trim().length > 0;
+      header.classList.toggle("has-content", hasContent);
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      icon.textContent = expanded ? "▾" : "▴";
+    };
+    const scrollContainer =
+      textarea.closest(".system-prompt-list") ||
+      textarea.closest(".modal-body");
+    entry.setExpanded = (next) => {
+      const current = header.getAttribute("aria-expanded") === "true";
+      if (next === current) {
+        entry.refresh();
+        if (next) autoExpandTextarea(textarea);
+        return;
+      }
+      const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+      header.setAttribute("aria-expanded", next ? "true" : "false");
+      body.classList.toggle("collapsed", !next);
+      if (next) autoExpandTextarea(textarea);
+      entry.refresh();
+      if (scrollContainer && !next) {
+        requestAnimationFrame(() => {
+          scrollContainer.scrollTop = scrollTop;
+        });
+      }
+    };
+    textareaCollapseStates.set(textarea, entry);
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    entry.setExpanded(forceCollapsed ? false : hasContent);
+    refreshTextareaWordCount(textarea);
+
+    // Determine appropriate save function based on modal
+    const modal = textarea.closest(".modal");
+    let saveFn = () => {};
+    if (modal) {
+      if (modal.id === "character-modal") {
+        saveFn = saveCharModalTextareaCollapseStates;
+      } else if (modal.id === "writing-instruction-editor-modal") {
+        saveFn = saveWiEditorTextareaCollapseStates;
+      } else if (modal.id === "settings-modal") {
+        saveFn = saveSettingsPromptingTextareaCollapseStates;
+      }
+    }
+
+    const toggle = () => {
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      entry.setExpanded(!expanded);
+      saveFn();
+    };
+    header.addEventListener("click", toggle);
+    textarea.addEventListener("input", () => {
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        autoExpandTextarea(textarea);
+      }
+      entry.refresh();
+      refreshTextareaWordCount(textarea);
+    });
+    textarea.addEventListener("focus", () => {
+      if (header.getAttribute("aria-expanded") === "true") {
+        autoExpandTextarea(textarea);
+      }
+    });
+  });
+}
+
+function resetModalTextareaCollapseStates(root = document) {
+  if (!root) return;
+  const modal = root.matches?.(".modal") ? root : root.closest?.(".modal");
+  if (modal?.id === "character-modal") return;
+  if (modal?.id === "memory-modal") return;
+  if (modal?.id === "writing-instruction-editor-modal") return;
+  root.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const state = textareaCollapseStates.get(textarea);
+    if (!state) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    const forceCollapsed = textarea.dataset.forceCollapsed === "1";
+    state.setExpanded(forceCollapsed ? false : hasContent);
+  });
+}
+
+function getCharModalCollapseStorageKey() {
+  const botId = state.editingCharacterId || "new";
+  const lang = state.charModalActiveLanguage || "en";
+  return `rp-char-collapse-${botId}-${lang}`;
+}
+
+function getInitialMessageCollapseStorageKey(language) {
+  if (!language) return null;
+  const namespace =
+    state.charModalDraftNamespace ||
+    (state.editingCharacterId
+      ? `char-${state.editingCharacterId}`
+      : "new");
+  return `rp-char-initial-msg-collapse-${namespace}-${language}`;
+}
+
+function loadInitialMessageCollapseStates(language) {
+  const key = getInitialMessageCollapseStorageKey(language);
+  if (!key) return [];
+  if (initialMessageCollapseStateCache.has(key)) {
+    return initialMessageCollapseStateCache.get(key);
+  }
+  let parsed = [];
+  const raw = localStorage.getItem(key);
+  if (raw) {
+    try {
+      const value = JSON.parse(raw);
+      if (Array.isArray(value)) {
+        parsed = value;
+      }
+    } catch {
+      parsed = [];
+    }
+  }
+  initialMessageCollapseStateCache.set(key, parsed);
+  return parsed;
+}
+
+function persistInitialMessageCollapseStates(language, states) {
+  const key = getInitialMessageCollapseStorageKey(language);
+  if (!key) return;
+  const normalized = Array.isArray(states) ? [...states] : [];
+  initialMessageCollapseStateCache.set(key, normalized);
+  localStorage.setItem(key, JSON.stringify(normalized));
+}
+
+function updateInitialMessageCollapseState(language, index, expanded) {
+  if (!language) return;
+  const states = loadInitialMessageCollapseStates(language);
+  states[index] = expanded;
+  persistInitialMessageCollapseStates(language, states);
+}
+
+function trimInitialMessageCollapseStates(language, length) {
+  if (!language || length < 0) return;
+  const states = loadInitialMessageCollapseStates(language);
+  if (states.length > length) {
+    states.length = length;
+    persistInitialMessageCollapseStates(language, states);
+  }
+}
+
+function saveCharModalTextareaCollapseStates() {
+  const key = getCharModalCollapseStorageKey();
+  const states = {};
+  const scrollStates = {};
+  const modal = document.getElementById("character-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    states[textarea.id] = expanded;
+    scrollStates[textarea.id] = textarea.scrollTop;
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+  localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
+  // Save modal body scroll position
+  const modalBody = modal.querySelector(".modal-body");
+  if (modalBody) {
+    localStorage.setItem(`${key}-modal-scroll`, String(modalBody.scrollTop));
+  }
+  const language = state.charModalActiveLanguage;
+  if (language) {
+    persistInitialMessageCollapseStates(language, loadInitialMessageCollapseStates(language));
+  }
+}
+
+function restoreCharModalTextareaCollapseStates() {
+  const key = getCharModalCollapseStorageKey();
+  const raw = localStorage.getItem(key);
+  const scrollRaw = localStorage.getItem(`${key}-scroll`);
+  const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
+  const modal = document.getElementById("character-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (raw) {
+      try {
+        const states = JSON.parse(raw);
+        if (states[textarea.id] !== undefined) {
+          entry.setExpanded(states[textarea.id]);
+        } else {
+          entry.setExpanded(hasContent);
+        }
+      } catch {
+        entry.setExpanded(hasContent);
+      }
+    } else {
+      entry.setExpanded(hasContent);
+    }
+    if (scrollStates[textarea.id] !== undefined) {
+      textarea.scrollTop = scrollStates[textarea.id];
+    }
+  });
+  // Restore modal body scroll position
+  const modalScrollKey = `${key}-modal-scroll`;
+  const savedModalScroll = localStorage.getItem(modalScrollKey);
+  if (savedModalScroll !== null) {
+    const modalBody = modal.querySelector(".modal-body");
+    if (modalBody) {
+      modalBody.scrollTop = Number(savedModalScroll);
+    }
+  }
+}
+
+function savePersonaEditorTextareaCollapseStates() {
+  const personaId = state_editingPersonaId;
+  if (!personaId) return;
+  const key = `rp-persona-collapse-${personaId}`;
+  const states = {};
+  const modal = document.getElementById("persona-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    states[textarea.id] = expanded;
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+}
+
+function restorePersonaEditorTextareaCollapseStates(personaId) {
+  if (!personaId) return;
+  const key = `rp-persona-collapse-${personaId}`;
+  const raw = localStorage.getItem(key);
+  const modal = document.getElementById("persona-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (raw) {
+      try {
+        const states = JSON.parse(raw);
+        if (states[textarea.id] !== undefined) {
+          entry.setExpanded(states[textarea.id]);
+        } else {
+          entry.setExpanded(hasContent);
+        }
+      } catch {
+        entry.setExpanded(hasContent);
+      }
+    } else {
+      entry.setExpanded(hasContent);
+    }
+  });
+}
+
+function saveSettingsPromptingTextareaCollapseStates() {
+  const key = "rp-settings-prompting-collapse";
+  const states = {};
+  const scrollStates = {};
+  const modal = document.getElementById("settings-modal");
+  if (!modal) return;
+  const panel = modal.querySelector('[data-settings-tab-panel="prompting"]');
+  if (!panel) return;
+  panel.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    states[textarea.id] = expanded;
+    scrollStates[textarea.id] = textarea.scrollTop;
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+  localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
+}
+
+function restoreSettingsPromptingTextareaCollapseStates() {
+  const key = "rp-settings-prompting-collapse";
+  const raw = localStorage.getItem(key);
+  const scrollRaw = localStorage.getItem(`${key}-scroll`);
+  const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
+  const modal = document.getElementById("settings-modal");
+  if (!modal) return;
+  const panel = modal.querySelector('[data-settings-tab-panel="prompting"]');
+  if (!panel) return;
+  panel.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (raw) {
+      try {
+        const states = JSON.parse(raw);
+        if (states[textarea.id] !== undefined) {
+          entry.setExpanded(states[textarea.id]);
+        } else {
+          entry.setExpanded(hasContent);
+        }
+      } catch {
+        entry.setExpanded(hasContent);
+      }
+    } else {
+      entry.setExpanded(hasContent);
+    }
+    if (scrollStates[textarea.id] !== undefined) {
+      textarea.scrollTop = scrollStates[textarea.id];
+    }
+  });
+}
+
+function getWiEditorCollapseStorageKey() {
+  const wiId = state_writingInstructions.editingId || "new";
+  const lang = state_writingInstructions.activeLanguage || "en";
+  return `rp-wi-collapse-${wiId}-${lang}`;
+}
+
+function saveWiEditorTextareaCollapseStates() {
+  const key = getWiEditorCollapseStorageKey();
+  const states = {};
+  const scrollStates = {};
+  const modal = document.getElementById("writing-instruction-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    states[textarea.id] = expanded;
+    scrollStates[textarea.id] = textarea.scrollTop;
+  });
+  localStorage.setItem(key, JSON.stringify(states));
+  localStorage.setItem(`${key}-scroll`, JSON.stringify(scrollStates));
+}
+
+function restoreWiEditorTextareaCollapseStates() {
+  const key = getWiEditorCollapseStorageKey();
+  const raw = localStorage.getItem(key);
+  const scrollRaw = localStorage.getItem(`${key}-scroll`);
+  const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
+  const modal = document.getElementById("writing-instruction-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (raw) {
+      try {
+        const states = JSON.parse(raw);
+        if (states[textarea.id] !== undefined) {
+          entry.setExpanded(states[textarea.id]);
+        } else {
+          entry.setExpanded(hasContent);
+        }
+      } catch {
+        entry.setExpanded(hasContent);
+      }
+    } else {
+      entry.setExpanded(hasContent);
+    }
+    if (scrollStates[textarea.id] !== undefined) {
+      textarea.scrollTop = scrollStates[textarea.id];
+    }
+  });
+}
+
+function captureTextareaLabel(textarea) {
+  const parent = textarea.parentElement;
+  if (!parent) return null;
+  const children = Array.from(parent.children);
+  const idx = children.indexOf(textarea);
+  for (let i = idx - 1; i >= 0; i -= 1) {
+    const el = children[i];
+    if (!el) continue;
+    const match = getLabelFromElement(el);
+    if (match) return match;
+  }
+  return null;
+}
+
+function getLabelFromElement(el) {
+  if (!el) return null;
+  if (el.matches("span, label")) {
+    const text = String(el.textContent || "").trim();
+    if (text && !/^\d+\/\d+$/.test(text)) {
+      return { element: el, text };
+    }
+  }
+  if (el.matches(".label-inline, .writing-instructions-header")) {
+    const span = el.querySelector("span");
+    if (span) {
+      const text = String(span.textContent || "").trim();
+      if (text && !/^\d+\/\d+$/.test(text)) {
+        return { element: span, text };
+      }
+    }
+  }
+  return null;
+}
+
+function autoExpandTextarea(textarea) {
+  if (!textarea) return;
+  const scrollContainer =
+    textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
+  const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+  textarea.style.height = "auto";
+  textarea.style.overflow = "hidden";
+  textarea.style.resize = "none";
+  const computed = window.getComputedStyle(textarea);
+  const lineHeight = parseFloat(computed.lineHeight) || 24;
+  const baseRows = Number(textarea.dataset.baseRows) || 4;
+  const minHeight = Math.max(
+    Number(textarea.dataset.minHeight) || 0,
+    lineHeight * baseRows,
+  );
+  textarea.dataset.minHeight = minHeight;
+  const applyHeight = () => {
+    const newHeight = Math.max(textarea.scrollHeight, minHeight);
+    textarea.style.height = `${newHeight}px`;
+  };
+  applyHeight();
+  if (textarea.scrollHeight === 0) {
+    requestAnimationFrame(() => {
+      applyHeight();
+      if (scrollContainer) {
+        requestAnimationFrame(() => {
+          scrollContainer.scrollTop = scrollTop;
+        });
+      }
+    });
+  } else if (scrollContainer) {
+    requestAnimationFrame(() => {
+      scrollContainer.scrollTop = scrollTop;
+    });
+  }
+}
+
+function updateNameLengthCounter(inputId, counterId, maxLen = 128) {
+  const input = document.getElementById(inputId);
+  const counter = document.getElementById(counterId);
+  if (!input || !counter) return;
+  let value = String(input.value || "");
+  if (value.length > maxLen) {
+    value = value.slice(0, maxLen);
+    input.value = value;
+  }
+  counter.textContent = `${value.length}/${maxLen}`;
+}
+
+function normalizeTagValue(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseTagList(value) {
+  return String(value || "")
+    .split(",")
+    .map((v) => normalizeTagValue(v))
+    .filter(Boolean)
+    .filter(
+      (v, i, arr) =>
+        arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i,
+    );
+}
+
+function formatTagList(tags) {
+  return (Array.isArray(tags) ? tags : [])
+    .map((t) => normalizeTagValue(t))
+    .filter(Boolean)
+    .join(", ");
+}
+
+function normalizeInitialMessageRole(role) {
+  const normalized = normalizeApiRole(role);
+  if (
+    normalized !== "system" &&
+    normalized !== "user" &&
+    normalized !== "assistant"
+  ) {
+    return null;
+  }
+  return normalized;
+}
+
+function parseInitialMessagesInput(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return { raw: "", messages: [] };
+  const parsedAsTagged = parseTaggedInitialMessages(text);
+  if (parsedAsTagged.messages.length > 0) {
+    return parsedAsTagged;
+  }
+
+  // Free-text fallback: no role tags found, treat everything as one assistant message.
+  const singleAssistantFallback = () => ({
+    raw: text,
+    messages: [
+      {
+        role: "assistant",
+        apiRole: "assistant",
+        content: text,
+      },
+    ],
+  });
+
+  // Backward compatibility for old JSON-based initial message definitions.
+  let parsed = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return singleAssistantFallback();
+  }
+  const arr = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed?.messages)
+      ? parsed.messages
+      : null;
+  if (!arr) {
+    return singleAssistantFallback();
+  }
+  const messages = [];
+  arr.forEach((entry, idx) => {
+    if (!entry || typeof entry !== "object") {
+      throw new Error(`Initial message #${idx + 1} must be an object.`);
+    }
+    const role = normalizeInitialMessageRole(entry.role || entry.apiRole);
+    if (!role) {
+      throw new Error(
+        `Initial message #${idx + 1} has invalid role. Use system, user, or assistant.`,
+      );
+    }
+    const content = normalizeContentParts(entry.content);
+    if (!String(content || "").trim()) return;
+    messages.push({
+      role,
+      apiRole: role,
+      content: String(content),
+    });
+  });
+  return { raw: text, messages };
+}
+
+function parseTaggedInitialMessages(text) {
+  const lines = String(text || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n");
+  const roleLinePattern =
+    /^\s*\[(AI|BOT|ASSISTANT|USER|SYSTEM)\]\s*:?\s*(.*)$/i;
+  const messages = [];
+  const leadingLines = [];
+  let sawRoleTag = false;
+  let current = null;
+
+  const pushCurrent = () => {
+    if (!current) return;
+    const content = current.lines.join("\n").trim();
+    if (content) {
+      messages.push({
+        role: current.role,
+        apiRole: current.role,
+        content,
+      });
+    }
+    current = null;
+  };
+
+  lines.forEach((line) => {
+    const match = line.match(roleLinePattern);
+    if (!match) {
+      if (current) current.lines.push(line);
+      else if (!sawRoleTag) leadingLines.push(line);
+      return;
+    }
+
+    sawRoleTag = true;
+    pushCurrent();
+    const rawRole = String(match[1] || "").toLowerCase();
+    const role =
+      rawRole === "ai" || rawRole === "bot" || rawRole === "assistant"
+        ? "assistant"
+        : rawRole === "system"
+          ? "system"
+          : "user";
+    current = {
+      role,
+      lines: [String(match[2] || "")],
+    };
+  });
+
+  pushCurrent();
+  const leadingContent = leadingLines.join("\n").trim();
+  if (sawRoleTag && leadingContent) {
+    messages.unshift({
+      role: "assistant",
+      apiRole: "assistant",
+      content: leadingContent,
+    });
+  }
+  return { raw: text, messages };
+}
+
+function formatInitialMessagesForEditor(messages) {
+  const list = Array.isArray(messages) ? messages : [];
+  if (list.length === 0) return "";
+  return list
+    .map((m) => {
+      const role = normalizeApiRole(m?.apiRole || m?.role);
+      const label =
+        role === "assistant" ? "AI" : role === "system" ? "SYSTEM" : "USER";
+      const content = String(m?.content || "");
+      return `[${label}]: ${content}`;
+    })
+    .join("\n\n");
+}
+
+function replaceInitialMessagePlaceholders(content, personaName, charName) {
+  return String(content || "")
+    .replace(/\{\{\s*user\s*\}\}/gi, personaName || "You")
+    .replace(/\{\{\s*char\s*\}\}/gi, charName || "Character");
+}
+
+async function buildThreadInitialMessages(character) {
+  const source = Array.isArray(character?.initialMessages)
+    ? character.initialMessages
+    : [];
+  const defaultPersona = await getCharacterDefaultPersona();
+  const personaName = defaultPersona?.name || "You";
+  const charName = character?.name || "Character";
+  const now = Date.now();
+  return source.map((m, i) => {
+    const role = normalizeInitialMessageRole(m?.role || m?.apiRole) || "user";
+    const content = replaceInitialMessagePlaceholders(
+      String(m?.content || ""),
+      personaName,
+      charName,
+    );
+    const payload = {
+      role,
+      apiRole: role,
+      content,
+      createdAt: now + i,
+      isInitial: true,
+      initialMessageIndex: i,
+    };
+    if (role === "user") {
+      payload.senderName = personaName;
+      payload.senderAvatar = defaultPersona?.avatar || "";
+      payload.senderPersonaId = defaultPersona?.id || null;
+    }
+    return payload;
+  });
+}
+
+function shouldAutoReplyFromInitialMessages(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return false;
+  const last = messages[messages.length - 1];
+  return normalizeApiRole(last?.apiRole || last?.role) === "user";
+}
+
+function getAllAvailableTags() {
+  const tags = (
+    Array.isArray(state.settings.customTags) ? state.settings.customTags : []
+  )
+    .map((t) => normalizeTagValue(t))
+    .filter(Boolean);
+  const unique = tags.filter(
+    (t, i, arr) =>
+      arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i,
+  );
+  return unique.sort((a, b) => a.localeCompare(b));
+}
+
+async function renameTagAcrossCharacters(oldTag, newTag) {
+  const normalizedOld = normalizeTagValue(oldTag);
+  const normalizedNew = normalizeTagValue(newTag);
+  if (!normalizedOld || !normalizedNew) return;
+  const lowerOld = normalizedOld.toLowerCase();
+  const newTagValue = normalizedNew;
+
+  state.characterTagFilters = state.characterTagFilters.map((filter) =>
+    String(filter || "").toLowerCase() === lowerOld ? newTagValue : filter,
+  );
+
+  const allCharacters = await db.characters.toArray();
+  for (const character of allCharacters) {
+    const tags = Array.isArray(character.tags) ? [...character.tags] : [];
+    let replaced = false;
+    const nextTags = tags.map((tag) => {
+      if (String(tag || "").toLowerCase() === lowerOld) {
+        replaced = true;
+        return newTagValue;
+      }
+      return tag;
+    });
+    if (!replaced) continue;
+    await db.characters.update(character.id, { tags: nextTags });
+    if (
+      currentCharacter &&
+      Number(currentCharacter.id) === Number(character.id)
+    ) {
+      currentCharacter.tags = nextTags;
+    }
+  }
+}
+
+function mergeTagsIntoCatalog(tags) {
+  const incoming = (Array.isArray(tags) ? tags : [])
+    .map((t) => normalizeTagValue(t))
+    .filter(Boolean);
+  if (incoming.length === 0) return false;
+  const existing = Array.isArray(state.settings.customTags)
+    ? state.settings.customTags.map((t) => normalizeTagValue(t)).filter(Boolean)
+    : [];
+  const lowerSet = new Set(existing.map((t) => t.toLowerCase()));
+  let changed = false;
+  incoming.forEach((tag) => {
+    const lower = tag.toLowerCase();
+    if (lowerSet.has(lower)) return;
+    existing.push(tag);
+    lowerSet.add(lower);
+    changed = true;
+  });
+  if (!changed) return false;
+  state.settings.customTags = existing;
+  state.settings.tagsInitialized = true;
+  saveSettings();
+  return true;
+}
+
+function setCharacterTagsInputValue(tags) {
+  const input = document.getElementById("char-tags-input");
+  if (!input) return;
+  input.value = formatTagList(tags);
+}
+
+function getCharacterTagsFromModal() {
+  return parseTagList(document.getElementById("char-tags-input")?.value || "");
+}
+
+function renderTagPresetsDataList() {
+  const dl = document.getElementById("tag-presets");
+  if (!dl) return;
+  dl.innerHTML = "";
+  getAllAvailableTags().forEach((tag) => {
+    const opt = document.createElement("option");
+    opt.value = tag;
+    dl.appendChild(opt);
+  });
+}
+
+function toggleModalTag(tag) {
+  const tags = getCharacterTagsFromModal();
+  const lower = tag.toLowerCase();
+  const exists = tags.some((t) => t.toLowerCase() === lower);
+  const next = exists
+    ? tags.filter((t) => t.toLowerCase() !== lower)
+    : [...tags, tag];
+  setCharacterTagsInputValue(next);
+  renderCharacterTagPresetButtons();
+  setModalDirtyState("character-modal", true);
+}
+
+function renderCharacterTagPresetButtons() {
+  const container = document.getElementById("char-tags-presets");
+  if (!container) return;
+  const active = new Set(
+    getCharacterTagsFromModal().map((t) => t.toLowerCase()),
+  );
+  container.innerHTML = "";
+  getAllAvailableTags().forEach((tag) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tag-chip-btn";
+    if (active.has(tag.toLowerCase())) btn.classList.add("active");
+    btn.textContent = tag;
+    btn.addEventListener("click", () => toggleModalTag(tag));
+    container.appendChild(btn);
+  });
+}
+
+async function removeCharacterTagFilter(tag) {
+  const lower = String(tag || "").toLowerCase();
+  state.characterTagFilters = state.characterTagFilters.filter(
+    (t) => t.toLowerCase() !== lower,
+  );
+  saveUiState();
+  renderCharacterTagFilterChips();
+  state.characterPage = 1;
+  await renderCharacters();
+}
+
+async function toggleCharacterTagFilter(tag) {
+  const normalized = normalizeTagValue(tag);
+  if (!normalized) return;
+  const lower = normalized.toLowerCase();
+  const exists = state.characterTagFilters.some(
+    (t) => t.toLowerCase() === lower,
+  );
+  if (exists) {
+    state.characterTagFilters = state.characterTagFilters.filter(
+      (t) => t.toLowerCase() !== lower,
+    );
+  } else {
+    state.characterTagFilters.push(normalized);
+  }
+  saveUiState();
+  renderCharacterTagFilterChips();
+  state.characterPage = 1;
+  await renderCharacters();
+}
+
+async function updateCharacterCardsVisibility() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const characters = await db.characters.toArray();
+  const activeFilters = Array.isArray(state.characterTagFilters)
+    ? state.characterTagFilters.map((t) => t.toLowerCase())
+    : [];
+  const cards = grid.querySelectorAll(".character-card");
+  cards.forEach((card) => {
+    const charId = card.dataset.characterId;
+    const char = characters.find((c) => Number(c.id) === Number(charId));
+    if (!char) {
+      card.style.display = "none";
+      return;
+    }
+    const tags = Array.isArray(char.tags)
+      ? char.tags.map((t) => String(t || "").toLowerCase())
+      : [];
+    const shouldShow =
+      activeFilters.length === 0 ||
+      activeFilters.every((f) => tags.includes(f));
+    card.style.display = shouldShow ? "" : "none";
+
+    const tagChips = card.querySelectorAll(".character-tags .tag-chip");
+    tagChips.forEach((chip) => {
+      const chipText = chip.textContent.toLowerCase();
+      if (activeFilters.includes(chipText)) {
+        chip.classList.add("active-filter");
+      } else {
+        chip.classList.remove("active-filter");
+      }
+    });
+  });
+  const empty = grid.querySelector(".muted");
+  const visibleCards = grid.querySelectorAll(
+    ".character-card:not([style*='display: none'])",
+  );
+  if (visibleCards.length === 0) {
+    if (!empty) {
+      const emptyMsg = document.createElement("p");
+      emptyMsg.className = "muted";
+      emptyMsg.textContent =
+        activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+      grid.appendChild(emptyMsg);
+    } else {
+      empty.textContent =
+        activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+    }
+  } else if (empty) {
+    empty.remove();
+  }
+}
+
+function getCharacterSortParts(sortMode) {
+  const raw = String(sortMode || "updated_desc");
+  const m = raw.match(/^(created|updated|name|threads)_(asc|desc)$/);
+  if (m) return { base: m[1], dir: m[2] };
+  return { base: "updated", dir: "desc" };
+}
+
+function updateCharacterFiltersToggleUi() {
+  const filters = document.getElementById("character-filters");
+  const btn = document.getElementById("character-filters-toggle");
+  if (!filters || !btn) return;
+  const collapsed = filters.classList.contains("collapsed");
+  btn.innerHTML = collapsed ? "&#9660;" : "&#9650;";
+}
+
+function getCharacterSortIconUrl(base) {
+  const raw =
+    CHARACTER_SORT_ICON_TEMPLATES[base] ||
+    CHARACTER_SORT_ICON_TEMPLATES.updated;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(raw)}`;
+}
+
+function getNextCharacterSortBase(current = "updated") {
+  const index = CHARACTER_SORT_BASES.indexOf(current);
+  if (index === -1) return CHARACTER_SORT_BASES[0];
+  return CHARACTER_SORT_BASES[(index + 1) % CHARACTER_SORT_BASES.length];
+}
+
+function updateCharacterSortButton() {
+  const btn = document.getElementById("character-sort-btn");
+  const icon = document.getElementById("character-sort-icon");
+  if (!btn || !icon) return;
+  const parts = getCharacterSortParts(state.characterSortMode);
+  const labelKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
+  const label = t(labelKey);
+  icon.src = getCharacterSortIconUrl(parts.base);
+  icon.alt = label;
+  btn.setAttribute("aria-label", label);
+}
+
+function renderCharacterTagFilterChips() {
+  const chips = document.getElementById("character-tag-filter-chips");
+  const cue = document.getElementById("character-filter-active-cue");
+  const sortBtn = document.getElementById("character-sort-btn");
+  const sortDirBtn = document.getElementById("character-sort-dir-btn");
+  const sortParts = getCharacterSortParts(state.characterSortMode);
+  if (sortDirBtn) {
+    const isDesc = sortParts.dir === "desc";
+    sortDirBtn.innerHTML = isDesc ? "&#8595;" : "&#8593;";
+    sortDirBtn.setAttribute(
+      "title",
+      isDesc ? t("sortDescending") : t("sortAscending"),
+    );
+  }
+  updateCharacterSortButton();
+  updateCharacterFiltersToggleUi();
+  if (!chips || !cue) return;
+  chips.innerHTML = "";
+  const selectedFilters = Array.isArray(state.characterTagFilters)
+    ? state.characterTagFilters
+    : [];
+  cue.classList.toggle("hidden", selectedFilters.length === 0);
+
+  const allTags = getAllAvailableTags();
+  if (allTags.length === 0) return;
+
+  const isExpanded = state.expandedCharacterTagFilters === true;
+  const chipsWrap = document.createElement("div");
+  chipsWrap.className = "filter-chips-overflow";
+  if (isExpanded) chipsWrap.classList.add("expanded");
+
+  allTags.forEach((tag) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "tag-chip";
+    if (
+      selectedFilters.some((f) => String(f).toLowerCase() === tag.toLowerCase())
+    ) {
+      chip.classList.add("active-filter");
+    }
+    chip.textContent = tag;
+    chip.addEventListener("click", () => toggleCharacterTagFilter(tag));
+    chipsWrap.appendChild(chip);
+  });
+  chips.appendChild(chipsWrap);
+  const moreBtn = document.createElement("button");
+  moreBtn.type = "button";
+  moreBtn.className = "tag-more-btn filter-tag-more-btn hidden";
+  chips.appendChild(moreBtn);
+  const refreshMore = () => {
+    const overflow = chipsWrap.scrollHeight > chipsWrap.clientHeight + 1;
+    if (!overflow && !isExpanded) {
+      moreBtn.classList.add("hidden");
+      return;
+    }
+    moreBtn.classList.remove("hidden");
+    moreBtn.textContent = isExpanded ? t("less") : t("more");
+  };
+  moreBtn.addEventListener("click", () => {
+    state.expandedCharacterTagFilters = !isExpanded;
+    saveUiState();
+    renderCharacterTagFilterChips();
+  });
+  requestAnimationFrame(refreshMore);
+}
+
+function handleMemoryCommandFromInput(input, raw = "") {
+  if (!input) return false;
+  const trimmedValue = String(raw || input.value || "").trim();
+  if (trimmedValue !== "/mem") return false;
+  const threadId = currentThread?.id ?? null;
+  if (!addPromptCommandEntry(threadId, trimmedValue)) {
+    // Duplicate or excluded
+  }
+  openMemoryModal().catch(() => {});
+  if (!raw) {
+    input.value = "";
+  }
+  requestAnimationFrame(() => {
+    adjustUserInputElementHeight(input);
+  });
+  return true;
+}
+
+function onInputKeyDown(e) {
+  const input = e.currentTarget;
+  if (state.settings.autoPairEnabled !== false) {
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      const pairs = {
+        "(": ")",
+        "[": "]",
+        "{": "}",
+        '"': '"',
+        _: "_",
+        "`": "`",
+        "*": "*",
+      };
+      const closeChar = pairs[e.key];
+      if (closeChar) {
+        const start = input.selectionStart ?? 0;
+        const end = input.selectionEnd ?? 0;
+        const selected = input.value.slice(start, end);
+        e.preventDefault();
+        if (selected) {
+          input.setRangeText(
+            `${e.key}${selected}${closeChar}`,
+            start,
+            end,
+            "end",
+          );
+          input.setSelectionRange(start + 1, end + 1);
+        } else {
+          input.setRangeText(`${e.key}${closeChar}`, start, end, "end");
+          input.setSelectionRange(start + 1, start + 1);
+        }
+        return;
+      }
+    }
+  }
+  if (e.key !== "Enter") return;
+  if (handleMemoryCommandFromInput(input)) {
+    e.preventDefault();
+    return;
+  }
+  const enterToSend = state.settings.enterToSendEnabled !== false;
+  if (enterToSend) {
+    if (!e.shiftKey && !e.ctrlKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+    return;
+  }
+  if (e.ctrlKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function onInputPointerUp() {
+  const now = Date.now();
+  if (now - state.lastTapAt < 280) {
+    openPromptHistory();
+  }
+  state.lastTapAt = now;
+}
+
+function onGlobalClick(e) {
+  const popover = document.getElementById("prompt-history-popover");
+  const input = document.getElementById("user-input");
+  if (
+    state.promptHistoryOpen &&
+    !popover.contains(e.target) &&
+    e.target !== input
+  ) {
+    closePromptHistory();
+  }
+  const overlay = document.getElementById("chat-opacity-overlay");
+  const overlayButton = document.getElementById("chat-opacity-toggle-btn");
+  if (
+    state.chatOpacityOverlayVisible &&
+    overlay &&
+    !overlay.contains(e.target) &&
+    e.target !== overlayButton
+  ) {
+    toggleChatOpacityOverlay(false).catch(() => {});
+  }
+}
+
+function onGlobalKeyDown(e) {
+  if (matchShortcutEvent(e, state.settings.cancelShortcut)) {
+    e.preventDefault();
+    cancelOngoingGeneration();
+    return;
+  }
+  if (matchShortcutEvent(e, state.settings.homeShortcut)) {
+    e.preventDefault();
+    triggerGoHomeShortcut();
+    return;
+  }
+  if (matchShortcutEvent(e, state.settings.newCharacterShortcut)) {
+    e.preventDefault();
+    triggerNewCharacterShortcut();
+    return;
+  }
+  if (e.key === "Escape") {
+    if (state.chatOpacityOverlayVisible) {
+      toggleChatOpacityOverlay(false).catch(() => {});
+      return;
+    }
+    if (cancelActiveMessageEdit()) return;
+    closePromptHistory();
+    closeAnyOpenModal();
+  }
+}
+
+function closeAnyOpenModal() {
+  const imagePreviewModal = document.getElementById("image-preview-modal");
+  if (imagePreviewModal && !imagePreviewModal.classList.contains("hidden")) {
+    closeImagePreview();
+    return;
+  }
+
+  const confirmModal = document.getElementById("confirm-modal");
+  if (confirmModal && !confirmModal.classList.contains("hidden")) {
+    resolveConfirmDialog(false);
+    return;
+  }
+
+  const textInputModal = document.getElementById("text-input-modal");
+  if (textInputModal && !textInputModal.classList.contains("hidden")) {
+    closeActiveModal();
+    return;
+  }
+
+  const charLanguageModal = document.getElementById("char-language-modal");
+  if (charLanguageModal && !charLanguageModal.classList.contains("hidden")) {
+    charLanguageModal.classList.add("hidden");
+    return;
+  }
+
+  if (state.activeModalId) {
+    closeActiveModal();
+    return;
+  }
+
+  const visibleModals = Array.from(
+    document.querySelectorAll(".modal:not(.hidden)"),
+  );
+  if (visibleModals.length > 0) {
+    const topMost = visibleModals[visibleModals.length - 1];
+    topMost.classList.add("hidden");
+  }
+}
+
+async function setupSettingsControls() {
+  // Apply saved theme early
+  try {
+    await applySavedTheme();
+  } catch (e) {
+    console.warn("Theme initialization failed:", e);
+  }
+  // Seed additional built-in themes
+  await seedAdditionalThemes();
+
+  const settingsVersionEl = document.getElementById("settings-version");
+  if (settingsVersionEl && typeof CONFIG.version === "string") {
+    settingsVersionEl.textContent = CONFIG.version;
+  }
+
+  const uiLanguageSelect = document.getElementById("ui-language-select");
+  const aiProviderSelect = document.getElementById("ai-provider-select");
+  const openRouterApiKey = document.getElementById("openrouter-api-key");
   
+  // Skip if settings modal not loaded (snippets not yet loaded)
   if (!openRouterApiKey) return;
   
+  const hordeApiKey = document.getElementById("horde-api-key");
+  const hordeApiMethod = document.getElementById("horde-api-method");
+  const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
+  const lmstudioApiMethod = document.getElementById("lmstudio-api-method");
+  const groqApiKey = document.getElementById("groq-api-key");
+  const modelSelect = document.getElementById("model-select");
+  const modelPricingFilter = document.getElementById("model-pricing-filter");
+  const modelModalityFilter = document.getElementById("model-modality-filter");
+  const modelSortOrder = document.getElementById("model-sort-order");
+  const modelRefreshBtn = document.getElementById("model-refresh-btn");
+  const modelSelectedMeta = document.getElementById("model-selected-meta");
+  const maxTokensSlider = document.getElementById("max-tokens-slider");
+  const maxTokensValue = document.getElementById("max-tokens-value");
+  const temperatureSlider = document.getElementById("temperature-slider");
+  const temperatureValue = document.getElementById("temperature-value");
+  const topPSlider = document.getElementById("top-p-slider");
+  const topPValue = document.getElementById("top-p-value");
+  const frequencyPenaltySlider = document.getElementById(
+    "frequency-penalty-slider",
+  );
+  const frequencyPenaltyValue = document.getElementById(
+    "frequency-penalty-value",
+  );
+  const presencePenaltySlider = document.getElementById(
+    "presence-penalty-slider",
+  );
+  const presencePenaltyValue = document.getElementById(
+    "presence-penalty-value",
+  );
+  const stopStringsInput = document.getElementById("stop-strings");
+  const toastDelaySlider = document.getElementById("toast-delay-slider");
+  const toastDelayValue = document.getElementById("toast-delay-value");
+  const marqueeBehaviorSelect = document.getElementById(
+    "marquee-behavior-select",
+  );
+  const lockMemoryMessages = document.getElementById("lock-memory-messages");
+  const summaryThresholdInput = document.getElementById("summary-threshold");
+  const memoryMessagesToKeepInput = document.getElementById(
+    "memory-messages-to-keep",
+  );
+  const memorySlotsInput = document.getElementById("memory-slots");
+  renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
+  if (uiLanguageSelect) {
+    uiLanguageSelect.querySelector('option[value="auto"]').textContent =
+      t("languageAuto");
+    uiLanguageSelect.querySelector('option[value="en"]').textContent =
+      t("languageEnglish");
+    uiLanguageSelect.querySelector('option[value="fr"]').textContent =
+      t("languageFrench");
+    uiLanguageSelect.querySelector('option[value="it"]').textContent =
+      t("languageItalian");
+    uiLanguageSelect.querySelector('option[value="de"]').textContent =
+      t("languageGerman");
+    uiLanguageSelect.querySelector('option[value="es"]').textContent =
+      t("languageSpanish");
+    uiLanguageSelect.querySelector('option[value="pt-BR"]').textContent = t(
+      "languagePortugueseBr",
+    );
+    uiLanguageSelect.value = state.settings.uiLanguage || "auto";
+    if (!uiLanguageSelect.value) uiLanguageSelect.value = "auto";
+  }
+
+  const sttLanguageSelect = document.getElementById("stt-language-select");
+  if (sttLanguageSelect) {
+    sttLanguageSelect.value = state.settings.sttLanguage || "en";
+    if (!sttLanguageSelect.value) sttLanguageSelect.value = "en";
+  }
+
+  const sttModeSelect = document.getElementById("stt-mode-select");
+  if (sttModeSelect) {
+    sttModeSelect.value = state.settings.sttMode || "push-to-talk";
+    if (!sttModeSelect.value) sttModeSelect.value = "push-to-talk";
+  }
+
+  const sttSilenceDuration = document.getElementById("stt-silence-duration");
+  if (sttSilenceDuration) {
+    sttSilenceDuration.value = state.settings.sttSilenceDuration || 2;
+  }
+
+  const themeSelect = document.getElementById("theme-select");
+  if (themeSelect) {
+    await populateThemeDropdown();
+  }
+
+  if (modelPricingFilter) {
+    modelPricingFilter.value =
+      state.settings.modelPricingFilter === "free" ||
+      state.settings.modelPricingFilter === "paid"
+        ? state.settings.modelPricingFilter
+        : "all";
+  }
+  if (modelModalityFilter) {
+    modelModalityFilter.value =
+      state.settings.modelModalityFilter === "all" ? "all" : "text-only";
+  }
+  if (modelSortOrder) {
+    const order = String(state.settings.modelSortOrder || "name_asc");
+    modelSortOrder.value = [
+      "name_asc",
+      "name_desc",
+      "created_asc",
+      "created_desc",
+    ].includes(order)
+      ? order
+      : "name_asc";
+  }
+
+  await populateSettingsModels();
+  // modelSelect.innerHTML = "";
+  // MODEL_OPTIONS.forEach((m) => {
+  //   const opt = document.createElement("option");
+  //   opt.value = m.value;
+  //   opt.label = m.label;
+  //   modelSelect.appendChild(opt);
+  // });
+  modelSelect.value = state.settings.model;
+  if (!modelSelect.value) {
+    modelSelect.value = DEFAULT_SETTINGS.model;
+    state.settings.model = modelSelect.value;
+    saveSettings();
+  }
+  refreshSelectedModelMeta(modelSelectedMeta);
+
+  const modelSelectDisplay = document.getElementById("model-select-display");
+  const modelCustomDropdown = document.getElementById("model-custom-dropdown");
+  if (modelSelectDisplay && modelCustomDropdown) {
+    modelSelectDisplay.addEventListener("click", (e) => {
+      e.stopPropagation();
+      modelCustomDropdown.classList.toggle("hidden");
+    });
+    document.addEventListener("click", () => {
+      modelCustomDropdown.classList.add("hidden");
+    });
+    modelCustomDropdown.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  const markdownCheck = document.getElementById("markdown-enabled");
+  const allowMessageHtml = document.getElementById("allow-message-html");
+  const trimMessagesCheckbox = document.getElementById("trim-messages");
+  const streamEnabled = document.getElementById("stream-enabled");
+  const autopairEnabled = document.getElementById("autopair-enabled");
+  const autoReplyEnabled = document.getElementById("auto-reply-enabled");
+  const enterToSendEnabled = document.getElementById("enter-to-send-enabled");
+  const oocModeToggle = document.getElementById("ooc-mode-toggle");
+  const cancelShortcut = document.getElementById("cancel-shortcut");
+  const homeShortcut = document.getElementById("home-shortcut");
+  const newCharacterShortcut = document.getElementById(
+    "new-character-shortcut",
+  );
+  if (summaryThresholdInput) {
+    const threshold =
+      typeof window.getSummaryThresholdValue === "function"
+        ? window.getSummaryThresholdValue(state.settings.summaryThreshold)
+        : Number(state.settings.summaryThreshold || 20);
+    state.settings.summaryThreshold = threshold;
+    summaryThresholdInput.value = String(threshold);
+  }
+  if (memoryMessagesToKeepInput) {
+    const keepValue =
+      typeof window.getMemoryMessagesToKeepValue === "function"
+        ? window.getMemoryMessagesToKeepValue(
+            state.settings.memoryMessagesToKeep,
+          )
+        : Math.max(
+            0,
+            Math.min(
+              4,
+              Number.isFinite(Number(state.settings.memoryMessagesToKeep))
+                ? Number(state.settings.memoryMessagesToKeep)
+                : 3,
+            ),
+          );
+    state.settings.memoryMessagesToKeep = keepValue;
+    memoryMessagesToKeepInput.value = String(keepValue);
+  }
+  if (memorySlotsInput) {
+    const slots =
+      typeof window.getMemorySlotsValue === "function"
+        ? window.getMemorySlotsValue(state.settings.memorySlots)
+        : Math.max(1, Math.min(10, Number(state.settings.memorySlots) || 5));
+    state.settings.memorySlots = slots;
+    memorySlotsInput.value = String(slots);
+  }
+  const autoUnloadThresholdInput = document.getElementById(
+    "auto-unload-threshold",
+  );
+  if (autoUnloadThresholdInput) {
+    const threshold = Math.max(
+      0,
+      Math.min(
+        1000,
+        Number.isFinite(Number(state.settings.autoUnloadThreshold))
+          ? Number(state.settings.autoUnloadThreshold)
+          : 0,
+      ),
+    );
+    state.settings.autoUnloadThreshold = threshold;
+    autoUnloadThresholdInput.value = String(threshold);
+    autoUnloadThresholdInput.addEventListener("change", async () => {
+      const val = Number(autoUnloadThresholdInput.value);
+      const clamped = Math.max(
+        0,
+        Math.min(1000, Number.isFinite(val) ? val : 0),
+      );
+      state.settings.autoUnloadThreshold = clamped;
+      autoUnloadThresholdInput.value = String(clamped);
+      saveSettings();
+      if (currentThread) {
+        const threadRecord = await db.threads.get(Number(currentThread.id));
+        if (!threadRecord) return;
+        const snapshot = buildThreadConversationSnapshot(threadRecord, clamped);
+        conversationHistory = snapshot.conversationHistory;
+        currentThread.unloadState = snapshot.unloadState;
+        await db.threads.update(Number(currentThread.id), {
+          unloadState: currentThread.unloadState,
+        });
+        renderChat();
+        updateUnloadButtonVisibility();
+      }
+    });
+  }
+  const chatMessageAlignment = document.getElementById(
+    "chat-message-alignment",
+  );
+  if (chatMessageAlignment) {
+    chatMessageAlignment.value = state.settings.chatMessageAlignment || "left";
+    chatMessageAlignment.addEventListener("change", () => {
+      const desired = String(chatMessageAlignment.value || "")
+        .trim()
+        .toLowerCase();
+      state.settings.chatMessageAlignment = ["center"].includes(desired)
+        ? desired
+        : "left";
+      applyChatMessageAlignment();
+      saveSettings();
+    });
+  }
+  const loreMatchingMode = document.getElementById("lore-matching-mode");
+  const loreSemanticThresholdContainer = document.getElementById(
+    "lore-semantic-threshold-container",
+  );
+  const loreSemanticThresholdInput = document.getElementById(
+    "lore-semantic-threshold",
+  );
+  if (loreMatchingMode) {
+    loreMatchingMode.value = state.settings.loreMatchingMode || "keyword";
+    loreMatchingMode.addEventListener("change", () => {
+      const mode = String(loreMatchingMode.value || "")
+        .trim()
+        .toLowerCase();
+      state.settings.loreMatchingMode =
+        mode === "semantic" ? "semantic" : "keyword";
+      if (loreSemanticThresholdContainer) {
+        loreSemanticThresholdContainer.classList.toggle(
+          "hidden",
+          state.settings.loreMatchingMode !== "semantic",
+        );
+      }
+      saveSettings();
+    });
+    if (loreSemanticThresholdContainer) {
+      loreSemanticThresholdContainer.classList.toggle(
+        "hidden",
+        state.settings.loreMatchingMode !== "semantic",
+      );
+    }
+  }
+  if (loreSemanticThresholdInput) {
+    const threshold = Math.max(
+      0,
+      Math.min(
+        1,
+        Number.isFinite(Number(state.settings.loreSemanticThreshold))
+          ? Number(state.settings.loreSemanticThreshold)
+          : 0.5,
+      ),
+    );
+    state.settings.loreSemanticThreshold = threshold;
+    loreSemanticThresholdInput.value = String(threshold);
+    loreSemanticThresholdInput.addEventListener("change", () => {
+      const val = Number(loreSemanticThresholdInput.value);
+      const clamped = Math.max(
+        0,
+        Math.min(1, Number.isFinite(val) ? val : 0.5),
+      );
+      state.settings.loreSemanticThreshold = clamped;
+      loreSemanticThresholdInput.value = String(clamped);
+      saveSettings();
+    });
+  }
+  autoReplyEnabled?.classList.toggle(
+    "is-active",
+    state.settings.autoReplyEnabled !== false,
+  );
+  enterToSendEnabled?.classList.toggle(
+    "is-active",
+    state.settings.enterToSendEnabled !== false,
+  );
+  const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
+  const markdownCustomCss = document.getElementById("markdown-custom-css");
+  const postprocessRulesJson = document.getElementById("postprocess-rules-json");
+  if (markdownCustomCss) {
+    markdownCustomCss.value = state.settings.markdownCustomCss || "";
+  }
+  if (postprocessRulesJson) {
+    postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
+  }
+  const initialSliderMax = getSettingsMaxTokensUpperBound(modelSelect.value);
+  state.settings.maxTokens = clampMaxTokens(
+    state.settings.maxTokens,
+    512,
+    initialSliderMax,
+  );
+  maxTokensSlider.min = "512";
+  maxTokensSlider.max = String(initialSliderMax);
+  maxTokensSlider.value = String(state.settings.maxTokens);
+  maxTokensValue.textContent = maxTokensSlider.value;
+  temperatureSlider.value = String(
+    clampTemperature(state.settings.temperature),
+  );
+  temperatureValue.textContent = clampTemperature(
+    state.settings.temperature,
+  ).toFixed(2);
+  if (topPSlider) {
+    topPSlider.value = String(Number(state.settings.topP) || 1);
+    topPValue.textContent = topPSlider.value;
+  }
+  if (frequencyPenaltySlider) {
+    frequencyPenaltySlider.value = String(
+      Number(state.settings.frequencyPenalty) || 0,
+    );
+    frequencyPenaltyValue.textContent = frequencyPenaltySlider.value;
+  }
+  if (presencePenaltySlider) {
+    presencePenaltySlider.value = String(
+      Number(state.settings.presencePenalty) || 0,
+    );
+    presencePenaltyValue.textContent = presencePenaltySlider.value;
+  }
+  if (stopStringsInput) {
+    stopStringsInput.value = state.settings.stopStrings || "";
+  }
+  const completionCooldownSlider = document.getElementById(
+    "completion-cooldown-slider",
+  );
+  const completionCooldownValue = document.getElementById(
+    "completion-cooldown-value",
+  );
+  if (completionCooldownSlider) {
+    completionCooldownSlider.value = String(
+      state.settings.completionCooldown ?? 2,
+    );
+    if (completionCooldownValue) {
+      completionCooldownValue.textContent = `${completionCooldownSlider.value}s`;
+    }
+  }
+  if (toastDelaySlider) {
+    const delay = clampToastDuration(state.settings.toastDurationMs);
+    state.settings.toastDurationMs = delay;
+    toastDelaySlider.value = String(delay);
+    if (toastDelayValue) {
+      toastDelayValue.textContent = `${Math.round(delay / 100) / 10}s`;
+    }
+  }
+  if (marqueeBehaviorSelect) {
+    const behavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
+    state.settings.marqueeBehavior = behavior;
+    marqueeBehaviorSelect.value = behavior;
+  }
+  updateSettingsRangeTone(maxTokensSlider, Number(maxTokensSlider.value), {
+    warnBelow: 1024,
+    dangerAbove: 4096,
+  });
+  updateSettingsRangeTone(temperatureSlider, Number(temperatureSlider.value), {
+    warnBelow: 0.7,
+    dangerAbove: 1.0,
+  });
+  const globalPromptTemplate = document.getElementById("global-prompt-template");
+  const summarySystemPrompt = document.getElementById("summary-system-prompt");
+  const memorySummarizerUserPrompt = document.getElementById(
+    "memory-summarizer-user-prompt",
+  );
+  const summaryMessagesPreProcessingJson = document.getElementById(
+    "summary-messages-preprocessing-json",
+  );
+  const personaInjectionTemplate = document.getElementById(
+    "persona-injection-template",
+  );
+  const writingInstructionsInjectionWhen = document.getElementById(
+    "writing-instructions-injection-when",
+  );
+  const shortcutsRaw = document.getElementById("shortcuts-raw");
+  const autoTitleSystemPrompt = document.getElementById(
+    "auto-title-system-prompt",
+  );
+  const autoTitleUserPrompt = document.getElementById("auto-title-user-prompt");
+  const sectionHeaderMemoryContext = document.getElementById(
+    "section-header-memory-context",
+  );
+  const sectionHeaderCharacterPrompt = document.getElementById(
+    "section-header-character-prompt",
+  );
+  const sectionHeaderMessagesSoFar = document.getElementById(
+    "section-header-messages-so-far",
+  );
+  const sectionHeaderMessages = document.getElementById("section-header-messages");
+  const sectionHeaderMemoryLevelContext = document.getElementById(
+    "section-header-memory-level-context",
+  );
+  const memoryRelevanceFilterToggle = document.getElementById(
+    "memory-relevance-filter-enabled",
+  );
+
+  if (globalPromptTemplate) {
+    globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
+  }
+  if (summarySystemPrompt) {
+    summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
+  }
+  if (memorySummarizerUserPrompt) {
+    const userPromptValue =
+      state.settings.memorySummarizerUserPrompt ||
+      DEFAULT_SETTINGS.memorySummarizerUserPrompt;
+    state.settings.memorySummarizerUserPrompt = userPromptValue;
+    memorySummarizerUserPrompt.value = userPromptValue;
+  }
+  if (summaryMessagesPreProcessingJson) {
+    const preProcessingValue =
+      state.settings.summaryMessagesPreProcessingJson || "[]";
+    state.settings.summaryMessagesPreProcessingJson = preProcessingValue;
+    summaryMessagesPreProcessingJson.value = preProcessingValue;
+  }
+  if (personaInjectionTemplate) {
+    personaInjectionTemplate.value =
+      state.settings.personaInjectionTemplate ||
+      DEFAULT_SETTINGS.personaInjectionTemplate;
+  }
+  if (writingInstructionsInjectionWhen) {
+    const writingWhen = normalizeWritingInstructionsTiming(
+      state.settings.writingInstructionsInjectionWhen,
+    );
+    state.settings.writingInstructionsInjectionWhen = writingWhen;
+    writingInstructionsInjectionWhen.value = writingWhen;
+  }
+  if (shortcutsRaw) {
+    shortcutsRaw.value = state.settings.shortcutsRaw || "";
+  }
+  if (autoTitleSystemPrompt) {
+    autoTitleSystemPrompt.value =
+      state.settings.autoTitleSystemPrompt ||
+      DEFAULT_SETTINGS.autoTitleSystemPrompt;
+  }
+  if (autoTitleUserPrompt) {
+    autoTitleUserPrompt.value =
+      state.settings.autoTitleUserPrompt ||
+      DEFAULT_SETTINGS.autoTitleUserPrompt;
+  }
+
+  if (sectionHeaderMessagesSoFar) {
+    sectionHeaderMessagesSoFar.value =
+      state.settings.sectionHeaderMessagesSoFar ||
+      DEFAULT_SETTINGS.sectionHeaderMessagesSoFar;
+  }
+  if (sectionHeaderMessages) {
+    sectionHeaderMessages.value =
+      state.settings.sectionHeaderMessages ||
+      DEFAULT_SETTINGS.sectionHeaderMessages;
+  }
+  if (sectionHeaderMemoryLevelContext) {
+    sectionHeaderMemoryLevelContext.value =
+      state.settings.sectionHeaderMemoryLevelContext ||
+      DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
+  }
+  const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
+  const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
+  if (oocSystemPromptIntro) {
+    oocSystemPromptIntro.value = getSectionHeader("oocSystemPromptIntro");
+  }
+  if (oocUserMessageFormat) {
+    oocUserMessageFormat.value = getSectionHeader("oocUserMessageFormat");
+  }
+  cancelShortcut.value =
+    state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
+  homeShortcut.value =
+    state.settings.homeShortcut || DEFAULT_SETTINGS.homeShortcut;
+  newCharacterShortcut.value =
+    state.settings.newCharacterShortcut ||
+    DEFAULT_SETTINGS.newCharacterShortcut;
+  const defaultPersonaInjectionPlacement = document.getElementById(
+    "default-persona-injection-placement",
+  );
+  const defaultTtsProvider = document.getElementById("default-tts-provider");
+  const defaultTtsRate = document.getElementById("default-tts-rate");
+  const defaultTtsRateValue = document.getElementById("default-tts-rate-value");
+  defaultPersonaInjectionPlacement.value =
+    state.settings.defaultPersonaInjectionPlacement ||
+    DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+  defaultTtsProvider.value =
+    state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+  defaultTtsRate.value = String(
+    state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate,
+  );
+  if (defaultTtsRateValue)
+    defaultTtsRateValue.textContent = String(defaultTtsRate.value);
+  const defaultIncludeOoc = document.getElementById("default-include-ooc");
+  const defaultAvatarScale = document.getElementById("default-avatar-scale");
+  if (defaultIncludeOoc) {
+    defaultIncludeOoc.checked =
+      state.settings.defaultIncludeOocInCompletions ??
+      DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
+  }
+  if (defaultAvatarScale) {
+    defaultAvatarScale.value = String(
+      state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale,
+    );
+  }
+  const defaultAutoTitleMinMessagesInput = document.getElementById(
+    "default-auto-title-min-messages",
+  );
+  if (defaultAutoTitleMinMessagesInput) {
+    defaultAutoTitleMinMessagesInput.value = String(
+      state.settings.defaultAutoTitleMinMessages ??
+        DEFAULT_SETTINGS.defaultAutoTitleMinMessages,
+    );
+  }
+  const autoTitleProvider = document.getElementById("default-auto-title-provider");
+  const autoTitleModel = document.getElementById("default-auto-title-model");
+  const autoTitleTemp = document.getElementById("default-auto-title-temp");
+  const autoTitleTempValue = document.getElementById("default-auto-title-temp-value");
+  const summaryProvider = document.getElementById("default-summary-provider");
+  const summaryModel = document.getElementById("default-summary-model");
+  const summaryTemp = document.getElementById("default-summary-temp");
+  const summaryTempValue = document.getElementById("default-summary-temp-value");
+  if (autoTitleProvider) {
+    autoTitleProvider.value =
+      state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  }
+  if (autoTitleModel) {
+    autoTitleModel.value =
+      state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
+  }
+  if (autoTitleTemp) {
+    autoTitleTemp.value = String(
+      state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature,
+    );
+    if (autoTitleTempValue)
+      autoTitleTempValue.textContent = autoTitleTemp.value;
+  }
+  if (summaryProvider) {
+    summaryProvider.value =
+      state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+  }
+  if (summaryModel) {
+    summaryModel.value =
+      state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
+  }
+  if (summaryTemp) {
+    summaryTemp.value = String(
+      state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature,
+    );
+    if (summaryTempValue)
+      summaryTempValue.textContent = summaryTemp.value;
+  }
+  const autoTitleStream = document.getElementById("default-auto-title-stream");
+  const summaryStream = document.getElementById("default-summary-stream");
+  if (autoTitleStream) {
+    autoTitleStream.checked =
+      state.settings.defaultAutoTitleStream ?? DEFAULT_SETTINGS.defaultAutoTitleStream;
+  }
+  if (summaryStream) {
+    summaryStream.checked =
+      state.settings.defaultSummaryStream ?? DEFAULT_SETTINGS.defaultSummaryStream;
+  }
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
   hordeApiMethod.value = state.settings.hordeApiMethod || "native";
@@ -17,4 +3606,20107 @@ function populateSettingsTabValues() {
   groqApiKey.value = state.settings.groqApiKey || "";
   aiProviderSelect.value = state.settings.aiProvider || "openrouter";
   updateProviderVisibility();
+  if (typeof window.updateTtsSupportUi === "function") {
+    window.updateTtsSupportUi();
+  }
+
+  aiProviderSelect.addEventListener("change", () => {
+    const oldProvider = state.settings.aiProvider || "openrouter";
+    const newProvider = aiProviderSelect.value;
+    if (oldProvider !== newProvider) {
+      const lastModels = state.settings.lastModelsPerProvider || {};
+      lastModels[oldProvider] = state.settings.model;
+      state.settings.lastModelsPerProvider = lastModels;
+    }
+    state.settings.aiProvider = newProvider;
+    const lastModels = state.settings.lastModelsPerProvider || {};
+    const savedModel = lastModels[newProvider];
+    if (savedModel) {
+      state.settings.model = savedModel;
+    }
+    updateProviderVisibility();
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  openRouterApiKey.addEventListener("input", () => {
+    state.settings.openRouterApiKey = openRouterApiKey.value.trim();
+    saveSettings();
+    populateSettingsModels().catch(() => {});
+  });
+
+  hordeApiKey.addEventListener("input", () => {
+    state.settings.hordeApiKey = hordeApiKey.value.trim();
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  hordeApiMethod.addEventListener("change", () => {
+    state.settings.hordeApiMethod = hordeApiMethod.value;
+    saveSettings();
+  });
+
+  let lmstudioBaseUrlInitialValue = lmstudioBaseUrl.value.trim();
+  lmstudioBaseUrl.addEventListener("focus", () => {
+    lmstudioBaseUrlInitialValue = lmstudioBaseUrl.value.trim();
+  });
+  lmstudioBaseUrl.addEventListener("blur", () => {
+    const currentValue = lmstudioBaseUrl.value.trim();
+    if (currentValue !== lmstudioBaseUrlInitialValue) {
+      state.settings.lmstudioBaseUrl = currentValue;
+      saveSettings();
+      populateSettingsModels({ force: true }).catch(() => {});
+    }
+  });
+  lmstudioBaseUrl.addEventListener("input", () => {
+    state.settings.lmstudioBaseUrl = lmstudioBaseUrl.value.trim();
+    saveSettings();
+  });
+
+  lmstudioApiMethod.addEventListener("change", () => {
+    state.settings.lmstudioApiMethod = lmstudioApiMethod.value;
+    state.lmstudioModelCatalog = [];
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  groqApiKey.addEventListener("input", () => {
+    state.settings.groqApiKey = groqApiKey.value.trim();
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  modelSelect.addEventListener("change", () => {
+    const provider = state.settings.aiProvider || "openrouter";
+    const lastModels = state.settings.lastModelsPerProvider || {};
+    lastModels[provider] = modelSelect.value;
+    state.settings.lastModelsPerProvider = lastModels;
+    state.settings.model = modelSelect.value;
+    const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
+    state.settings.maxTokens = clampMaxTokens(
+      state.settings.maxTokens,
+      512,
+      maxUpper,
+    );
+    maxTokensSlider.min = "512";
+    maxTokensSlider.max = String(maxUpper);
+    maxTokensSlider.value = String(state.settings.maxTokens);
+    maxTokensValue.textContent = String(state.settings.maxTokens);
+    refreshSelectedModelMeta(modelSelectedMeta);
+    scheduleThreadBudgetIndicatorUpdate();
+    saveSettings();
+    updateModelPill();
+  });
+
+  modelPricingFilter?.addEventListener("change", () => {
+    state.settings.modelPricingFilter = modelPricingFilter.value;
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  modelModalityFilter?.addEventListener("change", () => {
+    state.settings.modelModalityFilter = modelModalityFilter.value;
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  modelSortOrder?.addEventListener("change", () => {
+    state.settings.modelSortOrder = modelSortOrder.value;
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  modelRefreshBtn?.addEventListener("click", () => {
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+
+  markdownCheck?.addEventListener("change", () => {
+    state.settings.markdownEnabled = markdownCheck.checked;
+    saveSettings();
+    if (currentThread) renderChat();
+  });
+
+  unreadSoundEnabled?.addEventListener("change", () => {
+    state.settings.unreadSoundEnabled = unreadSoundEnabled.checked;
+    saveSettings();
+  });
+
+  allowMessageHtml?.addEventListener("change", () => {
+    state.settings.allowMessageHtml = allowMessageHtml.checked;
+    saveSettings();
+    if (currentThread) renderChat();
+  });
+
+  streamEnabled?.addEventListener("change", () => {
+    state.settings.streamEnabled = streamEnabled.checked;
+    saveSettings();
+  });
+
+  if (trimMessagesCheckbox) {
+    trimMessagesCheckbox.addEventListener("change", async () => {
+      state.settings.trimMessages = trimMessagesCheckbox.checked;
+      saveSettings();
+      normalizeAssistantMessages(conversationHistory);
+      if (currentThread) {
+        try {
+          await persistThreadMessagesById(currentThread.id, conversationHistory, {
+            _skipUpdatedAt: true,
+          });
+        } catch {
+          console.warn("Failed to persist trimmed assistant messages.");
+        }
+      }
+      renderChat();
+    });
+  }
+
+  autopairEnabled?.addEventListener("change", () => {
+    state.settings.autoPairEnabled = autopairEnabled.checked;
+    saveSettings();
+  });
+  lockMemoryMessages?.addEventListener("change", () => {
+    state.settings.lockMemoryMessages = lockMemoryMessages.checked;
+    saveSettings();
+  });
+  const crossWindowSyncEnabled = document.getElementById(
+    "cross-window-sync-enabled",
+  );
+  if (crossWindowSyncEnabled) {
+    crossWindowSyncEnabled.checked =
+      state.settings.crossWindowSyncEnabled !== false;
+    crossWindowSyncEnabled.addEventListener("change", () => {
+      state.settings.crossWindowSyncEnabled = crossWindowSyncEnabled.checked;
+      saveSettings();
+      applyCrossWindowSyncSetting();
+    });
+  }
+  const useLocalSummarization = document.getElementById(
+    "use-local-summarization",
+  );
+  if (useLocalSummarization) {
+    useLocalSummarization.checked =
+      state.settings.useLocalSummarization === true;
+    useLocalSummarization.addEventListener("change", () => {
+      state.settings.useLocalSummarization = useLocalSummarization.checked;
+      saveSettings();
+    });
+  }
+  const useLocalAutoTitle = document.getElementById(
+    "use-local-auto-title",
+  );
+  if (useLocalAutoTitle) {
+    useLocalAutoTitle.checked =
+      state.settings.useLocalAutoTitle === true;
+    useLocalAutoTitle.addEventListener("change", () => {
+      state.settings.useLocalAutoTitle = useLocalAutoTitle.checked;
+      saveSettings();
+    });
+  }
+  summaryThresholdInput?.addEventListener("change", () => {
+    const threshold =
+      typeof window.getSummaryThresholdValue === "function"
+        ? window.getSummaryThresholdValue(summaryThresholdInput.value)
+        : Number(summaryThresholdInput.value) || 20;
+    summaryThresholdInput.value = String(threshold);
+    state.settings.summaryThreshold = threshold;
+    saveSettings();
+  });
+  memoryMessagesToKeepInput?.addEventListener("change", () => {
+    const keepValue =
+      typeof window.getMemoryMessagesToKeepValue === "function"
+        ? window.getMemoryMessagesToKeepValue(memoryMessagesToKeepInput.value)
+        : Math.max(
+            0,
+            Math.min(
+              4,
+              Number.isFinite(Number(memoryMessagesToKeepInput.value))
+                ? Number(memoryMessagesToKeepInput.value)
+                : 3,
+            ),
+          );
+    memoryMessagesToKeepInput.value = String(keepValue);
+    state.settings.memoryMessagesToKeep = keepValue;
+    saveSettings();
+  });
+  memorySlotsInput?.addEventListener("change", () => {
+    const slots =
+      typeof window.getMemorySlotsValue === "function"
+        ? window.getMemorySlotsValue(memorySlotsInput.value)
+        : Math.max(1, Math.min(10, Number(memorySlotsInput.value) || 5));
+    memorySlotsInput.value = String(slots);
+    state.settings.memorySlots = slots;
+    saveSettings();
+  });
+
+  autoReplyEnabled?.addEventListener("click", async () => {
+    const newValue = !(currentThread?.autoReplyEnabled !== false);
+    if (currentThread) {
+      currentThread.autoReplyEnabled = newValue;
+      await db.threads.update(currentThread.id, { autoReplyEnabled: newValue });
+    }
+    state.settings.autoReplyEnabled = newValue;
+    autoReplyEnabled.classList.toggle("is-active", newValue);
+    saveSettings();
+  });
+
+  enterToSendEnabled?.addEventListener("click", async () => {
+    const newValue = !(currentThread?.enterToSendEnabled !== false);
+    if (currentThread) {
+      currentThread.enterToSendEnabled = newValue;
+      await db.threads.update(currentThread.id, {
+        enterToSendEnabled: newValue,
+      });
+    }
+    state.settings.enterToSendEnabled = newValue;
+    enterToSendEnabled.classList.toggle("is-active", newValue);
+    saveSettings();
+  });
+
+  oocModeToggle?.addEventListener("click", async () => {
+    if (!currentThread) return;
+    const next = !(currentThread.oocModeEnabled === true);
+    currentThread.oocModeEnabled = next;
+    const updatedAt = Date.now();
+    await db.threads.update(currentThread.id, {
+      oocModeEnabled: next,
+      updatedAt,
+    });
+    state.lastSyncSeenUpdatedAt = updatedAt;
+    updateOocModeUi();
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: currentThread.id,
+      updatedAt,
+    });
+    await renderThreads();
+  });
+
+  /*
+  markdownCustomCss.addEventListener("input", () => {
+    state.settings.markdownCustomCss = markdownCustomCss.value;
+    saveSettings();
+    applyMarkdownCustomCss();
+    if (currentThread) renderChat();
+  });
+  */
+
+  postprocessRulesJson.addEventListener("input", () => {
+    state.settings.postprocessRulesJson = postprocessRulesJson.value;
+    saveSettings();
+    if (currentThread) renderChat();
+  });
+
+  maxTokensSlider.addEventListener("input", () => {
+    const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
+    const value = clampMaxTokens(Number(maxTokensSlider.value), 512, maxUpper);
+    state.settings.maxTokens = value;
+    maxTokensSlider.max = String(maxUpper);
+    maxTokensSlider.value = String(value);
+    maxTokensValue.textContent = String(value);
+    updateSettingsRangeTone(maxTokensSlider, value, {
+      warnBelow: 1024,
+      dangerAbove: 4096,
+    });
+    scheduleThreadBudgetIndicatorUpdate();
+    saveSettings();
+  });
+
+  temperatureSlider.addEventListener("input", () => {
+    const value = clampTemperature(Number(temperatureSlider.value));
+    state.settings.temperature = value;
+    temperatureValue.textContent = value.toFixed(2);
+    updateSettingsRangeTone(temperatureSlider, value, {
+      warnBelow: 0.7,
+      dangerAbove: 1.0,
+    });
+    saveSettings();
+  });
+  topPSlider?.addEventListener("input", () => {
+    const value = Number(topPSlider.value);
+    state.settings.topP = value;
+    topPValue.textContent = value.toFixed(2);
+    saveSettings();
+  });
+  frequencyPenaltySlider?.addEventListener("input", () => {
+    const value = Number(frequencyPenaltySlider.value);
+    state.settings.frequencyPenalty = value;
+    frequencyPenaltyValue.textContent = value.toFixed(1);
+    saveSettings();
+  });
+  presencePenaltySlider?.addEventListener("input", () => {
+    const value = Number(presencePenaltySlider.value);
+    state.settings.presencePenalty = value;
+    presencePenaltyValue.textContent = value.toFixed(1);
+    saveSettings();
+  });
+  stopStringsInput?.addEventListener("input", () => {
+    state.settings.stopStrings = stopStringsInput.value.trim();
+    saveSettings();
+  });
+  completionCooldownSlider?.addEventListener("input", () => {
+    const value = Number(completionCooldownSlider.value);
+    state.settings.completionCooldown = value;
+    completionCooldownSlider.value = String(value);
+    if (completionCooldownValue) {
+      completionCooldownValue.textContent = `${value}s`;
+    }
+    saveSettings();
+    updateCooldownPinnedToast();
+  });
+  toastDelaySlider?.addEventListener("input", () => {
+    const value = clampToastDuration(Number(toastDelaySlider.value));
+    state.settings.toastDurationMs = value;
+    toastDelaySlider.value = String(value);
+    if (toastDelayValue) {
+      toastDelayValue.textContent = `${Math.round(value / 100) / 10}s`;
+    }
+    saveSettings();
+  });
+  marqueeBehaviorSelect?.addEventListener("change", () => {
+    state.settings.marqueeBehavior = normalizeMarqueeBehavior(
+      marqueeBehaviorSelect.value,
+    );
+    marqueeBehaviorSelect.value = state.settings.marqueeBehavior;
+    saveSettings();
+    refreshAllHoverMarquees();
+  });
+
+  const botCardAvatarEffectSelect = document.getElementById(
+    "bot-card-avatar-effect",
+  );
+  const botCardAvatarTransitionDelaySlider = document.getElementById(
+    "bot-card-avatar-transition-delay-slider",
+  );
+  const botCardAvatarTransitionDelayValue = document.getElementById(
+    "bot-card-avatar-transition-delay-value",
+  );
+  if (botCardAvatarEffectSelect) {
+    botCardAvatarEffectSelect.value =
+      state.settings.botCardAvatarEffect || "none";
+  }
+  if (botCardAvatarTransitionDelaySlider) {
+    const delay = Math.max(
+      4,
+      Math.min(30, Number(state.settings.botCardAvatarTransitionDelay) || 4),
+    );
+    state.settings.botCardAvatarTransitionDelay = delay;
+    botCardAvatarTransitionDelaySlider.value = String(delay);
+    if (botCardAvatarTransitionDelayValue) {
+      botCardAvatarTransitionDelayValue.textContent = `${delay}s`;
+    }
+    if (botCardAvatarEffectSelect) {
+      botCardAvatarTransitionDelaySlider.disabled =
+        botCardAvatarEffectSelect.value !== "carousel";
+    }
+  }
+  botCardAvatarEffectSelect?.addEventListener("change", () => {
+    state.settings.botCardAvatarEffect = botCardAvatarEffectSelect.value;
+    saveSettings();
+    if (botCardAvatarTransitionDelaySlider) {
+      botCardAvatarTransitionDelaySlider.disabled =
+        botCardAvatarEffectSelect.value !== "carousel";
+    }
+    renderCharacters();
+  });
+  botCardAvatarTransitionDelaySlider?.addEventListener("input", () => {
+    const value = Math.max(
+      4,
+      Math.min(30, Number(botCardAvatarTransitionDelaySlider.value) || 4),
+    );
+    state.settings.botCardAvatarTransitionDelay = value;
+    botCardAvatarTransitionDelaySlider.value = String(value);
+    if (botCardAvatarTransitionDelayValue) {
+      botCardAvatarTransitionDelayValue.textContent = `${value}s`;
+    }
+    saveSettings();
+  });
+
+  globalPromptTemplate.addEventListener("input", () => {
+    state.settings.globalPromptTemplate = globalPromptTemplate.value;
+    saveSettings();
+    if (state.activeModalId === "character-modal")
+      updateCharacterPromptPlaceholder();
+  });
+
+  summarySystemPrompt.addEventListener("input", () => {
+    state.settings.summarySystemPrompt = summarySystemPrompt.value;
+    saveSettings();
+  });
+
+  memorySummarizerUserPrompt?.addEventListener("input", () => {
+    state.settings.memorySummarizerUserPrompt =
+      memorySummarizerUserPrompt.value;
+    saveSettings();
+  });
+
+  autoTitleSystemPrompt?.addEventListener("input", () => {
+    state.settings.autoTitleSystemPrompt = autoTitleSystemPrompt.value;
+    saveSettings();
+  });
+
+  autoTitleUserPrompt?.addEventListener("input", () => {
+    state.settings.autoTitleUserPrompt = autoTitleUserPrompt.value;
+    saveSettings();
+  });
+
+  sectionHeaderMemoryContext?.addEventListener("input", () => {
+    state.settings.sectionHeaderMemoryContext =
+      sectionHeaderMemoryContext.value;
+    saveSettings();
+  });
+
+  sectionHeaderCharacterPrompt?.addEventListener("input", () => {
+    state.settings.sectionHeaderCharacterPrompt =
+      sectionHeaderCharacterPrompt.value;
+    saveSettings();
+  });
+
+  sectionHeaderMessagesSoFar?.addEventListener("input", () => {
+    state.settings.sectionHeaderMessagesSoFar =
+      sectionHeaderMessagesSoFar.value;
+    saveSettings();
+  });
+
+  sectionHeaderMessages?.addEventListener("input", () => {
+    state.settings.sectionHeaderMessages = sectionHeaderMessages.value;
+    saveSettings();
+  });
+
+  sectionHeaderMemoryLevelContext?.addEventListener("input", () => {
+    state.settings.sectionHeaderMemoryLevelContext =
+      sectionHeaderMemoryLevelContext.value;
+    saveSettings();
+  });
+
+  oocSystemPromptIntro?.addEventListener("input", () => {
+    state.settings.oocSystemPromptIntro = oocSystemPromptIntro.value;
+    saveSettings();
+  });
+
+  oocUserMessageFormat?.addEventListener("input", () => {
+    state.settings.oocUserMessageFormat = oocUserMessageFormat.value;
+    saveSettings();
+  });
+
+  summaryMessagesPreProcessingJson?.addEventListener("input", () => {
+    state.settings.summaryMessagesPreProcessingJson =
+      summaryMessagesPreProcessingJson.value;
+    saveSettings();
+  });
+
+  if (memoryRelevanceFilterToggle) {
+    memoryRelevanceFilterToggle.checked =
+      state.settings.memoryRelevanceFilterEnabled === true;
+    memoryRelevanceFilterToggle.addEventListener("change", () => {
+      const enabled = memoryRelevanceFilterToggle.checked;
+      state.settings.memoryRelevanceFilterEnabled = enabled;
+      saveSettings();
+      if (enabled) {
+        ensureMemoryFilterModelReady().catch(() => {});
+      }
+    });
+  }
+
+  if (state.settings.memoryRelevanceFilterEnabled) {
+    ensureMemoryFilterModelReady().catch(() => {});
+  }
+
+  personaInjectionTemplate.addEventListener("input", () => {
+    state.settings.personaInjectionTemplate = personaInjectionTemplate.value;
+    saveSettings();
+  });
+
+  writingInstructionsInjectionWhen?.addEventListener("change", () => {
+    state.settings.writingInstructionsInjectionWhen =
+      normalizeWritingInstructionsTiming(
+        writingInstructionsInjectionWhen.value,
+      );
+    writingInstructionsInjectionWhen.value =
+      state.settings.writingInstructionsInjectionWhen;
+    saveSettings();
+  });
+
+  cancelShortcut.addEventListener("change", () => {
+    state.settings.cancelShortcut = normalizeShortcutString(
+      cancelShortcut.value,
+    );
+    cancelShortcut.value = state.settings.cancelShortcut;
+    saveSettings();
+  });
+  homeShortcut.addEventListener("change", () => {
+    state.settings.homeShortcut = normalizeShortcutString(homeShortcut.value);
+    homeShortcut.value = state.settings.homeShortcut;
+    saveSettings();
+  });
+  newCharacterShortcut.addEventListener("change", () => {
+    state.settings.newCharacterShortcut = normalizeShortcutString(
+      newCharacterShortcut.value,
+    );
+    newCharacterShortcut.value = state.settings.newCharacterShortcut;
+    saveSettings();
+  });
+  if (defaultPersonaInjectionPlacement) {
+    defaultPersonaInjectionPlacement.addEventListener("change", () => {
+      state.settings.defaultPersonaInjectionPlacement =
+        defaultPersonaInjectionPlacement.value;
+      saveSettings();
+    });
+  }
+  if (defaultTtsProvider) {
+    defaultTtsProvider.addEventListener("change", () => {
+      state.settings.defaultTtsProvider = defaultTtsProvider.value;
+      saveSettings();
+    });
+  }
+  if (defaultTtsRate) {
+    defaultTtsRate.addEventListener("input", () => {
+      const value = Number(defaultTtsRate.value);
+      state.settings.defaultTtsRate = value;
+      if (defaultTtsRateValue) defaultTtsRateValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  if (defaultIncludeOoc) {
+    defaultIncludeOoc.addEventListener("change", () => {
+      state.settings.defaultIncludeOocInCompletions = defaultIncludeOoc.checked;
+      saveSettings();
+    });
+  }
+  if (defaultAvatarScale) {
+    defaultAvatarScale.addEventListener("change", () => {
+      const value = Number(defaultAvatarScale.value);
+      state.settings.defaultAvatarScale = value;
+      saveSettings();
+    });
+  }
+  if (defaultAutoTitleMinMessagesInput) {
+    defaultAutoTitleMinMessagesInput.addEventListener("input", () => {
+      const entered = Number(defaultAutoTitleMinMessagesInput.value);
+      const normalized = Number.isFinite(entered)
+        ? Math.min(Math.max(entered, 1), 50)
+        : DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
+      defaultAutoTitleMinMessagesInput.value = String(normalized);
+      state.settings.defaultAutoTitleMinMessages = normalized;
+      saveSettings();
+    });
+  }
+  if (autoTitleProvider) {
+    autoTitleProvider.addEventListener("change", () => {
+      const oldProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+      const newProvider = autoTitleProvider.value;
+      if (oldProvider !== newProvider) {
+        const lastModels = state.settings.lastModelsPerProvider || {};
+        if (state.settings.autoTitleModel) {
+          lastModels[oldProvider] = state.settings.autoTitleModel;
+        }
+        state.settings.lastModelsPerProvider = lastModels;
+        state.settings.autoTitleModel = "";
+      }
+      state.settings.autoTitleProvider = newProvider;
+      saveSettings();
+      populateAutoTitleSummaryModels().catch(() => {});
+    });
+  }
+  if (autoTitleModel) {
+    autoTitleModel.addEventListener("change", () => {
+      state.settings.autoTitleModel = autoTitleModel.value;
+      saveSettings();
+    });
+  }
+  if (autoTitleTemp) {
+    autoTitleTemp.addEventListener("input", () => {
+      const value = Number(autoTitleTemp.value);
+      state.settings.autoTitleTemperature = value;
+      if (autoTitleTempValue) autoTitleTempValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  if (summaryProvider) {
+    summaryProvider.addEventListener("change", () => {
+      const oldProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+      const newProvider = summaryProvider.value;
+      if (oldProvider !== newProvider) {
+        const lastModels = state.settings.lastModelsPerProvider || {};
+        if (state.settings.summaryModel) {
+          lastModels[oldProvider] = state.settings.summaryModel;
+        }
+        state.settings.lastModelsPerProvider = lastModels;
+        state.settings.summaryModel = "";
+      }
+      state.settings.summaryProvider = newProvider;
+      saveSettings();
+      populateAutoTitleSummaryModels().catch(() => {});
+    });
+  }
+  if (summaryModel) {
+    summaryModel.addEventListener("change", () => {
+      state.settings.summaryModel = summaryModel.value;
+      saveSettings();
+    });
+  }
+  if (summaryTemp) {
+    summaryTemp.addEventListener("input", () => {
+      const value = Number(summaryTemp.value);
+      state.settings.summaryTemperature = value;
+      if (summaryTempValue) summaryTempValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  if (autoTitleStream) {
+    autoTitleStream.addEventListener("change", () => {
+      state.settings.defaultAutoTitleStream = autoTitleStream.checked;
+      saveSettings();
+    });
+  }
+  if (summaryStream) {
+    summaryStream.addEventListener("change", () => {
+      state.settings.defaultSummaryStream = summaryStream.checked;
+      saveSettings();
+    });
+  }
+  if (uiLanguageSelect) {
+    uiLanguageSelect.addEventListener("change", async () => {
+      state.settings.uiLanguage = uiLanguageSelect.value || "auto";
+      saveSettings();
+      await applyInterfaceLanguage();
+      updateLanguageSelectOptions();
+      updateToastDelayDisplay();
+      await renderShortcutsBar();
+      await renderCharacters();
+      updateModelPill();
+    });
+  }
+  if (sttLanguageSelect) {
+    sttLanguageSelect.addEventListener("change", () => {
+      state.settings.sttLanguage = sttLanguageSelect.value || "en";
+      saveSettings();
+    });
+  }
+  if (sttModeSelect) {
+    sttModeSelect.addEventListener("change", () => {
+      state.settings.sttMode = sttModeSelect.value || "push-to-talk";
+      saveSettings();
+      updateSttButtonForMode();
+    });
+  }
+  if (sttSilenceDuration) {
+    sttSilenceDuration.addEventListener("change", () => {
+      const val = parseInt(sttSilenceDuration.value, 10);
+      state.settings.sttSilenceDuration =
+        isFinite(val) && val >= 1 && val <= 10 ? val : 2;
+      saveSettings();
+    });
+  }
+  if (themeSelect) {
+    themeSelect.addEventListener("change", async () => {
+      await applyThemeFromDb(themeSelect.value);
+    });
+  }
+}
+
+function clampToastDuration(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 2600;
+  return Math.max(1000, Math.min(10000, Math.round(num / 100) * 100));
+}
+
+function normalizeMarqueeBehavior(value) {
+  const v = String(value || "").toLowerCase();
+  if (v === "always") return "always";
+  if (v === "hover") return "hover";
+  return "disabled";
+}
+
+function updateToastDelayDisplay() {
+  const slider = document.getElementById("toast-delay-slider");
+  const valueEl = document.getElementById("toast-delay-value");
+  if (!slider || !valueEl) return;
+  const value = clampToastDuration(state.settings.toastDurationMs);
+  slider.value = String(value);
+  valueEl.textContent = `${Math.round(value / 100) / 10}s`;
+}
+
+function getSettingsGroupForNode(node) {
+  if (!node) return "appearance";
+  if (node.getAttribute?.("data-settings-group")) {
+    return node.getAttribute("data-settings-group");
+  }
+  const id = node.id || "";
+  const has = (selector) => !!node.querySelector?.(selector);
+  if (
+    has("#ai-provider-select") ||
+    has("#openrouter-api-key") ||
+    has("#horde-api-key") ||
+    has("#lmstudio-base-url") ||
+    has("#openrouter-api-key-container") ||
+    has("#horde-api-key-container") ||
+    has("#lmstudio-base-url-container") ||
+    has("#model-select") ||
+    has("#model-pricing-filter") ||
+    has("#model-modality-filter") ||
+    has("#model-sort-order") ||
+    has("#model-refresh-btn") ||
+    has("#max-tokens-slider") ||
+    has("#temperature-slider")
+  )
+    return "api";
+  if (has("#model-selected-meta") || has("#model-roleplay-warning"))
+    return "api";
+  if (
+    has("#markdown-enabled") ||
+    has("#allow-message-html") ||
+    has("#trim-messages") ||
+    has("#stream-enabled") ||
+    has("#autopair-enabled") ||
+    has("#lock-memory-messages") ||
+    has("#markdown-custom-css") ||
+    has("#postprocess-rules-json") ||
+    has("#chat-message-alignment")
+  )
+    return "threads";
+  if (
+    has("#cancel-shortcut") ||
+    has("#home-shortcut") ||
+    has("#new-character-shortcut")
+  )
+    return "shortcuts";
+  if (
+    has("#global-prompt-template") ||
+    has("#summary-system-prompt") ||
+    has("#summary-messages-preprocessing-json") ||
+    has("#persona-injection-template") ||
+    has("#writing-instructions-injection-when")
+  )
+    return "prompting";
+  if (
+    has("#ui-language-select") ||
+    has("#toast-delay-slider") ||
+    has("#marquee-behavior-select")
+  )
+    return "appearance";
+  const text = `${node.textContent || ""}`.toLowerCase();
+  if (
+    id === "ai-provider-select" ||
+    id === "openrouter-api-key" ||
+    id === "horde-api-key" ||
+    id === "openrouter-api-key-container" ||
+    id === "horde-api-key-container" ||
+    id === "model-select" ||
+    id === "model-selected-meta" ||
+    id === "model-roleplay-warning" ||
+    id === "max-tokens-slider" ||
+    id === "temperature-slider" ||
+    id === "model-pricing-filter" ||
+    id === "model-modality-filter" ||
+    id === "model-sort-order" ||
+    id === "model-refresh-btn" ||
+    id === "completion-cooldown-slider" ||
+    id === "completion-cooldown-value" ||
+    text.includes("openrouter api key") ||
+    text.includes("ai horde api key") ||
+    text.includes("ai provider")
+  ) {
+    return "api";
+  }
+  if (
+    id === "markdown-enabled" ||
+    id === "allow-message-html" ||
+    id === "trim-messages" ||
+    id === "stream-enabled" ||
+    id === "autopair-enabled" ||
+    id === "lock-memory-messages" ||
+    id === "markdown-custom-css" ||
+    id === "postprocess-rules-json" ||
+    id === "chat-message-alignment"
+  ) {
+    return "threads";
+  }
+  if (
+    id === "cancel-shortcut" ||
+    id === "home-shortcut" ||
+    id === "new-character-shortcut"
+  ) {
+    return "shortcuts";
+  }
+  if (
+    id === "global-prompt-template" ||
+    id === "summary-system-prompt" ||
+    id === "memory-relevance-filter-enabled" ||
+    id === "summary-messages-preprocessing-json" ||
+    id === "persona-injection-template" ||
+    id === "writing-instructions-injection-when"
+  ) {
+    return "prompting";
+  }
+  if (
+    id === "ui-language-select" ||
+    id === "theme-select" ||
+    id === "toast-delay-slider" ||
+    id === "marquee-behavior-select" ||
+    id === "bot-card-avatar-effect" ||
+    id === "bot-card-avatar-transition-delay-slider" ||
+    id === "bot-card-avatar-transition-delay-value"
+  ) {
+    return "appearance";
+  }
+  return "appearance";
+}
+
+function setupSettingsTabsLayout() {
+  const body = document.getElementById("settings-modal-body");
+  const tabs = document.querySelectorAll("[data-settings-tab-btn]");
+  if (!body || tabs.length === 0 || body.dataset.tabsReady === "1") return;
+
+  const groups = [
+    "api",
+    "appearance",
+    "threads",
+    "prompting",
+    "shortcuts",
+    "defaults",
+  ];
+  const panels = new Map();
+
+  // Use the form as container if available, otherwise body
+  const container = body.querySelector("form") || body;
+
+  groups.forEach((group) => {
+    const panel = document.createElement("div");
+    panel.className = "settings-tab-panel";
+    panel.dataset.settingsTabPanel = group;
+    if (group !== "api") panel.classList.add("hidden");
+    panels.set(group, panel);
+    container.appendChild(panel);
+  });
+
+  // Move settings-group elements into their corresponding panels
+  const movable = Array.from(container.children).filter((el) =>
+    el.hasAttribute("data-settings-group"),
+  );
+  movable.forEach((node) => {
+    const group = node.getAttribute("data-settings-group");
+    const target = panels.get(group) || panels.get("appearance");
+    target.appendChild(node);
+  });
+
+  tabs.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tab = btn.getAttribute("data-settings-tab-btn") || "appearance";
+      localStorage.setItem("rp-settings-last-tab", tab);
+      tabs.forEach((b) => b.classList.toggle("active", b === btn));
+      panels.forEach((panel, key) => {
+        panel.classList.toggle("hidden", key !== tab);
+      });
+      if (tab === "prompting") {
+        requestAnimationFrame(() => {
+          const panel = panels.get("prompting");
+          if (panel) {
+            restoreSettingsPromptingTextareaCollapseStates();
+            panel
+              .querySelectorAll(".textarea-collapse textarea")
+              .forEach((textarea) => {
+                const entry = textareaCollapseStates.get(textarea);
+                if (
+                  entry &&
+                  entry.header.getAttribute("aria-expanded") === "true"
+                ) {
+                  autoExpandTextarea(textarea);
+                }
+              });
+          }
+        });
+      }
+    });
+  });
+  body.dataset.tabsReady = "1";
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem("rp-settings");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state.settings = { ...DEFAULT_SETTINGS, ...parsed };
+      state.settings.marqueeBehavior = normalizeMarqueeBehavior(
+        state.settings.marqueeBehavior,
+      );
+    }
+  } catch {
+    state.settings = { ...DEFAULT_SETTINGS };
+  }
+}
+
+function loadUiState() {
+  try {
+    const raw = localStorage.getItem("rp-ui-state");
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.shortcutsVisible === "boolean") {
+      state.shortcutsVisible = parsed.shortcutsVisible;
+    }
+    if (Array.isArray(parsed.characterTagFilters)) {
+      state.characterTagFilters = parsed.characterTagFilters
+        .map((t) => normalizeTagValue(t))
+        .filter(Boolean);
+    }
+    if (
+      typeof parsed.characterSortMode === "string" &&
+      parsed.characterSortMode
+    ) {
+      const parts = getCharacterSortParts(parsed.characterSortMode);
+      state.characterSortMode = `${parts.base}_${parts.dir}`;
+    }
+    if (
+      parsed.characterPagination &&
+      typeof parsed.characterPagination === "object"
+    ) {
+      const perPageVal = Number(parsed.characterPagination.perPage);
+      if (
+        Number.isFinite(perPageVal) &&
+        perPageVal >= 0 &&
+        CHARACTER_PAGE_SIZES.includes(perPageVal)
+      ) {
+        state.characterCardsPerPage = perPageVal;
+      }
+      const pageVal = Number(parsed.characterPagination.page);
+      if (Number.isFinite(pageVal) && pageVal >= 1) {
+        state.characterPage = Math.max(1, Math.floor(pageVal));
+      }
+    }
+    const filters = document.getElementById("character-filters");
+    if (filters) {
+      const isCollapsed =
+        localStorage.getItem("rp-filters-collapsed") === "true";
+      if (isCollapsed) {
+        filters.classList.add("collapsed");
+      } else {
+        filters.classList.remove("collapsed");
+      }
+      updateCharacterFiltersToggleUi();
+    }
+  } catch {
+    state.shortcutsVisible = false;
+    state.characterTagFilters = [];
+    state.characterSortMode = "updated_desc";
+  }
+}
+
+function saveUiState() {
+  localStorage.setItem(
+    "rp-ui-state",
+    JSON.stringify({
+      shortcutsVisible: !!state.shortcutsVisible,
+      characterTagFilters: Array.isArray(state.characterTagFilters)
+        ? state.characterTagFilters
+        : [],
+      characterPagination: {
+        page: Math.max(1, Number(state.characterPage) || 1),
+        perPage: CHARACTER_PAGE_SIZES.includes(
+          Number(state.characterCardsPerPage),
+        )
+          ? Number(state.characterCardsPerPage)
+          : 0,
+      },
+      characterSortMode: state.characterSortMode || "updated_desc",
+    }),
+  );
+}
+
+function saveSettings() {
+  localStorage.setItem("rp-settings", JSON.stringify(state.settings));
+}
+
+function exportSettings() {
+  const promptHistoryRaw = localStorage.getItem(PROMPT_HISTORY_KEY);
+  const promptCommandHistoryRaw = localStorage.getItem(PROMPT_COMMAND_HISTORY_KEY);
+  const theme = localStorage.getItem("rp-theme");
+
+  const payload = {
+    schema: "rp-settings-export-v1",
+    exportedAt: new Date().toISOString(),
+    settings: { ...state.settings },
+    promptHistory: promptHistoryRaw ? JSON.parse(promptHistoryRaw) : [],
+    promptCommandHistory: promptCommandHistoryRaw
+      ? JSON.parse(promptCommandHistoryRaw)
+      : [],
+    theme: theme || "",
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const safeDate = new Date()
+    .toISOString()
+    .replace([":", ".", "T", "Z"], "-")
+    .slice(0, 16);
+  downloadBlob(blob, `settings_${safeDate}.json`);
+  showToast(t("settingsExported") || "Settings exported.", "success");
+}
+
+function importSettings() {
+  const input = document.getElementById("settings-import-input");
+  if (input) {
+    input.click();
+  }
+}
+
+function handleSettingsImport(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const content = e.target?.result;
+      if (typeof content !== "string") {
+        throw new Error("Invalid file content");
+      }
+      const parsed = JSON.parse(content);
+      if (!parsed?.settings || typeof parsed.settings !== "object") {
+        throw new Error("Invalid settings file format");
+      }
+      const confirmed = await openConfirmDialog(
+        t("importSettingsConfirmTitle") || "Import Settings",
+        t("importSettingsConfirmMessage") ||
+          "This will replace all your current settings. Are you sure?",
+      );
+      if (!confirmed) return;
+      const mergedSettings = { ...DEFAULT_SETTINGS, ...parsed.settings };
+      state.settings = mergedSettings;
+      saveSettings();
+      if (typeof window.applySettingsToUi === "function") {
+        window.applySettingsToUi();
+      }
+      if (Array.isArray(parsed.promptHistory)) {
+        try {
+          localStorage.setItem(
+            PROMPT_HISTORY_KEY,
+            JSON.stringify(parsed.promptHistory.slice(-PROMPT_HISTORY_MAX)),
+          );
+          state.promptHistory = parsed.promptHistory.slice(-PROMPT_HISTORY_MAX);
+        } catch (err) {
+          console.warn("Failed to restore prompt history:", err);
+        }
+      }
+      if (Array.isArray(parsed.promptCommandHistory)) {
+        try {
+          localStorage.setItem(
+            PROMPT_COMMAND_HISTORY_KEY,
+            JSON.stringify(
+              parsed.promptCommandHistory.slice(-PROMPT_COMMAND_HISTORY_MAX),
+            ),
+          );
+          state.promptCommandHistory = parsed.promptCommandHistory.slice(
+            -PROMPT_COMMAND_HISTORY_MAX,
+          );
+        } catch (err) {
+          console.warn("Failed to restore prompt command history:", err);
+        }
+      }
+      if (typeof parsed.theme === "string" && parsed.theme) {
+        try {
+          localStorage.setItem("rp-theme", parsed.theme);
+          if (typeof window.setTheme === "function") {
+            window.setTheme(parsed.theme);
+          }
+        } catch (err) {
+          console.warn("Failed to restore theme:", err);
+        }
+      }
+      showToast(t("settingsImported") || "Settings imported successfully.", "success");
+    } catch (err) {
+      console.error("Failed to import settings:", err);
+      showToast(
+        t("importSettingsFailed") || "Failed to import settings: " + err.message,
+        "error",
+      );
+    }
+  };
+  reader.onerror = () => {
+    showToast(t("importSettingsFailed") || "Failed to read settings file.", "error");
+  };
+  reader.readAsText(file);
+}
+
+function savePromptCommandHistory() {
+  try {
+    localStorage.setItem(
+      PROMPT_COMMAND_HISTORY_KEY,
+      JSON.stringify(state.promptCommandHistory || []),
+    );
+  } catch (err) {
+    console.warn("Failed to persist prompt command history:", err);
+  }
+}
+
+function loadPromptCommandHistory() {
+  const raw = localStorage.getItem(PROMPT_COMMAND_HISTORY_KEY);
+  if (!raw) {
+    state.promptCommandHistory = [];
+    return;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      state.promptCommandHistory = parsed
+        .filter((entry) => entry && typeof entry.content === "string")
+        .slice(-PROMPT_COMMAND_HISTORY_MAX);
+    } else {
+      state.promptCommandHistory = [];
+    }
+  } catch (err) {
+    console.warn("Failed to load prompt command history:", err);
+    state.promptCommandHistory = [];
+  }
+}
+
+function savePromptHistory() {
+  try {
+    localStorage.setItem(
+      PROMPT_HISTORY_KEY,
+      JSON.stringify(state.promptHistory || []),
+    );
+  } catch (err) {
+    console.warn("Failed to persist prompt history:", err);
+  }
+}
+
+function loadPromptHistory() {
+  const raw = localStorage.getItem(PROMPT_HISTORY_KEY);
+  if (!raw) {
+    state.promptHistory = [];
+    return;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      state.promptHistory = parsed
+        .filter((entry) => entry && typeof entry.content === "string")
+        .slice(-PROMPT_HISTORY_MAX);
+    } else {
+      state.promptHistory = [];
+    }
+  } catch (err) {
+    console.warn("Failed to load prompt history:", err);
+    state.promptHistory = [];
+  }
+}
+
+function addPromptToHistory(threadId, content, isOoc = false) {
+  if (!content || !threadId) return;
+  const trimmed = String(content).trim();
+  if (!trimmed) return;
+
+  state.promptHistory = Array.isArray(state.promptHistory)
+    ? state.promptHistory
+    : [];
+
+  // Check most recent prompt history entry for this thread
+  const threadPromptEntries = state.promptHistory.filter(
+    (e) => e.threadId === threadId,
+  );
+  if (threadPromptEntries.length > 0) {
+    threadPromptEntries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (threadPromptEntries[0].content === trimmed) {
+      return;
+    }
+  }
+
+  // Check most recent command history entry for this thread
+  const commandEntries = (state.promptCommandHistory || []).filter(
+    (e) => e.threadId === threadId,
+  );
+  if (commandEntries.length > 0) {
+    commandEntries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (commandEntries[0].content === trimmed) {
+      return;
+    }
+  }
+
+  const entryPersonaId = currentPersona?.id ?? null;
+  const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
+  state.promptHistory.push({
+    threadId,
+    content: trimmed,
+    createdAt: Date.now(),
+    isOoc,
+    personaId: entryPersonaId,
+    personaColor: entryPersonaColor,
+  });
+
+  if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
+    state.promptHistory.shift();
+  }
+  savePromptHistory();
+}
+
+function addPromptCommandEntry(threadId, content) {
+  if (!content) return false;
+  const trimmed = String(content).trim();
+  if (!trimmed) return false;
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
+    ? state.promptCommandHistory
+    : [];
+  const existingIndex = state.promptCommandHistory.findIndex(
+    (entry) => entry.threadId === threadId && entry.content === trimmed,
+  );
+  if (existingIndex >= 0) {
+    state.promptCommandHistory.splice(existingIndex, 1);
+  }
+  const entryPersonaId = currentPersona?.id ?? null;
+  const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
+  state.promptCommandHistory.push({
+    threadId,
+    content: trimmed,
+    createdAt: Date.now(),
+    isOoc: true,
+    personaId: entryPersonaId,
+    personaColor: entryPersonaColor,
+  });
+  if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+    state.promptCommandHistory.shift();
+  }
+  savePromptCommandHistory();
+  return true;
+}
+
+function updateSettingsRangeTone(slider, value, limits) {
+  if (!slider) return;
+  const { warnBelow, dangerAbove } = limits || {};
+  slider.classList.remove("tone-warn", "tone-danger");
+  if (typeof warnBelow === "number" && value < warnBelow) {
+    slider.classList.add("tone-warn");
+    return;
+  }
+  if (typeof dangerAbove === "number" && value > dangerAbove) {
+    slider.classList.add("tone-danger");
+  }
+}
+
+function markModalDirtyOnInput(modalId, selectors) {
+  selectors.forEach((selector) => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    const markDirty = () => setModalDirtyState(modalId, true);
+    el.addEventListener("input", markDirty);
+    el.addEventListener("change", markDirty);
+  });
+}
+
+function getModalActionButtons(modalId) {
+  if (modalId === "text-input-modal") {
+    return {
+      applyBtn: null,
+      saveBtn: document.getElementById("text-input-save"),
+    };
+  }
+  const prefix = String(modalId || "").replace(/-modal$/, "");
+  return {
+    applyBtn: document.getElementById(`apply-${prefix}-btn`),
+    saveBtn: document.getElementById(`save-${prefix}-btn`),
+  };
+}
+
+function updateModalActionButtons(modalId) {
+  const { applyBtn, saveBtn } = getModalActionButtons(modalId);
+  const isDirty = !!state.modalDirty[modalId];
+  [applyBtn, saveBtn].forEach((btn) => {
+    if (!btn) return;
+    btn.disabled = !isDirty;
+  });
+}
+
+function setModalDirtyState(modalId, isDirty) {
+  state.modalDirty[modalId] = !!isDirty;
+  updateModalActionButtons(modalId);
+}
+
+function normalizeShortcutString(value) {
+  const parts = String(value || "")
+    .split("+")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return "";
+  const key = parts.pop();
+  const mods = parts
+    .map((m) => m.toLowerCase())
+    .filter((m, i, arr) => arr.indexOf(m) === i)
+    .sort(
+      (a, b) =>
+        ["ctrl", "alt", "shift", "meta"].indexOf(a) -
+        ["ctrl", "alt", "shift", "meta"].indexOf(b),
+    )
+    .map((m) => {
+      if (m === "ctrl") return "Ctrl";
+      if (m === "alt") return "Alt";
+      if (m === "shift") return "Shift";
+      if (m === "meta") return "Meta";
+      return m;
+    });
+  const normalizedKey =
+    key.length === 1 ? key.toUpperCase() : key[0].toUpperCase() + key.slice(1);
+  return [...mods, normalizedKey].join("+");
+}
+
+function matchShortcutEvent(e, shortcut) {
+  const normalized = normalizeShortcutString(shortcut);
+  if (!normalized) return false;
+  const parts = normalized.split("+");
+  const key = parts.pop();
+  const wantCtrl = parts.includes("Ctrl");
+  const wantAlt = parts.includes("Alt");
+  const wantShift = parts.includes("Shift");
+  const wantMeta = parts.includes("Meta");
+  if (e.ctrlKey !== wantCtrl) return false;
+  if (e.altKey !== wantAlt) return false;
+  if (e.shiftKey !== wantShift) return false;
+  if (e.metaKey !== wantMeta) return false;
+  const eventKey = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+  if (key === "Period" && e.key === ".") return true;
+  return eventKey === key;
+}
+
+function hasBlockingUnsavedModal() {
+  const active = state.activeModalId;
+  if (!active) return false;
+  if (active === "settings-modal") return false;
+  return !!state.modalDirty[active];
+}
+
+function triggerGoHomeShortcut() {
+  if (hasBlockingUnsavedModal()) return;
+  if (state.activeModalId === "settings-modal") closeActiveModal();
+  if (state.activeModalId && state.activeModalId !== "settings-modal") return;
+  showMainView();
+}
+
+function triggerNewCharacterShortcut() {
+  if (state.activeModalId === "character-modal") return;
+  if (hasBlockingUnsavedModal()) return;
+  if (state.activeModalId === "settings-modal") closeActiveModal();
+  if (state.activeModalId && state.activeModalId !== "settings-modal") return;
+  openCharacterModal();
+}
+
+function showToast(message, type = "success") {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  toast.style.cursor = "pointer";
+  toast.addEventListener("click", () => toast.remove());
+  toast.addEventListener("touchstart", () => toast.remove(), { passive: true });
+  container.appendChild(toast);
+  const delay = clampToastDuration(state.settings.toastDurationMs);
+  window.setTimeout(() => {
+    toast.remove();
+  }, delay);
+}
+
+function updateCooldownPinnedToast(secondsOverride = null) {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+  const existing = container.querySelector(".toast.cooldown-pinned");
+  const seconds =
+    Number.isFinite(Number(secondsOverride)) && Number(secondsOverride) > 0
+      ? Number(secondsOverride)
+      : getCooldownRemainingSeconds();
+  const active = seconds > 0;
+  if (!active) {
+    existing?.remove();
+    return;
+  }
+  const text = tf("cooldownToastActive", { seconds });
+  const toast = existing || document.createElement("div");
+  toast.className = "toast cooldown-pinned";
+  toast.textContent = text;
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  if (!existing) {
+    container.prepend(toast);
+  } else if (container.firstElementChild !== toast) {
+    container.prepend(toast);
+  }
+}
+
+function openConfirmDialog(title, message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("confirm-modal");
+    const yesBtn = document.getElementById("confirm-yes-btn");
+    const noBtn = document.getElementById("confirm-no-btn");
+    const cancelBtn = document.getElementById("confirm-cancel-btn");
+    yesBtn.textContent = t("confirm");
+    noBtn.textContent = t("cancel");
+    noBtn.classList.remove("hidden");
+    cancelBtn.classList.remove("hidden");
+    state.confirmMode = "confirm";
+    document.getElementById("confirm-title").textContent =
+      title || t("confirm");
+    document.getElementById("confirm-message").textContent = message || "";
+    state.confirmResolver = resolve;
+    modal.classList.remove("hidden");
+  });
+}
+
+function resolveUnsavedDialog(action = "back") {
+  const modal = document.getElementById("unsaved-modal");
+  modal?.classList.add("hidden");
+  const resolver = state.unsavedResolver;
+  state.unsavedResolver = null;
+  if (resolver) resolver(action || "back");
+}
+
+function openUnsavedChangesDialog() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("unsaved-modal");
+    if (!modal) {
+      resolve("back");
+      return;
+    }
+    state.unsavedResolver = resolve;
+    modal.classList.remove("hidden");
+  });
+}
+
+function openInfoDialog(title, message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("confirm-modal");
+    const yesBtn = document.getElementById("confirm-yes-btn");
+    const noBtn = document.getElementById("confirm-no-btn");
+    const cancelBtn = document.getElementById("confirm-cancel-btn");
+    yesBtn.textContent = t("ok");
+    noBtn.classList.add("hidden");
+    cancelBtn.classList.add("hidden");
+    state.confirmMode = "info";
+    document.getElementById("confirm-title").textContent =
+      title || t("message");
+    document.getElementById("confirm-message").textContent = message || "";
+    state.confirmResolver = () => resolve(true);
+    modal.classList.remove("hidden");
+  });
+}
+
+function resolveConfirmDialog(value) {
+  const modal = document.getElementById("confirm-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  modal.classList.add("hidden");
+  const yesBtn = document.getElementById("confirm-yes-btn");
+  const noBtn = document.getElementById("confirm-no-btn");
+  const cancelBtn = document.getElementById("confirm-cancel-btn");
+  yesBtn.textContent = t("confirm");
+  noBtn.textContent = t("cancel");
+  noBtn.classList.remove("hidden");
+  cancelBtn.classList.remove("hidden");
+  state.confirmMode = "confirm";
+  const resolver = state.confirmResolver;
+  state.confirmResolver = null;
+  if (typeof resolver === "function") resolver(!!value);
+}
+
+function openTextInputDialog({
+  title = "",
+  label = "",
+  value = "",
+  saveLabel = "",
+  cancelLabel = "",
+  maxLength = 128,
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("text-input-modal");
+    const titleEl = document.getElementById("text-input-title");
+    const labelEl = document.getElementById("text-input-label");
+    const inputEl = document.getElementById("text-input-value");
+    const saveBtn = document.getElementById("text-input-save");
+    const cancelBtn = document.getElementById("text-input-cancel");
+    if (!modal || !titleEl || !labelEl || !inputEl || !saveBtn || !cancelBtn) {
+      resolve(null);
+      return;
+    }
+    const originalValue = String(value || "");
+    titleEl.textContent = title || t("input");
+    labelEl.textContent = label || t("value");
+    inputEl.value = originalValue;
+    inputEl.maxLength = Math.max(1, Number(maxLength) || 128);
+    saveBtn.textContent = saveLabel || t("save");
+    cancelBtn.textContent = cancelLabel || t("cancel");
+    setModalDirtyState("text-input-modal", false);
+    const onInput = () => {
+      setModalDirtyState("text-input-modal", inputEl.value !== originalValue);
+    };
+    const onKeyDown = (e) => {
+      if (e.key === "Enter" && inputEl.value !== originalValue) {
+        e.preventDefault();
+        resolveTextInputDialog(true);
+      }
+    };
+    inputEl.addEventListener("input", onInput);
+    inputEl.addEventListener("keydown", onKeyDown);
+    const cleanup = () => {
+      inputEl.removeEventListener("input", onInput);
+      inputEl.removeEventListener("keydown", onKeyDown);
+    };
+    state.textInputResolver = (save) => {
+      cleanup();
+      resolve(save);
+    };
+    state.activeModalId = "text-input-modal";
+    modal.classList.remove("hidden");
+    window.setTimeout(() => {
+      inputEl.focus();
+      inputEl.select();
+    }, 0);
+  });
+}
+
+function resolveTextInputDialog(save) {
+  const modal = document.getElementById("text-input-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  const resolver = state.textInputResolver;
+  state.textInputResolver = null;
+  const inputEl = document.getElementById("text-input-value");
+  modal.classList.add("hidden");
+  if (state.activeModalId === "text-input-modal") {
+    state.activeModalId = null;
+  }
+  if (typeof resolver === "function") {
+    resolver(save ? String(inputEl?.value || "") : null);
+  }
+}
+
+/*
+function applyMarkdownCustomCss() {
+  const id = "dynamic-markdown-style";
+  let styleTag = document.getElementById(id);
+  if (!styleTag) {
+    styleTag = document.createElement("style");
+    styleTag.id = id;
+    document.head.appendChild(styleTag);
+  }
+  styleTag.textContent = String(state.settings.markdownCustomCss || "");
+}
+*/
+
+function applyChatMessageAlignment() {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  if (state.settings.chatMessageAlignment === "center") {
+    log.classList.add("chat-messages-centered");
+  } else {
+    log.classList.remove("chat-messages-centered");
+  }
+}
+
+function parseShortcutEntries(raw) {
+  const lines = String(raw || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n");
+  const entries = [];
+  let current = null;
+
+  const pushCurrent = () => {
+    if (!current) return;
+    if (!current.name || !current.message) return;
+    entries.push({
+      name: current.name,
+      message: current.message,
+      insertionType: current.insertionType === "append" ? "append" : "replace",
+      autoSend: current.autoSend === "yes",
+      clearAfterSend: current.clearAfterSend === "yes",
+    });
+  };
+
+  for (const line of lines) {
+    const m = line.match(/^@([a-zA-Z]+)\s*=\s*(.*)$/);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    const value = m[2] ?? "";
+    if (key === "name") {
+      pushCurrent();
+      current = {
+        name: value,
+        message: "",
+        insertionType: "replace",
+        autoSend: "no",
+        clearAfterSend: "yes",
+      };
+      continue;
+    }
+    if (!current) continue;
+    if (key === "message") current.message = value;
+    if (key === "insertiontype")
+      current.insertionType = value.trim().toLowerCase();
+    if (key === "autosend") current.autoSend = value.trim().toLowerCase();
+    if (key === "clearaftersend")
+      current.clearAfterSend = value.trim().toLowerCase();
+  }
+  pushCurrent();
+  return entries;
+}
+
+function serializeShortcutEntries(entries) {
+  return entries
+    .map(
+      (s) =>
+        `@name=${s.name}\n@message=${s.message}\n@insertionType=${s.insertionType}\n@autoSend=${s.autoSend ? "yes" : "no"}\n@clearAfterSend=${s.clearAfterSend ? "yes" : "no"}`,
+    )
+    .join("\n\n");
+}
+
+async function saveShortcutsFromModal({ close = true } = {}) {
+  const raw = document.getElementById("shortcuts-raw").value;
+  const entries = parseShortcutEntries(raw);
+  state.settings.shortcutsRaw = serializeShortcutEntries(entries);
+  saveSettings();
+  setModalDirtyState("shortcuts-modal", false);
+  document.getElementById("shortcuts-raw").value = state.settings.shortcutsRaw;
+  await renderShortcutsBar();
+  showToast(t("shortcutsSaved"), "success");
+  if (close) {
+    closeActiveModal();
+  }
+  return true;
+}
+
+function isValidNewManagerTag(inputValue, editingTag = null) {
+  const tag = normalizeTagValue(inputValue);
+  if (tag.length < 2) return false;
+  const normalizedTag = tag.toLowerCase();
+  const editingLower = editingTag
+    ? String(editingTag || "").toLowerCase()
+    : null;
+  return !getAllAvailableTags().some((t) => {
+    const lower = t.toLowerCase();
+    if (editingLower && lower === editingLower) {
+      return false;
+    }
+    return lower === normalizedTag;
+  });
+}
+
+function updateTagManagerAddButtonState() {
+  const input = document.getElementById("tag-manager-input");
+  const btn = document.getElementById("add-tag-btn");
+  if (!input || !btn) return;
+  btn.disabled = !isValidNewManagerTag(input.value, state.tagManagerEditingTag);
+}
+
+function renderTagManagerList() {
+  const list = document.getElementById("tag-manager-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const tags = [...getAllAvailableTags()].sort((a, b) => a.localeCompare(b));
+  tags.forEach((tag) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "tag-filter-chip";
+    chip.textContent = tag;
+    chip.addEventListener("click", (e) => {
+      const input = document.getElementById("tag-manager-input");
+      if (input) {
+        input.value = tag;
+        input.focus();
+        state.tagManagerEditingTag = tag;
+        updateTagManagerAddButtonState();
+      }
+    });
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "tag-remove-btn";
+    removeBtn.textContent = "X";
+    removeBtn.setAttribute("aria-label", `${t("removeTagTitle")}: ${tag}`);
+    removeBtn.title = t("removeTagTitle");
+    removeBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await removeTagFromCatalog(tag);
+    });
+    chip.appendChild(removeBtn);
+    list.appendChild(chip);
+  });
+}
+
+async function addTagFromManagerInput() {
+  const input = document.getElementById("tag-manager-input");
+  if (!input) return;
+  const tag = normalizeTagValue(input.value);
+  if (tag.length < 2) return;
+  if (!isValidNewManagerTag(tag, state.tagManagerEditingTag)) return;
+  const editingTag = state.tagManagerEditingTag;
+  const existing = Array.isArray(state.settings.customTags)
+    ? [...state.settings.customTags]
+    : [];
+  if (editingTag) {
+    const normalizedIndex = existing.findIndex(
+      (t) => t.toLowerCase() === editingTag.toLowerCase(),
+    );
+    if (normalizedIndex >= 0) {
+      existing[normalizedIndex] = tag;
+    } else {
+      existing.push(tag);
+    }
+  } else {
+    existing.push(tag);
+  }
+  state.settings.customTags = existing;
+  state.settings.tagsInitialized = true;
+  saveSettings();
+  input.value = "";
+  if (editingTag) {
+    await renameTagAcrossCharacters(editingTag, tag);
+    state.tagManagerEditingTag = null;
+  }
+  updateTagManagerAddButtonState();
+  renderTagManagerList();
+  renderTagPresetsDataList();
+  renderCharacterTagPresetButtons();
+  renderCharacterTagFilterChips();
+  await renderCharacters();
+  showToast(t("tagsUpdated"), "success");
+}
+
+async function removeTagFromCatalog(tag) {
+  const normalized = normalizeTagValue(tag);
+  const lower = normalized.toLowerCase();
+  if (!normalized) return;
+  const allCharacters = await db.characters.toArray();
+  const affectedCharacters = allCharacters.filter((char) =>
+    (Array.isArray(char.tags) ? char.tags : []).some(
+      (t) => String(t || "").toLowerCase() === lower,
+    ),
+  );
+  if (affectedCharacters.length > 0) {
+    const affectedList = affectedCharacters
+      .slice(0, 12)
+      .map((c) => `- ${c.name || `Character #${c.id}`} (#${c.id})`)
+      .join("\n\n");
+    const extra =
+      affectedCharacters.length > 12
+        ? `\n\n...and ${affectedCharacters.length - 12} more.`
+        : "";
+    const ok = await openConfirmDialog(
+      t("removeTagTitle"),
+      tf("removeTagAffectsChars", { list: affectedList, extra }),
+    );
+    if (!ok) return;
+  } else {
+    const ok = await openConfirmDialog(
+      t("removeTagTitle"),
+      t("removeTagConfirmSimple"),
+    );
+    if (!ok) return;
+  }
+
+  const nextTags = (
+    Array.isArray(state.settings.customTags) ? state.settings.customTags : []
+  ).filter((t) => String(t || "").toLowerCase() !== lower);
+  state.settings.customTags = nextTags;
+  state.settings.tagsInitialized = true;
+  saveSettings();
+
+  if (affectedCharacters.length > 0) {
+    await db.transaction("rw", db.characters, async () => {
+      for (const char of affectedCharacters) {
+        const nextCharTags = (Array.isArray(char.tags) ? char.tags : []).filter(
+          (t) => String(t || "").toLowerCase() !== lower,
+        );
+        await db.characters.update(char.id, {
+          tags: nextCharTags,
+          updatedAt: Date.now(),
+        });
+      }
+    });
+  }
+
+  state.characterTagFilters = state.characterTagFilters.filter(
+    (t) => String(t || "").toLowerCase() !== lower,
+  );
+  saveUiState();
+  if (currentCharacter) {
+    const refreshed = await db.characters.get(currentCharacter.id);
+    if (refreshed) {
+      currentCharacter = refreshed;
+      state.cachedChatBotAvatar = {
+        url: null,
+        characterId: null,
+        personaId: null,
+      };
+    }
+  }
+  renderTagManagerList();
+  updateTagManagerAddButtonState();
+  renderTagPresetsDataList();
+  renderCharacterTagPresetButtons();
+  renderCharacterTagFilterChips();
+  await renderCharacters();
+  showToast(t("tagsUpdated"), "success");
+}
+
+async function renderShortcutsBar() {
+  const bar = document.getElementById("shortcuts-bar");
+  const toggleBtn = document.getElementById("shortcuts-toggle-btn");
+  if (!bar) return;
+  const entries = parseShortcutEntries(state.settings.shortcutsRaw);
+  bar.innerHTML = "";
+  const isVisible = currentThread?.shortcutsVisible === true;
+  bar.classList.toggle("hidden", !isVisible);
+  if (toggleBtn) {
+    toggleBtn.classList.toggle("is-active", isVisible);
+    toggleBtn.title = isVisible ? t("hideShortcuts") : t("showShortcuts");
+    toggleBtn.disabled = entries.length === 0;
+  }
+  if (!isVisible || entries.length === 0) return;
+
+  entries.forEach((entry, index) => {
+    const btn = document.createElement("button");
+    btn.className = "shortcut-chip";
+    btn.type = "button";
+    btn.textContent = entry.name || `Shortcut ${index + 1}`;
+    btn.addEventListener("click", async () => {
+      await applyShortcutEntry(entry);
+    });
+    btn.addEventListener("dblclick", () => applyShortcutEntry(entry, true));
+    bar.appendChild(btn);
+  });
+}
+
+async function toggleShortcutsVisibility() {
+  if (currentThread) {
+    const newValue = currentThread.shortcutsVisible === false;
+    currentThread.shortcutsVisible = newValue;
+    await db.threads.update(currentThread.id, {
+      shortcutsVisible: newValue,
+    });
+  } else {
+    state.shortcutsVisible = !state.shortcutsVisible;
+    saveUiState();
+  }
+  renderShortcutsBar();
+}
+
+async function closeShortcutsForOverlay() {
+  if (currentThread) {
+    if (currentThread.shortcutsVisible === true) {
+      currentThread.shortcutsVisible = false;
+      await db.threads.update(currentThread.id, {
+        shortcutsVisible: false,
+      });
+    }
+  } else {
+    state.shortcutsVisible = false;
+    saveUiState();
+  }
+  await renderShortcutsBar();
+}
+
+async function applyShortcutEntry(entry, forceSend = false) {
+  const input = document.getElementById("user-input");
+  const current = input.value;
+  if (entry.insertionType === "append") {
+    const start = input.selectionStart ?? current.length;
+    const end = input.selectionEnd ?? current.length;
+    input.value = `${current.slice(0, start)}${entry.message}${current.slice(end)}`;
+    const caret = start + entry.message.length;
+    input.setSelectionRange(caret, caret);
+  } else {
+    input.value = entry.message;
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+  input.focus();
+
+  state.activeShortcut = {
+    initialValue: input.value,
+    clearAfterSend: !!entry.clearAfterSend,
+  };
+
+  if (entry.autoSend || forceSend) {
+    await sendMessage({ preserveInput: !entry.clearAfterSend });
+  }
+}
+
+async function renderAll() {
+  await Promise.all([
+    renderCharacters(),
+    renderThreads(),
+    renderPersonaSelector(),
+    renderPersonaModalList(),
+    renderShortcutsBar(),
+  ]);
+  renderCharacterTagFilterChips();
+}
+
+function initCharacterCardHoverVideos(card, avatarWrap, videoAvatars) {
+  if (!card || !avatarWrap || !Array.isArray(videoAvatars)) return;
+  const hoverContainer = document.createElement("div");
+  hoverContainer.className = "character-avatar-hover-videos";
+  hoverContainer.setAttribute("aria-hidden", "true");
+  const videoElements = [];
+  videoAvatars.forEach((avatarData) => {
+    const video = document.createElement("video");
+    video.className = "character-avatar-hover-video";
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.loop = false;
+    const src =
+      avatarData.data instanceof Blob
+        ? getCachedAvatarBlobUrl(avatarData.data)
+        : avatarData.data;
+    if (src) {
+      video.src = src;
+    }
+    video.style.display = "none";
+    hoverContainer.appendChild(video);
+    videoElements.push(video);
+  });
+  if (videoElements.length === 0) return;
+  avatarWrap.appendChild(hoverContainer);
+
+  let hoverIndex = 0;
+  let hoverActive = false;
+
+  const showVideo = (index) => {
+    videoElements.forEach((video, idx) => {
+      if (idx === index) {
+        video.style.display = "block";
+        video.style.opacity = "1";
+      } else {
+        video.style.display = "none";
+        video.style.opacity = "0";
+      }
+    });
+  };
+
+  const playVideo = (index) => {
+    const video = videoElements[index];
+    if (!video) return;
+    video.currentTime = 0;
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
+  };
+
+  const advanceVideo = () => {
+    if (!hoverActive) return;
+    hoverIndex = (hoverIndex + 1) % videoElements.length;
+    showVideo(hoverIndex);
+    playVideo(hoverIndex);
+  };
+
+  videoElements.forEach((video) => {
+    video.addEventListener("ended", () => {
+      if (hoverActive) {
+        advanceVideo();
+      }
+    });
+  });
+
+  const startHoverPlayback = () => {
+    if (hoverActive) return;
+    hoverActive = true;
+    hoverIndex = 0;
+    showVideo(hoverIndex);
+    hoverContainer.classList.add("active");
+    playVideo(hoverIndex);
+  };
+
+  const stopHoverPlayback = () => {
+    if (!hoverActive) return;
+    hoverActive = false;
+    videoElements.forEach((video) => {
+      video.pause();
+      video.currentTime = 0;
+    });
+    hoverContainer.classList.remove("active");
+  };
+
+  const startHandler = () => startHoverPlayback();
+  const stopHandler = () => stopHoverPlayback();
+
+  card.addEventListener("pointerenter", startHandler);
+  card.addEventListener("focusin", startHandler);
+  card.addEventListener("pointerleave", stopHandler);
+  card.addEventListener("focusout", stopHandler);
+  card.tabIndex = 0;
+}
+
+async function renderCharacters() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const previousScrollTop = Number(grid.scrollTop || 0);
+  const characters = await db.characters.toArray();
+  const filters = document.getElementById("character-filters");
+  if (filters) {
+    filters.classList.toggle("hidden", characters.length === 0);
+  }
+  const threads = await db.threads.toArray();
+  const threadCountByCharId = new Map();
+  threads.forEach((thread) => {
+    const id = Number(thread.characterId);
+    if (!Number.isInteger(id)) return;
+    threadCountByCharId.set(id, (threadCountByCharId.get(id) || 0) + 1);
+  });
+
+  const activeFilters = Array.isArray(state.characterTagFilters)
+    ? state.characterTagFilters.map((t) => t.toLowerCase())
+    : [];
+  const filteredCharacters = characters.filter((char) => {
+    if (activeFilters.length === 0) return true;
+    const tags = Array.isArray(char.tags)
+      ? char.tags.map((t) => String(t || "").toLowerCase())
+      : [];
+    return activeFilters.every((f) => tags.includes(f));
+  });
+
+  const sortedCharacters = [...filteredCharacters];
+  sortedCharacters.sort((a, b) => {
+    // Pinned characters always appear first (undefined/pinned false = 0, true = 1)
+    const pinA = a.pinned === true ? 1 : 0;
+    const pinB = b.pinned === true ? 1 : 0;
+    if (pinA !== pinB) {
+      return pinB - pinA; // pinned first
+    }
+    const parts = getCharacterSortParts(state.characterSortMode);
+    const mode = `${parts.base}_${parts.dir}`;
+    const nameA = String(a.name || "").toLowerCase();
+    const nameB = String(b.name || "").toLowerCase();
+    const createdA = Number(a.createdAt || 0);
+    const createdB = Number(b.createdAt || 0);
+    const updatedA = Number(a.updatedAt || 0);
+    const updatedB = Number(b.updatedAt || 0);
+    const threadsA = Number(threadCountByCharId.get(Number(a.id)) || 0);
+    const threadsB = Number(threadCountByCharId.get(Number(b.id)) || 0);
+
+    if (mode === "name_asc") return nameA.localeCompare(nameB);
+    if (mode === "name_desc") return nameB.localeCompare(nameA);
+    if (mode === "created_asc") return createdA - createdB;
+    if (mode === "created_desc") return createdB - createdA;
+    if (mode === "updated_asc") return updatedA - updatedB;
+    if (mode === "threads_asc")
+      return threadsA - threadsB || updatedB - updatedA;
+    if (mode === "threads_desc")
+      return threadsB - threadsA || updatedB - updatedA;
+    return updatedB - updatedA;
+  });
+
+  const perPageSetting = Number(state.characterCardsPerPage);
+  const perPage = CHARACTER_PAGE_SIZES.includes(perPageSetting)
+    ? perPageSetting
+    : 0;
+  const totalCharacters = sortedCharacters.length;
+  const totalPages =
+    totalCharacters === 0
+      ? 0
+      : perPage > 0
+        ? Math.max(1, Math.ceil(totalCharacters / perPage))
+        : 1;
+  let currentPage = Number(state.characterPage) || 1;
+  if (totalPages === 0) {
+    currentPage = 1;
+  } else {
+    currentPage = Math.max(1, Math.min(currentPage, totalPages));
+  }
+  state.characterPage = currentPage;
+  const charactersToRender =
+    totalCharacters === 0
+      ? []
+      : perPage > 0
+        ? sortedCharacters.slice(
+            (currentPage - 1) * perPage,
+            (currentPage - 1) * perPage + perPage,
+          )
+        : sortedCharacters;
+
+  const existingCards = grid.querySelectorAll(".character-card");
+  const carouselStates = new Map();
+  existingCards.forEach((card) => {
+    const charId = card.dataset.characterId;
+    if (card._saveVideoTimes) card._saveVideoTimes();
+    if (card._getCarouselState) {
+      carouselStates.set(charId, card._getCarouselState());
+    }
+    if (card._stopCarousel) card._stopCarousel();
+  });
+
+  grid.innerHTML = "";
+  if (totalCharacters === 0) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent =
+      activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+    grid.appendChild(empty);
+    updateCharacterPaginationControls(0, 0);
+    return;
+  }
+
+  charactersToRender.forEach((char) => {
+    const resolved = resolveCharacterForLanguage(
+      char,
+      char?.selectedCardLanguage,
+    );
+    const threadCount = threadCountByCharId.get(Number(char.id)) || 0;
+    const card = document.createElement("article");
+    card.className = "character-card";
+    card.dataset.characterId = String(char.id);
+    if (
+      state.characterCardSlide &&
+      Number(state.characterCardSlide.charId) === Number(char.id)
+    ) {
+      card.classList.add(
+        state.characterCardSlide.direction === "prev"
+          ? "card-slide-prev"
+          : "card-slide-next",
+      );
+    }
+
+    const avatarWrap = document.createElement("div");
+    avatarWrap.className = "character-avatar-wrap";
+
+    const avatars = resolved.avatars || [];
+    const hasMultipleAvatars = avatars.length > 1;
+    const avatarEffect = state.settings.botCardAvatarEffect || "none";
+    const avatarTransitionDelay =
+      Number(state.settings.botCardAvatarTransitionDelay) || 4;
+    const transitionDelayMs = avatarTransitionDelay * 1000;
+    const videoAvatars = avatars.filter(
+      (avatar) => avatar?.type === "video" && avatar.data,
+    );
+    const hoverEffectEnabled =
+      avatarEffect === "hover" && videoAvatars.length > 0;
+
+    if (hasMultipleAvatars && avatarEffect === "carousel") {
+      let currentAvatarIndex = 0;
+      let carouselInterval = null;
+
+      const createAvatarElement = (avatarData, index) => {
+        const isVideo = avatarData.type === "video";
+        let el;
+        if (isVideo) {
+          el = document.createElement("video");
+          el.muted = true;
+          el.loop = false;
+          el.playsInline = true;
+        } else {
+          el = document.createElement("img");
+        }
+        el.className = "character-avatar";
+        el.src =
+          avatarData.data instanceof Blob
+            ? getCachedAvatarBlobUrl(avatarData.data)
+            : avatarData.data;
+        el.alt = `${resolved.name || "Character"} avatar`;
+        el.style.position = "absolute";
+        el.style.top = "0";
+        el.style.left = "0";
+        el.style.width = "100%";
+        el.style.height = "100%";
+        el.style.objectFit = "cover";
+        el.style.opacity = index === 0 ? "1" : "0";
+        el.style.transition = "opacity 0.5s ease-in-out";
+        el.style.zIndex = index === 0 ? "1" : "0";
+        if (isVideo) {
+          el.dataset.videoPlayed = "false";
+        }
+        return el;
+      };
+
+      const carouselContainer = document.createElement("div");
+      carouselContainer.className = "character-avatar-carousel";
+      carouselContainer.style.position = "relative";
+      carouselContainer.style.width = "100%";
+      carouselContainer.style.height = "100%";
+
+      const avatarElements = avatars.map((avatar, index) => {
+        const el = createAvatarElement(avatar, index);
+        if (el.tagName === "VIDEO") {
+          el.addEventListener("loadedmetadata", () => {
+            el.dataset.duration = String(el.duration);
+          });
+          el.addEventListener("ended", () => {
+            el.dataset.videoEnded = "true";
+            if (carouselInterval) {
+              clearInterval(carouselInterval);
+              carouselInterval = null;
+            }
+            const videoDuration = Number(el.dataset.duration) || 0;
+            if (videoDuration > 0 && videoDuration > avatarTransitionDelay) {
+              advanceCarousel();
+            } else {
+              const remainingDelay = avatarTransitionDelay - videoDuration;
+              carouselInterval = setTimeout(
+                advanceCarousel,
+                remainingDelay * 1000,
+              );
+            }
+          });
+        }
+        carouselContainer.appendChild(el);
+        return el;
+      });
+
+      const showAvatar = (index) => {
+        avatarElements.forEach((el, i) => {
+          el.style.opacity = i === index ? "1" : "0";
+          el.style.zIndex = i === index ? "1" : "0";
+        });
+      };
+
+      const scheduleNextTransition = () => {
+        if (carouselInterval) {
+          clearInterval(carouselInterval);
+          carouselInterval = null;
+        }
+        const currentEl = avatarElements[currentAvatarIndex];
+        if (currentEl.tagName === "VIDEO") {
+          const videoDuration = Number(currentEl.dataset.duration) || 0;
+          if (videoDuration > 0 && videoDuration > avatarTransitionDelay) {
+            return;
+          }
+        }
+        carouselInterval = setInterval(advanceCarousel, transitionDelayMs);
+      };
+
+      const advanceCarousel = () => {
+        const currentEl = avatarElements[currentAvatarIndex];
+        if (
+          currentEl.tagName === "VIDEO" &&
+          currentEl.dataset.videoEnded !== "true"
+        ) {
+          const videoDuration = Number(currentEl.dataset.duration) || 0;
+          if (videoDuration > 0 && videoDuration > avatarTransitionDelay) {
+            currentEl.currentTime = 0;
+            currentEl.play().catch(() => {});
+            return;
+          }
+        }
+
+        currentAvatarIndex = (currentAvatarIndex + 1) % avatars.length;
+        showAvatar(currentAvatarIndex);
+
+        const nextEl = avatarElements[currentAvatarIndex];
+        if (nextEl.tagName === "VIDEO") {
+          nextEl.dataset.videoEnded = "false";
+          nextEl.currentTime = 0;
+          nextEl.play().catch(() => {});
+        }
+        scheduleNextTransition();
+      };
+
+      avatarWrap.appendChild(carouselContainer);
+
+      carouselContainer.addEventListener("click", () => {
+        const lang = card.dataset.activeCardLanguage;
+        openCharacterModal(char, lang);
+      });
+
+      const startCarousel = (startIndex = 0) => {
+        if (carouselInterval) clearInterval(carouselInterval);
+        currentAvatarIndex = startIndex;
+        showAvatar(currentAvatarIndex);
+        const currentEl = avatarElements[currentAvatarIndex];
+        if (currentEl.tagName === "VIDEO") {
+          currentEl.dataset.videoEnded = "false";
+          currentEl.play().catch(() => {});
+        }
+        scheduleNextTransition();
+      };
+
+      const stopCarousel = () => {
+        if (carouselInterval) {
+          clearInterval(carouselInterval);
+          carouselInterval = null;
+        }
+        avatarElements.forEach((el) => {
+          if (el.tagName === "VIDEO") {
+            el.pause();
+            el.currentTime = 0;
+            el.dataset.videoEnded = "false";
+          }
+        });
+      };
+
+      const getCarouselState = () => {
+        return {
+          currentIndex: currentAvatarIndex,
+          videoTimes: avatarElements.map((el) => {
+            if (el.tagName === "VIDEO") {
+              return el.currentTime;
+            }
+            return 0;
+          }),
+        };
+      };
+
+      const saveVideoTimes = () => {
+        avatarElements.forEach((el) => {
+          if (el.tagName === "VIDEO") {
+            el.dataset.savedTime = String(el.currentTime);
+          }
+        });
+      };
+
+      const restoreVideoTimes = () => {
+        avatarElements.forEach((el) => {
+          if (el.tagName === "VIDEO") {
+            const savedTime = parseFloat(el.dataset.savedTime) || 0;
+            if (savedTime > 0 && el.paused) {
+              el.currentTime = savedTime;
+              el.play().catch(() => {});
+            }
+          }
+        });
+      };
+
+      card.dataset.carouselActive = "true";
+      card._startCarousel = startCarousel;
+      card._stopCarousel = stopCarousel;
+      card._saveVideoTimes = saveVideoTimes;
+      card._restoreVideoTimes = restoreVideoTimes;
+      card._getCarouselState = getCarouselState;
+
+      startCarousel();
+    } else {
+      const avatar = document.createElement("img");
+      avatar.className = "character-avatar";
+      avatar.alt = `${resolved.name || "Character"} avatar`;
+      setCharacterAvatarImage(
+        avatar,
+        resolved,
+        resolved.name || "Character",
+        512,
+      );
+      avatar.addEventListener("click", () => {
+        const lang = card.dataset.activeCardLanguage;
+        openCharacterModal(char, lang);
+      });
+      avatarWrap.appendChild(avatar);
+    }
+
+    // Pin button - positioned top-left
+    const pinBtn = document.createElement("button");
+    pinBtn.type = "button";
+    pinBtn.className = "character-pin-btn";
+    pinBtn.setAttribute(
+      "aria-label",
+      char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle"),
+    );
+    pinBtn.title = char.pinned
+      ? t("unpinCharacterTitle")
+      : t("pinCharacterTitle");
+    pinBtn.innerHTML = char.pinned ? ICONS.pinFilled : ICONS.pin;
+    pinBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const newPinnedState = !char.pinned;
+      await db.characters.update(char.id, { pinned: newPinnedState });
+      // Update local char object
+      char.pinned = newPinnedState;
+      // Re-render characters to update order and button icons
+      await renderCharacters();
+    });
+    avatarWrap.appendChild(pinBtn);
+
+    const idOverlay = document.createElement("span");
+    idOverlay.className = "character-avatar-id";
+    idOverlay.textContent = `#${char.id}`;
+    avatarWrap.appendChild(idOverlay);
+
+    const threadOverlay = document.createElement("span");
+    threadOverlay.className = "character-avatar-threads";
+    threadOverlay.textContent = String(threadCount);
+    if (threadCount === 0) {
+      threadOverlay.style.display = "none";
+    }
+    avatarWrap.appendChild(threadOverlay);
+
+    if (hoverEffectEnabled) {
+      initCharacterCardHoverVideos(card, avatarWrap, videoAvatars);
+    }
+
+    const name = document.createElement("h3");
+    name.className = "character-name";
+    applyHoverMarquee(name, resolved.name || "Unnamed");
+    name.addEventListener("click", () => {
+      const lang = card.dataset.activeCardLanguage;
+      openCharacterModal(char, lang);
+    });
+
+    const tagline = document.createElement("div");
+    tagline.className = "character-tagline";
+    const taglineText = resolved.tagline || "";
+    tagline.textContent = taglineText;
+    applyHoverMarquee(tagline, taglineText);
+
+    const langFlagsWrap = document.createElement("div");
+    langFlagsWrap.className = "character-lang-flags";
+    const definitions = resolved.definitions || [];
+    const activeLang =
+      resolved.activeLanguage || definitions[0]?.language || "en";
+    card.dataset.activeCardLanguage = activeLang;
+    definitions.forEach((def) => {
+      const flag = createLanguageFlagRibbonElement(def.language);
+      flag.classList.add("character-lang-flag");
+      if (def.language === activeLang) {
+        flag.classList.add("active");
+      }
+      flag.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const card = e.target.closest(".character-card");
+        const currentLang = card?.dataset.activeCardLanguage || activeLang;
+        if (def.language === currentLang) return;
+        await db.characters.update(char.id, {
+          selectedCardLanguage: def.language,
+        });
+        if (card) {
+          card.dataset.activeCardLanguage = def.language;
+          const flags = card.querySelectorAll(".character-lang-flag");
+          flags.forEach((f) => f.classList.remove("active"));
+          e.target.classList.add("active");
+          const targetDef =
+            definitions.find((d) => d.language === def.language) || def;
+          const displayName = targetDef?.name || resolved.name || "Unnamed";
+          applyHoverMarquee(name, displayName);
+          const displayTagline = targetDef?.tagline || "";
+          tagline.textContent = displayTagline;
+          applyHoverMarquee(tagline, displayTagline);
+        }
+      });
+      langFlagsWrap.appendChild(flag);
+    });
+
+    const tags = (Array.isArray(char.tags) ? char.tags : [])
+      .map((t) => normalizeTagValue(t))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    const tagsWrap = document.createElement("div");
+    tagsWrap.className = "character-tags";
+    const expanded = state.expandedCharacterTagIds.has(Number(char.id));
+    if (expanded) tagsWrap.classList.add("tags-expanded");
+    tags.forEach((tag, idx) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "tag-chip";
+      if (idx >= 3) chip.classList.add("tag-extra");
+      if (activeFilters.includes(tag.toLowerCase())) {
+        chip.classList.add("active-filter");
+      }
+      chip.textContent = tag;
+      chip.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const lower = tag.toLowerCase();
+        const exists = state.characterTagFilters.some(
+          (t) => t.toLowerCase() === lower,
+        );
+        if (exists) {
+          state.characterTagFilters = state.characterTagFilters.filter(
+            (t) => t.toLowerCase() !== lower,
+          );
+        } else {
+          state.characterTagFilters.push(tag);
+        }
+        saveUiState();
+        const filters = document.getElementById("character-filters");
+        if (filters?.classList.contains("collapsed")) {
+          filters.classList.remove("collapsed");
+          localStorage.setItem("rp-filters-collapsed", "false");
+          updateCharacterFiltersToggleUi();
+          requestAnimationFrame(() => {
+            renderCharacterTagFilterChips();
+          });
+        }
+        if (idx >= 3 && !state.expandedCharacterTagIds.has(Number(char.id))) {
+          state.expandedCharacterTagIds.add(Number(char.id));
+          const card = e.target.closest(".character-card");
+          if (card) {
+            const tagsDiv = card.querySelector(".character-tags");
+            if (tagsDiv) tagsDiv.classList.add("tags-expanded");
+          }
+        }
+        renderCharacterTagFilterChips();
+        state.characterPage = 1;
+        await renderCharacters();
+      });
+      tagsWrap.appendChild(chip);
+    });
+    if (tags.length > 3) {
+      const more = document.createElement("button");
+      more.type = "button";
+      more.className = "tag-more-btn";
+      more.textContent = expanded ? t("less") : t("more");
+      more.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (expanded) state.expandedCharacterTagIds.delete(Number(char.id));
+        else state.expandedCharacterTagIds.add(Number(char.id));
+        const card = e.target.closest(".character-card");
+        if (card) {
+          const tagsDiv = card.querySelector(".character-tags");
+          if (tagsDiv) {
+            tagsDiv.classList.toggle("tags-expanded");
+          }
+          e.target.textContent = tagsDiv.classList.contains("tags-expanded")
+            ? t("less")
+            : t("more");
+        }
+      });
+      tagsWrap.appendChild(more);
+      if (expanded) tagsWrap.classList.add("tags-expanded");
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+
+    const newChatBtn = document.createElement("button");
+    newChatBtn.type = "button";
+    newChatBtn.className = "secondary-btn new-chat-btn";
+    newChatBtn.setAttribute(
+      "aria-label",
+      tf("newChatAria", { name: resolved.name || "character" }),
+    );
+
+    const newChatBtnMain = document.createElement("span");
+    newChatBtnMain.className = "new-chat-btn-main";
+    newChatBtnMain.textContent = t("newChat");
+    newChatBtn.appendChild(newChatBtnMain);
+
+    const newChatBtnDropdown = document.createElement("span");
+    newChatBtnDropdown.className = "new-chat-btn-dropdown";
+    newChatBtnDropdown.innerHTML = "&#9660;";
+    newChatBtn.appendChild(newChatBtnDropdown);
+
+    applyHoverMarquee(newChatBtnMain, t("newChat"));
+    newChatBtnMain.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (personaDropdownOpen && personaDropdown) {
+        personaDropdownOpen = false;
+        if (personaDropdown.parentNode) {
+          personaDropdown.parentNode.removeChild(personaDropdown);
+        }
+        personaDropdown = null;
+      }
+      startNewThread(char.id);
+    });
+
+    let personaDropdownOpen = false;
+    let personaDropdown = null;
+
+    const showPersonaDropdown = async () => {
+      if (personaDropdownOpen) return;
+      personaDropdownOpen = true;
+      const personas = await getOrderedPersonas();
+      if (personas.length === 0) return;
+
+      personaDropdown = document.createElement("div");
+      personaDropdown.className = "new-chat-persona-dropdown";
+
+      for (const persona of personas) {
+        const item = document.createElement("button");
+        item.className = "new-chat-persona-dropdown-item";
+        item.type = "button";
+
+        if (persona.avatar) {
+          const img = document.createElement("img");
+          img.src =
+            persona.avatar instanceof Blob
+              ? getCachedAvatarBlobUrl(persona.avatar)
+              : persona.avatar;
+          item.appendChild(img);
+        }
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "persona-name";
+        nameSpan.textContent = persona.name || t("personaDefaultName");
+        item.appendChild(nameSpan);
+
+        if (persona.isDefault) {
+          const badge = document.createElement("span");
+          badge.className = "default-badge";
+          badge.textContent = t("defaultSuffix");
+          item.appendChild(badge);
+        }
+
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          personaDropdownOpen = false;
+          if (personaDropdown && personaDropdown.parentNode) {
+            personaDropdown.parentNode.removeChild(personaDropdown);
+          }
+          personaDropdown = null;
+          startNewThread(char.id, persona.id);
+        });
+
+        personaDropdown.appendChild(item);
+      }
+
+      const rect = newChatBtn.getBoundingClientRect();
+      personaDropdown.style.left = `${rect.left}px`;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+        personaDropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+      } else {
+        personaDropdown.style.top = `${rect.bottom + 4}px`;
+      }
+
+      document.body.appendChild(personaDropdown);
+
+      const closeDropdown = (e) => {
+        if (
+          personaDropdown &&
+          !personaDropdown.contains(e.target) &&
+          e.target !== newChatBtnDropdown
+        ) {
+          personaDropdownOpen = false;
+          if (personaDropdown && personaDropdown.parentNode) {
+            personaDropdown.parentNode.removeChild(personaDropdown);
+          }
+          personaDropdown = null;
+          document.removeEventListener("click", closeDropdown);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", closeDropdown), 0);
+    };
+
+    newChatBtnDropdown.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (personaDropdownOpen && personaDropdown) {
+        personaDropdownOpen = false;
+        if (personaDropdown.parentNode) {
+          personaDropdown.parentNode.removeChild(personaDropdown);
+        }
+        personaDropdown = null;
+      } else {
+        showPersonaDropdown();
+      }
+    });
+
+    actions.appendChild(newChatBtn);
+
+    card.addEventListener("mouseenter", () => {
+      newChatBtn.classList.add("card-hover-highlight");
+    });
+    card.addEventListener("mouseleave", () => {
+      newChatBtn.classList.remove("card-hover-highlight");
+    });
+    card.addEventListener("focusin", () => {
+      newChatBtn.classList.add("card-hover-highlight");
+    });
+    card.addEventListener("focusout", () => {
+      newChatBtn.classList.remove("card-hover-highlight");
+    });
+
+    const deleteCharBtn = iconButton(
+      "delete",
+      t("deleteCharacterAria"),
+      async (e) => {
+        e.stopPropagation();
+        await deleteCharacter(char.id);
+      },
+    );
+    deleteCharBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteCharBtn);
+
+    actions.appendChild(
+      iconButton("duplicate", t("duplicateCharacterAria"), async (e) => {
+        e.stopPropagation();
+        await duplicateCharacter(char.id);
+      }),
+    );
+
+    actions.appendChild(
+      iconButton("export", t("exportCharacterAria"), async (e) => {
+        e.stopPropagation();
+        await exportCharacter(char.id);
+      }),
+    );
+
+    card.append(avatarWrap, name, tagline, langFlagsWrap);
+    if (tags.length > 0) card.appendChild(tagsWrap);
+    card.append(actions);
+    grid.appendChild(card);
+  });
+
+  updateCharacterPaginationControls(totalCharacters, totalPages);
+  initPaginationResizeObserver();
+
+  carouselStates.forEach((state, charId) => {
+    const card = grid.querySelector(
+      `.character-card[data-character-id="${charId}"]`,
+    );
+    if (card && card._startCarousel) {
+      const savedTimes = state.videoTimes || [];
+      if (card._restoreVideoTimes) {
+        card._restoreVideoTimes();
+      }
+      const elems = card.querySelectorAll(".character-avatar");
+      savedTimes.forEach((time, idx) => {
+        if (elems[idx] && elems[idx].tagName === "VIDEO" && time > 0) {
+          elems[idx].currentTime = time;
+        }
+      });
+      card._startCarousel(state.currentIndex || 0);
+    }
+  });
+
+  const maxScroll = Math.max(0, grid.scrollHeight - grid.clientHeight);
+  grid.scrollTop = Math.min(previousScrollTop, maxScroll);
+  state.characterCardSlide = null;
+  updateCarouselForPaneState();
+}
+
+function getCharacterPaginationRange(
+  currentPage,
+  totalPages,
+  windowSize = CHARACTER_PAGE_BUTTON_WINDOW,
+) {
+  const pages = [];
+  if (totalPages <= 0) return pages;
+  if (totalPages <= windowSize) {
+    for (let i = 1; i <= totalPages; i += 1) {
+      pages.push(i);
+    }
+    return pages;
+  }
+  let start = Math.max(1, currentPage - Math.floor(windowSize / 2));
+  let end = start + windowSize - 1;
+  if (end > totalPages) {
+    end = totalPages;
+    start = Math.max(1, end - windowSize + 1);
+  }
+  for (let i = start; i <= end; i += 1) {
+    pages.push(i);
+  }
+  return pages;
+}
+
+function updateCharacterPaginationControls(totalItems, totalPages) {
+  const container = document.getElementById("character-pagination");
+  const pagesContainer = document.getElementById("character-pagination-pages");
+  const prevBtn = document.getElementById("character-pagination-prev");
+  const nextBtn = document.getElementById("character-pagination-next");
+  const sizeSelect = document.getElementById("character-pagination-size");
+  if (!container || !pagesContainer || !prevBtn || !nextBtn || !sizeSelect)
+    return;
+
+  const hasCharacters = totalItems > 0;
+  container.classList.toggle("hidden", !hasCharacters);
+  state.characterTotalPages = totalPages;
+  state.characterTotalItems = totalItems;
+
+  prevBtn.disabled = !hasCharacters || state.characterPage <= 1;
+  nextBtn.disabled =
+    !hasCharacters || totalPages <= 0 || state.characterPage >= totalPages;
+
+  const sanitizedPerPage = CHARACTER_PAGE_SIZES.includes(
+    Number(state.characterCardsPerPage),
+  )
+    ? Number(state.characterCardsPerPage)
+    : 0;
+  sizeSelect.value = String(sanitizedPerPage);
+
+  pagesContainer.innerHTML = "";
+  if (!hasCharacters || totalPages <= 0) return;
+
+  const windowSize = getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn);
+  const pageRange = getCharacterPaginationRange(
+    state.characterPage,
+    totalPages,
+    windowSize,
+  );
+  const fragment = document.createDocumentFragment();
+  pageRange.forEach((pageNum) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pagination-page-btn";
+    btn.textContent = String(pageNum);
+    btn.setAttribute("aria-label", tf("paginationPageAria", { page: pageNum }));
+    if (pageNum === state.characterPage) {
+      btn.classList.add("active");
+      btn.setAttribute("aria-current", "page");
+      btn.disabled = true;
+    } else {
+      btn.disabled = false;
+    }
+    btn.addEventListener("click", () => {
+      if (pageNum === state.characterPage) return;
+      state.characterPage = pageNum;
+      const grid = document.getElementById("character-grid");
+      if (grid) grid.scrollTo({ top: 0 });
+      renderCharacters();
+    });
+    fragment.appendChild(btn);
+  });
+  pagesContainer.appendChild(fragment);
+}
+
+function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn) {
+  const MIN_BUTTON_WIDTH = 36;
+  const BUTTON_GAP = 6;
+  const BUTTON_PADDING = 20;
+  const parent = pagesContainer.parentElement;
+  if (!parent) return 3;
+  const availableWidth =
+    parent.clientWidth -
+    prevBtn.offsetWidth -
+    nextBtn.offsetWidth -
+    BUTTON_GAP * 2;
+  if (availableWidth <= 0) return 3;
+  const maxButtons = Math.floor(
+    availableWidth / (MIN_BUTTON_WIDTH + BUTTON_PADDING),
+  );
+  return Math.max(3, maxButtons);
+}
+
+let paginationResizeObserver = null;
+function initPaginationResizeObserver() {
+  const container = document.getElementById("character-pagination");
+  if (!container) return;
+  if (paginationResizeObserver) {
+    paginationResizeObserver.disconnect();
+  }
+  paginationResizeObserver = new ResizeObserver(() => {
+    if (state.characterTotalItems > 0) {
+      updateCharacterPaginationControls(
+        state.characterTotalItems,
+        state.characterTotalPages,
+      );
+    }
+  });
+  paginationResizeObserver.observe(container);
+}
+
+function updateThreadBulkBar() {
+  const bulkBar = document.getElementById("thread-bulk-bar");
+  if (!bulkBar) return;
+  const selectAll = bulkBar.querySelector(".thread-select-all");
+  const deleteBtn = bulkBar.querySelector(".thread-bulk-delete");
+  const list = document.getElementById("thread-list");
+  if (!list) return;
+  const threadRows = list.querySelectorAll(".thread-row");
+  const totalThreads = threadRows.length;
+  const selectedCount = state.selectedThreadIds.size;
+  if (selectAll) {
+    selectAll.checked = selectedCount > 0 && selectedCount === totalThreads;
+    selectAll.indeterminate = selectedCount > 0 && selectedCount < totalThreads;
+  }
+  if (deleteBtn) {
+    deleteBtn.disabled = selectedCount === 0;
+  }
+  threadRows.forEach((row) => {
+    const checkbox = row.querySelector(".thread-select");
+    if (checkbox) {
+      const threadId = Number(row.dataset.threadId);
+      checkbox.checked = state.selectedThreadIds.has(threadId);
+    }
+  });
+}
+
+function updateDocumentTitleWithUnread() {
+  loadThreadsMetadataOnly().then((threads) => {
+    let totalUnread = 0;
+    if (currentThread && Array.isArray(currentThread.messages)) {
+      for (const m of currentThread.messages) {
+        if (m.role === "assistant" && Number(m.unreadAt) > 0) {
+          totalUnread += 1;
+        }
+      }
+    }
+    let title = "Scenara";
+    let suffix = "";
+    const chatActive = document
+      .getElementById("chat-view")
+      ?.classList.contains("active");
+    if (state.activeModalId === "character-modal" && currentCharacter?.name) {
+      suffix = currentCharacter.name;
+    } else if (chatActive && currentThread?.title) {
+      suffix = currentThread.title;
+    }
+    if (suffix) {
+      title = `${title} - ${suffix}`;
+    }
+    if (totalUnread > 0) {
+      document.title = `(${totalUnread}) ${title}`;
+    } else {
+      document.title = title;
+    }
+  });
+}
+
+function updateThreadMessageCount(threadId, messages) {
+  const list = document.getElementById("thread-list");
+  if (!list) return;
+  const row = list.querySelector(`.thread-row[data-thread-id="${threadId}"]`);
+  if (!row) return;
+  const msgCountEl = row.querySelector(".thread-msg-count");
+  if (msgCountEl) {
+    const hasInitialMessages = (messages || []).some((m) => m.isInitial);
+    const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
+    msgCountEl.textContent = `${nonInitialCount + (hasInitialMessages ? 1 : 0)}`;
+  }
+  if (
+    currentThread &&
+    Number(currentThread.id) === Number(threadId) &&
+    currentThread.unloadState
+  ) {
+    const hasInitialMessages = (messages || []).some((m) => m.isInitial);
+    const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
+    currentThread.unloadState.totalMessageCount =
+      nonInitialCount + (hasInitialMessages ? 1 : 0);
+  }
+}
+
+async function renderThreads() {
+  const list = document.getElementById("thread-list");
+  if (!list) return;
+  const renderSeq = ++state.renderThreadsSeq;
+  const previousScrollTop = Number(list?.scrollTop || 0);
+  const threads = await hydrateGenerationQueue();
+  if (renderSeq !== state.renderThreadsSeq) return;
+  threads.sort((a, b) => {
+    const af = a.favorite ? 1 : 0;
+    const bf = b.favorite ? 1 : 0;
+    if (af !== bf) return bf - af;
+    return Number(b.updatedAt || 0) - Number(a.updatedAt || 0);
+  });
+
+  const existingIds = new Set(threads.map((t) => Number(t.id)));
+  state.selectedThreadIds = new Set(
+    Array.from(state.selectedThreadIds).filter((id) =>
+      existingIds.has(Number(id)),
+    ),
+  );
+
+  if (threads.length === 0) {
+    list.innerHTML = "";
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = t("noThreadsYet");
+    list.appendChild(empty);
+    return;
+  }
+
+  const charIds = [
+    ...new Set(threads.map((t) => t.characterId).filter(Boolean)),
+  ];
+
+  // Use cached characters if available and not stale
+  const now = Date.now();
+  const cache = state.characterCache;
+  let charMap = new Map();
+  let needDbQuery = false;
+
+  if (cache.data.size > 0 && now - cache.timestamp < cache.ttl) {
+    // Check if we have all required characters in cache
+    let cachedAll = true;
+    for (const id of charIds) {
+      if (!cache.data.has(Number(id))) {
+        cachedAll = false;
+        break;
+      }
+    }
+    if (cachedAll) {
+      charMap = cache.data;
+    } else {
+      needDbQuery = true;
+    }
+  } else {
+    needDbQuery = true;
+  }
+
+  if (needDbQuery) {
+    const characters = await db.characters.where("id").anyOf(charIds).toArray();
+    if (renderSeq !== state.renderThreadsSeq) return;
+    charMap = new Map(characters.map((c) => [c.id, c]));
+    // Update cache
+    cache.data = charMap;
+    cache.timestamp = now;
+  }
+
+  const queuePosByThreadId = new Map(
+    state.generationQueue
+      .map((id, i) => [Number(id), i + 1])
+      .filter(([id]) => Number.isInteger(id)),
+  );
+
+  // Clear the list before building new content
+  list.innerHTML = "";
+
+  // Use document fragment to batch DOM updates and avoid forced reflows
+  const fragment = document.createDocumentFragment();
+
+  const bulkBar = document.createElement("div");
+  bulkBar.className = "thread-bulk-bar";
+  bulkBar.id = "thread-bulk-bar";
+  const selectAll = document.createElement("input");
+  selectAll.type = "checkbox";
+  selectAll.className = "thread-select thread-select-all thread-bulk-select";
+  selectAll.title = t("selectAllThreads");
+  selectAll.addEventListener("change", () => {
+    if (selectAll.checked) {
+      threads.forEach((t) => state.selectedThreadIds.add(Number(t.id)));
+    } else {
+      state.selectedThreadIds.clear();
+    }
+    updateThreadBulkBar();
+  });
+  const deleteSelectedBtn = iconButton(
+    "delete",
+    t("deleteSelectedThreads"),
+    async () => {
+      await deleteSelectedThreads();
+    },
+  );
+  deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
+  bulkBar.append(selectAll, deleteSelectedBtn);
+  fragment.appendChild(bulkBar);
+
+  const selectedCount = state.selectedThreadIds.size;
+  selectAll.checked = selectedCount > 0 && selectedCount === threads.length;
+  selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
+  deleteSelectedBtn.disabled = selectedCount === 0;
+
+  const chatViewActive = document
+    .getElementById("chat-view")
+    ?.classList.contains("active");
+
+  for (const thread of threads) {
+    const char = charMap.get(thread.characterId);
+    const resolvedChar = char
+      ? resolveCharacterForLanguage(char, thread.characterLanguage || "")
+      : null;
+
+    const row = document.createElement("div");
+    row.className = "thread-row";
+    if (chatViewActive && Number(currentThread?.id) === Number(thread.id)) {
+      row.classList.add("active-thread");
+    }
+    row.dataset.threadId = String(thread.id);
+    row.addEventListener("click", (e) => {
+      if (e.target?.closest(".actions")) return;
+      if (
+        e.target?.closest(".thread-tint-btn") ||
+        e.target?.closest(".thread-tint-input")
+      )
+        return;
+      const chatViewActive = document
+        .getElementById("chat-view")
+        ?.classList.contains("active");
+      if (chatViewActive && Number(currentThread?.id) === Number(thread.id))
+        return;
+      openThread(thread.id);
+    });
+
+    const selectBox = document.createElement("input");
+    selectBox.type = "checkbox";
+    selectBox.className = "thread-select";
+    selectBox.checked = state.selectedThreadIds.has(Number(thread.id));
+    selectBox.title = t("selectThread");
+    selectBox.addEventListener("click", (e) => e.stopPropagation());
+    selectBox.addEventListener("change", () => {
+      if (selectBox.checked) state.selectedThreadIds.add(Number(thread.id));
+      else state.selectedThreadIds.delete(Number(thread.id));
+      updateThreadBulkBar();
+    });
+
+    const msgCount = document.createElement("span");
+    msgCount.className = "thread-msg-count";
+    const totalMsgs = thread.unloadState?.totalMessageCount ?? 0;
+    msgCount.textContent = `${totalMsgs}`;
+
+    const avatar = document.createElement("img");
+    avatar.className = "thread-avatar";
+    const threadFallback = resolvedChar?.name || char?.name || t("threadWord");
+    if (resolvedChar) {
+      setCharacterAvatarImage(avatar, resolvedChar, threadFallback, 512);
+    } else {
+      avatar.src = fallbackAvatar(threadFallback, 512, 512);
+    }
+    avatar.alt = `${threadFallback} avatar`;
+
+    const hasGeneratingMessage = threadHasActiveGeneratingMessage(thread);
+    const hasSummarizingMessage = threadHasActiveSummarizingMessage(thread);
+    const isGenerating =
+      hasGeneratingMessage ||
+      (state.sending &&
+        Number(state.activeGenerationThreadId) === Number(thread.id));
+    const isInCooldown =
+      !isGenerating &&
+      String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
+      isInCompletionCooldown();
+    const unreadCount = thread.messages
+      ? getUnreadAssistantCount(thread.messages)
+      : 0;
+    const threadId = Number(thread.id);
+    const previousUnreadCount = state.threadUnreadCounts[threadId] || 0;
+    if (unreadCount > previousUnreadCount) {
+      playUnreadMessageSound();
+    }
+    state.threadUnreadCounts[threadId] = unreadCount;
+    const isProcessingThread = isGenerating || hasSummarizingMessage;
+    const queuePos =
+      isProcessingThread || isInCooldown
+        ? 0
+        : queuePosByThreadId.get(Number(thread.id)) || 0;
+    const statusBadges = document.createElement("div");
+    statusBadges.className = "thread-status-badges";
+    if (unreadCount > 0) {
+      const unreadBadge = document.createElement("span");
+      unreadBadge.className = "thread-unread-badge";
+      unreadBadge.textContent = String(unreadCount);
+      statusBadges.appendChild(unreadBadge);
+    }
+    let queueBadge = null;
+    if (hasSummarizingMessage) {
+      queueBadge = document.createElement("span");
+      queueBadge.className = "thread-generating-badge";
+      queueBadge.innerHTML = '<span class="spinner" aria-hidden="true"></span>';
+      const summaryLabel = t("summarizingMemoryLabel");
+      queueBadge.setAttribute("title", summaryLabel);
+      queueBadge.setAttribute("aria-label", summaryLabel);
+    } else if (isGenerating) {
+      queueBadge = document.createElement("span");
+      queueBadge.className = "thread-generating-badge";
+      queueBadge.innerHTML = '<span class="spinner" aria-hidden="true"></span>';
+      queueBadge.setAttribute("title", t("generatingLabel"));
+      queueBadge.setAttribute("aria-label", t("generatingLabel"));
+    } else if (isInCooldown) {
+      queueBadge = document.createElement("span");
+      queueBadge.className = "thread-cooldown-badge";
+      queueBadge.textContent = "C";
+      const cooldownTitle = tf("cooldownToastActive", {
+        seconds: getCooldownRemainingSeconds(),
+      });
+      queueBadge.setAttribute("title", cooldownTitle);
+      queueBadge.setAttribute("aria-label", cooldownTitle);
+    } else if (queuePos > 0) {
+      queueBadge = document.createElement("span");
+      queueBadge.className = "thread-queue-badge";
+      queueBadge.textContent = `Q${queuePos}`;
+      const queueTitle = tf("threadQueueBadgeTitle", { position: queuePos });
+      queueBadge.setAttribute("title", queueTitle);
+      queueBadge.setAttribute("aria-label", queueTitle);
+    }
+    if (queueBadge) {
+      statusBadges.appendChild(queueBadge);
+    }
+
+    const info = document.createElement("div");
+    info.className = "thread-info";
+
+    const meta = document.createElement("div");
+    meta.className = "thread-meta";
+    const metaName = document.createElement("span");
+    metaName.textContent = resolvedChar?.name || char?.name || "Unknown";
+    applyHoverMarquee(metaName, metaName.textContent);
+    meta.append(metaName);
+    const metaRight = document.createElement("div");
+    metaRight.className = "thread-meta-right";
+    const metaId = document.createElement("span");
+    metaId.textContent = `#${thread.id}`;
+    const metaLang = createLanguageFlagIconElement(
+      thread.characterLanguage || resolvedChar?.activeLanguage || "",
+      "thread-language-flag",
+    );
+    metaRight.append(metaId, metaLang);
+
+    const titleBtn = document.createElement("button");
+    titleBtn.className = "thread-title";
+    const threadTitleText =
+      thread.title || tf("threadTitleDefault", { id: thread.id });
+    applyHoverMarquee(titleBtn, threadTitleText);
+    titleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openThread(thread.id);
+    });
+    const titleRow = document.createElement("div");
+    titleRow.className = "thread-title-row";
+    const titleRowControls = document.createElement("div");
+    titleRowControls.className = "thread-title-row-controls";
+    const tintBtn = document.createElement("button");
+    tintBtn.type = "button";
+    tintBtn.className = "thread-tint-btn";
+    tintBtn.setAttribute("aria-label", t("threadTintColor"));
+    tintBtn.setAttribute("title", t("threadTintColorTitle"));
+    const tintIndicator = document.createElement("span");
+    tintIndicator.className = "thread-tint-indicator";
+    tintBtn.appendChild(tintIndicator);
+    const tintColorInput = document.createElement("input");
+    tintColorInput.type = "color";
+    tintColorInput.className = "thread-tint-input";
+    tintColorInput.value = thread.tintColor || DEFAULT_THREAD_TINT_INPUT_COLOR;
+    let tintPickerOpen = false;
+    let tintPickerBlurSuppressed = false;
+    const suppressNextBlur = () => {
+      tintPickerBlurSuppressed = true;
+      window.requestAnimationFrame(() => {
+        tintPickerBlurSuppressed = false;
+      });
+    };
+    const openColorPicker = () => {
+      if (tintPickerOpen) return;
+      tintPickerOpen = true;
+      if (typeof tintColorInput.showPicker === "function") {
+        tintColorInput.showPicker();
+        return;
+      }
+      tintColorInput.click();
+    };
+    const closeColorPicker = () => {
+      if (!tintPickerOpen) return;
+      tintPickerOpen = false;
+      if (typeof tintColorInput.closePicker === "function") {
+        tintColorInput.closePicker();
+      }
+      tintColorInput.blur();
+    };
+    tintBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (e.shiftKey) {
+        persistThreadTintColor(thread, row, tintIndicator, tintColorInput, "");
+        closeColorPicker();
+        return;
+      }
+      if (tintPickerOpen) {
+        closeColorPicker();
+        return;
+      }
+      openColorPicker();
+    });
+    tintBtn.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+      suppressNextBlur();
+    });
+    tintColorInput.addEventListener("input", (e) => {
+      e.stopPropagation();
+      persistThreadTintColor(
+        thread,
+        row,
+        tintIndicator,
+        tintColorInput,
+        e.target?.value,
+      );
+    });
+    tintColorInput.addEventListener("focus", () => {
+      tintPickerOpen = true;
+    });
+    tintColorInput.addEventListener("blur", () => {
+      if (tintPickerBlurSuppressed) {
+        tintPickerBlurSuppressed = false;
+        return;
+      }
+      tintPickerOpen = false;
+    });
+    tintColorInput.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+    tintColorInput.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+    });
+    const renameMiniBtn = iconButton(
+      "edit",
+      t("renameThreadAria"),
+      async (e) => {
+        e.stopPropagation();
+        await renameThread(thread.id);
+      },
+    );
+    renameMiniBtn.classList.add("thread-rename-mini");
+    titleRowControls.append(tintBtn, renameMiniBtn);
+    titleRow.append(titleBtn, titleRowControls);
+
+    info.append(titleRow, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const deleteThreadBtn = iconButton(
+      "delete",
+      t("deleteThreadAria"),
+      async (e) => {
+        e.stopPropagation();
+        await deleteThread(thread.id);
+      },
+    );
+    deleteThreadBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteThreadBtn);
+
+    if (char) {
+      actions.appendChild(
+        iconButton("edit", t("editThreadCharacter"), async (e) => {
+          e.stopPropagation();
+          const latestCharacter = await db.characters.get(char.id);
+          if (latestCharacter) openCharacterModal(latestCharacter);
+        }),
+      );
+    }
+
+    const duplicateBtn = iconButton(
+      "duplicate",
+      t("duplicateThreadAria"),
+      async (e) => {
+        e.stopPropagation();
+        await duplicateThread(thread.id);
+      },
+    );
+    duplicateBtn.disabled = threadHasPendingBotActivity(thread);
+    actions.appendChild(duplicateBtn);
+    const favBtn = iconButton(
+      thread.favorite ? "starFilled" : "star",
+      thread.favorite ? t("unfavoriteThread") : t("favoriteThread"),
+      async (e) => {
+        e.stopPropagation();
+        await toggleThreadFavorite(thread.id);
+      },
+    );
+    favBtn.classList.add("favorite-btn");
+    if (thread.favorite) favBtn.classList.add("is-favorite");
+    actions.appendChild(favBtn);
+
+    actions.prepend(msgCount, selectBox);
+    if (statusBadges.children.length > 0) {
+      row.append(avatar, info, metaRight, statusBadges, actions);
+    } else {
+      row.append(avatar, info, metaRight, actions);
+    }
+    row.appendChild(tintColorInput);
+    updateThreadTintIndicator(tintIndicator, thread.tintColor);
+    applyThreadTintToRow(row, thread.tintColor);
+    fragment.appendChild(row);
+  }
+
+  // Single DOM insertion to minimize reflow
+  list.appendChild(fragment);
+
+  const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
+  if (renderSeq !== state.renderThreadsSeq) return;
+  list.scrollTop = Math.min(previousScrollTop, maxScroll);
+  updateDocumentTitleWithUnread();
+}
+
+function updateThreadTintIndicator(indicator, color) {
+  if (!indicator) return;
+  if (!color) {
+    indicator.style.removeProperty("background-color");
+    indicator.style.removeProperty("box-shadow");
+    return;
+  }
+  indicator.style.backgroundColor = color;
+  indicator.style.removeProperty("box-shadow");
+}
+
+function applyThreadTintToRow(row, color) {
+  if (!row) return;
+  if (color) {
+    row.classList.add("thread-has-tint");
+    row.style.setProperty("--thread-tint-color", color);
+    return;
+  }
+  row.classList.remove("thread-has-tint");
+  row.style.removeProperty("--thread-tint-color");
+}
+
+async function persistThreadTintColor(
+  thread,
+  row,
+  tintIndicator,
+  tintColorInput,
+  color,
+) {
+  if (!thread) return;
+  const trimmed = typeof color === "string" ? color.trim() : "";
+  const nextColor = trimmed ? normalizePersonaColor(trimmed) : "";
+  thread.tintColor = nextColor;
+  if (tintColorInput) {
+    const targetValue = nextColor || DEFAULT_THREAD_TINT_INPUT_COLOR;
+    if (tintColorInput.value !== targetValue) {
+      tintColorInput.value = targetValue;
+    }
+  }
+  updateThreadTintIndicator(tintIndicator, nextColor);
+  applyThreadTintToRow(row, nextColor);
+  if (!Number.isInteger(Number(thread.id))) return;
+  try {
+    await db.threads.update(thread.id, {
+      tintColor: nextColor,
+    });
+    if (currentThread && Number(currentThread.id) === Number(thread.id)) {
+      currentThread.tintColor = nextColor;
+    }
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: Number(thread.id),
+      updatedAt: thread.updatedAt,
+    });
+  } catch (err) {
+    console.warn("Failed to persist thread tint:", err);
+  }
+}
+
+async function deleteSelectedThreads() {
+  const ids = Array.from(state.selectedThreadIds)
+    .map(Number)
+    .filter(Number.isInteger);
+  if (ids.length === 0) return;
+  const suffix = ids.length === 1 ? "" : "s";
+  const ok = await openConfirmDialog(
+    t("deleteThreadsTitle"),
+    tf("deleteSelectedThreadsConfirm", { count: ids.length, suffix }),
+  );
+  if (!ok) return;
+
+  const activeId = Number(state.activeGenerationThreadId);
+  if (
+    state.sending &&
+    Number.isInteger(activeId) &&
+    ids.includes(activeId) &&
+    state.abortController
+  ) {
+    cancelOngoingGeneration();
+  }
+  state.generationQueue = state.generationQueue.filter(
+    (id) => !ids.includes(Number(id)),
+  );
+  for (const id of ids) {
+    localStorage.removeItem(`rp-thread-scroll-${id}`);
+    try {
+      await db.threads.update(id, {
+        pendingGenerationReason: "",
+        pendingGenerationQueuedAt: 0,
+        updatedAt: Date.now(),
+      });
+    } catch {
+      // thread might already be deleted
+    }
+    await db.threads.delete(id);
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: id,
+      updatedAt: Date.now(),
+    });
+  }
+
+  if (currentThread && ids.includes(Number(currentThread.id))) {
+    currentThread = null;
+    currentCharacter = null;
+    conversationHistory = [];
+    showMainView();
+  }
+
+  state.selectedThreadIds.clear();
+  await renderThreads();
+  await renderCharacters();
+  showToast(
+    tf("deletedThreadsToast", { count: ids.length, suffix }),
+    "success",
+  );
+}
+
+function iconButton(iconKey, ariaLabel, handler) {
+  const btn = document.createElement("button");
+  btn.className = "icon-btn";
+  btn.type = "button";
+  btn.innerHTML = ICONS[iconKey] || iconKey;
+  btn.setAttribute("aria-label", ariaLabel);
+  btn.setAttribute("title", ariaLabel);
+  btn.addEventListener("click", handler);
+  return btn;
+}
+
+function togglePane() {
+  const pane = document.getElementById("left-pane");
+  const shell = document.getElementById("app-shell");
+  const createBtn = document.getElementById("create-character-btn");
+  const importBtn = document.getElementById("import-character-btn");
+  const homeBtn = document.getElementById("home-btn");
+  const overlayToggle = document.getElementById("pane-overlay-toggle");
+  const wasCollapsed = pane.classList.contains("collapsed");
+  pane.classList.toggle("collapsed");
+  const isCollapsed = pane.classList.contains("collapsed");
+  shell.classList.toggle(
+    "pane-collapsed",
+    isCollapsed,
+  );
+  if (overlayToggle) {
+    overlayToggle.classList.toggle(
+      "collapsed",
+      isCollapsed,
+    );
+  }
+
+  if (wasCollapsed && !isCollapsed) {
+    const expandedPaneWidth = 360;
+    const collapsedPaneWidth = 84;
+    const widthDiff = expandedPaneWidth - collapsedPaneWidth;
+    adjustModel3DPanelForPaneChange(-widthDiff);
+  } else if (!wasCollapsed && isCollapsed) {
+    const expandedPaneWidth = 360;
+    const collapsedPaneWidth = 84;
+    const widthDiff = expandedPaneWidth - collapsedPaneWidth;
+    adjustModel3DPanelForPaneChange(widthDiff);
+  }
+
+  updateCarouselForPaneState();
+  setTimeout(constrainModel3DPanelPosition, 250);
+}
+
+function adjustModel3DPanelForPaneChange(deltaX) {
+  const panel = document.getElementById('model3d-panel');
+  if (!panel || panel.classList.contains('hidden')) return;
+
+  let currentLeft = parseFloat(panel.style.left) || 0;
+  currentLeft += deltaX;
+  panel.style.left = currentLeft + 'px';
+}
+
+function showMainView() {
+  clearChatViewBackground();
+  if (currentThread) {
+    const log = document.getElementById("chat-log");
+    if (log) {
+      localStorage.setItem(
+        `rp-thread-scroll-${currentThread.id}`,
+        log.scrollTop,
+      );
+    }
+    const input = document.getElementById("user-input");
+    const draftValue = input?.value?.trim() || "";
+    if (draftValue) {
+      currentThread.draftInput = draftValue;
+      db.threads.update(currentThread.id, { draftInput: draftValue });
+    }
+  }
+  window.stopTtsPlayback();
+  stopAllSfx();
+  state.unreadNeedsUserScrollThreadId = null;
+  document.getElementById("main-view").classList.add("active");
+  document.getElementById("chat-view").classList.remove("active");
+  updateThreadRenameButtonState();
+  updateAutoTtsToggleButton();
+  updateChatInputToggles();
+  renderThreads().catch(() => {});
+  updateScrollBottomButtonVisibility();
+  scheduleThreadBudgetIndicatorUpdate();
+  startAllCarousels();
+  applyChatOpacitySetting();
+}
+
+function showChatView() {
+  document.getElementById("chat-view").classList.add("active");
+  document.getElementById("main-view").classList.remove("active");
+  updateThreadRenameButtonState();
+  updateAutoTtsToggleButton();
+  updateChatInputToggles();
+  setSendingState(state.sending);
+  renderThreads().catch(() => {});
+  updateScrollBottomButtonVisibility();
+  stopAllCarousels();
+  if (state.unreadNeedsUserScrollThreadId) {
+    window.requestAnimationFrame(() => {
+      maybeProcessUnreadMessagesSeen(false).catch(() => {});
+    });
+  }
+}
+
+function stopAllCarousels() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const cards = grid.querySelectorAll(".character-card");
+  cards.forEach((card) => {
+    if (card._stopCarousel) card._stopCarousel();
+  });
+}
+
+function startAllCarousels() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const cards = grid.querySelectorAll(".character-card");
+  cards.forEach((card) => {
+    if (card._restoreVideoTimes) card._restoreVideoTimes();
+    if (card._startCarousel) card._startCarousel();
+  });
+}
+
+function openModal(modalId) {
+  closeActiveModal();
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  state.activeModalId = modalId;
+  modal.classList.remove("hidden");
+  window.requestAnimationFrame(() => {
+    resetModalTextareaCollapseStates(modal);
+  });
+  setModalDirtyState(modalId, false);
+  loadSnippetsForModal(modalId).then(() => {
+    if (modalId === "settings-modal") {
+      setupSettingsTabsLayout();
+      populateSettingsTabValues();
+      const lastTab = localStorage.getItem("rp-settings-last-tab") || "api";
+      const tabBtn = document.querySelector(
+        `[data-settings-tab-btn="${lastTab}"]`,
+      );
+      if (tabBtn instanceof HTMLButtonElement) tabBtn.click();
+      else {
+        const firstTab = document.querySelector('[data-settings-tab-btn="api"]');
+        if (firstTab instanceof HTMLButtonElement) firstTab.click();
+      }
+      updateToastDelayDisplay();
+      populateSettingsModels().catch(() => {});
+      populateAutoTitleSummaryModels().catch(() => {});
+    } else if (modalId === "personas-modal") {
+      renderPersonaModalList();
+    } else if (modalId === "shortcuts-modal") {
+      const textarea = document.getElementById("shortcuts-raw");
+      if (textarea) {
+        textarea.value = state.settings.shortcutsRaw || "";
+        setupModalTextareas(modal);
+        markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
+      }
+    } else if (modalId === "tags-modal") {
+      const input = document.getElementById("tag-manager-input");
+      if (input) input.value = "";
+      state.tagManagerEditingTag = null;
+      renderTagManagerList();
+      updateTagManagerAddButtonState();
+    } else if (modalId === "writing-instructions-modal") {
+      openWritingInstructionsManager().catch(() => {});
+    } else if (modalId === "assets-modal") {
+      openAssetsManager().catch(() => {});
+    }
+  });
+}
+
+async function closeActiveModal() {
+  if (isMemoryRegeneratePromptOpen()) {
+    hideMemoryRegeneratePromptModal();
+    return;
+  }
+  if (!state.activeModalId) return;
+  const closingId = state.activeModalId;
+  if (closingId === "text-input-modal") {
+    if (state.modalDirty["text-input-modal"]) {
+      const action = await openUnsavedChangesDialog();
+      if (action === "back") return;
+      if (action === "close") {
+        setModalDirtyState("text-input-modal", false);
+        resolveTextInputDialog(false);
+        return;
+      } else if (action === "save") {
+        setModalDirtyState("text-input-modal", false);
+        resolveTextInputDialog(true);
+        return;
+      }
+    }
+    resolveTextInputDialog(false);
+    return;
+  }
+  if (state.modalDirty[closingId]) {
+    const action = await openUnsavedChangesDialog();
+    if (action === "back") return;
+    if (action === "close") {
+      setModalDirtyState(closingId, false);
+      if (closingId === "character-modal") {
+        state.characterModalImportCancelled = true;
+      }
+    } else if (action === "save") {
+      const saved = await handleModalSaveAction(closingId);
+      if (!saved) return;
+      setModalDirtyState(closingId, false);
+    }
+  }
+  const modal = document.getElementById(state.activeModalId);
+  modal?.classList.add("hidden");
+  if (closingId === "writing-instruction-editor-modal") {
+    saveWiEditorTextareaCollapseStates();
+    const parentModal = document.getElementById("writing-instructions-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "writing-instructions-modal";
+      return;
+    }
+  }
+  if (closingId === "persona-editor-modal") {
+    savePersonaEditorTextareaCollapseStates();
+    const parentModal = document.getElementById("personas-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "personas-modal";
+      return;
+    }
+  }
+  if (closingId === "select-asset-modal") {
+    const parentModal = document.getElementById("character-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "character-modal";
+      return;
+    }
+  }
+  if (closingId === "sfx-editor-modal") {
+    const parentModal = document.getElementById("character-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "character-modal";
+      state_sfx_editing = {
+        editingDef: null,
+        index: -1,
+        asset: null,
+        trigger: "start",
+        eviction: "never",
+        loop: false,
+      };
+      return;
+    }
+  }
+  if (closingId === "lore-editor-modal") {
+    setModalDirtyState(closingId, false);
+    resetLoreEditorState();
+    const parentModal = document.getElementById("lore-modal");
+    if (parentModal) {
+      renderLorebookManagementList().catch(() => {});
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "lore-modal";
+      updateDocumentTitleWithUnread();
+      return;
+    }
+  }
+  if (closingId === "character-modal") {
+    if (state.editingCharacterId) {
+      localStorage.setItem(
+        `rp-char-modal-last-lang-${state.editingCharacterId}`,
+        state.charModalActiveLanguage,
+      );
+    }
+    saveCharModalTextareaCollapseStates();
+    state.charModalPendingThreadDeleteIds = [];
+    state.charModalModel3d = null;
+    state.charModalCache = {};
+    if (
+      state.characterModalImportCancelled &&
+      state.importedCharacterLorebookId
+    ) {
+      await db.lorebooks.delete(state.importedCharacterLorebookId);
+      state.importedCharacterLorebookId = null;
+    }
+    state.characterModalImportCancelled = false;
+  }
+  state.activeModalId = null;
+  setModalDirtyState(closingId, false);
+  updateDocumentTitleWithUnread();
+}
+
+async function handleModalSaveAction(modalId) {
+  if (modalId === "memory-modal") {
+    return handleMemoryModalSave();
+  }
+  if (modalId === "character-modal") {
+    return saveCharacterFromModal({ close: false });
+  }
+  if (modalId === "shortcuts-modal") {
+    return saveShortcutsFromModal({ close: false });
+  }
+  if (modalId === "personas-modal") {
+    return savePersonaFromModal();
+  }
+  if (modalId === "persona-editor-modal") {
+    await savePersonaFromEditor();
+    return true;
+  }
+  if (modalId === "lore-editor-modal") {
+    return saveLorebookFromEditor({ close: false });
+  }
+  if (modalId === "writing-instructions-modal") {
+    return saveWritingInstruction();
+  }
+  if (modalId === "asset-editor-modal") {
+    return saveAssetFromEditor();
+  }
+  return true;
+}
+
+function normalizeBotLanguageCode(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "en";
+  if (raw.toLowerCase().startsWith("pt-br")) return "pt-BR";
+  if (raw.toLowerCase().startsWith("pt-pt")) return "pt-PT";
+  return raw;
+}
+
+function getBotLanguageFlag(code) {
+  return `[${normalizeBotLanguageCode(code)}]`;
+}
+
+function getBotLanguageFlagIconCode(code) {
+  return BOT_LANGUAGE_FLAG_ICON_CODES[normalizeBotLanguageCode(code)] || "";
+}
+
+function getBotLanguageName(code) {
+  return (
+    BOT_LANGUAGE_NAMES[normalizeBotLanguageCode(code)] ||
+    normalizeBotLanguageCode(code)
+  );
+}
+
+function createLanguageFlagIconElement(code, className = "") {
+  const span = document.createElement("span");
+  if (className) span.className = className;
+  const iconCode = getBotLanguageFlagIconCode(code);
+  if (iconCode) {
+    span.classList.add("fi", `fi-${iconCode}`, "flag-icon-inline");
+    span.style.backgroundImage = `url("assets/flag-icons/flags/4x3/${iconCode}.svg")`;
+    span.setAttribute("aria-label", normalizeBotLanguageCode(code));
+    span.setAttribute("title", normalizeBotLanguageCode(code));
+  } else {
+    span.textContent = getBotLanguageFlag(code);
+  }
+  return span;
+}
+
+function createLanguageFlagRibbonElement(code) {
+  const span = document.createElement("span");
+  span.className = "character-lang-flag-elem";
+  const iconCode = getBotLanguageFlagIconCode(code);
+  if (iconCode) {
+    span.style.backgroundImage = `url("assets/flag-icons/flags/4x3/${iconCode}.svg")`;
+    span.setAttribute("aria-label", normalizeBotLanguageCode(code));
+    span.setAttribute("title", normalizeBotLanguageCode(code));
+  } else {
+    span.textContent = getBotLanguageFlag(code);
+  }
+  return span;
+}
+
+function getPrimaryAvatarInfo(character) {
+  const avatars = Array.isArray(character?.avatars) ? character.avatars : [];
+  if (avatars.length > 0) {
+    const first = avatars[0];
+    if (first && first.data) {
+      return {
+        type: first.type || "image",
+        data: first.data,
+      };
+    }
+  }
+  if (character?.avatar) {
+    return {
+      type: "image",
+      data: character.avatar,
+    };
+  }
+  return null;
+}
+
+async function ensureVideoAvatarSnapshot(src) {
+  if (!src) return null;
+  if (state.avatarSnapshotCache.has(src))
+    return state.avatarSnapshotCache.get(src);
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+  video.src = src;
+  try {
+    await new Promise((resolve, reject) => {
+      const onLoaded = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = (err) => {
+        cleanup();
+        reject(err);
+      };
+      const cleanup = () => {
+        video.removeEventListener("loadeddata", onLoaded);
+        video.removeEventListener("error", onError);
+      };
+      video.addEventListener("loadeddata", onLoaded, { once: true });
+      video.addEventListener("error", onError, { once: true });
+    });
+    const width = video.videoWidth || 256;
+    const height = video.videoHeight || 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/png");
+      state.avatarSnapshotCache.set(src, dataUrl);
+      return dataUrl;
+    }
+  } catch (err) {
+    console.warn("avatar:snapshot-failed", src, err);
+  } finally {
+    video.pause();
+    video.src = "";
+  }
+  state.avatarSnapshotCache.set(src, null);
+  return null;
+}
+
+function setCharacterAvatarImage(
+  img,
+  character,
+  fallbackName,
+  fallbackSize = 512,
+) {
+  const info = getPrimaryAvatarInfo(character);
+  const fallbackUrl = fallbackAvatar(
+    fallbackName || t("threadWord"),
+    fallbackSize,
+    fallbackSize,
+  );
+  img.dataset.avatarVideo = "";
+  if (!info?.data) {
+    img.src = fallbackUrl;
+    return;
+  }
+  const dataSrc =
+    info.data instanceof Blob ? getCachedAvatarBlobUrl(info.data) : info.data;
+  if (info.type === "video") {
+    img.dataset.avatarVideo = dataSrc;
+    // Check snapshot cache synchronously first
+    const cachedSnapshot = state.avatarSnapshotCache.get(dataSrc);
+    if (cachedSnapshot) {
+      img.src = cachedSnapshot;
+      return;
+    }
+    img.src = fallbackUrl;
+    ensureVideoAvatarSnapshot(dataSrc)
+      .then((preview) => {
+        if (preview) img.src = preview;
+      })
+      .catch(() => {});
+    return;
+  }
+  img.src = dataSrc;
+}
+
+function createEmptyCharacterDefinition(language = "en") {
+  return {
+    language: normalizeBotLanguageCode(language),
+    name: "",
+    tagline: "",
+    systemPrompt: "",
+    oneTimeExtraPrompt: "",
+    writingInstructions: "",
+    writingInstructionId: "none",
+    initialMessagesRaw: "",
+    initialMessages: [],
+    personaInjectionPlacement:
+      state.settings.defaultPersonaInjectionPlacement || "end_system_prompt",
+    ttsVoice: DEFAULT_TTS_VOICE,
+    ttsLanguage: DEFAULT_TTS_LANGUAGE,
+    ttsRate: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
+    ttsPitch: 1.1,
+    ttsProvider: state.settings.defaultTtsProvider || "kokoro",
+    kokoroDevice: "webgpu",
+    kokoroDtype: "auto",
+    kokoroVoice: DEFAULT_KOKORO_VOICE,
+    kokoroSpeed: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
+    preferLoreBooksMatchingLanguage: true,
+    lorebookIds: [],
+    sfx: [],
+  };
+}
+
+function getInitialBotDefinitionLanguage() {
+  const ui = state.settings.uiLanguage;
+  if (ui && ui !== "auto") return normalizeBotLanguageCode(ui);
+  return normalizeBotLanguageCode(state.i18nLang || "en");
+}
+
+function normalizeCharacterDefinitions(character = null) {
+  if (!character) {
+    return [createEmptyCharacterDefinition(getInitialBotDefinitionLanguage())];
+  }
+  const defsRaw = Array.isArray(character?.definitions)
+    ? character.definitions
+    : [];
+  const defs = defsRaw
+    .map((d) => {
+      const def = {
+        ...createEmptyCharacterDefinition(d?.language || "en"),
+        ...d,
+        language: normalizeBotLanguageCode(d?.language || "en"),
+        ttsProvider:
+          d?.ttsProvider || state.settings.defaultTtsProvider || "kokoro",
+        kokoroDevice: d?.kokoroDevice || "webgpu",
+        kokoroDtype: d?.kokoroDtype || "auto",
+        kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
+        kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
+          ? Number(d.kokoroSpeed)
+          : Number.isFinite(Number(d?.ttsRate))
+            ? Number(d.ttsRate)
+            : state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
+        preferLoreBooksMatchingLanguage:
+          d?.preferLoreBooksMatchingLanguage !== false,
+        lorebookIds: Array.isArray(d?.lorebookIds)
+          ? d.lorebookIds.map(Number).filter(Number.isInteger)
+          : [],
+        sfx: Array.isArray(d?.sfx) ? d.sfx : [],
+      };
+      delete def.avatar;
+      delete def.avatars;
+      return def;
+    })
+    .filter(
+      (d, i, arr) => arr.findIndex((x) => x.language === d.language) === i,
+    );
+  if (defs.length > 0) return defs;
+  const fallbackLanguage = normalizeBotLanguageCode(
+    character?.selectedCardLanguage || character?.language || "en",
+  );
+  const fallback = createEmptyCharacterDefinition(fallbackLanguage);
+  fallback.name = String(character?.name || "");
+  fallback.tagline = String(character?.tagline || "");
+  fallback.systemPrompt = String(character?.systemPrompt || "");
+  fallback.oneTimeExtraPrompt = String(character?.oneTimeExtraPrompt || "");
+  fallback.writingInstructions = String(character?.writingInstructions || "");
+  fallback.writingInstructionId = String(character?.writingInstructionId || "");
+  fallback.initialMessagesRaw =
+    String(character?.initialMessagesRaw || "") ||
+    formatInitialMessagesForEditor(character?.initialMessages || []);
+  fallback.initialMessages = Array.isArray(character?.initialMessages)
+    ? character.initialMessages
+    : [];
+  fallback.personaInjectionPlacement =
+    character?.personaInjectionPlacement ||
+    state.settings.defaultPersonaInjectionPlacement ||
+    "end_system_prompt";
+  fallback.ttsVoice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
+  fallback.ttsLanguage = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
+  fallback.ttsRate = Number.isFinite(Number(character?.ttsRate))
+    ? Number(character.ttsRate)
+    : state.settings.defaultTtsRate || DEFAULT_TTS_RATE;
+  fallback.ttsPitch = Number.isFinite(Number(character?.ttsPitch))
+    ? Number(character.ttsPitch)
+    : 1.1;
+  fallback.ttsProvider =
+    character?.ttsProvider || state.settings.defaultTtsProvider || "kokoro";
+  fallback.kokoroDevice = character?.kokoroDevice || "webgpu";
+  fallback.kokoroDtype = character?.kokoroDtype || "auto";
+  fallback.kokoroVoice = String(character?.kokoroVoice || DEFAULT_KOKORO_VOICE);
+  fallback.kokoroSpeed = Number.isFinite(Number(character?.kokoroSpeed))
+    ? Number(character.kokoroSpeed)
+    : Number.isFinite(Number(character?.ttsRate))
+      ? Number(character.ttsRate)
+      : state.settings.defaultTtsRate || DEFAULT_TTS_RATE;
+  fallback.preferLoreBooksMatchingLanguage =
+    character?.preferLoreBooksMatchingLanguage !== false;
+  fallback.lorebookIds = Array.isArray(character?.lorebookIds)
+    ? character.lorebookIds.map(Number).filter(Number.isInteger)
+    : [];
+  return [fallback];
+}
+
+function resolveCharacterLanguageDefinition(character, preferredLanguage = "") {
+  const defs = normalizeCharacterDefinitions(character);
+  const preferred = normalizeBotLanguageCode(
+    preferredLanguage ||
+      character?.selectedCardLanguage ||
+      defs[0]?.language ||
+      "en",
+  );
+  const def = defs.find((d) => d.language === preferred) || defs[0];
+  return {
+    definitions: defs,
+    definition: def,
+    language: def?.language || defs[0]?.language || "en",
+  };
+}
+
+function resolveCharacterForLanguage(character, preferredLanguage = "") {
+  const base = character || {};
+  const resolved = resolveCharacterLanguageDefinition(base, preferredLanguage);
+  return {
+    ...base,
+    ...(resolved.definition || {}),
+    definitions: resolved.definitions,
+    activeLanguage: resolved.language,
+  };
+}
+
+function getActiveCharacterDefinition() {
+  return state.charModalDefinitions.find(
+    (d) => d.language === state.charModalActiveLanguage,
+  );
+}
+
+function setCharacterModalTab(tab = "lang") {
+  const normalized =
+    tab === "config"
+      ? "config"
+      : tab === "tags"
+        ? "tags"
+        : tab === "sfx"
+          ? "sfx"
+          : tab === "model3d"
+            ? "model3d"
+            : "lang";
+  state.charModalActiveTab = normalized;
+  const showLang = normalized === "lang";
+  const showConfig = normalized === "config";
+  const showTags = normalized === "tags";
+  const showSfx = normalized === "sfx";
+  const showModel3d = normalized === "model3d";
+  document
+    .querySelectorAll(".lang-field")
+    .forEach((el) => el.classList.toggle("hidden", !showLang));
+  document
+    .querySelectorAll(".global-field")
+    .forEach((el) => el.classList.toggle("hidden", !showConfig));
+  document
+    .querySelectorAll(".tags-field")
+    .forEach((el) => el.classList.toggle("hidden", !showTags));
+  document
+    .querySelectorAll(".sfx-field")
+    .forEach((el) => el.classList.toggle("hidden", !showSfx));
+  document
+    .querySelectorAll(".model3d-field")
+    .forEach((el) => el.classList.toggle("hidden", !showModel3d));
+  const configBtn = document.getElementById("char-config-tab-btn");
+  if (configBtn) configBtn.classList.toggle("active", showConfig);
+  const tagsBtn = document.getElementById("char-tags-tab-btn");
+  if (tagsBtn) tagsBtn.classList.toggle("active", showTags);
+  const sfxBtn = document.getElementById("char-sfx-tab-btn");
+  if (sfxBtn) sfxBtn.classList.toggle("active", showSfx);
+  const model3dBtn = document.getElementById("char-model3d-tab-btn");
+  if (model3dBtn) model3dBtn.classList.toggle("active", showModel3d);
+  document
+    .querySelectorAll(".initial-messages-hint")
+    .forEach((el) => el.classList.toggle("hidden", showLang));
+}
+
+function renderCharacterDefinitionTabs() {
+  const root = document.getElementById("char-def-tabs-left");
+  if (!root) return;
+  root.innerHTML = "";
+  state.charModalDefinitions.forEach((def) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "settings-tab-btn char-def-tab-btn";
+    if (
+      def.language === state.charModalActiveLanguage &&
+      state.charModalActiveTab === "lang"
+    ) {
+      btn.classList.add("active");
+    }
+    const label = document.createElement("span");
+    label.className = "char-def-tab-label";
+    const flag = createLanguageFlagIconElement(
+      def.language,
+      "char-def-tab-flag",
+    );
+    const text = document.createElement("span");
+    text.textContent = def.language;
+    label.append(flag, text);
+    btn.appendChild(label);
+    btn.addEventListener("click", async () => {
+      saveActiveCharacterDefinitionFromForm();
+      saveCharModalTextareaCollapseStates();
+      state.charModalActiveLanguage = def.language;
+      await loadActiveCharacterDefinitionToForm();
+      setCharacterModalTab("lang");
+      renderCharacterDefinitionTabs();
+      restoreCharModalTextareaCollapseStates();
+    });
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "char-def-tab-delete";
+    del.textContent = "x";
+    del.disabled = state.charModalDefinitions.length <= 1;
+    del.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (state.charModalDefinitions.length <= 1) {
+        await openInfoDialog(t("message"), t("languageRequired"));
+        return;
+      }
+      let affectedThreads = [];
+      if (Number.isInteger(Number(state.editingCharacterId))) {
+        const threadsForChar = await db.threads
+          .where("characterId")
+          .equals(Number(state.editingCharacterId))
+          .toArray();
+        affectedThreads = threadsForChar.filter(
+          (th) =>
+            normalizeBotLanguageCode(th.characterLanguage || "") ===
+            def.language,
+        );
+      }
+      const removeMsg =
+        affectedThreads.length > 0
+          ? tf("removeLanguageConfirmWithThreads", {
+              lang: def.language,
+              count: affectedThreads.length,
+            })
+          : tf("removeLanguageConfirm", { lang: def.language });
+      const ok = await openConfirmDialog(t("removeLanguageTitle"), removeMsg);
+      if (!ok) return;
+      saveActiveCharacterDefinitionFromForm();
+      state.charModalDefinitions = state.charModalDefinitions.filter(
+        (x) => x.language !== def.language,
+      );
+      if (state.charModalActiveLanguage === def.language) {
+        state.charModalActiveLanguage =
+          state.charModalDefinitions[0]?.language || "";
+      }
+      if (affectedThreads.length > 0) {
+        const idsToDelete = affectedThreads
+          .map((th) => Number(th.id))
+          .filter(Number.isInteger);
+        state.charModalPendingThreadDeleteIds = Array.from(
+          new Set([
+            ...(Array.isArray(state.charModalPendingThreadDeleteIds)
+              ? state.charModalPendingThreadDeleteIds
+              : []),
+            ...idsToDelete,
+          ]),
+        );
+      }
+      await loadActiveCharacterDefinitionToForm();
+      renderCharacterDefinitionTabs();
+    });
+    btn.appendChild(del);
+    root.appendChild(btn);
+  });
+  const configBtn = document.getElementById("char-config-tab-btn");
+  if (configBtn)
+    configBtn.classList.toggle("active", state.charModalActiveTab === "config");
+  const tagsBtn = document.getElementById("char-tags-tab-btn");
+  if (tagsBtn)
+    tagsBtn.classList.toggle("active", state.charModalActiveTab === "tags");
+  const sfxBtn = document.getElementById("char-sfx-tab-btn");
+  if (sfxBtn)
+    sfxBtn.classList.toggle("active", state.charModalActiveTab === "sfx");
+}
+
+function saveActiveCharacterDefinitionFromForm() {
+  const def = getActiveCharacterDefinition();
+  if (!def) return;
+  saveCharModalTextareaCollapseStates();
+  def.name = String(document.getElementById("char-name")?.value || "").trim();
+  def.tagline = String(
+    document.getElementById("char-tagline")?.value || "",
+  ).trim();
+  def.systemPrompt = String(
+    document.getElementById("char-system-prompt")?.value || "",
+  ).trim();
+  def.oneTimeExtraPrompt = String(
+    document.getElementById("char-one-time-extra-prompt")?.value || "",
+  ).trim();
+  const writingInstructionsTextarea = document.getElementById(
+    "char-writing-instructions",
+  );
+  const writingInstructionsSelect = document.getElementById(
+    "char-writing-instructions-select",
+  );
+  const selectedWritingInstructionId = String(
+    writingInstructionsSelect?.value || "",
+  );
+  def.writingInstructionId = selectedWritingInstructionId;
+  def.writingInstructions =
+    selectedWritingInstructionId === ""
+      ? String(writingInstructionsTextarea?.value || "").trim()
+      : "";
+  const language = def.language;
+  let drafts = getInitialMessageDrafts(language);
+  if (drafts.length === 0) {
+    drafts = [""];
+    setInitialMessageDrafts(language, drafts);
+  }
+  def.initialMessageDrafts = [...drafts];
+  def.personaInjectionPlacement = String(
+    document.getElementById("char-persona-injection-placement")?.value ||
+      "end_system_prompt",
+  );
+  const selectedTts = getResolvedCharTtsSelection();
+  def.ttsVoice = selectedTts.voice;
+  def.ttsLanguage = selectedTts.language;
+  def.ttsRate = selectedTts.rate;
+  def.ttsPitch = selectedTts.pitch;
+  def.ttsProvider = getCharModalTtsProviderSelection();
+  def.kokoroDevice = String(
+    document.getElementById("char-tts-kokoro-device")?.value || "webgpu",
+  );
+  def.kokoroDtype = String(
+    document.getElementById("char-tts-kokoro-dtype")?.value || "auto",
+  );
+  def.kokoroVoice = String(
+    document.getElementById("char-tts-kokoro-voice")?.value ||
+      DEFAULT_KOKORO_VOICE,
+  );
+  def.kokoroSpeed = selectedTts.rate;
+  def.lorebookIds = getSelectedLorebookIds();
+}
+
+function getInitialMessageDraftKey(language) {
+  const normalizedLang = normalizeBotLanguageCode(language || "en");
+  const charId = state.editingCharacterId;
+  const hasCharacterId =
+    charId !== null && charId !== undefined && String(charId).trim() !== "";
+  const namespace = hasCharacterId
+    ? `char-${String(charId)}`
+    : state.charModalDraftNamespace || "new-0";
+  return `${namespace}:${normalizedLang}`;
+}
+
+function getInitialMessageDrafts(language) {
+  const key = getInitialMessageDraftKey(language);
+  if (!Array.isArray(state.initialMessageDraftsByKey[key])) {
+    state.initialMessageDraftsByKey[key] = [];
+  }
+  return state.initialMessageDraftsByKey[key];
+}
+
+function setInitialMessageDrafts(language, drafts, meta = null) {
+  const key = getInitialMessageDraftKey(language);
+  state.initialMessageDraftsByKey[key] = Array.isArray(drafts) ? drafts : [];
+  if (meta) {
+    state.initialMessageDraftsMetaByKey[key] = { ...meta };
+  }
+}
+
+function ensureInitialMessageDraftsForLanguage(def) {
+  const language = def?.language;
+  if (!language) return;
+  const key = getInitialMessageDraftKey(language);
+  const existingDrafts = getInitialMessageDrafts(language);
+  const meta = state.initialMessageDraftsMetaByKey[key];
+  let parsed = [];
+  let desiredRaw = "";
+
+  if (Array.isArray(def.initialMessages) && def.initialMessages.length > 0) {
+    parsed = def.initialMessages;
+    desiredRaw = formatInitialMessagesForEditor(parsed);
+  } else if (String(def.initialMessagesRaw || "").trim()) {
+    const rawInput = String(def.initialMessagesRaw || "");
+    try {
+      const parsedInput = parseInitialMessagesInput(rawInput);
+      parsed = parsedInput.messages;
+      desiredRaw = String(parsedInput.raw || rawInput);
+    } catch {
+      parsed = [];
+      desiredRaw = rawInput;
+    }
+  } else {
+    desiredRaw = "";
+  }
+
+  const needsReset =
+    !meta || meta.loadedRaw !== desiredRaw || existingDrafts.length === 0;
+  if (!needsReset) return;
+
+  const nextDrafts =
+    parsed.length > 0
+      ? parsed.map((message) => formatInitialMessagesForEditor([message]))
+      : [""];
+  setInitialMessageDrafts(language, nextDrafts, { loadedRaw: desiredRaw });
+}
+
+function renderCharacterInitialMessagesList() {
+  const listRoot = document.getElementById("char-initial-messages-list");
+  if (!listRoot) return;
+  const language = state.charModalActiveLanguage;
+  if (!language) {
+    listRoot.innerHTML = "";
+    return;
+  }
+  const drafts = getInitialMessageDrafts(language);
+  listRoot.innerHTML = "";
+  const container = listRoot.closest(".initial-messages-field");
+  if (container) {
+    container.classList.toggle("hidden", drafts.length === 0);
+  }
+  trimInitialMessageCollapseStates(language, drafts.length);
+  drafts.forEach((messageText, index) => {
+    const entry = buildInitialMessageEntry(messageText, index, language);
+    listRoot.appendChild(entry);
+  });
+}
+
+async function refreshOpenThreadInitialMessagesForCharacter(characterId) {
+  if (!currentThread || !Number.isInteger(Number(currentThread?.id))) return;
+  if (Number(currentThread.characterId) !== Number(characterId)) return;
+  if (currentThread.initialMessagesRemoved === true) return;
+  const characterRecord = await db.characters.get(characterId);
+  if (!characterRecord) return;
+  const resolvedCharacter = resolveCharacterForLanguage(
+    characterRecord,
+    currentThread.characterLanguage || "",
+  );
+  const initialMessages = await buildThreadInitialMessages(resolvedCharacter);
+  if (!Array.isArray(initialMessages)) return;
+  const remaining = (currentThread.messages || []).filter(
+    (msg) => !msg?.isInitial,
+  );
+  const updatedMessages = [...initialMessages, ...remaining];
+  currentThread.messages = updatedMessages;
+  conversationHistory = updatedMessages.map((msg) => ({
+    ...msg,
+    role: msg.role === "ai" ? "assistant" : msg.role,
+  }));
+  await db.threads.update(Number(currentThread.id), {
+    messages: updatedMessages,
+    updatedAt: Date.now(),
+  });
+  state.initialMessageIndexByThread[Number(currentThread.id)] = 0;
+  renderChat();
+}
+
+function buildInitialMessageEntry(text, index, language) {
+  const entry = document.createElement("div");
+  entry.className = "initial-message-card";
+
+  const textarea = document.createElement("textarea");
+  textarea.id = `initial-message-textarea-${index}`;
+  textarea.className = "initial-message-entry-textarea";
+  textarea.rows = 3;
+  textarea.placeholder = t("initialMessageContentPlaceholder");
+  textarea.value = String(text || "");
+  const labelText = tf("initialMessageLabel", { number: index + 1 });
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "textarea-collapse";
+
+  const header = document.createElement("button");
+  header.type = "button";
+  header.className = "textarea-collapse-header";
+  header.setAttribute("aria-expanded", "true");
+
+  const title = document.createElement("span");
+  title.textContent = labelText;
+  const rightGroup = document.createElement("span");
+  rightGroup.className = "textarea-collapse-header-right";
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "icon-btn small initial-message-remove-btn";
+  removeBtn.innerHTML = ICONS.delete;
+  const removeLabel = t("removeInitialMessage");
+  removeBtn.setAttribute("aria-label", removeLabel);
+  removeBtn.title = removeLabel;
+  removeBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    removeInitialMessageDraft(language, index);
+  });
+
+  const icon = document.createElement("span");
+  icon.className = "textarea-collapse-icon";
+
+  rightGroup.append(removeBtn, icon);
+  header.append(title, rightGroup);
+
+  const body = document.createElement("div");
+  body.className = "textarea-collapse-body";
+
+  rightGroup.append(removeBtn, icon);
+  header.append(title, rightGroup);
+
+  const entryObj = { header, body, icon };
+  entryObj.refresh = () => {
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    header.classList.toggle("has-content", hasContent);
+    const expanded = header.getAttribute("aria-expanded") === "true";
+    icon.textContent = expanded ? "▾" : "▴";
+  };
+  entryObj.setExpanded = (next) => {
+    const current = header.getAttribute("aria-expanded") === "true";
+    if (next === current) {
+      entryObj.refresh();
+      if (next) autoExpandTextarea(textarea);
+      return;
+    }
+    header.setAttribute("aria-expanded", next ? "true" : "false");
+    body.classList.toggle("collapsed", !next);
+    if (next) autoExpandTextarea(textarea);
+    entryObj.refresh();
+  };
+  textareaCollapseStates.set(textarea, entryObj);
+
+  header.addEventListener("click", (event) => {
+    if (event.target.closest(".initial-message-remove-btn")) return;
+    event.preventDefault();
+    const isExpanded = header.getAttribute("aria-expanded") === "true";
+    entryObj.setExpanded(!isExpanded);
+    updateInitialMessageCollapseState(language, index, !isExpanded);
+  });
+
+  wrapper.append(header, body);
+  body.appendChild(textarea);
+
+  textarea.addEventListener("input", (event) => {
+    const drafts = getInitialMessageDrafts(language);
+    drafts[index] = String(event.target.value || "");
+    setModalDirtyState("character-modal", true);
+  });
+
+  entry.appendChild(wrapper);
+
+  requestAnimationFrame(() => {
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    const storedStates = loadInitialMessageCollapseStates(language);
+    const storedExpanded =
+      storedStates[index] !== undefined ? storedStates[index] : hasContent;
+    entryObj.setExpanded(storedExpanded);
+    autoExpandTextarea(textarea);
+  });
+
+  return entry;
+}
+
+function addInitialMessageDraft(language) {
+  if (!language) return;
+  const drafts = getInitialMessageDrafts(language);
+  const next = [...drafts, ""];
+  setInitialMessageDrafts(language, next);
+  trimInitialMessageCollapseStates(language, next.length);
+  renderCharacterInitialMessagesList();
+  setModalDirtyState("character-modal", true);
+}
+
+function removeInitialMessageDraft(language, index) {
+  if (!language) return;
+  const drafts = getInitialMessageDrafts(language);
+  if (index < 0 || index >= drafts.length) return;
+  const next = drafts.filter((_, idx) => idx !== index);
+  if (next.length === 0) {
+    next.push("");
+  }
+  setInitialMessageDrafts(language, next);
+  trimInitialMessageCollapseStates(language, next.length);
+  renderCharacterInitialMessagesList();
+  setModalDirtyState("character-modal", true);
+}
+
+async function loadActiveCharacterDefinitionToForm() {
+  const def = getActiveCharacterDefinition();
+  if (!def) return;
+  document.getElementById("char-name").value = def.name || "";
+  updateNameLengthCounter("char-name", "char-name-count", 128);
+  const titleEl = document.getElementById("character-title");
+  if (titleEl) {
+    titleEl.textContent = def.name || "BOT";
+  }
+  updateDocumentTitleWithUnread();
+  document.getElementById("char-tagline").value = def.tagline || "";
+  updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
+  document.getElementById("char-system-prompt").value = def.systemPrompt || "";
+  document.getElementById("char-one-time-extra-prompt").value =
+    def.oneTimeExtraPrompt || "";
+  document.getElementById("char-writing-instructions").value =
+    def.writingInstructions || "";
+  await populateCharWritingInstructionsSelect(
+    def.writingInstructionId,
+    def.writingInstructions,
+  );
+  updateCharWritingInstructionsVisibility();
+  if (!Array.isArray(def.initialMessages)) {
+    def.initialMessages = [];
+  }
+  ensureInitialMessageDraftsForLanguage(def);
+  renderCharacterInitialMessagesList();
+  document.getElementById("char-persona-injection-placement").value =
+    def.personaInjectionPlacement || "end_system_prompt";
+  populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
+  populateCharTtsVoiceSelect(def.ttsVoice || DEFAULT_TTS_VOICE);
+  document.getElementById("char-tts-rate").value = String(
+    Math.max(0.5, Math.min(2, Number(def.ttsRate) || DEFAULT_TTS_RATE)),
+  );
+  document.getElementById("char-tts-pitch").value = String(
+    Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1)),
+  );
+  document.getElementById("char-tts-provider").value =
+    def.ttsProvider || "kokoro";
+  const kokoroDevice = document.getElementById("char-tts-kokoro-device");
+  const kokoroDeviceValue = def.kokoroDevice || "webgpu";
+  if (kokoroDevice) kokoroDevice.value = kokoroDeviceValue;
+  updateKokoroDtypeOptionsForDevice(
+    kokoroDeviceValue,
+    def.kokoroDtype || "auto",
+  );
+  const activeModalLanguage = getCharModalActiveLanguage();
+  populateKokoroVoiceSelect(
+    def.kokoroVoice || DEFAULT_KOKORO_VOICE,
+    activeModalLanguage,
+  );
+  updateCharTtsRatePitchLabels();
+  refreshCharTtsProviderFields();
+  renderCharacterLorebookList(def.lorebookIds || []);
+}
+
+function populateCharacterLanguageSelectOptions() {
+  const select = document.getElementById("char-language-select");
+  if (!select) return;
+  const used = new Set(state.charModalDefinitions.map((d) => d.language));
+  select.innerHTML = "";
+  const FLAG_EMOJI = {
+    en: "🇺🇸",
+    fr: "🇫🇷",
+    it: "🇮🇹",
+    de: "🇩🇪",
+    es: "🇪🇸",
+    "pt-BR": "🇧🇷",
+    "pt-PT": "🇵🇹",
+    ja: "🇯🇵",
+    ko: "🇰🇷",
+    "zh-CN": "🇨🇳",
+    "zh-TW": "🇹🇼",
+    ru: "🇷🇺",
+    ar: "🇸🇦",
+    nl: "🇳🇱",
+    tr: "🇹🇷",
+    pl: "🇵🇱",
+    sv: "🇸🇪",
+    da: "🇩🇰",
+    fi: "🇫🇮",
+    no: "🇳🇴",
+    cs: "🇨🇿",
+    ro: "🇷🇴",
+    hu: "🇭🇺",
+    el: "🇬🇷",
+    he: "🇮🇱",
+    hi: "🇮🇳",
+    id: "🇮🇩",
+    th: "🇹🇭",
+    vi: "🇻🇳",
+  };
+  BOT_LANGUAGE_OPTIONS.filter((code) => !used.has(code)).forEach((code) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    const flagEmoji = FLAG_EMOJI[code] || "🌐";
+    const langName = getBotLanguageName(code);
+    opt.textContent = `${flagEmoji} ${langName} (${code})`;
+    select.appendChild(opt);
+  });
+}
+
+async function openCharacterModal(
+  character = null,
+  selectedCardLanguage = null,
+  startDirty = false,
+) {
+  state.charModalTtsTestPlaying = false;
+  state.charModalPendingThreadDeleteIds = [];
+  state.editingCharacterId = character?.id || null;
+  state.characterModalImportCancelled = false;
+  if (character?.id) {
+    state.charModalDraftNamespace = `char-${character.id}`;
+    state.charModalCache[character.id] = { ...character };
+  } else {
+    state.nextCharModalDraftNamespace =
+      Number(state.nextCharModalDraftNamespace || 0) + 1;
+    state.charModalDraftNamespace = `new-${state.nextCharModalDraftNamespace}`;
+  }
+  setupKokoroDownloadCancel();
+  state.charModalModel3d = character?.model3d || null;
+  renderModel3DPreview();
+
+  const hasAvatars =
+    character?.avatars &&
+    Array.isArray(character.avatars) &&
+    character.avatars.length > 0;
+  state.charModalAvatars = hasAvatars ? [...character.avatars] : [];
+  if (state.charModalAvatars.length === 0 && character?.avatar) {
+    state.charModalAvatars = [
+      { type: "image", data: character.avatar, name: "" },
+    ];
+  }
+  renderCharAvatars();
+  state.charModalDefinitions = normalizeCharacterDefinitions(character);
+  const cardLanguage =
+    selectedCardLanguage || character?.selectedCardLanguage || "";
+  const hasCardLanguage =
+    cardLanguage &&
+    state.charModalDefinitions.some((d) => d.language === cardLanguage);
+  let activeLanguage = hasCardLanguage
+    ? cardLanguage
+    : state.charModalDefinitions[0]?.language ||
+      getInitialBotDefinitionLanguage();
+  if (character?.id) {
+    const savedLang = localStorage.getItem(
+      `rp-char-modal-last-lang-${character.id}`,
+    );
+    if (
+      savedLang &&
+      state.charModalDefinitions.some((d) => d.language === savedLang)
+    ) {
+      activeLanguage = savedLang;
+    }
+  }
+  state.charModalActiveLanguage = activeLanguage;
+  state.charModalActiveTab = "lang";
+
+  document.getElementById("char-use-memory").checked =
+    character?.useMemory !== false;
+  document.getElementById("char-use-postprocess").checked =
+    character?.usePostProcessing !== false;
+  document.getElementById("char-auto-trigger-first-ai").checked =
+    character?.autoTriggerAiFirstMessage !== false;
+  document.getElementById("char-auto-title").checked =
+    character?.autoTitleEnabled !== false;
+  const charAutoTitleMinMessagesInput = document.getElementById(
+    "char-auto-title-min-messages",
+  );
+  if (charAutoTitleMinMessagesInput) {
+    const defaultCharAutoTitleMinMessages =
+      state.settings.defaultAutoTitleMinMessages ??
+      DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
+    const storedCharMin = Number(character?.autoTitleMinMessages);
+    const resolvedCharMin = Number.isFinite(storedCharMin)
+      ? storedCharMin
+      : defaultCharAutoTitleMinMessages;
+    const normalizedCharMin = Math.max(1, Math.min(50, resolvedCharMin));
+    charAutoTitleMinMessagesInput.value = String(normalizedCharMin);
+  }
+  document.getElementById("char-persona-prefix").checked =
+    character?.personaPrefixEnabled !== false;
+  document.getElementById("char-include-ooc").checked =
+    character?.includeOocInCompletions ??
+    state.settings.defaultIncludeOocInCompletions ??
+    DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
+  document.getElementById("char-avatar-scale").value = String(
+    character?.avatarScale != null
+      ? Number(character.avatarScale)
+      : state.settings.defaultAvatarScale ??
+        DEFAULT_SETTINGS.defaultAvatarScale,
+  );
+  setCharacterTagsInputValue(character?.tags || []);
+  renderCharacterTagPresetButtons();
+
+  renderCharacterDefinitionTabs();
+  await loadActiveCharacterDefinitionToForm();
+  setCharacterModalTab("lang");
+  populateCharacterLanguageSelectOptions();
+
+  const loreCooldownInput = document.getElementById("char-lore-cooldown");
+  if (loreCooldownInput) {
+    const storedLoreCooldown = Number.isFinite(Number(character?.loreCooldown))
+      ? Number(character.loreCooldown)
+      : 20;
+    loreCooldownInput.value = String(storedLoreCooldown);
+  }
+
+  updateCharTtsRatePitchLabels();
+  updateCharTtsTestButtonState();
+  updateCharacterPromptPlaceholder();
+  document.getElementById("char-language-modal")?.classList.add("hidden");
+
+  openModal("character-modal");
+  setModalDirtyState("character-modal", startDirty);
+  restoreCharModalTextareaCollapseStates();
+  // For new characters, reset modal scroll to top
+  if (!character?.id) {
+    const modalBody = document.querySelector("#character-modal .modal-body");
+    if (modalBody) modalBody.scrollTop = 0;
+  }
+}
+
+async function saveCharacterFromModal({ close = true } = {}) {
+  saveActiveCharacterDefinitionFromForm();
+  const defs = state.charModalDefinitions.map((def) => ({ ...def }));
+  if (defs.length === 0) {
+    await openInfoDialog(t("missingFieldTitle"), t("languageRequired"));
+    return false;
+  }
+
+  const missingNameLanguages = [];
+  for (let i = 0; i < defs.length; i += 1) {
+    const def = defs[i];
+    def.language = normalizeBotLanguageCode(def.language || "en");
+    def.name = String(def.name || "").trim();
+    def.systemPrompt = String(def.systemPrompt || "").trim();
+    def.oneTimeExtraPrompt = String(def.oneTimeExtraPrompt || "").trim();
+    def.writingInstructions = String(def.writingInstructions || "").trim();
+    def.personaInjectionPlacement =
+      def.personaInjectionPlacement ||
+      state.settings.defaultPersonaInjectionPlacement ||
+      "end_system_prompt";
+    def.ttsVoice = String(def.ttsVoice || DEFAULT_TTS_VOICE);
+    def.ttsLanguage = String(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
+    def.ttsRate = Math.max(
+      0.5,
+      Math.min(
+        2,
+        Number(def.ttsRate) ||
+          (state.settings.defaultTtsRate ?? DEFAULT_TTS_RATE),
+      ),
+    );
+    def.ttsPitch = Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1));
+    def.preferLoreBooksMatchingLanguage =
+      def.preferLoreBooksMatchingLanguage !== false;
+    def.lorebookIds = Array.isArray(def.lorebookIds)
+      ? def.lorebookIds.map(Number).filter(Number.isInteger)
+      : [];
+    delete def.avatar;
+    delete def.avatars;
+    if (!def.name) missingNameLanguages.push(def.language);
+    const drafts = Array.isArray(def.initialMessageDrafts)
+      ? def.initialMessageDrafts
+      : [];
+    const collectedMessages = [];
+    for (const draft of drafts) {
+      const trimmed = String(draft || "").trim();
+      if (!trimmed) continue;
+      try {
+        const parsed = parseInitialMessagesInput(trimmed);
+        collectedMessages.push(...parsed.messages);
+      } catch (err) {
+        await openInfoDialog(
+          t("invalidInitialMessagesTitle"),
+          String(err?.message || t("invalidInitialMessagesMessage")),
+        );
+        return;
+      }
+    }
+    if (collectedMessages.length === 0) {
+      def.initialMessagesRaw = "";
+      def.initialMessages = [];
+    } else {
+      def.initialMessages = collectedMessages;
+      def.initialMessagesRaw =
+        formatInitialMessagesForEditor(collectedMessages);
+    }
+    const savedRaw = String(def.initialMessagesRaw || "");
+    const filteredDrafts = drafts.filter((draft) => String(draft || "").trim());
+    setInitialMessageDrafts(def.language, filteredDrafts, {
+      loadedRaw: savedRaw,
+    });
+  }
+  renderCharacterInitialMessagesList();
+
+  if (missingNameLanguages.length > 0) {
+    await openInfoDialog(
+      t("missingFieldTitle"),
+      tf("characterNameRequiredAllLanguages", {
+        langs: missingNameLanguages.join(", "),
+      }),
+    );
+    return;
+  }
+
+  const uiLang = normalizeBotLanguageCode(state.settings.uiLanguage || "en");
+  const primaryDef =
+    defs.find((d) => d.language === uiLang) ||
+    defs.find((d) => !!String(d.name || "").trim()) ||
+    defs[0];
+  let previousSelectedCardLanguage = "";
+  if (state.editingCharacterId) {
+    const existingChar = await db.characters.get(state.editingCharacterId);
+    previousSelectedCardLanguage = normalizeBotLanguageCode(
+      existingChar?.selectedCardLanguage || "",
+    );
+  }
+  const selectedCardLanguage =
+    defs.find((d) => d.language === previousSelectedCardLanguage)?.language ||
+    defs[0]?.language ||
+    "en";
+  const selectedLorebookIds = Array.isArray(primaryDef?.lorebookIds)
+    ? primaryDef.lorebookIds
+    : [];
+  const selectedTts = {
+    voice: primaryDef?.ttsVoice || DEFAULT_TTS_VOICE,
+    language: primaryDef?.ttsLanguage || DEFAULT_TTS_LANGUAGE,
+    rate: Math.max(
+      0.5,
+      Math.min(2, Number(primaryDef?.ttsRate) || DEFAULT_TTS_RATE),
+    ),
+    pitch: Math.max(0, Math.min(2, Number(primaryDef?.ttsPitch) || 1.1)),
+  };
+
+  const payload = {
+    name: String(primaryDef?.name || "").trim(),
+    tagline: String(primaryDef?.tagline || "").trim(),
+    definitions: defs,
+    selectedCardLanguage,
+    oneTimeExtraPrompt: String(primaryDef?.oneTimeExtraPrompt || "").trim(),
+    writingInstructions: String(primaryDef?.writingInstructions || "").trim(),
+    writingInstructionId: String(primaryDef?.writingInstructionId || ""),
+    initialMessagesRaw: String(primaryDef?.initialMessagesRaw || ""),
+    initialMessages: Array.isArray(primaryDef?.initialMessages)
+      ? primaryDef.initialMessages
+      : [],
+    useMemory: document.getElementById("char-use-memory").checked,
+    usePostProcessing: document.getElementById("char-use-postprocess").checked,
+    autoTriggerAiFirstMessage: document.getElementById(
+      "char-auto-trigger-first-ai",
+    ).checked,
+    autoTitleEnabled: document.getElementById("char-auto-title").checked,
+    autoTitleMinMessages:
+      Number(document.getElementById("char-auto-title-min-messages").value) ||
+      10,
+    personaPrefixEnabled: document.getElementById("char-persona-prefix")
+      .checked,
+    includeOocInCompletions:
+      document.getElementById("char-include-ooc").checked,
+    personaInjectionPlacement: String(
+      primaryDef?.personaInjectionPlacement || "end_system_prompt",
+    ),
+    avatarScale:
+      Number(document.getElementById("char-avatar-scale").value) || 1,
+    tags: getCharacterTagsFromModal(),
+    ttsVoice: selectedTts.voice,
+    ttsLanguage: selectedTts.language,
+    ttsRate: selectedTts.rate,
+    ttsPitch: selectedTts.pitch,
+    preferLoreBooksMatchingLanguage:
+      primaryDef?.preferLoreBooksMatchingLanguage !== false,
+    lorebookIds: selectedLorebookIds,
+    loreCooldown: (() => {
+      const rawValue = document.getElementById("char-lore-cooldown")?.value;
+      const parsed = Number(rawValue);
+      if (!Number.isFinite(parsed) || String(rawValue).trim() === "") {
+        return 20;
+      }
+      return Math.max(0, Math.min(100, parsed));
+    })(),
+    avatar:
+      state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
+    avatars:
+      state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [],
+    model3d: state.charModalModel3d ||
+      (state.editingCharacterId ? state.charModalCache?.[state.editingCharacterId]?.model3d : null) ||
+      null,
+    updatedAt: Date.now(),
+  };
+
+  if (!payload.name) {
+    await openInfoDialog(t("missingFieldTitle"), t("characterNameRequired"));
+    return;
+  }
+
+  const tagsUpdated = mergeTagsIntoCatalog(payload.tags);
+  if (tagsUpdated) {
+    renderTagPresetsDataList();
+    renderCharacterTagPresetButtons();
+    renderCharacterTagFilterChips();
+  }
+
+  let savedCharacterId = null;
+  if (state.editingCharacterId) {
+    savedCharacterId = Number(state.editingCharacterId);
+    await db.characters.update(state.editingCharacterId, payload);
+    if (
+      currentCharacter &&
+      Number(currentCharacter.id) === Number(state.editingCharacterId)
+    ) {
+      const merged = { ...currentCharacter, ...payload };
+      currentCharacter = resolveCharacterForLanguage(
+        merged,
+        currentThread?.characterLanguage || "",
+      );
+      state.cachedChatBotAvatar = {
+        url: null,
+        characterId: null,
+        personaId: null,
+      };
+      renderChat();
+      updateModel3DToggleButton();
+      const panel = document.getElementById('model3d-panel');
+      if (!currentCharacter?.model3d?.data) {
+        hideModel3DPanel();
+      } else if (panel && !panel.classList.contains('hidden')) {
+        loadModel3DFromCharacter(currentCharacter);
+      }
+    }
+    showToast(t("characterUpdated"), "success");
+  } else {
+    payload.createdAt = Date.now();
+    const newId = await db.characters.add(payload);
+    state.editingCharacterId = newId;
+    savedCharacterId = Number(newId);
+    showToast(t("characterCreated"), "success");
+  }
+
+  const pendingThreadDeleteIds = Array.isArray(
+    state.charModalPendingThreadDeleteIds,
+  )
+    ? state.charModalPendingThreadDeleteIds
+        .map((id) => Number(id))
+        .filter(Number.isInteger)
+    : [];
+  if (pendingThreadDeleteIds.length > 0) {
+    state.generationQueue = state.generationQueue.filter(
+      (id) => !pendingThreadDeleteIds.includes(Number(id)),
+    );
+    await db.threads.bulkDelete(pendingThreadDeleteIds);
+    pendingThreadDeleteIds.forEach((id) =>
+      state.selectedThreadIds.delete(Number(id)),
+    );
+    if (
+      currentThread &&
+      pendingThreadDeleteIds.includes(Number(currentThread.id))
+    ) {
+      currentThread = null;
+      currentCharacter = null;
+      conversationHistory = [];
+      showMainView();
+      updateAutoTtsToggleButton();
+    }
+  }
+
+  state.charModalPendingThreadDeleteIds = [];
+  setModalDirtyState("character-modal", false);
+  await renderAll();
+  if (Number.isInteger(savedCharacterId)) {
+    await refreshOpenThreadInitialMessagesForCharacter(savedCharacterId);
+  }
+  if (close) {
+    if (state.editingCharacterId) {
+      localStorage.setItem(
+        `rp-char-modal-last-lang-${state.editingCharacterId}`,
+        state.charModalActiveLanguage,
+      );
+    }
+    closeActiveModal();
+  }
+  return true;
+}
+
+async function applyCharacterFromModal() {
+  return saveCharacterFromModal({ close: false });
+}
+
+function populateCharTtsLanguageSelect(
+  preferredLanguage = DEFAULT_TTS_LANGUAGE,
+) {
+  const languageSelect = document.getElementById("char-tts-language");
+  if (!languageSelect) return;
+  const hasBrowserSupport =
+    typeof window.hasBrowserTtsSupport === "function" &&
+    window.hasBrowserTtsSupport();
+  const voices = hasBrowserSupport
+    ? window.speechSynthesis.getVoices?.() || []
+    : [];
+  const langs = Array.from(
+    new Set(voices.map((v) => String(v.lang || "").trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b));
+  if (langs.length === 0) {
+    langs.push(DEFAULT_TTS_LANGUAGE);
+  }
+  languageSelect.innerHTML = "";
+  langs.forEach((code) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = code;
+    languageSelect.appendChild(opt);
+  });
+  const hasPreferred = langs.includes(preferredLanguage);
+  languageSelect.value = hasPreferred ? preferredLanguage : langs[0];
+}
+
+function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
+  const languageSelect = document.getElementById("char-tts-language");
+  const voiceSelect = document.getElementById("char-tts-voice");
+  if (!languageSelect || !voiceSelect) return;
+  const selectedLang = String(languageSelect.value || DEFAULT_TTS_LANGUAGE);
+  const hasBrowserSupport =
+    typeof window.hasBrowserTtsSupport === "function" &&
+    window.hasBrowserTtsSupport();
+  const voices = hasBrowserSupport
+    ? window.speechSynthesis.getVoices?.() || []
+    : [];
+  const filtered = voices.filter(
+    (v) => String(v.lang || "").toLowerCase() === selectedLang.toLowerCase(),
+  );
+  const candidates = filtered.length ? filtered : voices;
+  const names = Array.from(
+    new Set(candidates.map((v) => String(v.name || "").trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b));
+  if (names.length === 0) {
+    names.push(DEFAULT_TTS_VOICE);
+  }
+  voiceSelect.innerHTML = "";
+  names.forEach((voice) => {
+    const opt = document.createElement("option");
+    opt.value = voice;
+    opt.textContent = voice;
+    voiceSelect.appendChild(opt);
+  });
+  const hasPreferred = names.includes(preferredVoice);
+  voiceSelect.value = hasPreferred ? preferredVoice : names[0];
+}
+
+async function populateCharWritingInstructionsSelect(
+  preferredId = "",
+  customInstructions = "",
+) {
+  const select = document.getElementById("char-writing-instructions-select");
+  const textarea = document.getElementById("char-writing-instructions");
+  if (!select || !textarea) return;
+  const currentLang =
+    state.charModalActiveLanguage || state.settings.interfaceLanguage || "en";
+  const allWi = await getAllWritingInstructions();
+  const matchingWi = allWi.filter(
+    (wi) => wi.instructions && wi.instructions[currentLang],
+  );
+  select.innerHTML = "";
+  const noneOpt = document.createElement("option");
+  noneOpt.value = "none";
+  noneOpt.textContent = t("writingInstructionsNone");
+  select.appendChild(noneOpt);
+  const customOpt = document.createElement("option");
+  customOpt.value = "";
+  customOpt.textContent = t("customInstructions");
+  select.appendChild(customOpt);
+  matchingWi.forEach((wi) => {
+    const opt = document.createElement("option");
+    opt.value = String(wi.id);
+    opt.textContent = wi.name || `Writing Instruction #${wi.id}`;
+    select.appendChild(opt);
+  });
+  const hasPreferred = matchingWi.some((wi) => String(wi.id) === preferredId);
+  const isCustomPreferred = preferredId === "";
+  const hasCustomContent = String(customInstructions || "").trim().length > 0;
+  if (isCustomPreferred && hasCustomContent) {
+    select.value = "";
+  } else if (hasPreferred) {
+    select.value = preferredId;
+  } else {
+    select.value = "none";
+  }
+  updateCharWritingInstructionsVisibility();
+}
+
+function updateCharWritingInstructionsVisibility() {
+  const select = document.getElementById("char-writing-instructions-select");
+  const textarea = document.getElementById("char-writing-instructions");
+  if (!select || !textarea) return;
+  const isCustom = !select.value;
+  const collapse = textarea.closest(".textarea-collapse");
+  if (collapse) {
+    collapse.classList.toggle("hidden", !isCustom);
+    const header = collapse.querySelector(".textarea-collapse-header");
+    const body = collapse.querySelector(".textarea-collapse-body");
+    if (header) {
+      header.setAttribute("aria-expanded", isCustom ? "true" : "false");
+      const icon = header.querySelector(".textarea-collapse-icon");
+      if (icon) icon.textContent = isCustom ? "▴" : "▾";
+    }
+    if (body) {
+      body.classList.toggle("collapsed", !isCustom);
+    }
+  } else {
+    textarea.classList.toggle("hidden", !isCustom);
+  }
+}
+
+function updateCharTtsRatePitchLabels() {
+  const rate = document.getElementById("char-tts-rate");
+  const pitch = document.getElementById("char-tts-pitch");
+  const rateValue = document.getElementById("char-tts-rate-value");
+  const pitchValue = document.getElementById("char-tts-pitch-value");
+  if (rate && rateValue)
+    rateValue.textContent = Number(rate.value || 1).toFixed(1);
+  if (pitch && pitchValue)
+    pitchValue.textContent = Number(pitch.value || 1).toFixed(1);
+}
+
+function getResolvedTtsSelection(
+  languageInput,
+  voiceInput,
+  rateInput,
+  pitchInput,
+) {
+  const language =
+    String(languageInput || DEFAULT_TTS_LANGUAGE).trim() ||
+    DEFAULT_TTS_LANGUAGE;
+  const voice =
+    String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
+  const rate = Math.max(
+    0.5,
+    Math.min(2, Number(rateInput) || DEFAULT_TTS_RATE),
+  );
+  const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1.1));
+  return {
+    language,
+    voice,
+    rate,
+    pitch,
+  };
+}
+
+function getResolvedCharTtsSelection() {
+  return getResolvedTtsSelection(
+    document.getElementById("char-tts-language")?.value,
+    document.getElementById("char-tts-voice")?.value,
+    document.getElementById("char-tts-rate")?.value,
+    document.getElementById("char-tts-pitch")?.value,
+  );
+}
+
+function getCharModalActiveLanguage() {
+  const rawLanguage =
+    state.charModalActiveLanguage ||
+    getActiveCharacterDefinition()?.language ||
+    DEFAULT_TTS_LANGUAGE;
+  return normalizeBotLanguageCode(rawLanguage || "") || DEFAULT_TTS_LANGUAGE;
+}
+
+function refreshCharTtsProviderFields() {
+  const providerSelect = document.getElementById("char-tts-provider");
+  const kokoroConfig = document.getElementById("char-tts-kokoro-config");
+  const modalLanguage = getCharModalActiveLanguage();
+  const kokoroSupport = isKokoroSupportedForLanguage(modalLanguage);
+  const kokoroOption = providerSelect?.querySelector('option[value="kokoro"]');
+  if (kokoroOption) kokoroOption.disabled = !kokoroSupport;
+  const kokoroDevice = document.getElementById("char-tts-kokoro-device");
+  const kokoroDeviceValue = kokoroDevice?.value || "webgpu";
+  updateKokoroDtypeOptionsForDevice(kokoroDeviceValue);
+  let isKokoro = providerSelect?.value === "kokoro";
+  if (!kokoroSupport && providerSelect) {
+    providerSelect.value = "browser";
+    isKokoro = false;
+  }
+  kokoroConfig?.classList.toggle("hidden", !isKokoro);
+  ["char-tts-language", "char-tts-voice"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = isKokoro;
+  });
+  const pitch = document.getElementById("char-tts-pitch");
+  if (pitch) pitch.disabled = isKokoro;
+  document.querySelectorAll(".tts-extra-field").forEach((field) => {
+    field.classList.toggle("hidden", isKokoro);
+    field.style.display = isKokoro ? "none" : "";
+  });
+  const kokoroVoice = document.getElementById("char-tts-kokoro-voice");
+  if (isKokoro) {
+    if (!kokoroSupport) {
+      setKokoroVoiceLoadingPlaceholder();
+      if (providerSelect) providerSelect.value = "browser";
+      return;
+    }
+    const preferred = kokoroVoice?.value || DEFAULT_KOKORO_VOICE;
+    if (window.ttsState.kokoro.voiceListLoaded) {
+      populateKokoroVoiceSelect(preferred, modalLanguage);
+    } else {
+      setKokoroVoiceLoadingPlaceholder();
+      populateKokoroVoiceSelect(preferred, modalLanguage);
+    }
+    if (kokoroVoice) {
+      kokoroVoice.disabled = state.charModalTtsTestPlaying === true;
+    }
+  } else if (kokoroVoice) {
+    kokoroVoice.disabled = true;
+  }
+  moveCharModalTtsTestButton(isKokoro ? "kokoro" : "tts");
+}
+
+function getAvailableKokoroDtypeOptions(device = "webgpu") {
+  const normalized = String(device || "webgpu")
+    .trim()
+    .toLowerCase();
+  return KOKORO_DTYPE_OPTIONS.filter((dtype) => {
+    if (normalized === "webgpu" && dtype === "fp16") return false;
+    return true;
+  });
+}
+
+function updateKokoroDtypeOptionsForDevice(
+  device = "webgpu",
+  preferred = null,
+) {
+  const select = document.getElementById("char-tts-kokoro-dtype");
+  if (!select) return;
+  const allowed = getAvailableKokoroDtypeOptions(device);
+  if (allowed.length === 0) return;
+  const previous = String(preferred || select.value || "").trim();
+  select.innerHTML = "";
+  allowed.forEach((dtype) => {
+    const option = document.createElement("option");
+    option.value = dtype;
+    option.textContent = KOKORO_DTYPE_LABELS[dtype] || dtype;
+    select.appendChild(option);
+  });
+  select.value = allowed.includes(previous) ? previous : allowed[0];
+}
+
+function getCharModalTtsProviderSelection() {
+  const select = document.getElementById("char-tts-provider");
+  return select?.value === "kokoro" ? "kokoro" : "browser";
+}
+
+function moveCharModalTtsTestButton(target = "tts") {
+  const btn = document.getElementById("char-tts-test-btn");
+  if (!btn) return;
+  const slot = document.querySelector(`.tts-test-slot[data-slot="${target}"]`);
+  if (slot) slot.appendChild(btn);
+}
+
+async function renderPersonaSelector() {
+  await ensurePersonasInitialized();
+  const select = document.getElementById("persona-select");
+  const personas = await getOrderedPersonas();
+  select.innerHTML = "";
+
+  personas.forEach((persona) => {
+    const opt = document.createElement("option");
+    opt.value = String(persona.id);
+    opt.textContent = `${persona.name || `Persona ${persona.id}`}${persona.isDefault ? ` (${t("defaultSuffix")})` : ""}`;
+    select.appendChild(opt);
+  });
+
+  const defaultPersona = await getCharacterDefaultPersona();
+  const requestedId = Number(currentThread?.selectedPersonaId);
+  const existing = requestedId
+    ? personas.find((p) => p.id === requestedId)
+    : null;
+  const effective = existing || defaultPersona || personas[0] || null;
+
+  currentPersona = effective || null;
+  state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+  select.value = effective ? String(effective.id) : "";
+  updatePersonaPickerDisplay();
+
+  if (
+    currentThread &&
+    effective &&
+    Number(currentThread.selectedPersonaId) !== Number(effective.id)
+  ) {
+    currentThread.selectedPersonaId = effective.id;
+    await db.threads.update(currentThread.id, {
+      selectedPersonaId: effective.id,
+      updatedAt: Date.now(),
+    });
+  }
+}
+
+async function onPersonaSelectChange() {
+  const select = document.getElementById("persona-select");
+  const personaId = Number(select.value);
+  currentPersona = personaId
+    ? await db.personas.get(personaId)
+    : await getCharacterDefaultPersona();
+  updatePersonaPickerDisplay();
+  if (!currentThread) return;
+  const displayHistory = getFilteredConversationHistoryForThread();
+  cachedInitialMessageDisplayIndex =
+    getFirstInitialDisplayIndex(displayHistory);
+  const updatedAt = Date.now();
+  currentThread.selectedPersonaId = currentPersona?.id || null;
+  state.lastSyncSeenUpdatedAt = updatedAt;
+  await db.threads.update(currentThread.id, {
+    selectedPersonaId: currentThread.selectedPersonaId,
+    updatedAt,
+  });
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: currentThread.id,
+    updatedAt,
+  });
+  showToast(
+    tf("personaSwitched", { name: currentPersona?.name || "You" }),
+    "success",
+  );
+}
+
+let chatPersonaDropdownOpen = false;
+let chatPersonaDropdown = null;
+
+async function showChatPersonaDropdown() {
+  const avatarEl = document.getElementById("persona-selected-avatar");
+  if (!avatarEl) return;
+
+  if (chatPersonaDropdownOpen && chatPersonaDropdown) {
+    chatPersonaDropdownOpen = false;
+    if (chatPersonaDropdown.parentNode) {
+      chatPersonaDropdown.parentNode.removeChild(chatPersonaDropdown);
+    }
+    chatPersonaDropdown = null;
+    return;
+  }
+
+  chatPersonaDropdownOpen = true;
+  const personas = await getOrderedPersonas();
+  if (personas.length === 0) return;
+
+  chatPersonaDropdown = document.createElement("div");
+  chatPersonaDropdown.className = "new-chat-persona-dropdown";
+
+  for (const persona of personas) {
+    const item = document.createElement("button");
+    item.className = "new-chat-persona-dropdown-item";
+    item.type = "button";
+
+    if (persona.avatar) {
+      const img = document.createElement("img");
+      img.src =
+        persona.avatar instanceof Blob
+          ? getCachedAvatarBlobUrl(persona.avatar)
+          : persona.avatar;
+      item.appendChild(img);
+    }
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "persona-name";
+    nameSpan.textContent = persona.name || t("personaDefaultName");
+    item.appendChild(nameSpan);
+
+    if (persona.isDefault) {
+      const badge = document.createElement("span");
+      badge.className = "default-badge";
+      badge.textContent = t("defaultSuffix");
+      item.appendChild(badge);
+    }
+
+    item.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      chatPersonaDropdownOpen = false;
+      if (chatPersonaDropdown && chatPersonaDropdown.parentNode) {
+        chatPersonaDropdown.parentNode.removeChild(chatPersonaDropdown);
+      }
+      chatPersonaDropdown = null;
+
+      currentPersona = persona;
+      state.cachedChatBotAvatar = {
+        url: null,
+        characterId: null,
+        personaId: null,
+      };
+      updatePersonaPickerDisplay();
+      if (!currentThread) return;
+      const updatedAt = Date.now();
+      currentThread.selectedPersonaId = currentPersona?.id || null;
+      state.lastSyncSeenUpdatedAt = updatedAt;
+      await db.threads.update(currentThread.id, {
+        selectedPersonaId: currentThread.selectedPersonaId,
+        updatedAt,
+      });
+      broadcastSyncEvent({
+        type: "thread-updated",
+        threadId: currentThread.id,
+        updatedAt,
+      });
+      showToast(
+        tf("personaSwitched", { name: currentPersona?.name || "You" }),
+        "success",
+      );
+    });
+
+    chatPersonaDropdown.appendChild(item);
+  }
+
+  const rect = avatarEl.getBoundingClientRect();
+  const dropdownWidth = 280;
+  let leftPos = rect.left;
+  if (leftPos + dropdownWidth > window.innerWidth - 10) {
+    leftPos = window.innerWidth - dropdownWidth - 10;
+  }
+  chatPersonaDropdown.style.left = `${leftPos}px`;
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+    chatPersonaDropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+  } else {
+    chatPersonaDropdown.style.top = `${rect.bottom + 4}px`;
+  }
+
+  document.body.appendChild(chatPersonaDropdown);
+
+  const closeDropdown = (e) => {
+    if (
+      chatPersonaDropdown &&
+      !chatPersonaDropdown.contains(e.target) &&
+      e.target !== avatarEl
+    ) {
+      chatPersonaDropdownOpen = false;
+      if (chatPersonaDropdown && chatPersonaDropdown.parentNode) {
+        chatPersonaDropdown.parentNode.removeChild(chatPersonaDropdown);
+      }
+      chatPersonaDropdown = null;
+      document.removeEventListener("click", closeDropdown);
+    }
+  };
+  setTimeout(() => document.addEventListener("click", closeDropdown), 0);
+}
+
+function updatePersonaPickerDisplay() {
+  const img = document.getElementById("persona-selected-avatar");
+  if (!img) return;
+  const name = currentPersona?.name || "You";
+  const avatarSrc =
+    currentPersona?.avatar instanceof Blob
+      ? getCachedAvatarBlobUrl(currentPersona.avatar)
+      : currentPersona?.avatar || fallbackAvatar(name, 512, 512);
+  img.src = avatarSrc;
+  img.alt = `${name} avatar`;
+  applyPersonaColorStyles();
+}
+
+async function savePersonaFromModal() {
+  const personas = await getOrderedPersonas();
+  const name = document.getElementById("persona-name").value.trim();
+  const avatar =
+    state.currentPersonaAvatarBlob ||
+    document.getElementById("persona-avatar").value.trim();
+  const description = document
+    .getElementById("persona-description")
+    .value.trim();
+  const internalDescription = document
+    .getElementById("persona-internal-description")
+    .value.trim();
+  const wantsDefault = document.getElementById("persona-is-default").checked;
+
+  if (!name) {
+    await openInfoDialog(t("missingFieldTitle"), t("personaNameRequired"));
+    return false;
+  }
+  if (description.length > 100) {
+    await openInfoDialog(
+      t("personaDescriptionTitle"),
+      t("personaDescriptionLimit"),
+    );
+    return false;
+  }
+
+  const shouldBeDefault = wantsDefault || personas.length === 0;
+
+  if (shouldBeDefault) {
+    await db.personas.toCollection().modify({ isDefault: false });
+  }
+
+  if (state.editingPersonaId) {
+    await db.personas.update(state.editingPersonaId, {
+      name,
+      avatar,
+      description,
+      internalDescription,
+      isDefault: shouldBeDefault,
+      updatedAt: Date.now(),
+    });
+    showToast(t("personaUpdated"), "success");
+  } else {
+    await db.personas.add({
+      name,
+      avatar,
+      description,
+      internalDescription,
+      isDefault: shouldBeDefault,
+      order: personas.length,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    showToast(t("personaCreated"), "success");
+  }
+
+  document.getElementById("persona-name").value = "";
+  updateNameLengthCounter("persona-name", "persona-name-count", 64);
+  document.getElementById("persona-avatar").value = "";
+  document.getElementById("persona-avatar-file").value = "";
+  document.getElementById("persona-description").value = "";
+  document.getElementById("persona-internal-description").value = "";
+  updateNameLengthCounter(
+    "persona-description",
+    "persona-description-count",
+    100,
+  );
+  document.getElementById("persona-is-default").checked = false;
+  state.editingPersonaId = null;
+  state.currentPersonaAvatarBlob = null;
+  document.getElementById("save-persona-btn").textContent = t("savePersona");
+  state.modalDirty["personas-modal"] = false;
+
+  await ensurePersonasInitialized();
+  await renderPersonaModalList();
+  await renderPersonaSelector();
+  broadcastSyncEvent({ type: "personas-updated" });
+  return true;
+}
+
+async function renderPersonaModalList() {
+  const list = document.getElementById("persona-list");
+  if (!list) return;
+  const personas = await getOrderedPersonas();
+  list.innerHTML = "";
+
+  if (personas.length === 0) {
+    list.innerHTML = `<p class="muted" data-i18n="noPersonasYet">${t("noPersonasYet")}</p>`;
+    return;
+  }
+
+  for (const persona of personas) {
+    const row = document.createElement("div");
+    row.className = "persona-row";
+    row.draggable = true;
+    row.dataset.personaId = String(persona.id);
+    row.addEventListener("dragstart", onPersonaDragStart);
+    row.addEventListener("dragover", onPersonaDragOver);
+    row.addEventListener("drop", onPersonaDrop);
+    row.addEventListener("dragend", onPersonaDragEnd);
+
+    const drag = document.createElement("div");
+    drag.className = "persona-drag";
+    drag.textContent = ":::";
+    drag.title = t("dragToReorder");
+
+    const avatar = document.createElement("img");
+    avatar.className = "persona-avatar";
+    avatar.src =
+      persona.avatar instanceof Blob
+        ? getCachedAvatarBlobUrl(persona.avatar)
+        : persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
+    avatar.alt = "persona avatar";
+    avatar.classList.add("clickable-avatar");
+    avatar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openImagePreview(avatar.src);
+    });
+
+    const info = document.createElement("div");
+    info.className = "persona-info";
+    const title = document.createElement("div");
+    title.className = "persona-title";
+    title.textContent = `${persona.name}${persona.isDefault ? ` (${t("defaultSuffix")})` : ""}`;
+    const desc = document.createElement("div");
+    desc.className = "persona-meta";
+    desc.textContent = persona.description || "";
+    info.append(title, desc);
+
+    const actions = document.createElement("div");
+    actions.className = "lorebook-actions";
+    const swatch = document.createElement("span");
+    swatch.className = "persona-color-swatch";
+    swatch.style.backgroundColor = normalizePersonaColor(persona.color);
+    actions.appendChild(swatch);
+    actions.appendChild(
+      iconButton("copy", t("duplicatePersonaAria"), async () => {
+        await duplicatePersona(persona.id);
+      }),
+    );
+    const deleteBtn = iconButton(
+      "delete",
+      t("deletePersonaTitle"),
+      async () => {
+        await deletePersona(persona.id);
+      },
+    );
+    deleteBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteBtn);
+
+    row.append(drag, avatar, info, actions);
+
+    row.addEventListener("click", (e) => {
+      // Exclude clicks on drag handle, avatar, and action buttons
+      if (
+        e.target.closest(".persona-drag") ||
+        e.target.closest(".persona-avatar") ||
+        e.target.closest(".lorebook-actions")
+      ) {
+        return;
+      }
+      openPersonaEditor(persona);
+    });
+
+    list.appendChild(row);
+  }
+}
+
+async function deletePersona(personaId) {
+  const ok = await openConfirmDialog(
+    t("deletePersonaTitle"),
+    t("deletePersonaConfirm"),
+  );
+  if (!ok) return;
+  const persona = await db.personas.get(personaId);
+  await db.personas.delete(personaId);
+
+  const threads = await db.threads
+    .filter((t) => Number(t.selectedPersonaId) === Number(personaId))
+    .toArray();
+  await Promise.all(
+    threads.map((t) =>
+      db.threads.update(t.id, {
+        selectedPersonaId: null,
+        updatedAt: Date.now(),
+      }),
+    ),
+  );
+
+  if (currentThread?.selectedPersonaId === personaId) {
+    currentThread.selectedPersonaId = null;
+    currentPersona = null;
+  }
+
+  if (persona?.isDefault) {
+    await ensurePersonasInitialized();
+  } else {
+    await normalizePersonaOrder();
+  }
+
+  await renderPersonaSelector();
+  await renderPersonaModalList();
+  broadcastSyncEvent({ type: "personas-updated" });
+  showToast(t("personaDeleted"), "success");
+}
+
+function loadPersonaForEditing(persona) {
+  state.editingPersonaId = persona.id;
+  state.currentPersonaAvatarBlob = null;
+  document.getElementById("persona-name").value = persona.name || "";
+  updateNameLengthCounter("persona-name", "persona-name-count", 64);
+  if (persona.avatar instanceof Blob) {
+    document.getElementById("persona-avatar").value = getCachedAvatarBlobUrl(
+      persona.avatar,
+    );
+  } else {
+    document.getElementById("persona-avatar").value = persona.avatar || "";
+  }
+  document.getElementById("persona-avatar-file").value = "";
+  document.getElementById("persona-description").value =
+    persona.description || "";
+  document.getElementById("persona-internal-description").value =
+    persona.internalDescription || "";
+  updateNameLengthCounter(
+    "persona-description",
+    "persona-description-count",
+    100,
+  );
+  document.getElementById("persona-is-default").checked = !!persona.isDefault;
+  document.getElementById("save-persona-btn").textContent = t("updatePersona");
+}
+
+let state_editingPersonaId = null;
+
+function openPersonaEditor(persona = null) {
+  setModalDirtyState("persona-editor-modal", false);
+  state_editingPersonaId = persona?.id || null;
+  state.currentPersonaAvatarBlob = null;
+
+  const nameInput = document.getElementById("persona-editor-name");
+  nameInput.value = persona?.name || "";
+  updateNameLengthCounter(
+    "persona-editor-name",
+    "persona-editor-name-count",
+    64,
+  );
+
+  const descInput = document.getElementById("persona-editor-description");
+  descInput.value = persona?.description || "";
+  updateNameLengthCounter(
+    "persona-editor-description",
+    "persona-editor-description-count",
+    100,
+  );
+
+  document.getElementById("persona-editor-internal-description").value =
+    persona?.internalDescription || "";
+
+  document.getElementById("persona-editor-color").value = normalizePersonaColor(
+    persona?.color,
+  );
+  document.getElementById("persona-editor-is-default").checked =
+    !!persona?.isDefault;
+
+  const dropzone = document.getElementById("persona-avatar-dropzone");
+  const preview = document.getElementById("persona-avatar-preview");
+  const removeBtn = document.getElementById("persona-remove-avatar");
+
+  if (persona?.avatar) {
+    const avatarSrc =
+      persona.avatar instanceof Blob
+        ? getCachedAvatarBlobUrl(persona.avatar)
+        : persona.avatar;
+    preview.src = avatarSrc;
+    preview.classList.remove("hidden");
+    dropzone.classList.add("has-avatar");
+    removeBtn.classList.remove("hidden");
+  } else {
+    preview.classList.add("hidden");
+    dropzone.classList.remove("has-avatar");
+    removeBtn.classList.add("hidden");
+  }
+
+  document.getElementById("persona-avatar-file-input").value = "";
+
+  const title = document.getElementById("persona-editor-title");
+  title.textContent = persona ? t("editPersona") : t("newPersona");
+
+  const editorModal = document.getElementById("persona-editor-modal");
+  if (editorModal) {
+    editorModal.classList.remove("hidden");
+    state.activeModalId = "persona-editor-modal";
+    setupModalTextareas(editorModal);
+    restorePersonaEditorTextareaCollapseStates(persona?.id);
+  }
+}
+
+async function savePersonaFromEditor() {
+  savePersonaEditorTextareaCollapseStates();
+
+  const name = document.getElementById("persona-editor-name").value.trim();
+  if (!name) {
+    showToast(t("personaNameRequired"), "error");
+    return;
+  }
+
+  const description = document
+    .getElementById("persona-editor-description")
+    .value.trim();
+  const internalDescription = document
+    .getElementById("persona-editor-internal-description")
+    .value.trim();
+  const isDefault = document.getElementById(
+    "persona-editor-is-default",
+  ).checked;
+  const colorValue = document.getElementById("persona-editor-color")?.value;
+
+  let avatar = null;
+  if (state.currentPersonaAvatarBlob) {
+    avatar = state.currentPersonaAvatarBlob;
+  } else if (state_editingPersonaId) {
+    const existing = await db.personas.get(state_editingPersonaId);
+    avatar = existing?.avatar || null;
+  }
+
+  const personaData = {
+    name,
+    description,
+    internalDescription,
+    avatar,
+    isDefault: isDefault ? true : false,
+    color: normalizePersonaColor(colorValue),
+    updatedAt: Date.now(),
+  };
+
+  if (isDefault) {
+    const allPersonas = await db.personas.toArray();
+    for (const p of allPersonas) {
+      if (p.id !== state_editingPersonaId && p.isDefault) {
+        await db.personas.update(p.id, { isDefault: false });
+      }
+    }
+  }
+
+  let savedId;
+  if (state_editingPersonaId) {
+    await db.personas.update(state_editingPersonaId, personaData);
+    savedId = state_editingPersonaId;
+  } else {
+    const personas = await getOrderedPersonas();
+    const maxOrder = personas.reduce(
+      (max, p) => Math.max(max, p.order || 0),
+      0,
+    );
+    personaData.order = maxOrder + 1;
+    savedId = await db.personas.add(personaData);
+  }
+
+  state.activeModalId = "persona-editor-modal";
+  setModalDirtyState("persona-editor-modal", false);
+  await closeActiveModal();
+  await renderPersonaModalList();
+  await renderPersonaSelector();
+  updatePersonaPickerDisplay();
+  broadcastSyncEvent({ type: "personas-updated" });
+  showToast(t("personaSaved"), "success");
+}
+
+async function duplicatePersona(personaId) {
+  const source = await db.personas.get(personaId);
+  if (!source) return;
+
+  const personas = await getOrderedPersonas();
+  const maxOrder = personas.reduce((max, p) => Math.max(max, p.order || 0), 0);
+
+  const copy = {
+    name: `${source.name || "Persona"} Copy`,
+    description: source.description || "",
+    internalDescription: source.internalDescription || "",
+    avatar: source.avatar || null,
+    color: normalizePersonaColor(source.color),
+    isDefault: false,
+    order: maxOrder + 1,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  await db.personas.add(copy);
+  await renderPersonaModalList();
+  broadcastSyncEvent({ type: "personas-updated" });
+  showToast(t("personaDuplicated"), "success");
+}
+
+async function getOrderedPersonas() {
+  const personas = await db.personas.toArray();
+  return personas.sort((a, b) => {
+    const ao = Number.isFinite(a.order) ? a.order : Number.MAX_SAFE_INTEGER;
+    const bo = Number.isFinite(b.order) ? b.order : Number.MAX_SAFE_INTEGER;
+    if (ao !== bo) return ao - bo;
+    return String(a.name || "").localeCompare(String(b.name || ""));
+  });
+}
+
+async function getDefaultPersona() {
+  const personas = await getOrderedPersonas();
+  return personas.find((p) => p.isDefault) || null;
+}
+
+async function getCharacterDefaultPersona() {
+  return getDefaultPersona();
+}
+window.getCharacterDefaultPersona = getCharacterDefaultPersona;
+
+async function ensurePersonasInitialized() {
+  const personas = await getOrderedPersonas();
+  if (personas.length === 0) {
+    await db.personas.add({
+      name: "You",
+      avatar: "",
+      description: "",
+      internalDescription: "",
+      isDefault: true,
+      color: DEFAULT_PERSONA_COLOR,
+      order: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    return;
+  }
+
+  await normalizePersonaOrder();
+
+  const hasDefault = personas.some((p) => p.isDefault);
+  if (!hasDefault) {
+    const first = (await getOrderedPersonas())[0];
+    if (first) {
+      await setDefaultPersona(first.id);
+    }
+  }
+}
+
+async function setDefaultPersona(personaId) {
+  await db.transaction("rw", db.personas, async () => {
+    await db.personas.toCollection().modify({ isDefault: false });
+    await db.personas.update(personaId, {
+      isDefault: true,
+      updatedAt: Date.now(),
+    });
+  });
+  if (!currentPersona || Number(currentPersona.id) === Number(personaId)) {
+    currentPersona = await db.personas.get(personaId);
+  }
+  await renderPersonaSelector();
+  await renderPersonaModalList();
+  broadcastSyncEvent({ type: "personas-updated" });
+  showToast(t("defaultPersonaUpdated"), "success");
+}
+
+async function normalizePersonaOrder() {
+  const personas = await getOrderedPersonas();
+  await Promise.all(
+    personas.map((p, index) => db.personas.update(p.id, { order: index })),
+  );
+}
+
+function onPersonaDragStart(e) {
+  const row = e.currentTarget;
+  state.draggingPersonaId = Number(row.dataset.personaId);
+  row.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+}
+
+function onPersonaDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+}
+
+async function onPersonaDrop(e) {
+  e.preventDefault();
+  const targetId = Number(e.currentTarget.dataset.personaId);
+  const draggedId = Number(state.draggingPersonaId);
+  if (!draggedId || !targetId || draggedId === targetId) return;
+
+  const personas = await getOrderedPersonas();
+  const from = personas.findIndex((p) => p.id === draggedId);
+  const to = personas.findIndex((p) => p.id === targetId);
+  if (from < 0 || to < 0) return;
+
+  const [moved] = personas.splice(from, 1);
+  personas.splice(to, 0, moved);
+
+  await Promise.all(
+    personas.map((p, index) =>
+      db.personas.update(p.id, { order: index, updatedAt: Date.now() }),
+    ),
+  );
+
+  await renderPersonaModalList();
+  await renderPersonaSelector();
+  broadcastSyncEvent({ type: "personas-updated" });
+}
+
+function onPersonaDragEnd(e) {
+  e.currentTarget.classList.remove("dragging");
+  state.draggingPersonaId = null;
+}
+
+function onPersonaAvatarFileChange(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    openInfoDialog(t("invalidFileTitle"), t("pleaseChooseImageFile"));
+    e.target.value = "";
+    return;
+  }
+
+  state.currentPersonaAvatarBlob = file;
+  const previewUrl = URL.createObjectURL(file);
+  const preview = document.getElementById("persona-avatar-preview");
+  const dropzone = document.getElementById("persona-avatar-dropzone");
+  const removeBtn = document.getElementById("persona-remove-avatar");
+  if (preview) {
+    preview.src = previewUrl;
+    preview.classList.remove("hidden");
+  }
+  if (dropzone) {
+    dropzone.classList.add("has-avatar");
+  }
+  if (removeBtn) {
+    removeBtn.classList.remove("hidden");
+  }
+}
+
+function formatDateTime(value) {
+  const ts = Number(value || 0);
+  if (!Number.isFinite(ts) || ts <= 0) return "-";
+  try {
+    return new Date(ts).toLocaleString();
+  } catch {
+    return "-";
+  }
+}
+
+function parseCsvValues(value) {
+  return String(value || "")
+    .split(",")
+    .map((v) => normalizeTagValue(v))
+    .filter(Boolean)
+    .filter(
+      (v, i, arr) =>
+        arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i,
+    );
+}
+
+function normalizeLorebookEntry(entry, fallbackIndex = 0) {
+  const keys = Array.isArray(entry?.keys)
+    ? entry.keys
+    : parseCsvValues(entry?.key || "");
+  const secondaryKeys = Array.isArray(entry?.secondaryKeys)
+    ? entry.secondaryKeys
+    : parseCsvValues(entry?.keysecondary || "");
+  return {
+    id: Number(entry?.id) || Date.now() + fallbackIndex,
+    keys: keys.map((k) => normalizeTagValue(k)).filter(Boolean),
+    secondaryKeys: secondaryKeys
+      .map((k) => normalizeTagValue(k))
+      .filter(Boolean),
+    content: String(entry?.content || "").trim(),
+  };
+}
+
+function normalizeLorebookRecord(record) {
+  if (!record || typeof record !== "object") return null;
+  const entriesRaw = Array.isArray(record.entries)
+    ? record.entries
+    : record.entries && typeof record.entries === "object"
+      ? Object.values(record.entries)
+      : [];
+  const entries = entriesRaw
+    .map((entry, idx) => normalizeLorebookEntry(entry, idx))
+    .filter((entry) => entry && entry.content);
+  return {
+    id: record.id,
+    name: String(record.name || "").trim(),
+    avatar: String(record.avatar || "").trim(),
+    description: String(record.description || "").slice(0, 512),
+    scanDepth: Math.max(5, Math.min(100, Number(record.scanDepth) || 50)),
+    tokenBudget: Math.max(
+      100,
+      Math.min(1000, Number(record.tokenBudget) || 200),
+    ),
+    recursiveScanning: record.recursiveScanning === true,
+    entries,
+    createdAt: Number(record.createdAt) || Date.now(),
+    updatedAt: Number(record.updatedAt) || Date.now(),
+  };
+}
+
+async function getAllLorebooks() {
+  const all = await db.lorebooks.toArray();
+  return all
+    .map((entry) => normalizeLorebookRecord(entry))
+    .filter(Boolean)
+    .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+}
+
+function addLoreEntryEditor(entry = null) {
+  state.lore.entries.push(
+    normalizeLorebookEntry(
+      entry || {
+        id: Date.now() + state.lore.entries.length,
+        keys: [],
+        secondaryKeys: [],
+        content: "",
+      },
+      state.lore.entries.length,
+    ),
+  );
+  state.modalDirty["lore-editor-modal"] = true;
+}
+
+function resetLoreEditorState() {
+  state.lore.editingId = null;
+  state.lore.entries = [];
+}
+
+async function closeLoreEditor() {
+  await closeActiveModal();
+}
+
+async function openLoreEditor(lorebook = null) {
+  const normalized = normalizeLorebookRecord(lorebook || {});
+  state.lore.editingId = normalized?.id || null;
+  state.lore.entries = Array.isArray(normalized?.entries)
+    ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx))
+    : [];
+
+  const nameField = document.getElementById("lore-name");
+  if (nameField) nameField.value = normalized?.name || "";
+  const avatarField = document.getElementById("lore-avatar");
+  if (avatarField) avatarField.value = normalized?.avatar || "";
+  const descriptionField = document.getElementById("lore-description");
+  if (descriptionField) descriptionField.value = normalized?.description || "";
+  const scanDepthField = document.getElementById("lore-scan-depth");
+  if (scanDepthField)
+    scanDepthField.value = String(normalized?.scanDepth || 50);
+  const tokenBudgetField = document.getElementById("lore-token-budget");
+  if (tokenBudgetField)
+    tokenBudgetField.value = String(normalized?.tokenBudget || 200);
+  const recursiveField = document.getElementById("lore-recursive-scanning");
+  if (recursiveField)
+    recursiveField.checked = normalized?.recursiveScanning === true;
+  const injectionModeField = document.getElementById("lore-injection-mode");
+  if (injectionModeField)
+    injectionModeField.value = normalized?.injectionMode || "cooldown";
+  const suppressionWindowField = document.getElementById(
+    "lore-suppression-window",
+  );
+  if (suppressionWindowField)
+    suppressionWindowField.value = String(normalized?.suppressionWindow || 10);
+  toggleSuppressionWindowField();
+
+  if (state.lore.entries.length === 0) addLoreEntryEditor();
+  renderLoreEntryEditors();
+  await openModal("lore-editor-modal");
+  const editorModal = document.getElementById("lore-editor-modal");
+  if (editorModal) {
+    setTimeout(() => setupModalTextareas(editorModal), 0);
+  }
+}
+
+function renderLoreEntryEditors() {
+  const root = document.getElementById("lore-entries-list");
+  if (!root) return;
+  root.innerHTML = "";
+  state.lore.entries.forEach((entry, index) => {
+    const card = document.createElement("div");
+    card.className = "lore-entry-card";
+
+    const head = document.createElement("div");
+    head.className = "lore-entry-title";
+    const label = document.createElement("span");
+    label.textContent = `Entry ${String(index + 1).padStart(2, "0")}`;
+    const delBtn = iconButton("delete", "Delete entry", () => {
+      state.lore.entries.splice(index, 1);
+      if (state.lore.entries.length === 0) addLoreEntryEditor();
+      state.modalDirty["lore-editor-modal"] = true;
+      renderLoreEntryEditors();
+    });
+    delBtn.classList.add("danger-icon-btn");
+    head.append(label, delBtn);
+
+    const keysInput = document.createElement("textarea");
+    keysInput.rows = 2;
+    keysInput.placeholder = "Keys (comma-separated)";
+    keysInput.value = (entry.keys || []).join(", ");
+    keysInput.addEventListener("input", () => {
+      entry.keys = parseCsvValues(keysInput.value);
+      state.modalDirty["lore-editor-modal"] = true;
+    });
+
+    const secondaryInput = document.createElement("textarea");
+    secondaryInput.rows = 2;
+    secondaryInput.placeholder = "Secondary Keys (comma-separated, optional)";
+    secondaryInput.value = (entry.secondaryKeys || []).join(", ");
+    secondaryInput.addEventListener("input", () => {
+      entry.secondaryKeys = parseCsvValues(secondaryInput.value);
+      state.modalDirty["lore-editor-modal"] = true;
+    });
+
+    const contentInput = document.createElement("textarea");
+    contentInput.rows = 8;
+    contentInput.maxLength = 10480;
+    contentInput.placeholder = "Entry content";
+    contentInput.value = entry.content || "";
+    contentInput.addEventListener("input", () => {
+      entry.content = String(contentInput.value || "");
+      state.modalDirty["lore-editor-modal"] = true;
+    });
+
+    card.append(head, keysInput, secondaryInput, contentInput);
+    root.appendChild(card);
+  });
+}
+
+async function renderLorebookManagementList() {
+  const list = document.getElementById("lorebook-list");
+  if (!list) return;
+  const [lorebooks, characters] = await Promise.all([
+    getAllLorebooks(),
+    db.characters.toArray(),
+  ]);
+  list.innerHTML = "";
+  if (lorebooks.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No Lorebooks yet.";
+    list.appendChild(empty);
+    return;
+  }
+
+  lorebooks.forEach((lorebook) => {
+    const users = characters.filter(
+      (char) =>
+        Array.isArray(char.lorebookIds) &&
+        char.lorebookIds.map(Number).includes(Number(lorebook.id)),
+    );
+
+    const row = document.createElement("div");
+    row.className = "lorebook-row";
+
+    const avatar = document.createElement("img");
+    avatar.className = "lorebook-avatar";
+    avatar.src =
+      lorebook.avatar || fallbackAvatar(lorebook.name || "LB", 512, 512);
+    avatar.alt = `${lorebook.name || "Lorebook"} avatar`;
+    avatar.classList.add("clickable-avatar");
+    avatar.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openImagePreview(avatar.src);
+    });
+
+    const main = document.createElement("div");
+    main.className = "lorebook-main";
+    const title = document.createElement("div");
+    title.className = "lorebook-title";
+    title.textContent = lorebook.name || "Untitled Lorebook";
+    const meta = document.createElement("div");
+    meta.className = "lorebook-meta";
+    meta.textContent = `Created: ${formatDateTime(lorebook.createdAt)}\nUpdated: ${formatDateTime(lorebook.updatedAt)}`;
+    meta.style.whiteSpace = "pre-line";
+    const usage = document.createElement("div");
+    usage.className = "lorebook-usage";
+    const usageLabel = document.createElement("span");
+    usageLabel.className = "muted";
+    usageLabel.textContent = "Used by:";
+    usage.appendChild(usageLabel);
+    if (users.length === 0) {
+      const none = document.createElement("span");
+      none.className = "muted";
+      none.textContent = "none";
+      usage.appendChild(none);
+    } else {
+      users.forEach((char) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "lorebook-usage-btn";
+        chip.textContent = char.name || `Character #${char.id}`;
+        chip.addEventListener("click", async () => {
+          await openCharacterModal(char);
+          const target = document.getElementById("char-lorebooks-list");
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            target.classList.add("char-lore-focus");
+            window.setTimeout(
+              () => target.classList.remove("char-lore-focus"),
+              1400,
+            );
+          }
+        });
+        usage.appendChild(chip);
+      });
+    }
+    main.append(title, meta, usage);
+
+    const actions = document.createElement("div");
+    actions.className = "lorebook-actions";
+    actions.appendChild(
+      iconButton("edit", "Edit Lorebook", () => openLoreEditor(lorebook)),
+    );
+    actions.appendChild(
+      iconButton("duplicate", "Duplicate Lorebook", async () => {
+        await duplicateLorebook(lorebook.id);
+      }),
+    );
+    const exportBtn = iconButton("export", "Export Lorebook", async () => {
+      await exportLorebook(lorebook.id);
+    });
+    actions.appendChild(exportBtn);
+    const deleteBtn = iconButton(
+      "delete",
+      t("deleteLoreBookAria"),
+      async () => {
+        await deleteLorebook(lorebook.id);
+      },
+    );
+    deleteBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteBtn);
+
+    row.append(avatar, main, actions);
+    row.addEventListener("click", (e) => {
+      if (
+        e.target.closest(".lorebook-actions") ||
+        e.target.closest("button") ||
+        e.target.closest(".icon-btn")
+      ) {
+        return;
+      }
+      openLoreEditor(lorebook);
+    });
+    list.appendChild(row);
+  });
+}
+
+async function collectLorebookFromEditor() {
+  const name = String(document.getElementById("lore-name")?.value || "").trim();
+  const description = String(
+    document.getElementById("lore-description")?.value || "",
+  )
+    .trim()
+    .slice(0, 512);
+  const avatar = String(
+    document.getElementById("lore-avatar")?.value || "",
+  ).trim();
+  const scanDepth = Math.max(
+    5,
+    Math.min(
+      100,
+      Number(document.getElementById("lore-scan-depth")?.value) || 50,
+    ),
+  );
+  const tokenBudget = Math.max(
+    100,
+    Math.min(
+      1000,
+      Number(document.getElementById("lore-token-budget")?.value) || 200,
+    ),
+  );
+  const recursiveScanning =
+    document.getElementById("lore-recursive-scanning")?.checked === true;
+  const injectionMode =
+    document.getElementById("lore-injection-mode")?.value || "cooldown";
+  const suppressionWindow = Math.max(
+    1,
+    Math.min(
+      100,
+      Number(document.getElementById("lore-suppression-window")?.value) || 10,
+    ),
+  );
+
+  if (name.length < 2 || name.length > 128) {
+    await openInfoDialog(
+      "Invalid Lorebook",
+      "Name must have between 2 and 128 characters.",
+    );
+    return null;
+  }
+
+  const entries = state.lore.entries
+    .map((entry, idx) => ({
+      id: Number(entry.id) || Date.now() + idx,
+      keys: parseCsvValues((entry.keys || []).join(", ")),
+      secondaryKeys: parseCsvValues((entry.secondaryKeys || []).join(", ")),
+      content: String(entry.content || "").trim(),
+    }))
+    .filter((entry) => entry.keys.length > 0 || entry.content.length > 0);
+
+  if (entries.length === 0) {
+    await openInfoDialog(t("invalidLoreBookTitle"), t("loreAtLeastOneEntry"));
+    return null;
+  }
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i];
+    if (entry.keys.length === 0) {
+      await openInfoDialog(
+        "Invalid Lore Entry",
+        `Entry ${i + 1} requires at least one key.`,
+      );
+      return null;
+    }
+    if (
+      !entry.content ||
+      entry.content.length < 1 ||
+      entry.content.length > 10480
+    ) {
+      await openInfoDialog(
+        "Invalid Lore Entry",
+        `Entry ${i + 1} content must be between 1 and 10480 characters.`,
+      );
+      return null;
+    }
+  }
+
+  return {
+    name,
+    avatar,
+    description,
+    scanDepth,
+    tokenBudget,
+    recursiveScanning,
+    injectionMode,
+    suppressionWindow,
+    entries,
+    updatedAt: Date.now(),
+  };
+}
+
+async function saveLorebookFromEditor({ close = true } = {}) {
+  const payload = await collectLorebookFromEditor();
+  if (!payload) return false;
+  if (state.lore.editingId) {
+    await db.lorebooks.update(state.lore.editingId, payload);
+    showToast(t("loreUpdated"), "success");
+  } else {
+    payload.createdAt = Date.now();
+    await db.lorebooks.add(payload);
+    showToast(t("loreCreated"), "success");
+  }
+  setModalDirtyState("lore-editor-modal", false);
+  await renderCharacterLorebookList(getSelectedLorebookIds());
+  if (close) {
+    await closeLoreEditor();
+  }
+  return true;
+}
+
+async function duplicateLorebook(lorebookId) {
+  const source = await db.lorebooks.get(lorebookId);
+  const normalized = normalizeLorebookRecord(source);
+  if (!normalized) return;
+  const copy = {
+    ...normalized,
+    name: `${normalized.name} Copy`,
+    entries: normalized.entries.map((entry, idx) => ({
+      ...entry,
+      id: Date.now() + idx,
+    })),
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  delete copy.id;
+  await db.lorebooks.add(copy);
+  await renderLorebookManagementList();
+  await renderCharacterLorebookList(getSelectedLorebookIds());
+  showToast(t("loreDuplicated"), "success");
+}
+
+async function deleteLorebook(lorebookId) {
+  const lorebook = normalizeLorebookRecord(await db.lorebooks.get(lorebookId));
+  if (!lorebook) return;
+  const allCharacters = await db.characters.toArray();
+  const affected = allCharacters.filter(
+    (char) =>
+      Array.isArray(char.lorebookIds) &&
+      char.lorebookIds.map(Number).includes(Number(lorebookId)),
+  );
+  let message = `Delete Lorebook "${lorebook.name}"?`;
+  if (affected.length > 0) {
+    const lines = affected
+      .slice(0, 20)
+      .map((char) => `- ${char.name || `Character #${char.id}`}`)
+      .join("\n");
+    const extra =
+      affected.length > 20 ? `\n...and ${affected.length - 20} more.` : "";
+    message += `\n\nUsed by:\n${lines}${extra}`;
+  }
+  const ok = await openConfirmDialog(t("deleteLoreBookTitle"), message);
+  if (!ok) return;
+
+  await db.transaction("rw", db.lorebooks, db.characters, async () => {
+    await db.lorebooks.delete(lorebookId);
+    for (const char of affected) {
+      const next = (char.lorebookIds || []).filter(
+        (id) => Number(id) !== Number(lorebookId),
+      );
+      await db.characters.update(char.id, {
+        lorebookIds: next,
+        updatedAt: Date.now(),
+      });
+    }
+  });
+  if (currentCharacter && Number(currentCharacter.id) > 0) {
+    const refreshed = await db.characters.get(currentCharacter.id);
+    if (refreshed) {
+      currentCharacter = refreshed;
+      state.cachedChatBotAvatar = {
+        url: null,
+        characterId: null,
+        personaId: null,
+      };
+    }
+  }
+  await renderLorebookManagementList();
+  await renderCharacters();
+  await renderCharacterLorebookList(getSelectedLorebookIds());
+  showToast(t("loreDeleted"), "success");
+}
+
+function buildLorebookExportPayload(lorebook) {
+  if (!lorebook) return null;
+  const entries = {};
+  (Array.isArray(lorebook.entries) ? lorebook.entries : []).forEach(
+    (entry, index) => {
+      const keys = (Array.isArray(entry.keys) ? entry.keys : [])
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      if (keys.length === 0) return;
+      const secondaryKeys = (
+        Array.isArray(entry.secondaryKeys) ? entry.secondaryKeys : []
+      )
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      entries[String(index + 1)] = {
+        key: keys,
+        keysecondary: secondaryKeys,
+        content: String(entry.content || "").trim(),
+      };
+    },
+  );
+  if (Object.keys(entries).length === 0) return null;
+  return {
+    name: String(lorebook.name || "").trim(),
+    description: String(lorebook.description || "").trim(),
+    scan_depth: Math.max(5, Math.min(100, Number(lorebook.scanDepth) || 50)),
+    token_budget: Math.max(
+      100,
+      Math.min(1000, Number(lorebook.tokenBudget) || 200),
+    ),
+    recursive_scanning: Boolean(lorebook.recursiveScanning),
+    entries,
+  };
+}
+
+async function exportLorebook(lorebookId) {
+  try {
+    const source = normalizeLorebookRecord(await db.lorebooks.get(lorebookId));
+    if (!source) {
+      showToast(t("lorebookNotFound"), "error");
+      return;
+    }
+    const payload = buildLorebookExportPayload(source);
+    if (!payload) {
+      showToast(t("lorebookExportFailed"), "error");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeName = (source.name || "lorebook").replace(/[^\w-]+/g, "_");
+    a.href = url;
+    a.download = `${safeName}.lorebook.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast(t("lorebookExported"), "success");
+  } catch (err) {
+    console.error("Lorebook export failed", err);
+    showToast(t("lorebookExportFailed"), "error");
+  }
+}
+
+let state_writingInstructions = {
+  editingId: null,
+  definitions: [],
+  activeLanguage: "",
+};
+
+async function getAllWritingInstructions() {
+  return await db.writingInstructions.orderBy("id").toArray();
+}
+
+function normalizeWritingInstructionRecord(wi) {
+  if (!wi) return null;
+  return {
+    id: Number(wi.id) || null,
+    name: String(wi.name || "").trim(),
+    instructions:
+      typeof wi.instructions === "object" && wi.instructions !== null
+        ? wi.instructions
+        : {},
+    createdAt: Number(wi.createdAt) || Date.now(),
+    updatedAt: Number(wi.updatedAt) || Date.now(),
+  };
+}
+
+async function openWritingInstructionsManager() {
+  await renderWritingInstructionsList();
+}
+
+async function renderWritingInstructionsList() {
+  const list = document.getElementById("writing-instructions-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const writingInstructions = await getAllWritingInstructions();
+  if (writingInstructions.length === 0) {
+    list.innerHTML = `<p class="muted" data-i18n="noWritingInstructionsYet">No writing instructions yet.</p>`;
+    return;
+  }
+  for (const wi of writingInstructions) {
+    const row = document.createElement("div");
+    row.className = "lorebook-row";
+    const avatar = document.createElement("div");
+    avatar.className = "lorebook-avatar";
+    avatar.style.display = "flex";
+    avatar.style.alignItems = "center";
+    avatar.style.justifyContent = "center";
+    avatar.style.background = "#253147";
+    avatar.style.fontSize = "20px";
+    avatar.textContent = "WI";
+    const main = document.createElement("div");
+    main.className = "lorebook-main";
+    const title = document.createElement("div");
+    title.className = "lorebook-title";
+    title.textContent = wi.name || "Untitled";
+    const meta = document.createElement("div");
+    meta.className = "lorebook-meta";
+    meta.style.display = "flex";
+    meta.style.gap = "4px";
+    const langs = Object.keys(wi.instructions || {});
+    langs.forEach((lang) => {
+      const flag = createLanguageFlagIconElement(lang);
+      meta.appendChild(flag);
+    });
+    main.appendChild(title);
+    main.appendChild(meta);
+    const actions = document.createElement("div");
+    actions.className = "lorebook-actions";
+    actions.appendChild(
+      iconButton("copy", t("duplicateWritingInstructionAria"), async () => {
+        await duplicateWritingInstruction(wi.id);
+      }),
+    );
+    actions.appendChild(
+      iconButton("export", t("exportWritingInstructionAria"), async () => {
+        await exportWritingInstruction(wi.id);
+      }),
+    );
+    const deleteBtn = iconButton(
+      "delete",
+      t("deleteWritingInstructionAria"),
+      async () => {
+        await deleteWritingInstruction(wi.id);
+      },
+    );
+    deleteBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteBtn);
+    row.append(avatar, main, actions);
+    row.addEventListener("click", (e) => {
+      if (
+        e.target.closest(".lorebook-actions") ||
+        e.target.closest("button") ||
+        e.target.closest(".icon-btn")
+      ) {
+        return;
+      }
+      openWritingInstructionEditor(wi);
+    });
+    list.appendChild(row);
+  }
+}
+
+async function openWritingInstructionEditor(writingInstruction = null) {
+  setModalDirtyState("writing-instruction-editor-modal", false);
+  const normalized = normalizeWritingInstructionRecord(
+    writingInstruction || {},
+  );
+  state_writingInstructions.editingId = normalized.id || null;
+  const interfaceLang = state.settings.interfaceLanguage || "en";
+  if (
+    !normalized.instructions ||
+    Object.keys(normalized.instructions).length === 0
+  ) {
+    state_writingInstructions.definitions = [
+      { language: interfaceLang, instructions: "" },
+    ];
+  } else {
+    state_writingInstructions.definitions = Object.entries(
+      normalized.instructions,
+    ).map(([language, instructions]) => ({
+      language,
+      instructions: instructions || "",
+    }));
+  }
+  state_writingInstructions.activeLanguage =
+    state_writingInstructions.definitions[0]?.language || interfaceLang;
+  document.getElementById("writing-instruction-name").value =
+    normalized.name || "";
+  updateWritingInstructionNameCount();
+  renderWritingInstructionTabs();
+  loadActiveWritingInstructionToForm();
+  const editorModal = document.getElementById(
+    "writing-instruction-editor-modal",
+  );
+  if (editorModal) {
+    editorModal.classList.remove("hidden");
+    state.activeModalId = "writing-instruction-editor-modal";
+    setupModalTextareas(editorModal);
+    restoreWiEditorTextareaCollapseStates();
+  }
+}
+
+function renderWritingInstructionTabs() {
+  const root = document.getElementById("writing-instruction-tabs-left");
+  if (!root) return;
+  root.innerHTML = "";
+  if (
+    !state_writingInstructions.definitions ||
+    state_writingInstructions.definitions.length === 0
+  )
+    return;
+  state_writingInstructions.definitions.forEach((def) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "settings-tab-btn char-def-tab-btn";
+    if (def.language === state_writingInstructions.activeLanguage) {
+      btn.classList.add("active");
+    }
+    const label = document.createElement("span");
+    label.className = "char-def-tab-label";
+    const flag = createLanguageFlagIconElement(
+      def.language,
+      "char-def-tab-flag",
+    );
+    const text = document.createElement("span");
+    text.textContent = def.language;
+    label.append(flag, text);
+    btn.appendChild(label);
+    btn.addEventListener("click", () => {
+      saveActiveWritingInstructionFromForm();
+      saveWiEditorTextareaCollapseStates();
+      state_writingInstructions.activeLanguage = def.language;
+      loadActiveWritingInstructionToForm();
+      restoreWiEditorTextareaCollapseStates();
+      renderWritingInstructionTabs();
+    });
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "char-def-tab-delete";
+    del.textContent = "x";
+    del.disabled = state_writingInstructions.definitions.length <= 1;
+    del.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (state_writingInstructions.definitions.length <= 1) {
+        await openInfoDialog(t("message"), t("languageRequired"));
+        return;
+      }
+      const ok = await openConfirmDialog(
+        t("removeLanguageTitle"),
+        t("removeLanguageConfirm", { lang: def.language }),
+      );
+      if (!ok) return;
+      saveActiveWritingInstructionFromForm();
+      state_writingInstructions.definitions =
+        state_writingInstructions.definitions.filter(
+          (x) => x.language !== def.language,
+        );
+      if (state_writingInstructions.activeLanguage === def.language) {
+        state_writingInstructions.activeLanguage =
+          state_writingInstructions.definitions[0]?.language || "";
+      }
+      loadActiveWritingInstructionToForm();
+      renderWritingInstructionTabs();
+    });
+    btn.appendChild(del);
+    root.appendChild(btn);
+  });
+}
+
+function getActiveWritingInstructionDefinition() {
+  return state_writingInstructions.definitions.find(
+    (d) => d.language === state_writingInstructions.activeLanguage,
+  );
+}
+
+function saveActiveWritingInstructionFromForm() {
+  const def = getActiveWritingInstructionDefinition();
+  if (!def) return;
+  def.instructions = String(
+    document.getElementById("writing-instruction-text")?.value || "",
+  ).trim();
+}
+
+function loadActiveWritingInstructionToForm() {
+  const def = getActiveWritingInstructionDefinition();
+  const textField = document.getElementById("writing-instruction-text");
+  if (textField && def) {
+    textField.value = def.instructions || "";
+    autoExpandTextarea(textField);
+    updateWritingInstructionTextCount();
+  } else if (textField) {
+    textField.value = "";
+    autoExpandTextarea(textField);
+    updateWritingInstructionTextCount();
+  }
+  updateSaveWritingInstructionButton();
+}
+
+function updateWritingInstructionNameCount() {
+  const nameInput = document.getElementById("writing-instruction-name");
+  const countSpan = document.getElementById("writing-instruction-name-count");
+  if (nameInput && countSpan) {
+    countSpan.textContent = `${nameInput.value.length}/64`;
+  }
+}
+
+function updateWritingInstructionTextCount() {
+  const textInput = document.getElementById("writing-instruction-text");
+  const countSpan = document.getElementById("writing-instruction-text-count");
+  if (textInput && countSpan) {
+    countSpan.textContent = `${textInput.value.length}/20480`;
+  }
+}
+
+function updateSaveWritingInstructionButton() {
+  // Sync current form values to state_writingInstructions.definitions
+  saveActiveWritingInstructionFromForm();
+  const saveBtn = document.getElementById("save-writing-instructions-btn");
+  if (!saveBtn) return;
+  const name = String(
+    document.getElementById("writing-instruction-name")?.value || "",
+  ).trim();
+  const hasAllContent = state_writingInstructions.definitions.every(
+    (d) => String(d.instructions || "").trim().length > 0,
+  );
+  const isDirty = !!state.modalDirty["writing-instruction-editor-modal"];
+  saveBtn.disabled = !name || !hasAllContent || !isDirty;
+}
+
+async function saveWritingInstruction({ close = true } = {}) {
+  saveWiEditorTextareaCollapseStates();
+  saveActiveWritingInstructionFromForm();
+  const name = String(
+    document.getElementById("writing-instruction-name")?.value || "",
+  ).trim();
+  if (!name) {
+    await openInfoDialog(t("missingFieldTitle"), t("nameRequired"));
+    return false;
+  }
+  const hasAllContent = state_writingInstructions.definitions.every(
+    (d) => String(d.instructions || "").trim().length > 0,
+  );
+  if (!hasAllContent) {
+    await openInfoDialog(
+      t("missingFieldTitle"),
+      t("writingInstructionsRequired"),
+    );
+    return false;
+  }
+  const instructions = {};
+  state_writingInstructions.definitions.forEach((d) => {
+    instructions[d.language] = d.instructions;
+  });
+  const payload = {
+    name,
+    instructions,
+    updatedAt: Date.now(),
+  };
+  if (state_writingInstructions.editingId) {
+    await db.writingInstructions.update(
+      state_writingInstructions.editingId,
+      payload,
+    );
+    showToast(t("writingInstructionUpdated"), "success");
+  } else {
+    payload.createdAt = Date.now();
+    await db.writingInstructions.add(payload);
+    showToast(t("writingInstructionCreated"), "success");
+  }
+  setModalDirtyState("writing-instruction-editor-modal", false);
+  await renderWritingInstructionsList();
+  if (close) {
+    closeActiveModal();
+    const parentModal = document.getElementById("writing-instructions-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "writing-instructions-modal";
+    }
+  }
+  return true;
+}
+
+async function duplicateWritingInstruction(writingInstructionId) {
+  const source = await db.writingInstructions.get(writingInstructionId);
+  if (!source) return;
+  const copy = {
+    name: `${source.name} (copy)`,
+    instructions: { ...source.instructions },
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await db.writingInstructions.add(copy);
+  await renderWritingInstructionsList();
+  showToast(t("writingInstructionDuplicated"), "success");
+}
+
+async function deleteWritingInstruction(writingInstructionId) {
+  const wi = normalizeWritingInstructionRecord(
+    await db.writingInstructions.get(writingInstructionId),
+  );
+  if (!wi) return;
+
+  // Find characters using this writing instruction (check all language definitions)
+  const allCharacters = await db.characters.toArray();
+  const usingCharacters = allCharacters.filter((char) => {
+    if (!char.definitions || !Array.isArray(char.definitions)) return false;
+    return char.definitions.some(
+      (def) => def.writingInstructionId === writingInstructionId,
+    );
+  });
+
+  let message = tf("deleteWritingInstructionConfirm", { name: wi.name });
+  if (usingCharacters.length > 0) {
+    const charNames = usingCharacters.map((c) => c.name).join(", ");
+    message +=
+      "\n\n" +
+      t("writingInstructionUsedByBots", {
+        count: usingCharacters.length,
+        names: charNames,
+      });
+  }
+
+  const ok = await openConfirmDialog(
+    t("deleteWritingInstructionTitle"),
+    message,
+  );
+  if (!ok) return;
+  await db.writingInstructions.delete(writingInstructionId);
+  await renderWritingInstructionsList();
+  showToast(t("writingInstructionDeleted"), "success");
+}
+
+async function exportWritingInstruction(writingInstructionId) {
+  const wi = normalizeWritingInstructionRecord(
+    await db.writingInstructions.get(writingInstructionId),
+  );
+  if (!wi) return;
+  const interfaceLang = state.settings.interfaceLanguage || "en";
+  const content =
+    wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${wi.name.replace(/[^a-z0-9]/gi, "_")}.md`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(t("writingInstructionExported"), "success");
+}
+
+function openWritingInstructionLanguageModal() {
+  const select = document.getElementById("writing-instruction-language-select");
+  if (!select) return;
+  const usedLanguages = new Set(
+    state_writingInstructions.definitions.map((d) => d.language),
+  );
+  select.innerHTML = "";
+  BOT_LANGUAGE_OPTIONS.filter((code) => !usedLanguages.has(code)).forEach(
+    (code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = getBotLanguageName(code);
+      select.appendChild(opt);
+    },
+  );
+  document
+    .getElementById("writing-instruction-language-modal")
+    ?.classList.remove("hidden");
+}
+
+function closeWritingInstructionLanguageModal() {
+  document
+    .getElementById("writing-instruction-language-modal")
+    ?.classList.add("hidden");
+}
+
+async function addWritingInstructionLanguage() {
+  const select = document.getElementById("writing-instruction-language-select");
+  const lang = select?.value;
+  if (!lang) return;
+  saveActiveWritingInstructionFromForm();
+  state_writingInstructions.definitions.push({
+    language: lang,
+    instructions: "",
+  });
+  state_writingInstructions.activeLanguage = lang;
+  closeWritingInstructionLanguageModal();
+  loadActiveWritingInstructionToForm();
+  renderWritingInstructionTabs();
+}
+
+const PLACEHOLDER_STATUSES = new Set([
+  "queued",
+  "cooling_down",
+  "title_generating",
+  "summarizing",
+]);
+
+function isPlaceholderMessage(message) {
+  if (!message) return false;
+  if (message.placeholder === true) return true;
+  const status = String(message.generationStatus || "").trim();
+  return PLACEHOLDER_STATUSES.has(status);
+}
+
+if (typeof window !== "undefined") {
+  window.isPlaceholderMessage = isPlaceholderMessage;
+  window.PLACEHOLDER_STATUSES = PLACEHOLDER_STATUSES;
+}
+
+function isCountedSimulationMessage(message) {
+  if (!message || !isInSimulationMessage(message, true)) return false;
+  const role = normalizeApiRole(message?.apiRole || message?.role);
+  return role === "assistant" || role === "user";
+}
+
+function countSimulationMessages(messages, start = 0, end = Infinity) {
+  const list = Array.isArray(messages) ? messages : [];
+  const normalizedStart = Math.max(
+    0,
+    Number.isFinite(Number(start)) ? Number(start) : 0,
+  );
+  const normalizedEnd = Math.min(
+    list.length,
+    Number.isFinite(Number(end)) ? Number(end) : list.length,
+  );
+  let count = 0;
+  for (let i = normalizedStart; i < normalizedEnd; i += 1) {
+    if (isCountedSimulationMessage(list[i])) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+function getThreadDisplayOffset(thread = currentThread) {
+  if (!thread || !thread.unloadState) return 0;
+  const offset = Number(thread.unloadState.displayIndexOffset);
+  return Number.isFinite(offset) && offset >= 0 ? offset : 0;
+}
+
+function getInSimulationMessages(history = conversationHistory, options = {}) {
+  const list = Array.isArray(history) ? history : [];
+  const includeOoc = options.includeOoc === true;
+  return list.filter((m) => isInSimulationMessage(m, includeOoc));
+}
+
+function isInSimulationMessage(message, includeOoc = false) {
+  if (includeOoc) {
+    return !!message && !isPlaceholderMessage(message);
+  }
+  return !!message && message.ooc !== true && !isPlaceholderMessage(message);
+}
+
+function getMessageDisplayIndex(index, history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  const max = Math.min(index, list.length - 1);
+  let count = 0;
+  for (let i = 0; i <= max; i += 1) {
+    const msg = list[i];
+    if (isCountedSimulationMessage(msg)) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+function getFirstInitialDisplayIndex(history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  const firstInitialIndex = list.findIndex((msg) => msg?.isInitial);
+  if (firstInitialIndex < 0) return null;
+  return getMessageDisplayIndex(firstInitialIndex, history);
+}
+
+function formatOocContextEntry(message) {
+  if (!message) return "";
+  if (!isInSimulationMessage(message)) return "";
+  const role = normalizeApiRole(message?.apiRole || message?.role) || "user";
+  const fallbackSender =
+    role === "assistant"
+      ? currentCharacter?.name || "Assistant"
+      : message.senderName || "You";
+  const content = removeImageLinksFromContent(message.content);
+  if (!content) return "";
+  return `${role}: ${fallbackSender}: ${content}`;
+}
+
+function removeImageLinksFromContent(content) {
+  if (!content) return "";
+  return String(content)
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "")
+    .trim();
+}
+
+function hasMeaningfulAssistantMessage(history) {
+  return (Array.isArray(history) ? history : []).some((m) => {
+    if (!isInSimulationMessage(m)) return false;
+    if (normalizeApiRole(m?.apiRole || m?.role) !== "assistant") return false;
+    if (m?.pending === true) return false;
+    return String(m?.content || "").trim().length > 0;
+  });
+}
+
+function shouldIncludeOneTimeExtraPrompt(history) {
+  return !hasMeaningfulAssistantMessage(history);
+}
+
+function normalizeWritingInstructionsTiming(value) {
+  const v = String(value || "always").toLowerCase();
+  if (
+    v === "always" ||
+    v === "every_other" ||
+    v === "every_second" ||
+    v === "every_third" ||
+    v === "every_fourth"
+  ) {
+    return v;
+  }
+  return "always";
+}
+
+function buildThreadConversationSnapshot(
+  thread,
+  threshold = state.settings.autoUnloadThreshold || 0,
+) {
+  const allMessages = Array.isArray(thread?.messages) ? thread.messages : [];
+  const hasInitialMessages = allMessages.some((m) => m.isInitial);
+  const nonInitialCount = allMessages.filter((m) => !m.isInitial).length;
+  const totalMessages = nonInitialCount + (hasInitialMessages ? 1 : 0);
+  const normalizedThreshold = Math.max(0, Number(threshold) || 0);
+  let loadedStartIndex = 0;
+  let loadLimit = 0;
+  if (normalizedThreshold > 0 && totalMessages > normalizedThreshold) {
+    const startActive = Math.max(0, totalMessages - normalizedThreshold);
+    const storedStart = thread?.unloadState?.loadedStartIndex;
+    let candidate = Number.isFinite(Number(storedStart))
+      ? Number(storedStart)
+      : startActive;
+    candidate = Math.max(0, Math.min(startActive, candidate));
+    loadedStartIndex = candidate;
+    loadLimit = Math.max(0, startActive - loadedStartIndex);
+  }
+  const subset = allMessages.slice(loadedStartIndex).map((msg) =>
+    msg
+      ? {
+          ...msg,
+          role: msg.role === "ai" ? "assistant" : msg.role,
+        }
+      : msg,
+  );
+  const displayIndexOffset = countSimulationMessages(
+    allMessages,
+    0,
+    loadedStartIndex,
+  );
+  return {
+    conversationHistory: subset,
+    unloadState: {
+      loadLimit,
+      totalMessageCount: totalMessages,
+      loadedStartIndex,
+      displayIndexOffset,
+    },
+  };
+}
+
+let state_assets = {
+  editingId: null,
+  currentFile: null,
+  currentFileData: null,
+  currentFileType: null,
+  currentFileName: null,
+  audioElement: null,
+};
+
+function createBlobUrl(blob) {
+  return blob ? URL.createObjectURL(blob) : "";
+}
+
+function getCachedAvatarBlobUrl(blob) {
+  if (!blob) return "";
+  if (state.avatarBlobUrlCache.has(blob)) {
+    return state.avatarBlobUrlCache.get(blob);
+  }
+  const url = URL.createObjectURL(blob);
+  state.avatarBlobUrlCache.set(blob, url);
+  return url;
+}
+
+function revokeBlobUrl(url) {
+  if (url && url.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function resolveBlobSourceToUrl(source) {
+  if (!source) return "";
+  return source instanceof Blob ? URL.createObjectURL(source) : source;
+}
+
+function getCachedAssetBlobUrl(cacheKey, source) {
+  if (!source) return "";
+  if (!cacheKey) return resolveBlobSourceToUrl(source);
+  const existingEntry = state.assetBlobUrlCache.get(cacheKey);
+  if (existingEntry && existingEntry.source === source) {
+    return existingEntry.url;
+  }
+  if (existingEntry) {
+    revokeBlobUrl(existingEntry.url);
+    if (existingEntry.source) {
+      state.assetBlobUrlCache.delete(existingEntry.source);
+    }
+  }
+  const url = resolveBlobSourceToUrl(source);
+  if (!url) return "";
+  const entry = { url, source };
+  state.assetBlobUrlCache.set(cacheKey, entry);
+  if (source) {
+    state.assetBlobUrlCache.set(source, entry);
+  }
+  return url;
+}
+
+const ASSET_EDITOR_CACHE_KEY = "asset-editor-current";
+
+function releaseAssetBlobUrl(cacheKey) {
+  if (!cacheKey) return;
+  const entry = state.assetBlobUrlCache.get(cacheKey);
+  if (!entry) return;
+  state.assetBlobUrlCache.delete(cacheKey);
+  if (entry.source) {
+    state.assetBlobUrlCache.delete(entry.source);
+  }
+  revokeBlobUrl(entry.url);
+}
+
+function getAssetDataUrl(asset, options = {}) {
+  if (!asset) return "";
+  const data = asset.data;
+  if (!data) return "";
+  const key =
+    options.cacheKey || (asset.id ? `asset-${asset.id}` : null) || null;
+  return getCachedAssetBlobUrl(key, data);
+}
+
+function clearAssetDataUrl(assetId) {
+  if (!assetId) return;
+  releaseAssetBlobUrl(`asset-${assetId}`);
+}
+
+function getTemporaryBlobUrl(cacheKey, source) {
+  return getCachedAssetBlobUrl(cacheKey, source);
+}
+
+function clearTemporaryBlobUrl(cacheKey) {
+  releaseAssetBlobUrl(cacheKey);
+}
+
+function getAssetTypeFromMime(mime) {
+  if (!mime) return "sound";
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("video/")) return "video";
+  if (mime.startsWith("audio/")) return "sound";
+  return "sound";
+}
+
+function getAssetTypeLabel(type) {
+  switch (type) {
+    case "image":
+      return "Image";
+    case "video":
+      return "Video";
+    case "sound":
+      return "Sound";
+    default:
+      return "Unknown";
+  }
+}
+
+function getAssetTypeIcon(type) {
+  switch (type) {
+    case "image":
+      return "&#128444;";
+    case "video":
+      return "&#127909;";
+    case "sound":
+      return "&#127925;";
+    default:
+      return "&#128190;";
+  }
+}
+
+async function getAllAssets() {
+  return db.assets.toArray();
+}
+
+async function getAssetById(id) {
+  return db.assets.get(Number(id));
+}
+
+async function deleteAsset(id) {
+  await db.assets.delete(Number(id));
+  clearAssetDataUrl(Number(id));
+}
+
+async function saveAsset(asset) {
+  if (asset.id) {
+    clearAssetDataUrl(asset.id);
+    await db.assets.put(asset);
+    return asset.id;
+  } else {
+    return await db.assets.add(asset);
+  }
+}
+
+async function openAssetsManager() {
+  setModalDirtyState("assets-modal", false);
+  renderAssetsList();
+  setupAssetsDropzone();
+}
+
+async function renderAssetsList() {
+  const list = document.getElementById("assets-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const assets = await getAllAssets();
+
+  if (assets.length === 0) {
+    list.innerHTML = `<p class="muted" data-i18n="noAssetsYet">No assets yet.</p>`;
+    return;
+  }
+
+  for (const asset of assets) {
+    const row = document.createElement("div");
+    row.className = "lorebook-row asset-row";
+
+    const avatar = document.createElement("div");
+    avatar.className = "lorebook-avatar";
+
+    if (asset.type === "image" && asset.data) {
+      const img = document.createElement("img");
+      img.src = getAssetDataUrl(asset);
+      img.alt = asset.name || "Asset";
+      avatar.appendChild(img);
+    } else if (asset.type === "video" && asset.data) {
+      const video = document.createElement("video");
+      video.src = getAssetDataUrl(asset);
+      video.muted = true;
+      const thumb = document.createElement("img");
+      thumb.src = asset.thumbnail || "";
+      thumb.alt = asset.name || "Asset";
+      if (!asset.thumbnail) {
+        avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+      } else {
+        avatar.appendChild(thumb);
+      }
+    } else if (asset.type === "sound" && asset.data) {
+      avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+    } else {
+      avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+    }
+
+    const main = document.createElement("div");
+    main.className = "lorebook-main";
+
+    const title = document.createElement("div");
+    title.className = "lorebook-title";
+    title.textContent = asset.name || asset.originalName || "Untitled";
+
+    const meta = document.createElement("div");
+    meta.className = "lorebook-meta";
+    const typeSpan = document.createElement("span");
+    typeSpan.textContent = getAssetTypeLabel(asset.type);
+    typeSpan.style.fontSize = "11px";
+    meta.appendChild(typeSpan);
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "lorebook-actions";
+
+    const downloadBtn = iconButton(
+      "export",
+      t("downloadAssetAria") || "Download",
+      () => {
+        downloadAsset(asset);
+      },
+    );
+    actions.appendChild(downloadBtn);
+
+    const deleteBtn = iconButton(
+      "delete",
+      t("deleteAssetAria") || "Delete",
+      async () => {
+        const ok = await openConfirmDialog(
+          t("deleteAssetTitle"),
+          tf("deleteAssetConfirm", {
+            name: asset.name || asset.originalName || "Untitled",
+          }),
+        );
+        if (!ok) return;
+        await deleteAsset(asset.id);
+        await renderAssetsList();
+      },
+    );
+    deleteBtn.classList.add("danger-icon-btn");
+    actions.appendChild(deleteBtn);
+
+    row.append(avatar, main, actions);
+    row.addEventListener("click", (e) => {
+      if (
+        e.target.closest(".lorebook-actions") ||
+        e.target.closest("button") ||
+        e.target.closest(".icon-btn")
+      ) {
+        return;
+      }
+      openAssetEditor(asset);
+    });
+    list.appendChild(row);
+  }
+}
+
+function setupAssetsDropzone() {
+  const dropzone = document.getElementById("assets-dropzone");
+  const fileInput = document.getElementById("assets-file-input");
+
+  if (!dropzone || !fileInput) return;
+
+  dropzone.onclick = () => fileInput.click();
+
+  dropzone.ondragover = (e) => {
+    e.preventDefault();
+    dropzone.classList.add("drag-over");
+  };
+
+  dropzone.ondragleave = () => {
+    dropzone.classList.remove("drag-over");
+  };
+
+  dropzone.ondrop = (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("drag-over");
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      handleAssetFiles(files);
+    }
+  };
+
+  fileInput.onchange = () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      handleAssetFiles(fileInput.files);
+    }
+    fileInput.value = "";
+  };
+}
+
+async function handleAssetFiles(files) {
+  for (const file of files) {
+    clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
+    state_assets.currentFile = file;
+    state_assets.currentFileData = file;
+    state_assets.currentFileType = getAssetTypeFromMime(file.type);
+    state_assets.currentFileName = file.name;
+    state_assets.editingId = null;
+
+    openAssetEditor(null);
+  }
+}
+
+async function openAssetEditor(asset = null) {
+  setModalDirtyState("asset-editor-modal", false);
+
+  const nameInput = document.getElementById("asset-name");
+  const originalNameInput = document.getElementById("asset-original-name");
+  const typeInput = document.getElementById("asset-type");
+  const previewContainer = document.getElementById("asset-preview-container");
+  const audioControls = document.getElementById("asset-audio-controls");
+  const nameCount = document.getElementById("asset-name-count");
+
+  if (state_assets.audioElement) {
+    state_assets.audioElement.pause();
+    state_assets.audioElement = null;
+  }
+
+  if (asset) {
+    state_assets.editingId = asset.id;
+    clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
+    state_assets.currentFileData = asset.data;
+    state_assets.currentFileType = asset.type;
+    state_assets.currentFileName = asset.originalName;
+
+    nameInput.value = asset.name || "";
+    originalNameInput.value = asset.originalName || "";
+    typeInput.value = getAssetTypeLabel(asset.type);
+  } else {
+    state_assets.editingId = null;
+    nameInput.value = "";
+    originalNameInput.value = state_assets.currentFileName || "";
+    typeInput.value = getAssetTypeLabel(
+      state_assets.currentFileType || "sound",
+    );
+  }
+
+  if (nameCount) {
+    nameCount.textContent = `${(nameInput.value || "").length}/128`;
+  }
+
+  previewContainer.innerHTML = "";
+  audioControls.classList.add("hidden");
+
+  if (
+    state_assets.currentFileType === "image" &&
+    state_assets.currentFileData
+  ) {
+    const url = getTemporaryBlobUrl(
+      ASSET_EDITOR_CACHE_KEY,
+      state_assets.currentFileData,
+    );
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      previewContainer.appendChild(img);
+    }
+  } else if (
+    state_assets.currentFileType === "video" &&
+    state_assets.currentFileData
+  ) {
+    const url = getTemporaryBlobUrl(
+      ASSET_EDITOR_CACHE_KEY,
+      state_assets.currentFileData,
+    );
+    if (url) {
+      const video = document.createElement("video");
+      video.src = url;
+      video.controls = true;
+      video.muted = true;
+      previewContainer.appendChild(video);
+    }
+  } else if (
+    state_assets.currentFileType === "sound" &&
+    state_assets.currentFileData
+  ) {
+    audioControls.classList.remove("hidden");
+    const url = getTemporaryBlobUrl(
+      ASSET_EDITOR_CACHE_KEY,
+      state_assets.currentFileData,
+    );
+    const audio = document.createElement("audio");
+    if (url) {
+      audio.src = url;
+    }
+    state_assets.audioElement = audio;
+
+    const audioPlayer = document.createElement("div");
+    audioPlayer.className = "asset-preview-container";
+    audioPlayer.style.width = "100%";
+    const audioInfo = document.createElement("span");
+    audioInfo.className = "muted";
+    audioInfo.textContent = state_assets.currentFileName || "Audio file";
+    audioPlayer.appendChild(audioInfo);
+    previewContainer.appendChild(audioPlayer);
+  }
+
+  nameInput.oninput = () => {
+    if (nameCount) {
+      nameCount.textContent = `${(nameInput.value || "").length}/128`;
+    }
+    setModalDirtyState("asset-editor-modal", true);
+  };
+
+  const applyBtn = document.getElementById("apply-asset-editor-btn");
+  const saveBtn = document.getElementById("save-asset-editor-btn");
+
+  const cancelBtn = document.getElementById("cancel-asset-btn");
+  const handleCancel = () => {
+    if (state_assets.audioElement) {
+      state_assets.audioElement.pause();
+      state_assets.audioElement = null;
+    }
+    if (state.modalDirty["asset-editor-modal"]) {
+      openUnsavedChangesDialog().then((action) => {
+        if (action === "back") return;
+        if (action === "close") {
+          setModalDirtyState("asset-editor-modal", false);
+          closeActiveModal();
+          clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
+          const parentModal = document.getElementById("assets-modal");
+          if (parentModal) {
+            parentModal.classList.remove("hidden");
+            state.activeModalId = "assets-modal";
+          }
+        }
+        if (action === "save") {
+          saveAssetFromEditor();
+        }
+      });
+    } else {
+      closeActiveModal();
+      clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
+      const parentModal = document.getElementById("assets-modal");
+      if (parentModal) {
+        parentModal.classList.remove("hidden");
+        state.activeModalId = "assets-modal";
+      }
+    }
+  };
+
+  cancelBtn.onclick = handleCancel;
+
+  applyBtn.onclick = async () => {
+    await saveAssetFromEditor();
+  };
+
+  saveBtn.onclick = async () => {
+    await saveAssetFromEditor();
+  };
+
+  const playBtn = document.getElementById("asset-play-btn");
+  const pauseBtn = document.getElementById("asset-pause-btn");
+  const stopBtn = document.getElementById("asset-stop-btn");
+
+  playBtn.onclick = () => {
+    if (state_assets.audioElement) {
+      state_assets.audioElement.play();
+    }
+  };
+
+  pauseBtn.onclick = () => {
+    if (state_assets.audioElement) {
+      state_assets.audioElement.pause();
+    }
+  };
+
+  stopBtn.onclick = () => {
+    if (state_assets.audioElement) {
+      state_assets.audioElement.pause();
+      state_assets.audioElement.currentTime = 0;
+    }
+  };
+
+  openModal("asset-editor-modal");
+}
+
+async function saveAssetFromEditor() {
+  const nameInput = document.getElementById("asset-name");
+  const originalNameInput = document.getElementById("asset-original-name");
+  const typeInput = document.getElementById("asset-type");
+
+  const asset = {
+    id: state_assets.editingId || undefined,
+    name: nameInput.value.trim() || null,
+    originalName: originalNameInput.value,
+    type: state_assets.currentFileType,
+    data: state_assets.currentFileData,
+    createdAt: state_assets.editingId ? undefined : Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  const savedId = await saveAsset(asset);
+
+  if (!state_assets.editingId && savedId) {
+    state_assets.editingId = savedId;
+  }
+
+  if (state_assets.audioElement) {
+    state_assets.audioElement.pause();
+    state_assets.audioElement = null;
+  }
+
+  setModalDirtyState("asset-editor-modal", false);
+  await closeActiveModal();
+  const parentModal = document.getElementById("assets-modal");
+  if (parentModal) {
+    parentModal.classList.remove("hidden");
+    state.activeModalId = "assets-modal";
+  }
+  await renderAssetsList();
+
+  clearTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY);
+
+  return true;
+}
+
+function downloadAsset(asset) {
+  if (!asset.data) return;
+
+  const url = getAssetDataUrl(asset);
+  if (!url) return;
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = asset.name || asset.originalName || "asset";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+async function openAssetSelectorForSfx() {
+  const modal = document.getElementById("select-asset-modal");
+  if (!modal) return;
+  await renderAssetSelectorList();
+  state.activeModalId = "select-asset-modal";
+  modal.classList.remove("hidden");
+}
+
+async function renderAssetSelectorList() {
+  const list = document.getElementById("select-asset-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const assets = await getAllAssets();
+  const activeDef = getActiveCharacterDefinition();
+  const existingAssetIds = activeDef?.sfx?.map((e) => e.assetId) || [];
+
+  if (assets.length === 0) {
+    list.innerHTML = `<p class="muted" data-i18n="noAssetsYet">No assets yet.</p>`;
+    return;
+  }
+
+  for (const asset of assets) {
+    // Skip assets already in SFX list
+    if (existingAssetIds.includes(asset.id)) continue;
+
+    const row = document.createElement("div");
+    row.className = "lorebook-row asset-row";
+    row.style.cursor = "pointer";
+
+    const avatar = document.createElement("div");
+    avatar.className = "lorebook-avatar";
+
+    if (asset.type === "image" && asset.data) {
+      const img = document.createElement("img");
+      img.src = getAssetDataUrl(asset);
+      img.alt = asset.name || "Asset";
+      avatar.appendChild(img);
+    } else if (asset.type === "video" && asset.data) {
+      const video = document.createElement("video");
+      video.src = getAssetDataUrl(asset);
+      video.muted = true;
+      const thumb = document.createElement("img");
+      thumb.src = asset.thumbnail || "";
+      thumb.alt = asset.name || "Asset";
+      if (!asset.thumbnail) {
+        avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+      } else {
+        avatar.appendChild(thumb);
+      }
+    } else if (asset.type === "sound" && asset.data) {
+      avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+    } else {
+      avatar.innerHTML = `<span class="asset-type-icon">${getAssetTypeIcon(asset.type)}</span>`;
+    }
+
+    const main = document.createElement("div");
+    main.className = "lorebook-main";
+
+    const title = document.createElement("div");
+    title.className = "lorebook-title";
+    title.textContent = asset.name || asset.originalName || "Untitled";
+
+    const meta = document.createElement("div");
+    meta.className = "lorebook-meta";
+    const typeSpan = document.createElement("span");
+    typeSpan.textContent = getAssetTypeLabel(asset.type);
+    typeSpan.style.fontSize = "11px";
+    meta.appendChild(typeSpan);
+
+    main.appendChild(title);
+    main.appendChild(meta);
+
+    row.append(avatar, main);
+
+    row.addEventListener("click", async () => {
+      await closeActiveModal();
+      openSfxEditor(asset);
+    });
+
+    list.appendChild(row);
+  }
+}
+
+function renderModel3DPreview() {
+  const preview = document.getElementById('char-model3d-preview');
+  const info = document.getElementById('char-model3d-info');
+  const nameEl = document.getElementById('char-model3d-name');
+  if (!preview || !info || !nameEl) return;
+
+  const model3d = state.charModalModel3d ||
+    (state.editingCharacterId ? state.charModalCache?.[state.editingCharacterId]?.model3d : null);
+
+  if (!model3d) {
+    preview.classList.remove('hidden');
+    info.classList.add('hidden');
+  } else {
+    preview.classList.add('hidden');
+    info.classList.remove('hidden');
+    nameEl.textContent = model3d.name || '3D Model';
+  }
+}
+
+function updateModel3DToggleButton() {
+  const btn = document.getElementById('toggle-model3d-panel-btn');
+  if (!btn) return;
+
+  const hasModel = currentCharacter?.model3d?.data;
+  btn.classList.toggle('hidden', !hasModel);
+}
+
+function isModel3DExpressionPresetSupported(expressionKey, namesSet) {
+  if (!expressionKey) return false;
+  if (expressionKey === 'neutral') return true;
+  if (!namesSet) return true;
+  if (namesSet.has(expressionKey)) return true;
+  const aliasList = MODEL3D_EXPRESSION_ALIAS_MAP[expressionKey] || [];
+  return aliasList.some((alias) => namesSet.has(normalizeExpressionKey(alias)));
+}
+
+function renderModel3DExpressionControls() {
+  const container = document.getElementById('model3d-expression-controls');
+  if (!container) return;
+  const hasModel = !!currentCharacter?.model3d?.data;
+  const expressionNamesSet = state.model3dExpressionNamesLoaded
+    ? new Set(state.model3dExpressionNames.map((name) => normalizeExpressionKey(name)))
+    : null;
+
+  container.querySelectorAll('button[data-expression]').forEach((button) => {
+    const key = normalizeExpressionKey(button.dataset.expression);
+    const supported = hasModel && isModel3DExpressionPresetSupported(key, expressionNamesSet);
+    button.disabled = !supported;
+    button.classList.toggle('active', state.model3dExpression === key);
+  });
+}
+
+function refreshModel3DExpressionCatalog() {
+  const names = window.getModel3DExpressionNames?.() ?? [];
+  state.model3dExpressionNames = Array.isArray(names) ? names.filter(Boolean) : [];
+  state.model3dExpressionNamesLoaded = true;
+  renderModel3DExpressionControls();
+}
+
+function setModel3DExpression(expressionKey, options = {}) {
+  if (!currentCharacter?.model3d?.data) return false;
+
+  const normalizedInput = normalizeExpressionKey(expressionKey);
+  const normalizedTarget = normalizedInput || 'neutral';
+  if (!options.force && state.model3dExpression === normalizedTarget) {
+    return false;
+  }
+
+  state.model3dExpression = normalizedTarget;
+  const setFn = window.setModel3DExpression;
+  const resetFn = window.resetModel3DExpressions;
+
+  let applied = false;
+  if (normalizedTarget === 'neutral') {
+    applied = resetFn?.() ?? false;
+  } else {
+    applied = setFn?.(normalizedTarget) ?? false;
+  }
+
+  if (!applied && normalizedTarget !== 'neutral') {
+    resetFn?.();
+    state.model3dExpression = 'neutral';
+  }
+
+  renderModel3DExpressionControls();
+
+  if (options.persist !== false) {
+    persistModel3DPanelState(currentThread?.id, {
+      expression: state.model3dExpression,
+    });
+  }
+
+  return applied;
+}
+
+async function handleModel3DUpload(file) {
+  if (!file) return;
+
+  const validTypes = ['.vrm', '.glb', '.gltf'];
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!validTypes.includes(ext)) {
+    await openInfoDialog(
+      t('error'),
+      tf('unsupportedFileType', { types: validTypes.join(', ') }),
+    );
+    return;
+  }
+
+  const model3d = {
+    name: file.name,
+    type: ext.slice(1),
+    size: file.size,
+  };
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    model3d.data = e.target.result;
+    state.charModalModel3d = model3d;
+
+    if (state.editingCharacterId) {
+      if (!state.charModalCache[state.editingCharacterId]) {
+        state.charModalCache[state.editingCharacterId] = {};
+      }
+      state.charModalCache[state.editingCharacterId].model3d = model3d;
+    }
+
+    setModalDirtyState('character-modal', true);
+    renderModel3DPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeModel3D() {
+  state.charModalModel3d = null;
+  if (state.editingCharacterId && state.charModalCache[state.editingCharacterId]) {
+    state.charModalCache[state.editingCharacterId].model3d = null;
+  }
+  setModalDirtyState('character-modal', true);
+  renderModel3DPreview();
+}
+
+function toggleModel3DPanel() {
+  const panel = document.getElementById('model3d-panel');
+  const btn = document.getElementById('toggle-model3d-panel-btn');
+  if (!panel) return;
+
+  const isHidden = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden');
+  const nowHidden = panel.classList.contains('hidden');
+  panel.dataset.hidden = nowHidden ? 'true' : 'false';
+  updateModel3DVisibilityButtonIcon(nowHidden);
+  btn?.classList.toggle('is-active', isHidden);
+
+  if (isHidden) {
+    if (currentCharacter?.model3d?.data) {
+      scheduleModel3DLoad(currentCharacter);
+    }
+    persistModel3DPanelState(currentThread?.id, { visible: true });
+  } else {
+    if (window.disposeModel3D) {
+      window.disposeModel3D();
+    }
+    persistModel3DPanelState(currentThread?.id, { visible: false });
+  }
+}
+
+function showModel3DPanel() {
+  const panel = document.getElementById('model3d-panel');
+  const btn = document.getElementById('toggle-model3d-panel-btn');
+  if (!panel) return;
+  panel.classList.remove('hidden');
+  btn?.classList.remove('is-active');
+  panel.dataset.hidden = 'false';
+  updateModel3DVisibilityButtonIcon(false);
+  if (currentCharacter?.model3d) {
+    scheduleModel3DLoad(currentCharacter);
+  }
+}
+
+function hideModel3DPanel() {
+  const panel = document.getElementById('model3d-panel');
+  const btn = document.getElementById('toggle-model3d-panel-btn');
+  if (!panel) return;
+  panel.classList.add('hidden');
+  btn?.classList.add('is-active');
+  panel.dataset.hidden = 'true';
+  updateModel3DVisibilityButtonIcon(true);
+  if (window.disposeModel3D) {
+    window.disposeModel3D();
+  }
+}
+
+function scheduleModel3DLoad(character) {
+  if (!character?.model3d?.data) return;
+  if (window.requestAnimationFrame) {
+    window.requestAnimationFrame(() => {
+      loadModel3DFromCharacter(character);
+    });
+  } else {
+    setTimeout(() => {
+      loadModel3DFromCharacter(character);
+    }, 0);
+  }
+}
+
+function waitForNextPaint() {
+  return new Promise((resolve) => {
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(() => resolve(), 16);
+    }
+  });
+}
+
+const MODEL3D_VISIBILITY_ICONS = {
+  visible:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  hidden:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
+};
+
+function updateModel3DVisibilityButtonIcon(isHidden) {
+  const btn = document.getElementById("model3d-toggle-visibility-btn");
+  if (!btn) return;
+  btn.innerHTML = isHidden
+    ? MODEL3D_VISIBILITY_ICONS.hidden
+    : MODEL3D_VISIBILITY_ICONS.visible;
+}
+
+async function persistModel3DPanelState(threadId, updates = {}) {
+  if (!Number.isInteger(Number(threadId))) return;
+
+  try {
+    const thread = await db.threads.get(threadId);
+    if (!thread) return;
+
+    const model3dPanel = thread.model3dPanel || {};
+    const panel = document.getElementById('model3d-panel');
+    const btn = document.getElementById('toggle-model3d-panel-btn');
+
+    if (updates.visible !== undefined) {
+      model3dPanel.visible = updates.visible;
+    }
+
+    if (panel && !panel.classList.contains('hidden')) {
+      model3dPanel.left = parseFloat(panel.style.left) || 0;
+      model3dPanel.top = parseFloat(panel.style.top) || 0;
+      model3dPanel.width = panel.offsetWidth;
+      model3dPanel.height = panel.offsetHeight;
+      model3dPanel.chatViewWidth = panel.parentElement?.clientWidth || 0;
+    }
+
+    if (window.getModel3DCameraState && updates.camera !== false) {
+      model3dPanel.camera = window.getModel3DCameraState();
+    }
+
+    if (updates.expression !== undefined) {
+      model3dPanel.expression = updates.expression;
+    } else if (state.model3dExpression !== null && state.model3dExpression !== undefined) {
+      model3dPanel.expression = state.model3dExpression;
+    }
+
+    await db.threads.update(threadId, { model3dPanel });
+  } catch (err) {
+    console.warn("Failed to persist model3d panel state:", err);
+  }
+}
+
+async function restoreModel3DPanelState(threadId) {
+  if (!Number.isInteger(Number(threadId))) return;
+
+  try {
+    const thread = await db.threads.get(threadId);
+    if (!thread?.model3dPanel) return;
+
+    const panel = document.getElementById('model3d-panel');
+    const btn = document.getElementById('toggle-model3d-panel-btn');
+    if (!panel) return;
+
+    const panelState = thread.model3dPanel;
+    state.model3dExpression = panelState.expression || null;
+    state.model3dExpressionNames = [];
+    state.model3dExpressionNamesLoaded = false;
+    renderModel3DExpressionControls();
+    const chatViewWidth = panel.parentElement?.clientWidth || 0;
+
+    if (panelState.visible && currentCharacter?.model3d?.data) {
+      if (
+        panelState.chatViewWidth &&
+        Math.abs(panelState.chatViewWidth - chatViewWidth) > 100
+      ) {
+        return;
+      }
+
+      if (panelState.width && panelState.height) {
+        panel.style.width = panelState.width + 'px';
+        panel.style.height = panelState.height + 'px';
+      }
+
+      if (panelState.left !== undefined && panelState.top !== undefined) {
+        const maxLeft = chatViewWidth - panel.offsetWidth;
+        const maxTop = panel.parentElement?.clientHeight - panel.offsetHeight || 0;
+        panel.style.left = Math.max(0, Math.min(maxLeft, panelState.left)) + 'px';
+        panel.style.top = Math.max(0, Math.min(maxTop, panelState.top)) + 'px';
+      }
+
+      panel.classList.remove('hidden');
+      btn?.classList.remove('is-active');
+      panel.dataset.hidden = 'false';
+      updateModel3DVisibilityButtonIcon(false);
+
+      await waitForNextPaint();
+      await loadModel3DFromCharacter(currentCharacter);
+
+      if (panelState.camera && window.restoreModel3DCameraState) {
+        window.restoreModel3DCameraState(panelState.camera);
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to restore model3d panel state:", err);
+  }
+}
+
+async function loadModel3DFromCharacter(character) {
+  if (!character?.model3d?.data) return;
+
+  state.model3dExpressionNamesLoaded = false;
+  state.model3dExpressionNames = [];
+  renderModel3DExpressionControls();
+
+  try {
+    const base64 = character.model3d.data;
+    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+    const binary = atob(base64Data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    let mimeType = 'application/octet-stream';
+    if (character.model3d.type === 'glb') {
+      mimeType = 'model/gltf-binary';
+    } else if (character.model3d.type === 'gltf') {
+      mimeType = 'model/gltf+json';
+    }
+
+    const blob = new Blob([bytes], { type: mimeType });
+
+    await window.loadModel3D(blob);
+    refreshModel3DExpressionCatalog();
+    setModel3DExpression(state.model3dExpression || 'neutral', {
+      persist: false,
+      force: true,
+    });
+  } catch (error) {
+    console.error('Failed to load 3D model:', error);
+    await openInfoDialog(t('error'), t('failedToLoadModel3d'));
+  }
+}
+
+let model3dPanelState = {
+  isDragging: false,
+  isResizing: false,
+  resizeCorner: null,
+  startX: 0,
+  startY: 0,
+  startWidth: 0,
+  startHeight: 0,
+  startLeft: 0,
+  startTop: 0,
+  hasMoved: false,
+  initialLeft: 0,
+  initialTop: 0,
+};
+
+function initModel3DPanelDragResize() {
+  const panel = document.getElementById('model3d-panel');
+  const header = document.getElementById('model3d-panel-header');
+  const resizeHandles = {
+    nw: document.getElementById('model3d-resize-handle-nw'),
+    ne: document.getElementById('model3d-resize-handle-ne'),
+    sw: document.getElementById('model3d-resize-handle-sw'),
+    se: document.getElementById('model3d-resize-handle-se'),
+  };
+  if (!panel || !header) return;
+
+  header.addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) return;
+    e.preventDefault();
+    model3dPanelState.isDragging = true;
+    model3dPanelState.startX = e.clientX;
+    model3dPanelState.startY = e.clientY;
+    const rect = panel.getBoundingClientRect();
+    const parentRect = panel.parentElement.getBoundingClientRect();
+    model3dPanelState.startLeft = rect.left - parentRect.left;
+    model3dPanelState.startTop = rect.top - parentRect.top;
+    model3dPanelState.initialLeft = model3dPanelState.startLeft;
+    model3dPanelState.initialTop = model3dPanelState.startTop;
+    model3dPanelState.hasMoved = false;
+    document.body.style.cursor = 'move';
+  });
+
+  Object.entries(resizeHandles).forEach(([corner, handle]) => {
+    if (!handle) return;
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      model3dPanelState.isResizing = true;
+      model3dPanelState.resizeCorner = corner;
+      model3dPanelState.startX = e.clientX;
+      model3dPanelState.startY = e.clientY;
+      const rect = panel.getBoundingClientRect();
+      const parentRect = panel.parentElement.getBoundingClientRect();
+      model3dPanelState.startWidth = rect.width;
+      model3dPanelState.startHeight = rect.height;
+      model3dPanelState.startLeft = rect.left - parentRect.left;
+      model3dPanelState.startTop = rect.top - parentRect.top;
+      const cursors = { nw: 'nw-resize', ne: 'ne-resize', sw: 'sw-resize', se: 'se-resize' };
+      document.body.style.cursor = cursors[corner];
+    });
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (model3dPanelState.isDragging) {
+      e.preventDefault();
+      const dx = e.clientX - model3dPanelState.startX;
+      const dy = e.clientY - model3dPanelState.startY;
+
+      if (!model3dPanelState.hasMoved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+        model3dPanelState.hasMoved = true;
+        panel.style.left = model3dPanelState.startLeft + 'px';
+        panel.style.top = model3dPanelState.startTop + 'px';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+      }
+
+      if (model3dPanelState.hasMoved) {
+        const parent = panel.parentElement;
+        const parentRect = parent.getBoundingClientRect();
+        const panelWidth = panel.offsetWidth;
+        const panelHeight = panel.offsetHeight;
+
+        let newLeft = model3dPanelState.startLeft + dx;
+        let newTop = model3dPanelState.startTop + dy;
+
+        newLeft = Math.max(0, Math.min(parentRect.width - panelWidth, newLeft));
+        newTop = Math.max(0, Math.min(parentRect.height - panelHeight, newTop));
+
+        panel.style.left = newLeft + 'px';
+        panel.style.top = newTop + 'px';
+      }
+    }
+
+    if (model3dPanelState.isResizing) {
+      e.preventDefault();
+      const dx = e.clientX - model3dPanelState.startX;
+      const dy = e.clientY - model3dPanelState.startY;
+      const corner = model3dPanelState.resizeCorner;
+      const parent = panel.parentElement;
+      const parentWidth = parent.clientWidth;
+      const parentHeight = parent.clientHeight;
+
+      let newWidth = model3dPanelState.startWidth;
+      let newHeight = model3dPanelState.startHeight;
+      let newLeft = model3dPanelState.startLeft;
+      let newTop = model3dPanelState.startTop;
+
+      if (corner === 'se') {
+        newWidth = Math.max(200, model3dPanelState.startWidth + dx);
+        newHeight = Math.max(200, model3dPanelState.startHeight + dy);
+      } else if (corner === 'sw') {
+        const widthChange = Math.min(dx, model3dPanelState.startWidth - 200) * -1;
+        newWidth = model3dPanelState.startWidth + widthChange;
+        newLeft = model3dPanelState.startLeft - widthChange;
+        newHeight = Math.max(200, model3dPanelState.startHeight + dy);
+      } else if (corner === 'ne') {
+        newWidth = Math.max(200, model3dPanelState.startWidth + dx);
+        const heightChange = Math.min(dy, model3dPanelState.startHeight - 200) * -1;
+        newHeight = model3dPanelState.startHeight + heightChange;
+        newTop = model3dPanelState.startTop - heightChange;
+      } else if (corner === 'nw') {
+        const widthChange = Math.min(dx, model3dPanelState.startWidth - 200) * -1;
+        newWidth = model3dPanelState.startWidth + widthChange;
+        newLeft = model3dPanelState.startLeft - widthChange;
+        const heightChange = Math.min(dy, model3dPanelState.startHeight - 200) * -1;
+        newHeight = model3dPanelState.startHeight + heightChange;
+        newTop = model3dPanelState.startTop - heightChange;
+      }
+
+      newLeft = Math.max(0, Math.min(parentWidth - newWidth, newLeft));
+      newTop = Math.max(0, Math.min(parentHeight - newHeight, newTop));
+
+      panel.style.width = newWidth + 'px';
+      panel.style.height = newHeight + 'px';
+      panel.style.left = newLeft + 'px';
+      panel.style.top = newTop + 'px';
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+
+      const container = document.getElementById('model3d-canvas-container');
+      if (container) {
+        window.resizeModel3D(container.clientWidth, container.clientHeight);
+      }
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (model3dPanelState.isDragging || model3dPanelState.isResizing) {
+      model3dPanelState.isDragging = false;
+      model3dPanelState.isResizing = false;
+      model3dPanelState.resizeCorner = null;
+      document.body.style.cursor = '';
+      persistModel3DPanelState(currentThread?.id);
+    }
+  });
+}
+
+function constrainModel3DPanelPosition() {
+  const panel = document.getElementById('model3d-panel');
+  if (!panel || panel.classList.contains('hidden')) return;
+
+  const parent = panel.parentElement;
+  if (!parent) return;
+
+  const parentWidth = parent.clientWidth;
+  const parentHeight = parent.clientHeight;
+  const panelWidth = panel.offsetWidth;
+  const panelHeight = panel.offsetHeight;
+
+  let left = parseFloat(panel.style.left) || 0;
+  let top = parseFloat(panel.style.top) || 0;
+
+  left = Math.max(0, Math.min(parentWidth - panelWidth, left));
+  top = Math.max(0, Math.min(parentHeight - panelHeight, top));
+
+  panel.style.left = left + 'px';
+  panel.style.top = top + 'px';
+}
+
+window.addEventListener('resize', constrainModel3DPanelPosition);
+
+function getThreadWritingInstructionsTurnCount(thread = currentThread) {
+  const raw = Number(thread?.writingInstructionsTurnCount);
+  if (Number.isInteger(raw) && raw >= 0) return raw;
+  return 0;
+}
+
+function getNextWritingInstructionsTurnIndex(thread = currentThread) {
+  return getThreadWritingInstructionsTurnCount(thread) + 1;
+}
+
+function computeWritingInstructionsTurnCountFromMessages(messages = []) {
+  if (!Array.isArray(messages)) return 0;
+  let max = 0;
+  for (const message of messages) {
+    if (!message) continue;
+    const role = normalizeApiRole(message?.apiRole || message?.role);
+    if (role !== "assistant") continue;
+    const turnIndex = Number(message?.writingInstructionsTurnIndex);
+    if (!Number.isFinite(turnIndex)) continue;
+    max = Math.max(max, turnIndex);
+  }
+  return max;
+}
+
+function shouldInjectWritingInstructionsForTurn(turnIndex) {
+  const mode = normalizeWritingInstructionsTiming(
+    state.settings.writingInstructionsInjectionWhen,
+  );
+  const turn = Math.max(1, Number(turnIndex) || 1);
+  if (mode === "always") return true;
+  if (mode === "every_other") return turn % 2 === 1;
+  if (mode === "every_second") return turn % 2 === 0;
+  if (mode === "every_third") return turn % 3 === 0;
+  if (mode === "every_fourth") return turn % 4 === 0;
+  return true;
+}
+
+function isLatestAssistantMessageIndex(index, history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  const latest = list
+    .map((m, i) => ({ m, i }))
+    .filter(
+      ({ m }) =>
+        isInSimulationMessage(m) &&
+        normalizeApiRole(m?.apiRole || m?.role) === "assistant",
+    )
+    .pop();
+  return latest ? latest.i === index : false;
+}
+
+function isFirstAssistantMessageIndex(index, history = conversationHistory) {
+  const list = Array.isArray(history) ? history : [];
+  const first = list.findIndex(
+    (m) =>
+      normalizeApiRole(m?.apiRole || m?.role) === "assistant" &&
+      isInSimulationMessage(m) &&
+      m.manualMessage !== true,
+  );
+  return first === index;
+}
+
+function updateCharacterPromptPlaceholder() {
+  const promptInput = document.getElementById("char-system-prompt");
+  promptInput.placeholder = state.settings.globalPromptTemplate || "";
+}
+
+async function renderCharacterLorebookList(selectedIds = []) {
+  const root = document.getElementById("char-lorebooks-list");
+  const allLore = await db.lorebooks.orderBy("id").toArray();
+  const selected = new Set((selectedIds || []).map(Number));
+
+  root.innerHTML = "";
+  if (allLore.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No Lorebooks available.";
+    root.appendChild(empty);
+    return;
+  }
+
+  allLore.forEach((entry) => {
+    const label = document.createElement("label");
+    label.className = "check-item lorebook-entry";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = String(entry.id);
+    checkbox.checked = selected.has(Number(entry.id));
+    checkbox.addEventListener("change", () => {
+      setModalDirtyState("character-modal", true);
+    });
+
+    const textWrapper = document.createElement("span");
+    textWrapper.className = "lorebook-entry-text";
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "lorebook-entry-name";
+    nameSpan.textContent = entry.name || "Untitled";
+
+    const idSpan = document.createElement("span");
+    idSpan.className = "lorebook-entry-id";
+    idSpan.textContent = `#${entry.id}`;
+
+    textWrapper.append(nameSpan, idSpan);
+    label.append(checkbox, textWrapper);
+    root.appendChild(label);
+  });
+}
+
+function getSelectedLorebookIds() {
+  return Array.from(
+    document.querySelectorAll(
+      "#char-lorebooks-list input[type='checkbox']:checked",
+    ),
+  )
+    .map((el) => Number(el.value))
+    .filter((id) => Number.isInteger(id));
+}
+
+function onTextAreaFileDragOver(e) {
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+}
+
+async function onTextAreaFileDrop(e) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  const file = e.dataTransfer?.files?.[0];
+  if (!target || !file) return;
+  try {
+    const text = await file.text();
+    target.value = String(text || "");
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+    showToast(tf("loadedFileIntoField", { name: file.name }), "success");
+  } catch {
+    await openInfoDialog(t("dropFailedTitle"), t("dropReadFailed"));
+  }
+}
+
+const MAX_AVATAR_SIZE_MB = 10;
+const MAX_AVATAR_SIZE_BYTES = MAX_AVATAR_SIZE_MB * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+];
+
+function setupCharAvatarDropzone() {
+  const dropzone = document.getElementById("char-avatar-dropzone");
+  const fileInput = document.getElementById("char-avatar-file-input");
+  if (!dropzone || !fileInput) return;
+
+  dropzone.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const tempInput = document.createElement("input");
+    tempInput.type = "file";
+    tempInput.accept = "image/*,video/mp4";
+    tempInput.multiple = true;
+    tempInput.style.position = "fixed";
+    tempInput.style.top = "0";
+    tempInput.style.left = "0";
+    tempInput.style.opacity = "0";
+    document.body.appendChild(tempInput);
+
+    tempInput.addEventListener("change", (event) => {
+      if (event.target.files && event.target.files.length > 0) {
+        handleAvatarFiles(event.target.files);
+      }
+      document.body.removeChild(tempInput);
+    });
+
+    tempInput.click();
+  });
+
+  dropzone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      // Trigger click on the dropzone
+      dropzone.click();
+    }
+  });
+
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("drag-over");
+  });
+
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.classList.remove("drag-over");
+  });
+
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropzone.classList.remove("drag-over");
+    const files = e.dataTransfer?.files;
+    if (files) handleAvatarFiles(files);
+  });
+
+  fileInput.addEventListener("change", (e) => {
+    const files = e.target.files;
+    if (files) handleAvatarFiles(files);
+    fileInput.value = "";
+  });
+}
+
+function triggerAvatarFileSelect() {
+  console.log("triggerAvatarFileSelect called");
+  const fileInput = document.getElementById("char-avatar-file-input");
+  console.log("fileInput:", fileInput);
+  if (fileInput) fileInput.click();
+}
+
+window.triggerAvatarFileSelect = triggerAvatarFileSelect;
+
+async function handleAvatarFiles(files) {
+  for (const file of files) {
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      openInfoDialog(
+        t("invalidFileTitle"),
+        "Please choose an image or MP4 video file.",
+      );
+      continue;
+    }
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      openInfoDialog(
+        t("invalidFileTitle"),
+        `File must be less than ${MAX_AVATAR_SIZE_MB}MB.`,
+      );
+      continue;
+    }
+    await addAvatarFromFile(file);
+  }
+}
+
+function addAvatarFromFile(file) {
+  return new Promise((resolve) => {
+    const avatarType = file.type.startsWith("video") ? "video" : "image";
+    state.charModalAvatars.push({
+      type: avatarType,
+      data: file,
+      name: file.name,
+    });
+    setModalDirtyState("character-modal", true);
+    renderCharAvatars();
+    resolve();
+  });
+}
+
+function renderCharAvatars() {
+  const container = document.getElementById("char-avatars-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+  container.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  state.charModalAvatars.forEach((avatar, index) => {
+    const item = document.createElement("div");
+    item.className = "char-avatar-item" + (index === 0 ? " is-main" : "");
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    const avatarSrc =
+      avatar.data instanceof Blob
+        ? getCachedAvatarBlobUrl(avatar.data)
+        : avatar.data;
+    if (avatar.type === "video") {
+      const video = document.createElement("video");
+      video.src = avatarSrc;
+      video.muted = true;
+      video.loop = true;
+      video.preload = "metadata";
+      video.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openVideoPreview(avatarSrc);
+      });
+      video.addEventListener("mousedown", (e) => e.preventDefault());
+      item.addEventListener("mouseenter", () => {
+        video.play().catch(() => {});
+      });
+      item.addEventListener("mouseleave", () => {
+        video.pause();
+        video.currentTime = 0;
+      });
+      item.appendChild(video);
+    } else {
+      const img = document.createElement("img");
+      img.src = avatarSrc;
+      img.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openImagePreview(avatarSrc);
+      });
+      img.addEventListener("mousedown", (e) => e.preventDefault());
+      item.appendChild(img);
+    }
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "avatar-remove-btn";
+    removeBtn.innerHTML = "&times;";
+    removeBtn.title = "Remove";
+    removeBtn.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const ok = await openConfirmDialog(
+        t("removeAvatarTitle"),
+        t("removeAvatarConfirm"),
+      );
+      if (!ok) return;
+      removeAvatar(index);
+    };
+    item.appendChild(removeBtn);
+
+    if (index === 0) {
+      const mainBadge = document.createElement("span");
+      mainBadge.className = "avatar-main-badge";
+      mainBadge.textContent = "Main";
+      item.appendChild(mainBadge);
+    } else {
+      const setMainBtn = document.createElement("button");
+      setMainBtn.className = "avatar-set-main-btn";
+      setMainBtn.innerHTML = "&#9733;";
+      setMainBtn.title = "Set as main";
+      setMainBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setAvatarAsMain(index);
+      };
+      item.appendChild(setMainBtn);
+    }
+
+    const orderOverlay = document.createElement("div");
+    orderOverlay.className = "char-avatar-order";
+
+    const movePrevBtn = document.createElement("button");
+    movePrevBtn.className = "avatar-order-btn avatar-order-btn-prev";
+    movePrevBtn.type = "button";
+    movePrevBtn.title = "Move earlier";
+    movePrevBtn.innerHTML = "&#8592;";
+    movePrevBtn.disabled = index === 0;
+    movePrevBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      moveAvatar(index, -1);
+    };
+
+    const moveNextBtn = document.createElement("button");
+    moveNextBtn.className = "avatar-order-btn avatar-order-btn-next";
+    moveNextBtn.type = "button";
+    moveNextBtn.title = "Move later";
+    moveNextBtn.innerHTML = "&#8594;";
+    moveNextBtn.disabled = index === state.charModalAvatars.length - 1;
+    moveNextBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      moveAvatar(index, 1);
+    };
+
+    orderOverlay.appendChild(movePrevBtn);
+    orderOverlay.appendChild(moveNextBtn);
+    item.appendChild(orderOverlay);
+
+    container.appendChild(item);
+  });
+
+  const dropzone = document.createElement("div");
+  dropzone.id = "char-avatar-dropzone";
+  dropzone.className = "char-avatar-dropzone";
+  dropzone.setAttribute("tabindex", "0");
+  dropzone.setAttribute("role", "button");
+  dropzone.setAttribute("aria-label", "Upload avatar");
+  dropzone.innerHTML = `
+    <span class="dropzone-plus">+</span>
+    <span class="dropzone-hint">Drag & drop or click</span>
+  `;
+  container.appendChild(dropzone);
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.id = "char-avatar-file-input";
+  fileInput.className = "visually-hidden";
+  fileInput.accept = "image/*,video/mp4";
+  fileInput.multiple = true;
+  container.appendChild(fileInput);
+
+  setupCharAvatarDropzone();
+}
+
+function removeAvatar(index) {
+  state.charModalAvatars.splice(index, 1);
+  setModalDirtyState("character-modal", true);
+  renderCharAvatars();
+}
+
+function setAvatarAsMain(index) {
+  if (index === 0) return;
+  const avatar = state.charModalAvatars.splice(index, 1)[0];
+  state.charModalAvatars.unshift(avatar);
+  setModalDirtyState("character-modal", true);
+  renderCharAvatars();
+}
+
+function moveAvatar(index, offset) {
+  const targetIndex = index + offset;
+  if (
+    !Number.isInteger(index) ||
+    !Number.isInteger(targetIndex) ||
+    targetIndex < 0 ||
+    targetIndex >= state.charModalAvatars.length
+  ) {
+    return;
+  }
+  const avatar = state.charModalAvatars.splice(index, 1)[0];
+  state.charModalAvatars.splice(targetIndex, 0, avatar);
+  setModalDirtyState("character-modal", true);
+  renderCharAvatars();
+}
+
+async function duplicateCharacter(characterId) {
+  const source = await db.characters.get(characterId);
+  if (!source) return;
+  const copy = {
+    ...source,
+    lorebookIds: Array.isArray(source.lorebookIds)
+      ? [...source.lorebookIds]
+      : [],
+    tags: Array.isArray(source.tags) ? [...source.tags] : [],
+    avatars: Array.isArray(source.avatars) ? [...source.avatars] : [],
+    name: `${source.name} Copy`,
+    pinned: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  delete copy.id;
+  await db.characters.add(copy);
+  await renderCharacters();
+  showToast(t("characterDuplicated"), "success");
+}
+
+async function exportCharacter(characterId) {
+  const character = await db.characters.get(characterId);
+  if (!character) {
+    showToast(t("characterNotFound"), "error");
+    return;
+  }
+
+  const safeName = (character.name || "character").replace(/[^\w-]+/g, "_");
+
+  const processedCharacter = { ...character };
+
+  if (Array.isArray(processedCharacter.avatars)) {
+    processedCharacter.avatars = await Promise.all(
+      processedCharacter.avatars.map(async (avatar) => {
+        if (avatar.data instanceof Blob) {
+          const base64 = await blobToBase64(avatar.data);
+          return { ...avatar, data: base64 };
+        }
+        return avatar;
+      })
+    );
+  }
+
+  if (
+    processedCharacter.avatar &&
+    processedCharacter.avatar instanceof Blob
+  ) {
+    processedCharacter.avatar = await blobToBase64(processedCharacter.avatar);
+  }
+
+  const uniqueWiIds = new Set();
+  const charWiId = processedCharacter.writingInstructionId;
+  if (charWiId && charWiId !== "none") {
+    uniqueWiIds.add(String(charWiId));
+  }
+  if (Array.isArray(processedCharacter.definitions)) {
+    for (const def of processedCharacter.definitions) {
+      const defWiId = def?.writingInstructionId;
+      if (defWiId && defWiId !== "none") {
+        uniqueWiIds.add(String(defWiId));
+      }
+    }
+  }
+
+  const payload = {
+    schema: "rp-character-export-v1",
+    exportedAt: new Date().toISOString(),
+    character: processedCharacter,
+  };
+  delete payload.character.id;
+
+  const charBlob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  downloadBlob(charBlob, `${safeName}.rpchar.json`);
+
+  let exportedWiCount = 0;
+  for (const wiId of uniqueWiIds) {
+    const wi = normalizeWritingInstructionRecord(
+      await db.writingInstructions.get(Number(wiId))
+    );
+    if (!wi) continue;
+
+    const interfaceLang = state.settings.interfaceLanguage || "en";
+    const content =
+      wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
+
+    const wiBlob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const wiSafeName = wi.name.replace(/[^a-z0-9]/gi, "_");
+    downloadBlob(wiBlob, `${safeName}_${wiSafeName}.md`);
+    exportedWiCount++;
+  }
+
+  let toastMsg = t("characterExported");
+  if (exportedWiCount > 0) {
+    toastMsg += ` (+${exportedWiCount} writing instruction${exportedWiCount > 1 ? "s" : ""})`;
+  }
+  showToast(toastMsg, "success");
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function buildLegacyInitialMessagesFromPayload(source) {
+  const list = [];
+  if (!source || typeof source !== "object") return list;
+  const pushText = (value) => {
+    const text = String(value || "").trim();
+    if (!text) return;
+    list.push({
+      role: "assistant",
+      apiRole: "assistant",
+      content: text,
+    });
+  };
+  const primary = source.first_mes ?? source.firstMes;
+  if (primary) {
+    pushText(primary);
+  }
+  const alt = Array.isArray(source.alternate_greetings)
+    ? source.alternate_greetings
+    : [];
+  alt.forEach((entry) => {
+    let candidate = "";
+    if (typeof entry === "string") {
+      candidate = entry;
+    } else if (entry && typeof entry === "object") {
+      candidate =
+        entry.message ||
+        entry.text ||
+        entry.greeting ||
+        entry.value ||
+        entry.content ||
+        "";
+    }
+    pushText(candidate);
+  });
+  return list;
+}
+
+function normalizeLoreImportKeyList(raw) {
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter(Boolean);
+  }
+  if (typeof raw === "string") {
+    return raw
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  if (raw && typeof raw === "object") {
+    return Object.values(raw)
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function mapImportedLorebookPayload(payload, fallbackName = "") {
+  if (!payload || typeof payload !== "object") return null;
+  const entriesSource = payload.entries;
+  const rawEntries = Array.isArray(entriesSource)
+    ? entriesSource
+    : entriesSource && typeof entriesSource === "object"
+      ? Object.values(entriesSource)
+      : [];
+  const entries = rawEntries
+    .map((entry, idx) => {
+      if (!entry || typeof entry !== "object") return null;
+      const keys = normalizeLoreImportKeyList(entry.key ?? entry.keys);
+      const secondaryKeys = normalizeLoreImportKeyList(
+        entry.keysecondary ?? entry.secondary_keys,
+      );
+      const content = String(entry.content || "").trim();
+      if (!content || keys.length === 0) return null;
+      return {
+        id: Number(entry.id) || Date.now() + idx,
+        keys,
+        secondaryKeys,
+        content,
+      };
+    })
+    .filter(Boolean);
+
+  if (entries.length === 0) return null;
+
+  const nameCandidate = String(
+    payload.name || payload.title || payload.label || "",
+  ).trim();
+  const scanDepth = Math.max(
+    5,
+    Math.min(100, Number(payload.scan_depth ?? payload.scanDepth) || 50),
+  );
+  const tokenBudget = Math.max(
+    100,
+    Math.min(1000, Number(payload.token_budget ?? payload.tokenBudget) || 200),
+  );
+  const description = String(payload.description || "").trim();
+  const recursiveScanning =
+    payload.recursive_scanning ?? payload.recursiveScanning ?? false;
+
+  return {
+    name: nameCandidate || fallbackName || "",
+    description,
+    scanDepth,
+    tokenBudget,
+    recursiveScanning: Boolean(recursiveScanning),
+    entries,
+  };
+}
+
+async function importLorebookFromFile(e) {
+  const input = e?.target;
+  const file = input?.files?.[0];
+  if (input) input.value = "";
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    const fallbackName = file.name ? file.name.replace(/\.[^.]+$/, "") : "";
+    const record = mapImportedLorebookPayload(payload, fallbackName);
+    if (!record) {
+      throw new Error("Imported lorebook contains no valid entries.");
+    }
+    openLoreEditor(record);
+  } catch (err) {
+    console.error("Lore book import failed", err);
+    await openInfoDialog(
+      t("importFailedTitle"),
+      tf("importFailed", {
+        error: err?.message || t("unknownError"),
+      }),
+    );
+  }
+}
+
+function applyCharacterSettingsDefaults(character) {
+  if (!character) return;
+  if (character.useMemory === undefined) character.useMemory = true;
+  if (character.usePostProcessing === undefined)
+    character.usePostProcessing = true;
+  if (character.autoTriggerAiFirstMessage === undefined)
+    character.autoTriggerAiFirstMessage = true;
+  if (character.autoTitleEnabled === undefined)
+    character.autoTitleEnabled = true;
+  const resolvedAutoTitleMinMessages =
+    state.settings.defaultAutoTitleMinMessages ??
+    DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
+  if (character.autoTitleMinMessages === undefined)
+    character.autoTitleMinMessages = resolvedAutoTitleMinMessages;
+  if (character.personaPrefixEnabled === undefined)
+    character.personaPrefixEnabled = true;
+  if (character.includeOocInCompletions === undefined)
+    character.includeOocInCompletions =
+      state.settings.defaultIncludeOocInCompletions ??
+      DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
+  if (character.avatarScale === undefined)
+    character.avatarScale =
+      state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale;
+  if (character.loreCooldown === undefined) character.loreCooldown = 20;
+
+  if (Array.isArray(character.definitions)) {
+    const defaultPlacement =
+      state.settings.defaultPersonaInjectionPlacement ||
+      DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+    const defaultTtsProvider =
+      state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+    const defaultTtsRate =
+      state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
+
+    character.definitions.forEach((def) => {
+      if (def) {
+        if (!def.personaInjectionPlacement) {
+          def.personaInjectionPlacement = defaultPlacement;
+        }
+        if (!def.ttsProvider) {
+          def.ttsProvider = defaultTtsProvider;
+        }
+        if (def.ttsRate === undefined || def.ttsRate === null) {
+          def.ttsRate = defaultTtsRate;
+        }
+        if (!def.kokoroDtype) {
+          def.kokoroDtype = "auto";
+        }
+      }
+    });
+  }
+}
+
+async function importCharacterFromFile(e) {
+  const file = e.target.files?.[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    let character = null;
+
+    if (parsed?.spec === "chara_card_v2") {
+      const data = parsed?.data;
+      if (!data || typeof data !== "object") {
+        throw new Error("Invalid character card format: missing data object");
+      }
+      const name = String(data.name || "").trim();
+      if (!name) {
+        throw new Error("Character card missing required field: name");
+      }
+      const description = String(data.description || "").trim();
+      const personality = String(data.personality || "").trim();
+      const legacyInitialMessages = buildLegacyInitialMessagesFromPayload(data);
+      const initialMessagesRaw =
+        legacyInitialMessages.length > 0
+          ? formatInitialMessagesForEditor(legacyInitialMessages)
+          : "";
+      const initialMessages = legacyInitialMessages.map((message) => ({
+        ...message,
+      }));
+      let avatarUrl = String(data.avatar || "").trim();
+      let avatarData = "";
+      if (avatarUrl) {
+        try {
+          showToast("Downloading avatar...", "success");
+          const response = await fetch(avatarUrl);
+          if (!response.ok) throw new Error("Failed to download avatar");
+          const blob = await response.blob();
+          avatarData = await blobToBase64(blob);
+        } catch {
+          avatarUrl = "";
+        }
+      }
+      const scenario = String(data.scenario || "").trim();
+      const postHistory = String(data.post_history_instructions || "").trim();
+      let tags = [];
+      if (Array.isArray(data.tags)) {
+        const normalizedTags = data.tags.map((t) => normalizeTagValue(t));
+        const existingTags = getAllAvailableTags();
+        const existingLowerMap = new Map();
+        existingTags.forEach((t) => existingLowerMap.set(t.toLowerCase(), t));
+        const seen = new Set();
+        normalizedTags.forEach((t) => {
+          if (t && !seen.has(t.toLowerCase())) {
+            seen.add(t.toLowerCase());
+            tags.push(existingLowerMap.get(t.toLowerCase()) || t);
+          }
+        });
+      }
+      let writingInstructionId = "";
+      if (postHistory) {
+        const wiPayload = {
+          name: `${name} - Custom`,
+          instructions: { en: postHistory },
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        writingInstructionId = await db.writingInstructions.add(wiPayload);
+      }
+      mergeTagsIntoCatalog(tags);
+      const prompt = [description, personality].filter(Boolean).join("\n\n");
+      const language = "en";
+      const defaultPlacement =
+        state.settings.defaultPersonaInjectionPlacement ||
+        DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+      const defaultTtsProvider =
+        state.settings.defaultTtsProvider ||
+        DEFAULT_SETTINGS.defaultTtsProvider;
+      const defaultTtsRate =
+        state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
+      character = {
+        name,
+        selectedCardLanguage: language,
+        tags,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        definitions: [
+          {
+            language,
+            name,
+            tagline: "",
+            systemPrompt: prompt,
+            oneTimeExtraPrompt: scenario,
+            writingInstructions: postHistory || "",
+            writingInstructionId: String(writingInstructionId || ""),
+            initialMessagesRaw: initialMessagesRaw,
+            initialMessages: initialMessages,
+            personaInjectionPlacement: defaultPlacement,
+            ttsVoice: DEFAULT_TTS_VOICE,
+            ttsLanguage: DEFAULT_TTS_LANGUAGE,
+            ttsRate: defaultTtsRate,
+            ttsPitch: 1.1,
+            ttsProvider: defaultTtsProvider,
+            kokoroDevice: "webgpu",
+            kokoroDtype: "auto",
+            kokoroVoice: DEFAULT_KOKORO_VOICE,
+            preferLoreBooksMatchingLanguage: true,
+            lorebookIds: [],
+          },
+        ],
+      };
+      if (avatarData) {
+        character.definitions[0].avatar = avatarData;
+        character.avatar = avatarData;
+        character.avatars = [{ type: "image", data: avatarData, name: "" }];
+      }
+
+      if (data.character_book && typeof data.character_book === "object") {
+        const lorebookData = data.character_book;
+        const lorebookEntries = [];
+        if (Array.isArray(lorebookData.entries)) {
+          lorebookData.entries.forEach((entry) => {
+            if (entry && typeof entry === "object") {
+              const keys = Array.isArray(entry.keys)
+                ? entry.keys.map((k) => String(k || "").trim()).filter(Boolean)
+                : [];
+              const secondaryKeys = Array.isArray(entry.secondary_keys)
+                ? entry.secondary_keys.map((k) => String(k || "").trim()).filter(Boolean)
+                : [];
+              if (keys.length > 0) {
+                lorebookEntries.push({
+                  name: String(entry.name || "").trim(),
+                  keys: keys,
+                  secondaryKeys: secondaryKeys,
+                  content: String(entry.content || "").trim(),
+                });
+              }
+            }
+          });
+        }
+        if (lorebookEntries.length > 0) {
+          const lorebookPayload = {
+            name: String(lorebookData.name || `${name} Lorebook`).trim(),
+            description: String(lorebookData.description || "").trim(),
+            scanDepth: Math.max(5, Math.min(100, Number(lorebookData.scan_depth) || 50)),
+            tokenBudget: Math.max(0, Math.min(8192, Number(lorebookData.token_budget) || 2048)),
+            recursiveScanning: Boolean(lorebookData.recursive_scanning),
+            entries: lorebookEntries,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+          const newLorebookId = await db.lorebooks.add(lorebookPayload);
+          state.importedCharacterLorebookId = newLorebookId;
+          character.definitions[0].lorebookIds = [newLorebookId];
+        }
+      }
+    } else {
+      const imported = parsed?.character || parsed;
+      if (!imported || typeof imported !== "object") {
+        throw new Error("Invalid character file");
+      }
+      const rawTags = Array.isArray(imported.tags)
+        ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
+        : parseTagList(imported.tags || "");
+      const existingTags = getAllAvailableTags();
+      const existingLowerMap = new Map();
+      existingTags.forEach((t) => existingLowerMap.set(t.toLowerCase(), t));
+      const normalizedTags = rawTags.map(
+        (t) => existingLowerMap.get(t.toLowerCase()) || t,
+      );
+      mergeTagsIntoCatalog(rawTags);
+      character = {
+        ...imported,
+        name: String(imported.name || "").trim(),
+        tags: normalizedTags,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        personaInjectionPlacement: "end_system_prompt",
+      };
+      const legacyInitialMessagesFromImported =
+        buildLegacyInitialMessagesFromPayload(imported);
+      if (legacyInitialMessagesFromImported.length > 0) {
+        const formattedLegacyRaw = formatInitialMessagesForEditor(
+          legacyInitialMessagesFromImported,
+        );
+        if (Array.isArray(character.definitions)) {
+          character.definitions = character.definitions.map((def) => {
+            const copy = { ...def };
+            const hasExistingMessages =
+              Array.isArray(copy.initialMessages) &&
+              copy.initialMessages.length > 0;
+            const hasRaw =
+              String(copy.initialMessagesRaw || "").trim().length > 0;
+            if (!hasExistingMessages) {
+              copy.initialMessages =
+                copy.initialMessages && copy.initialMessages.length > 0
+                  ? copy.initialMessages
+                  : legacyInitialMessagesFromImported.map((message) => ({
+                      ...message,
+                    }));
+            }
+            if (!hasRaw) {
+              copy.initialMessagesRaw = formattedLegacyRaw;
+            }
+            return copy;
+          });
+        }
+      }
+      if (character.definitions && character.definitions.length > 0) {
+        character.definitions = character.definitions.map((def) => {
+          const updated = {
+            ...def,
+            personaInjectionPlacement:
+              def.personaInjectionPlacement || "end_system_prompt",
+            kokoroDtype: def.kokoroDtype || "auto",
+          };
+          const hasCustomInstructions =
+            typeof def.writingInstructions === "string" &&
+            def.writingInstructions.trim().length > 0;
+          updated.writingInstructionId = hasCustomInstructions
+            ? ""
+            : def.writingInstructionId || "none";
+          return updated;
+        });
+      }
+
+      if (parsed.character_book && typeof parsed.character_book === "object") {
+        const lorebookData = parsed.character_book;
+        const lorebookEntries = [];
+        if (Array.isArray(lorebookData.entries)) {
+          lorebookData.entries.forEach((entry) => {
+            if (entry && typeof entry === "object") {
+              const keys = Array.isArray(entry.keys)
+                ? entry.keys.map((k) => String(k || "").trim()).filter(Boolean)
+                : [];
+              const secondaryKeys = Array.isArray(entry.secondary_keys)
+                ? entry.secondary_keys.map((k) => String(k || "").trim()).filter(Boolean)
+                : [];
+              if (keys.length > 0) {
+                lorebookEntries.push({
+                  name: String(entry.name || "").trim(),
+                  keys: keys,
+                  secondaryKeys: secondaryKeys,
+                  content: String(entry.content || "").trim(),
+                });
+              }
+            }
+          });
+        }
+        if (lorebookEntries.length > 0) {
+          const lorebookPayload = {
+            name: String(lorebookData.name || `${character.name} Lorebook`).trim(),
+            description: String(lorebookData.description || "").trim(),
+            scanDepth: Math.max(5, Math.min(100, Number(lorebookData.scan_depth) || 50)),
+            tokenBudget: Math.max(0, Math.min(8192, Number(lorebookData.token_budget) || 2048)),
+            recursiveScanning: Boolean(lorebookData.recursive_scanning),
+            entries: lorebookEntries,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+          const newLorebookId = await db.lorebooks.add(lorebookPayload);
+          state.importedCharacterLorebookId = newLorebookId;
+          if (Array.isArray(character.definitions) && character.definitions.length > 0) {
+            character.definitions[0].lorebookIds = [newLorebookId];
+          }
+        }
+      }
+    }
+
+    if (!character.name) throw new Error("Character name is required in file");
+
+    applyCharacterSettingsDefaults(character);
+
+    renderCharacters();
+    showToast(t("characterImported"), "success");
+    openCharacterModal(character, null, true);
+  } catch (err) {
+    await openInfoDialog(t("importFailedTitle"), err.message);
+  }
+}
+
+async function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function exportDatabaseBackup() {
+  try {
+    const payload = await buildDatabaseBackupPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const safeDate = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .replace("T", "_")
+      .replace("Z", "");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `rp_llm_backend_backup_${safeDate}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+    showToast(t("databaseExported"), "success");
+  } catch (err) {
+    showToast(
+      tf("databaseExportFailed", { error: err.message || t("unknownError") }),
+      "error",
+    );
+  }
+}
+
+async function importDatabaseBackupFromFile(e) {
+  const file = e.target.files?.[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    validateDatabaseBackupPayload(parsed);
+
+    const ok = await openConfirmDialog(
+      t("importDatabase"),
+      t("databaseImportConfirm"),
+    );
+    if (!ok) return;
+
+    await restoreDatabaseBackupPayload(parsed);
+    showToast(t("databaseImportedReloading"), "success");
+    window.setTimeout(() => window.location.reload(), 600);
+  } catch (err) {
+    showToast(
+      tf("databaseImportFailed", { error: err.message || t("unknownError") }),
+      "error",
+    );
+  }
+}
+
+async function buildDatabaseBackupPayload() {
+  const tables = {};
+  for (const table of db.tables) {
+    tables[table.name] = await table.toArray();
+  }
+
+  if (tables.characters) {
+    tables.characters = await Promise.all(
+      tables.characters.map(async (char) => {
+        const processed = { ...char };
+        if (Array.isArray(processed.avatars)) {
+          processed.avatars = await Promise.all(
+            processed.avatars.map(async (avatar) => {
+              if (avatar.data instanceof Blob) {
+                const base64 = await blobToBase64(avatar.data);
+                return { ...avatar, data: base64 };
+              }
+              return avatar;
+            })
+          );
+        }
+        if (processed.avatar instanceof Blob) {
+          processed.avatar = await blobToBase64(processed.avatar);
+        }
+        if (Array.isArray(processed.definitions)) {
+          for (const def of processed.definitions) {
+            if (def.avatar instanceof Blob) {
+              def.avatar = await blobToBase64(def.avatar);
+            }
+            if (Array.isArray(def.avatars)) {
+              def.avatars = await Promise.all(
+                def.avatars.map(async (avatar) => {
+                  if (avatar.data instanceof Blob) {
+                    const base64 = await blobToBase64(avatar.data);
+                    return { ...avatar, data: base64 };
+                  }
+                  return avatar;
+                })
+              );
+            }
+          }
+        }
+        return processed;
+      })
+    );
+  }
+
+  if (tables.memories) {
+    tables.memories = tables.memories.map(({ embedding, ...rest }) => rest);
+  }
+
+  if (tables.assets) {
+    tables.assets = await Promise.all(
+      tables.assets.map(async (asset) => {
+        if (asset.data instanceof Blob) {
+          const base64 = await blobToBase64(asset.data);
+          return { ...asset, data: base64 };
+        }
+        return asset;
+      })
+    );
+    const validAssetTypes = ["image", "video", "sound"];
+    tables.assets = tables.assets.filter(
+      (asset) => asset.type && validAssetTypes.includes(asset.type),
+    );
+  }
+
+  const localState = {};
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith("rp-")) continue;
+    localState[key] = localStorage.getItem(key);
+  }
+  return {
+    schema: "rp-db-backup-v1",
+    exportedAt: new Date().toISOString(),
+    dbName: db.name,
+    dbVersion: Number(db.verno || 0),
+    tables,
+    localStorage: localState,
+  };
+}
+
+function validateDatabaseBackupPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Invalid backup payload.");
+  }
+  if (String(payload.schema || "").trim() !== "rp-db-backup-v1") {
+    throw new Error("Unsupported backup schema.");
+  }
+  if (!payload.tables || typeof payload.tables !== "object") {
+    throw new Error("Backup does not contain tables.");
+  }
+}
+
+async function restoreDatabaseBackupPayload(payload) {
+  const tableMap = new Map(db.tables.map((table) => [table.name, table]));
+  const validAssetTypes = ["image", "video", "sound"];
+  await db.transaction("rw", ...db.tables, async () => {
+    for (const table of db.tables) {
+      await table.clear();
+    }
+    for (const [tableName, rows] of Object.entries(payload.tables || {})) {
+      const table = tableMap.get(tableName);
+      if (!table || !Array.isArray(rows) || rows.length === 0) continue;
+      let rowsToInsert = rows;
+      if (tableName === "assets") {
+        rowsToInsert = rows.filter(
+          (asset) =>
+            asset.type && validAssetTypes.includes(asset.type),
+        );
+      }
+      if (rowsToInsert.length > 0) {
+        await table.bulkPut(rowsToInsert);
+      }
+    }
+  });
+
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith("rp-")) keysToRemove.push(key);
+  }
+  keysToRemove.forEach((k) => localStorage.removeItem(k));
+  Object.entries(payload.localStorage || {}).forEach(([key, value]) => {
+    if (!key.startsWith("rp-")) return;
+    localStorage.setItem(key, String(value ?? ""));
+  });
+}
+
+async function deleteCharacter(characterId) {
+  const ok = await openConfirmDialog(
+    "Delete Character",
+    "Delete this character and all related threads?",
+  );
+  if (!ok) return;
+
+  await db.transaction(
+    "rw",
+    db.characters,
+    db.threads,
+    db.memories,
+    db.sessions,
+    async () => {
+      await db.characters.delete(characterId);
+      await db.threads.where("characterId").equals(characterId).delete();
+      await db.memories.where("characterId").equals(characterId).delete();
+      await db.sessions.where("characterId").equals(characterId).delete();
+    },
+  );
+
+  // Clean up stored modal scroll and collapse states for this character
+  const prefix = `rp-char-collapse-${characterId}-`;
+  const lastLangKey = `rp-char-modal-last-lang-${characterId}`;
+  const keysToDelete = [lastLangKey];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) {
+      keysToDelete.push(key);
+    }
+  }
+  keysToDelete.forEach((k) => localStorage.removeItem(k));
+
+  if (currentCharacter?.id === characterId) {
+    currentCharacter = null;
+    currentThread = null;
+    conversationHistory = [];
+    showMainView();
+  }
+
+  await renderAll();
+  showToast(t("characterDeleted"), "success");
+}
+
+async function startNewThread(characterId, forcedPersonaId = null) {
+  const character = await db.characters.get(characterId);
+  if (!character) return;
+  const resolvedCharacter = resolveCharacterForLanguage(
+    character,
+    character?.selectedCardLanguage || "",
+  );
+  let selectedPersona = null;
+  if (forcedPersonaId) {
+    selectedPersona = await db.personas.get(forcedPersonaId);
+  }
+  if (!selectedPersona) {
+    selectedPersona = await getCharacterDefaultPersona();
+  }
+  const initialMessages = await buildThreadInitialMessages(resolvedCharacter);
+
+  const newThread = {
+    characterId,
+    characterLanguage: resolvedCharacter.activeLanguage || "",
+    title: tf("threadTitleAtDate", { date: new Date().toLocaleString() }),
+    titleGenerated: false,
+    titleManual: false,
+    messages: initialMessages,
+    selectedPersonaId: selectedPersona?.id || null,
+    initialUserName: selectedPersona?.name || "You",
+    autoTtsEnabled: false,
+    lastPersonaInjectionPersonaId: null,
+    writingInstructionsTurnCount: 0,
+    pendingGenerationReason: "",
+    pendingGenerationQueuedAt: 0,
+    shortcutsVisible: false,
+    oocModeEnabled: false,
+    chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
+    unloadState: { loadLimit: 0 },
+    initialMessageIndex: 0,
+    initialMessagesRemoved: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  const threadId = await db.threads.add(newThread);
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId,
+    updatedAt: newThread.updatedAt,
+  });
+  await renderThreads();
+  await renderCharacters();
+  await openThread(threadId);
+  const shouldAutoTriggerFirstAi =
+    (resolvedCharacter?.autoTriggerAiFirstMessage ?? true) !== false;
+  const shouldTriggerFromInitial =
+    state.settings.autoReplyEnabled !== false &&
+    shouldAutoReplyFromInitialMessages(initialMessages);
+  const shouldTriggerWithoutInitial =
+    shouldAutoTriggerFirstAi && initialMessages.length === 0;
+  if (shouldTriggerFromInitial || shouldTriggerWithoutInitial) {
+    await requestBotReplyForCurrentThread("new_thread_auto_first_reply");
+  }
+  showToast(t("threadCreated"), "success");
+}
+
+async function forkThreadFromMessage(messageIndex) {
+  if (!currentThread) return;
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return;
+  const source = await db.threads.get(threadId);
+  if (!source) return;
+  if (threadHasPendingBotActivity(source)) {
+    showToast(t("generationQueuedNotice"), "warning");
+    return;
+  }
+
+  const count = conversationHistory.length;
+  if (count === 0) return;
+  const requestedIndex = Number.isInteger(Number(messageIndex))
+    ? Number(messageIndex)
+    : count - 1;
+  const boundedIndex = Math.max(0, Math.min(count - 1, requestedIndex));
+  const targetMessage = conversationHistory[boundedIndex];
+  if (!targetMessage) return;
+
+  const truncated = conversationHistory.slice(0, boundedIndex + 1);
+  if (truncated.length === 0) return;
+  const cloneMessages = (() => {
+    if (typeof structuredClone === "function") {
+      return structuredClone(truncated);
+    }
+    return truncated.map((msg) => JSON.parse(JSON.stringify(msg)));
+  })();
+
+  const titleTarget =
+    source.title || tf("threadTitleDefault", { id: source.id });
+  const copyTitle = tf("threadTitleForked", { title: titleTarget });
+  const writingCount =
+    computeWritingInstructionsTurnCountFromMessages(cloneMessages);
+  const copy = {
+    characterId: source.characterId,
+    characterLanguage: source.characterLanguage || "",
+    title: copyTitle,
+    titleGenerated: false,
+    titleManual: true,
+    messages: cloneMessages,
+    selectedPersonaId: source.selectedPersonaId || null,
+    autoTtsEnabled: source.autoTtsEnabled === true,
+    lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
+    personaInjectionOnceUsed: !!source.personaInjectionOnceUsed,
+    writingInstructionsTurnCount: writingCount,
+    shortcutsVisible: source.shortcutsVisible === true,
+    oocModeEnabled: source.oocModeEnabled === true,
+    chatOpacity: getThreadChatOpacity(source),
+    favorite: false,
+    pendingGenerationReason: "",
+    pendingGenerationQueuedAt: 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  const newThreadId = await db.threads.add(copy);
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: newThreadId,
+    updatedAt: Date.now(),
+  });
+
+  const lastMessageTimestamp = Number(targetMessage.createdAt);
+  const cutoffTimestamp = Number.isFinite(lastMessageTimestamp)
+    ? lastMessageTimestamp
+    : Date.now();
+
+  // Build a map of memoryId to the indices of messages that have that summaryId
+  const memoryIdToIndices = new Map();
+  conversationHistory.forEach((msg, idx) => {
+    const summaryId = Number(msg?.summaryId);
+    if (Number.isInteger(summaryId) && summaryId > 0) {
+      if (!memoryIdToIndices.has(summaryId)) {
+        memoryIdToIndices.set(summaryId, []);
+      }
+      memoryIdToIndices.get(summaryId).push(idx);
+    }
+  });
+
+  // Get all memory entries for the source character and thread
+  const allMemoryEntries = await getMemoryEntries(
+    source.characterId,
+    source.id,
+  );
+
+  // Filter entries: only those where all messages with that summaryId are within the truncated set (index <= boundedIndex)
+  const safeMemoryEntries = allMemoryEntries.filter((entry) => {
+    const indices = memoryIdToIndices.get(entry.id) || [];
+    if (indices.length === 0) {
+      // Not referenced by any message, skip
+      return false;
+    }
+    // All referencing message indices must be <= boundedIndex
+    return indices.every((idx) => idx <= boundedIndex);
+  });
+
+  // Copy safe memory entries to the new thread
+  const mapping = new Map();
+  if (safeMemoryEntries.length > 0) {
+    await db.transaction("rw", db.memories, async () => {
+      for (const entry of safeMemoryEntries) {
+        const entryCopy = { ...entry };
+        delete entryCopy.id;
+        entryCopy.threadId = newThreadId;
+        entryCopy.characterId = source.characterId;
+        const newId = await db.memories.add(entryCopy);
+        mapping.set(entry.id, newId);
+      }
+    });
+  }
+
+  // Remap message references: summaryId and summaryProtected
+  const remapId = (value) => {
+    const num = Number(value);
+    if (Number.isInteger(num) && mapping.has(num)) {
+      return mapping.get(num);
+    }
+    // No mapping: clear reference
+    return null;
+  };
+  const remappedMessages = cloneMessages.map((msg) => {
+    const next = { ...msg };
+    const newSummaryId = remapId(next.summaryId);
+    const newProtectedId = remapId(next.summaryProtected);
+    if (newSummaryId !== null) {
+      next.summaryId = newSummaryId;
+    } else {
+      delete next.summaryId;
+    }
+    if (newProtectedId !== null) {
+      next.summaryProtected = newProtectedId;
+    } else {
+      delete next.summaryProtected;
+    }
+    return next;
+  });
+  await db.threads.update(newThreadId, { messages: remappedMessages });
+
+  state.promptHistory = Array.isArray(state.promptHistory)
+    ? state.promptHistory
+    : [];
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
+    ? state.promptCommandHistory
+    : [];
+
+  const promptEntriesToCopy = (state.promptHistory || [])
+    .filter((entry) => entry.threadId === threadId)
+    .filter((entry) => {
+      const created = Number(entry.createdAt || 0);
+      return created <= cutoffTimestamp;
+    })
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+  let promptHistoryChanged = false;
+  for (const entry of promptEntriesToCopy) {
+    state.promptHistory.push({
+      threadId: newThreadId,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      isOoc: entry.isOoc || false,
+      personaId: entry.personaId ?? null,
+      personaColor: entry.personaColor ?? "",
+    });
+    promptHistoryChanged = true;
+  }
+  if (promptHistoryChanged) {
+    if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
+      state.promptHistory = state.promptHistory.slice(-PROMPT_HISTORY_MAX);
+    }
+    savePromptHistory();
+  }
+
+  const promptCommandEntriesToCopy = (state.promptCommandHistory || [])
+    .filter((entry) => entry.threadId === threadId)
+    .filter((entry) => {
+      const created = Number(entry.createdAt || 0);
+      return created <= cutoffTimestamp;
+    })
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+  let promptCommandHistoryChanged = false;
+  for (const entry of promptCommandEntriesToCopy) {
+    state.promptCommandHistory.push({
+      threadId: newThreadId,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      isOoc: entry.isOoc || false,
+      personaId: entry.personaId ?? null,
+      personaColor: entry.personaColor ?? "",
+    });
+    promptCommandHistoryChanged = true;
+  }
+  if (promptCommandHistoryChanged) {
+    if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+      state.promptCommandHistory = state.promptCommandHistory.slice(
+        -PROMPT_COMMAND_HISTORY_MAX,
+      );
+    }
+    savePromptCommandHistory();
+  }
+
+  await renderThreads();
+  await renderCharacters();
+  await openThread(newThreadId);
+  showToast(t("threadForked"), "success");
+}
+
+async function duplicateThread(threadId) {
+  const source = await db.threads.get(threadId);
+  if (!source) return;
+  if (threadHasPendingBotActivity(source)) {
+    showToast(t("generationQueuedNotice"), "warning");
+    return;
+  }
+
+  // Ensure arrays exist
+  state.promptHistory = Array.isArray(state.promptHistory)
+    ? state.promptHistory
+    : [];
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
+    ? state.promptCommandHistory
+    : [];
+
+  const clonedMessages = (() => {
+    const list = Array.isArray(source.messages) ? source.messages : [];
+    if (typeof structuredClone === "function") {
+      return structuredClone(list);
+    }
+    return list.map((m) => JSON.parse(JSON.stringify(m)));
+  })();
+
+  const copy = {
+    characterId: source.characterId,
+    characterLanguage: source.characterLanguage || "",
+    title: `${source.title || tf("threadTitleDefault", { id: source.id })} Copy`,
+    titleGenerated: !!source.titleGenerated,
+    titleManual: !!source.titleManual,
+    messages: clonedMessages,
+    selectedPersonaId: source.selectedPersonaId || null,
+    autoTtsEnabled: source.autoTtsEnabled === true,
+    lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
+    personaInjectionOnceUsed: !!source.personaInjectionOnceUsed,
+    writingInstructionsTurnCount:
+      Number(source.writingInstructionsTurnCount) >= 0
+        ? Number(source.writingInstructionsTurnCount)
+        : 0,
+    shortcutsVisible: source.shortcutsVisible === true,
+    oocModeEnabled: source.oocModeEnabled === true,
+    chatOpacity: getThreadChatOpacity(source),
+    favorite: false,
+    initialMessagesRemoved: source.initialMessagesRemoved === true,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  const newThreadId = await db.threads.add(copy);
+  const memoryMapping = await duplicateThreadMemories(
+    source.characterId,
+    source.id,
+    newThreadId,
+  );
+  if (memoryMapping.size > 0) {
+    const remapId = (value) => {
+      const num = Number(value);
+      return Number.isInteger(num) && memoryMapping.has(num)
+        ? memoryMapping.get(num)
+        : null;
+    };
+    const remappedMessages = copy.messages.map((msg) => {
+      const next = { ...msg };
+      const newSummaryId = remapId(next.summaryId);
+      const newProtectedId = remapId(next.summaryProtected);
+      if (newSummaryId !== null) {
+        next.summaryId = newSummaryId;
+      } else {
+        delete next.summaryId;
+      }
+      if (newProtectedId !== null) {
+        next.summaryProtected = newProtectedId;
+      } else {
+        delete next.summaryProtected;
+      }
+      return next;
+    });
+    await db.threads.update(newThreadId, { messages: remappedMessages });
+  } else {
+    const needsCleanup = copy.messages.some(
+      (msg) => msg.summaryId || msg.summaryProtected,
+    );
+    if (needsCleanup) {
+      const cleanedMessages = copy.messages.map((msg) => {
+        const next = { ...msg };
+        delete next.summaryId;
+        delete next.summaryProtected;
+        return next;
+      });
+      await db.threads.update(newThreadId, { messages: cleanedMessages });
+    }
+  }
+
+  // Duplicate prompt history entries for the new thread
+  const originalPromptEntries = (state.promptHistory || []).filter(
+    (e) => e.threadId === threadId,
+  );
+  for (const entry of originalPromptEntries) {
+    state.promptHistory.push({
+      threadId: newThreadId,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      isOoc: entry.isOoc || false,
+      personaId: entry.personaId ?? null,
+      personaColor: entry.personaColor ?? "",
+    });
+  }
+  if (originalPromptEntries.length > 0) {
+    if (state.promptHistory.length > PROMPT_HISTORY_MAX) {
+      state.promptHistory = state.promptHistory.slice(-PROMPT_HISTORY_MAX);
+    }
+    savePromptHistory();
+  }
+
+  // Duplicate command history entries for the new thread
+  const originalCommandEntries = (state.promptCommandHistory || []).filter(
+    (e) => e.threadId === threadId,
+  );
+  for (const entry of originalCommandEntries) {
+    state.promptCommandHistory.push({
+      threadId: newThreadId,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      isOoc: entry.isOoc || false,
+      personaId: entry.personaId ?? null,
+      personaColor: entry.personaColor ?? "",
+    });
+  }
+  if (originalCommandEntries.length > 0) {
+    if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+      state.promptCommandHistory = state.promptCommandHistory.slice(
+        -PROMPT_COMMAND_HISTORY_MAX,
+      );
+    }
+    savePromptCommandHistory();
+  }
+
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: newThreadId,
+    updatedAt: Date.now(),
+  });
+  await renderThreads();
+  await renderCharacters();
+  await openThread(newThreadId);
+  showToast(t("threadDuplicated"), "success");
+}
+
+async function duplicateThreadMemories(
+  characterId,
+  originalThreadId,
+  newThreadId,
+) {
+  const mapping = new Map();
+  const charId = Number(characterId || 0);
+  const oldThreadId = Number(originalThreadId || 0);
+  const targetThreadId =
+    Number.isInteger(Number(newThreadId)) && Number(newThreadId) > 0
+      ? Number(newThreadId)
+      : null;
+  if (charId <= 0 || oldThreadId <= 0 || !targetThreadId) {
+    return mapping;
+  }
+  const entries = await getMemoryEntries(charId, oldThreadId);
+  if (!entries.length) return mapping;
+  await db.transaction("rw", db.memories, async () => {
+    for (const entry of entries) {
+      const entryId = Number(entry.id);
+      if (!Number.isInteger(entryId) || entryId <= 0) continue;
+      const copy = { ...entry };
+      delete copy.id;
+      copy.threadId = targetThreadId;
+      copy.characterId = charId;
+      const newId = await db.memories.add(copy);
+      mapping.set(entryId, newId);
+    }
+  });
+  return mapping;
+}
+
+async function toggleThreadFavorite(threadId) {
+  const thread = await db.threads.get(threadId);
+  if (!thread) return;
+  const next = !thread.favorite;
+  await db.threads.update(threadId, { favorite: next, updatedAt: Date.now() });
+  if (currentThread?.id === threadId) {
+    currentThread.favorite = next;
+  }
+  await renderThreads();
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId,
+    updatedAt: Date.now(),
+  });
+  showToast(next ? t("threadFavorited") : t("threadUnfavorited"), "success");
+}
+
+async function deleteThread(threadId) {
+  const ok = await openConfirmDialog(
+    t("deleteThreadTitle"),
+    t("deleteThreadConfirm"),
+  );
+  if (!ok) return;
+
+  localStorage.removeItem(`rp-thread-scroll-${threadId}`);
+
+  if (
+    state.sending &&
+    Number(state.activeGenerationThreadId) === Number(threadId) &&
+    state.abortController
+  ) {
+    cancelOngoingGeneration();
+  }
+  state.generationQueue = state.generationQueue.filter(
+    (id) => Number(id) !== Number(threadId),
+  );
+  try {
+    await db.threads.update(threadId, {
+      pendingGenerationReason: "",
+      pendingGenerationQueuedAt: 0,
+      updatedAt: Date.now(),
+    });
+  } catch {
+    // thread might already be gone
+  }
+  await db.threads.delete(threadId);
+  state.selectedThreadIds.delete(Number(threadId));
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId,
+    updatedAt: Date.now(),
+  });
+  if (currentThread?.id === threadId) {
+    currentThread = null;
+    currentCharacter = null;
+    conversationHistory = [];
+    showMainView();
+    updateAutoTtsToggleButton();
+  }
+  await renderThreads();
+  await renderCharacters();
+  showToast(t("threadDeleted"), "success");
+}
+
+async function openThread(threadId) {
+  const chatViewActive = document
+    .getElementById("chat-view")
+    ?.classList.contains("active");
+  if (chatViewActive && Number(currentThread?.id) === Number(threadId)) {
+    return;
+  }
+  state.pendingTitleGeneration = false;
+  if (chatViewActive && currentThread) {
+    const log = document.getElementById("chat-log");
+    if (log) {
+      localStorage.setItem(
+        `rp-thread-scroll-${currentThread.id}`,
+        log.scrollTop,
+      );
+    }
+    const input = document.getElementById("user-input");
+    const draftValue = input?.value?.trim() || "";
+    if (draftValue) {
+      currentThread.draftInput = draftValue;
+      db.threads.update(currentThread.id, { draftInput: draftValue });
+    }
+  }
+  delete state.threadUnreadCounts[Number(threadId)];
+  const thread = await db.threads.get(threadId);
+  if (!thread) return;
+  if (thread.initialMessagesRemoved === true) {
+    const rawMessages = Array.isArray(thread.messages) ? thread.messages : [];
+    const hasInitial = rawMessages.some((msg) => msg?.isInitial);
+    if (hasInitial) {
+      const filtered = rawMessages.filter((msg) => !msg?.isInitial);
+      thread.messages = filtered;
+      try {
+        await db.threads.update(threadId, { messages: filtered });
+      } catch (err) {
+        console.warn("Failed to remove persisted initial messages", err);
+      }
+    }
+  }
+
+  if (
+    Number.isInteger(thread.initialMessageIndex) &&
+    thread.initialMessageIndex >= 0
+  ) {
+    state.initialMessageIndexByThread[Number(threadId)] =
+      thread.initialMessageIndex;
+  }
+
+  window.stopTtsPlayback();
+  stopAllSfx();
+  const characterBase = await db.characters.get(thread.characterId);
+  const character = characterBase
+    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
+    : null;
+  currentThread = {
+    ...thread,
+    writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
+    initialMessagesRemoved: thread.initialMessagesRemoved === true,
+  };
+  if (!currentThread.unloadState) {
+    const hasInitialMessages = (thread.messages || []).some((m) => m.isInitial);
+    const nonInitialCount = (thread.messages || []).filter(
+      (m) => !m.isInitial,
+    ).length;
+    currentThread.unloadState = {
+      loadLimit: 0,
+      totalMessageCount: nonInitialCount + (hasInitialMessages ? 1 : 0),
+      loadedStartIndex: 0,
+      displayIndexOffset: 0,
+    };
+  }
+  applyChatOpacitySetting(getThreadChatOpacity(thread));
+  if (!thread.characterLanguage && character?.activeLanguage) {
+    currentThread.characterLanguage = character.activeLanguage;
+    await db.threads.update(thread.id, {
+      characterLanguage: character.activeLanguage,
+    });
+  }
+  currentCharacter = character || null;
+  state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
+  preloadKokoroForActiveCharacter();
+
+  const snapshot = buildThreadConversationSnapshot(
+    thread,
+    state.settings.autoUnloadThreshold || 0,
+  );
+  conversationHistory = snapshot.conversationHistory;
+  currentThread.unloadState = snapshot.unloadState;
+  await db.threads.update(thread.id, {
+    unloadState: currentThread.unloadState,
+  });
+
+  let initialOrdinal = 0;
+  conversationHistory.forEach((msg) => {
+    if (msg?.isInitial) {
+      msg.initialMessageIndex = initialOrdinal;
+      initialOrdinal += 1;
+    }
+  });
+
+  await applyChatViewBackgroundFromSfx(currentThread);
+  playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
+  currentPersona = thread.selectedPersonaId
+    ? await db.personas.get(thread.selectedPersonaId)
+    : null;
+  try {
+    await renderPersonaSelector();
+  } catch (e) {
+    console.warn("Persona selector render failed:", e);
+  }
+
+  updateChatTitle();
+  updateThreadRenameButtonState();
+  updateAutoTtsToggleButton();
+  updateChatInputToggles();
+  updateModelPill();
+  hideModel3DPanel();
+  updateModel3DToggleButton();
+  restoreModel3DPanelState(thread.id);
+  state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
+
+  for (const msg of conversationHistory) {
+    if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+      msg.unreadAt = 0;
+    }
+  }
+  if (thread.messages) {
+    for (const msg of thread.messages) {
+      if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+        msg.unreadAt = 0;
+      }
+    }
+  }
+  if (currentThread?.messages) {
+    for (const msg of currentThread.messages) {
+      if (msg?.role === "assistant" && Number(msg.unreadAt) > 0) {
+        msg.unreadAt = 0;
+      }
+    }
+  }
+  state.unreadNeedsUserScrollThreadId = null;
+  const unloadStateToSave = currentThread.unloadState || {
+    loadLimit: 0,
+    totalMessageCount: conversationHistory.length,
+    loadedStartIndex: 0,
+    displayIndexOffset: 0,
+  };
+  await persistThreadMessagesById(Number(threadId), conversationHistory, {
+    _skipUpdatedAt: true,
+    _retainConversationHistory: true,
+    unloadState: unloadStateToSave,
+  });
+  renderChat();
+  const input = document.getElementById("user-input");
+  input.value = thread.draftInput || "";
+  state.activeShortcut = null;
+  closePromptHistory();
+  await renderShortcutsBar();
+  await renderThreads();
+  setSendingState();
+  ensureUnloadButton();
+  updateUnloadButtonVisibility();
+  updateScrollBottomButtonVisibility();
+  showChatView();
+  const savedScroll = localStorage.getItem(`rp-thread-scroll-${threadId}`);
+  const log = document.getElementById("chat-log");
+  if (log && savedScroll) {
+    log.scrollTop = Number(savedScroll);
+  } else if (log) {
+    log.scrollTop = log.scrollHeight;
+  }
+  broadcastSyncEvent({ type: "thread-viewed", threadId: Number(threadId) });
+  if (thread.pendingGenerationReason) {
+    const id = Number(thread.id);
+    if (!state.generationQueue.includes(id)) state.generationQueue.push(id);
+  }
+  await processNextQueuedThread();
+}
+
+function threadHasPendingBotActivity(thread) {
+  if (!thread) return false;
+  const id = Number(thread.id);
+  if (state.sending && Number(state.activeGenerationThreadId) === id) {
+    return true;
+  }
+  if (String(thread.pendingGenerationReason || "").trim()) return true;
+  if (!thread.messages) return false;
+  const messages = Array.isArray(thread.messages) ? thread.messages : [];
+  return messages.some((m) => {
+    if (!m || m.role !== "assistant") return false;
+    const st = String(m.generationStatus || "").trim();
+    return (
+      st === "queued" ||
+      st === "cooling_down" ||
+      st === "generating" ||
+      st === "regenerating"
+    );
+  });
+}
+
+function threadHasActiveGeneratingMessage(thread) {
+  if (!thread) return false;
+  if (String(thread.pendingGenerationReason || "").trim()) return true;
+  if (!thread.messages) return false;
+  const messages = Array.isArray(thread.messages) ? thread.messages : [];
+  return messages.some((m) => {
+    if (!m) return false;
+    const role = normalizeApiRole(m?.apiRole || m?.role);
+    if (role !== "assistant") return false;
+    const status = String(m.generationStatus || "").trim();
+    return status === "generating" || status === "regenerating";
+  });
+}
+
+function threadHasActiveSummarizingMessage(thread) {
+  if (!thread) return false;
+  if (!thread.messages) return false;
+  const messages = Array.isArray(thread.messages) ? thread.messages : [];
+  return messages.some((m) => {
+    if (!m) return false;
+    const role = normalizeApiRole(m?.apiRole || m?.role);
+    if (role !== "assistant") return false;
+    const status = String(m.generationStatus || "").trim();
+    return status === "summarizing";
+  });
+}
+
+function updateThreadRenameButtonState() {
+  const btn = document.getElementById("rename-thread-btn");
+  if (!btn) return;
+  btn.innerHTML = ICONS.edit;
+  btn.disabled = !currentThread;
+}
+
+function updateAutoTtsToggleButton() {
+  const btn = document.getElementById("auto-tts-toggle-btn");
+  if (!btn) return;
+  btn.innerHTML = ICONS.speaker;
+  const enabled = !!(currentThread && currentThread.autoTtsEnabled === true);
+  btn.classList.toggle("is-active", enabled);
+  btn.disabled = !currentThread;
+  btn.setAttribute(
+    "title",
+    enabled ? t("autoTtsTitleOn") : t("autoTtsTitleOff"),
+  );
+  btn.setAttribute(
+    "aria-label",
+    enabled ? t("disableAutoTtsAria") : t("enableAutoTtsAria"),
+  );
+}
+
+function updateChatInputToggles() {
+  const autoReplyEnabled = document.getElementById("auto-reply-enabled");
+  const enterToSendEnabled = document.getElementById("enter-to-send-enabled");
+  if (!autoReplyEnabled && !enterToSendEnabled) return;
+  const threadAutoReply = currentThread?.autoReplyEnabled;
+  const threadEnterToSend = currentThread?.enterToSendEnabled;
+  const globalAutoReply = state.settings.autoReplyEnabled;
+  const globalEnterToSend = state.settings.enterToSendEnabled;
+  if (autoReplyEnabled) {
+    const isActive =
+      threadAutoReply !== undefined
+        ? threadAutoReply
+        : globalAutoReply !== false;
+    autoReplyEnabled.classList.toggle("is-active", isActive);
+    autoReplyEnabled.disabled = !currentThread;
+  }
+  if (enterToSendEnabled) {
+    const isActive =
+      threadEnterToSend !== undefined
+        ? threadEnterToSend
+        : globalEnterToSend !== false;
+    enterToSendEnabled.classList.toggle("is-active", isActive);
+    enterToSendEnabled.disabled = !currentThread;
+  }
+  updateOocModeUi();
+}
+
+function updateOocModeUi() {
+  const btn = document.getElementById("ooc-mode-toggle");
+  const container = document.getElementById("user-input-container");
+  const isActive = currentThread?.oocModeEnabled === true;
+  if (btn) {
+    btn.classList.toggle("is-active", isActive);
+    btn.disabled = !currentThread;
+    btn.setAttribute(
+      "title",
+      isActive ? t("oocModeTitleOn") : t("oocModeTitleOff"),
+    );
+    btn.setAttribute(
+      "aria-label",
+      isActive ? t("disableOocModeAria") : t("enableOocModeAria"),
+    );
+  }
+  if (container) {
+    container.classList.toggle("ooc-active", isActive);
+  }
+  applyPersonaColorStyles();
+}
+
+function applyPersonaColorStyles() {
+  const color = normalizePersonaColor(currentPersona?.color);
+  const isOocActive = currentThread?.oocModeEnabled === true;
+  if (isOocActive) {
+    document.documentElement.style.removeProperty("--persona-color");
+    document.documentElement.style.removeProperty("--persona-input-bg");
+  } else {
+    document.documentElement.style.setProperty("--persona-color", color);
+    document.documentElement.style.setProperty(
+      "--persona-input-bg",
+      hexToRgba(color, 0.08),
+    );
+  }
+  if (state.promptHistoryOpen) {
+    const list = document.getElementById("prompt-history-list");
+    if (list) {
+      applyPersonaColorToPromptHistoryList(list);
+    }
+  }
+}
+
+function applyPersonaColorToPromptHistoryList(root) {
+  if (!root) return;
+  root.querySelectorAll(".prompt-history-item").forEach((btn) => {
+    if (btn.classList.contains("ooc-prompt")) return;
+    const personaColorValue = String(btn.dataset.personaColor || "").trim();
+    if (!personaColorValue) {
+      btn.style.removeProperty("border-color");
+      btn.style.removeProperty("background-color");
+      return;
+    }
+    const color = normalizePersonaColor(personaColorValue);
+    btn.style.borderColor = color;
+    btn.style.backgroundColor = hexToRgba(color, 0.12);
+  });
+}
+
+function applyPersonaColorToUserMessageBlock(block, message) {
+  if (!block) return;
+  const shouldTint = message && message.role === "user" && message.ooc !== true;
+  if (!shouldTint) {
+    block.style.removeProperty("border-color");
+    block.style.removeProperty("background-color");
+    return;
+  }
+  const personaColorValue = String(message.personaColor || "").trim();
+  if (!personaColorValue) {
+    block.style.removeProperty("border-color");
+    block.style.removeProperty("background-color");
+    return;
+  }
+  const color = normalizePersonaColor(personaColorValue);
+  block.style.borderColor = color;
+  block.style.backgroundColor = hexToRgba(color, 0.12);
+}
+
+async function toggleThreadAutoTts() {
+  if (!currentThread) return;
+  const next = !(currentThread.autoTtsEnabled === true);
+  currentThread.autoTtsEnabled = next;
+  await db.threads.update(currentThread.id, {
+    autoTtsEnabled: next,
+  });
+  updateAutoTtsToggleButton();
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: currentThread.id,
+  });
+  showToast(next ? t("autoTtsEnabled") : t("autoTtsDisabled"), "success");
+}
+
+async function toggleSttRecording() {
+  if (state.settings.sttMode === "auto-stop") {
+    if (state.stt.isListening) {
+      await stopSttRecording();
+    } else {
+      await startSttRecording();
+    }
+  }
+}
+
+async function startSttRecording() {
+  if (!currentThread) {
+    showToast(t("sttNoThread"), "error");
+    return;
+  }
+
+  window.stopTtsPlayback();
+  state.stt.threadId = currentThread?.id || null;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.stt.stream = stream;
+    state.stt.audioContext = new (
+      window.AudioContext || window.webkitAudioContext
+    )();
+    state.stt.mediaRecorder = new MediaRecorder(stream);
+    state.stt.audioChunks = [];
+
+    state.stt.mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        state.stt.audioChunks.push(e.data);
+      }
+    };
+
+    state.stt.mediaRecorder.onstop = async () => {
+      stopSilenceDetection();
+      const audioBlob = new Blob(state.stt.audioChunks, { type: "audio/webm" });
+      if (state.stt.stream) {
+        state.stt.stream.getTracks().forEach((track) => track.stop());
+        state.stt.stream = null;
+      }
+      if (state.stt.audioContext) {
+        await state.stt.audioContext.close();
+        state.stt.audioContext = null;
+      }
+      state.stt.mediaRecorder = null;
+
+      if (audioBlob.size > 0) {
+        await processSttAudio(audioBlob);
+      }
+    };
+
+    state.stt.mediaRecorder.start();
+    state.stt.isListening = true;
+    state.stt.silenceStartTime = null;
+    updateSttToggleButton();
+
+    if (state.settings.sttMode === "push-to-talk") {
+      showToast(t("sttHoldToTalk"), "info");
+    } else {
+      showToast(t("sttListeningAutoStop"), "info");
+      if (typeof createSilenceDetector === "function") {
+        startSilenceDetection();
+      }
+    }
+  } catch (e) {
+    console.error("STT recording failed:", e);
+    showToast(t("sttErrorMic"), "error");
+  }
+}
+
+function startSilenceDetection() {
+  if (!state.stt.audioContext || !state.stt.stream) return;
+
+  state.stt.silenceDetector = createSilenceDetector(
+    state.stt.audioContext,
+    state.stt.stream,
+    onSilenceDetected,
+  );
+
+  checkSilence();
+}
+
+function checkSilence() {
+  if (!state.stt.isListening || !state.stt.silenceDetector) return;
+
+  const level = state.stt.silenceDetector.getAudioLevel();
+  const silenceThreshold = -40;
+  const silenceDuration = state.settings.sttSilenceDuration || 2;
+
+  if (level < silenceThreshold) {
+    if (!state.stt.silenceStartTime) {
+      state.stt.silenceStartTime = Date.now();
+    } else if (
+      Date.now() - state.stt.silenceStartTime >
+      silenceDuration * 1000
+    ) {
+      onSilenceDetected();
+      return;
+    }
+  } else {
+    state.stt.silenceStartTime = null;
+  }
+
+  state.stt.animationFrameId = requestAnimationFrame(checkSilence);
+}
+
+function stopSilenceDetection() {
+  if (state.stt.animationFrameId) {
+    cancelAnimationFrame(state.stt.animationFrameId);
+    state.stt.animationFrameId = null;
+  }
+  state.stt.silenceDetector = null;
+  state.stt.silenceStartTime = null;
+}
+
+function onSilenceDetected() {
+  stopSilenceDetection();
+  showToast(t("sttSilenceDetected"), "info");
+  stopSttRecording();
+}
+
+async function stopSttRecording() {
+  if (state.stt.mediaRecorder && state.stt.isListening) {
+    stopSilenceDetection();
+    state.stt.mediaRecorder.stop();
+    state.stt.isListening = false;
+    state.stt.isPushToTalkActive = false;
+    updateSttToggleButton();
+  }
+}
+
+async function processSttAudio(audioBlob) {
+  const input = document.getElementById("user-input");
+  if (!input) return;
+
+  const originalThreadId = state.stt.threadId;
+  state.stt.threadId = null;
+
+  showToast(t("sttProcessing"), "info");
+
+  try {
+    if (!window.sttReady) {
+      await loadSttModel();
+    }
+
+    const language = state.settings.sttLanguage || "en";
+    console.log("STT Processing: Language from settings:", language);
+    const text = await transcribeAudio(audioBlob, language);
+
+    if (text) {
+      if (currentThread?.id !== originalThreadId) {
+        showToast(t("sttWrongThread"), "warn");
+        return;
+      }
+
+      const existingText = input.value.trim();
+      input.value = existingText ? `${existingText} ${text}` : text;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+
+      showToast(t("sttTranscribed"), "success");
+
+      if (state.stt.autoSend) {
+        setTimeout(() => {
+          const sendBtn = document.getElementById("send-btn");
+          if (sendBtn) sendBtn.click();
+        }, 100);
+      }
+    } else {
+      showToast(t("sttNoSpeech"), "warn");
+    }
+  } catch (e) {
+    console.error("STT transcription failed:", e);
+    showToast(t("sttError"), "error");
+  }
+}
+
+function updateSttToggleButton() {
+  const btn = document.getElementById("stt-toggle-btn");
+  if (!btn) return;
+
+  if (state.stt.isListening) {
+    btn.classList.add("is-active", "stt-recording");
+    btn.setAttribute("data-i18n-title", "sttTitleOn");
+    btn.title =
+      state.settings.sttMode === "push-to-talk"
+        ? t("sttHoldToTalk")
+        : t("sttListeningAutoStop");
+    btn.innerHTML = ICONS.micFilled;
+  } else {
+    btn.classList.remove("is-active", "stt-recording");
+    btn.setAttribute("data-i18n-title", "sttTitleOff");
+    btn.title =
+      state.settings.sttMode === "push-to-talk"
+        ? t("sttPushToTalkHint")
+        : t("sttAutoStopHint");
+    btn.innerHTML = ICONS.mic;
+  }
+}
+
+function updateSttButtonForMode() {
+  updateSttToggleButton();
+  updateSttAutoSendButton();
+}
+
+function toggleSttAutoSend() {
+  state.stt.autoSend = !state.stt.autoSend;
+  state.settings.sttAutoSend = state.stt.autoSend;
+  saveSettings();
+  updateSttAutoSendButton();
+  showToast(
+    state.stt.autoSend ? t("sttAutoSendEnabled") : t("sttAutoSendDisabled"),
+    "success",
+  );
+}
+
+function updateSttAutoSendButton() {
+  const btn = document.getElementById("stt-auto-send-toggle-btn");
+  if (!btn) return;
+
+  if (state.stt.autoSend) {
+    btn.classList.add("is-active");
+    btn.setAttribute("data-i18n-title", "sttAutoSendOn");
+    btn.title = "STT Auto-send: On";
+  } else {
+    btn.classList.remove("is-active");
+    btn.setAttribute("data-i18n-title", "sttAutoSendOff");
+    btn.title = "STT Auto-send: Off";
+  }
+}
+
+async function maybeAutoSpeakAssistantMessage(messageIndex) {
+  if (!currentThread || currentThread.autoTtsEnabled !== true) return;
+  if (!window.ttsState.voiceSupportReady) return;
+  const msg = conversationHistory[messageIndex];
+  if (!msg || msg.role !== "assistant") return;
+  if (!String(msg.content || "").trim()) return;
+  try {
+    await window.toggleMessageSpeech(messageIndex);
+  } catch {
+    // keep silent for auto mode failures
+  }
+}
+
+async function renameCurrentThread() {
+  if (!currentThread) return;
+  await renameThread(currentThread.id);
+}
+
+async function renameThread(threadId) {
+  const thread = await db.threads.get(threadId);
+  if (!thread) return;
+  const next = await openTextInputDialog({
+    title: t("renameThreadTitle"),
+    label: t("threadTitleLabel"),
+    value: thread.title || tf("threadTitleDefault", { id: thread.id }),
+    saveLabel: "Save",
+    cancelLabel: "Cancel",
+    maxLength: 128,
+  });
+  if (next === null) return;
+  const title = String(next || "")
+    .trim()
+    .slice(0, 128);
+  if (!title) {
+    await openInfoDialog(t("missingFieldTitle"), t("threadTitleRequired"));
+    return;
+  }
+  await db.threads.update(thread.id, {
+    title,
+    titleManual: true,
+    titleGenerated: true,
+  });
+  if (currentThread?.id === thread.id) {
+    currentThread.title = title;
+    currentThread.titleManual = true;
+    currentThread.titleGenerated = true;
+    updateChatTitle();
+  }
+  await renderThreads();
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: thread.id,
+    updatedAt,
+  });
+  showToast(t("threadRenamed"), "success");
+}
+
+function updateChatTitle() {
+  const titleEl = document.getElementById("chat-title");
+  if (!titleEl) return;
+  if (!currentThread) {
+    applyHoverMarquee(titleEl, t("threadWord"));
+    return;
+  }
+  const displayTitle =
+    currentThread.title || tf("threadTitleDefault", { id: currentThread.id });
+  applyHoverMarquee(titleEl, displayTitle);
+}
+
+function applyHoverMarquee(element, fullText) {
+  if (!element) return;
+  const text = String(fullText || "");
+  const behavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
+  if (behavior === "disabled") {
+    element.classList.remove(
+      "hover-marquee",
+      "marquee-overflow",
+      "marquee-always",
+    );
+    element.style.removeProperty("--marquee-shift");
+    element.style.removeProperty("--marquee-duration");
+    element.textContent = text;
+    element.setAttribute("title", text);
+    return;
+  }
+  let inner = element.querySelector(".hover-marquee-inner");
+  if (!inner) {
+    inner = document.createElement("span");
+    inner.className = "hover-marquee-inner";
+    element.textContent = "";
+    element.appendChild(inner);
+  }
+  inner.textContent = text;
+  element.classList.add("hover-marquee");
+  element.setAttribute("title", text);
+  requestAnimationFrame(() => updateHoverMarqueeState(element));
+}
+
+function updateHoverMarqueeState(element) {
+  if (!element) return;
+  const inner = element.querySelector(".hover-marquee-inner");
+  if (!inner) return;
+  const behavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
+  const overflow = Math.ceil(inner.scrollWidth - element.clientWidth);
+  const canAnimate = overflow > 8 && behavior !== "disabled";
+  if (canAnimate) {
+    element.classList.add("marquee-overflow");
+    element.classList.toggle("marquee-always", behavior === "always");
+    element.style.setProperty("--marquee-shift", `-${overflow}px`);
+    const durationSec = Math.max(7, Math.min(22, overflow / 24 + 6));
+    element.style.setProperty("--marquee-duration", `${durationSec}s`);
+  } else {
+    element.classList.remove("marquee-overflow");
+    element.classList.remove("marquee-always");
+    element.style.removeProperty("--marquee-shift");
+    element.style.removeProperty("--marquee-duration");
+  }
+}
+
+function refreshAllHoverMarquees() {
+  document.querySelectorAll(".hover-marquee").forEach((el) => {
+    updateHoverMarqueeState(el);
+  });
+}
+
+async function maybeGenerateTitleBeforeBotReply() {
+  if (!currentThread || !currentCharacter) return true;
+  if (currentCharacter.autoTitleEnabled === false) return true;
+  if (currentThread.titleGenerated === true) {
+    state.pendingTitleGeneration = false;
+    return true;
+  }
+  if (currentThread.titleManual === true) return true;
+  const minMessages = Math.max(
+    1,
+    Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10),
+  );
+  const displayHistory = getFilteredConversationHistoryForThread(currentThread);
+  const inSimulationHistory = getInSimulationMessages(displayHistory);
+  // Generate title if either we have enough messages OR pending flag is set
+  if (inSimulationHistory.length < minMessages && !state.pendingTitleGeneration)
+    return true;
+
+  const existingTitleMessage = conversationHistory.find(
+    (m) =>
+      m.ooc !== true &&
+      m.role === "assistant" &&
+      m.generationStatus === "title_generating",
+  );
+  if (existingTitleMessage) return true;
+
+  const hasExistingPendingMessage = conversationHistory.some(
+    (m) =>
+      m.ooc !== true &&
+      m.role === "assistant" &&
+      (m.generationStatus === "generating" ||
+        m.generationStatus === "regenerating" ||
+        m.generationStatus === "queued" ||
+        m.generationStatus === "cooling_down"),
+  );
+  if (hasExistingPendingMessage) return true;
+
+  // Clear the pending flag
+  state.pendingTitleGeneration = false;
+
+  // Create pending message for title generation (will be used for bot reply too)
+  const pendingTitleMessage = {
+    role: "assistant",
+    content: "",
+    generationStatus: "title_generating",
+    createdAt: Date.now(),
+    finishReason: "",
+    nativeFinishReason: "",
+    truncatedByFilter: false,
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    model: state.settings.model || "",
+    temperature: Number(state.settings.temperature) || 0,
+    placeholder: true,
+  };
+  conversationHistory.push(pendingTitleMessage);
+  if (currentThread) {
+    currentThread.messages = [...conversationHistory];
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, conversationHistory);
+  }
+  const pendingIndex = conversationHistory.length - 1;
+
+  await persistCurrentThread();
+
+  const log = document.getElementById("chat-log");
+  if (log && isViewingThread(currentThread.id)) {
+    const pendingRow = buildMessageRow(
+      pendingTitleMessage,
+      pendingIndex,
+      true,
+      displayHistory,
+    );
+    log.appendChild(pendingRow);
+    const pendingContent = pendingRow?.querySelector(".message-content");
+    if (pendingContent) {
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingTitleLabel") || t("generatingLabel"))}`;
+    }
+    scrollChatToBottom();
+  }
+
+  setSendingState();
+
+  const titleSlice = inSimulationHistory.slice(0, minMessages);
+  const personaPrefixEnabled = currentCharacter?.personaPrefixEnabled !== false;
+  const transcript = titleSlice
+    .map((m) => {
+      const rawContent = String(m.content || "");
+      if (!rawContent.trim()) return "";
+      const isOoc = m.ooc === true;
+      const processed =
+        m.role === "assistant"
+          ? applySummaryMessagePreProcessing(rawContent)
+          : rawContent;
+      const trimmed = processed.trim();
+      if (!trimmed) return "";
+      let labelContent = trimmed;
+      if (isOoc) {
+        labelContent = `((OOC: ${labelContent}))`;
+      }
+      if (m.role === "assistant") {
+        return `[ASSISTANT]: ${labelContent}`;
+      } else {
+        if (personaPrefixEnabled && m.senderName && m.senderName !== "You") {
+          const personaName = String(m.senderName);
+          return `[USER (as ${personaName})]: ${labelContent}`;
+        }
+        return `[USER]: ${labelContent}`;
+      }
+    })
+    .filter((entry) => entry !== "")
+    .join("\n\n");
+  const languageCode =
+    normalizeBotLanguageCode(
+      currentThread.characterLanguage ||
+        currentCharacter.activeLanguage ||
+        "en",
+    ) || "en";
+
+  const userPromptTemplate =
+    state.settings.autoTitleUserPrompt ||
+    DEFAULT_SETTINGS.autoTitleUserPrompt;
+  const titlePrompt = userPromptTemplate
+    .replace(/\{\{transcript\}\}/g, transcript)
+    .replace(/\{\{languageCode\}\}/g, languageCode);
+
+  if (state.settings.useLocalAutoTitle) {
+    console.log('[app] useLocalAutoTitle is TRUE, calling local title...');
+    if (isViewingThread(currentThread.id)) {
+      showToast("Using local auto-title...", "info");
+    }
+    const localTitle = await window.getLocalTitle(transcript);
+    if (localTitle) {
+      const updatedAt = Date.now();
+      await db.threads.update(currentThread.id, {
+        title: localTitle,
+        titleGenerated: true,
+        titleManual: false,
+        updatedAt,
+      });
+      currentThread.title = localTitle;
+      currentThread.titleGenerated = true;
+      currentThread.titleManual = false;
+      currentThread.updatedAt = updatedAt;
+      state.lastSyncSeenUpdatedAt = updatedAt;
+      updateChatTitle();
+      await renderThreads();
+      pendingTitleMessage.generationStatus = "generating";
+      await persistCurrentThread();
+      if (isViewingThread(currentThread.id)) {
+        renderChat();
+      }
+      setSendingState();
+      return true;
+    } else {
+      if (isViewingThread(currentThread.id)) {
+        showToast("Local auto-title failed, using API", "warning");
+      }
+    }
+  }
+
+  try {
+    const result = await callOpenRouter(
+      state.settings.autoTitleSystemPrompt ||
+        DEFAULT_SETTINGS.autoTitleSystemPrompt,
+      [{ role: "user", content: titlePrompt }],
+      state.settings.autoTitleModel,
+      null,
+      null,
+      {
+        forceStream:
+          state.settings.defaultAutoTitleStream ??
+          DEFAULT_SETTINGS.defaultAutoTitleStream,
+        isTitleGeneration: true,
+      },
+    );
+    const raw = String(result?.content || "").trim();
+    if (!raw) {
+      conversationHistory.pop();
+      await persistCurrentThread();
+      if (isViewingThread(currentThread.id)) {
+        renderChat();
+      }
+      setSendingState();
+      return true;
+    }
+    const cleaned = raw
+      .replace(/^["'`]+|["'`]+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 128);
+    if (!cleaned) {
+      conversationHistory.pop();
+      await persistCurrentThread();
+      if (isViewingThread(currentThread.id)) {
+        renderChat();
+      }
+      setSendingState();
+      return true;
+    }
+
+    const updatedAt = Date.now();
+    await db.threads.update(currentThread.id, {
+      title: cleaned,
+      titleGenerated: true,
+      titleManual: false,
+      updatedAt,
+    });
+    currentThread.title = cleaned;
+    currentThread.titleGenerated = true;
+    currentThread.titleManual = false;
+    currentThread.updatedAt = updatedAt;
+    state.lastSyncSeenUpdatedAt = updatedAt;
+    updateChatTitle();
+    await renderThreads();
+
+    pendingTitleMessage.generationStatus = "generating";
+    await persistCurrentThread();
+
+    if (isViewingThread(currentThread.id)) {
+      renderChat();
+    }
+
+    setSendingState();
+
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId: currentThread.id,
+      updatedAt,
+    });
+    return true;
+  } catch (err) {
+    const detail = String(err?.message || t("unknownError"));
+    const errorMessage = tf("autoTitleFailed", { error: detail });
+    const idx = conversationHistory.indexOf(pendingTitleMessage);
+    if (idx >= 0) {
+      const failureMessage = conversationHistory[idx];
+      failureMessage.generationStatus = "";
+      failureMessage.placeholder = false;
+      failureMessage.content = "";
+      failureMessage.generationError = errorMessage;
+    }
+    await persistCurrentThread();
+    if (isViewingThread(currentThread.id)) {
+      renderChat();
+    }
+    setSendingState();
+    showToast(errorMessage, "error");
+    console.warn("Auto-title generation failed:", detail);
+    return false;
+  }
+}
+
+async function maybeGenerateThreadTitle() {
+  if (!currentThread || !currentCharacter) return;
+  if (currentCharacter.autoTitleEnabled === false) return;
+  if (currentThread.titleGenerated === true) return true;
+  if (currentThread.titleManual === true) return;
+  const minMessages = Math.max(
+    1,
+    Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10),
+  );
+  const inSimulationHistory = getInSimulationMessages(conversationHistory);
+  if (inSimulationHistory.length < minMessages) return;
+
+  const existingTitleMessage = conversationHistory.find(
+    (m) =>
+      m.ooc !== true &&
+      m.role === "assistant" &&
+      m.generationStatus === "title_generating",
+  );
+  if (existingTitleMessage) return;
+
+  const hasExistingPendingMessage = conversationHistory.some(
+    (m) =>
+      m.ooc !== true &&
+      m.role === "assistant" &&
+      (m.generationStatus === "generating" ||
+        m.generationStatus === "regenerating" ||
+        m.generationStatus === "queued" ||
+        m.generationStatus === "cooling_down" ||
+        m.generationStatus === "title_generating"),
+  );
+  if (hasExistingPendingMessage) return;
+
+  // Check if title was already generated by maybeGenerateTitleBeforeBotReply
+  if (currentThread.titleGenerated === true) return;
+
+  // Instead of generating title in a new bubble after bot message,
+  // set a flag so the NEXT bot reply will generate title first in the same bubble
+  state.pendingTitleGeneration = true;
+}
+
+async function loadMessagesFromDb(threadId, startIndex, count) {
+  const thread = await db.threads.get(threadId);
+  if (!thread?.messages) return [];
+  const messages = thread.messages;
+  const endIndex = Math.min(startIndex + count, messages.length);
+  const loaded = [];
+  for (let i = startIndex; i < endIndex; i++) {
+    const msg = messages[i];
+    if (msg) {
+      loaded.push({
+        ...msg,
+        role: msg.role === "ai" ? "assistant" : msg.role,
+      });
+    }
+  }
+  return loaded;
+}
+
+async function getFullHistoryFromDb(threadId) {
+  const thread = await db.threads.get(threadId);
+  if (!thread?.messages) return [];
+  return thread.messages.map((m) => ({
+    ...m,
+    role: m.role === "ai" ? "assistant" : m.role,
+  }));
+}
+
+function computeVisibleMessageIndices() {
+  const threshold = state.settings.autoUnloadThreshold || 0;
+  const thread = currentThread;
+  const unloadState = thread?.unloadState;
+  const totalMessages =
+    unloadState?.totalMessageCount || conversationHistory.length;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+
+  if (threshold === 0 || totalMessages <= threshold) {
+    console.debug(
+      "[computeVisible] Early return: threshold=0 or total <= threshold",
+      { threshold, totalMessages },
+    );
+    return {
+      indices: Array.from({ length: conversationHistory.length }, (_, i) => i),
+      loadLimit: 0,
+      startActive: 0,
+      hiddenCount: 0,
+      totalHiddenCount: 0,
+      totalMessages,
+      loadedStartIndex: 0,
+    };
+  }
+
+  const startActive = totalMessages - threshold;
+  const loadLimit = unloadState?.loadLimit || 0;
+  const clampedLoadLimit = Math.max(0, Math.min(loadLimit, startActive));
+  const totalHidden = startActive;
+  console.debug("[computeVisible]", {
+    threshold,
+    totalMessages,
+    startActive,
+    loadLimit,
+    clampedLoadLimit,
+    totalHidden,
+  });
+
+  const visible = [];
+  for (let i = startActive - clampedLoadLimit; i < startActive; i++) {
+    const memIndex = i - loadedStartIndex;
+    if (memIndex >= 0 && memIndex < conversationHistory.length) {
+      visible.push(memIndex);
+    }
+  }
+  const memStart = startActive - loadedStartIndex;
+  for (let i = 0; i < conversationHistory.length; i++) {
+    if (i >= memStart && !visible.includes(i)) {
+      visible.push(i);
+    }
+  }
+
+  return {
+    indices: visible.sort((a, b) => a - b),
+    loadLimit: clampedLoadLimit,
+    startActive,
+    hiddenCount: startActive - clampedLoadLimit,
+    totalHiddenCount: totalHidden,
+    totalMessages,
+    loadedStartIndex,
+  };
+}
+
+function ensureUnloadButton() {
+  const log = document.getElementById("chat-log");
+  if (!log) {
+    console.debug("[unloadButton] ensureUnloadButton: no log found");
+    return;
+  }
+  let btn = document.getElementById("unload-oldest-btn");
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "unload-oldest-btn";
+    btn.type = "button";
+    btn.classList.add("unload-oldest-btn");
+    btn.addEventListener("click", toggleUnloadBatch);
+    log.insertBefore(btn, log.firstChild);
+    console.debug("[unloadButton] ensureUnloadButton: created new button");
+  } else {
+    console.debug("[unloadButton] ensureUnloadButton: button already exists");
+  }
+}
+
+function updateUnloadButtonVisibility() {
+  const log = document.getElementById("chat-log");
+  const btn = document.getElementById("unload-oldest-btn");
+  if (!log || !btn || !currentThread) {
+    if (btn) btn.classList.add("hidden");
+    console.debug(
+      "[unloadButton] Early return: missing log, btn, or currentThread",
+      { hasLog: !!log, hasBtn: !!btn, hasThread: !!currentThread },
+    );
+    return;
+  }
+  const threshold = state.settings.autoUnloadThreshold || 0;
+  if (threshold === 0) {
+    btn.classList.add("hidden");
+    console.debug("[unloadButton] Hidden: threshold is 0");
+    return;
+  }
+  const vis = computeVisibleMessageIndices();
+  const hiddenCount = vis.hiddenCount || 0;
+  const loadLimit = vis.loadLimit || 0;
+  if (hiddenCount === 0 && loadLimit === 0) {
+    btn.classList.add("hidden");
+    console.debug("[unloadButton] Hidden: no hiddenCount and no loadLimit", {
+      hiddenCount,
+      loadLimit,
+    });
+    return;
+  }
+  // Always show button when there are hidden messages to load
+  // Only hide when user has loaded messages and scrolled away from top
+  const isScrolledAway = log.scrollTop > 200;
+  if (hiddenCount === 0 && isScrolledAway) {
+    btn.classList.add("hidden");
+    console.debug("[unloadButton] Hidden: scrolled away", {
+      scrollTop: log.scrollTop,
+    });
+    return;
+  }
+  btn.classList.remove("hidden");
+  if (hiddenCount > 0) {
+    const count = Math.min(threshold, hiddenCount);
+    const totalHidden = vis.totalHiddenCount || hiddenCount;
+    if (totalHidden > count) {
+      btn.textContent =
+        tf("unloadThresholdLoadButton", { count }) + ` (${totalHidden} hidden)`;
+    } else {
+      btn.textContent = tf("unloadThresholdLoadButton", { count });
+    }
+    btn.dataset.action = "load";
+  } else if (loadLimit > 0) {
+    btn.textContent = t("unloadThresholdHideButton");
+    btn.dataset.action = "hide";
+  } else {
+    btn.classList.add("hidden");
+  }
+  console.debug("[unloadButton] Shown:", {
+    hiddenCount,
+    loadLimit,
+    threshold,
+    scrollTop: log.scrollTop,
+  });
+}
+
+async function toggleUnloadBatch() {
+  if (!currentThread) return;
+  const threshold = state.settings.autoUnloadThreshold || 0;
+  if (threshold === 0) return;
+  const vis = computeVisibleMessageIndices();
+  const startActive = vis.startActive || 0;
+  let newLoadLimit = vis.loadLimit || 0;
+  const threadId = Number(currentThread.id);
+
+  if (vis.hiddenCount > 0) {
+    newLoadLimit = Math.min(startActive, newLoadLimit + threshold);
+    const loadStart = startActive - newLoadLimit;
+    const loaded = await loadMessagesFromDb(
+      threadId,
+      loadStart,
+      newLoadLimit - (vis.loadLimit || 0),
+    );
+    const existingStart = conversationHistory.map((m) => ({ ...m }));
+    const additionalSimulationCount = countSimulationMessages(loaded);
+    const previousOffset = currentThread.unloadState?.displayIndexOffset || 0;
+    const normalizedOffset = Math.max(
+      0,
+      previousOffset - additionalSimulationCount,
+    );
+    conversationHistory = [...loaded, ...existingStart];
+    currentThread.unloadState = {
+      ...currentThread.unloadState,
+      loadLimit: newLoadLimit,
+      loadedStartIndex: loadStart,
+      displayIndexOffset: normalizedOffset,
+    };
+  } else if (newLoadLimit > 0) {
+    newLoadLimit = 0;
+    const keepStart = vis.loadLimit;
+    const removed = conversationHistory.slice(0, keepStart);
+    const removedSimulationCount = countSimulationMessages(removed);
+    const prevOffset = currentThread.unloadState?.displayIndexOffset || 0;
+    conversationHistory = conversationHistory.slice(keepStart);
+    currentThread.unloadState = {
+      ...currentThread.unloadState,
+      loadLimit: 0,
+      loadedStartIndex: startActive,
+      displayIndexOffset: prevOffset + removedSimulationCount,
+    };
+  } else {
+    currentThread.unloadState = {
+      ...currentThread.unloadState,
+      loadLimit: newLoadLimit,
+    };
+  }
+
+  await db.threads.update(threadId, {
+    unloadState: {
+      loadLimit: currentThread.unloadState.loadLimit,
+      totalMessageCount: currentThread.unloadState.totalMessageCount,
+      loadedStartIndex: currentThread.unloadState.loadedStartIndex,
+      displayIndexOffset: currentThread.unloadState.displayIndexOffset || 0,
+    },
+  });
+
+  renderChat();
+  updateUnloadButtonVisibility();
+}
+
+function releaseMessageRowResources(row) {
+  if (!row) return;
+  row.querySelectorAll("img, video").forEach((media) => {
+    if (media.tagName === "VIDEO") {
+      media.pause();
+    }
+    media.removeAttribute("src");
+  });
+  const content = row.querySelector(".message-content");
+  if (content) content.innerHTML = "";
+}
+
+function releaseAllChatRowResources(log) {
+  if (!log) return;
+  Array.from(log.children).forEach((row) => releaseMessageRowResources(row));
+}
+
+function renderChat(startIdx, endIdx) {
+  const perfStart = performance.now();
+  const perfMarks = { clear: 0, build: 0, append: 0, total: 0 };
+
+  const log = document.getElementById("chat-log");
+  console.debug("[renderChat] Called", {
+    threadId: currentThread?.id,
+    historyLength: conversationHistory.length,
+    threshold: state.settings.autoUnloadThreshold,
+    hasUnloadState: !!currentThread?.unloadState,
+  });
+  const previousScrollTop = log.scrollTop;
+  const previousScrollHeight = log.scrollHeight;
+  const isAtBottom =
+    previousScrollHeight - previousScrollTop - log.clientHeight <= 50;
+  const savedScroll = currentThread
+    ? localStorage.getItem(`rp-thread-scroll-${currentThread.id}`)
+    : null;
+  const hasSavedScroll = savedScroll !== null;
+  const savedScrollTop = hasSavedScroll ? Number(savedScroll) : null;
+
+  // Determine range to render
+  const renderStart = startIdx !== undefined ? startIdx : 0;
+  const renderEnd =
+    endIdx !== undefined && endIdx !== null
+      ? endIdx
+      : conversationHistory.length - 1;
+
+  // Always do full render when no explicit range provided
+  const isFullRender = arguments.length === 0;
+
+  if (isFullRender) {
+    const clearStart = performance.now();
+    releaseAllChatRowResources(log);
+    log.innerHTML = "";
+    state.editingMessageIndex = null;
+    perfMarks.clear = performance.now() - clearStart;
+  }
+
+  if (!currentThread) return;
+  const displayHistory = getFilteredConversationHistoryForThread();
+  cachedInitialMessageDisplayIndex =
+    getFirstInitialDisplayIndex(displayHistory);
+
+  if (
+    conversationHistory.length === 0 &&
+    String(currentThread.pendingGenerationReason || "").trim()
+  ) {
+    const note = document.createElement("p");
+    note.className = "muted";
+    const pos =
+      state.generationQueue.indexOf(Number(currentThread.id)) >= 0
+        ? state.generationQueue.indexOf(Number(currentThread.id)) + 1
+        : null;
+    note.textContent = pos
+      ? tf("generationQueuedNoticeWithPos", { position: pos })
+      : t("generationQueuedNotice");
+    log.appendChild(note);
+  }
+
+  const activeThreadId = Number(state.activeGenerationThreadId);
+  const currentId = Number(currentThread.id);
+  const isActiveGenerationThread =
+    state.sending &&
+    Number.isInteger(activeThreadId) &&
+    Number.isInteger(currentId) &&
+    activeThreadId === currentId;
+
+  // Determine which indices to render
+  let indicesToRender;
+  const unloadState = currentThread?.unloadState;
+  const hasUnloadedMessages = unloadState && unloadState.loadedStartIndex > 0;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+
+  function getOriginalIndex(memIndex) {
+    if (hasUnloadedMessages) {
+      return loadedStartIndex + memIndex;
+    }
+    return memIndex;
+  }
+
+  if (isFullRender && hasUnloadedMessages) {
+    const vis = computeVisibleMessageIndices();
+    indicesToRender = vis.indices;
+  } else {
+    indicesToRender = null;
+  }
+
+  if (indicesToRender === null) {
+    indicesToRender = [];
+    for (let i = renderStart; i <= renderEnd; i++) {
+      indicesToRender.push(i);
+    }
+  }
+
+  // Build all rows first, then batch insert
+  const buildStart = performance.now();
+  const rowsToAppend = [];
+  let domNodesCreated = 0;
+
+  for (let i of indicesToRender) {
+    const message = conversationHistory[i];
+    if (!message) continue;
+    const originalIndex = getOriginalIndex(i);
+    // Check if row already exists (for partial updates)
+    const existingRow = log.querySelector(
+      `.chat-row[data-message-index="${originalIndex}"]`,
+    );
+    const status = String(message?.generationStatus || "").trim();
+    const rowStreaming =
+      message?.role === "assistant" &&
+      (status === "queued" ||
+        status === "cooling_down" ||
+        (isActiveGenerationThread &&
+          (status === "generating" || status === "regenerating")));
+    if (existingRow) {
+      const newRow = buildMessageRow(
+        message,
+        originalIndex,
+        rowStreaming,
+        displayHistory,
+      );
+      releaseMessageRowResources(existingRow);
+      existingRow.replaceWith(newRow);
+    } else {
+      rowsToAppend.push(
+        buildMessageRow(message, originalIndex, rowStreaming, displayHistory),
+      );
+      domNodesCreated++;
+    }
+  }
+  perfMarks.build = performance.now() - buildStart;
+
+  // Batch insert using DocumentFragment for better performance
+  const appendStart = performance.now();
+  if (rowsToAppend.length > 0) {
+    const fragment = document.createDocumentFragment();
+    for (const row of rowsToAppend) {
+      fragment.appendChild(row);
+    }
+    log.appendChild(fragment);
+  }
+  perfMarks.append = performance.now() - appendStart;
+
+  if (isFullRender) {
+    if (hasSavedScroll && !state.sending) {
+      log.scrollTop = savedScrollTop;
+    } else if (state.sending && isAtBottom) {
+      scrollChatToBottom();
+    } else if (!state.sending && isAtBottom) {
+      log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  perfMarks.total = performance.now() - perfStart;
+
+  // Log performance metrics in development
+  if (state.settings?.debugMode || perfMarks.total > 50) {
+    console.debug(
+      `[renderChat] ${indicesToRender.length} messages, ${domNodesCreated} new DOM nodes | ` +
+        `clear: ${perfMarks.clear.toFixed(1)}ms, build: ${perfMarks.build.toFixed(1)}ms, ` +
+        `append: ${perfMarks.append.toFixed(1)}ms, total: ${perfMarks.total.toFixed(1)}ms`,
+    );
+  }
+
+  ensureUnloadButton();
+  updateUnloadButtonVisibility();
+  updateScrollBottomButtonVisibility();
+  scheduleThreadBudgetIndicatorUpdate();
+  updateInitialMessageControls();
+  refreshInitialMessageRowVisibility();
+  maybeProcessUnreadMessagesSeen(false).catch(() => {});
+}
+
+function getCurrentThreadInitialMessages() {
+  return conversationHistory.filter((msg) => msg?.isInitial);
+}
+
+function getSelectedInitialMessageIndexForThread(
+  threadId,
+  history = conversationHistory,
+) {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return null;
+  const list = Array.isArray(history) ? history : [];
+  const initialMessages = list.filter((msg) => msg?.isInitial);
+  if (initialMessages.length === 0) return null;
+  let index = state.initialMessageIndexByThread[id];
+  if (!Number.isInteger(index) || index < 0) {
+    index = 0;
+  }
+  if (index >= initialMessages.length) {
+    index = initialMessages.length - 1;
+  }
+  return index;
+}
+
+function filterConversationHistoryForSelectedInitialMessage(
+  threadId,
+  history = conversationHistory,
+) {
+  const selectedIndex = getSelectedInitialMessageIndexForThread(
+    threadId,
+    history,
+  );
+  if (selectedIndex === null) return history;
+  const list = Array.isArray(history) ? history : [];
+  return list.filter((msg) => {
+    if (!msg?.isInitial) return true;
+    const msgIndex = Number.isInteger(Number(msg.initialMessageIndex))
+      ? Number(msg.initialMessageIndex)
+      : 0;
+    return msgIndex === selectedIndex;
+  }).filter((msg) => msg?.generationStatus !== "regenerating");
+}
+
+function getFilteredConversationHistoryForThread(
+  thread = currentThread,
+  history = conversationHistory,
+) {
+  if (!thread) return history;
+  const threadId = Number(thread.id);
+  const filtered = filterConversationHistoryForSelectedInitialMessage(
+    threadId,
+    history,
+  );
+  if (thread.initialMessagesRemoved === true) {
+    return filtered.filter((msg) => !msg?.isInitial);
+  }
+  return filtered.filter((msg) => msg?.generationStatus !== "regenerating");
+}
+
+function updateInitialMessageControls() {
+  const controls = document.getElementById("initial-message-controls");
+  if (controls) {
+    controls.classList.add("hidden");
+  }
+}
+
+function refreshInitialMessageRowVisibility() {
+  const log = document.getElementById("chat-log");
+  if (!log || !currentThread) return;
+  const threadId = Number(currentThread.id);
+  const selectedIndex = state.initialMessageIndexByThread[threadId] ?? 0;
+  const rows = log.querySelectorAll(".chat-row[data-initial-message]");
+  rows.forEach((row) => {
+    const rowIndex = Number(row.dataset.initialMessageIndex || 0);
+    const hide = rowIndex !== selectedIndex;
+    row.classList.toggle("initial-message-hidden", hide);
+  });
+}
+
+async function cycleInitialMessagePreview(delta) {
+  if (!currentThread) return;
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return;
+  const initialMessages = getCurrentThreadInitialMessages();
+  const total = initialMessages.length;
+  if (total <= 1) return;
+  let index = state.initialMessageIndexByThread[threadId] ?? 0;
+  index = (index + delta + total) % total;
+  state.initialMessageIndexByThread[threadId] = index;
+  await db.threads.update(threadId, { initialMessageIndex: index });
+  updateInitialMessageControls();
+  refreshInitialMessageRowVisibility();
+  updateInlineInitialMessageCounters();
+}
+
+function updateInlineInitialMessageCounters() {
+  const threadId = currentThread?.id;
+  if (!threadId) return;
+  const currentIdx = state.initialMessageIndexByThread[Number(threadId)] ?? 0;
+  const allInitial = (conversationHistory || []).filter((m) => m.isInitial);
+  const counterText = `${currentIdx + 1}/${allInitial.length}`;
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const counters = log.querySelectorAll(".inline-initial-counter");
+  counters.forEach((counter) => {
+    counter.textContent = counterText;
+  });
+}
+
+function getUnreadAssistantCount(messages) {
+  const list = Array.isArray(messages) ? messages : [];
+  let count = 0;
+  for (const m of list) {
+    if (!m || m.role !== "assistant") continue;
+    if (Number(m.unreadAt) > 0) count += 1;
+  }
+  return count;
+}
+
+function clearChatUnreadStyling() {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const unreadBlocks = log.querySelectorAll(".message-block-unread");
+  for (const block of unreadBlocks) {
+    block.classList.remove("message-block-unread");
+    block.classList.add("message-block-unread-clearing");
+    window.setTimeout(() => {
+      block.classList.remove("message-block-unread-clearing");
+    }, 700);
+  }
+}
+
+async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
+  if (!currentThread) return;
+  const currentId = Number(currentThread.id);
+  if (!Number.isInteger(currentId)) return;
+  if (state.unreadNeedsUserScrollThreadId !== currentId) return;
+
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const logRect = log.getBoundingClientRect();
+  let changed = false;
+  const now = Date.now();
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+
+  for (let i = 0; i < conversationHistory.length; i += 1) {
+    const message = conversationHistory[i];
+    if (
+      !message ||
+      message.role !== "assistant" ||
+      Number(message.unreadAt) <= 0
+    )
+      continue;
+    const originalIndex = loadedStartIndex + i;
+    const row = log.querySelector(
+      `.chat-row[data-message-index="${originalIndex}"]`,
+    );
+    if (!row) continue;
+    const rowRect = row.getBoundingClientRect();
+    const isVisible =
+      rowRect.bottom > logRect.top + 6 && rowRect.top < logRect.bottom - 6;
+    if (!isVisible) continue;
+    message.unreadAt = 0;
+    changed = true;
+    const block = row.querySelector(".message-block");
+    if (block) {
+      block.classList.remove("message-block-unread");
+      block.classList.add("message-block-unread-clearing");
+      window.setTimeout(() => {
+        block.classList.remove("message-block-unread-clearing");
+      }, 700);
+    }
+  }
+
+  if (!changed) return;
+
+  const remaining = getUnreadAssistantCount(conversationHistory);
+  if (remaining === 0) {
+    state.unreadNeedsUserScrollThreadId = null;
+  }
+
+  await persistCurrentThread();
+  await renderThreads();
+}
+
+function isMessageLockedByMemory(message) {
+  return (
+    state.settings.lockMemoryMessages === true &&
+    (message?.summarized === true || message?.summaryProtected)
+  );
+}
+
+function buildMessageRow(message, index, streaming, displayHistory = null) {
+  const row = document.createElement("div");
+  row.className = "chat-row";
+  row.dataset.streaming = streaming ? "1" : "0";
+  row.dataset.messageIndex = String(index);
+  const isOocMessage = message?.ooc === true;
+  if (message?.isInitial) {
+    row.dataset.initialMessage = "1";
+    row.dataset.initialMessageIndex = String(
+      Number.isInteger(message.initialMessageIndex)
+        ? message.initialMessageIndex
+        : 0,
+    );
+    row.classList.add("chat-row-initial");
+  }
+  if (isOocMessage) {
+    row.classList.add("chat-row-ooc");
+  } else {
+    if (message.role === "user") {
+      row.classList.add("chat-row-user");
+    } else if (message.role === "assistant") {
+      row.classList.add("chat-row-assistant");
+    }
+  }
+
+  const avatar = document.createElement("img");
+  avatar.className = "chat-avatar";
+  const fallbackSender =
+    message.role && message.role !== "user" && message.role !== "assistant"
+      ? String(message.role)
+      : "You";
+  const userName = message.senderName || fallbackSender;
+  const userAvatar = message.senderAvatar || fallbackAvatar(userName, 512, 512);
+  const botName = currentCharacter?.name || "Character";
+  const chatFsName =
+    message.role === "assistant" ? botName : userName || t("message");
+  const systemRoleLabel = t("systemRoleName");
+  const isSystemOocMessage = isOocMessage && message.role === "assistant";
+  const senderLabel = isSystemOocMessage
+    ? systemRoleLabel
+    : message.role === "assistant"
+      ? botName
+      : userName;
+  if (message.role === "assistant") {
+    if (isSystemOocMessage) {
+      const customAvatar = String(state.settings.oocSystemAvatar || "").trim();
+      avatar.dataset.avatarVideo = "";
+      avatar.src = customAvatar || DEFAULT_SYSTEM_AVATAR_IMAGE;
+    } else {
+      const cache = state.cachedChatBotAvatar;
+      const charId = currentCharacter?.id;
+      const personaId = currentPersona?.id;
+      if (
+        cache.url &&
+        cache.characterId === charId &&
+        cache.personaId === personaId
+      ) {
+        avatar.src = cache.url;
+        avatar.alt = `${botName} avatar`;
+      } else {
+        setCharacterAvatarImage(avatar, currentCharacter, botName, 256);
+        state.cachedChatBotAvatar = {
+          url: avatar.src,
+          characterId: charId,
+          personaId,
+        };
+      }
+      if (avatar.dataset.avatarVideo) {
+        // Video avatar - ensure we have the snapshot cached for reuse
+      }
+    }
+  } else {
+    setCharacterAvatarImage(avatar, { avatar: userAvatar }, chatFsName, 256);
+  }
+  avatar.classList.add("clickable-avatar");
+  avatar.addEventListener("click", () => {
+    const videoSrc = avatar.dataset.avatarVideo;
+    if (videoSrc) {
+      openVideoPreview(videoSrc);
+    } else {
+      openImagePreview(avatar.src);
+    }
+  });
+  if (message.role === "assistant") {
+    const mult = Math.max(
+      1,
+      Math.min(4, Number(currentCharacter?.avatarScale) || 1),
+    );
+    const size = 44 * mult;
+    avatar.style.width = `${size}px`;
+    avatar.style.height = `${size}px`;
+  }
+  const avatarRoleLabel = isSystemOocMessage ? systemRoleLabel : message.role;
+  avatar.alt = `${avatarRoleLabel} avatar`;
+
+  const block = document.createElement("div");
+  block.className = "message-block";
+  if (message?.role === "assistant" && Number(message?.unreadAt) > 0) {
+    block.classList.add("message-block-unread");
+  }
+
+  const header = document.createElement("div");
+  header.className = "message-header";
+
+  const sender = document.createElement("span");
+  sender.textContent = senderLabel;
+  header.appendChild(sender);
+
+  const controls = document.createElement("div");
+  controls.className = "message-controls";
+  const messageIndex = document.createElement("span");
+  messageIndex.className = "message-index";
+  const historyForDisplay = Array.isArray(displayHistory)
+    ? displayHistory
+    : conversationHistory;
+  const resolvedIndex = historyForDisplay.indexOf(message);
+  const effectiveIndex =
+    resolvedIndex >= 0 ? resolvedIndex : historyForDisplay.length;
+  const displayIndex = message?.isInitial
+    ? (cachedInitialMessageDisplayIndex ??
+      getMessageDisplayIndex(effectiveIndex, historyForDisplay))
+    : getMessageDisplayIndex(effectiveIndex, historyForDisplay);
+  const offset = getThreadDisplayOffset();
+  const numberedIndex = displayIndex + offset;
+  messageIndex.textContent = isOocMessage
+    ? `OOC #${numberedIndex}`
+    : `#${numberedIndex}`;
+  const isTruncated = message.truncatedByFilter === true;
+  const hasGenerationError = !!String(message.generationError || "").trim();
+  const isLockedMemoryMessage = isMessageLockedByMemory(message);
+  const disableControlsForRow = streaming;
+
+  if (message.role === "assistant" || isOocMessage) {
+    controls.appendChild(messageIndex);
+  }
+
+  if (message.role === "assistant") {
+    const delBtn = iconButton("delete", t("msgDeleteTitle"), async () => {
+      await deleteMessageAt(index);
+    });
+    delBtn.classList.add("msg-delete-btn");
+    delBtn.classList.add("danger-icon-btn");
+    delBtn.disabled = disableControlsForRow || isLockedMemoryMessage;
+    controls.appendChild(delBtn);
+
+    const regenBtn = iconButton(
+      "regenerate",
+      t("msgRegenerateTitle"),
+      async () => {
+        await regenerateMessage(index);
+      },
+    );
+    regenBtn.classList.add("msg-regen-btn");
+    regenBtn.disabled =
+      state.sending ||
+      disableControlsForRow ||
+      isLockedMemoryMessage ||
+      message.manualMessage === true;
+    controls.appendChild(regenBtn);
+    const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
+      beginInlineMessageEdit(index, content);
+    });
+    editBtn.classList.add("msg-edit-btn");
+    editBtn.disabled =
+      disableControlsForRow ||
+      isTruncated ||
+      hasGenerationError ||
+      isLockedMemoryMessage ||
+      isOocMessage;
+    applyEditButtonEditedStyle(editBtn, message);
+    controls.appendChild(editBtn);
+
+    const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
+      await copyMessage(message.content || "");
+    });
+    copyBtn.classList.add("msg-copy-btn");
+    copyBtn.disabled = disableControlsForRow;
+    controls.appendChild(copyBtn);
+    const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
+      await openMessageMetadataModal(index);
+    });
+    infoBtn.classList.add("msg-info-btn");
+    applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
+    controls.appendChild(infoBtn);
+    const modelInfoBtn = iconButton(
+      "model",
+      t("msgModelInfoTitle"),
+      async () => {
+        await openMessageModelInfoModal(index);
+      },
+    );
+    modelInfoBtn.classList.add("msg-model-info-btn");
+    const isInitial = message?.isInitial === true;
+    const isUserEdited = message?.userEdited === true;
+    if (disableControlsForRow || isInitial || isUserEdited || !message.model) {
+      modelInfoBtn.disabled = true;
+      if (isUserEdited) {
+        modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableEdited"));
+        modelInfoBtn.setAttribute(
+          "aria-label",
+          t("msgMetadataUnavailableEditedAria"),
+        );
+      } else if (isInitial) {
+        modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableInitial"));
+        modelInfoBtn.setAttribute(
+          "aria-label",
+          t("msgMetadataUnavailableInitialAria"),
+        );
+      } else if (disableControlsForRow) {
+        modelInfoBtn.setAttribute(
+          "title",
+          t("msgMetadataUnavailableGenerating"),
+        );
+        modelInfoBtn.setAttribute(
+          "aria-label",
+          t("msgMetadataUnavailableGeneratingAria"),
+        );
+      }
+    } else {
+      modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
+      modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
+    }
+    controls.appendChild(modelInfoBtn);
+    const systemPromptBtn = iconButton(
+      "badge",
+      t("msgSystemPromptTitle"),
+      async () => {
+        await openMessageSystemPromptModal(index);
+      },
+    );
+    systemPromptBtn.classList.add("msg-system-prompt-btn");
+    const hasContent =
+      message && index >= 0 && index < conversationHistory.length;
+    systemPromptBtn.disabled = !hasContent;
+    if (hasContent) {
+      systemPromptBtn.setAttribute("title", t("msgSystemPromptTitle"));
+      systemPromptBtn.setAttribute("aria-label", t("msgSystemPromptTitle"));
+    }
+    controls.appendChild(systemPromptBtn);
+    const speakerBtn = iconButton("speaker", t("msgSpeakTitle"), async (e) => {
+      const clickedBtn = e?.currentTarget;
+      const resolvedIndex = resolveMessageIndexFromButton(clickedBtn, index);
+      if (window.ttsDebug)
+        window.ttsDebug("bubble-click", {
+          capturedIndex: index,
+          resolvedIndex,
+          datasetIndex: clickedBtn?.dataset?.messageIndex,
+        });
+      await window.toggleMessageSpeech(resolvedIndex);
+    });
+    speakerBtn.classList.add("msg-tts-btn");
+    speakerBtn.dataset.messageIndex = String(index);
+    if (disableControlsForRow) speakerBtn.disabled = true;
+    controls.appendChild(speakerBtn);
+  } else {
+    controls.appendChild(messageIndex);
+    const delBtn = iconButton("delete", t("msgDeleteTitle"), async () => {
+      await deleteMessageAt(index);
+    });
+    delBtn.classList.add("msg-delete-btn");
+    delBtn.classList.add("danger-icon-btn");
+    delBtn.disabled = disableControlsForRow || isLockedMemoryMessage;
+    controls.appendChild(delBtn);
+    const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
+      beginInlineMessageEdit(index, content);
+    });
+    editBtn.classList.add("msg-edit-btn");
+    editBtn.disabled =
+      disableControlsForRow ||
+      isTruncated ||
+      hasGenerationError ||
+      isLockedMemoryMessage;
+    applyEditButtonEditedStyle(editBtn, message);
+    controls.appendChild(editBtn);
+    const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
+      await copyMessage(message.content || "");
+    });
+    copyBtn.classList.add("msg-copy-btn");
+    copyBtn.disabled = disableControlsForRow;
+    controls.appendChild(copyBtn);
+  }
+
+  const forkBtn = iconButton("fork", t("msgForkTitle"), async () => {
+    await forkThreadFromMessage(index);
+  });
+  forkBtn.classList.add("msg-fork-btn");
+  forkBtn.dataset.messageIndex = String(index);
+  forkBtn.disabled = disableControlsForRow;
+  controls.appendChild(forkBtn);
+
+  if (message.isInitial) {
+    const initialControls = document.createElement("span");
+    initialControls.className = "inline-initial-controls";
+    const prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.className = "inline-initial-btn";
+    prevBtn.textContent = "‹";
+    prevBtn.addEventListener("click", () => cycleInitialMessagePreview(-1));
+    const counter = document.createElement("span");
+    counter.className = "inline-initial-counter";
+    const threadId = currentThread?.id;
+    if (threadId) {
+      const allInitial = (conversationHistory || []).filter((m) => m.isInitial);
+      const currentIdx =
+        state.initialMessageIndexByThread[Number(threadId)] ?? 0;
+      counter.textContent = `${currentIdx + 1}/${allInitial.length}`;
+    }
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "inline-initial-btn";
+    nextBtn.textContent = "›";
+    nextBtn.addEventListener("click", () => cycleInitialMessagePreview(1));
+    initialControls.append(prevBtn, counter, nextBtn);
+    controls.appendChild(initialControls);
+  }
+
+  header.appendChild(controls);
+
+  const content = document.createElement("div");
+  content.className = "message-content";
+  content.addEventListener("dblclick", () => {
+    if (isOocMessage) return;
+    const rowEl = content.closest(".chat-row");
+    if (rowEl?.dataset?.streaming === "1") return;
+    if (String(message?.generationError || "").trim()) return;
+    if (isLockedMemoryMessage) return;
+    beginInlineMessageEdit(index, content);
+  });
+  if (streaming) {
+    const statusInfo = getAssistantStreamingStatusInfo(message);
+    if (!statusInfo.shouldShowSpinner) {
+      content.innerHTML = renderMessageHtml(message.content, message.role);
+    } else {
+      const label = statusInfo.statusLabel || t("generatingLabel");
+      content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+        label,
+      )}`;
+    }
+  } else {
+    renderMessageContent(content, message);
+  }
+
+  block.append(header, content);
+  applyPersonaColorToUserMessageBlock(block, message);
+  row.append(avatar, block);
+  if (message.role === "assistant") {
+    if (typeof window.updateMessageSpeakerButton === "function") {
+      window.updateMessageSpeakerButton(speakerBtnForRow(row), index);
+    }
+  }
+  return row;
+}
+
+function speakerBtnForRow(row) {
+  return row?.querySelector(".msg-tts-btn") || null;
+}
+
+const STREAMING_STATUSES = new Set([
+  "queued",
+  "cooling_down",
+  "generating",
+  "regenerating",
+  "title_generating",
+]);
+
+function getAssistantStreamingStatusInfo(message) {
+  const status = String(message?.generationStatus || "").trim();
+  const hasContent = String(message?.content || "").trim().length > 0;
+  const isQueued = status === "queued";
+  const isCoolingDown = status === "cooling_down";
+  const isTitleGenerating = status === "title_generating";
+  const isStreamingStatus = STREAMING_STATUSES.has(status);
+  if (!isStreamingStatus) {
+    return {
+      isStreamingStatus: false,
+      shouldShowSpinner: false,
+      statusLabel: null,
+    };
+  }
+  let statusLabel = t("generatingLabel");
+  if (status === "regenerating") {
+    statusLabel = t("regeneratingLabel");
+  } else if (isTitleGenerating) {
+    statusLabel = t("generatingTitleLabel") || t("generatingLabel");
+  } else if (isCoolingDown) {
+    statusLabel =
+      String(message?.content || "").trim() ||
+      tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() });
+  } else if (isQueued) {
+    statusLabel = String(message?.content || "").trim() || t("generatingLabel");
+  }
+  const shouldShowSpinner =
+    isQueued || isCoolingDown || isTitleGenerating || !hasContent;
+  return { isStreamingStatus, shouldShowSpinner, statusLabel };
+}
+
+function renderMessageContent(contentEl, message) {
+  if (!contentEl || !message) return;
+  const status = String(message?.generationStatus || "").trim();
+  if (status === "summarizing") {
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+      t("summarizingMemoryLabel"),
+    )}`;
+    return;
+  }
+  const statusInfo = getAssistantStreamingStatusInfo(message);
+  if (statusInfo.shouldShowSpinner) {
+    const label = statusInfo.statusLabel ?? t("generatingLabel");
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+      label,
+    )}`;
+  } else {
+    contentEl.innerHTML = renderMessageHtml(
+      message.content || "",
+      message.role,
+    );
+    decorateMessageCodeBlocks(contentEl);
+  }
+  if (message.truncatedByFilter === true) {
+    contentEl.appendChild(buildTruncationNotice());
+  }
+  if (String(message.generationError || "").trim()) {
+    contentEl.appendChild(buildGenerationErrorNotice(message.generationError));
+  }
+}
+
+function decorateMessageCodeBlocks(container) {
+  if (!container || !state.settings.markdownEnabled) return;
+  const codeBlocks = container.querySelectorAll("pre");
+  codeBlocks.forEach((pre) => {
+    if (pre.closest(".message-code-block-wrapper")) return;
+    const codeEl = pre.querySelector("code");
+    if (!codeEl) return;
+    const parent = pre.parentElement;
+    if (!parent) return;
+    const wrapper = document.createElement("div");
+    wrapper.className = "message-code-block-wrapper";
+    parent.replaceChild(wrapper, pre);
+    wrapper.appendChild(pre);
+    const copyBtn = iconButton(
+      "copy",
+      t("codeBlockCopyTitle"),
+      async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await copyCodeBlockText(codeEl.textContent ?? "");
+      },
+    );
+    copyBtn.classList.add("message-code-block-copy-btn");
+    wrapper.appendChild(copyBtn);
+  });
+}
+
+function ensureMessageRowExists(index) {
+  if (index == null) return null;
+  const log = document.getElementById("chat-log");
+  if (!log) return null;
+  let row = log.querySelector(`.chat-row[data-message-index="${index}"]`);
+  if (row) return row;
+  renderChat();
+  return log.querySelector(`.chat-row[data-message-index="${index}"]`);
+}
+
+function refreshLatestAssistantRowContent() {
+  if (!conversationHistory.length) return;
+  const displayHistory = getFilteredConversationHistoryForThread();
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+  for (let idx = conversationHistory.length - 1; idx >= 0; idx -= 1) {
+    const message = conversationHistory[idx];
+    if (!message || message.role !== "assistant") continue;
+    const originalIndex = loadedStartIndex + idx;
+    const oldRow = document.querySelector(
+      `#chat-log .chat-row[data-message-index="${originalIndex}"]`,
+    );
+    if (!oldRow) continue;
+    const status = String(message?.generationStatus || "").trim();
+    const isStreamingStatus = STREAMING_STATUSES.has(status);
+    const isStreaming = isStreamingStatus;
+    const newRow = buildMessageRow(
+      message,
+      originalIndex,
+      isStreaming,
+      displayHistory,
+    );
+    oldRow.replaceWith(newRow);
+    refreshMessageControlStates();
+    window.refreshAllSpeakerButtons();
+    break;
+  }
+}
+
+function hasSystemMessagesData(message) {
+  if (!message) return false;
+  return (
+    Array.isArray(message.systemMessages) &&
+    message.systemMessages.some((entry) => String(entry?.content || "").trim())
+  );
+}
+
+function applyInfoButtonAvailability(button, message, isStreaming) {
+  if (!button) return;
+  const isInitial = message?.isInitial === true;
+  const isUserEdited = message?.userEdited === true;
+  const isManualMessage = message?.manualMessage === true;
+  button.disabled = !!isStreaming || isInitial || isUserEdited;
+  if (isUserEdited) {
+    button.setAttribute("title", t("msgMetadataUnavailableEdited"));
+    button.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+    return;
+  }
+  if (isManualMessage) {
+    button.disabled = true;
+    button.setAttribute("title", t("msgMetadataUnavailableManual"));
+    button.setAttribute("aria-label", t("msgMetadataUnavailableManualAria"));
+    return;
+  }
+  if (isInitial) {
+    button.setAttribute("title", t("msgMetadataUnavailableInitial"));
+    button.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
+    return;
+  }
+  if (isStreaming) {
+    button.setAttribute("title", t("msgMetadataUnavailableGenerating"));
+    button.setAttribute(
+      "aria-label",
+      t("msgMetadataUnavailableGeneratingAria"),
+    );
+    return;
+  }
+  button.setAttribute("title", t("msgMetadataTitle"));
+  button.setAttribute("aria-label", t("msgMetadataTitle"));
+}
+
+function applyEditButtonEditedStyle(button, message) {
+  if (!button) return;
+  const isEdited = message?.userEdited === true;
+  button.classList.toggle("msg-edit-btn-edited", isEdited);
+}
+
+function buildTruncationNotice() {
+  const box = document.createElement("div");
+  box.className = "message-truncated-note";
+  const p1 = document.createElement("p");
+  p1.textContent = t("truncatedMessageLine1");
+  const p2 = document.createElement("p");
+  p2.textContent = t("truncatedMessageLine2");
+  box.append(p1, p2);
+  return box;
+}
+
+function buildGenerationErrorNotice(errorText) {
+  const box = document.createElement("div");
+  box.className = "message-truncated-note";
+  const p1 = document.createElement("p");
+  p1.textContent = t("generationErrorLine1");
+  const p2 = document.createElement("p");
+  p2.textContent = String(errorText || "Unknown error");
+  const p3 = document.createElement("p");
+  p3.textContent = t("generationErrorLine3");
+  box.append(p1, p2, p3);
+  return box;
+}
+
+function beginInlineMessageEdit(index, contentEl) {
+  if (!contentEl || !currentThread) return;
+  const rowEl = contentEl.closest(".chat-row");
+  if (rowEl?.dataset?.streaming === "1") return;
+  const message = conversationHistory[index];
+  if (!message) return;
+  if (isMessageLockedByMemory(message)) return;
+  if (message.truncatedByFilter === true) return;
+  if (String(message.generationError || "").trim()) return;
+  if (message.ooc === true) return;
+
+  if (
+    state.editingMessageIndex !== null &&
+    state.editingMessageIndex !== index &&
+    document.querySelector(".message-editor")
+  ) {
+    const prev = document.querySelector(".message-editor");
+    prev?.blur();
+  }
+
+  if (contentEl.querySelector(".message-editor")) return;
+  state.editingMessageIndex = index;
+
+  const contentHeight = Math.max(
+    90,
+    Math.ceil(contentEl.getBoundingClientRect().height),
+  );
+  const contentWidth = Math.max(
+    180,
+    Math.ceil(contentEl.getBoundingClientRect().width),
+  );
+  const editor = document.createElement("textarea");
+  editor.className = "message-editor";
+  editor.value = String(message.content || "");
+  editor.style.minHeight = `${contentHeight}px`;
+  editor.style.height = `${contentHeight}px`;
+  editor.style.width = `${contentWidth}px`;
+  editor.style.maxWidth = "100%";
+  contentEl.innerHTML = "";
+  contentEl.appendChild(editor);
+  editor.focus();
+  editor.setSelectionRange(editor.value.length, editor.value.length);
+  autoSizeMessageEditor(editor, contentHeight);
+
+  const original = String(message.content || "");
+  let cancelled = false;
+  editor.addEventListener("input", () =>
+    autoSizeMessageEditor(editor, contentHeight),
+  );
+  editor.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      cancelled = true;
+      editor.blur();
+      return;
+    }
+    if (e.key === "Enter" && e.ctrlKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      editor.blur();
+    }
+  });
+  const finalize = async () => {
+    if (state.editingMessageIndex !== index) return;
+    state.editingMessageIndex = null;
+    if (cancelled) {
+      renderMessageContent(contentEl, { ...message, content: original });
+      return;
+    }
+    const next = editor.value;
+    if (next === original) {
+      renderMessageContent(contentEl, { ...message, content: original });
+      return;
+    }
+    message.content = next;
+    message.userEdited = true;
+    message.summarized = false;
+    window.stopTtsPlayback();
+    renderMessageContent(contentEl, message);
+    refreshMessageControlStates();
+    await persistCurrentThread();
+    await renderThreads();
+    showToast(t("messageUpdated"), "success");
+  };
+
+  editor.addEventListener(
+    "blur",
+    () => {
+      finalize().catch((e) => {
+        console.warn("Message edit save failed:", e);
+        renderMessageContent(contentEl, message);
+      });
+    },
+    { once: true },
+  );
+}
+
+function autoSizeMessageEditor(editor, minHeight = 90) {
+  if (!editor) return;
+  editor.style.height = "auto";
+  editor.style.height = `${Math.max(minHeight, editor.scrollHeight)}px`;
+}
+
+function cancelActiveMessageEdit() {
+  const editor = document.querySelector(".message-editor");
+  if (!editor) return false;
+  const event = new KeyboardEvent("keydown", {
+    key: "Escape",
+    bubbles: true,
+    cancelable: true,
+  });
+  editor.dispatchEvent(event);
+  if (document.activeElement === editor) editor.blur();
+  return true;
+}
+
+function resolveMessageIndexFromButton(buttonEl, fallbackIndex) {
+  const dataIndex = Number(buttonEl?.dataset?.messageIndex);
+  if (Number.isInteger(dataIndex) && dataIndex >= 0) {
+    return dataIndex;
+  }
+  const row = buttonEl?.closest?.(".chat-row");
+  const log = document.getElementById("chat-log");
+  if (!row || !log) return fallbackIndex;
+  const rowIndex = Array.from(log.children).indexOf(row);
+  if (rowIndex >= 0) {
+    return rowIndex;
+  }
+  return fallbackIndex;
+}
+
+async function sendMessage(options = {}) {
+  if (!currentThread || !currentCharacter) return;
+  window.stopTtsPlayback();
+  const pendingState = getThreadPendingGenerationState(
+    Number(currentThread.id),
+    conversationHistory,
+  );
+  if (pendingState === "queued") {
+    showToast(t("generationQueuedNotice"), "warning");
+    return;
+  }
+  if (pendingState === "cooling_down") {
+    showToast(
+      tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() }),
+      "warning",
+    );
+    return;
+  }
+  if (state.sending) {
+    const activeId = Number(state.activeGenerationThreadId);
+    const currentId = Number(currentThread.id);
+    if (Number.isInteger(activeId) && activeId === currentId) {
+      cancelOngoingGeneration();
+      return;
+    }
+  }
+
+  const input = document.getElementById("user-input");
+  const shortcutPreserve =
+    state.activeShortcut &&
+    input.value === state.activeShortcut.initialValue &&
+    state.activeShortcut.clearAfterSend === false;
+  const preserveInput =
+    typeof options.preserveInput === "boolean"
+      ? options.preserveInput
+      : !!shortcutPreserve;
+  const rawInput = input.value;
+  const text = rawInput.trim();
+  if (handleMemoryCommandFromInput(input, text)) {
+    return;
+  }
+  const aiCommandMatch = text.match(/^\/ai(?:\s+(.*))?$/i);
+  const aiCommandContent = aiCommandMatch?.[1]?.trim();
+  const shouldTriggerAiOnly = !text || (aiCommandMatch && !aiCommandContent);
+  const clearDraftInput = () => {
+    if (preserveInput) return;
+    input.value = "";
+    state.activeShortcut = null;
+    if (currentThread) {
+      currentThread.draftInput = null;
+      db.threads.update(currentThread.id, { draftInput: null });
+    }
+  };
+  if (aiCommandMatch && aiCommandContent) {
+    if (currentThread) {
+      addPromptCommandEntry(currentThread.id, text);
+    }
+    clearDraftInput();
+    await addManualAssistantMessage(aiCommandContent);
+    return;
+  }
+  if (shouldTriggerAiOnly) {
+    if (currentThread) {
+      addPromptCommandEntry(currentThread.id, "/ai");
+    }
+    clearDraftInput();
+    await requestBotReplyForCurrentThread("manual_send_ai_only");
+    return;
+  }
+  clearDraftInput();
+
+  if (currentThread?.oocModeEnabled === true) {
+    await sendOocInquiry(text);
+    return;
+  }
+
+  const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
+  const userMsg = {
+    role: "user",
+    content: text,
+    createdAt: Date.now(),
+    senderName: currentPersona?.name || "You",
+    senderAvatar: currentPersona?.avatar || "",
+    senderPersonaId: currentPersona?.id || null,
+    personaColor: entryPersonaColor,
+  };
+  conversationHistory.push(userMsg);
+  if (currentThread) {
+    currentThread.messages = [...conversationHistory];
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, conversationHistory);
+  }
+  await persistCurrentThread();
+  addPromptToHistory(currentThread.id, text, false);
+
+  const log = document.getElementById("chat-log");
+  const displayHistory = getFilteredConversationHistoryForThread();
+  log.appendChild(
+    buildMessageRow(
+      userMsg,
+      conversationHistory.length - 1,
+      false,
+      displayHistory,
+    ),
+  );
+  scrollChatToBottom();
+
+  // Evaluate SFX eviction after user message (triggers are for bot messages only)
+  try {
+    await evaluateSfxEvictions(userMsg, currentThread);
+  } catch (sfxErr) {
+    console.warn("SFX evaluation error (user message):", sfxErr);
+  }
+
+  // Trigger memory summarization if threshold reached (including when user sends the nth message)
+  if (shouldTriggerMemorySummaries(currentCharacter)) {
+    const summaryResult = await summarizeMemory(currentCharacter);
+    if (summaryResult === false) {
+      await renderThreads();
+      return;
+    }
+  }
+
+  if (state.settings.autoReplyEnabled === false) {
+    await renderThreads();
+    return;
+  }
+
+  await requestBotReplyForCurrentThread("manual_send_auto_reply");
+}
+
+async function addManualAssistantMessage(content) {
+  if (!currentThread) return;
+  const messageContent = String(content || "").trim();
+  if (!messageContent) return;
+  const assistantMsg = {
+    role: "assistant",
+    content: messageContent,
+    createdAt: Date.now(),
+    senderName: currentCharacter?.name || "Character",
+    senderAvatar: currentCharacter?.avatar || "",
+    manualMessage: true,
+    generationStatus: "",
+    generationError: "",
+    truncatedByFilter: false,
+    finishReason: "",
+    nativeFinishReason: "",
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    writingInstructionsTurnIndex: 0,
+    writingInstructionsCounted: false,
+  };
+  conversationHistory.push(assistantMsg);
+  if (currentThread) {
+    currentThread.messages = [...conversationHistory];
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, conversationHistory);
+  }
+  await persistCurrentThread();
+  renderChat();
+  scrollChatToBottom();
+  await renderThreads();
+}
+
+async function queueThreadForCooldown(threadId, targetMessage = null) {
+  if (!currentThread || Number(currentThread.id) !== threadId) return;
+  const seconds = getCooldownRemainingSeconds();
+  const cooldownLabel = tf("cooldownToastActive", { seconds });
+  if (!state.generationQueue.includes(threadId)) {
+    state.generationQueue.push(threadId);
+  }
+  let cooldownTarget = targetMessage;
+  if (!cooldownTarget) {
+    const existingPendingIdx =
+      findLatestPendingAssistantIndex(conversationHistory);
+    if (existingPendingIdx >= 0) {
+      cooldownTarget = conversationHistory[existingPendingIdx];
+    }
+  }
+  if (cooldownTarget) {
+    cooldownTarget.generationStatus = "cooling_down";
+    cooldownTarget.content = cooldownLabel;
+    cooldownTarget.generationError = "";
+    cooldownTarget.truncatedByFilter = false;
+    cooldownTarget.placeholder = true;
+  } else {
+    conversationHistory.push({
+      role: "assistant",
+      content: cooldownLabel,
+      generationStatus: "cooling_down",
+      createdAt: Date.now(),
+      finishReason: "",
+      nativeFinishReason: "",
+      truncatedByFilter: false,
+      generationId: "",
+      completionMeta: null,
+      generationInfo: null,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+      writingInstructionsTurnIndex: 0,
+      writingInstructionsCounted: false,
+      placeholder: true,
+    });
+    if (currentThread) {
+      currentThread.messages = [...conversationHistory];
+      const msgCount = conversationHistory.length;
+      updateThreadMessageCount(currentThread.id, conversationHistory);
+    }
+  }
+  const nowTs = Date.now();
+  currentThread.pendingGenerationReason = "cooldown";
+  currentThread.pendingGenerationQueuedAt = Number(
+    currentThread.pendingGenerationQueuedAt || nowTs,
+  );
+  await persistCurrentThread();
+  const allFinished = conversationHistory.every(
+    (m) => !m.generationStatus || m.generationStatus === "",
+  );
+  const updateData = {
+    pendingGenerationReason: "cooldown",
+    pendingGenerationQueuedAt: currentThread.pendingGenerationQueuedAt,
+  };
+  if (allFinished) {
+    updateData.updatedAt = Date.now();
+  }
+  await db.threads.update(threadId, updateData);
+  renderChat();
+  scrollChatToBottom();
+  setSendingState(state.sending);
+  updateCooldownPinnedToast(seconds);
+  await renderThreads();
+}
+
+function findPreviousOocUserMessageIndex(startIndex) {
+  const limit = Math.min(
+    Math.max(Number(startIndex), 0),
+    conversationHistory.length - 1,
+  );
+  for (let i = limit; i >= 0; i -= 1) {
+    const msg = conversationHistory[i];
+    if (!msg || msg.role !== "user") continue;
+    if (msg.ooc === true) return i;
+  }
+  return -1;
+}
+
+function getOocPromptForUserMessage(message) {
+  if (!message) return "";
+  if (typeof message.oocPrompt === "string") return message.oocPrompt;
+  const raw = String(message.content || "").trim();
+  if (!raw) return "";
+  const defaultFormat = DEFAULT_SETTINGS.oocUserMessageFormat;
+  const userFormat = getSectionHeader("oocUserMessageFormat");
+  const patterns = [
+    defaultFormat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{content\\}", "([\\s\\S]+?)"),
+    userFormat !== defaultFormat ? userFormat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{content\\}", "([\\s\\S]+?)") : null,
+  ].filter(Boolean);
+  for (const pattern of patterns) {
+    const match = raw.match(new RegExp(`^\\(\\(OOC: SYSTEM, ${pattern}\\)\\)$`));
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  if (raw.startsWith("((OOC: SYSTEM, reply in OOC manner. ")) {
+    return raw
+      .slice("((OOC: SYSTEM, reply in OOC manner. ".length)
+      .replace(/\)\)$/, "")
+      .trim();
+  }
+  if (raw.endsWith("))")) {
+    return raw.slice(0, -2).trim();
+  }
+  return raw;
+}
+
+function formatOocSystemPromptText(text) {
+  const normalized = String(text || "").trim();
+  if (!normalized) return "";
+  if (normalized.startsWith("((OOC:")) {
+    return normalized;
+  }
+  const prefixRemoved = normalized.replace(/^\s*SYSTEM,?\s*/i, "").trim();
+  const inner = prefixRemoved || normalized;
+  return `((OOC: SYSTEM, ${inner}))`;
+}
+
+function formatOocSystemMessageEntries(entries) {
+  const list = Array.isArray(entries) ? entries : [];
+  const formatted = [];
+  for (const entry of list) {
+    if (!entry) continue;
+    const role = String(entry.role || "").toLowerCase();
+    const content = String(entry.content || "").trim();
+    if (!content) continue;
+    if (role !== "system") {
+      formatted.push({ ...entry, content });
+      continue;
+    }
+    const wrapped = formatOocSystemPromptText(content) || content;
+    formatted.push({ ...entry, content: wrapped });
+  }
+  return formatted;
+}
+
+function formatOocMessageEntry(message, personaPrefixEnabled = true) {
+  if (!message) return "";
+  const rawContent = String(message.content || "");
+  if (!rawContent.trim()) return "";
+  const isOoc = message.ooc === true;
+  let labelContent = rawContent.trim();
+  if (isOoc) {
+    labelContent = `((OOC: ${labelContent}))`;
+  }
+  const labeled = `${message.role}: ${labelContent}`;
+  const normalized = labeled
+    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
+    .replace(/(^|\n)user:/gi, "$1[USER]:");
+  if (message.role === "user" && !isOoc && personaPrefixEnabled) {
+    const personaName = String(message.senderName || "You");
+    return normalized.replace(
+      /^\[USER\]:/,
+      `[USER (as ${personaName})]:`,
+    );
+  }
+  return normalized;
+}
+
+async function buildOocSystemPrompt() {
+  const displayHistory = getFilteredConversationHistoryForThread();
+  const personaPrefixEnabled = currentCharacter?.personaPrefixEnabled !== false;
+  const includeOoc = currentCharacter?.includeOocInCompletions === true;
+  const inSimulationHistory = getInSimulationMessages(displayHistory, {
+    includeOoc,
+  });
+  const contextMessages = inSimulationHistory
+    .filter((msg) => !isMessageLockedByMemory(msg))
+    .filter((msg) => !msg.summarized)
+    .map((msg) => formatOocMessageEntry(msg, personaPrefixEnabled))
+    .filter(Boolean);
+  const rawMemory = await getMemorySummary(
+    currentCharacter.id,
+    currentThread.id,
+  );
+  const memoryContext = await filterMemoriesByRelevance(
+    rawMemory,
+    currentCharacter,
+    currentThread.id,
+  );
+  const memorySection = memoryContext
+    ? `${getSectionHeader("sectionHeaderMemoryContext")}\n\n${String(memoryContext || "").trim()}`
+    : "";
+  const charPersonaName =
+    currentThread?.initialUserName || currentPersona?.name || "You";
+  const charName = currentCharacter?.name || "Character";
+  const characterPromptRaw = (
+    currentCharacter?.systemPrompt ||
+    state.settings.globalPromptTemplate ||
+    ""
+  ).trim();
+  const characterPrompt = replaceLorePlaceholders(
+    characterPromptRaw,
+    charPersonaName,
+    charName,
+  ).trim();
+  const characterPromptSection = characterPrompt
+    ? `${getSectionHeader("sectionHeaderCharacterPrompt")}\n\n${characterPrompt}`
+    : "";
+  const messageSection = `${getSectionHeader("sectionHeaderMessagesSoFar")}\n\n${contextMessages.join(
+    "\n\n",
+  )}`;
+  const systemPromptParts = [
+    getSectionHeader("oocSystemPromptIntro"),
+    characterPromptSection,
+    memorySection,
+    messageSection,
+  ].filter(Boolean);
+  const rawSystemPrompt = systemPromptParts.join("\n\n").trim();
+  return {
+    systemPrompt: formatOocSystemPromptText(rawSystemPrompt) || rawSystemPrompt,
+    contextMessages,
+    memoryContext,
+  };
+}
+
+async function sendOocInquiry(text) {
+  if (!currentThread || !currentCharacter) return;
+
+  const { systemPrompt } = await buildOocSystemPrompt();
+
+  const log = document.getElementById("chat-log");
+  const isViewing = isViewingThread(currentThread.id);
+  const displayHistory = getFilteredConversationHistoryForThread();
+
+  const userIndex = conversationHistory.length;
+  const oocUserMessageFormatTemplate = getSectionHeader("oocUserMessageFormat");
+  const userMsg = {
+    role: "user",
+    content: oocUserMessageFormatTemplate.replace("{content}", text),
+    oocPrompt: text,
+    createdAt: Date.now(),
+    senderName: currentPersona?.name || "You",
+    senderAvatar: currentPersona?.avatar || "",
+    senderPersonaId: currentPersona?.id || null,
+    ooc: true,
+  };
+  conversationHistory.push(userMsg);
+  if (currentThread) {
+    currentThread.messages = [...conversationHistory];
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, conversationHistory);
+  }
+  addPromptToHistory(currentThread.id, text, true);
+  const updatedDisplayHistory = getFilteredConversationHistoryForThread();
+  if (log && isViewing) {
+    log.appendChild(
+      buildMessageRow(userMsg, userIndex, false, updatedDisplayHistory),
+    );
+    scrollChatToBottom();
+  }
+
+  const pendingAssistant = {
+    role: "assistant",
+    ooc: true,
+    content: "",
+    generationStatus: "generating",
+    createdAt: Date.now(),
+    finishReason: "",
+    nativeFinishReason: "",
+    truncatedByFilter: false,
+    generationId: "",
+    completionMeta: null,
+    generationInfo: null,
+    usedLoreEntries: [],
+    usedMemorySummary: "",
+    model: state.settings.model || "",
+    temperature: Number(state.settings.temperature) || 0,
+    requestMessages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMsg.content },
+    ],
+  };
+  const pendingIndex = conversationHistory.length;
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+  const originalPendingIndex = loadedStartIndex + pendingIndex;
+  const displayPendingIndex = updatedDisplayHistory.length;
+  const displayPendingRowIndex = displayPendingIndex;
+  conversationHistory.push(pendingAssistant);
+  if (currentThread) {
+    currentThread.messages = [...conversationHistory];
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, conversationHistory);
+  }
+  let pendingRow = null;
+  if (log && isViewing) {
+    pendingRow = buildMessageRow(
+      pendingAssistant,
+      displayPendingIndex,
+      true,
+      updatedDisplayHistory,
+    );
+    log.appendChild(pendingRow);
+    const pendingContent = pendingRow?.querySelector(".message-content");
+    if (pendingContent) {
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+        t("generatingLabel"),
+      )}`;
+    }
+    scrollChatToBottom();
+  }
+
+  await persistCurrentThread();
+
+  try {
+    const result = await callOpenRouter(
+      systemPrompt,
+      [{ role: "user", content: userMsg.content }],
+      state.settings.model,
+      (chunk) => {
+        pendingAssistant.content += chunk;
+        if (state.settings.streamEnabled) {
+          const liveRow = ensureMessageRowExists(displayPendingIndex);
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(
+              pendingAssistant.content,
+              pendingAssistant.role,
+            );
+          }
+        }
+        if (isViewing) scrollChatToBottom();
+      },
+    );
+    state.lastUsedModel = result.model || "";
+    state.lastUsedProvider = result.provider || "";
+    updateModelPill();
+    const assistantText = result.content || pendingAssistant.content || "";
+    const trimmedText = assistantText.trim();
+    let wrappedContent = "(No content returned)";
+    if (trimmedText) {
+      if (trimmedText.startsWith("((OOC:") && trimmedText.endsWith("))")) {
+        wrappedContent = trimmedText;
+      } else {
+        wrappedContent = `((OOC: ${trimmedText}))`;
+      }
+    }
+    pendingAssistant.content = wrappedContent;
+    pendingAssistant.finishReason = String(result.finishReason || "");
+    pendingAssistant.nativeFinishReason = String(
+      result.nativeFinishReason || "",
+    );
+    pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
+    const finishReasonValue = result.finishReason;
+    const isOkFinish = finishReasonValue === "stop";
+    if (!isOkFinish && !pendingAssistant.truncatedByFilter) {
+      pendingAssistant.generationError = `finish_reason: ${
+        finishReasonValue ?? "null"
+      }`;
+    } else {
+      pendingAssistant.generationError = "";
+    }
+    pendingAssistant.systemMessages = formatOocSystemMessageEntries(
+      result.systemMessages,
+    );
+    pendingAssistant.generationStatus = "";
+  } catch (err) {
+    pendingAssistant.generationStatus = "";
+    const errorMessage = String(err?.message || err || "OOC request failed");
+    pendingAssistant.generationError = errorMessage;
+    pendingAssistant.content =
+      pendingAssistant.content ||
+      `((OOC: OOC request failed: ${errorMessage}))`;
+    showToast(`OOC request failed: ${errorMessage}`, "error");
+  }
+  await persistCurrentThread();
+  if (isViewing) {
+    renderChat();
+    scrollChatToBottom();
+  }
+  await renderThreads();
+}
+
+async function regenerateOocMessage(index) {
+  if (!currentThread || !currentCharacter || state.sending) return;
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return;
+  if (index < 0 || index >= conversationHistory.length) return;
+  const target = conversationHistory[index];
+  if (!target || target.role !== "assistant" || target.ooc !== true) return;
+  if (state.settings.lockMemoryMessages && target?.summarized) {
+    showToast(t("memoryMessageLockedNotice"), "warning");
+    return;
+  }
+  const userIndex = findPreviousOocUserMessageIndex(index - 1);
+  if (userIndex < 0) return;
+  const userMessage = conversationHistory[userIndex];
+  if (!userMessage || !userMessage.content) return;
+
+  window.stopTtsPlayback();
+  state.sending = true;
+  state.chatAutoScroll = true;
+  state.abortController = new AbortController();
+  state.activeGenerationThreadId = threadId;
+  setSendingState(true);
+  state.pendingPersonaInjectionPersonaId = null;
+
+  const isViewing = isViewingThread(currentThread.id);
+  const messagesToSave = conversationHistory.map((m) => ({ ...m }));
+
+  target.content = "";
+  target.generationStatus = "regenerating";
+  target.generationError = "";
+  target.ooc = true;
+  messagesToSave[index].content = "";
+  messagesToSave[index].generationStatus = "regenerating";
+  messagesToSave[index].generationError = "";
+  messagesToSave[index].ooc = true;
+
+  renderChat();
+  const row = document.getElementById("chat-log").children[index];
+  const contentEl = row?.querySelector(".message-content");
+  if (row) row.dataset.streaming = "1";
+  refreshMessageControlStates();
+  if (contentEl) {
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
+      t("regeneratingLabel"),
+    )}`;
+  }
+  if (isViewing) scrollChatToBottom();
+
+  try {
+    const { systemPrompt } = await buildOocSystemPrompt();
+    const oocRequestMessages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage.content },
+    ];
+    target.requestMessages = oocRequestMessages;
+    messagesToSave[index].requestMessages = oocRequestMessages;
+    const result = await callOpenRouter(
+      systemPrompt,
+      [{ role: "user", content: userMessage.content }],
+      state.settings.model,
+      (chunk) => {
+        target.content += chunk;
+        messagesToSave[index].content = target.content;
+        if (isViewing) {
+          const liveRow = ensureMessageRowExists(index);
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(
+              target.content,
+              target.role,
+            );
+          } else {
+            renderChat();
+          }
+          scrollChatToBottom();
+        }
+      },
+      state.abortController.signal,
+    );
+    state.lastUsedModel = result.model || "";
+    state.lastUsedProvider = result.provider || "";
+    updateModelPill();
+    const assistantText = result.content || target.content || "";
+    target.content = assistantText || "(No content returned)";
+    target.finishReason = String(result.finishReason || "");
+    target.nativeFinishReason = String(result.nativeFinishReason || "");
+    target.truncatedByFilter = result.truncatedByFilter === true;
+    target.generationId = String(result.generationId || "");
+    target.completionMeta = result.completionMeta || null;
+    target.generationInfo = result.generationInfo || null;
+    target.generationFetchDebug = result.generationFetchDebug || [];
+    target.model = result.model || state.settings.model || "";
+    target.temperature = Number(state.settings.temperature) || 0;
+    target.generationError = "";
+    target.generationStatus = "";
+    target.systemMessages = formatOocSystemMessageEntries(
+      result.systemMessages,
+    );
+    messagesToSave[index] = { ...target };
+    if (!isViewing) {
+      target.unreadAt = Date.now();
+      messagesToSave[index].unreadAt = target.unreadAt;
+      playUnreadMessageSound();
+    }
+    await persistThreadMessagesById(threadId, messagesToSave);
+    renderChat();
+    if (isViewing) scrollChatToBottom();
+    await renderThreads();
+
+    // Evaluate SFX triggers and evictions after bot message
+    if (!isViewing && target.role === "assistant") {
+      try {
+        await evaluateSfxTriggers(target, currentThread);
+        await evaluateSfxEvictions(target, currentThread);
+      } catch (sfxErr) {
+        console.warn("SFX evaluation error:", sfxErr);
+      }
+    }
+  } catch (err) {
+    target.generationStatus = "";
+    target.generationError = String(
+      err?.message || err || "OOC request failed",
+    );
+    messagesToSave[index].generationStatus = "";
+    messagesToSave[index].generationError = target.generationError;
+    if (!isViewing) {
+      target.unreadAt = Date.now();
+      messagesToSave[index].unreadAt = target.unreadAt;
+      playUnreadMessageSound();
+    }
+    await persistThreadMessagesById(threadId, messagesToSave);
+    renderChat();
+    if (isViewing) scrollChatToBottom();
+    await renderThreads();
+    showToast(`OOC request failed: ${target.generationError}`, "error");
+  } finally {
+    if (row) {
+      row.dataset.streaming = "0";
+    }
+    state.pendingPersonaInjectionPersonaId = null;
+    state.abortController = null;
+    state.activeGenerationThreadId = null;
+    state.sending = false;
+    setSendingState(false);
+    refreshMessageControlStates();
+  }
+}
+
+function isInCompletionCooldown() {
+  const cooldown = Number(state.settings.completionCooldown) || 0;
+  if (cooldown <= 0) return false;
+  const now = Date.now();
+  const timeSinceLastCompletion = now - (state.lastCompletionTime || 0);
+  return timeSinceLastCompletion < cooldown * 1000;
+}
+
+function getCooldownRemainingSeconds() {
+  const cooldown = Number(state.settings.completionCooldown) || 0;
+  if (cooldown <= 0) return 0;
+  const now = Date.now();
+  const timeSinceLastCompletion = now - (state.lastCompletionTime || 0);
+  const remaining = cooldown - timeSinceLastCompletion / 1000;
+  return Math.max(0, Math.ceil(remaining));
+}
+
+function getActiveSummaryThreshold() {
+  if (typeof window.getSummaryThresholdValue === "function") {
+    return window.getSummaryThresholdValue(state.settings.summaryThreshold);
+  }
+  const fallback = Number(state.settings.summaryThreshold);
+  return Number.isFinite(fallback)
+    ? fallback
+    : DEFAULT_SETTINGS.summaryThreshold;
+}
+
+function getUnsummarizedMessageCount() {
+  return conversationHistory.reduce((count, message) => {
+    if (!message) return count;
+    if (message.ooc === true) return count;
+    if (isPlaceholderMessage(message)) return count;
+    const role = message.role;
+    if (role !== "assistant" && role !== "user") return count;
+    if (message.summarized === true) return count;
+    return count + 1;
+  }, 0);
+}
+
+function shouldTriggerMemorySummaries(character) {
+  if (!character || character.useMemory === false) return false;
+  const threshold = getActiveSummaryThreshold();
+  if (threshold <= 0) return false;
+  return getUnsummarizedMessageCount() >= threshold;
+}
+
+async function generateBotReply() {
+  if (!currentThread || !currentCharacter || state.sending) return;
+
+  // Check if we need to generate title before bot reply
+  const titleReady = await maybeGenerateTitleBeforeBotReply();
+  if (titleReady === false) return;
+
+  const cooldown = Number(state.settings.completionCooldown) || 0;
+  const threadId = Number(currentThread.id);
+  if (cooldown > 0 && isInCompletionCooldown()) {
+    await queueThreadForCooldown(threadId);
+    return;
+  }
+  const displayHistory = getFilteredConversationHistoryForThread();
+  const includeOoc = currentCharacter?.includeOocInCompletions === true;
+  const inSimulationHistory = getInSimulationMessages(displayHistory, {
+    includeOoc,
+  });
+  const includeOneTimeExtra =
+    shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
+  const generationCharacter = currentCharacter;
+  const generationPersona = currentPersona;
+  const generationThreadSnapshot = { ...currentThread };
+  const generationHistory = conversationHistory;
+  let writingTurnCountForThread = getThreadWritingInstructionsTurnCount(
+    generationThreadSnapshot,
+  );
+  const writingTurnIndex = getNextWritingInstructionsTurnIndex(
+    generationThreadSnapshot,
+  );
+  const promptContext = await buildSystemPrompt(generationCharacter, {
+    includeOneTimeExtraPrompt: includeOneTimeExtra,
+    writingInstructionsTurnIndex: writingTurnIndex,
+    returnTrace: true,
+    personaOverride: generationPersona,
+    historyOverride: inSimulationHistory,
+    threadOverride: generationThreadSnapshot,
+  });
+  const systemPrompt = promptContext.prompt;
+  const messagesWithoutSystem = inSimulationHistory
+    .filter((m) => !m.summarized)
+    .map((m) => {
+      const role = m.role === "ai" ? "assistant" : m.role;
+      let content = removeImageLinksFromContent(m.content);
+      if (
+        role === "user" &&
+        currentCharacter?.personaPrefixEnabled !== false &&
+        m.senderName &&
+        m.senderName !== "You" &&
+        currentThread?.oocModeEnabled !== true &&
+        m.ooc !== true
+      ) {
+        content = `(As ${m.senderName}): ${content}`;
+      }
+      return { role, content };
+    });
+
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...messagesWithoutSystem,
+  ];
+  if (promptContext.personaInjectionForEndMessages) {
+    promptMessages.push({
+      role: "system",
+      content: promptContext.personaInjectionForEndMessages,
+    });
+  }
+  state.currentRequestMessages = promptMessages;
+
+  const log = document.getElementById("chat-log");
+  const existingPendingIdx = findLatestPendingAssistantIndex(generationHistory);
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+  let pending = null;
+  let pendingIndex = existingPendingIdx;
+  let originalPendingIndex =
+    pendingIndex >= 0 ? loadedStartIndex + pendingIndex : -1;
+  if (existingPendingIdx >= 0) {
+    pending = generationHistory[existingPendingIdx];
+    pending.placeholder = false;
+    pending.content = "";
+    pending.generationStatus = "generating";
+    pending.generationError = "";
+    pending.truncatedByFilter = false;
+    pending.model = state.settings.model || "";
+    pending.temperature = Number(state.settings.temperature) || 0;
+    pending.requestMessages = state.currentRequestMessages || null;
+    if (!Number.isInteger(Number(pending.writingInstructionsTurnIndex))) {
+      pending.writingInstructionsTurnIndex = writingTurnIndex;
+      pending.writingInstructionsCounted = false;
+    }
+    if (currentThread && Number(currentThread.id) === threadId) {
+      currentThread.messages = [...generationHistory];
+      updateThreadMessageCount(threadId, generationHistory);
+    }
+  } else {
+    pending = {
+      role: "assistant",
+      content: "",
+      generationStatus: "generating",
+      createdAt: Date.now(),
+      finishReason: "",
+      nativeFinishReason: "",
+      truncatedByFilter: false,
+      generationId: "",
+      completionMeta: null,
+      generationInfo: null,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+      writingInstructionsTurnIndex: writingTurnIndex,
+      writingInstructionsCounted: false,
+      model: state.settings.model || "",
+      temperature: Number(state.settings.temperature) || 0,
+      topP: Number(state.settings.topP) || 1,
+      maxTokens: Number(state.settings.maxTokens) || 0,
+      frequencyPenalty: Number(state.settings.frequencyPenalty) || 0,
+      presencePenalty: Number(state.settings.presencePenalty) || 0,
+      streamEnabled: Boolean(state.settings.streamEnabled),
+      requestMessages: state.currentRequestMessages || null,
+    };
+    generationHistory.push(pending);
+    pendingIndex = generationHistory.length - 1;
+    originalPendingIndex = loadedStartIndex + pendingIndex;
+    if (currentThread && Number(currentThread.id) === threadId) {
+      currentThread.messages = [...generationHistory];
+      updateThreadMessageCount(threadId, generationHistory);
+    }
+  }
+  await clearThreadGenerationQueueFlag(threadId);
+  await persistThreadMessagesById(threadId, generationHistory);
+  if (promptContext.personaInjectionAppliedOnce) {
+    await markThreadPersonaInjectionOnceApplied();
+  }
+  let pendingRow = null;
+  if (log) {
+    pendingRow = log.querySelector(
+      `.chat-row[data-message-index="${originalPendingIndex}"]`,
+    );
+    if (!pendingRow) {
+      pendingRow = buildMessageRow(
+        pending,
+        originalPendingIndex,
+        true,
+        displayHistory,
+      );
+      log.appendChild(pendingRow);
+    }
+  }
+  if (isViewingThread(threadId) && pendingRow) {
+    const pendingContent = pendingRow.querySelector(".message-content");
+    if (pendingContent) {
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
+    }
+    scrollChatToBottom();
+  }
+
+  state.sending = true;
+  state.activeGenerationThreadId = threadId;
+  state.chatAutoScroll = true;
+  state.abortController = new AbortController();
+  setSendingState(true);
+
+  try {
+    const result = await callOpenRouter(
+      systemPrompt,
+      messagesWithoutSystem,
+      state.settings.model,
+      (chunk) => {
+        pending.content += chunk;
+        if (state.settings.streamEnabled) {
+          persistThreadMessagesById(threadId, generationHistory).catch(
+            () => {},
+          );
+        }
+        const liveRow = ensureMessageRowExists(pendingIndex);
+        const liveContent = liveRow?.querySelector(".message-content");
+        if (liveContent) {
+          liveContent.innerHTML = renderMessageHtml(
+            pending.content,
+            pending.role,
+          );
+        }
+        if (isViewingThread(threadId)) scrollChatToBottom();
+      },
+      state.abortController.signal,
+    );
+    const assistantText = result.content || pending.content || "";
+    state.lastUsedModel = result.model || "";
+    state.lastUsedProvider = result.provider || "";
+    updateModelPill();
+
+    pending.content = assistantText || "(No content returned)";
+    pending.finishReason = String(result.finishReason || "");
+    pending.nativeFinishReason = String(result.nativeFinishReason || "");
+    pending.truncatedByFilter = result.truncatedByFilter === true;
+    const finishReasonValue = result.finishReason;
+    const isOkFinish = finishReasonValue === "stop";
+    if (!isOkFinish && !pending.truncatedByFilter) {
+      pending.generationError = `finish_reason: ${finishReasonValue ?? "null"}`;
+    } else {
+      pending.generationError = "";
+    }
+    pending.generationStatus = "";
+    if (!isViewingThread(threadId)) {
+      pending.unreadAt = Date.now();
+      playUnreadMessageSound();
+    }
+    if (pending.writingInstructionsCounted !== true) {
+      pending.writingInstructionsCounted = true;
+      writingTurnCountForThread = Math.max(
+        writingTurnCountForThread,
+        Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
+      );
+    }
+    if (isViewingThread(threadId)) {
+      refreshLatestAssistantRowContent();
+    }
+    if (currentThread && Number(currentThread.id) === threadId) {
+      commitPendingPersonaInjectionMarker();
+    } else {
+      state.pendingPersonaInjectionPersonaId = null;
+    }
+    await persistThreadMessagesById(threadId, generationHistory, {
+      writingInstructionsTurnCount: writingTurnCountForThread,
+    });
+    if (isViewingThread(threadId)) {
+      maybeAutoSpeakAssistantMessage(pendingIndex).catch(() => {});
+      await maybeGenerateThreadTitle();
+      scrollChatToBottom();
+    }
+
+    if (
+      shouldTriggerMemorySummaries(generationCharacter) &&
+      isViewingThread(threadId)
+    ) {
+      await summarizeMemory(generationCharacter);
+    }
+
+    await renderThreads();
+  } catch (e) {
+    state.pendingPersonaInjectionPersonaId = null;
+    if (isAbortError(e)) {
+      if (!pending.content.trim()) {
+        const idx = generationHistory.lastIndexOf(pending);
+        if (idx >= 0) generationHistory.splice(idx, 1);
+        if (pendingRow) pendingRow.remove();
+      } else {
+        pending.generationStatus = "";
+        if (isViewingThread(threadId)) {
+          refreshLatestAssistantRowContent();
+        }
+        if (isViewingThread(threadId)) {
+          window.refreshAllSpeakerButtons();
+        }
+      }
+      await persistThreadMessagesById(threadId, generationHistory);
+      await renderThreads();
+      showToast(t("generationCancelled"), "success");
+    } else {
+      pending.generationError = String(e?.message || "Unknown error");
+      pending.generationStatus = "";
+      if (!String(pending.content || "").trim()) {
+        pending.content = "";
+      }
+      if (isViewingThread(threadId)) {
+        refreshLatestAssistantRowContent();
+      }
+      if (isViewingThread(threadId)) {
+        window.refreshAllSpeakerButtons();
+        refreshMessageControlStates();
+      }
+      await persistThreadMessagesById(threadId, generationHistory);
+      await renderThreads();
+      showToast(t("generationFailed"), "error");
+    }
+  } finally {
+    state.pendingPersonaInjectionPersonaId = null;
+    state.abortController = null;
+    state.sending = false;
+    state.activeGenerationThreadId = null;
+    setSendingState(false);
+    await renderThreads();
+    await processNextQueuedThread();
+  }
+}
+
+async function deleteMessageAt(index) {
+  if (!currentThread) return;
+  if (index < 0 || index >= conversationHistory.length) return;
+
+  window.stopTtsPlayback();
+  const target = conversationHistory[index];
+  const targetRole = normalizeApiRole(target?.apiRole || target?.role);
+  if (state.settings.lockMemoryMessages && target?.summarized) {
+    showToast(t("memoryMessageLockedNotice"), "warning");
+    return;
+  }
+  const previewBase = String(target?.content || "").trim();
+  const truncatedPreview =
+    previewBase.length > 120 ? `${previewBase.slice(0, 120)}…` : previewBase;
+  const previewText = truncatedPreview
+    ? `\n\n"${truncatedPreview}"`
+    : truncatedPreview;
+  const ok = await openConfirmDialog(
+    t("deleteMessageTitle"),
+    tf("deleteMessageConfirm", { preview: previewText }),
+  );
+  if (!ok) return;
+
+  // Determine if this is an API-generated assistant message (not manual, not OOC) and placement is "once"
+  const isApiAssistant =
+    targetRole === "assistant" &&
+    !target?.ooc &&
+    target.manualMessage !== true &&
+    currentCharacter?.personaInjectionPlacement === "once";
+
+  const latestCountedTurn =
+    getThreadWritingInstructionsTurnCount(currentThread);
+  const targetTurn = Number(target?.writingInstructionsTurnIndex);
+  const isLatestAssistant =
+    targetRole === "assistant" &&
+    isLatestAssistantMessageIndex(index, conversationHistory);
+  const isLatestCountedAssistant =
+    isLatestAssistant &&
+    target?.writingInstructionsCounted === true &&
+    Number.isInteger(targetTurn) &&
+    targetTurn === latestCountedTurn;
+  conversationHistory.splice(index, 1);
+  if (currentThread) {
+    currentThread.messages = [...conversationHistory];
+    const msgCount = conversationHistory.length;
+    updateThreadMessageCount(currentThread.id, conversationHistory);
+  }
+  if (target?.isInitial && currentThread) {
+    currentThread.initialMessagesRemoved = true;
+  }
+
+  // After deletion, if the deleted message was an API assistant and no other API assistants remain, clear the once flag
+  if (isApiAssistant) {
+    const hasApiAssistant = conversationHistory.some((m) => {
+      const role = normalizeApiRole(m?.apiRole || m?.role);
+      return role === "assistant" && m.manualMessage !== true && m.ooc !== true;
+    });
+    if (!hasApiAssistant) {
+      await clearThreadPersonaInjectionOnceApplied();
+    }
+  }
+  if (isLatestCountedAssistant && currentThread) {
+    currentThread.writingInstructionsTurnCount = Math.max(
+      0,
+      latestCountedTurn - 1,
+    );
+  }
+  await persistCurrentThread(false, { skipUpdatedAt: true });
+  renderChat();
+}
+
+async function regenerateMessage(index) {
+  if (!currentThread || !currentCharacter || state.sending) return;
+  const threadId = Number(currentThread.id);
+  if (!Number.isInteger(threadId)) return;
+  if (index < 0 || index >= conversationHistory.length) return;
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+  const originalIndex = loadedStartIndex + index;
+
+  const cooldown = Number(state.settings.completionCooldown) || 0;
+  if (cooldown > 0 && isInCompletionCooldown()) {
+    const target = conversationHistory[index];
+    await queueThreadForCooldown(threadId, target);
+    return;
+  }
+  if (state.generationQueue.length > 0) {
+    const headId = Number(state.generationQueue[0]);
+    if (headId !== threadId) {
+      const queuedIdx = state.generationQueue.indexOf(threadId);
+      const queueNotice =
+        queuedIdx >= 0
+          ? tf("generationQueuedNoticeWithPos", { position: queuedIdx + 1 })
+          : t("generationQueuedNotice");
+      showToast(queueNotice, "warning");
+      return;
+    }
+    await clearThreadGenerationQueueFlag(threadId);
+  }
+
+  const target = conversationHistory[index];
+  if (!target || target.role !== "assistant") return;
+  if (
+    target.ooc !== true &&
+    currentCharacter?.personaInjectionPlacement === "once" &&
+    isFirstAssistantMessageIndex(index)
+  ) {
+    await clearThreadPersonaInjectionOnceApplied();
+  }
+  if (target.manualMessage === true) return;
+  if (target.ooc === true) {
+    await regenerateOocMessage(index);
+    return;
+  }
+  target.placeholder = false;
+  target.generationStatus = "regenerating";
+  if (state.settings.lockMemoryMessages && target?.summarized) {
+    showToast(t("memoryMessageLockedNotice"), "warning");
+    return;
+  }
+
+  const displayHistory = getFilteredConversationHistoryForThread();
+  const prior = displayHistory.slice(0, index);
+  const includeOoc = currentCharacter?.includeOocInCompletions === true;
+  const regenHistory = getInSimulationMessages(prior, { includeOoc });
+  const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
+  const regenWritingTurnIndex =
+    Number(target.writingInstructionsTurnIndex) || 0;
+  const effectiveWritingTurnIndex =
+    regenWritingTurnIndex > 0
+      ? regenWritingTurnIndex
+      : Math.max(1, getThreadWritingInstructionsTurnCount(currentThread));
+  const originalContent = String(target.content || "");
+  const messagesToSave = conversationHistory.map((m) => ({ ...m }));
+
+  window.stopTtsPlayback();
+  state.sending = true;
+  state.chatAutoScroll = true;
+  state.abortController = new AbortController();
+  state.activeGenerationThreadId = threadId;
+  setSendingState(true);
+
+  try {
+    const promptContext = await buildSystemPrompt(currentCharacter, {
+      includeOneTimeExtraPrompt: includeOneTimeExtra,
+      writingInstructionsTurnIndex: effectiveWritingTurnIndex,
+      returnTrace: true,
+      historyOverride: regenHistory,
+    });
+    const systemPrompt = promptContext.prompt;
+    const regenMessagesWithoutSystem = regenHistory
+      .filter((m) => !m.summarized)
+      .map((m) => {
+        const role = m.role === "ai" ? "assistant" : m.role;
+        let content = m.content;
+        if (
+          role === "user" &&
+          currentCharacter?.personaPrefixEnabled !== false &&
+          m.senderName &&
+          m.senderName !== "You" &&
+          currentThread?.oocModeEnabled !== true &&
+          m.ooc !== true
+        ) {
+          content = `(As ${m.senderName}): ${content}`;
+        }
+        return { role, content };
+      });
+    const regenMessages = [
+      { role: "system", content: systemPrompt },
+      ...regenMessagesWithoutSystem,
+    ];
+    if (promptContext.personaInjectionForEndMessages) {
+      regenMessages.push({
+        role: "system",
+        content: promptContext.personaInjectionForEndMessages,
+      });
+    }
+    target.requestMessages = regenMessages;
+    target.content = "";
+    target.generationStatus = "regenerating";
+    messagesToSave[index].content = target.content;
+    messagesToSave[index].generationStatus = target.generationStatus;
+    await persistThreadMessagesById(threadId, messagesToSave);
+    renderChat();
+    const log = document.getElementById("chat-log");
+    const row = log?.querySelector(
+      `.chat-row[data-message-index="${originalIndex}"]`,
+    );
+    const contentEl = row?.querySelector(".message-content");
+    if (row) row.dataset.streaming = "1";
+    refreshMessageControlStates();
+    if (contentEl)
+      contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
+    scrollChatToBottom();
+
+    const result = await callOpenRouter(
+      systemPrompt,
+      regenMessagesWithoutSystem,
+      state.settings.model,
+      (chunk) => {
+        target.content += chunk;
+        messagesToSave[index].content = target.content;
+        if (isViewingThread(threadId)) {
+          const liveRow = ensureMessageRowExists(originalIndex);
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(
+              target.content,
+              target.role,
+            );
+          } else {
+            renderChat();
+          }
+          scrollChatToBottom();
+        }
+        if (!isViewingThread(threadId)) {
+          persistThreadMessagesById(threadId, messagesToSave).catch(() => {});
+        }
+      },
+      state.abortController.signal,
+    );
+    const reply = result.content || target.content;
+    state.lastUsedModel = result.model || "";
+    state.lastUsedProvider = result.provider || "";
+    updateModelPill();
+    target.content = reply || "(No content returned)";
+    messagesToSave[index].content = target.content;
+    target.isInitial = false;
+    messagesToSave[index].isInitial = false;
+    target.userEdited = false;
+    messagesToSave[index].userEdited = false;
+    target.finishReason = String(result.finishReason || "");
+    messagesToSave[index].finishReason = target.finishReason;
+    target.nativeFinishReason = String(result.nativeFinishReason || "");
+    messagesToSave[index].nativeFinishReason = target.nativeFinishReason;
+    target.truncatedByFilter = result.truncatedByFilter === true;
+    messagesToSave[index].truncatedByFilter = target.truncatedByFilter;
+    target.generationId = String(result.generationId || "");
+    messagesToSave[index].generationId = target.generationId;
+    target.completionMeta = result.completionMeta || null;
+    messagesToSave[index].completionMeta = target.completionMeta;
+    target.generationInfo = result.generationInfo || null;
+    messagesToSave[index].generationInfo = target.generationInfo;
+    target.generationFetchDebug = result.generationFetchDebug || [];
+    messagesToSave[index].generationFetchDebug = target.generationFetchDebug;
+    target.model = result.model || state.settings.model || "";
+    messagesToSave[index].model = target.model;
+    target.temperature = Number(state.settings.temperature) || 0;
+    messagesToSave[index].temperature = target.temperature;
+    target.systemMessages =
+      target.ooc === true
+        ? formatOocSystemMessageEntries(result.systemMessages)
+        : Array.isArray(result.systemMessages)
+          ? result.systemMessages.filter(
+              (entry) => entry && String(entry.content || "").trim(),
+            )
+          : [];
+    messagesToSave[index].systemMessages = target.systemMessages;
+    target.generationError = "";
+    target.generationStatus = "";
+    messagesToSave[index] = { ...target };
+    target.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
+      ? promptContext.usedLoreEntries
+      : [];
+    messagesToSave[index].usedLoreEntries = target.usedLoreEntries;
+    target.usedMemorySummary = String(promptContext.memory || "");
+    messagesToSave[index].usedMemorySummary = target.usedMemorySummary;
+    if (!Number.isInteger(Number(target.writingInstructionsTurnIndex))) {
+      target.writingInstructionsTurnIndex = effectiveWritingTurnIndex;
+      messagesToSave[index].writingInstructionsTurnIndex =
+        target.writingInstructionsTurnIndex;
+    }
+    if (!isViewingThread(threadId)) {
+      target.unreadAt = Date.now();
+      messagesToSave[index].unreadAt = target.unreadAt;
+      playUnreadMessageSound();
+    }
+    commitPendingPersonaInjectionMarker();
+    await persistThreadMessagesById(threadId, messagesToSave);
+    if (promptContext.newLoreState) {
+      await updateLoreState(threadId, promptContext.newLoreState);
+    }
+    renderChat();
+    maybeAutoSpeakAssistantMessage(index).catch(() => {});
+    await renderThreads();
+  } catch (e) {
+    state.pendingPersonaInjectionPersonaId = null;
+    if (isAbortError(e)) {
+      target.generationStatus = "";
+      messagesToSave[index].generationStatus = "";
+      await persistThreadMessagesById(threadId, messagesToSave);
+      renderChat();
+      await renderThreads();
+      showToast(t("regenerationCancelled"), "success");
+    } else {
+      target.generationError = String(e?.message || "Unknown error");
+      target.generationStatus = "";
+      messagesToSave[index].generationError = target.generationError;
+      messagesToSave[index].generationStatus = "";
+      if (!isViewingThread(threadId)) {
+        target.unreadAt = Date.now();
+        messagesToSave[index].unreadAt = target.unreadAt;
+        playUnreadMessageSound();
+      }
+      await persistThreadMessagesById(threadId, messagesToSave);
+      renderChat();
+      window.refreshAllSpeakerButtons();
+      refreshMessageControlStates();
+      await renderThreads();
+      showToast(t("generationFailed"), "error");
+    }
+  } finally {
+    state.pendingPersonaInjectionPersonaId = null;
+    state.abortController = null;
+    state.activeGenerationThreadId = null;
+    state.sending = false;
+    setSendingState(false);
+  }
+}
+
+function commitPendingPersonaInjectionMarker() {
+  if (!currentThread) return;
+  if (!state.pendingPersonaInjectionPersonaId) return;
+  currentThread.lastPersonaInjectionPersonaId =
+    state.pendingPersonaInjectionPersonaId;
+}
+
+async function copyTextWithToast(text, successKey) {
+  try {
+    await navigator.clipboard.writeText(String(text ?? ""));
+    showToast(t(successKey), "success");
+  } catch {
+    await openInfoDialog(t("copyFailedTitle"), t("copyFailedMessage"));
+  }
+}
+
+async function copyMessage(text) {
+  return copyTextWithToast(text, "messageCopied");
+}
+
+async function copyCodeBlockText(text) {
+  return copyTextWithToast(text, "codeBlockCopied");
+}
+
+function getCurrentCharacterTtsOptions() {
+  const resolved = getResolvedTtsSelection(
+    currentCharacter?.ttsLanguage,
+    currentCharacter?.ttsVoice,
+    currentCharacter?.ttsRate,
+    currentCharacter?.ttsPitch,
+  );
+  const provider = String(
+    currentCharacter?.ttsProvider || "kokoro",
+  ).toLowerCase();
+  const options = {
+    voice: resolved.voice || DEFAULT_TTS_VOICE,
+    language: resolved.language || DEFAULT_TTS_LANGUAGE,
+    rate: resolved.rate,
+    pitch: resolved.pitch,
+    provider,
+    kokoro: buildKokoroOptions(currentCharacter, resolved.rate),
+  };
+  return options;
+}
+
+function getTtsOptionsFromCharacterModal() {
+  const resolved = getResolvedCharTtsSelection();
+  const provider = getCharModalTtsProviderSelection();
+  const kokoroSource = {
+    kokoroDevice: document.getElementById("char-tts-kokoro-device")?.value,
+    kokoroDtype: document.getElementById("char-tts-kokoro-dtype")?.value,
+    kokoroVoice: document.getElementById("char-tts-kokoro-voice")?.value,
+    kokoroSpeed: resolved.rate,
+  };
+  const options = {
+    voice: resolved.voice || DEFAULT_TTS_VOICE,
+    language: resolved.language || DEFAULT_TTS_LANGUAGE,
+    rate: resolved.rate,
+    pitch: resolved.pitch,
+    provider,
+    kokoro: buildKokoroOptions(kokoroSource, resolved.rate),
+  };
+  return options;
+}
+
+function updateCharTtsTestButtonState() {
+  const btn = document.getElementById("char-tts-test-btn");
+  if (!btn) return;
+  const active = state.charModalTtsTestPlaying === true;
+  const idleLabel = t("testCharacterVoice");
+  const stopLabel = t("stopCharacterVoiceTest");
+  btn.innerHTML = active ? ICONS.stop : ICONS.speaker;
+  const label = active ? stopLabel : idleLabel;
+  btn.setAttribute("aria-label", label);
+  btn.setAttribute("title", label);
+}
+
+async function playCharacterTtsTestFromModal() {
+  if (state.charModalTtsTestPlaying) {
+    window.stopTtsPlayback({ silent: true });
+    state.charModalTtsTestPlaying = false;
+    updateCharTtsTestButtonState();
+    return;
+  }
+  const textInput = document.getElementById("char-tts-test-text");
+  const text =
+    String(textInput?.value || "").trim() || "This is a test voice playback.";
+  state.charModalTtsTestPlaying = true;
+  updateCharTtsTestButtonState();
+  try {
+    await window.playTtsAudio(text, getTtsOptionsFromCharacterModal());
+  } catch (err) {
+    if (window.isTtsCancelledError(err)) return;
+    showToast(
+      tf("ttsTestFailed", { error: err.message || t("unknownError") }),
+      "error",
+    );
+  } finally {
+    state.charModalTtsTestPlaying = false;
+    updateCharTtsTestButtonState();
+  }
+}
+
+function showKokoroDownloadProgress() {
+  const container = document.getElementById("char-tts-kokoro-download");
+  if (container) {
+    container.classList.remove("hidden");
+  }
+}
+
+function hideKokoroDownloadProgress() {
+  const container = document.getElementById("char-tts-kokoro-download");
+  if (container) {
+    container.classList.add("hidden");
+  }
+  const percentEl = document.getElementById("kokoro-download-percent");
+  if (percentEl) {
+    percentEl.textContent = "0%";
+  }
+}
+
+function updateKokoroDownloadProgress(percent) {
+  const percentEl = document.getElementById("kokoro-download-percent");
+  if (percentEl) {
+    percentEl.textContent = `${percent}%`;
+  }
+}
+
+let kokoroDownloadProgressInterval = null;
+
+function startKokoroDownloadProgressMonitor() {
+  stopKokoroDownloadProgressMonitor();
+  kokoroDownloadProgressInterval = setInterval(() => {
+    if (typeof getKokoroVoiceDownloadProgress === "function") {
+      const progress = getKokoroVoiceDownloadProgress();
+      if (progress && progress.total > 0) {
+        updateKokoroDownloadProgress(progress.percent);
+      }
+    }
+  }, 200);
+}
+
+function stopKokoroDownloadProgressMonitor() {
+  if (kokoroDownloadProgressInterval) {
+    clearInterval(kokoroDownloadProgressInterval);
+    kokoroDownloadProgressInterval = null;
+  }
+}
+
+function setupKokoroDownloadCancel() {
+  const cancelBtn = document.getElementById("kokoro-download-cancel");
+  if (cancelBtn) {
+    cancelBtn.onclick = () => {
+      if (typeof cancelKokoroVoiceDownload === "function") {
+        cancelKokoroVoiceDownload();
+      }
+      stopKokoroDownloadProgressMonitor();
+      hideKokoroDownloadProgress();
+    };
+  }
+}
+function openPromptHistory() {
+  if (!currentThread || state.sending) return;
+  if (state.chatOpacityOverlayVisible) return;
+
+  const list = document.getElementById("prompt-history-list");
+  list.innerHTML = "";
+
+  const threadId = currentThread?.id ?? null;
+
+  // Get prompts from our persistent prompt history (user messages)
+  const historyPrompts = (state.promptHistory || []).filter(
+    (entry) => entry.threadId === threadId,
+  );
+
+  // Get command prompts
+  const commandPrompts = (state.promptCommandHistory || [])
+    .filter((entry) => entry.threadId === threadId)
+    .map((entry) => ({ ...entry, isOoc: true })); // Treat commands as OOC for tint
+
+  // Combine and sort by most recent first
+  const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
+    const aTs = Number(a.createdAt) || 0;
+    const bTs = Number(b.createdAt) || 0;
+    return bTs - aTs;
+  });
+
+  if (prompts.length === 0) {
+    const msg = document.createElement("p");
+    msg.className = "muted";
+    msg.textContent = "No prompts yet.";
+    list.appendChild(msg);
+  } else {
+    prompts.forEach((entry) => {
+      const btn = document.createElement("button");
+      btn.className = "prompt-history-item";
+      if (entry.isOoc) {
+        btn.classList.add("ooc-prompt");
+      }
+      btn.textContent = entry.content;
+      const personaColorValue = String(entry.personaColor || "").trim();
+      if (personaColorValue) {
+        btn.dataset.personaColor = normalizePersonaColor(personaColorValue);
+      }
+
+      // Single click: populate and close (with delay to allow double-click detection)
+      btn.addEventListener("click", (e) => {
+        const handler = setTimeout(() => {
+          const promptInput = document.getElementById("user-input");
+          if (promptInput) {
+            promptInput.value = entry.content;
+            promptInput.focus();
+            requestAnimationFrame(() => {
+              adjustUserInputElementHeight(promptInput);
+            });
+          }
+          closePromptHistory();
+        }, 250);
+        btn._clickTimeout = handler;
+      });
+
+      // Double click: populate and auto-send if allowed
+      btn.addEventListener("dblclick", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Cancel pending single-click action
+        if (btn._clickTimeout) {
+          clearTimeout(btn._clickTimeout);
+          btn._clickTimeout = null;
+        }
+        // Check if sending is allowed (same checks as sendMessage)
+        if (!currentThread || !currentCharacter) return;
+        const pendingState = getThreadPendingGenerationState(
+          Number(currentThread.id),
+          conversationHistory,
+        );
+        if (pendingState) {
+          // Block if thread is queued, cooling down, generating, regenerating, or summarizing
+          return;
+        }
+        if (state.sending) {
+          const activeId = Number(state.activeGenerationThreadId);
+          const currentId = Number(currentThread.id);
+          if (Number.isInteger(activeId) && activeId === currentId) {
+            return;
+          }
+        }
+        const promptInput = document.getElementById("user-input");
+        if (promptInput) {
+          promptInput.value = entry.content;
+          requestAnimationFrame(() => {
+            adjustUserInputElementHeight(promptInput);
+            // Attempt to send
+            sendMessage();
+          });
+        }
+        const isCommandEntry =
+          entry.isOoc &&
+          String(entry.content || "")
+            .trim()
+            .startsWith("/");
+        if (isCommandEntry) {
+          setTimeout(() => {
+            promotePromptCommandHistoryEntry(entry);
+          }, 0);
+        }
+        closePromptHistory();
+      });
+
+      list.appendChild(btn);
+    });
+  }
+
+  document.getElementById("prompt-history-popover").classList.remove("hidden");
+  state.promptHistoryOpen = true;
+  positionPromptHistoryPopover();
+
+  ensurePromptHistoryScrollTop(list);
+  applyPersonaColorToPromptHistoryList(list);
+}
+
+function closePromptHistory() {
+  if (!state.promptHistoryOpen) return;
+  document.getElementById("prompt-history-popover").classList.add("hidden");
+  state.promptHistoryOpen = false;
+}
+
+function ensurePromptHistoryScrollTop(list) {
+  if (!list) return;
+  list.scrollTop = 0;
+  list.scrollTo({ top: 0 });
+  requestAnimationFrame(() => {
+    list.scrollTop = 0;
+  });
+}
+
+function promotePromptCommandHistoryEntry(entry) {
+  if (!entry) return;
+  const threadId = entry.threadId ?? null;
+  const content = String(entry.content || "").trim();
+  if (!threadId || !content) return;
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
+    ? state.promptCommandHistory
+    : [];
+  const normalizedThreadId = String(threadId);
+  const normalizedContent = content;
+  const existingIndex = state.promptCommandHistory.findIndex(
+    (item) =>
+      String(item?.threadId ?? "") === normalizedThreadId &&
+      String(item?.content ?? "") === normalizedContent,
+  );
+  if (existingIndex < 0) {
+    return;
+  }
+  const [existingEntry] = state.promptCommandHistory.splice(existingIndex, 1);
+  existingEntry.createdAt = Date.now();
+  state.promptCommandHistory.push(existingEntry);
+  if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
+    state.promptCommandHistory.shift();
+  }
+  savePromptCommandHistory();
+}
+
+async function renderMemoryModalEntries() {
+  const modal = document.getElementById("memory-modal");
+  const entriesRoot = document.getElementById("memory-modal-entries");
+  const statusEl = document.getElementById("memory-modal-status");
+  const saveBtn = document.getElementById("memory-modal-save");
+  if (!modal || !entriesRoot || !statusEl || !saveBtn) return;
+  entriesRoot.innerHTML = "";
+  statusEl.textContent = "";
+  saveBtn.disabled = true;
+  setModalDirtyState("memory-modal", false);
+  if (!currentCharacter || !currentThread) {
+    statusEl.textContent = t("openThreadFirst");
+    return;
+  }
+  if (currentCharacter.useMemory === false) {
+    statusEl.textContent = t("memoryModalDisabled");
+    return;
+  }
+  const entries = await getMemoryEntries(
+    Number(currentCharacter.id),
+    Number(currentThread.id),
+  );
+  if (!entries.length) {
+    statusEl.textContent = t("memoryModalNotTriggered");
+    return;
+  }
+  const highestLevel = getHighestMemoryLevel(entries);
+  const sorted = [...entries].sort((a, b) => {
+    const levelA = getEntryLevel(a);
+    const levelB = getEntryLevel(b);
+    if (levelA !== levelB) return levelA - levelB;
+    const slotA = Number(a?.slotNumber) || 0;
+    const slotB = Number(b?.slotNumber) || 0;
+    return slotA - slotB;
+  });
+  const editableTextareas = [];
+  sorted.forEach((entry, idx) => {
+    const entryLevel = getEntryLevel(entry);
+    const slot =
+      Number(entry.slotNumber) && Number(entry.slotNumber) > 0
+        ? Number(entry.slotNumber)
+        : idx + 1;
+    const textarea = document.createElement("textarea");
+    textarea.id = `memory-entry-${entry.id || idx}`;
+    textarea.rows = 4;
+    textarea.placeholder = tf("memoryModalEntryLabel", {
+      level: entryLevel,
+      slot,
+    });
+    const summaryValue = String(entry.summary || "");
+    textarea.value = summaryValue;
+    textarea.dataset.memoryEntryId = String(entry.id || "");
+    textarea.dataset.originalValue = summaryValue;
+    const isLocked = entryLevel < highestLevel;
+    if (isLocked) {
+      textarea.disabled = true;
+      textarea.title = t("memoryModalLevelLocked");
+    } else {
+      editableTextareas.push(textarea);
+    }
+    const wrapper = document.createElement("div");
+    wrapper.className = "memory-entry";
+    const row = document.createElement("div");
+    row.className = "memory-entry-row";
+    row.appendChild(textarea);
+    if (!isLocked) {
+      const entryData = {
+        id: Number(entry.id),
+        level: entryLevel,
+        slot,
+        summaryUserContent: String(
+          entry.summaryUserContent || entry.summary || "",
+        ),
+        characterId: Number(currentCharacter?.id),
+        threadId: Number(currentThread?.id),
+      };
+      const actions = document.createElement("div");
+      actions.className = "memory-entry-actions";
+      const regenBtn = iconButton(
+        "regenerate",
+        t("memoryEntryRegenerate"),
+        () => openMemoryRegeneratePromptModal(entryData),
+      );
+      regenBtn.classList.add(
+        "memory-entry-action-btn",
+        "memory-entry-regen-btn",
+      );
+      const deleteBtn = iconButton(
+        "delete",
+        t("memoryEntryDelete"),
+        async () => {
+          if (deleteBtn.disabled) return;
+          deleteBtn.disabled = true;
+          try {
+            await handleMemoryEntryDelete(entryData);
+          } finally {
+            deleteBtn.disabled = false;
+          }
+        },
+      );
+      deleteBtn.classList.add(
+        "memory-entry-action-btn",
+        "memory-entry-delete-btn",
+        "danger-btn",
+      );
+      actions.append(regenBtn, deleteBtn);
+      row.appendChild(actions);
+    }
+    wrapper.appendChild(row);
+    entriesRoot.appendChild(wrapper);
+  });
+
+  setupModalTextareas(modal);
+
+  const collapseMemoryEntries = () => {
+    const modalBody = modal.querySelector(".modal-body");
+    const scrollTop = modalBody ? modalBody.scrollTop : 0;
+    modal
+      .querySelectorAll(".textarea-collapse textarea")
+      .forEach((textarea) => {
+        const entryState = textareaCollapseStates.get(textarea);
+        if (entryState) {
+          entryState.setExpanded(false);
+        }
+      });
+    if (modalBody) {
+      requestAnimationFrame(() => {
+        modalBody.scrollTop = scrollTop;
+      });
+    }
+  };
+
+  const enforceExclusiveEntryExpansion = () => {
+    const headers = modal.querySelectorAll(".textarea-collapse-header");
+    headers.forEach((header) => {
+      header.addEventListener("click", () => {
+        headers.forEach((otherHeader) => {
+          if (otherHeader === header) return;
+          const textarea = otherHeader
+            .closest(".textarea-collapse")
+            ?.querySelector("textarea");
+          const entryState = textareaCollapseStates.get(textarea);
+          if (entryState) {
+            entryState.setExpanded(false);
+          }
+        });
+      });
+    });
+  };
+
+  enforceExclusiveEntryExpansion();
+  collapseMemoryEntries();
+  requestAnimationFrame(collapseMemoryEntries);
+
+  const updateSaveState = () => {
+    const hasChanges = editableTextareas.some(
+      (textarea) => textarea.value !== textarea.dataset.originalValue,
+    );
+    setModalDirtyState("memory-modal", hasChanges);
+    saveBtn.disabled = !hasChanges;
+  };
+
+  editableTextareas.forEach((textarea) => {
+    textarea.addEventListener("input", updateSaveState);
+  });
+
+  updateSaveState();
+}
+
+async function deleteMemoryEntryAndRenumber(entryId, characterId, threadId) {
+  if (!Number.isInteger(entryId) || entryId <= 0) return false;
+  if (!Number.isInteger(characterId) || characterId <= 0) return false;
+  await db.memories.delete(entryId);
+  const limit = Math.max(1, getCurrentMemorySlots());
+  const entries = await getMemoryEntries(characterId, threadId);
+  let slot = 1;
+  let level = 1;
+  const updates = [];
+  for (const entry of entries) {
+    const targetSlot = slot;
+    const targetLevel = level;
+    if (
+      Number(entry.slotNumber) !== targetSlot ||
+      Number(entry.levelNumber) !== targetLevel
+    ) {
+      updates.push({
+        id: entry.id,
+        slotNumber: targetSlot,
+        levelNumber: targetLevel,
+      });
+    }
+    slot += 1;
+    if (slot > limit) {
+      slot = 1;
+      level += 1;
+    }
+  }
+  if (updates.length > 0) {
+    await db.transaction("rw", db.memories, async () => {
+      for (const update of updates) {
+        await db.memories.update(update.id, {
+          slotNumber: update.slotNumber,
+          levelNumber: update.levelNumber,
+        });
+      }
+    });
+  }
+  return true;
+}
+
+async function handleMemoryEntryDelete(entry) {
+  if (!entry || !Number.isInteger(entry.id)) return;
+  const level = Number(entry.level) || 1;
+  const slot = Number(entry.slot) || 1;
+  const ok = await openConfirmDialog(
+    t("memoryEntryDeleteTitle"),
+    tf("memoryEntryDeleteConfirm", { level, slot }),
+  );
+  if (!ok) return;
+  const characterId =
+    Number.isInteger(Number(entry.characterId)) && entry.characterId > 0
+      ? Number(entry.characterId)
+      : Number(currentCharacter?.id || 0);
+  const threadId =
+    Number.isInteger(Number(entry.threadId)) && entry.threadId > 0
+      ? Number(entry.threadId)
+      : Number(currentThread?.id || 0);
+  const success = await deleteMemoryEntryAndRenumber(
+    Number(entry.id),
+    characterId,
+    Number.isInteger(threadId) ? threadId : null,
+  );
+  if (!success) return;
+  showToast(t("memoryEntryDeleted"), "success");
+  await renderMemoryModalEntries();
+}
+
+async function openMemoryModal() {
+  await renderMemoryModalEntries();
+  openModal("memory-modal");
+}
+
+async function handleMemoryModalSave() {
+  const modal = document.getElementById("memory-modal");
+  const saveBtn = document.getElementById("memory-modal-save");
+  if (!modal || !saveBtn) return false;
+  const editableTextareas = Array.from(
+    modal.querySelectorAll("#memory-modal-entries textarea"),
+  ).filter((textarea) => !textarea.disabled);
+  if (editableTextareas.length === 0) return false;
+  const updates = [];
+  for (const textarea of editableTextareas) {
+    const trimmed = String(textarea.value || "").trim();
+    if (!trimmed) {
+      showToast(t("memoryModalEmptyEntryWarning"), "error");
+      textarea.focus();
+      return false;
+    }
+    const original = textarea.dataset.originalValue || "";
+    if (textarea.value !== original) {
+      const id = Number(textarea.dataset.memoryEntryId);
+      if (Number.isInteger(id) && id > 0) {
+        updates.push({ id, summary: textarea.value });
+      }
+    }
+  }
+  if (updates.length === 0) return false;
+  saveBtn.disabled = true;
+  try {
+    for (const update of updates) {
+      await db.memories.update(update.id, { summary: update.summary });
+    }
+    showToast(t("memoryModalSaveSuccess"), "success");
+    await renderMemoryModalEntries();
+    return true;
+  } catch (err) {
+    console.warn("Failed to save memory entries:", err);
+    showToast(t("unknownError"), "error");
+    return false;
+  }
+}
+
+let pendingMemoryRegenerationEntry = null;
+let memoryRegenerationInFlight = false;
+
+function openMemoryRegeneratePromptModal(entry) {
+  const modal = document.getElementById("memory-regenerate-prompt-modal");
+  const textarea = document.getElementById("memory-regenerate-prompt-input");
+  const entryLabel = document.getElementById(
+    "memory-regenerate-prompt-entry-label",
+  );
+  const description = document.getElementById(
+    "memory-regenerate-prompt-description",
+  );
+  if (!modal || !textarea) return;
+  pendingMemoryRegenerationEntry = entry;
+  modal.dataset.memoryEntryId = String(entry.id || "");
+  if (entryLabel) {
+    entryLabel.textContent = tf("memoryModalEntryLabel", {
+      level: entry.level,
+      slot: entry.slot,
+    });
+  }
+  if (description) {
+    description.textContent = t("memoryRegeneratePromptDescription");
+  }
+  textarea.value = String(entry.summaryUserContent || "");
+  refreshTextareaWordCount(textarea);
+  modal.classList.remove("hidden");
+  setupModalTextareas(modal);
+  textarea.focus();
+}
+
+function hideMemoryRegeneratePromptModal() {
+  const modal = document.getElementById("memory-regenerate-prompt-modal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  pendingMemoryRegenerationEntry = null;
+}
+
+function isMemoryRegeneratePromptOpen() {
+  const modal = document.getElementById("memory-regenerate-prompt-modal");
+  if (!modal) return false;
+  return !modal.classList.contains("hidden");
+}
+
+function showMemoryRegenerateProgressModal(entryId, level, slot) {
+  const modal = document.getElementById("memory-regenerate-progress-modal");
+  if (!modal) return;
+  modal.dataset.memoryEntryId = String(entryId || "");
+  const entryLabel = document.getElementById(
+    "memory-regenerate-progress-entry-label",
+  );
+  if (entryLabel) {
+    entryLabel.textContent = tf("memoryModalEntryLabel", {
+      level: level || 1,
+      slot: slot || 1,
+    });
+  }
+  const avatar = document.getElementById("memory-regenerate-progress-avatar");
+  if (avatar) {
+    const customAvatar = String(state.settings.oocSystemAvatar || "").trim();
+    avatar.src = customAvatar || DEFAULT_SYSTEM_AVATAR_IMAGE;
+  }
+  const statusEl = document.getElementById("memory-regenerate-progress-status");
+  const spinner = modal.querySelector(".memory-regenerate-progress-spinner");
+  if (statusEl) {
+    statusEl.textContent = t("memoryRegenerateProgressPending");
+  }
+  spinner?.classList.remove("hidden");
+  memoryRegenerationInFlight = true;
+  updateMemoryRegenerateProgressClosers();
+  modal.classList.remove("hidden");
+}
+
+function hideMemoryRegenerateProgressModal() {
+  const modal = document.getElementById("memory-regenerate-progress-modal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  memoryRegenerationInFlight = false;
+  updateMemoryRegenerateProgressClosers();
+}
+
+function updateMemoryRegenerateProgressClosers() {
+  const buttons = document.querySelectorAll(
+    "[data-memory-regenerate-progress-close-btn]",
+  );
+  buttons.forEach((btn) => {
+    btn.disabled = memoryRegenerationInFlight;
+  });
+}
+
+async function handleMemoryRegeneratePromptSubmit() {
+  const textarea = document.getElementById("memory-regenerate-prompt-input");
+  if (!textarea) return;
+  const entryMeta = pendingMemoryRegenerationEntry;
+  if (!entryMeta || !Number.isInteger(Number(entryMeta.id))) return;
+  const promptText = String(textarea.value || "").trim();
+  if (!promptText) {
+    showToast(t("memoryModalEmptyEntryWarning"), "error");
+    textarea.focus();
+    return;
+  }
+  const entryId = Number(entryMeta.id);
+  const level = entryMeta.level || 1;
+  const slot = entryMeta.slot || 1;
+  hideMemoryRegeneratePromptModal();
+  await runMemoryRegeneration(entryId, promptText, level, slot);
+}
+
+async function runMemoryRegeneration(entryId, promptText, level, slot) {
+  if (!Number.isInteger(entryId) || entryId <= 0) return;
+  showMemoryRegenerateProgressModal(entryId, level, slot);
+  const modal = document.getElementById("memory-regenerate-progress-modal");
+  const spinner = modal?.querySelector(".memory-regenerate-progress-spinner");
+  const statusEl = document.getElementById("memory-regenerate-progress-status");
+  try {
+    const summarySystemPrompt =
+      state.settings.summarySystemPrompt ||
+      "You are a helpful summarization assistant.";
+    const requestHistory = [{ role: "user", content: promptText }];
+    const result = await callOpenRouter(
+      summarySystemPrompt,
+      requestHistory,
+      state.settings.model,
+      null,
+      null,
+      {
+        forceStream:
+          state.settings.defaultSummaryStream ??
+          DEFAULT_SETTINGS.defaultSummaryStream,
+        isSummarization: true,
+      },
+    );
+    const summary = String(result.content || "").trim();
+    if (!summary) throw new Error(t("unknownError"));
+    const systemMessages = Array.isArray(result.systemMessages)
+      ? result.systemMessages
+      : [];
+    const systemContentPieces = systemMessages
+      .filter((msg) => msg.role === "system")
+      .map((msg) => String(msg.content || "").trim())
+      .filter(Boolean);
+    const summarySystemContent =
+      systemContentPieces.length > 0
+        ? systemContentPieces.join("\n\n")
+        : summarySystemPrompt;
+    const userContentPieces = requestHistory
+      .filter((msg) => msg.role === "user")
+      .map((msg) => String(msg.content || "").trim())
+      .filter(Boolean);
+    const summaryUserContent =
+      userContentPieces.length > 0
+        ? userContentPieces.join("\n\n")
+        : promptText;
+    await db.memories.update(entryId, {
+      summary,
+      summarySystemContent,
+      summaryUserContent,
+    });
+    if (typeof getEmbedding === "function") {
+      (async () => {
+        try {
+          const embedding = await getEmbedding(String(summary).trim());
+          if (embedding && Array.isArray(embedding)) {
+            await db.memories.update(entryId, { embedding });
+          }
+        } catch (embeddingErr) {
+          console.warn("Failed to generate memory embedding:", embeddingErr);
+        }
+      })();
+    }
+    spinner?.classList.add("hidden");
+    if (statusEl) {
+      statusEl.textContent = summary;
+    }
+    showToast(t("memoryModalSaveSuccess"), "success");
+    await renderMemoryModalEntries();
+  } catch (err) {
+    spinner?.classList.add("hidden");
+    const errorText = String(err?.message || t("unknownError"));
+    if (statusEl) {
+      statusEl.textContent = tf("memoryRegenerateProgressFailed", {
+        error: errorText,
+      });
+    }
+  } finally {
+    memoryRegenerationInFlight = false;
+    updateMemoryRegenerateProgressClosers();
+  }
+}
+
+function setupMemoryRegenerationControls() {
+  document
+    .querySelectorAll("[data-memory-regenerate-prompt-close]")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        hideMemoryRegeneratePromptModal();
+      });
+    });
+  const promptSubmit = document.getElementById(
+    "memory-regenerate-prompt-submit",
+  );
+  promptSubmit?.addEventListener("click", () => {
+    handleMemoryRegeneratePromptSubmit();
+  });
+  document
+    .querySelectorAll("[data-memory-regenerate-progress-close-btn]")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (memoryRegenerationInFlight) return;
+        hideMemoryRegenerateProgressModal();
+      });
+    });
+  const cancelBtn = document.getElementById(
+    "memory-regenerate-progress-cancel",
+  );
+  cancelBtn?.addEventListener("click", () => {
+    if (!memoryRegenerationInFlight) {
+      hideMemoryRegenerateProgressModal();
+      return;
+    }
+    openConfirmDialog(
+      t("confirm"),
+      t("memoryRegenerateProgressCancelConfirm"),
+    ).then((confirmed) => {
+      if (confirmed) {
+        hideMemoryRegenerateProgressModal();
+      }
+    });
+  });
+}
+
+function positionPromptHistoryPopover() {
+  const popover = document.getElementById("prompt-history-popover");
+  const chatView = document.getElementById("chat-view");
+  const inputRow = document.querySelector(".input-row");
+  if (
+    !popover ||
+    !chatView ||
+    !inputRow ||
+    popover.classList.contains("hidden")
+  )
+    return;
+  popover.style.bottom = "";
+  popover.style.top = "0px";
+  const desiredTop = Math.max(0, inputRow.offsetTop - popover.offsetHeight - 8);
+  popover.style.top = `${desiredTop}px`;
+}
+
+function setSendingState(sending) {
+  const sendBtn = document.getElementById("send-btn");
+  const personaSelect = document.getElementById("persona-select");
+  const currentId = Number(currentThread?.id);
+  const activeId = Number(state.activeGenerationThreadId);
+  const hasGeneratingMarker = Array.isArray(conversationHistory)
+    ? conversationHistory.some((m) => {
+        if (!m || m.role !== "assistant") return false;
+        const st = String(m.generationStatus || "").trim();
+        return (
+          st === "generating" ||
+          st === "regenerating" ||
+          st === "title_generating" ||
+          st === "summarizing"
+        );
+      })
+    : false;
+  const hasTitleGeneratingMarker = Array.isArray(conversationHistory)
+    ? conversationHistory.some((m) => {
+        if (!m || m.role !== "assistant") return false;
+        return String(m.generationStatus || "").trim() === "title_generating";
+      })
+    : false;
+  const isActiveGeneration =
+    Number.isInteger(activeId) &&
+    activeId > 0 &&
+    currentId === activeId &&
+    (hasGeneratingMarker || !!state.abortController);
+  const isSummarizing =
+    Number.isInteger(currentId) &&
+    currentId > 0 &&
+    state.summarizationInProgress?.has(currentId) === true;
+  const currentThreadGenerating = isActiveGeneration || isSummarizing;
+  const pendingState = getThreadPendingGenerationState(
+    currentId,
+    conversationHistory,
+  );
+  const isBlockedByQueueOrCooldown =
+    pendingState === "queued" || pendingState === "cooling_down";
+  sendBtn.disabled = isBlockedByQueueOrCooldown;
+  sendBtn.classList.toggle(
+    "is-generating",
+    currentThreadGenerating ||
+      isBlockedByQueueOrCooldown ||
+      hasTitleGeneratingMarker,
+  );
+  sendBtn.classList.toggle(
+    "danger-btn",
+    currentThreadGenerating ||
+      isBlockedByQueueOrCooldown ||
+      hasTitleGeneratingMarker,
+  );
+  if (hasTitleGeneratingMarker) {
+    sendBtn.textContent = "";
+  } else {
+    sendBtn.textContent = "";
+  }
+  personaSelect.disabled =
+    currentThreadGenerating ||
+    isBlockedByQueueOrCooldown ||
+    hasTitleGeneratingMarker;
+  refreshMessageControlStates();
+  window.refreshAllSpeakerButtons();
+  if (currentThreadGenerating) closePromptHistory();
+  renderThreads().catch(() => {});
+}
+
+function refreshMessageControlStates() {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const rows = Array.from(log.querySelectorAll(".chat-row"));
+  rows.forEach((row) => {
+    const index = Number(row.dataset.messageIndex);
+    const message = conversationHistory[index];
+    const isStreaming = row.dataset.streaming === "1";
+    const isTruncated = message?.truncatedByFilter === true;
+    const hasGenerationError = !!String(message?.generationError || "").trim();
+
+    const isLockedMemoryMessage = isMessageLockedByMemory(message);
+    row.querySelectorAll(".msg-delete-btn").forEach((btn) => {
+      btn.disabled = isStreaming || isLockedMemoryMessage;
+    });
+    row.querySelectorAll(".msg-copy-btn").forEach((btn) => {
+      btn.disabled = isStreaming;
+    });
+    row.querySelectorAll(".msg-regen-btn").forEach((btn) => {
+      btn.disabled = state.sending || isStreaming || isLockedMemoryMessage;
+    });
+    row.querySelectorAll(".msg-edit-btn").forEach((btn) => {
+      btn.disabled =
+        isStreaming ||
+        isTruncated ||
+        hasGenerationError ||
+        isLockedMemoryMessage;
+      applyEditButtonEditedStyle(btn, message);
+    });
+    row.querySelectorAll(".msg-info-btn").forEach((btn) => {
+      applyInfoButtonAvailability(btn, message, isStreaming);
+    });
+    row.querySelectorAll(".msg-model-info-btn").forEach((btn) => {
+      const isInitial = message?.isInitial === true;
+      const isUserEdited = message?.userEdited === true;
+      btn.disabled =
+        isStreaming || isInitial || isUserEdited || !message?.model;
+      if (isUserEdited) {
+        btn.setAttribute("title", t("msgMetadataUnavailableEdited"));
+        btn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+      } else if (isInitial) {
+        btn.setAttribute("title", t("msgMetadataUnavailableInitial"));
+        btn.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
+      } else if (isStreaming) {
+        btn.setAttribute("title", t("msgMetadataUnavailableGenerating"));
+        btn.setAttribute(
+          "aria-label",
+          t("msgMetadataUnavailableGeneratingAria"),
+        );
+      } else if (!message?.model) {
+        btn.setAttribute("title", t("msgMetadataUnavailableEdited"));
+        btn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+      } else {
+        btn.setAttribute("title", t("msgModelInfoTitle"));
+        btn.setAttribute("aria-label", t("msgModelInfoTitle"));
+      }
+    });
+    row.querySelectorAll(".msg-system-prompt-btn").forEach((btn) => {
+      const hasMsg = message && Number.isInteger(index) && index >= 0;
+      const isManualMessage = message?.manualMessage === true;
+      btn.disabled = !hasMsg || isManualMessage;
+      if (isManualMessage) {
+        btn.setAttribute("title", t("msgSystemPromptUnavailableManual"));
+        btn.setAttribute("aria-label", t("msgSystemPromptUnavailableManual"));
+        return;
+      }
+      if (hasMsg) {
+        btn.setAttribute("title", t("msgSystemPromptTitle"));
+        btn.setAttribute("aria-label", t("msgSystemPromptTitle"));
+      } else {
+        btn.setAttribute("title", t("msgSystemPromptUnavailable"));
+        btn.setAttribute("aria-label", t("msgSystemPromptUnavailable"));
+      }
+    });
+    row.querySelectorAll(".msg-fork-btn").forEach((btn) => {
+      btn.disabled = isStreaming;
+    });
+  });
+}
+
+async function populateSettingsModels(options = {}) {
+  const modelSelect = document.getElementById("model-select");
+  if (!modelSelect) return;
+  const force = options?.force === true;
+  const provider = state.settings.aiProvider || "openrouter";
+
+  if (state.modelLoad.controller) {
+    state.modelLoad.controller.abort();
+  }
+  const controller = new AbortController();
+  state.modelLoad.controller = controller;
+  const requestId = Number(state.modelLoad.requestId || 0) + 1;
+  state.modelLoad.requestId = requestId;
+
+  modelSelect.innerHTML = "";
+  const loadingOpt = document.createElement("option");
+  loadingOpt.value = "";
+  loadingOpt.textContent = "Loading models...";
+  modelSelect.appendChild(loadingOpt);
+  modelSelect.disabled = true;
+
+  try {
+    if (provider === "aihorde") {
+      if (force || state.hordeModelCatalog.length === 0) {
+        const remoteCatalog = await fetchAIHordeModelCatalog(controller.signal);
+        if (requestId !== state.modelLoad.requestId) return;
+        state.hordeModelCatalog = remoteCatalog;
+      }
+    } else if (provider === "lmstudio") {
+      if (force || state.lmstudioModelCatalog.length === 0) {
+        const remoteCatalog = await fetchLMStudioModelCatalog(controller.signal);
+        if (requestId !== state.modelLoad.requestId) return;
+        state.lmstudioModelCatalog = remoteCatalog;
+      }
+    } else if (provider === "groq") {
+      if (force || state.groqModelCatalog.length === 0) {
+        const remoteCatalog = await fetchGroqModelCatalog(controller.signal);
+        if (requestId !== state.modelLoad.requestId) return;
+        state.groqModelCatalog = remoteCatalog;
+      }
+    } else {
+      if (force || state.modelCatalog.length === 0) {
+        const remoteCatalog = await fetchOpenRouterModelCatalog(
+          controller.signal,
+        );
+        if (requestId !== state.modelLoad.requestId) return;
+        state.modelCatalog = remoteCatalog;
+      }
+    }
+    renderSettingsModelOptions();
+  } catch (err) {
+    if (isAbortError(err)) return;
+    if (provider === "aihorde") {
+      if (state.hordeModelCatalog.length === 0) {
+        state.hordeModelCatalog = getHordeFallbackModelCatalog();
+      }
+      renderSettingsModelOptions();
+      showToast(
+        `Failed to load model list from AI Horde: ${err?.message || "using fallback list."}`,
+        "error",
+      );
+    } else if (provider === "lmstudio") {
+      if (state.lmstudioModelCatalog.length === 0) {
+        state.lmstudioModelCatalog = [];
+      }
+      renderSettingsModelOptions();
+      showToast(
+        `Failed to load model list from LM Studio: ${err?.message || "using empty list."}`,
+        "error",
+      );
+    } else if (provider === "groq") {
+      if (state.groqModelCatalog.length === 0) {
+        state.groqModelCatalog = [];
+      }
+      renderSettingsModelOptions();
+      showToast(
+        `Failed to load model list from Groq: ${err?.message || "using empty list."}`,
+        "error",
+      );
+    } else {
+      if (state.modelCatalog.length === 0) {
+        state.modelCatalog = getFallbackModelCatalog();
+      }
+      renderSettingsModelOptions();
+      showToast(
+        `Failed to load model list from OpenRouter: ${err?.message || "using fallback list."}`,
+        "error",
+      );
+    }
+  } finally {
+    if (requestId === state.modelLoad.requestId) {
+      state.modelLoad.controller = null;
+      modelSelect.disabled = false;
+    }
+  }
+}
+
+function renderSettingsModelOptions() {
+  const modelSelect = document.getElementById("model-select");
+  if (!modelSelect) return;
+  const targetModel = String(state.settings.model || "").trim();
+  const provider = state.settings.aiProvider || "openrouter";
+
+  let catalog;
+  if (provider === "aihorde") {
+    catalog =
+      state.hordeModelCatalog.length > 0
+        ? state.hordeModelCatalog
+        : getHordeFallbackModelCatalog();
+  } else if (provider === "lmstudio") {
+    catalog = state.lmstudioModelCatalog || [];
+  } else if (provider === "groq") {
+    catalog = state.groqModelCatalog || [];
+  } else {
+    catalog =
+      state.modelCatalog.length > 0
+        ? state.modelCatalog
+        : getFallbackModelCatalog();
+  }
+
+  const pricingFilter =
+    state.settings.modelPricingFilter === "free" ||
+    state.settings.modelPricingFilter === "paid"
+      ? state.settings.modelPricingFilter
+      : "all";
+  const modalityFilter =
+    state.settings.modelModalityFilter === "all" ? "all" : "text-only";
+  const sortOrder = [
+    "name_asc",
+    "name_desc",
+    "created_asc",
+    "created_desc",
+  ].includes(state.settings.modelSortOrder)
+    ? state.settings.modelSortOrder
+    : "name_asc";
+
+  const filtered = catalog.filter((m) => {
+    if (pricingFilter === "free" && !isModelFree(m)) return false;
+    if (pricingFilter === "paid" && isModelFree(m)) return false;
+    if (
+      modalityFilter === "text-only" &&
+      String(m.modality || "").toLowerCase() !== "text->text"
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  const favoriteModels = state.settings.favoriteModels || [];
+
+  filtered.sort((a, b) => {
+    const aFav = favoriteModels.includes(a.id);
+    const bFav = favoriteModels.includes(b.id);
+    if (aFav && !bFav) return -1;
+    if (!aFav && bFav) return 1;
+    if (sortOrder === "name_desc") return b.name.localeCompare(a.name);
+    if (sortOrder === "created_asc") return a.created - b.created;
+    if (sortOrder === "created_desc") return b.created - a.created;
+    return a.name.localeCompare(b.name);
+  });
+
+  modelSelect.innerHTML = "";
+  filtered.forEach((m) => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
+    const moderationMark = m.isModerated === true ? " | Moderated" : "";
+    opt.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+    modelSelect.appendChild(opt);
+  });
+
+  const exists = Array.from(modelSelect.options).some(
+    (opt) => String(opt.value || "").trim() === targetModel,
+  );
+  let finalModel = targetModel;
+  if (!exists && targetModel) {
+    const fromCatalog = catalog.find((m) => m.id === targetModel);
+    if (fromCatalog) {
+      const opt = document.createElement("option");
+      opt.value = targetModel;
+      opt.textContent = `${fromCatalog.name} (${targetModel})`;
+      modelSelect.appendChild(opt);
+    } else {
+      finalModel = catalog.length > 0 ? catalog[0].id : DEFAULT_SETTINGS.model;
+      const lastModels = state.settings.lastModelsPerProvider || {};
+      lastModels[provider] = finalModel;
+      state.settings.lastModelsPerProvider = lastModels;
+    }
+  }
+  modelSelect.value = finalModel || DEFAULT_SETTINGS.model;
+
+  renderModelCustomDropdown(filtered, catalog, finalModel);
+
+  const maxTokensSlider = document.getElementById("max-tokens-slider");
+  const maxTokensValue = document.getElementById("max-tokens-value");
+  if (maxTokensSlider && maxTokensValue) {
+    const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
+    state.settings.maxTokens = clampMaxTokens(
+      state.settings.maxTokens,
+      512,
+      maxUpper,
+    );
+    maxTokensSlider.min = "512";
+    maxTokensSlider.max = String(maxUpper);
+    maxTokensSlider.value = String(state.settings.maxTokens);
+    maxTokensValue.textContent = String(state.settings.maxTokens);
+  }
+  refreshSelectedModelMeta();
+}
+
+async function populateAutoTitleSummaryModels() {
+  const autoTitleModel = document.getElementById("default-auto-title-model");
+  const summaryModel = document.getElementById("default-summary-model");
+  if (!autoTitleModel || !summaryModel) return;
+
+  const autoTitleProvider =
+    state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  const summaryProvider =
+    state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+
+  const autoTitleCatalog = await getModelCatalogForProvider(autoTitleProvider, true);
+  const summaryCatalog = await getModelCatalogForProvider(summaryProvider, true);
+
+  const lastModels = state.settings.lastModelsPerProvider || {};
+
+  const autoTitleSelectedModel = getBestModelForProvider(
+    autoTitleProvider,
+    state.settings.autoTitleModel,
+    autoTitleCatalog,
+    lastModels,
+  );
+  const summarySelectedModel = getBestModelForProvider(
+    summaryProvider,
+    state.settings.summaryModel,
+    summaryCatalog,
+    lastModels,
+  );
+
+  renderModelSelectOptions(autoTitleModel, autoTitleCatalog, autoTitleSelectedModel);
+  renderModelSelectOptions(summaryModel, summaryCatalog, summarySelectedModel);
+}
+
+function getBestModelForProvider(provider, currentModel, catalog, lastModels) {
+  if (!currentModel) {
+    return catalog.length > 0 ? catalog[0].id : "";
+  }
+  const existsInCatalog = catalog.some((m) => m.id === currentModel);
+  if (existsInCatalog) {
+    return currentModel;
+  }
+  return catalog.length > 0 ? catalog[0].id : "";
+}
+
+async function getModelCatalogForProvider(provider, skipMainProviderCheck = false) {
+  const mainProvider = state.settings.aiProvider || "openrouter";
+  if (!skipMainProviderCheck && provider !== mainProvider) {
+    return [];
+  }
+  if (provider === "aihorde") {
+    if (state.hordeModelCatalog.length === 0) {
+      try {
+        state.hordeModelCatalog = await fetchAIHordeModelCatalog();
+      } catch {
+        state.hordeModelCatalog = getHordeFallbackModelCatalog();
+      }
+    }
+    return state.hordeModelCatalog;
+  } else if (provider === "lmstudio") {
+    if (state.lmstudioModelCatalog.length === 0) {
+      try {
+        state.lmstudioModelCatalog = await fetchLMStudioModelCatalog();
+      } catch {
+        state.lmstudioModelCatalog = [];
+      }
+    }
+    return state.lmstudioModelCatalog;
+  } else {
+    if (state.modelCatalog.length === 0) {
+      try {
+        state.modelCatalog = await fetchOpenRouterModelCatalog();
+      } catch {
+        state.modelCatalog = getFallbackModelCatalog();
+      }
+    }
+    return state.modelCatalog;
+  }
+}
+
+function renderModelSelectOptions(selectEl, catalog, selectedModel) {
+  if (!selectEl || !catalog) return;
+  selectEl.innerHTML = "";
+  const targetModel = String(selectedModel || "").trim();
+  catalog.forEach((m) => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = `${m.name} (${m.id})`;
+    selectEl.appendChild(opt);
+  });
+  const exists = Array.from(selectEl.options).some(
+    (opt) => String(opt.value || "").trim() === targetModel,
+  );
+  if (!exists && targetModel) {
+    const fromCatalog = catalog.find((m) => m.id === targetModel);
+    const opt = document.createElement("option");
+    opt.value = targetModel;
+    opt.textContent = fromCatalog
+      ? `${fromCatalog.name} (${targetModel})`
+      : `${targetModel} (custom)`;
+    selectEl.appendChild(opt);
+  }
+  selectEl.value = targetModel || "";
+}
+
+function renderModelCustomDropdown(models, catalog, selectedModel) {
+  const dropdownOptions = document.getElementById("model-dropdown-options");
+  const dropdown = document.getElementById("model-custom-dropdown");
+  const display = document.getElementById("model-select-display");
+  if (!dropdownOptions || !dropdown || !display) return;
+
+  const favoriteModels = state.settings.favoriteModels || [];
+  const favoriteModelsList = models.filter((m) =>
+    favoriteModels.includes(m.id),
+  );
+  const otherModelsList = models.filter((m) => !favoriteModels.includes(m.id));
+
+  dropdownOptions.innerHTML = "";
+
+  if (favoriteModelsList.length === 0 && otherModelsList.length === 0) {
+    const emptyMsg = document.createElement("div");
+    emptyMsg.className = "model-dropdown-empty";
+    emptyMsg.textContent = "No models available";
+    dropdownOptions.appendChild(emptyMsg);
+    display.textContent = "No models available";
+    return;
+  }
+
+  if (favoriteModelsList.length > 0) {
+    const header = document.createElement("div");
+    header.className = "model-dropdown-header";
+    header.textContent = t("favoriteModels");
+    dropdownOptions.appendChild(header);
+
+    favoriteModelsList.forEach((m) => {
+      const isSelected = m.id === selectedModel;
+      const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
+      const moderationMark = m.isModerated === true ? " | Moderated" : "";
+
+      const option = document.createElement("div");
+      option.className = `model-dropdown-option${isSelected ? " selected" : ""} favorite`;
+      option.dataset.modelId = m.id;
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "model-name";
+      nameSpan.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+      nameSpan.title = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+      nameSpan.style.color = "#ffd700";
+
+      const starSpan = document.createElement("span");
+      starSpan.className = "model-star favorited";
+      starSpan.innerHTML = "&#9733;";
+      starSpan.title = t("modelUnfavorite");
+      starSpan.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleModelFavorite(m.id);
+      });
+
+      option.appendChild(nameSpan);
+      option.appendChild(starSpan);
+      option.addEventListener("click", () => {
+        selectModelFromDropdown(m.id);
+      });
+
+      dropdownOptions.appendChild(option);
+    });
+  }
+
+  if (otherModelsList.length > 0) {
+    if (favoriteModelsList.length > 0) {
+      const header = document.createElement("div");
+      header.className = "model-dropdown-header";
+      header.textContent = t("all");
+      dropdownOptions.appendChild(header);
+    }
+
+    otherModelsList.forEach((m) => {
+      const isSelected = m.id === selectedModel;
+      const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
+      const moderationMark = m.isModerated === true ? " | Moderated" : "";
+
+      const option = document.createElement("div");
+      option.className = `model-dropdown-option${isSelected ? " selected" : ""}`;
+      option.dataset.modelId = m.id;
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "model-name";
+      nameSpan.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+      nameSpan.title = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+
+      const starSpan = document.createElement("span");
+      starSpan.className = "model-star";
+      starSpan.innerHTML = "&#9734;";
+      starSpan.title = t("modelFavorite");
+      starSpan.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleModelFavorite(m.id);
+      });
+
+      option.appendChild(nameSpan);
+      option.appendChild(starSpan);
+      option.addEventListener("click", () => {
+        selectModelFromDropdown(m.id);
+      });
+
+      dropdownOptions.appendChild(option);
+    });
+  }
+
+  const selectedModelData =
+    models.find((m) => m.id === selectedModel) ||
+    catalog.find((m) => m.id === selectedModel);
+  if (selectedModelData) {
+    const lowContextMark = isLowContextRoleplayModel(selectedModelData)
+      ? " | ! <=16k"
+      : "";
+    const moderationMark =
+      selectedModelData.isModerated === true ? " | Moderated" : "";
+    display.textContent = `${selectedModelData.name} (${selectedModelData.id})${lowContextMark}${moderationMark}`;
+  } else if (selectedModel) {
+    display.textContent = `${selectedModel} (custom)`;
+  } else {
+    display.textContent = "Select a model...";
+  }
+}
+
+function toggleModelFavorite(modelId) {
+  if (!state.settings.favoriteModels) {
+    state.settings.favoriteModels = [];
+  }
+  const index = state.settings.favoriteModels.indexOf(modelId);
+  if (index === -1) {
+    state.settings.favoriteModels.push(modelId);
+  } else {
+    state.settings.favoriteModels.splice(index, 1);
+  }
+  saveSettings();
+  renderSettingsModelOptions();
+}
+
+function selectModelFromDropdown(modelId) {
+  const modelSelect = document.getElementById("model-select");
+  const provider = state.settings.aiProvider || "openrouter";
+  if (modelSelect) {
+    modelSelect.value = modelId;
+    const lastModels = state.settings.lastModelsPerProvider || {};
+    lastModels[provider] = modelId;
+    state.settings.lastModelsPerProvider = lastModels;
+    state.settings.model = modelId;
+    saveSettings();
+    refreshSelectedModelMeta();
+    updateModelPill();
+  }
+  const dropdown = document.getElementById("model-custom-dropdown");
+  if (dropdown) {
+    dropdown.classList.add("hidden");
+  }
+  renderSettingsModelOptions();
+}
+
+async function fetchOpenRouterModelCatalog(signal) {
+  const headers = {};
+  const localKey = String(state.settings.openRouterApiKey || "").trim();
+  const fallbackKey = String(CONFIG.apiKey || "").trim();
+  const apiKey = localKey || fallbackKey;
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+  const res = await fetch("https://openrouter.ai/api/v1/models", {
+    method: "GET",
+    headers,
+    signal,
+  });
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const payload = await res.json();
+      const msg = String(payload?.error?.message || "").trim();
+      if (msg) errorMessage = `${errorMessage}: ${msg}`;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(errorMessage);
+  }
+
+  const payload = await res.json();
+  const list = Array.isArray(payload?.data) ? payload.data : [];
+  const normalized = list
+    .map((model) => normalizeModelCatalogItem(model))
+    .filter(Boolean);
+
+  const byId = new Map(normalized.map((m) => [m.id, m]));
+  if (!byId.has("openrouter/auto")) {
+    byId.set(
+      "openrouter/auto",
+      normalizeModelCatalogItem({
+        id: "openrouter/auto",
+        name: "Auto",
+        architecture: { modality: "text->text" },
+        top_provider: {},
+        pricing: {},
+        created: 0,
+        context_length: 16384,
+      }),
+    );
+  }
+  if (!byId.has("openrouter/free")) {
+    byId.set(
+      "openrouter/free",
+      normalizeModelCatalogItem({
+        id: "openrouter/free",
+        name: "OpenRouter Free Router",
+        architecture: { modality: "text->text" },
+        top_provider: {},
+        pricing: { prompt: "0", completion: "0", request: "0", image: "0" },
+        created: 0,
+        context_length: 16384,
+      }),
+    );
+  }
+  return Array.from(byId.values());
+}
+
+async function fetchLMStudioModelCatalog(signal) {
+  const baseUrl = getLMStudioBaseUrl();
+  const apiMethod = state.settings.lmstudioApiMethod || "openai";
+  const endpoint = apiMethod === "native" ? "/api/v1/models" : "/v1/models";
+  
+  const res = await fetch(`${baseUrl}${endpoint}`, {
+    method: "GET",
+    signal,
+  });
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const payload = await res.json();
+      const msg = String(payload?.error?.message || "").trim();
+      if (msg) errorMessage = `${errorMessage}: ${msg}`;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(errorMessage);
+  }
+
+  const payload = await res.json();
+  let models = [];
+  
+  if (apiMethod === "native") {
+    models = Array.isArray(payload.models) ? payload.models : [];
+  } else {
+    models = Array.isArray(payload.data) ? payload.data : [];
+  }
+
+  const normalized = models
+    .map((model) => normalizeLMStudioModelItem(model))
+    .filter(Boolean);
+
+  return normalized;
+}
+
+function normalizeLMStudioModelItem(model) {
+  const id = String(model?.key || model?.id || "").trim();
+  if (!id) return null;
+  const name = String(model?.display_name || model?.name || model?.id || "").trim();
+  return {
+    id: `lmstudio/${id}`,
+    name: name,
+    created: Number(model?.created) || 0,
+    modality: "text->text",
+    promptPrice: 0,
+    completionPrice: 0,
+    requestPrice: 0,
+    imagePrice: 0,
+    contextLength: Number(model?.max_context_length || model?.context_length || 8192),
+    topContextLength: Number(model?.max_context_length || model?.context_length || 8192),
+    maxCompletionTokens: Number(model?.max_completion_tokens || 4096),
+    isModerated: false,
+  };
+}
+
+function getLMStudioBaseUrl() {
+  const input = document.getElementById("lmstudio-base-url");
+  const defaultUrl = "http://localhost:1234";
+  return input?.value?.trim() || state.settings.lmstudioBaseUrl || defaultUrl;
+}
+
+async function fetchAIHordeModelCatalog(signal) {
+  const res = await fetch(
+    "https://stablehorde.net/api/v2/status/models?type=text",
+    {
+      method: "GET",
+      headers: {
+        "Client-Agent": "rp-llm-backend:1.0:0",
+      },
+      signal,
+    },
+  );
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const payload = await res.json();
+      const msg = String(payload?.error?.message || "").trim();
+      if (msg) errorMessage = `${errorMessage}: ${msg}`;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(errorMessage);
+  }
+
+  const payload = await res.json();
+  const models = Array.isArray(payload) ? payload : [];
+
+  const normalized = models
+    .map((model) => normalizeHordeModelItem(model))
+    .filter(Boolean);
+
+  const byId = new Map(normalized.map((m) => [m.id, m]));
+
+  if (!byId.has("aihorde/auto")) {
+    byId.set("aihorde/auto", {
+      id: "aihorde/auto",
+      name: "Auto (Any available model)",
+      created: 0,
+      modality: "text->text",
+      promptPrice: 0,
+      completionPrice: 0,
+      requestPrice: 0,
+      imagePrice: 0,
+      contextLength: 8192,
+      topContextLength: 8192,
+      maxCompletionTokens: 1024,
+      isModerated: false,
+    });
+  }
+
+  return Array.from(byId.values());
+}
+
+async function fetchGroqModelCatalog(signal) {
+  const apiKey = state.settings.groqApiKey;
+  if (!apiKey) {
+    throw new Error("Missing Groq API key");
+  }
+
+  const res = await fetch("https://api.groq.com/openai/v1/models", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+    signal,
+  });
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}`;
+    try {
+      const payload = await res.json();
+      const msg = String(payload?.error?.message || "").trim();
+      if (msg) errorMessage = `${errorMessage}: ${msg}`;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(errorMessage);
+  }
+
+  const payload = await res.json();
+  const models = Array.isArray(payload.data) ? payload.data : [];
+
+  const normalized = models
+    .filter(m => m.active)
+    .map((model) => normalizeGroqModelItem(model))
+    .filter(Boolean);
+
+  return normalized;
+}
+
+function normalizeGroqModelItem(model) {
+  const id = String(model?.id || "").trim();
+  if (!id) return null;
+  return {
+    id: `groq/${id}`,
+    name: id,
+    created: Number(model?.created) || 0,
+    modality: "text->text",
+    promptPrice: 0,
+    completionPrice: 0,
+    requestPrice: 0,
+    imagePrice: 0,
+    contextLength: Number(model?.context_window) || 8192,
+    topContextLength: Number(model?.context_window) || 8192,
+    maxCompletionTokens: Number(model?.max_completion_tokens) || 8192,
+    isModerated: false,
+  };
+}
+
+function normalizeHordeModelItem(model) {
+  const id = String(model?.name || model?.id || "").trim();
+  if (!id) return null;
+  const name = String(model?.name || model?.id || "").trim();
+  const maxContext = Number(model?.max_context_length || 8192);
+  const maxLength = Number(model?.max_length || 1024);
+  return {
+    id: `aihorde/${id}`,
+    name: name,
+    created: 0,
+    modality: "text->text",
+    promptPrice: 0,
+    completionPrice: 0,
+    requestPrice: 0,
+    imagePrice: 0,
+    contextLength: maxContext,
+    topContextLength: maxContext,
+    maxCompletionTokens: maxLength,
+    isModerated: false,
+    hordeStats: {
+      workers: model?.workers || 0,
+      queued: model?.queued || 0,
+      speed: model?.speed || 0,
+      eta: model?.eta || 0,
+    },
+  };
+}
+
+function getHordeFallbackModelCatalog() {
+  return [
+    {
+      id: "aihorde/auto",
+      name: "Auto (Any available model)",
+      created: 0,
+      modality: "text->text",
+      promptPrice: 0,
+      completionPrice: 0,
+      requestPrice: 0,
+      imagePrice: 0,
+      contextLength: 8192,
+      topContextLength: 8192,
+      maxCompletionTokens: 1024,
+      isModerated: false,
+    },
+  ];
+}
+
+function normalizeModelCatalogItem(model) {
+  const id = String(model?.id || "").trim();
+  if (!id) return null;
+  const name = String(model?.name || id).trim();
+  const pricing = model?.pricing || {};
+  const topProvider = model?.top_provider || {};
+  const contextLength = Number(model?.context_length) || 0;
+  const topContext = Number(topProvider?.context_length) || 0;
+  const maxCompletion = Number(topProvider?.max_completion_tokens) || 0;
+  return {
+    id,
+    name,
+    created: Number(model?.created) || 0,
+    modality: String(model?.architecture?.modality || "").toLowerCase(),
+    promptPrice: Number(pricing?.prompt) || 0,
+    completionPrice: Number(pricing?.completion) || 0,
+    requestPrice: Number(pricing?.request) || 0,
+    imagePrice: Number(pricing?.image) || 0,
+    contextLength,
+    topContextLength: topContext,
+    maxCompletionTokens: maxCompletion,
+    isModerated: topProvider?.is_moderated === true,
+  };
+}
+
+function getFallbackModelCatalog() {
+  return MODEL_OPTIONS.map((m, idx) =>
+    normalizeModelCatalogItem({
+      id: m.value,
+      name: m.label,
+      created: idx,
+      architecture: { modality: "text->text" },
+      top_provider: {},
+      pricing: String(m.value || "").includes(":free")
+        ? { prompt: "0", completion: "0", request: "0", image: "0" }
+        : {},
+      context_length: 16384,
+    }),
+  ).filter(Boolean);
+}
+
+function isModelFree(model) {
+  if (!model) return false;
+  if (String(model.id || "").includes(":free")) return true;
+  return (
+    Number(model.promptPrice || 0) <= 0 &&
+    Number(model.completionPrice || 0) <= 0 &&
+    Number(model.requestPrice || 0) <= 0 &&
+    Number(model.imagePrice || 0) <= 0
+  );
+}
+
+function getSelectedModelMeta(modelId) {
+  const id = String(modelId || state.settings.model || "").trim();
+  if (!id) return null;
+  const catalog =
+    state.modelCatalog.length > 0
+      ? state.modelCatalog
+      : getFallbackModelCatalog();
+  return catalog.find((m) => String(m.id || "") === id) || null;
+}
+
+function getSelectedModelTokenCompatibility(modelId) {
+  const model = getSelectedModelMeta(modelId);
+  if (!model) return { min: 512, max: 16384 };
+  const candidates = [
+    Number(model.maxCompletionTokens) || 0,
+    Number(model.topContextLength) || 0,
+    Number(model.contextLength) || 0,
+  ].filter((n) => Number.isFinite(n) && n > 0);
+  const hardMax = candidates.length > 0 ? Math.min(...candidates) : 16384;
+  const roundedMax = Math.max(64, Math.floor(hardMax / 64) * 64 || 64);
+  const min = Math.min(512, roundedMax);
+  return { min, max: roundedMax };
+}
+
+function getSettingsMaxTokensUpperBound(modelId) {
+  const model = getSelectedModelMeta(modelId);
+  if (!model) return 8192;
+  const primary =
+    Number(model.maxCompletionTokens) > 0
+      ? Number(model.maxCompletionTokens)
+      : Number(model.topContextLength || model.contextLength || 0);
+  if (!Number.isFinite(primary) || primary <= 0) return 8192;
+  const rounded = Math.floor(primary / 64) * 64;
+  const bounded = rounded > 0 ? rounded : primary;
+  return Math.max(512, Math.min(8192, bounded));
+}
+
+function isLowContextRoleplayModel(model) {
+  if (!model) return false;
+  const maxCompletion = Number(model.maxCompletionTokens) || 0;
+  const context = Number(model.topContextLength || model.contextLength) || 0;
+  const completionLimited = maxCompletion > 0 && maxCompletion <= 16000;
+  const contextLimited = context > 0 && context <= 16000;
+  return completionLimited || contextLimited;
+}
+
+function updateProviderVisibility() {
+  const provider = state.settings.aiProvider || "openrouter";
+  const openrouterContainer = document.getElementById(
+    "openrouter-api-key-container",
+  );
+  const hordeContainer = document.getElementById("horde-api-key-container");
+  const hordeApiMethodContainer = document.getElementById("horde-api-method-container");
+  const lmstudioContainer = document.getElementById("lmstudio-base-url-container");
+  const lmstudioApiMethodContainer = document.getElementById("lmstudio-api-method-container");
+  const groqContainer = document.getElementById("groq-api-key-container");
+  const modelFilterRow = document.getElementById("model-filter-row");
+  if (openrouterContainer) {
+    if (provider === "openrouter") {
+      openrouterContainer.classList.remove("hidden");
+    } else {
+      openrouterContainer.classList.add("hidden");
+    }
+  }
+  if (hordeContainer) {
+    if (provider === "aihorde") {
+      hordeContainer.classList.remove("hidden");
+    } else {
+      hordeContainer.classList.add("hidden");
+    }
+  }
+  if (hordeApiMethodContainer) {
+    if (provider === "aihorde") {
+      hordeApiMethodContainer.classList.remove("hidden");
+    } else {
+      hordeApiMethodContainer.classList.add("hidden");
+    }
+  }
+  if (lmstudioContainer) {
+    if (provider === "lmstudio") {
+      lmstudioContainer.classList.remove("hidden");
+    } else {
+      lmstudioContainer.classList.add("hidden");
+    }
+  }
+  if (lmstudioApiMethodContainer) {
+    if (provider === "lmstudio") {
+      lmstudioApiMethodContainer.classList.remove("hidden");
+    } else {
+      lmstudioApiMethodContainer.classList.add("hidden");
+    }
+  }
+  if (groqContainer) {
+    if (provider === "groq") {
+      groqContainer.classList.remove("hidden");
+    } else {
+      groqContainer.classList.add("hidden");
+    }
+  }
+  if (modelFilterRow) {
+    if (provider === "openrouter") {
+      modelFilterRow.classList.remove("hidden");
+    } else {
+      modelFilterRow.classList.add("hidden");
+    }
+  }
+}
+
+function refreshSelectedModelMeta(element = null) {
+  const target = element || document.getElementById("model-selected-meta");
+  const warning = document.getElementById("model-roleplay-warning");
+  if (!target) return;
+  const model = getSelectedModelMeta(state.settings.model);
+  if (!model) {
+    target.textContent = "";
+    target.classList.remove("danger");
+    warning?.classList.add("hidden");
+    return;
+  }
+  const moderated = model.isModerated ? "Moderated: Yes" : "Moderated: No";
+  const modality = model.modality || "unknown";
+  const freeLabel = isModelFree(model) ? "Pricing: Free" : "Pricing: Paid";
+  const context = Number(model.topContextLength || model.contextLength || 0);
+  const maxCompletion = Number(model.maxCompletionTokens || 0);
+  const createdText =
+    Number(model.created) > 0
+      ? new Date(Number(model.created) * 1000).toLocaleDateString()
+      : "n/a";
+  target.textContent = `${freeLabel} | ${moderated} | Modality: ${modality} | Context: ${context || "n/a"} | Max Completion: ${maxCompletion || "n/a"} | Created: ${createdText}`;
+  const lowContext = isLowContextRoleplayModel(model);
+  target.classList.toggle("danger", lowContext);
+  if (warning) {
+    warning.classList.toggle("hidden", !lowContext);
+  }
+}
+
+function estimatePromptTokens(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return 0;
+  let total = 0;
+  for (const msg of messages) {
+    const role = String(msg?.role || "");
+    const content = String(msg?.content || "");
+    // Heuristic token estimation for budgeting only.
+    total += Math.ceil(content.length / 4) + Math.ceil(role.length / 4) + 6;
+  }
+  return total;
+}
+
+function resolveModelContextWindow(modelId) {
+  const meta = getSelectedModelMeta(modelId);
+  if (!meta) return 0;
+  const candidates = [
+    Number(meta.topContextLength) || 0,
+    Number(meta.contextLength) || 0,
+  ].filter((n) => Number.isFinite(n) && n > 0);
+  return candidates.length > 0 ? Math.max(...candidates) : 0;
+}
+
+function computeEffectiveMaxTokensForRequest(modelId, promptMessages) {
+  const userMax = clampMaxTokens(state.settings.maxTokens);
+  const contextWindow = resolveModelContextWindow(modelId);
+  if (!Number.isFinite(contextWindow) || contextWindow <= 0) return userMax;
+  const SAFETY_MARGIN = 256;
+  const promptTokens = estimatePromptTokens(promptMessages);
+  const available = contextWindow - promptTokens - SAFETY_MARGIN;
+  if (available <= 1) return 1;
+  const bounded = Math.max(1, Math.floor(available));
+  return Math.max(1, Math.min(userMax, bounded));
+}
+
+function openImagePreview(src) {
+  if (!src) return;
+  const img = document.getElementById("image-preview-img");
+  const video = document.getElementById("image-preview-video");
+  const modal = document.getElementById("image-preview-modal");
+  const downloadBtn = document.getElementById("image-preview-download-btn");
+  if (!img) return;
+  state.imagePreview.src = src;
+  state.imagePreview.isVideo = false;
+  img.src = src;
+  img.draggable = false;
+  img.classList.remove("hidden");
+  if (video) video.classList.add("hidden");
+  downloadBtn.title = "Download image";
+  downloadBtn.setAttribute("aria-label", "Download image");
+  resetImagePreviewZoom();
+  modal?.classList.remove("hidden");
+}
+
+function openVideoPreview(src) {
+  if (!src) return;
+  const video = document.getElementById("image-preview-video");
+  const img = document.getElementById("image-preview-img");
+  const modal = document.getElementById("image-preview-modal");
+  const downloadBtn = document.getElementById("image-preview-download-btn");
+  if (!video || !img || !modal) return;
+
+  img.classList.add("hidden");
+  video.classList.remove("hidden");
+  video.src = src;
+  state.imagePreview.src = src;
+  state.imagePreview.isVideo = true;
+  video.controls = true;
+  video.play();
+
+  downloadBtn.title = "Download video";
+  downloadBtn.setAttribute("aria-label", "Download video");
+
+  modal?.classList.remove("hidden");
+}
+
+function closeImagePreview() {
+  endImagePreviewPanning();
+  const video = document.getElementById("image-preview-video");
+  if (video) {
+    video.pause();
+    video.src = "";
+  }
+  const img = document.getElementById("image-preview-img");
+  if (img) {
+    img.classList.remove("hidden");
+  }
+  const videoEl = document.getElementById("image-preview-video");
+  if (videoEl) {
+    videoEl.classList.add("hidden");
+  }
+  const modal = document.getElementById("image-preview-modal");
+  modal?.classList.add("hidden");
+  state.imagePreview.isVideo = false;
+}
+
+function applyImagePreviewZoom() {
+  const img = document.getElementById("image-preview-img");
+  if (!img) return;
+  const scale = Math.max(
+    state.imagePreview.minScale,
+    Math.min(
+      state.imagePreview.maxScale,
+      Number(state.imagePreview.scale) || 1,
+    ),
+  );
+  state.imagePreview.scale = scale;
+  img.style.transform = `translate3d(${Number(state.imagePreview.panX) || 0}px, ${Number(state.imagePreview.panY) || 0}px, 0) scale(${scale})`;
+}
+
+function resetImagePreviewZoom() {
+  state.imagePreview.scale = 1;
+  state.imagePreview.panX = 0;
+  state.imagePreview.panY = 0;
+  applyImagePreviewZoom();
+}
+
+function onImagePreviewWheel(e) {
+  const modal = document.getElementById("image-preview-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  if (state.imagePreview.isVideo) return;
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? 0.12 : -0.12;
+  state.imagePreview.scale += delta;
+  applyImagePreviewZoom();
+}
+
+function onImagePreviewPointerDown(e) {
+  const modal = document.getElementById("image-preview-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  if (state.imagePreview.isVideo) return;
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  const img = document.getElementById("image-preview-img");
+  if (!img) return;
+  e.preventDefault();
+  state.imagePreview.panning = true;
+  state.imagePreview.pointerId = e.pointerId;
+  state.imagePreview.startX = e.clientX;
+  state.imagePreview.startY = e.clientY;
+  state.imagePreview.startPanX = Number(state.imagePreview.panX) || 0;
+  state.imagePreview.startPanY = Number(state.imagePreview.panY) || 0;
+  if (typeof img.setPointerCapture === "function") {
+    try {
+      img.setPointerCapture(e.pointerId);
+    } catch {
+      // noop
+    }
+  }
+  img.classList.add("is-panning");
+}
+
+function onImagePreviewPointerMove(e) {
+  if (!state.imagePreview.panning) return;
+  if (state.imagePreview.pointerId !== e.pointerId) return;
+  e.preventDefault();
+  const dx = e.clientX - (Number(state.imagePreview.startX) || 0);
+  const dy = e.clientY - (Number(state.imagePreview.startY) || 0);
+  state.imagePreview.panX = (Number(state.imagePreview.startPanX) || 0) + dx;
+  state.imagePreview.panY = (Number(state.imagePreview.startPanY) || 0) + dy;
+  applyImagePreviewZoom();
+}
+
+function onImagePreviewPointerEnd(e) {
+  if (state.imagePreview.pointerId !== e.pointerId) return;
+  endImagePreviewPanning(e.pointerId);
+}
+
+function endImagePreviewPanning(pointerId = null) {
+  if (!state.imagePreview.panning && pointerId === null) return;
+  const img = document.getElementById("image-preview-img");
+  if (
+    img &&
+    pointerId != null &&
+    typeof img.releasePointerCapture === "function"
+  ) {
+    try {
+      img.releasePointerCapture(pointerId);
+    } catch {
+      // noop
+    }
+  }
+  state.imagePreview.panning = false;
+  state.imagePreview.pointerId = null;
+  img?.classList.remove("is-panning");
+}
+
+function downloadImagePreview() {
+  const src = String(state.imagePreview.src || "").trim();
+  if (!src) return;
+  const a = document.createElement("a");
+  a.href = src;
+  a.download = state.imagePreview.isVideo ? "video" : "image";
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function openMessageMetadataModal(index) {
+  const message = conversationHistory[index];
+  if (!message) return;
+  if (message.isInitial === true || message.userEdited === true) return;
+  openModal("message-metadata-modal");
+  const pre = document.getElementById("message-metadata-json");
+  if (!pre) return;
+
+  const cloneForMetadata = (input) => {
+    try {
+      if (typeof structuredClone === "function") {
+        return structuredClone(input || {});
+      }
+    } catch {
+      // fall back to JSON
+    }
+    try {
+      return JSON.parse(JSON.stringify(input || {}));
+    } catch {
+      return { ...input };
+    }
+  };
+
+  const renderMetadata = () => {
+    const snapshot = cloneForMetadata(message);
+    const createdAt = Number(message.createdAt) || 0;
+    snapshot.index = index + 1;
+    snapshot.createdAt = createdAt ? new Date(createdAt).toISOString() : null;
+    snapshot.role = message.role || snapshot.role || "";
+    snapshot.requestMessages =
+      message.requestMessages || snapshot.requestMessages || null;
+    snapshot.systemMessages =
+      message.systemMessages || snapshot.systemMessages || null;
+    snapshot.usedLoreEntries =
+      message.usedLoreEntries || snapshot.usedLoreEntries || null;
+    snapshot.usedMemorySummary =
+      message.usedMemorySummary || snapshot.usedMemorySummary || null;
+    snapshot.senderName = message.senderName || snapshot.senderName || null;
+    snapshot.senderPersonaId =
+      message.senderPersonaId || snapshot.senderPersonaId || null;
+    snapshot.truncatedByFilter =
+      message.truncatedByFilter === true || snapshot.truncatedByFilter === true;
+    snapshot.generationId =
+      message.generationId || snapshot.generationId || null;
+    snapshot.finishReason =
+      message.finishReason || snapshot.finishReason || null;
+    snapshot.nativeFinishReason =
+      message.nativeFinishReason || snapshot.nativeFinishReason || null;
+    snapshot.model = message.model || snapshot.model || null;
+    snapshot.temperature =
+      Number(message.temperature) || snapshot.temperature || null;
+    snapshot.writingInstructionsTurnIndex =
+      Number(message.writingInstructionsTurnIndex) ||
+      snapshot.writingInstructionsTurnIndex ||
+      null;
+    snapshot.generationStatus =
+      message.generationStatus || snapshot.generationStatus || null;
+    snapshot.generationError =
+      message.generationError || snapshot.generationError || null;
+    snapshot.completionMeta =
+      message.completionMeta || snapshot.completionMeta || null;
+    snapshot.generationInfo =
+      message.generationInfo || snapshot.generationInfo || null;
+    snapshot.generationFetchDebug =
+      message.generationFetchDebug || snapshot.generationFetchDebug || null;
+    pre.textContent = JSON.stringify(snapshot, null, 2);
+  };
+
+  renderMetadata();
+
+  if (
+    message.role === "assistant" &&
+    message.generationId &&
+    !message.generationInfo
+  ) {
+    pre.textContent += "\n\nFetching generation info...";
+    const fetched = await fetchGenerationDetails(message.generationId);
+    message.generationInfo = fetched?.data || null;
+    message.generationFetchDebug = fetched?.debug || [];
+    await persistCurrentThread();
+    renderMetadata();
+  }
+}
+
+function cancelOngoingGeneration() {
+  if (!state.sending || !state.abortController) return;
+  state.abortController.abort();
+}
+
+function isViewingThread(threadId) {
+  if (
+    !currentThread ||
+    Number(currentThread.id) !== Number(threadId) ||
+    !document.getElementById("chat-view")?.classList.contains("active")
+  ) {
+    return false;
+  }
+  const visibilityState =
+    typeof document !== "undefined" ? document.visibilityState : "visible";
+  if (visibilityState !== "visible") return false;
+  if (
+    typeof document !== "undefined" &&
+    typeof document.hasFocus === "function" &&
+    !document.hasFocus()
+  ) {
+    return false;
+  }
+  return true;
+}
+
+async function persistThreadMessagesById(threadId, messages, extra = {}) {
+  const msgs = Array.isArray(messages) ? messages : [];
+  const payload = { ...extra };
+  if (
+    payload.initialMessagesRemoved === undefined &&
+    currentThread &&
+    Number(currentThread.id) === Number(threadId)
+  ) {
+    payload.initialMessagesRemoved = currentThread.initialMessagesRemoved === true;
+  }
+  const explicitSkipUpdatedAt = payload._skipUpdatedAt === true;
+  const explicitRetainFlag = payload._retainConversationHistory;
+  delete payload._skipUpdatedAt;
+  delete payload._retainConversationHistory;
+  const isActiveThread =
+    currentThread && Number(currentThread.id) === Number(threadId);
+  const activeUnloadState =
+    isActiveThread && currentThread?.unloadState
+      ? currentThread.unloadState
+      : null;
+  const hasActiveUnloadHistory =
+    activeUnloadState && Number(activeUnloadState.loadedStartIndex) > 0;
+  const skipUpdatedAt = explicitSkipUpdatedAt;
+  const retainConversationHistory =
+    explicitRetainFlag === true ||
+    (explicitRetainFlag !== false && hasActiveUnloadHistory);
+
+  const allMessagesFinished = msgs.every(
+    (m) => !m.generationStatus || m.generationStatus === "",
+  );
+
+  let unloadState = payload.unloadState;
+  if (
+    !unloadState &&
+    currentThread &&
+    Number(currentThread.id) === Number(threadId)
+  ) {
+    unloadState = currentThread.unloadState;
+  }
+  if (unloadState) {
+    payload.unloadState = unloadState;
+  }
+
+  let messagesToSave = msgs;
+  if (unloadState && unloadState.loadedStartIndex > 0 && isActiveThread) {
+    const thread = await db.threads.get(threadId);
+    const existingMessages = Array.isArray(thread?.messages)
+      ? thread.messages
+      : [];
+    const loadedStart = Math.min(
+      existingMessages.length,
+      Math.max(0, Number(unloadState.loadedStartIndex) || 0),
+    );
+    const beforeLoaded = existingMessages.slice(0, loadedStart);
+    messagesToSave = [...beforeLoaded, ...msgs];
+  }
+
+  normalizeAssistantMessages(messagesToSave);
+
+  const updated = {
+    messages: messagesToSave,
+    ...payload,
+  };
+
+  if (allMessagesFinished && !skipUpdatedAt) {
+    updated.updatedAt = Date.now();
+  }
+
+  await db.threads.update(threadId, updated);
+  if (isActiveThread) {
+    const nextThread = { ...currentThread, ...updated };
+    nextThread.messages = updated.messages;
+    if (updated.unloadState) {
+      nextThread.unloadState = updated.unloadState;
+    }
+    currentThread = nextThread;
+    if (!retainConversationHistory) {
+      conversationHistory = updated.messages;
+    }
+    if (updated.updatedAt) {
+      state.lastSyncSeenUpdatedAt = Number(updated.updatedAt || 0);
+    }
+  }
+  if (updated.updatedAt) {
+    broadcastSyncEvent({
+      type: "thread-updated",
+      threadId,
+      updatedAt: updated.updatedAt,
+    });
+  }
+}
+
+async function enqueueThreadGeneration(threadId, reason = "busy") {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return;
+  const wasQueued = state.generationQueue.includes(id);
+  if (!wasQueued) state.generationQueue.push(id);
+  const queueSize = state.generationQueue.length;
+  const queuePos = state.generationQueue.indexOf(id) + 1;
+  const queuedAt = Date.now();
+  const thread = await db.threads.get(id);
+  const threadMessages = Array.isArray(thread?.messages)
+    ? thread.messages.map((m) => ({ ...m }))
+    : [];
+  if (!wasQueued) {
+    const pendingIdx = findLatestPendingAssistantIndex(threadMessages);
+    if (pendingIdx >= 0) {
+      threadMessages[pendingIdx].generationStatus = "queued";
+      threadMessages[pendingIdx].content = tf("queuedLabel", {
+        position: queuePos,
+        size: queueSize,
+      });
+      threadMessages[pendingIdx].generationError = "";
+      threadMessages[pendingIdx].truncatedByFilter = false;
+      threadMessages[pendingIdx].placeholder = true;
+    } else {
+      threadMessages.push({
+        role: "assistant",
+        content: tf("queuedLabel", { position: queuePos, size: queueSize }),
+        createdAt: queuedAt,
+        generationStatus: "queued",
+        generationError: "",
+        truncatedByFilter: false,
+        usedLoreEntries: [],
+        usedMemorySummary: "",
+        placeholder: true,
+      });
+    }
+  }
+  updateQueuedPlaceholdersInMessages(id, threadMessages);
+  await db.threads.update(id, {
+    messages: threadMessages,
+    pendingGenerationReason: reason,
+    pendingGenerationQueuedAt: queuedAt,
+  });
+  if (currentThread && Number(currentThread.id) === id) {
+    conversationHistory = threadMessages;
+    currentThread.pendingGenerationReason = reason;
+    currentThread.pendingGenerationQueuedAt = queuedAt;
+    renderChat();
+  }
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: id,
+  });
+  await renderThreads();
+  if (queuePos > 0) {
+    showToast(tf("generationQueuedToast", { position: queuePos }), "success");
+  }
+}
+
+async function clearThreadGenerationQueueFlag(threadId) {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return;
+  state.generationQueue = state.generationQueue.filter((x) => Number(x) !== id);
+  const queuedIds = [...state.generationQueue];
+  const updatedAt = Date.now();
+  const thread = await db.threads.get(id);
+  const threadMessages = Array.isArray(thread?.messages)
+    ? thread.messages.map((m) => ({ ...m }))
+    : [];
+  updateQueuedPlaceholdersInMessages(id, threadMessages);
+  await db.threads.update(id, {
+    messages: threadMessages,
+    pendingGenerationReason: "",
+    pendingGenerationQueuedAt: 0,
+    updatedAt,
+  });
+  for (const qid of queuedIds) {
+    const qThread = await db.threads.get(qid);
+    if (!qThread) continue;
+    const qMessages = Array.isArray(qThread.messages)
+      ? qThread.messages.map((m) => ({ ...m }))
+      : [];
+    updateQueuedPlaceholdersInMessages(qid, qMessages);
+    const allFinished = qMessages.every(
+      (m) => !m.generationStatus || m.generationStatus === "",
+    );
+    const qUpdate = { messages: qMessages };
+    if (allFinished) {
+      qUpdate.updatedAt = Date.now();
+    }
+    await db.threads.update(qid, qUpdate);
+  }
+  if (currentThread && Number(currentThread.id) === id) {
+    conversationHistory = threadMessages;
+    currentThread.pendingGenerationReason = "";
+    currentThread.pendingGenerationQueuedAt = 0;
+    currentThread.updatedAt = updatedAt;
+    renderChat();
+  }
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: id,
+    updatedAt,
+  });
+  await renderThreads();
+}
+
+async function tryStartQueuedGenerationForCurrentThread() {
+  if (state.sending || !currentThread) return;
+  const threadId = Number(currentThread.id);
+  if (!state.generationQueue.includes(threadId)) return;
+  const head = Number(state.generationQueue[0]);
+  if (head !== threadId) return;
+  if (isInCompletionCooldown()) {
+    await ensureQueuedThreadCoolingDown(threadId);
+    return;
+  }
+  await clearThreadGenerationQueueFlag(threadId);
+  await generateBotReply();
+}
+
+async function processNextQueuedThread() {
+  if (state.sending) return;
+  if (state.generationQueue.length === 0) return;
+  const nextThreadId = Number(state.generationQueue[0]);
+  if (!nextThreadId) return;
+  if (isInCompletionCooldown()) {
+    await ensureQueuedThreadCoolingDown(nextThreadId);
+    return;
+  }
+  if (currentThread && Number(currentThread.id) === nextThreadId) {
+    await tryStartQueuedGenerationForCurrentThread();
+    return;
+  }
+  await clearThreadGenerationQueueFlag(nextThreadId);
+  const thread = await db.threads.get(nextThreadId);
+  if (!thread) {
+    await processNextQueuedThread();
+    return;
+  }
+  const characterBase = await db.characters.get(thread.characterId);
+  const character = characterBase
+    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
+    : null;
+  if (!character) {
+    await processNextQueuedThread();
+    return;
+  }
+  const tempThread = {
+    ...thread,
+    writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
+  };
+  const tempConversation = (thread.messages || []).map((m) => ({
+    ...m,
+    role: m.role === "ai" ? "assistant" : m.role,
+  }));
+  const tempPersona = thread.selectedPersonaId
+    ? await db.personas.get(thread.selectedPersonaId)
+    : null;
+  const writingTurnCountForThread =
+    getThreadWritingInstructionsTurnCount(tempThread);
+  const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
+  const includeOoc = character?.includeOocInCompletions === true;
+  const filteredTempConversation = getInSimulationMessages(tempConversation, {
+    includeOoc,
+  });
+  const promptContext = await buildSystemPrompt(character, {
+    includeOneTimeExtraPrompt: shouldIncludeOneTimeExtraPrompt(
+      filteredTempConversation,
+    ),
+    writingInstructionsTurnIndex: writingTurnIndex,
+    returnTrace: true,
+    personaOverride: tempPersona,
+    historyOverride: filteredTempConversation,
+    threadOverride: tempThread,
+  });
+  const systemPrompt = promptContext.prompt;
+  const messagesWithoutSystem = filteredTempConversation
+    .filter((m) => !m.summarized)
+    .map((m) => ({
+      role: m.role === "ai" ? "assistant" : m.role,
+      content: removeImageLinksFromContent(m.content),
+    }));
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...messagesWithoutSystem,
+  ];
+  if (promptContext.personaInjectionForEndMessages) {
+    promptMessages.push({
+      role: "system",
+      content: promptContext.personaInjectionForEndMessages,
+    });
+  }
+  state.currentRequestMessages = promptMessages;
+
+  const existingPendingIdx = findLatestPendingAssistantIndex(tempConversation);
+  let pending = null;
+  let pendingIndex = existingPendingIdx;
+  if (existingPendingIdx >= 0) {
+    pending = tempConversation[existingPendingIdx];
+    pending.content = "";
+    pending.generationStatus = "generating";
+    pending.generationError = "";
+    pending.truncatedByFilter = false;
+    if (!Number.isInteger(Number(pending.writingInstructionsTurnIndex))) {
+      pending.writingInstructionsTurnIndex = writingTurnIndex;
+      pending.writingInstructionsCounted = false;
+    }
+  } else {
+    pending = {
+      role: "assistant",
+      content: "",
+      generationStatus: "generating",
+      createdAt: Date.now(),
+      finishReason: "",
+      nativeFinishReason: "",
+      truncatedByFilter: false,
+      generationId: "",
+      completionMeta: null,
+      generationInfo: null,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+      writingInstructionsTurnIndex: writingTurnIndex,
+      writingInstructionsCounted: false,
+    };
+    tempConversation.push(pending);
+    pendingIndex = tempConversation.length - 1;
+  }
+  pending.requestMessages = state.currentRequestMessages || null;
+  await persistThreadMessagesById(nextThreadId, tempConversation);
+  state.sending = true;
+  state.activeGenerationThreadId = nextThreadId;
+  state.chatAutoScroll = true;
+  state.abortController = new AbortController();
+  setSendingState(true);
+  try {
+    const result = await callOpenRouter(
+      systemPrompt,
+      messagesWithoutSystem,
+      state.settings.model,
+      null,
+      state.abortController.signal,
+    );
+    pending.content = result.content || "";
+    pending.finishReason = result.finishReason || "";
+    pending.nativeFinishReason = result.nativeFinishReason || "";
+    pending.generationStatus = "";
+    pending.unreadAt = Date.now();
+    playUnreadMessageSound();
+    pending.generationId = String(result.generationId || "");
+    pending.completionMeta = result.completionMeta || null;
+    pending.generationInfo = result.generationInfo || null;
+    pending.model = result.model || state.settings.model || "";
+    pending.temperature = Number(state.settings.temperature) || 0;
+    pending.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
+      ? promptContext.usedLoreEntries
+      : [];
+    pending.usedMemorySummary = promptContext.usedMemorySummary || "";
+    if (
+      pending.writingInstructionsTurnIndex &&
+      !pending.writingInstructionsCounted
+    ) {
+      tempThread.writingInstructionsTurnCount =
+        (tempThread.writingInstructionsTurnCount || 0) + 1;
+    }
+    pending.truncatedByFilter = result.truncatedByFilter === true;
+    await db.threads.update(nextThreadId, {
+      messages: tempConversation,
+      updatedAt: Date.now(),
+      writingInstructionsTurnCount: tempThread.writingInstructionsTurnCount,
+    });
+    await persistLorebookStates(nextThreadId, tempConversation);
+  } catch (e) {
+    if (e.name === "AbortError") {
+      pending.generationStatus = "cancelled";
+    } else {
+      pending.generationError = e.message || String(e);
+      pending.generationStatus = "error";
+    }
+  } finally {
+    state.pendingPersonaInjectionPersonaId = null;
+    state.abortController = null;
+    state.sending = false;
+    state.activeGenerationThreadId = null;
+    setSendingState(false);
+    await renderThreads();
+    await processNextQueuedThread();
+  }
+}
+
+async function requestBotReplyForCurrentThread(trigger = "manual_send") {
+  if (!currentThread || !currentCharacter) return;
+  const currentId = Number(currentThread.id);
+  const activeId = Number(state.activeGenerationThreadId);
+  if (state.sending && Number.isInteger(activeId) && activeId !== currentId) {
+    await enqueueThreadGeneration(currentId, trigger);
+    return;
+  }
+  await generateBotReply();
+}
+
+function getThreadPendingGenerationState(threadId, messages = []) {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return "";
+  if (state.sending && Number(state.activeGenerationThreadId) === id) {
+    return "generating";
+  }
+  const list = Array.isArray(messages) ? messages : [];
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const m = list[i];
+    if (!m || m.role !== "assistant") continue;
+    if (m.ooc === true) continue;
+    const status = String(m.generationStatus || "").trim();
+    if (
+      status === "queued" ||
+      status === "cooling_down" ||
+      status === "generating" ||
+      status === "regenerating" ||
+      status === "summarizing"
+    ) {
+      return status;
+    }
+  }
+  return "";
+}
+
+function refreshCurrentThreadCooldownBubble(secondsOverride = null) {
+  if (!currentThread || !Array.isArray(conversationHistory)) return;
+  const seconds =
+    Number.isFinite(Number(secondsOverride)) && Number(secondsOverride) > 0
+      ? Number(secondsOverride)
+      : getCooldownRemainingSeconds();
+  if (seconds <= 0) return;
+  const label = tf("cooldownToastActive", { seconds });
+  const idx = findLatestPendingAssistantIndex(conversationHistory);
+  if (idx < 0) return;
+  const msg = conversationHistory[idx];
+  if (!msg || String(msg.generationStatus || "").trim() !== "cooling_down")
+    return;
+  if (String(msg.content || "") === label) return;
+  msg.content = label;
+  const row = document.querySelector(
+    `#chat-log .chat-row[data-message-index="${idx}"]`,
+  );
+  const content = row?.querySelector(".message-content");
+  if (content) {
+    content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(label)}`;
+  }
+}
+
+async function ensureQueuedThreadCoolingDown(threadId) {
+  const id = Number(threadId);
+  if (!Number.isInteger(id)) return;
+  const thread = await db.threads.get(id);
+  if (!thread) return;
+  const messages = Array.isArray(thread.messages)
+    ? thread.messages.map((m) => ({ ...m }))
+    : [];
+  const seconds = getCooldownRemainingSeconds();
+  const label = tf("cooldownToastActive", { seconds });
+  const hadPendingBefore = findLatestPendingAssistantIndex(messages) >= 0;
+  let idx = findLatestPendingAssistantIndex(messages);
+  let prevContent = "";
+  let prevStatus = "";
+  if (idx < 0) {
+    idx = messages.length;
+    messages.push({
+      role: "assistant",
+      content: label,
+      createdAt: Date.now(),
+      generationStatus: "cooling_down",
+      generationError: "",
+      truncatedByFilter: false,
+      usedLoreEntries: [],
+      usedMemorySummary: "",
+      placeholder: true,
+    });
+    prevContent = "";
+    prevStatus = "";
+  } else {
+    prevContent = String(messages[idx].content || "");
+    prevStatus = String(messages[idx].generationStatus || "").trim();
+    messages[idx].generationStatus = "cooling_down";
+    messages[idx].content = label;
+    messages[idx].generationError = "";
+    messages[idx].truncatedByFilter = false;
+    messages[idx].placeholder = true;
+  }
+
+  const needsReason =
+    String(thread.pendingGenerationReason || "").trim() !== "cooldown";
+  const hasChanges =
+    !hadPendingBefore ||
+    needsReason ||
+    prevContent !== label ||
+    prevStatus !== "cooling_down";
+  if (!hasChanges) return;
+
+  await db.threads.update(id, {
+    messages,
+    pendingGenerationReason: "cooldown",
+    pendingGenerationQueuedAt: Number(
+      thread.pendingGenerationQueuedAt || Date.now(),
+    ),
+  });
+  if (currentThread && Number(currentThread.id) === id) {
+    conversationHistory = messages;
+    currentThread.pendingGenerationReason = "cooldown";
+    currentThread.pendingGenerationQueuedAt = Number(
+      thread.pendingGenerationQueuedAt || Date.now(),
+    );
+    renderChat();
+  }
+  broadcastSyncEvent({
+    type: "thread-updated",
+    threadId: id,
+  });
+  await renderThreads();
+}
+
+async function tickQueueCooldownState() {
+  if (state.sending || state.generationQueue.length === 0) return;
+  const headId = Number(state.generationQueue[0]);
+  if (!Number.isInteger(headId)) return;
+  if (isInCompletionCooldown()) {
+    await ensureQueuedThreadCoolingDown(headId);
+    return;
+  }
+  await processNextQueuedThread();
+}
+
+function findLatestPendingAssistantIndex(messages) {
+  const list = Array.isArray(messages) ? messages : [];
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const m = list[i];
+    if (!m || m.role !== "assistant") continue;
+    const status = String(m.generationStatus || "").trim();
+    if (
+      status === "queued" ||
+      status === "cooling_down" ||
+      status === "generating" ||
+      status === "regenerating" ||
+      status === "title_generating"
+    ) {
+      return i;
+    }
+    const emptyContent = !String(m.content || "").trim();
+    const hasError = !!String(m.generationError || "").trim();
+    if (emptyContent && !hasError && m.truncatedByFilter !== true) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+function updateQueuedPlaceholdersInMessages(threadId, messages) {
+  const id = Number(threadId);
+  const list = Array.isArray(messages) ? messages : [];
+  const queueIndex = state.generationQueue.indexOf(id);
+  const queueSize = state.generationQueue.length;
+  list.forEach((m) => {
+    if (!m || m.role !== "assistant") return;
+    if (String(m.generationStatus || "").trim() !== "queued") return;
+    if (queueIndex >= 0 && queueSize > 0) {
+      m.content = tf("queuedLabel", {
+        position: queueIndex + 1,
+        size: queueSize,
+      });
+      m.placeholder = true;
+    } else {
+      m.content = "";
+      m.generationStatus = "";
+      m.placeholder = false;
+    }
+  });
+  return list;
+}
+
+async function persistCurrentThread(forceUpdate = false, options = {}) {
+  if (!currentThread) return;
+
+  const allMessagesFinished = conversationHistory.every(
+    (m) => !m.generationStatus || m.generationStatus === "",
+  );
+  const skipTimestampUpdate = options.skipUpdatedAt === true;
+  const shouldUpdateTimestamp =
+    !skipTimestampUpdate && (forceUpdate || allMessagesFinished);
+
+  await persistThreadMessagesById(currentThread.id, conversationHistory, {
+    selectedPersonaId: currentThread.selectedPersonaId || null,
+    lastPersonaInjectionPersonaId:
+      currentThread.lastPersonaInjectionPersonaId || null,
+    writingInstructionsTurnCount:
+      getThreadWritingInstructionsTurnCount(currentThread),
+    oocModeEnabled: currentThread.oocModeEnabled === true,
+    initialMessagesRemoved: currentThread.initialMessagesRemoved === true,
+    unloadState: currentThread.unloadState,
+    _skipUpdatedAt: !shouldUpdateTimestamp,
+    _retainConversationHistory: true,
+  });
+}
+
+function isChatNearBottom() {
+  const log = document.getElementById("chat-log");
+  if (!log) return true;
+  const threshold = 36;
+  const remaining = log.scrollHeight - log.scrollTop - log.clientHeight;
+  return remaining <= threshold;
+}
+
+function scrollChatToBottom(force = false) {
+  if (!force && state.sending && state.chatAutoScroll === false) return;
+  const log = document.getElementById("chat-log");
+  log.scrollTop = log.scrollHeight;
+  updateScrollBottomButtonVisibility();
+}
+
+function updateScrollBottomButtonVisibility() {
+  const btn = document.getElementById("scroll-bottom-btn");
+  const chatViewActive = document
+    .getElementById("chat-view")
+    ?.classList.contains("active");
+  if (!btn) return;
+  positionScrollBottomButton();
+  if (!chatViewActive || !currentThread) {
+    btn.classList.add("hidden");
+    return;
+  }
+  if (isChatNearBottom()) btn.classList.add("hidden");
+  else btn.classList.remove("hidden");
+}
+
+function positionScrollBottomButton() {
+  const btn = document.getElementById("scroll-bottom-btn");
+  const chatView = document.getElementById("chat-view");
+  const inputRow = document.querySelector("#chat-view .input-row");
+  if (!btn || !chatView || !inputRow) return;
+  const chatRect = chatView.getBoundingClientRect();
+  const inputRect = inputRow.getBoundingClientRect();
+  const bottom = Math.max(18, Math.round(chatRect.bottom - inputRect.top + 10));
+  btn.style.bottom = `${bottom}px`;
+}
+
+function applyCrossWindowSyncSetting() {
+  if (state.settings.crossWindowSyncEnabled) {
+    setupCrossWindowSync();
+  } else {
+    if (state.syncTimerId) {
+      clearInterval(state.syncTimerId);
+      state.syncTimerId = null;
+    }
+  }
+}
+
+function setupCrossWindowSync() {
+  if (!state.settings.crossWindowSyncEnabled) return;
+  if (typeof BroadcastChannel !== "undefined") {
+    state.syncChannel = new BroadcastChannel("rp-thread-sync");
+    state.syncChannel.onmessage = async (event) => {
+      if (!state.settings.crossWindowSyncEnabled) return;
+      const data = event?.data;
+      if (!data || data.sourceTabId === state.tabId) return;
+      if (data.type === "thread-updated") {
+        await renderThreads();
+        if (
+          currentThread &&
+          Number(data.threadId) === Number(currentThread.id) &&
+          !state.sending
+        ) {
+          await refreshCurrentThreadFromDb();
+        }
+      }
+      if (data.type === "thread-viewed") {
+        delete state.threadUnreadCounts[Number(data.threadId)];
+        await renderThreads();
+      }
+      if (data.type === "personas-updated") {
+        await renderPersonaSelector();
+        if (state.activeModalId === "personas-modal") {
+          await renderPersonaModalList();
+        }
+      }
+    };
+  }
+
+  if (!state.syncTimerId) {
+    state.syncTimerId = window.setInterval(async () => {
+      if (!currentThread || state.sending) return;
+      const latest = await db.threads.get(currentThread.id);
+      if (!latest) return;
+      const latestUpdated = Number(latest.updatedAt || 0);
+      if (latestUpdated > Number(state.lastSyncSeenUpdatedAt || 0)) {
+        await refreshCurrentThreadFromDb();
+        await renderThreads();
+      }
+    }, 1200);
+  }
+}
+
+function broadcastSyncEvent(payload) {
+  if (!state.syncChannel) return;
+  state.syncChannel.postMessage({
+    ...payload,
+    sourceTabId: state.tabId,
+  });
+}
+
+async function refreshCurrentThreadFromDb() {
+  if (!currentThread) return;
+  const thread = await db.threads.get(currentThread.id);
+  if (!thread) return;
+  const characterBase = thread.characterId
+    ? await db.characters.get(thread.characterId)
+    : null;
+  currentThread = thread;
+  state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
+  currentCharacter = characterBase
+    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
+    : currentCharacter;
+  if (characterBase) {
+    state.cachedChatBotAvatar = {
+      url: null,
+      characterId: null,
+      personaId: null,
+    };
+  }
+  const snapshot = buildThreadConversationSnapshot(
+    thread,
+    state.settings.autoUnloadThreshold || 0,
+  );
+  conversationHistory = snapshot.conversationHistory;
+  currentThread.unloadState = snapshot.unloadState;
+  state.unreadNeedsUserScrollThreadId =
+    getUnreadAssistantCount(conversationHistory) > 0 ? Number(thread.id) : null;
+  currentPersona = thread.selectedPersonaId
+    ? await db.personas.get(thread.selectedPersonaId)
+    : currentPersona;
+  if (thread.selectedPersonaId) {
+    state.cachedChatBotAvatar = {
+      url: null,
+      characterId: null,
+      personaId: null,
+    };
+  }
+  updatePersonaPickerDisplay();
+  renderChat();
+}
+
+async function migrateLegacySessions() {
+  const threadCount = await db.threads.count();
+  if (threadCount > 0) return;
+
+  const sessions = await db.sessions.toArray();
+  if (sessions.length === 0) return;
+
+  for (const session of sessions) {
+    await db.threads.add({
+      characterId: session.characterId,
+      title: `Imported Thread ${session.id}`,
+      titleGenerated: false,
+      titleManual: false,
+      messages: session.messages || [],
+      lastPersonaInjectionPersonaId: null,
+      writingInstructionsTurnCount: 0,
+      oocModeEnabled: false,
+      chatOpacity: normalizeChatOpacityValue(state.settings.chatOpacity),
+      initialMessagesRemoved: session.initialMessagesRemoved === true,
+      createdAt: session.updatedAt || Date.now(),
+      updatedAt: session.updatedAt || Date.now(),
+    });
+  }
+}
+
+async function buildSystemPrompt(character, options = {}) {
+  const threadOverride = options?.threadOverride || currentThread;
+  const defaultPersona = await getCharacterDefaultPersona();
+  const personaForContext =
+    options?.personaOverride || currentPersona || defaultPersona;
+  const charName = String(character?.name || "Character");
+  const initialUserName = threadOverride?.initialUserName;
+  const personaName = initialUserName || String(defaultPersona?.name || "You");
+  const basePromptRaw = (
+    character.systemPrompt ||
+    state.settings.globalPromptTemplate ||
+    ""
+  ).trim();
+  const basePrompt = replaceLorePlaceholders(
+    basePromptRaw,
+    personaName,
+    charName,
+  );
+  let writingInstructionsRaw = "";
+  const wiId = character?.writingInstructionId;
+  if (wiId && wiId !== "none") {
+    const wi = await db.writingInstructions.get(Number(wiId));
+    if (wi && wi.instructions) {
+      const threadLanguage =
+        character?.activeLanguage || options?.characterLanguage || "en";
+      writingInstructionsRaw = String(
+        wi.instructions[threadLanguage] ||
+          Object.values(wi.instructions)[0] ||
+          "",
+      ).trim();
+    }
+  } else {
+    writingInstructionsRaw = String(
+      character?.writingInstructions || "",
+    ).trim();
+  }
+  const writingTurnIndex = Math.max(
+    1,
+    Number(options?.writingInstructionsTurnIndex) || 1,
+  );
+  const includeWritingInstructions =
+    writingInstructionsRaw.length > 0 &&
+    shouldInjectWritingInstructionsForTurn(writingTurnIndex);
+  const writingInstructions = includeWritingInstructions
+    ? replaceLorePlaceholders(writingInstructionsRaw, personaName, charName)
+    : "";
+  const oneTimeExtraRaw =
+    options?.includeOneTimeExtraPrompt === true
+      ? String(character?.oneTimeExtraPrompt || "").trim()
+      : "";
+  const oneTimeExtra = replaceLorePlaceholders(
+    oneTimeExtraRaw,
+    personaName,
+    charName,
+  );
+  const promptBeforePersona = [basePrompt, writingInstructions, oneTimeExtra]
+    .filter((part) => String(part || "").trim())
+    .join("\n\n")
+    .trim();
+  const loreEntriesResult = await getCharacterLoreEntries(character, {
+    historyOverride: options?.historyOverride,
+    personaOverride: personaForContext,
+    thread: threadOverride,
+  });
+  const loreEntries = loreEntriesResult.entries;
+  const newLoreState = loreEntriesResult.newLoreState;
+  const threadIdForMemory = threadOverride?.id;
+  const memory =
+    character.useMemory === false
+      ? null
+      : await getMemorySummary(character.id, threadIdForMemory);
+  const contextSections = [];
+  state.pendingPersonaInjectionPersonaId = null;
+  let systemPromptWithPersona = promptBeforePersona;
+  let personaInjectionForEndMessages = null;
+  let personaInjectionAppliedOnce = false;
+  if (
+    personaForContext &&
+    shouldInjectPersonaContext(
+      personaForContext,
+      options?.threadOverride || null,
+    )
+  ) {
+    const requestedPlacement =
+      character?.personaInjectionPlacement || "end_system_prompt";
+    let actualPlacement = requestedPlacement;
+    if (requestedPlacement === "once") {
+      if (shouldInjectPersonaOnceForThread(threadOverride)) {
+        personaInjectionAppliedOnce = true;
+        actualPlacement = "end_system_prompt";
+      } else {
+        actualPlacement = "none";
+      }
+    }
+    if (actualPlacement !== "none") {
+      const personaInjected = renderPersonaInjectionContent(personaForContext);
+      const templateNotEmpty = String(
+        state.settings.personaInjectionTemplate ||
+          DEFAULT_SETTINGS.personaInjectionTemplate ||
+          "",
+      ).trim();
+      if (templateNotEmpty) {
+        if (actualPlacement === "end_messages") {
+          personaInjectionForEndMessages = personaInjected;
+        } else {
+          systemPromptWithPersona = applyPersonaInjectionPlacement(
+            promptBeforePersona,
+            personaInjected,
+            actualPlacement,
+          );
+        }
+      }
+      state.pendingPersonaInjectionPersonaId = personaForContext.id || null;
+    } else {
+      state.pendingPersonaInjectionPersonaId = null;
+    }
+  } else {
+    state.pendingPersonaInjectionPersonaId = null;
+  }
+
+  if (loreEntries.length > 0) {
+    contextSections.push(
+      `***LORE CONTEXT***\n\n${loreEntries
+        .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
+        .join("\n\n")}`,
+    );
+  }
+  if (memory) {
+    contextSections.push(`${getSectionHeader("sectionHeaderMemoryContext")}\n\n${memory}`);
+  }
+
+  const prompt = [systemPromptWithPersona, ...contextSections]
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+  if (options?.returnTrace === true) {
+    return {
+      prompt,
+      loreEntries: Array.isArray(loreEntries) ? loreEntries : [],
+      newLoreState: newLoreState || null,
+      memory: memory || "",
+      personaInjectionForEndMessages,
+      personaInjectionAppliedOnce,
+    };
+  }
+  return { prompt, personaInjectionForEndMessages };
+}
+
+async function openMessageModelInfoModal(index) {
+  const message = conversationHistory[index];
+  if (!message) return;
+  if (!message.model && !message.temperature) return;
+  openModal("message-model-info-modal");
+  const modelEl = document.getElementById("message-model-info-model");
+  const temperatureEl = document.getElementById(
+    "message-model-info-temperature",
+  );
+  const maxTokensEl = document.getElementById("message-model-info-max-tokens");
+  const topPEl = document.getElementById("message-model-info-top-p");
+  const frequencyEl = document.getElementById(
+    "message-model-info-frequency-penalty",
+  );
+  const presenceEl = document.getElementById(
+    "message-model-info-presence-penalty",
+  );
+  const streamEl = document.getElementById("message-model-info-stream");
+  const formatNumericValue = (rawValue, decimals = 2) => {
+    const parsed = Number(rawValue);
+    if (!Number.isFinite(parsed)) return "-";
+    if (decimals > 0) {
+      return parsed.toFixed(decimals).replace(/\.?0+$/, "");
+    }
+    return parsed.toString();
+  };
+  if (modelEl) {
+    modelEl.textContent = message.model || "-";
+  }
+  if (temperatureEl) {
+    temperatureEl.textContent =
+      message.temperature != null ? message.temperature : "-";
+  }
+  if (maxTokensEl) {
+    maxTokensEl.textContent = formatNumericValue(message.maxTokens, 0);
+  }
+  if (topPEl) {
+    topPEl.textContent = formatNumericValue(message.topP, 2);
+  }
+  if (frequencyEl) {
+    frequencyEl.textContent = formatNumericValue(message.frequencyPenalty, 2);
+  }
+  if (presenceEl) {
+    presenceEl.textContent = formatNumericValue(message.presencePenalty, 2);
+  }
+  if (streamEl) {
+    const streamLabel =
+      message.streamEnabled === true ? t("enabledLabel") : t("disabledLabel");
+    streamEl.textContent = streamLabel;
+  }
+}
+
+async function openMessageSystemPromptModal(index) {
+  const container = document.getElementById("message-system-prompt-list");
+  const modal = document.getElementById("message-system-prompt-modal");
+  if (!container || !modal) return;
+  container.innerHTML = "";
+
+  const showUnavailable = () => {
+    const notice = document.createElement("p");
+    notice.className = "muted";
+    notice.textContent = t("msgSystemPromptUnavailable");
+    container.appendChild(notice);
+    openModal("message-system-prompt-modal");
+  };
+
+  const message = conversationHistory[index];
+  if (!message) {
+    showUnavailable();
+    return;
+  }
+
+  let messagesToShow = [];
+  if (message.requestMessages && Array.isArray(message.requestMessages)) {
+    messagesToShow = message.requestMessages;
+  } else if (index >= 0 && index < conversationHistory.length) {
+    messagesToShow = conversationHistory.slice(0, index + 1);
+  }
+
+  if (messagesToShow.length === 0) {
+    showUnavailable();
+    return;
+  }
+
+  messagesToShow.forEach((msg, idx) => {
+    const entryWrapper = document.createElement("div");
+    entryWrapper.className = "system-prompt-entry";
+
+    const roleLabelText = String(msg?.role || "unknown")
+      .trim()
+      .toUpperCase();
+    const label = document.createElement("span");
+    label.className = "system-prompt-entry-label";
+    label.textContent = roleLabelText;
+    label.style.display = "none";
+
+    const textarea = document.createElement("textarea");
+    textarea.id = `system-prompt-entry-${idx}`;
+    textarea.rows = 4;
+    textarea.readOnly = true;
+    textarea.value = String(msg?.content || "");
+    textarea.dataset.forceCollapsed = "1";
+
+    const countEl = document.createElement("span");
+    countEl.id = `${textarea.id}-count`;
+    countEl.className = "textarea-collapse-count system-prompt-word-count";
+    countEl.textContent = String(countWords(textarea.value));
+
+    entryWrapper.append(label, textarea, countEl);
+    container.appendChild(entryWrapper);
+  });
+
+  setupModalTextareas(modal);
+
+  const collapseSystemPromptEntries = () => {
+    const textareas = modal.querySelectorAll(".textarea-collapse textarea");
+    textareas.forEach((textarea) => {
+      const entryState = textareaCollapseStates.get(textarea);
+      if (entryState) {
+        entryState.setExpanded(false);
+      }
+    });
+  };
+
+  const enforceExclusiveEntryExpansion = () => {
+    const headers = modal.querySelectorAll(".textarea-collapse-header");
+    headers.forEach((header) => {
+      if (header.dataset.systemPromptExclusive === "1") return;
+      header.dataset.systemPromptExclusive = "1";
+      header.addEventListener("click", () => {
+        headers.forEach((otherHeader) => {
+          if (otherHeader === header) return;
+          const textarea = otherHeader
+            .closest(".textarea-collapse")
+            ?.querySelector("textarea");
+          const entryState = textareaCollapseStates.get(textarea);
+          if (entryState) {
+            entryState.setExpanded(false);
+          }
+        });
+      });
+    });
+  };
+
+  enforceExclusiveEntryExpansion();
+  collapseSystemPromptEntries();
+  requestAnimationFrame(() => collapseSystemPromptEntries());
+
+  openModal("message-system-prompt-modal");
+}
+
+function refreshTextareaWordCount(textarea) {
+  if (!textarea || !textarea.id) return;
+  const countEl = document.getElementById(`${textarea.id}-count`);
+  if (!countEl) return;
+  countEl.textContent = String(countWords(textarea.value));
+}
+
+function countWords(text) {
+  const value = String(text || "").trim();
+  if (!value) return 0;
+  return value.split(/\s+/).filter(Boolean).length;
+}
+
+function shouldInjectPersonaContext(persona, threadOverride = null) {
+  if (!persona) return false;
+  const template =
+    state.settings.personaInjectionTemplate ||
+    DEFAULT_SETTINGS.personaInjectionTemplate;
+  if (!String(template || "").trim()) return false;
+  return true;
+}
+
+function shouldInjectPersonaOnceForThread(thread = currentThread) {
+  if (!thread) return true;
+  return thread.personaInjectionOnceUsed !== true;
+}
+
+async function markThreadPersonaInjectionOnceApplied() {
+  if (!currentThread) return;
+  if (currentThread.personaInjectionOnceUsed === true) return;
+  currentThread.personaInjectionOnceUsed = true;
+  await db.threads.update(currentThread.id, {
+    personaInjectionOnceUsed: true,
+  });
+}
+
+async function clearThreadPersonaInjectionOnceApplied() {
+  if (!currentThread) return;
+  if (currentThread.personaInjectionOnceUsed !== true) return;
+  currentThread.personaInjectionOnceUsed = false;
+  await db.threads.update(currentThread.id, {
+    personaInjectionOnceUsed: false,
+  });
+}
+
+function renderPersonaInjectionContent(persona) {
+  const template =
+    state.settings.personaInjectionTemplate ||
+    DEFAULT_SETTINGS.personaInjectionTemplate;
+  const name = String(persona?.name || "").trim() || "Anon";
+  const description = String(persona?.description || "").trim();
+  let result = String(template || "");
+  if (description) {
+    result = result
+      .replace(/\{\{\s*name\s*\}\}/gi, name)
+      .replace(/\{\{\s*description\s*\}\}/gi, description);
+  } else {
+    result = result
+      .replace(/\{\{\s*name\s*\}\}/gi, name)
+      .replace(/\{\{\s*description\s*\}\}/gi, "");
+  }
+  return result;
+}
+
+function applyPersonaInjectionPlacement(basePrompt, injection, placement) {
+  const normalizedBase = String(basePrompt || "");
+  const normalizedInjection = String(injection || "");
+  if (!normalizedInjection.trim()) return normalizedBase;
+  if ((placement || "end_system_prompt") === "end_system_prompt") {
+    if (!normalizedBase.trim()) return normalizedInjection.trim();
+    return `${normalizedBase}${normalizedInjection}`;
+  }
+  return `${normalizedBase}${normalizedInjection}`;
+}
+
+function replaceUserPlaceholders(text, replacement) {
+  const value = String(text || "");
+  const name = replacement || "You";
+  return value
+    .replace(/\{\{\s*user\s*\}\}/gi, name)
+    .replace(/\[\[\s*user\s*\]\]/gi, name);
+}
+
+async function callOpenRouter(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const provider = state.settings.aiProvider || "openrouter";
+
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+  const summaryModel =
+    state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
+  const titleModel =
+    state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
+  const titleProvider =
+    state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  const summaryProvider =
+    state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+
+  const effectiveProvider = isTitleGeneration || isSummarization
+    ? (isTitleGeneration ? titleProvider : summaryProvider)
+    : provider;
+
+  if (effectiveProvider === "aihorde") {
+    const effectiveModel = isTitleGeneration
+      ? titleModel
+      : isSummarization
+        ? summaryModel
+        : model;
+    const apiMethod = state.settings.hordeApiMethod || "native";
+    if (apiMethod === "openai") {
+      return callAIHordeOpenAI(systemPrompt, history, effectiveModel, onChunk, signal, options);
+    }
+    return callAIHorde(systemPrompt, history, effectiveModel, onChunk, signal, options);
+  }
+
+  if (effectiveProvider === "lmstudio") {
+    const effectiveModel = isTitleGeneration
+      ? titleModel
+      : isSummarization
+        ? summaryModel
+        : model;
+    return callLMStudio(systemPrompt, history, effectiveModel, onChunk, signal, options);
+  }
+
+  if (effectiveProvider === "groq") {
+    const effectiveModel = isTitleGeneration
+      ? titleModel
+      : isSummarization
+        ? summaryModel
+        : model;
+    return callGroq(systemPrompt, history, effectiveModel, onChunk, signal, options);
+  }
+
+  const resolvedModel = resolveModelForRequest(model);
+  const fallbackModel = getFallbackModel(resolvedModel, model);
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        // Filter out empty assistant messages
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    promptMessages,
+  );
+  const streamForced =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : null;
+  const body = {
+    model: isTitleGeneration
+      ? titleModel
+      : isSummarization
+        ? summaryModel
+        : resolvedModel,
+    messages: promptMessages,
+    max_completion_tokens: effectiveMaxTokens,
+    temperature: isTitleGeneration
+      ? (state.settings.autoTitleTemperature ??
+        DEFAULT_SETTINGS.autoTitleTemperature)
+      : isSummarization
+        ? (state.settings.summaryTemperature ??
+          DEFAULT_SETTINGS.summaryTemperature)
+        : clampTemperature(state.settings.temperature),
+    top_p: isTitleGeneration
+      ? 0.9
+      : isSummarization
+        ? 0.9
+        : Number(state.settings.topP) || 1,
+    frequency_penalty: isTitleGeneration
+      ? 0
+      : isSummarization
+        ? 0
+        : Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: isTitleGeneration
+      ? 0
+      : isSummarization
+        ? 0
+        : Number(state.settings.presencePenalty) || 0,
+    ...((() => {
+      const stopStrings = getStopStrings();
+      return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
+    })()),
+    stream: isTitleGeneration
+      ? false
+      : streamForced === null
+        ? !!state.settings.streamEnabled
+        : Boolean(streamForced),
+  };
+
+  state.currentRequestMessages = body.messages;
+
+  try {
+    const attempts = body.stream ? 1 : 3;
+    const response = await requestCompletionWithRetry(
+      body,
+      attempts,
+      onChunk,
+      signal,
+    );
+    return { ...response, systemMessages };
+  } catch (primaryErr) {
+    if (!fallbackModel) throw primaryErr;
+    const fallbackBody = { ...body, model: fallbackModel };
+    const fallbackAttempts = fallbackBody.stream ? 1 : 2;
+    const fallbackResponse = await requestCompletionWithRetry(
+      fallbackBody,
+      fallbackAttempts,
+      onChunk,
+      signal,
+    );
+    return { ...fallbackResponse, systemMessages };
+  }
+}
+
+async function callLMStudio(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const resolvedModel = resolveModelForRequest(model);
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+  const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
+  if (nonSystemMessages.length === 0) {
+    promptMessages.push({ role: "user", content: "Continue" });
+  }
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    promptMessages,
+  );
+
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+  const lmstudioModel = resolvedModel.startsWith("lmstudio/")
+    ? resolvedModel.slice(9)
+    : resolvedModel;
+
+  state.currentRequestMessages = promptMessages;
+
+  const baseUrl = getLMStudioBaseUrl();
+  const apiMethod = state.settings.lmstudioApiMethod || "openai";
+  const streamEnabled =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : !!state.settings.streamEnabled;
+
+  let endpoint, body;
+
+  if (apiMethod === "native") {
+    endpoint = "/api/v1/chat";
+    const systemMessagesList = promptMessages.filter((m) => m.role === "system");
+    const nonSystemMsgs = promptMessages.filter((m) => m.role !== "system");
+    let input = nonSystemMsgs.map((m) => ({
+      type: "text",
+      content: `${m.role}: ${m.content}`,
+    }));
+    if (input.length === 0) {
+      input = [{ type: "text", content: "user: " }];
+    }
+    const topK = Number(state.settings.topK);
+    const repeatPenalty = Number(state.settings.repeatPenalty);
+    const contextLength = Number(state.settings.contextLength);
+    const autoTitleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+    const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+    const shouldDisableStore =
+      (isTitleGeneration && autoTitleProvider === "lmstudio" && apiMethod === "native") ||
+      (isSummarization && summaryProvider === "lmstudio" && apiMethod === "native");
+    body = {
+      model: lmstudioModel,
+      input,
+      system_prompt:
+        systemMessagesList.length > 0 ? systemMessagesList[0].content : undefined,
+      temperature: isTitleGeneration
+        ? (state.settings.autoTitleTemperature ??
+          DEFAULT_SETTINGS.autoTitleTemperature)
+        : isSummarization
+          ? (state.settings.summaryTemperature ??
+            DEFAULT_SETTINGS.summaryTemperature)
+          : clampTemperature(state.settings.temperature),
+      top_p: Number(state.settings.topP) || 1,
+      top_k: topK > 0 ? topK : undefined,
+      repeat_penalty: repeatPenalty !== 1 ? repeatPenalty : undefined,
+      max_output_tokens: effectiveMaxTokens,
+      context_length: contextLength > 0 ? contextLength : undefined,
+      stream: streamEnabled,
+      store: shouldDisableStore ? false : undefined,
+    };
+  } else {
+    endpoint = "/v1/chat/completions";
+    const stopStrings = getStopStrings();
+    body = {
+      model: lmstudioModel,
+      messages: promptMessages,
+      max_tokens: effectiveMaxTokens,
+      temperature: isTitleGeneration
+        ? (state.settings.autoTitleTemperature ??
+          DEFAULT_SETTINGS.autoTitleTemperature)
+        : isSummarization
+          ? (state.settings.summaryTemperature ??
+            DEFAULT_SETTINGS.summaryTemperature)
+          : clampTemperature(state.settings.temperature),
+      top_p: Number(state.settings.topP) || 1,
+      frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+      presence_penalty: Number(state.settings.presencePenalty) || 0,
+      ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
+      stream: streamEnabled,
+    };
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const payload = await response.json();
+        const msg = String(payload?.error?.message || "").trim();
+        if (msg) errorMessage = `${errorMessage}: ${msg}`;
+      } catch {
+        // ignore
+      }
+      throw new Error(errorMessage);
+    }
+
+    if (streamEnabled) {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("No response stream available");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let content = "";
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+
+      while (true) {
+        if (stoppedByStopString) break;
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (stoppedByStopString) break;
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
+          const data = trimmed.slice(6);
+          if (data === "[DONE]") {
+            return {
+              content,
+              model: lmstudioModel,
+              provider: "LM Studio",
+              completionMeta: null,
+              finishReason: "stop",
+              nativeFinishReason: "stop",
+              truncatedByFilter: false,
+              stoppedByStopString,
+              generationInfo: null,
+              systemMessages,
+            };
+          }
+
+          try {
+            const json = JSON.parse(data);
+            let delta = "";
+            if (apiMethod === "native") {
+              delta = json?.content || "";
+            } else {
+              delta = json?.choices?.[0]?.delta?.content || "";
+            }
+            content += delta;
+            if (stopStrings && stopStrings.length > 0) {
+              const stopIdx = findStopStringIndex(content, stopStrings);
+              if (stopIdx !== -1) {
+                const beforeStop = content.slice(0, stopIdx);
+                content = beforeStop;
+                stoppedByStopString = true;
+                if (typeof onChunk === "function") {
+                  const addedContent = beforeStop.slice(beforeStop.length - delta.length);
+                  if (addedContent) {
+                    onChunk(addedContent.slice(0, stopIdx - (beforeStop.length - delta.length)));
+                  }
+                }
+                break;
+              }
+            }
+            if (typeof onChunk === "function") {
+              onChunk(delta);
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+      }
+
+      if (buffer && buffer.startsWith("data:")) {
+        const data = buffer.slice(6).trim();
+        if (data && data !== "[DONE]") {
+          try {
+            const json = JSON.parse(data);
+            let delta = "";
+            if (apiMethod === "native") {
+              delta = json?.content || "";
+            } else {
+              delta = json?.choices?.[0]?.delta?.content || "";
+            }
+            if (delta) {
+              content += delta;
+              if (typeof onChunk === "function") onChunk(delta);
+            }
+          } catch { /* ignore malformed final line */ }
+        }
+      }
+
+      return {
+        content,
+        model: lmstudioModel,
+        provider: "LM Studio",
+        completionMeta: null,
+        finishReason: "stop",
+        nativeFinishReason: "stop",
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    } else {
+      const json = await response.json();
+      let content, finishReason, usage, stats;
+
+      if (apiMethod === "native") {
+        const output = json?.output || [];
+        for (const item of output) {
+          if (item?.type === "message") {
+            content = item?.content || "";
+            break;
+          }
+        }
+        content = content || "";
+        finishReason = "stop";
+        stats = json?.stats || {};
+        usage = {
+          prompt_tokens: stats?.input_tokens || 0,
+          completion_tokens: stats?.total_output_tokens || 0,
+          total_tokens: (stats?.input_tokens || 0) + (stats?.total_output_tokens || 0),
+        };
+      } else {
+        content = json?.choices?.[0]?.message?.content || "";
+        finishReason = json?.choices?.[0]?.finish_reason || "stop";
+        usage = json?.usage || {};
+      }
+
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+          finishReason = "stop";
+        }
+      }
+
+      if (typeof onChunk === "function") {
+        for (const char of content) {
+          onChunk(char);
+          await new Promise((r) => setTimeout(r, 5));
+        }
+      }
+
+      return {
+        content,
+        model: json?.model || lmstudioModel,
+        provider: "LM Studio",
+        completionMeta: {
+          id: json?.id || `lmstudio-${Date.now()}`,
+          created: Math.floor(Date.now() / 1000),
+          object: "chat.completion",
+          usage: {
+            prompt_tokens: usage?.prompt_tokens || 0,
+            completion_tokens: usage?.completion_tokens || 0,
+            total_tokens: usage?.total_tokens || 0,
+          },
+        },
+        finishReason,
+        nativeFinishReason: finishReason,
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    }
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(
+      `LM Studio request failed: ${err?.message || "Unknown error"}`,
+    );
+  }
+}
+
+async function callGroq(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const apiKey = state.settings.groqApiKey;
+  if (!apiKey) {
+    throw new Error("Missing Groq API key. Set it in Settings.");
+  }
+
+  const resolvedModel = resolveModelForRequest(model);
+  const groqModel = resolvedModel.startsWith("groq/")
+    ? resolvedModel.slice(5)
+    : resolvedModel;
+
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+  const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
+  if (nonSystemMessages.length === 0) {
+    promptMessages.push({ role: "user", content: "Continue" });
+  }
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    promptMessages,
+  );
+
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+
+  state.currentRequestMessages = promptMessages;
+
+  const baseUrl = "https://api.groq.com/openai/v1";
+  const streamEnabled =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : !!state.settings.streamEnabled;
+
+  const stopStrings = getStopStrings();
+  const body = {
+    model: groqModel,
+    messages: promptMessages,
+    max_tokens: effectiveMaxTokens,
+    temperature: isTitleGeneration
+      ? (state.settings.autoTitleTemperature ??
+        DEFAULT_SETTINGS.autoTitleTemperature)
+      : isSummarization
+        ? (state.settings.summaryTemperature ??
+          DEFAULT_SETTINGS.summaryTemperature)
+        : clampTemperature(state.settings.temperature),
+    top_p: Number(state.settings.topP) || 1,
+    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
+    stream: streamEnabled,
+  };
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const payload = await response.json();
+        const msg = String(payload?.error?.message || "").trim();
+        if (msg) errorMessage = `${errorMessage}: ${msg}`;
+      } catch {
+        // ignore json parse errors
+      }
+      throw new Error(errorMessage);
+    }
+
+    if (streamEnabled) {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Response body is not readable");
+      }
+
+      const decoder = new TextDecoder();
+      let content = "";
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data: ")) continue;
+            const dataStr = trimmed.slice(6);
+            if (dataStr === "[DONE]") continue;
+
+            try {
+              const data = JSON.parse(dataStr);
+              const delta = data?.choices?.[0]?.delta?.content || "";
+              if (delta) {
+                content += delta;
+                if (typeof onChunk === "function") {
+                  onChunk(delta);
+                }
+              }
+            } catch {
+              // ignore parse errors
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      if (buffer && buffer.startsWith("data:")) {
+        const dataStr = buffer.slice(6).trim();
+        if (dataStr && dataStr !== "[DONE]") {
+          try {
+            const data = JSON.parse(dataStr);
+            const delta = data?.choices?.[0]?.delta?.content || "";
+            if (delta) {
+              content += delta;
+              if (typeof onChunk === "function") onChunk(delta);
+            }
+          } catch { /* ignore malformed final line */ }
+        }
+      }
+
+      let stoppedByStopString = false;
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+        }
+      }
+
+      return {
+        content,
+        model: groqModel,
+        provider: "Groq",
+        completionMeta: null,
+        finishReason: "stop",
+        nativeFinishReason: "stop",
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    } else {
+      const json = await response.json();
+      let content = json?.choices?.[0]?.message?.content || "";
+      const finishReason = json?.choices?.[0]?.finish_reason || "stop";
+      const usage = json?.usage || {};
+
+      let stoppedByStopString = false;
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+        }
+      }
+
+      if (typeof onChunk === "function") {
+        for (const char of content) {
+          onChunk(char);
+          await new Promise((r) => setTimeout(r, 5));
+        }
+      }
+
+      return {
+        content,
+        model: json?.model || groqModel,
+        provider: "Groq",
+        completionMeta: {
+          id: json?.id || `groq-${Date.now()}`,
+          created: Math.floor(Date.now() / 1000),
+          object: "chat.completion",
+          usage: {
+            prompt_tokens: usage?.prompt_tokens || 0,
+            completion_tokens: usage?.completion_tokens || 0,
+            total_tokens: usage?.total_tokens || 0,
+          },
+        },
+        finishReason,
+        nativeFinishReason: finishReason,
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    }
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(
+      `Groq request failed: ${err?.message || "Unknown error"}`,
+    );
+  }
+}
+
+async function callAIHordeOpenAI(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const resolvedModel = resolveModelForRequest(model);
+  const promptMessages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+  const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
+  if (nonSystemMessages.length === 0) {
+    promptMessages.push({ role: "user", content: "Continue" });
+  }
+  const systemMessages = promptMessages
+    .filter((msg) => msg.role === "system")
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    promptMessages,
+  );
+
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+  const hordeModel = resolvedModel.startsWith("aihorde/")
+    ? resolvedModel.slice(8)
+    : resolvedModel;
+
+  state.currentRequestMessages = promptMessages;
+
+  const localKey = String(state.settings.hordeApiKey || "").trim();
+  const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
+  const hordeApiKey = localKey || fallbackKey;
+
+  const baseUrl = "https://oai.aihorde.net";
+  const streamEnabled =
+    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
+      ? Boolean(options.forceStream)
+      : !!state.settings.streamEnabled;
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (hordeApiKey) {
+    headers["Authorization"] = `Bearer ${hordeApiKey}`;
+  }
+
+  const body = {
+    model: hordeModel,
+    messages: promptMessages,
+    max_tokens: effectiveMaxTokens,
+    temperature: isTitleGeneration
+      ? (state.settings.autoTitleTemperature ??
+        DEFAULT_SETTINGS.autoTitleTemperature)
+      : isSummarization
+        ? (state.settings.summaryTemperature ??
+          DEFAULT_SETTINGS.summaryTemperature)
+        : clampTemperature(state.settings.temperature),
+    top_p: Number(state.settings.topP) || 1,
+    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    ...((() => {
+      const stopStrings = getStopStrings();
+      return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
+    })()),
+    stream: streamEnabled,
+  };
+
+  try {
+    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal,
+    });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const payload = await response.json();
+        const msg = String(payload?.error?.message || payload?.detail || "").trim();
+        if (msg) errorMessage = `${errorMessage}: ${msg}`;
+      } catch {
+        // ignore
+      }
+      throw new Error(errorMessage);
+    }
+
+    if (streamEnabled) {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("No response stream available");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let content = "";
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+
+      while (true) {
+        if (stoppedByStopString) break;
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (stoppedByStopString) break;
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
+          const data = trimmed.slice(6);
+          if (data === "[DONE]") {
+            return {
+              content,
+              model: hordeModel,
+              provider: "AI Horde",
+              completionMeta: null,
+              finishReason: "stop",
+              nativeFinishReason: "stop",
+              truncatedByFilter: false,
+              stoppedByStopString,
+              generationInfo: null,
+              systemMessages,
+            };
+          }
+
+          try {
+            const json = JSON.parse(data);
+            const delta = json?.choices?.[0]?.delta?.content || "";
+            content += delta;
+            if (stopStrings && stopStrings.length > 0) {
+              const stopIdx = findStopStringIndex(content, stopStrings);
+              if (stopIdx !== -1) {
+                const beforeStop = content.slice(0, stopIdx);
+                content = beforeStop;
+                stoppedByStopString = true;
+                if (typeof onChunk === "function") {
+                  const addedContent = beforeStop.slice(beforeStop.length - delta.length);
+                  if (addedContent) {
+                    onChunk(addedContent.slice(0, stopIdx - (beforeStop.length - delta.length)));
+                  }
+                }
+                break;
+              }
+            }
+            if (typeof onChunk === "function") {
+              onChunk(delta);
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+      }
+
+      if (buffer && buffer.startsWith("data:")) {
+        const data = buffer.slice(6).trim();
+        if (data && data !== "[DONE]") {
+          try {
+            const json = JSON.parse(data);
+            const delta = json?.choices?.[0]?.delta?.content || "";
+            if (delta) {
+              content += delta;
+              if (typeof onChunk === "function") onChunk(delta);
+            }
+          } catch { /* ignore malformed final line */ }
+        }
+      }
+
+      return {
+        content,
+        model: hordeModel,
+        provider: "AI Horde",
+        completionMeta: null,
+        finishReason: "stop",
+        nativeFinishReason: "stop",
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    } else {
+      const json = await response.json();
+      let content = json?.choices?.[0]?.message?.content || "";
+      let finishReason = json?.choices?.[0]?.finish_reason || "stop";
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+          finishReason = "stop";
+        }
+      }
+      const usage = json?.usage || {};
+
+      if (typeof onChunk === "function") {
+        for (const char of content) {
+          onChunk(char);
+          await new Promise((r) => setTimeout(r, 5));
+        }
+      }
+
+      return {
+        content,
+        model: json?.model || hordeModel,
+        provider: "AI Horde",
+        completionMeta: {
+          id: json?.id || `aihorde-${Date.now()}`,
+          created: Math.floor(Date.now() / 1000),
+          object: "chat.completion",
+          usage: {
+            prompt_tokens: usage?.prompt_tokens || 0,
+            completion_tokens: usage?.completion_tokens || 0,
+            total_tokens: usage?.total_tokens || 0,
+          },
+        },
+        finishReason,
+        nativeFinishReason: finishReason,
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    }
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(
+      `AI Horde OpenAI request failed: ${err?.message || "Unknown error"}`,
+    );
+  }
+}
+
+async function callAIHorde(
+  systemPrompt,
+  history,
+  model,
+  onChunk = null,
+  signal = null,
+  options = {},
+) {
+  const resolvedModel = resolveModelForRequest(model);
+  const hordeModel = resolvedModel.startsWith("aihorde/")
+    ? resolvedModel.slice(8)
+    : resolvedModel;
+
+  const isSummarization = options?.isSummarization === true;
+  const isTitleGeneration = options?.isTitleGeneration === true;
+
+  const temperature = isTitleGeneration
+    ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
+    : isSummarization
+      ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
+      : clampTemperature(state.settings.temperature);
+
+  const effectiveMaxTokens = isTitleGeneration
+    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
+    : isSummarization
+      ? (state.settings.summaryMaxTokens ?? DEFAULT_SETTINGS.summaryMaxTokens)
+      : (state.settings.maxTokens ?? DEFAULT_SETTINGS.maxTokens);
+
+  const localKey = String(state.settings.hordeApiKey || "").trim();
+  const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
+  const hordeApiKey = localKey || fallbackKey;
+
+  const baseUrl = "https://stablehorde.net";
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...history
+      .filter((m) => {
+        if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        return true;
+      })
+      .map((m) => ({
+        role: normalizeApiRole(m.apiRole || m.role),
+        content: removeImageLinksFromContent(m.content),
+      })),
+  ];
+
+  const nonSystemMessages = messages.filter((m) => m.role !== "system");
+  if (nonSystemMessages.length === 0) {
+    messages.push({ role: "user", content: "Continue" });
+  }
+
+  const prompt = messagesToHordePrompt(messages);
+  const models = hordeModel && hordeModel !== "auto" ? [hordeModel] : [];
+
+  const hordeRequest = {
+    prompt,
+    apikey: hordeApiKey || "0000000000",
+    models,
+    params: {
+      n: 1,
+      max_length: effectiveMaxTokens,
+      temperature,
+      top_p: Number(state.settings.topP) || 1,
+      top_k: 0,
+      top_a: 0,
+      typical: 0,
+      tfs: 0.9,
+      rep_pen: 1.1,
+      rep_pen_range: 256,
+      rep_pen_slope: 0,
+      samp_pen: [],
+      pi_id: "",
+      genmd: true,
+      quiet: false,
+      filter_nsfw: false,
+      r2: false,
+      cache_prompt: true,
+      name: "rp-llm-backend",
+      model: hordeModel && hordeModel !== "auto" ? hordeModel : "",
+    },
+  };
+
+  try {
+    const asyncRes = await fetch(`${baseUrl}/api/v2/generate/text/async`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Client-Agent": "rp-llm-backend:1.0:0",
+        "apikey": hordeApiKey || "0000000000",
+      },
+      body: JSON.stringify(hordeRequest),
+      signal,
+    });
+
+    if (!asyncRes.ok) {
+      const errorText = await asyncRes.text();
+      throw new Error(`AI Horde request failed: ${asyncRes.status} - ${errorText}`);
+    }
+
+    const asyncData = await asyncRes.json();
+    const requestId = asyncData.id;
+
+    if (!requestId) {
+      throw new Error("No request ID returned from AI Horde");
+    }
+
+    const result = await pollAIHordeResult(requestId, baseUrl, hordeApiKey, signal);
+
+    const generatedText = result.generations?.[0]?.text || "";
+    const usedModel = result.generations?.[0]?.model || hordeModel || "unknown";
+    const seed = result.generations?.[0]?.seed || 0;
+    const kudos = result.generations?.[0]?.kudos || 0;
+    const workerId = result.generations?.[0]?.worker_id || "";
+    const workerName = result.generations?.[0]?.worker_name || "";
+
+    let content = generatedText;
+    let stoppedByStopString = false;
+    const stopStrings = getStopStrings();
+    if (stopStrings && stopStrings.length > 0) {
+      const truncation = truncateAtStopString(content, stopStrings);
+      if (truncation.stopped) {
+        content = truncation.content;
+        stoppedByStopString = true;
+      }
+    }
+
+    if (typeof onChunk === "function") {
+      for (const char of content) {
+        onChunk(char);
+        await new Promise((r) => setTimeout(r, 5));
+      }
+    }
+
+    const systemMessages = messages
+      .filter((msg) => msg.role === "system")
+      .map((msg) => ({ role: msg.role, content: msg.content }));
+
+    return {
+      content,
+      model: usedModel,
+      provider: "AI Horde",
+      completionMeta: {
+        id: `horde-${requestId}-${Date.now()}`,
+        created: Math.floor(Date.now() / 1000),
+        object: "chat.completion",
+        usage: {
+          prompt_tokens: estimateTokens(prompt),
+          completion_tokens: estimateTokens(content),
+          total_tokens: estimateTokens(prompt) + estimateTokens(content),
+        },
+      },
+      generationFetchDebug: [
+        {
+          type: "ai_horde_native",
+          request_id: requestId,
+          worker_id: workerId,
+          worker_name: workerName,
+          kudos,
+        },
+      ],
+      finishReason: "stop",
+      nativeFinishReason: "stop",
+      truncatedByFilter: false,
+      stoppedByStopString,
+      generationInfo: null,
+      systemMessages,
+    };
+  } catch (err) {
+    if (err?.name === "AbortError") throw err;
+    throw new Error(`AI Horde request failed: ${err?.message || "Unknown error"}`);
+  }
+}
+
+function messagesToHordePrompt(messages) {
+  const systemMessages = [];
+  const conversationMessages = [];
+
+  for (const msg of messages) {
+    if (msg.role === "system") {
+      systemMessages.push(msg.content);
+    } else if (msg.role === "user") {
+      conversationMessages.push({ role: "user", content: msg.content });
+    } else if (msg.role === "assistant") {
+      conversationMessages.push({ role: "assistant", content: msg.content });
+    }
+  }
+
+  let prompt = "";
+
+  if (systemMessages.length > 0) {
+    prompt += `### Instruction:\n${systemMessages.join("\n\n")}\n\n`;
+  }
+
+  for (let i = 0; i < conversationMessages.length; i++) {
+    const msg = conversationMessages[i];
+    if (msg.role === "user") {
+      if (i === conversationMessages.length - 1) {
+        prompt += `### Input:\n${msg.content}\n\n### Response:\n`;
+      } else {
+        prompt += `### Input:\n${msg.content}\n\n`;
+      }
+    } else if (msg.role === "assistant") {
+      prompt += `${msg.content}\n\n`;
+    }
+  }
+
+  return prompt.trim();
+}
+
+async function pollAIHordeResult(requestId, baseUrl, apiKey, signal) {
+  const startTime = Date.now();
+  const pollInterval = 2000;
+  const timeoutMs = 120000;
+
+  while (Date.now() - startTime < timeoutMs) {
+    await new Promise((r) => setTimeout(r, pollInterval));
+
+    if (signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
+    const statusRes = await fetch(
+      `${baseUrl}/api/v2/generate/text/status/${requestId}`,
+      {
+        headers: {
+          "Client-Agent": "rp-llm-backend:1.0:0",
+          apikey: apiKey || "0000000000",
+        },
+        signal,
+      },
+    );
+
+    if (!statusRes.ok) {
+      throw new Error(`AI Horde status check failed: ${statusRes.status}`);
+    }
+
+    const statusData = await statusRes.json();
+
+    if (statusData.done === true) {
+      return statusData;
+    }
+
+    if (statusData.faulted === true) {
+      throw new Error(
+        `AI Horde request faulted: ${statusData.errors?.join(", ") || "Unknown error"}`,
+      );
+    }
+  }
+
+  throw new Error("AI Horde request timed out");
+}
+
+function estimateTokens(text) {
+  if (!text) return 0;
+  return Math.ceil(text.length / 4);
+}
+
+function resolveModelForRequest(model) {
+  return model || state.settings.model || DEFAULT_SETTINGS.model;
+}
+
+function getFallbackModel(resolvedModel, originalModel) {
+  if (!originalModel) return null;
+  return resolvedModel === originalModel ? null : originalModel;
+}
+
+async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
+  let lastError = null;
+  const cooldownEnabled = Number(state.settings.completionCooldown) > 0;
+  if (cooldownEnabled) {
+    state.lastCompletionTime = Date.now();
+    updateCooldownPinnedToast();
+  }
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const res = await fetchCompletionResponse(body, signal);
+
+      if (!res.ok) {
+        let msg = res.statusText;
+        const status = res.status;
+        try {
+          const err = await res.json();
+          msg = buildOpenRouterErrorMessage(err, msg);
+        } catch {
+          // ignore parse error
+        }
+        const error = new Error(msg || `HTTP ${status}`);
+        error.httpStatus = status;
+        throw error;
+      }
+
+      if (body.stream) {
+        const streamed = await readStreamedCompletion(res, body.model, onChunk);
+        if (streamed.content) {
+          return {
+            ...streamed,
+            generationInfo: null,
+            generationFetchDebug: [],
+          };
+        }
+        throw new Error("Empty assistant content from stream.");
+      }
+
+      const data = await res.json();
+      let content = extractAssistantText(data);
+      const finishMeta = extractFinishMeta(data);
+      let stoppedByStopString = false;
+      const stopStrings = getStopStrings();
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+        }
+      }
+      if (content && content.trim()) {
+        const generationId = String(data?.id || "");
+        return {
+          content,
+          model: data?.model || body.model,
+          provider: data?.provider || "",
+          finishReason: stoppedByStopString ? "stop" : finishMeta.finishReason,
+          nativeFinishReason: stoppedByStopString ? "stop" : finishMeta.nativeFinishReason,
+          truncatedByFilter: finishMeta.truncatedByFilter,
+          stoppedByStopString,
+          generationId,
+          completionMeta: {
+            id: generationId,
+            created: data?.created || null,
+            object: data?.object || null,
+            usage: data?.usage || null,
+          },
+          generationInfo: null,
+          generationFetchDebug: [],
+        };
+      }
+
+      const finishReason = data?.choices?.[0]?.finish_reason || "unknown";
+      const provider = data?.provider || data?.model || "unknown";
+      throw new Error(
+        `Empty assistant content (finish_reason: ${finishReason}, provider: ${provider})`,
+      );
+    } catch (err) {
+      lastError = err;
+      if (!shouldRetryError(err, attempt, attempts)) throw err;
+      await sleep(getRetryDelayMs(attempt));
+    }
+  }
+
+  throw lastError || new Error("Request failed.");
+}
+
+async function fetchCompletionResponse(body, signal) {
+  const localKey = String(state.settings.openRouterApiKey || "").trim();
+  if (localKey) {
+    return fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": getAppReferer(),
+        "X-Title": "RP LLM BACKEND",
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+  }
+
+  const proxyUrl = "/api/chat-completions";
+  const fallbackOnProxyStatus = new Set([
+    400, 401, 402, 404, 408, 413, 422, 429, 500, 502, 503,
+  ]);
+  try {
+    const proxyRes = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+    if (
+      proxyRes.status !== 404 &&
+      proxyRes.status !== 405 &&
+      (!fallbackOnProxyStatus.has(proxyRes.status) || !CONFIG.apiKey)
+    ) {
+      return proxyRes;
+    }
+  } catch {
+    // proxy unavailable locally; fallback below if api key exists client-side
+  }
+
+  if (!CONFIG.apiKey) {
+    throw new Error(
+      "Missing OpenRouter API key. Set it in Settings or provide server env OPENROUTER_API_KEY.",
+    );
+  }
+
+  return fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${CONFIG.apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": getAppReferer(),
+      "X-Title": "RP LLM BACKEND",
+    },
+    body: JSON.stringify(body),
+    signal,
+  });
+}
+
+function getAppReferer() {
+  if (typeof CONFIG?.httpReferer === "string" && CONFIG.httpReferer.trim()) {
+    return CONFIG.httpReferer.trim();
+  }
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+  return "http://localhost";
+}
+
+async function readStreamedCompletion(res, fallbackModel, onChunk) {
+  if (!res.body) {
+    throw new Error("No response stream available.");
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let content = "";
+  let model = fallbackModel;
+  let provider = "";
+  let generationId = "";
+  let created = null;
+  let object = null;
+  let usage = null;
+  let finishReason = "";
+  let nativeFinishReason = "";
+  let truncatedByFilter = false;
+  let stoppedByStopString = false;
+  const stopStrings = getStopStrings();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done || stoppedByStopString) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const rawLine of lines) {
+      if (stoppedByStopString) break;
+      const line = rawLine.trim();
+      if (!line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+      try {
+        const json = JSON.parse(data);
+        generationId = json?.id || generationId;
+        model = json?.model || model;
+        provider = json?.provider || provider;
+        created = json?.created ?? created;
+        object = json?.object ?? object;
+        usage = json?.usage ?? usage;
+        const choice = json?.choices?.[0] || {};
+        const chunkFinish = String(choice?.finish_reason || "");
+        const chunkNativeFinish = String(choice?.native_finish_reason || "");
+        if (chunkFinish) finishReason = chunkFinish;
+        if (chunkNativeFinish) nativeFinishReason = chunkNativeFinish;
+        if (
+          chunkFinish.toLowerCase() === "content_filter" ||
+          chunkNativeFinish.toLowerCase() === "content_filter"
+        ) {
+          truncatedByFilter = true;
+          finishReason = "content_filter";
+          nativeFinishReason = chunkNativeFinish || chunkFinish;
+        }
+        const piece = normalizeContentParts(json?.choices?.[0]?.delta?.content);
+        if (piece) {
+          content += piece;
+          if (stopStrings && stopStrings.length > 0) {
+            const stopIdx = findStopStringIndex(content, stopStrings);
+            if (stopIdx !== -1) {
+              const beforeStop = content.slice(0, stopIdx);
+              content = beforeStop;
+              stoppedByStopString = true;
+              finishReason = "stop";
+              nativeFinishReason = "stop";
+              if (typeof onChunk === "function") {
+                const addedContent = beforeStop.slice(beforeStop.length - piece.length);
+                if (addedContent) {
+                  onChunk(addedContent.slice(0, stopIdx - (beforeStop.length - piece.length)));
+                }
+              }
+              break;
+            }
+          }
+          if (typeof onChunk === "function") onChunk(piece);
+        }
+      } catch {
+        // ignore malformed chunk
+      }
+    }
+  }
+
+  // Process any remaining data in buffer after stream ends
+  if (buffer && buffer.startsWith("data:")) {
+    const data = buffer.slice(5).trim();
+    if (data && data !== "[DONE]") {
+      try {
+        const json = JSON.parse(data);
+        generationId = json?.id || generationId;
+        model = json?.model || model;
+        provider = json?.provider || provider;
+        created = json?.created ?? created;
+        object = json?.object ?? object;
+        usage = json?.usage ?? usage;
+        const choice = json?.choices?.[0] || {};
+        const chunkFinish = String(choice?.finish_reason || "");
+        const chunkNativeFinish = String(choice?.native_finish_reason || "");
+        if (chunkFinish) finishReason = chunkFinish;
+        if (chunkNativeFinish) nativeFinishReason = chunkNativeFinish;
+        if (
+          chunkFinish.toLowerCase() === "content_filter" ||
+          chunkNativeFinish.toLowerCase() === "content_filter"
+        ) {
+          truncatedByFilter = true;
+          finishReason = "content_filter";
+          nativeFinishReason = chunkNativeFinish || chunkFinish;
+        }
+        const piece = normalizeContentParts(json?.choices?.[0]?.delta?.content);
+        if (piece) {
+          content += piece;
+          if (typeof onChunk === "function") onChunk(piece);
+        }
+      } catch (e) {
+        // ignore malformed final line
+      }
+    }
+  }
+
+  return {
+    content,
+    model,
+    provider,
+    generationId,
+    completionMeta: {
+      id: generationId,
+      created,
+      object,
+      usage,
+    },
+    finishReason,
+    nativeFinishReason,
+    truncatedByFilter,
+    stoppedByStopString,
+  };
+}
+
+async function fetchGenerationDetails(generationId, signal) {
+  const id = String(generationId || "").trim();
+  if (!id) {
+    return { data: null, debug: [{ source: "none", error: "missing-id" }] };
+  }
+  const debug = [];
+  const endpoint = `https://openrouter.ai/api/v1/generation?id=${encodeURIComponent(id)}`;
+  const localKey = String(state.settings.openRouterApiKey || "").trim();
+  const fallbackKey = String(CONFIG.apiKey || "").trim();
+  const authKey = localKey || fallbackKey;
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    try {
+      const headers = {};
+      if (authKey) {
+        headers.Authorization = `Bearer ${authKey}`;
+        headers["HTTP-Referer"] = getAppReferer();
+        headers["X-Title"] = "RP LLM BACKEND";
+      }
+      const res = await fetch(endpoint, {
+        method: "GET",
+        headers,
+        credentials: "omit",
+        signal,
+      });
+      if (res.ok) return { data: await res.json(), debug };
+      debug.push({ source: "direct", endpoint, attempt, status: res.status });
+      const shouldRetry =
+        res.status === 404 || res.status === 408 || res.status === 409;
+      if (shouldRetry && attempt < 4) {
+        await sleep(getRetryDelayMs(attempt));
+        continue;
+      }
+    } catch (err) {
+      if (isAbortError(err)) return { data: null, debug };
+      debug.push({
+        source: "direct",
+        endpoint,
+        attempt,
+        error: String(err?.message || err),
+      });
+      if (attempt < 4) {
+        await sleep(getRetryDelayMs(attempt));
+        continue;
+      }
+    }
+    break;
+  }
+  return { data: null, debug };
+}
+
+function shouldRetryError(error, attempt, attempts) {
+  if (attempt >= attempts) return false;
+  if (isAbortError(error)) return false;
+  const msg = String(error?.message || "").toLowerCase();
+  const status = Number(error?.httpStatus || 0);
+  if (
+    msg.includes("failed to fetch") ||
+    msg.includes("network") ||
+    msg.includes("timeout")
+  ) {
+    return true;
+  }
+  if (status === 408 || status === 409 || status === 429) return true;
+  if (status >= 500) return true;
+  return false;
+}
+
+function isAbortError(error) {
+  return (
+    error?.name === "AbortError" ||
+    String(error?.message || "")
+      .toLowerCase()
+      .includes("aborted")
+  );
+}
+
+function getRetryDelayMs(attempt) {
+  const delays = [700, 1500, 2600];
+  return delays[Math.min(attempt - 1, delays.length - 1)];
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function clampMaxTokens(value, min = 512, max = 8192) {
+  const n = Number(value);
+  const minSafe = Math.max(1, Number(min) || 512);
+  const maxSafe = Math.max(minSafe, Number(max) || 16384);
+  if (!Number.isFinite(n)) {
+    return Math.max(minSafe, Math.min(maxSafe, DEFAULT_SETTINGS.maxTokens));
+  }
+  const rounded = Math.round(n / 64) * 64;
+  return Math.max(minSafe, Math.min(maxSafe, rounded));
+}
+
+function clampTemperature(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_SETTINGS.temperature;
+  return Math.max(0, Math.min(2, Number(n.toFixed(2))));
+}
+
+function getStopStrings() {
+  const raw = state.settings.stopStrings || "";
+  if (!raw.trim()) return null;
+  return raw.split(",").map((s) => s.trimStart()).filter(Boolean);
+}
+
+function findStopStringIndex(content, stopStrings) {
+  if (!stopStrings || !Array.isArray(stopStrings) || stopStrings.length === 0) {
+    return -1;
+  }
+  let earliestIndex = -1;
+  for (const stop of stopStrings) {
+    const idx = content.indexOf(stop);
+    if (idx !== -1 && (earliestIndex === -1 || idx < earliestIndex)) {
+      earliestIndex = idx;
+    }
+  }
+  return earliestIndex;
+}
+
+function truncateAtStopString(content, stopStrings) {
+  const idx = findStopStringIndex(content, stopStrings);
+  if (idx === -1) return { content, stopped: false };
+  return { content: content.slice(0, idx), stopped: true };
+}
+
+function normalizeApiRole(role) {
+  const r = String(role || "").toLowerCase();
+  if (r === "assistant" || r === "user" || r === "system" || r === "tool") {
+    return r;
+  }
+  if (r === "ai") return "assistant";
+  return "user";
+}
+
+function buildOpenRouterErrorMessage(payload, fallbackMessage) {
+  const base = payload?.error?.message || fallbackMessage || "Request failed";
+  const raw = payload?.error?.metadata?.raw;
+  const providerName = payload?.error?.metadata?.provider_name;
+  const parts = [base];
+  if (raw) parts.push(raw);
+  const hordeDetail = getAiHordeOpenAiErrorDetail(payload);
+  if (hordeDetail) {
+    parts.push(`${hordeDetail.key}: ${hordeDetail.value}`);
+  }
+  if (providerName) parts.push(`provider: ${providerName}`);
+  return parts.join(" | ");
+}
+
+function getAiHordeOpenAiErrorDetail(payload) {
+  if (!payload) return null;
+  if (String(state.settings.aiProvider || "openrouter").toLowerCase() !== "aihorde") {
+    return null;
+  }
+  if (String(state.settings.hordeApiMethod || "native").toLowerCase() !== "openai") {
+    return null;
+  }
+  const candidates = [
+    { key: "details", value: payload.details },
+    { key: "detail", value: payload.detail },
+    { key: "details", value: payload.response?.details },
+    { key: "detail", value: payload.response?.detail },
+    { key: "details", value: payload?.error?.details },
+    { key: "detail", value: payload?.error?.detail },
+  ];
+  for (const candidate of candidates) {
+    if (!candidate.value) continue;
+    const normalized = String(candidate.value).trim();
+    if (normalized) {
+      return { key: candidate.key, value: normalized };
+    }
+  }
+  return null;
+}
+
+function updateModelPill() {
+  const chatPill = document.getElementById("chat-model-pill");
+  const homePill = document.getElementById("home-model-pill");
+  if (!chatPill && !homePill) return;
+  const model = resolveModelForRequest(state.settings.model);
+  const provider =
+    state.lastUsedModel &&
+    state.lastUsedProvider &&
+    String(state.lastUsedModel) === String(model)
+      ? ` (${state.lastUsedProvider})`
+      : "";
+  const text = tf("modelPill", { model: `${model}${provider}` });
+  if (chatPill) chatPill.textContent = text;
+  if (homePill) homePill.textContent = text;
+  scheduleThreadBudgetIndicatorUpdate();
+}
+
+function scheduleThreadBudgetIndicatorUpdate() {
+  if (state.budgetIndicator.timerId) {
+    window.clearTimeout(state.budgetIndicator.timerId);
+  }
+  state.budgetIndicator.timerId = window.setTimeout(() => {
+    state.budgetIndicator.timerId = null;
+    updateThreadBudgetIndicator().catch(() => {});
+  }, 120);
+}
+
+async function updateThreadBudgetIndicator() {
+  const pill = document.getElementById("chat-budget-pill");
+  if (!pill) return;
+  const isChatViewActive = document
+    .getElementById("chat-view")
+    ?.classList.contains("active");
+  if (!isChatViewActive || !currentThread || !currentCharacter) {
+    pill.textContent = "Max out: -";
+    pill.classList.remove("warn", "danger");
+    pill.title = t("threadBudgetUnavailable");
+    return;
+  }
+
+  const seq = Number(state.budgetIndicator.seq || 0) + 1;
+  state.budgetIndicator.seq = seq;
+
+  const includeOoc = currentCharacter?.includeOocInCompletions === true;
+  const inSimulationHistory = getInSimulationMessages(conversationHistory, {
+    includeOoc,
+  });
+  const includeOneTimeExtra =
+    shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
+  const previousPendingPersonaInjection =
+    state.pendingPersonaInjectionPersonaId;
+  let systemPrompt = "";
+  let personaInjectionForEndMessages = null;
+  try {
+    const result = await buildSystemPrompt(currentCharacter, {
+      includeOneTimeExtraPrompt: includeOneTimeExtra,
+      returnTrace: false,
+      historyOverride: inSimulationHistory,
+    });
+    systemPrompt = result.prompt || "";
+    personaInjectionForEndMessages = result.personaInjectionForEndMessages;
+  } finally {
+    state.pendingPersonaInjectionPersonaId = previousPendingPersonaInjection;
+  }
+  if (seq !== state.budgetIndicator.seq) return;
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...inSimulationHistory.map((m) => {
+      const role = normalizeApiRole(m.apiRole || m.role);
+      let content = m.content;
+      if (
+        role === "user" &&
+        currentCharacter?.personaPrefixEnabled !== false &&
+        m.senderName &&
+        m.senderName !== "You" &&
+        currentThread?.oocModeEnabled !== true &&
+        m.ooc !== true
+      ) {
+        content = `(As ${m.senderName}): ${content}`;
+      }
+      return { role, content };
+    }),
+  ];
+  if (personaInjectionForEndMessages) {
+    messages.push({
+      role: "system",
+      content: personaInjectionForEndMessages,
+    });
+  }
+
+  const pendingInput = String(
+    document.getElementById("user-input")?.value || "",
+  ).trim();
+  if (pendingInput) {
+    let pendingContent = pendingInput;
+    if (
+      currentCharacter?.personaPrefixEnabled !== false &&
+      currentPersona?.name &&
+      currentPersona.name !== "You" &&
+      currentThread?.oocModeEnabled !== true
+    ) {
+      pendingContent = `(As ${currentPersona.name}): ${pendingInput}`;
+    }
+    messages.push({ role: "user", content: pendingContent });
+  }
+
+  const resolvedModel = resolveModelForRequest(state.settings.model);
+  const userMax = clampMaxTokens(state.settings.maxTokens);
+  const contextWindow = resolveModelContextWindow(resolvedModel);
+  const promptTokens = estimatePromptTokens(messages);
+  const effectiveMax = computeEffectiveMaxTokensForRequest(
+    resolvedModel,
+    messages,
+  );
+
+  pill.textContent = `Max out: ${effectiveMax}`;
+  pill.classList.remove("warn", "danger");
+  if (effectiveMax < Math.max(256, Math.floor(userMax * 0.33))) {
+    pill.classList.add("danger");
+  } else if (effectiveMax < Math.max(512, Math.floor(userMax * 0.66))) {
+    pill.classList.add("warn");
+  }
+  const contextText = contextWindow > 0 ? String(contextWindow) : "unknown";
+  pill.title = tf("threadBudgetTooltip", {
+    userMax,
+    contextText,
+    promptTokens,
+    effectiveMax,
+  });
+}
+
+function extractAssistantText(payload) {
+  const msg = payload?.choices?.[0]?.message;
+  if (!msg) return "";
+
+  const fromContent = normalizeContentParts(msg.content);
+  if (fromContent && fromContent.trim()) return fromContent;
+
+  const fromReasoning = normalizeContentParts(msg.reasoning);
+  if (fromReasoning && fromReasoning.trim()) return fromReasoning;
+
+  if (typeof payload?.choices?.[0]?.text === "string") {
+    return payload.choices[0].text;
+  }
+
+  return "";
+}
+
+function extractFinishMeta(payload) {
+  const choice = payload?.choices?.[0] || {};
+  const finishReason = String(choice?.finish_reason || "");
+  const nativeFinishReason = String(choice?.native_finish_reason || "");
+  const truncatedByFilter =
+    finishReason.toLowerCase() === "content_filter" ||
+    nativeFinishReason.toLowerCase() === "content_filter";
+  return { finishReason, nativeFinishReason, truncatedByFilter };
+}
+
+function normalizeContentParts(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    const joined = value
+      .map((part) => {
+        if (typeof part === "string") return part;
+        if (!part || typeof part !== "object") return "";
+        if (typeof part.text === "string") return part.text;
+        if (typeof part.content === "string") return part.content;
+        if (typeof part.output_text === "string") return part.output_text;
+        return "";
+      })
+      .join("");
+    return joined;
+  }
+  if (typeof value === "object") {
+    if (typeof value.text === "string") return value.text;
+    if (typeof value.content === "string") return value.content;
+    if (typeof value.output_text === "string") return value.output_text;
+  }
+  return "";
+}
+
+function renderMessageHtml(content, role = "assistant") {
+  let raw = String(content || "");
+  if (role === "assistant" && currentCharacter?.usePostProcessing !== false) {
+    const skipCodeBlocks = state.settings.markdownEnabled;
+    raw = applyPostProcessingRules(raw, skipCodeBlocks);
+  }
+  if (role === "assistant") {
+    raw = trimTrailingWhitespacePerLine(raw);
+  }
+  if (!state.settings.markdownEnabled) {
+    return state.settings.allowMessageHtml
+      ? escapeHtml(raw).replace(/\n/g, "<br>")
+      : raw.replace(/\n/g, "<br>");
+  }
+  if (typeof window.markdownit === "function") {
+    const md = window.markdownit("default", {
+      html: !state.settings.allowMessageHtml,
+      linkify: true,
+      typographer: false,
+      breaks: true,
+    });
+    return md.render(raw);
+  }
+  return markdownToHtml(raw);
+}
+
+function trimTrailingWhitespacePerLine(value) {
+  if (value == null) return "";
+  return String(value).replace(/[ \t]+$/gm, "");
+}
+
+function trimAssistantMessageContent(value) {
+  if (state.settings.trimMessages !== true) return value;
+  let txt = String(value || "");
+  txt = trimTrailingWhitespacePerLine(txt);
+  txt = txt.replace(/^[\s\r\n]+|[\s\r\n]+$/g, "");
+  return txt;
+}
+
+function normalizeAssistantMessages(messages) {
+  if (state.settings.trimMessages !== true) return;
+  const list = Array.isArray(messages) ? messages : [];
+  for (const msg of list) {
+    if (!msg || msg.role !== "assistant") continue;
+    msg.content = trimAssistantMessageContent(msg.content);
+  }
+}
+
+function markdownToHtml(input) {
+  let html = state.settings.allowMessageHtml
+    ? escapeHtml(input)
+    : String(input);
+
+  html = html.replace(
+    /```([\s\S]*?)```/g,
+    (_m, code) => `<pre><code>${code}</code></pre>`,
+  );
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  html = html.replace(
+    /\*\*([^*]+)\*\*/g,
+    '<strong class="md-strong">$1</strong>',
+  );
+  html = html.replace(/\*([^*]+)\*/g, '<em class="md-em">$1</em>');
+  html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+  html = html.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+  html = html.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+  );
+
+  const blocks = html
+    .split(/\n\n+/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  const rendered = blocks.map((block) => {
+    if (block.startsWith(">")) {
+      const quote = block
+        .split("\n")
+        .map((line) => line.replace(/^>\s?/, ""))
+        .join("<br>");
+      return `<blockquote class="md-blockquote">${quote}</blockquote>`;
+    }
+    if (/^[-*] /.test(block)) {
+      const items = block
+        .split("\n")
+        .filter((line) => /^[-*] /.test(line))
+        .map((line) => `<li>${line.replace(/^[-*] /, "")}</li>`)
+        .join("");
+      return `<ul>${items}</ul>`;
+    }
+    return `<p>${block.replace(/\n/g, "<br>")}</p>`;
+  });
+
+  return rendered.join("");
+}
+
+function applyPostProcessingRules(text, skipCodeBlocks = false) {
+  const rules = parsePostProcessingRules(state.settings.postprocessRulesJson);
+  if (rules.length === 0) return text;
+
+  if (skipCodeBlocks) {
+    const codeBlockRegex = /```[\s\S]*?```/g;
+    const codeBlocks = [];
+    const textWithoutCodeBlocks = text.replace(codeBlockRegex, (match) => {
+      codeBlocks.push(match);
+      return `__CODEBLOCK_${codeBlocks.length - 1}__`;
+    });
+
+    let out = textWithoutCodeBlocks;
+    for (const rule of rules) {
+      try {
+        const re = new RegExp(rule.pattern, rule.flags || "g");
+        out = out.replace(re, rule.replacement || "");
+      } catch {
+        // ignore malformed rule
+      }
+    }
+
+    return out.replace(/__CODEBLOCK_(\d+)__/g, (_, idx) => codeBlocks[idx]);
+  }
+
+  let out = text;
+  for (const rule of rules) {
+    try {
+      const re = new RegExp(rule.pattern, rule.flags || "g");
+      out = out.replace(re, rule.replacement || "");
+    } catch {
+      // ignore malformed rule
+    }
+  }
+  return out;
+}
+
+function parsePostProcessingRules(rawJson) {
+  try {
+    const parsed = JSON.parse(rawJson || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (r) =>
+        r && typeof r.pattern === "string" && typeof r.replacement === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+function applySummaryMessagePreProcessing(text) {
+  const rules = parseSummaryPreProcessingRules(
+    state.settings.summaryMessagesPreProcessingJson,
+  );
+  if (rules.length === 0) return text;
+  let out = text;
+  for (const rule of rules) {
+    try {
+      const re = new RegExp(rule.pattern, rule.flags || "g");
+      out = out.replace(re, rule.replacement || "");
+    } catch {
+      // ignore malformed rule
+    }
+  }
+  return out;
+}
+
+function parseSummaryPreProcessingRules(rawJson) {
+  try {
+    const parsed = JSON.parse(rawJson || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (r) =>
+        r && typeof r.pattern === "string" && typeof r.replacement === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function fallbackAvatar(seed, width, height) {
+  const initial = escapeHtml(
+    (seed || "?").trim().slice(0, 1).toUpperCase() || "?",
+  );
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'><rect width='100%' height='100%' fill='#253147'/><text x='50%' y='53%' text-anchor='middle' font-size='${Math.floor(width * 0.48)}' fill='#c2cee4' font-family='Segoe UI'>${initial}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+function clearChatViewBackground() {
+  const chatView = document.getElementById("chat-view");
+  if (chatView) {
+    chatView.style.removeProperty("background-image");
+    chatView.style.removeProperty("background-size");
+    chatView.style.removeProperty("background-position");
+    chatView.style.removeProperty("background-repeat");
+    chatView.style.removeProperty("background-attachment");
+    chatView.style.removeProperty("background-color");
+  }
+  state.chatBackgroundAssetId = null;
+  state.chatBackgroundAssetUrl = "";
+}
+
+async function resolveThreadBackgroundCharacter(thread) {
+  if (!thread?.characterId) return null;
+  const base = await db.characters.get(Number(thread.characterId));
+  if (!base) return null;
+  return resolveCharacterForLanguage(
+    base,
+    thread.characterLanguage || thread.language || base.activeLanguage || "en",
+  );
+}
+
+async function getThreadStartImageSfxAsset(character, thread) {
+  if (!character || !thread) return null;
+  const lang = String(thread.characterLanguage || thread.language || "en");
+  const defs = Array.isArray(character.definitions)
+    ? character.definitions
+    : [character].filter(Boolean);
+  const def =
+    defs.find(
+      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
+    ) || defs[0];
+  const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
+  for (const entry of sfxList) {
+    if (!entry) continue;
+    const trigger = String(entry.trigger || "").toLowerCase();
+    if (trigger !== "start") continue;
+    const eviction = String(entry.eviction || "").toLowerCase();
+    if (eviction !== "never") continue;
+    const assetId = Number(entry.assetId);
+    if (!Number.isInteger(assetId)) continue;
+    const asset = await db.assets.get(assetId);
+    if (!asset || asset.type !== "image" || !asset.data) continue;
+    const url = getAssetDataUrl(asset);
+    if (!url) continue;
+    return { assetId: Number(asset.id), url };
+  }
+  return null;
+}
+
+async function applyChatViewBackgroundFromSfx(thread) {
+  const chatView = document.getElementById("chat-view");
+  if (!chatView) {
+    state.chatBackgroundAssetId = null;
+    state.chatBackgroundAssetUrl = "";
+    return;
+  }
+  try {
+    const resolvedCharacter = await resolveThreadBackgroundCharacter(thread);
+    if (!resolvedCharacter) {
+      if (state.chatBackgroundAssetId || state.chatBackgroundAssetUrl) {
+        clearChatViewBackground();
+      }
+      return;
+    }
+    const assetInfo = await getThreadStartImageSfxAsset(
+      resolvedCharacter,
+      thread,
+    );
+    if (!assetInfo) {
+      if (state.chatBackgroundAssetId || state.chatBackgroundAssetUrl) {
+        clearChatViewBackground();
+      }
+      return;
+    }
+    if (
+      state.chatBackgroundAssetId === assetInfo.assetId &&
+      state.chatBackgroundAssetUrl === assetInfo.url
+    ) {
+      return;
+    }
+    chatView.style.backgroundImage = `url("${assetInfo.url}")`;
+    chatView.style.backgroundSize = "cover";
+    chatView.style.backgroundPosition = "center center";
+    chatView.style.backgroundRepeat = "no-repeat";
+    chatView.style.backgroundAttachment = "fixed";
+    chatView.style.backgroundColor = "transparent";
+    state.chatBackgroundAssetId = assetInfo.assetId;
+    state.chatBackgroundAssetUrl = assetInfo.url;
+  } catch (err) {
+    console.warn("Failed to update chat background from SFX:", err);
+  }
+}
+
+function stopAllSfx() {
+  if (state.sfx?.currentAudio) {
+    try {
+      state.sfx.currentAudio.pause();
+      state.sfx.currentAudio.currentTime = 0;
+      if (state.sfx.currentAudio.src?.startsWith("blob:")) {
+        URL.revokeObjectURL(state.sfx.currentAudio.src);
+      }
+    } catch (e) {
+      console.warn("Error stopping SFX:", e);
+    }
+    state.sfx.currentAudio = null;
+    state.sfx.playingAssetId = null;
+  }
+
+  clearSfxBackground();
+
+  const overlayContainer = getOrCreateSfxOverlayContainer();
+  if (overlayContainer) {
+    overlayContainer.innerHTML = "";
+  }
+
+  state.sfx.activeEntries = [];
+  state.sfx.lastTriggered = {};
+  state.sfx.messageCount = {};
+
+  renderActiveSfxPanel();
+}
+
+const ENABLE_SFX_DEBUG_LOGS = false;
+
+async function playStartSfxForCharacter(character, thread) {
+  if (ENABLE_SFX_DEBUG_LOGS) {
+    console.log("[SFX] playStartSfxForCharacter called", {
+      characterName: character?.name,
+      threadId: thread?.id,
+      messageCount: conversationHistory.length,
+    });
+  }
+  if (!character || !thread) {
+    if (ENABLE_SFX_DEBUG_LOGS) {
+      console.log("[SFX] No character or thread, returning");
+    }
+    return;
+  }
+  stopAllSfx();
+
+  const lang = String(thread.characterLanguage || thread.language || "en");
+  if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] Thread language:", lang);
+  const defs = Array.isArray(character.definitions)
+    ? character.definitions
+    : [character].filter(Boolean);
+  const def =
+    defs.find(
+      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
+    ) || defs[0];
+  const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
+  if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] SFX list:", sfxList);
+
+  if (sfxList.length === 0) {
+    if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] No SFX entries, returning");
+    return;
+  }
+  if (conversationHistory.length > 1) {
+    if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] More than 1 message, not playing");
+    return;
+  }
+
+  const sfx = sfxList.find(
+    (s) => s && String(s.trigger || "").toLowerCase() === "start",
+  );
+  if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] First SFX with trigger=start:", sfx);
+  if (!sfx) {
+    if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] No SFX with trigger Start, returning");
+    return;
+  }
+
+  const entry = normalizeSfxEntry(sfx);
+
+  if (isSfxEntryActive(entry.assetId)) {
+    if (ENABLE_SFX_DEBUG_LOGS) {
+      console.log("[SFX] Same asset already playing, skipping");
+    }
+    return;
+  }
+
+  stopAllSfx();
+
+  try {
+    await activateSfxEntry(entry, thread);
+  } catch (err) {
+    console.warn("Error playing start SFX:", err);
+    stopAllSfx();
+  }
+}
+
+// ============================================================================
+// SFX Conditional Rules Engine
+// ============================================================================
+
+function normalizeSfxEntry(entry) {
+  if (!entry) return null;
+  const trigger = String(entry.trigger || "").toLowerCase();
+  const eviction = String(entry.eviction || "").toLowerCase();
+  return {
+    assetId: Number(entry.assetId) || null,
+    name: String(entry.name || ""),
+    type: entry.type || "sound",
+    trigger: trigger,
+    triggerKeywords: Array.isArray(entry.triggerKeywords)
+      ? entry.triggerKeywords
+      : [],
+    triggerKeywordsSecondary: Array.isArray(entry.triggerKeywordsSecondary)
+      ? entry.triggerKeywordsSecondary
+      : [],
+    triggerActionPattern: String(entry.triggerActionPattern || ""),
+    triggerMatchCase: !!entry.triggerMatchCase,
+    triggerMatchWholeWord: !!entry.triggerMatchWholeWord,
+    triggerTurnInterval: Number(entry.triggerTurnInterval) || 0,
+    triggerCooldownMs: Number(entry.triggerCooldownMs) || 0,
+    eviction: eviction,
+    evictionKeywords: Array.isArray(entry.evictionKeywords)
+      ? entry.evictionKeywords
+      : [],
+    evictionMessageCount: Number(entry.evictionMessageCount) || 0,
+    loop: !!entry.loop,
+    volume: Number(entry.volume) || 1,
+    fadeInMs: Number(entry.fadeInMs) || 0,
+    fadeOutMs: Number(entry.fadeOutMs) || 0,
+    opacity: Number(entry.opacity) || 1,
+    position: entry.position || "cover",
+    layer: Number(entry.layer) || 0,
+    transitionDuration: Number(entry.transitionDuration) || 300,
+  };
+}
+
+function doesTextMatchKeywords(text, keywords, options = {}) {
+  if (!text || !Array.isArray(keywords) || keywords.length === 0) return false;
+  const { matchCase = false, matchWholeWord = false } = options;
+  const searchText = matchCase ? text : text.toLowerCase();
+  for (const keyword of keywords) {
+    if (!keyword) continue;
+    const kw = matchCase ? keyword : keyword.toLowerCase();
+    if (matchWholeWord) {
+      const regex = new RegExp(
+        `\\b${escapeRegex(kw)}\\b`,
+        matchCase ? "" : "i",
+      );
+      if (regex.test(searchText)) return true;
+    } else {
+      if (searchText.includes(kw)) return true;
+    }
+  }
+  return false;
+}
+
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function extractActionText(text) {
+  if (!text) return "";
+  const asteriskMatch = text.match(/\*([^*]+)\*/g);
+  if (asteriskMatch) {
+    return asteriskMatch.map((s) => s.replace(/\*/g, "")).join(" ");
+  }
+  return "";
+}
+
+function doesTextMatchActionPattern(text, pattern) {
+  if (!text || !pattern) return false;
+  try {
+    const regex = new RegExp(pattern, "i");
+    return regex.test(text);
+  } catch (e) {
+    console.warn("Invalid action pattern regex:", e);
+    return false;
+  }
+}
+
+function getLastTriggerTime(entryKey) {
+  return state.sfx.lastTriggered[entryKey] || 0;
+}
+
+function setLastTriggerTime(entryKey, time = Date.now()) {
+  state.sfx.lastTriggered[entryKey] = time;
+}
+
+function getSfxMessageCount(entryKey) {
+  return state.sfx.messageCount[entryKey] || 0;
+}
+
+function incrementSfxMessageCount(entryKey) {
+  if (!state.sfx.messageCount[entryKey]) {
+    state.sfx.messageCount[entryKey] = 0;
+  }
+  state.sfx.messageCount[entryKey]++;
+}
+
+function resetSfxMessageCount(entryKey) {
+  state.sfx.messageCount[entryKey] = 0;
+}
+
+function getEntryKey(sfxEntry, charId) {
+  return `${charId}-${sfxEntry.assetId}-${sfxEntry.trigger}-${sfxEntry.triggerKeywords?.join(",") || ""}`;
+}
+
+function isSfxEntryActive(assetId) {
+  return state.sfx.activeEntries.some((e) => e.assetId === assetId);
+}
+
+function addActiveSfxEntry(entry) {
+  if (!isSfxEntryActive(entry.assetId)) {
+    state.sfx.activeEntries.push({ ...entry, activatedAt: Date.now() });
+    renderActiveSfxPanel();
+  }
+}
+
+function removeActiveSfxEntry(assetId) {
+  const idx = state.sfx.activeEntries.findIndex((e) => e.assetId === assetId);
+  if (idx !== -1) {
+    state.sfx.activeEntries.splice(idx, 1);
+    renderActiveSfxPanel();
+  }
+}
+
+async function evaluateSfxTriggers(botMessage, thread) {
+  if (!botMessage || !thread) return;
+  const charId = Number(thread.characterId);
+  if (!Number.isInteger(charId)) return;
+
+  const character = await db.characters.get(charId);
+  if (!character) return;
+
+  const lang = String(thread.characterLanguage || thread.language || "en");
+  const defs = Array.isArray(character.definitions)
+    ? character.definitions
+    : [character];
+  const def =
+    defs.find(
+      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
+    ) || defs[0];
+  if (!def || !Array.isArray(def.sfx)) return;
+
+  const messageText = String(botMessage.content || "");
+  const actionText = extractActionText(messageText);
+  const fullText = messageText + " " + actionText;
+
+  for (const rawEntry of def.sfx) {
+    const entry = normalizeSfxEntry(rawEntry);
+    if (!entry || !entry.assetId) continue;
+
+    const entryKey = getEntryKey(entry, charId);
+    let shouldTrigger = false;
+
+    const triggerType = entry.trigger;
+
+    if (triggerType === "start") {
+      shouldTrigger = conversationHistory.length <= 1;
+    } else if (triggerType === "keyword" || triggerType === "keywords") {
+      const primaryMatch = doesTextMatchKeywords(
+        fullText,
+        entry.triggerKeywords,
+        {
+          matchCase: entry.triggerMatchCase,
+          matchWholeWord: entry.triggerMatchWholeWord,
+        },
+      );
+      const secondaryMatch =
+        entry.triggerKeywordsSecondary.length === 0 ||
+        doesTextMatchKeywords(fullText, entry.triggerKeywordsSecondary, {
+          matchCase: entry.triggerMatchCase,
+          matchWholeWord: entry.triggerMatchWholeWord,
+        });
+      shouldTrigger = primaryMatch && secondaryMatch;
+    }
+
+    if (triggerType === "action" || triggerType === "action_pattern") {
+      if (entry.triggerActionPattern) {
+        shouldTrigger = doesTextMatchActionPattern(
+          actionText,
+          entry.triggerActionPattern,
+        );
+      }
+    }
+
+    if (triggerType === "turn" || triggerType === "turn_interval") {
+      const interval = entry.triggerTurnInterval || 1;
+      const count = getSfxMessageCount(entryKey);
+      shouldTrigger = count > 0 && count % interval === 0;
+    }
+
+    if (triggerType === "always") {
+      shouldTrigger = true;
+    }
+
+    if (shouldTrigger && entry.triggerCooldownMs > 0) {
+      const lastTime = getLastTriggerTime(entryKey);
+      const now = Date.now();
+      if (now - lastTime < entry.triggerCooldownMs) {
+        shouldTrigger = false;
+      }
+    }
+
+    if (shouldTrigger) {
+      setLastTriggerTime(entryKey);
+      await activateSfxEntry(entry, thread);
+    }
+  }
+}
+
+async function activateSfxEntry(entry, thread) {
+  if (!entry || !entry.assetId) return;
+
+  try {
+    const asset = await db.assets.get(entry.assetId);
+    if (!asset) {
+      console.warn("[SFX] Asset not found:", entry.assetId);
+      return;
+    }
+
+    const sfxType =
+      entry.type || (asset.type === "sound" ? "sound" : "background");
+
+    if (sfxType === "sound") {
+      await playSfxSound(entry, asset);
+    } else if (sfxType === "background") {
+      await showSfxBackground(entry, asset);
+    } else if (sfxType === "overlay") {
+      await showSfxOverlay(entry, asset);
+    } else if (sfxType === "avatar") {
+      await swapSfxAvatar(entry, asset, thread);
+    }
+
+    addActiveSfxEntry(entry);
+  } catch (err) {
+    console.warn("[SFX] Error activating entry:", err);
+  }
+}
+
+async function playSfxSound(entry, asset) {
+  if (!asset.data) return;
+
+  if (ENABLE_SFX_DEBUG_LOGS)
+    console.log("[SFX] playSfxSound called with entry:", entry);
+
+  const url = getAssetDataUrl(asset);
+  if (!url) return;
+
+  if (state.sfx.currentAudio) {
+    state.sfx.currentAudio.pause();
+    if (state.sfx.currentAudio.src?.startsWith("blob:")) {
+      URL.revokeObjectURL(state.sfx.currentAudio.src);
+    }
+  }
+
+  const audio = new Audio(url);
+  audio.loop = !!entry.loop;
+  const volume = Number(entry.volume);
+  audio.volume =
+    Number.isFinite(volume) && volume >= 0 && volume <= 1 ? volume : 1;
+    if (ENABLE_SFX_DEBUG_LOGS)
+    if (ENABLE_SFX_DEBUG_LOGS)
+      console.log("[SFX] Setting audio volume to:", audio.volume);
+
+  if (entry.fadeInMs > 0) {
+    audio.volume = 0;
+    audio.play();
+    fadeAudioIn(audio, entry.fadeInMs, entry.volume || 1);
+  } else {
+    audio.play();
+  }
+
+  state.sfx.currentAudio = audio;
+  state.sfx.playingAssetId = entry.assetId;
+
+  audio.addEventListener("ended", () => {
+    if (!entry.loop) {
+      removeActiveSfxEntry(entry.assetId);
+    }
+  });
+}
+
+function fadeAudioIn(audio, durationMs, targetVolume) {
+  const steps = 20;
+  const interval = durationMs / steps;
+  const volumeStep = targetVolume / steps;
+  let currentStep = 0;
+
+  const fadeInterval = setInterval(() => {
+    currentStep++;
+    audio.volume = Math.min(volumeStep * currentStep, targetVolume);
+    if (currentStep >= steps) {
+      clearInterval(fadeInterval);
+    }
+  }, interval);
+}
+
+function fadeAudioOut(audio, durationMs, onComplete) {
+  if (!audio) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  const startVolume = audio.volume;
+  const steps = 20;
+  const interval = durationMs / steps;
+  const volumeStep = startVolume / steps;
+  let currentStep = 0;
+
+  const fadeInterval = setInterval(() => {
+    currentStep++;
+    audio.volume = Math.max(startVolume - volumeStep * currentStep, 0);
+    if (currentStep >= steps) {
+      clearInterval(fadeInterval);
+      audio.pause();
+      if (onComplete) onComplete();
+    }
+  }, interval);
+}
+
+async function showSfxBackground(entry, asset) {
+  if (!asset.data) return;
+
+  const url = getAssetDataUrl(asset);
+  if (!url) return;
+
+  const chatView = document.getElementById("chat-view");
+  if (!chatView) return;
+
+  if (entry.fadeInMs > 0) {
+    chatView.style.transition = `background ${entry.fadeInMs}ms ease-in-out`;
+  }
+
+  chatView.style.backgroundImage = `url("${url}")`;
+  chatView.style.backgroundSize = entry.position || "cover";
+  chatView.style.backgroundPosition = "center center";
+  chatView.style.backgroundRepeat = "no-repeat";
+  chatView.style.backgroundAttachment = "fixed";
+  chatView.style.backgroundColor = "transparent";
+
+  state.sfx.chatBackgroundAssetId = entry.assetId;
+  state.sfx.chatBackgroundAssetUrl = url;
+}
+
+function clearSfxBackground() {
+  const chatView = document.getElementById("chat-view");
+  if (chatView) {
+    chatView.style.backgroundImage = "";
+    chatView.style.backgroundColor = "";
+  }
+  state.sfx.chatBackgroundAssetId = null;
+  state.sfx.chatBackgroundAssetUrl = "";
+}
+
+async function showSfxOverlay(entry, asset) {
+  const overlayContainer = getOrCreateSfxOverlayContainer();
+  if (!overlayContainer) return;
+
+  const url = asset.data ? getAssetDataUrl(asset) : asset.thumbnail;
+  if (!url) return;
+
+  const existingOverlay = overlayContainer.querySelector(
+    `[data-sfx-asset-id="${entry.assetId}"]`,
+  );
+  if (existingOverlay) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "sfx-overlay";
+  overlay.dataset.sfxAssetId = entry.assetId;
+  overlay.style.position = "absolute";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.pointerEvents = "none";
+  overlay.style.zIndex = String(entry.layer || 100);
+  overlay.style.opacity = String(entry.opacity || 1);
+  overlay.style.transition = `opacity ${entry.transitionDuration || 300}ms ease-in-out`;
+
+  if (asset.type === "image") {
+    const img = document.createElement("img");
+    img.src = url;
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = entry.position || "cover";
+    overlay.appendChild(img);
+  } else if (asset.type === "video") {
+    const video = document.createElement("video");
+    video.src = url;
+    video.loop = !!entry.loop;
+    video.muted = true;
+    video.playsInline = true;
+    video.style.width = "100%";
+    video.style.height = "100%";
+    video.style.objectFit = entry.position || "cover";
+    if (entry.fadeInMs > 0) {
+      video.style.opacity = "0";
+      setTimeout(() => {
+        video.style.transition = `opacity ${entry.fadeInMs}ms`;
+        video.style.opacity = "1";
+      }, 10);
+    }
+    video.play();
+    overlay.appendChild(video);
+  }
+
+  overlayContainer.appendChild(overlay);
+}
+
+function getOrCreateSfxOverlayContainer() {
+  let container = document.getElementById("sfx-overlay-container");
+  if (!container) {
+    container = document.getElementById("chat-view");
+  }
+  if (!container) return null;
+
+  let overlayDiv = container.querySelector(".sfx-overlays-layer");
+  if (!overlayDiv) {
+    overlayDiv = document.createElement("div");
+    overlayDiv.className = "sfx-overlays-layer";
+    overlayDiv.style.position = "absolute";
+    overlayDiv.style.top = "0";
+    overlayDiv.style.left = "0";
+    overlayDiv.style.width = "100%";
+    overlayDiv.style.height = "100%";
+    overlayDiv.style.pointerEvents = "none";
+    overlayDiv.style.zIndex = "50";
+    container.style.position = "relative";
+    container.appendChild(overlayDiv);
+  }
+  return overlayDiv;
+}
+
+function removeSfxOverlay(assetId) {
+  const container = getOrCreateSfxOverlayContainer();
+  if (!container) return;
+
+  const overlay = container.querySelector(`[data-sfx-asset-id="${assetId}"]`);
+  if (overlay) {
+    overlay.style.opacity = "0";
+    setTimeout(() => overlay.remove(), 300);
+  }
+}
+
+async function swapSfxAvatar(entry, asset, thread) {
+  if (!asset || !thread) return;
+
+  const url = asset.data ? getAssetDataUrl(asset) : asset.thumbnail;
+  if (!url) return;
+
+  thread.sfxAvatarUrl = url;
+
+  const messageElements = document.querySelectorAll(
+    `.message[data-character-id="${thread.characterId}"] .message-avatar img`,
+  );
+  messageElements.forEach((img) => {
+    img.src = url;
+  });
+
+  const avatarElements = document.querySelectorAll(
+    `.bot-avatar[data-thread-id="${thread.id}"]`,
+  );
+  avatarElements.forEach((avatar) => {
+    avatar.innerHTML = `<img src="${url}" alt="Avatar">`;
+  });
+}
+
+async function evaluateSfxEvictions(botMessage, thread) {
+  if (!botMessage || !thread) return;
+  const charId = Number(thread.characterId);
+  if (!Number.isInteger(charId)) return;
+
+  const character = await db.characters.get(charId);
+  if (!character) return;
+
+  const lang = String(thread.characterLanguage || thread.language || "en");
+  const defs = Array.isArray(character.definitions)
+    ? character.definitions
+    : [character];
+  const def =
+    defs.find(
+      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
+    ) || defs[0];
+  if (!def || !Array.isArray(def.sfx)) return;
+
+  const messageText = String(botMessage.content || "");
+
+  const activeAssetIds = state.sfx.activeEntries.map((e) => e.assetId);
+
+  for (const activeEntry of [...state.sfx.activeEntries]) {
+    const rawEntry = def.sfx.find(
+      (e) => Number(e.assetId) === activeEntry.assetId,
+    );
+    if (!rawEntry) {
+      await deactivateSfxEntry(activeEntry);
+      continue;
+    }
+
+    const entry = normalizeSfxEntry(rawEntry);
+    const entryKey = getEntryKey(entry, charId);
+    const evictionType = entry.eviction;
+
+    let shouldEvict = false;
+
+    if (evictionType === "never" || evictionType === "manual") {
+      continue;
+    }
+
+    if (evictionType === "keyword" || evictionType === "keywords") {
+      shouldEvict = doesTextMatchKeywords(messageText, entry.evictionKeywords, {
+        matchCase: entry.triggerMatchCase,
+        matchWholeWord: entry.triggerMatchWholeWord,
+      });
+    }
+
+    if (evictionType === "message_count" || evictionType === "messagecount") {
+      incrementSfxMessageCount(entryKey);
+      const count = getSfxMessageCount(entryKey);
+      if (
+        entry.evictionMessageCount > 0 &&
+        count >= entry.evictionMessageCount
+      ) {
+        shouldEvict = true;
+        resetSfxMessageCount(entryKey);
+      }
+    }
+
+    if (evictionType === "eof" || evictionType === "end_of_conversation") {
+      if (botMessage.isFinalIncomplete) {
+        shouldEvict = true;
+      }
+    }
+
+    if (shouldEvict) {
+      await deactivateSfxEntry(activeEntry);
+    }
+  }
+}
+
+async function deactivateSfxEntry(entry) {
+  if (!entry) return;
+
+  const assetId = entry.assetId || entry;
+
+  try {
+    const asset = await db.assets.get(assetId);
+    const sfxType =
+      entry.type || (asset?.type === "sound" ? "sound" : "background");
+
+    if (sfxType === "sound") {
+      if (state.sfx.playingAssetId === assetId && state.sfx.currentAudio) {
+        if (entry.fadeOutMs > 0) {
+          fadeAudioOut(state.sfx.currentAudio, entry.fadeOutMs, () => {
+            if (state.sfx.currentAudio?.src?.startsWith("blob:")) {
+              URL.revokeObjectURL(state.sfx.currentAudio.src);
+            }
+            state.sfx.currentAudio = null;
+            state.sfx.playingAssetId = null;
+          });
+        } else {
+          state.sfx.currentAudio.pause();
+          if (state.sfx.currentAudio.src?.startsWith("blob:")) {
+            URL.revokeObjectURL(state.sfx.currentAudio.src);
+          }
+          state.sfx.currentAudio = null;
+          state.sfx.playingAssetId = null;
+        }
+      }
+    } else if (sfxType === "background") {
+      if (state.sfx.chatBackgroundAssetId === assetId) {
+        clearSfxBackground();
+      }
+    } else if (sfxType === "overlay") {
+      removeSfxOverlay(assetId);
+    } else if (sfxType === "avatar") {
+      // Avatar revert would require storing original - simplified for now
+    }
+
+    removeActiveSfxEntry(assetId);
+  } catch (err) {
+    console.warn("[SFX] Error deactivating entry:", err);
+    removeActiveSfxEntry(assetId);
+  }
+}
+
+function renderActiveSfxPanel() {
+  const panel = document.getElementById("active-sfx-panel");
+  if (!panel) return;
+
+  if (state.sfx.activeEntries.length === 0) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  panel.classList.remove("hidden");
+  const list = panel.querySelector(".active-sfx-list");
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  for (const entry of state.sfx.activeEntries) {
+    const item = document.createElement("div");
+    item.className = "active-sfx-item";
+    item.innerHTML = `
+      <span class="active-sfx-name">${entry.name || "SFX"}</span>
+      <button class="icon-btn danger-icon-btn" data-evict-sfx="${entry.assetId}" title="${t("stopSfx") || "Stop"}">
+        &times;
+      </button>
+    `;
+    list.appendChild(item);
+  }
+
+  list.querySelectorAll("[data-evict-sfx]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const assetId = Number(e.target.dataset.evictSfx);
+      const entry = state.sfx.activeEntries.find(
+        (ent) => ent.assetId === assetId,
+      );
+      if (entry) {
+        await deactivateSfxEntry(entry);
+      }
+    });
+  });
+}
+
+async function evictAllSfx() {
+  for (const entry of [...state.sfx.activeEntries]) {
+    await deactivateSfxEntry(entry);
+  }
+  state.sfx.lastTriggered = {};
+  state.sfx.messageCount = {};
 }
