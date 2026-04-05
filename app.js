@@ -4510,10 +4510,13 @@ function setupSettingsTabsLayout() {
   tabs.forEach((btn) => {
     btn.addEventListener("click", () => {
       const tab = btn.getAttribute("data-settings-tab-btn") || "appearance";
+      console.log("Tab clicked:", tab, "panels size:", panels.size);
       localStorage.setItem("rp-settings-last-tab", tab);
       tabs.forEach((b) => b.classList.toggle("active", b === btn));
       panels.forEach((panel, key) => {
-        panel.classList.toggle("hidden", key !== tab);
+        const shouldShow = key === tab;
+        console.log("Panel", key, "show:", shouldShow, "has hidden:", panel.classList.contains("hidden"));
+        panel.classList.toggle("hidden", !shouldShow);
       });
       if (tab === "prompting") {
         requestAnimationFrame(() => {
