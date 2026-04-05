@@ -3239,6 +3239,7 @@ async function setupSettingsControls() {
     "is-active",
     state.settings.enterToSendEnabled !== false,
   );
+  const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
   const markdownCustomCss = document.getElementById("markdown-custom-css");
   const postprocessRulesJson = document.getElementById("postprocess-rules-json");
   if (markdownCustomCss) {
