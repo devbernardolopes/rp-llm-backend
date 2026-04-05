@@ -4504,6 +4504,9 @@ textarea {
     bottom: env(safe-area-inset-bottom, 12px);
     z-index: 5;
     margin-top: 0;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-bottom: 80px;
   }
 
   .chat-input-wrapper .shortcuts-bar {
