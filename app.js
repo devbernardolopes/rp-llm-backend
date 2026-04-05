@@ -194,7 +194,10 @@ async function fetchSnippet(filename) {
 async function loadSnippetsForModal(modalId) {
   const snippets = SNIPPET_MAP[modalId];
   if (!snippets) return;
-  const containerId = modalId.replace("-modal", "-content");
+  // For settings-modal, use the modal-body container
+  const containerId = modalId === "settings-modal"
+    ? "settings-modal-body"
+    : modalId.replace("-modal", "-content");
   const container = document.getElementById(containerId);
   if (!container) return;
   if (container.dataset.snippetsLoaded === "1") return;
