@@ -3354,6 +3354,51 @@ async function setupSettingsControls() {
     "memory-relevance-filter-enabled",
   );
 
+  if (globalPromptTemplate) {
+    globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
+  }
+  if (summarySystemPrompt) {
+    summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
+  }
+  if (memorySummarizerUserPrompt) {
+    const userPromptValue =
+      state.settings.memorySummarizerUserPrompt ||
+      DEFAULT_SETTINGS.memorySummarizerUserPrompt;
+    state.settings.memorySummarizerUserPrompt = userPromptValue;
+    memorySummarizerUserPrompt.value = userPromptValue;
+  }
+  if (summaryMessagesPreProcessingJson) {
+    const preProcessingValue =
+      state.settings.summaryMessagesPreProcessingJson || "[]";
+    state.settings.summaryMessagesPreProcessingJson = preProcessingValue;
+    summaryMessagesPreProcessingJson.value = preProcessingValue;
+  }
+  if (personaInjectionTemplate) {
+    personaInjectionTemplate.value =
+      state.settings.personaInjectionTemplate ||
+      DEFAULT_SETTINGS.personaInjectionTemplate;
+  }
+  if (writingInstructionsInjectionWhen) {
+    const writingWhen = normalizeWritingInstructionsTiming(
+      state.settings.writingInstructionsInjectionWhen,
+    );
+    state.settings.writingInstructionsInjectionWhen = writingWhen;
+    writingInstructionsInjectionWhen.value = writingWhen;
+  }
+  if (shortcutsRaw) {
+    shortcutsRaw.value = state.settings.shortcutsRaw || "";
+  }
+  if (autoTitleSystemPrompt) {
+    autoTitleSystemPrompt.value =
+      state.settings.autoTitleSystemPrompt ||
+      DEFAULT_SETTINGS.autoTitleSystemPrompt;
+  }
+  if (autoTitleUserPrompt) {
+    autoTitleUserPrompt.value =
+      state.settings.autoTitleUserPrompt ||
+      DEFAULT_SETTINGS.autoTitleUserPrompt;
+  }
+
   if (sectionHeaderMessagesSoFar) {
     sectionHeaderMessagesSoFar.value =
       state.settings.sectionHeaderMessagesSoFar ||
