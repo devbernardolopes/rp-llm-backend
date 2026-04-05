@@ -12956,11 +12956,61 @@ async function buildDatabaseBackupPayload() {
     tables[table.name] = await table.toArray();
   }
 
+  if (tables.characters) {
+    tables.characters = await Promise.all(
+      tables.characters.map(async (char) => {
+        const processed = { ...char };
+        if (Array.isArray(processed.avatars)) {
+          processed.avatars = await Promise.all(
+            processed.avatars.map(async (avatar) => {
+              if (avatar.data instanceof Blob) {
+                const base64 = await blobToBase64(avatar.data);
+                return { ...avatar, data: base64 };
+              }
+              return avatar;
+            })
+          );
+        }
+        if (processed.avatar instanceof Blob) {
+          processed.avatar = await blobToBase64(processed.avatar);
+        }
+        if (Array.isArray(processed.definitions)) {
+          for (const def of processed.definitions) {
+            if (def.avatar instanceof Blob) {
+              def.avatar = await blobToBase64(def.avatar);
+            }
+            if (Array.isArray(def.avatars)) {
+              def.avatars = await Promise.all(
+                def.avatars.map(async (avatar) => {
+                  if (avatar.data instanceof Blob) {
+                    const base64 = await blobToBase64(avatar.data);
+                    return { ...avatar, data: base64 };
+                  }
+                  return avatar;
+                })
+              );
+            }
+          }
+        }
+        return processed;
+      })
+    );
+  }
+
   if (tables.memories) {
     tables.memories = tables.memories.map(({ embedding, ...rest }) => rest);
   }
 
   if (tables.assets) {
+    tables.assets = await Promise.all(
+      tables.assets.map(async (asset) => {
+        if (asset.data instanceof Blob) {
+          const base64 = await blobToBase64(asset.data);
+          return { ...asset, data: base64 };
+        }
+        return asset;
+      })
+    );
     const validAssetTypes = ["image", "video", "sound"];
     tables.assets = tables.assets.filter(
       (asset) => asset.type && validAssetTypes.includes(asset.type),
