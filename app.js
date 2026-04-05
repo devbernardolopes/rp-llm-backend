@@ -4118,6 +4118,7 @@ async function setupSettingsControls() {
           lastModels[oldProvider] = state.settings.autoTitleModel;
         }
         state.settings.lastModelsPerProvider = lastModels;
+        state.settings.autoTitleModel = "";
       }
       state.settings.autoTitleProvider = newProvider;
       saveSettings();
@@ -4148,6 +4149,7 @@ async function setupSettingsControls() {
           lastModels[oldProvider] = state.settings.summaryModel;
         }
         state.settings.lastModelsPerProvider = lastModels;
+        state.settings.summaryModel = "";
       }
       state.settings.summaryProvider = newProvider;
       saveSettings();
@@ -14546,7 +14548,7 @@ async function maybeGenerateTitleBeforeBotReply() {
       state.settings.autoTitleSystemPrompt ||
         DEFAULT_SETTINGS.autoTitleSystemPrompt,
       [{ role: "user", content: titlePrompt }],
-      state.settings.model,
+      state.settings.autoTitleModel,
       null,
       null,
       {
@@ -18582,13 +18584,6 @@ function getBestModelForProvider(provider, currentModel, catalog, lastModels) {
   const existsInCatalog = catalog.some((m) => m.id === currentModel);
   if (existsInCatalog) {
     return currentModel;
-  }
-  const lastModel = lastModels[provider];
-  if (lastModel) {
-    const lastExists = catalog.some((m) => m.id === lastModel);
-    if (lastExists) {
-      return lastModel;
-    }
   }
   return catalog.length > 0 ? catalog[0].id : "";
 }

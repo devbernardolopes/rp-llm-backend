@@ -490,13 +490,13 @@ async function summarizeMemory(character) {
        }
      }
      
-      if (summary === null) {
-        const summaryResult = await callOpenRouter(
-          summarySystemPrompt,
-          requestHistory,
-          state.settings.model,
-          null,
-          null,
+       if (summary === null) {
+         const summaryResult = await callOpenRouter(
+           summarySystemPrompt,
+           requestHistory,
+           state.settings.summaryModel,
+           null,
+           null,
           {
             forceStream:
               state.settings.defaultSummaryStream ??
