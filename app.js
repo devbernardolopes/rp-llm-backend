@@ -3032,6 +3032,9 @@ async function setupSettingsControls() {
     "memory-messages-to-keep",
   );
   const memorySlotsInput = document.getElementById("memory-slots");
+
+  if (!modelSelect) return; // Settings modal not loaded yet
+
   renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
   if (uiLanguageSelect) {
     uiLanguageSelect.querySelector('option[value="auto"]').textContent =
@@ -3106,8 +3109,8 @@ async function setupSettingsControls() {
   //   opt.label = m.label;
   //   modelSelect.appendChild(opt);
   // });
-  modelSelect.value = state.settings.model;
-  if (!modelSelect.value) {
+  if (modelSelect) modelSelect.value = state.settings.model;
+  if (modelSelect && !modelSelect.value) {
     modelSelect.value = DEFAULT_SETTINGS.model;
     state.settings.model = modelSelect.value;
     saveSettings();
