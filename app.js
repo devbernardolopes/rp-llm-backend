@@ -3090,10 +3090,6 @@ async function setupSettingsControls() {
   const newCharacterShortcut = document.getElementById(
     "new-character-shortcut",
   );
-  const markdownCustomCss = document.getElementById("markdown-custom-css");
-  if (markdownCustomCss) {
-    markdownCustomCss.value = state.settings.markdownCustomCss || "";
-  }
   if (summaryThresholdInput) {
     const threshold =
       typeof window.getSummaryThresholdValue === "function"
@@ -3243,6 +3239,8 @@ async function setupSettingsControls() {
     "is-active",
     state.settings.enterToSendEnabled !== false,
   );
+  const markdownCustomCss = document.getElementById("markdown-custom-css");
+  const postprocessRulesJson = document.getElementById("postprocess-rules-json");
   if (markdownCustomCss) {
     markdownCustomCss.value = state.settings.markdownCustomCss || "";
   }
@@ -3327,7 +3325,6 @@ async function setupSettingsControls() {
   const summaryMessagesPreProcessingJson = document.getElementById(
     "summary-messages-preprocessing-json",
   );
-  const postprocessRulesJson = document.getElementById("postprocess-rules-json");
   const personaInjectionTemplate = document.getElementById(
     "persona-injection-template",
   );
