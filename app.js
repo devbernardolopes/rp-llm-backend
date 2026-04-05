@@ -179,12 +179,11 @@ async function fetchSnippet(filename) {
   try {
     const response = await fetch(`snippets/${filename}`);
     if (!response.ok) {
-      console.warn(`Snippet not found: snippets/${filename}, status: ${response.status}`);
+      console.warn(`Snippet not found: snippets/${filename}`);
       return null;
     }
     const html = await response.text();
     snippetCache.set(filename, html);
-    console.log("Loaded snippet:", filename, "length:", html.length);
     return html;
   } catch (err) {
     console.warn(`Failed to load snippet: snippets/${filename}`, err);
@@ -196,20 +195,16 @@ async function loadSnippetsForModal(modalId) {
   const snippets = SNIPPET_MAP[modalId];
   if (!snippets) return;
   
-  // For settings-modal, each snippet goes into its own placeholder
+  // For settings-modal, load all snippets into modal-body
   if (modalId === "settings-modal") {
     const body = document.getElementById("settings-modal-body");
     if (!body || body.dataset.snippetsLoaded === "1") return;
     body.dataset.snippetsLoaded = "1";
     
     for (const snippet of snippets) {
-      // Extract group from filename like "settings-api.html" -> "api"
-      const group = snippet.replace("settings-", "").replace(".html", "");
-      const placeholder = document.getElementById(`settings-${group}-content`);
-      if (!placeholder) continue;
       const html = await fetchSnippet(snippet);
       if (html) {
-        placeholder.insertAdjacentHTML("beforeend", html);
+        body.insertAdjacentHTML("beforeend", html);
       }
     }
     return;
@@ -4494,42 +4489,26 @@ function setupSettingsTabsLayout() {
   });
 
   // Move settings-group elements into their corresponding panels
-  // Look inside the placeholder divs (e.g., settings-api-content)
-  const placeholders = container.querySelectorAll("[id$='-content']");
-  console.log("Found placeholders:", placeholders.length);
-  placeholders.forEach((placeholder) => {
-    console.log("Processing placeholder:", placeholder.id, "children:", placeholder.children.length);
-    const id = placeholder.id;
-    // Extract group name from id like "settings-api-content" -> "api"
-    const group = id.replace("settings-", "").replace("-content", "");
+  const movable = Array.from(container.children).filter((el) =>
+    el.hasAttribute("data-settings-group"),
+  );
+  movable.forEach((node) => {
+    const group = node.getAttribute("data-settings-group");
     const target = panels.get(group) || panels.get("appearance");
-    if (!target) {
-      console.log("No target panel for group:", group);
-      return;
-    }
-    console.log("Moving content from", id, "to group:", group);
-    // Move all children from placeholder to the target panel
-    while (placeholder.firstChild) {
-      target.appendChild(placeholder.firstChild);
-    }
+    target.appendChild(node);
   });
-  console.log("Container children after move:", container.children.length);
 
   tabs.forEach((btn) => {
     btn.addEventListener("click", () => {
       const tab = btn.getAttribute("data-settings-tab-btn") || "appearance";
-      console.log("Tab clicked:", tab, "panels size:", panels.size);
       localStorage.setItem("rp-settings-last-tab", tab);
       tabs.forEach((b) => b.classList.toggle("active", b === btn));
       panels.forEach((panel, key) => {
-        const shouldShow = key === tab;
-        console.log("Panel", key, "show:", shouldShow, "before hidden:", panel.classList.contains("hidden"));
-        if (shouldShow) {
+        if (key === tab) {
           panel.classList.remove("hidden");
         } else {
           panel.classList.add("hidden");
         }
-        console.log("Panel", key, "after hidden:", panel.classList.contains("hidden"));
       });
       if (tab === "prompting") {
         requestAnimationFrame(() => {
