@@ -916,71 +916,76 @@ function setupEvents() {
       handleMemoryCommandFromInput(input, "/mem");
     });
   }
-  document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
-  document
-    .getElementById("auto-tts-toggle-btn")
-    .addEventListener("click", toggleThreadAutoTts);
-  document.getElementById("stt-toggle-btn").innerHTML = ICONS.mic;
-  const sttBtn = document.getElementById("stt-toggle-btn");
+  if (document.getElementById("auto-tts-toggle-btn")) {
+    document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
+    document
+      .getElementById("auto-tts-toggle-btn")
+      .addEventListener("click", toggleThreadAutoTts);
+  }
+  if (document.getElementById("stt-toggle-btn")) {
+    document.getElementById("stt-toggle-btn").innerHTML = ICONS.mic;
+    const sttBtn = document.getElementById("stt-toggle-btn");
 
-  sttBtn.addEventListener("mousedown", (e) => {
-    if (state.settings.sttMode === "push-to-talk") {
-      e.preventDefault();
-      state.stt.isPushToTalkActive = true;
-      startSttRecording();
-    }
-  });
+    sttBtn.addEventListener("mousedown", (e) => {
+      if (state.settings.sttMode === "push-to-talk") {
+        e.preventDefault();
+        state.stt.isPushToTalkActive = true;
+        startSttRecording();
+      }
+    });
 
-  sttBtn.addEventListener("mouseup", () => {
-    if (
-      state.settings.sttMode === "push-to-talk" &&
-      state.stt.isPushToTalkActive
-    ) {
-      state.stt.isPushToTalkActive = false;
-      stopSttRecording();
-    }
-  });
+    sttBtn.addEventListener("mouseup", () => {
+      if (
+        state.settings.sttMode === "push-to-talk" &&
+        state.stt.isPushToTalkActive
+      ) {
+        state.stt.isPushToTalkActive = false;
+        stopSttRecording();
+      }
+    });
 
-  sttBtn.addEventListener("mouseleave", () => {
-    if (
-      state.settings.sttMode === "push-to-talk" &&
-      state.stt.isPushToTalkActive
-    ) {
-      state.stt.isPushToTalkActive = false;
-      stopSttRecording();
-    }
-  });
+    sttBtn.addEventListener("mouseleave", () => {
+      if (
+        state.settings.sttMode === "push-to-talk" &&
+        state.stt.isPushToTalkActive
+      ) {
+        state.stt.isPushToTalkActive = false;
+        stopSttRecording();
+      }
+    });
 
-  sttBtn.addEventListener("touchstart", (e) => {
-    if (state.settings.sttMode === "push-to-talk") {
-      e.preventDefault();
-      state.stt.isPushToTalkActive = true;
-      startSttRecording();
-    }
-  });
+    sttBtn.addEventListener("touchstart", (e) => {
+      if (state.settings.sttMode === "push-to-talk") {
+        e.preventDefault();
+        state.stt.isPushToTalkActive = true;
+        startSttRecording();
+      }
+    });
 
-  sttBtn.addEventListener("touchend", () => {
-    if (
-      state.settings.sttMode === "push-to-talk" &&
-      state.stt.isPushToTalkActive
-    ) {
-      state.stt.isPushToTalkActive = false;
-      stopSttRecording();
-    }
-  });
+    sttBtn.addEventListener("touchend", () => {
+      if (
+        state.settings.sttMode === "push-to-talk" &&
+        state.stt.isPushToTalkActive
+      ) {
+        state.stt.isPushToTalkActive = false;
+        stopSttRecording();
+      }
+    });
 
-  sttBtn.addEventListener("click", () => {
-    if (state.settings.sttMode === "auto-stop") {
-      toggleSttRecording();
-    }
-  });
-
-  document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#10148;";
-  document
-    .getElementById("stt-auto-send-toggle-btn")
-    .addEventListener("click", toggleSttAutoSend);
-  state.stt.autoSend = state.settings.sttAutoSend;
-  updateSttAutoSendButton();
+    sttBtn.addEventListener("click", () => {
+      if (state.settings.sttMode === "auto-stop") {
+        toggleSttRecording();
+      }
+    });
+  }
+  if (document.getElementById("stt-auto-send-toggle-btn")) {
+    document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#10148;";
+    document
+      .getElementById("stt-auto-send-toggle-btn")
+      .addEventListener("click", toggleSttAutoSend);
+    state.stt.autoSend = state.settings.sttAutoSend;
+    updateSttAutoSendButton();
+  }
   setupCharAvatarDropzone();
   ["char-system-prompt", "char-one-time-extra-prompt"].forEach((id) => {
     const el = document.getElementById(id);
@@ -3085,59 +3090,8 @@ async function setupSettingsControls() {
   const newCharacterShortcut = document.getElementById(
     "new-character-shortcut",
   );
-  const markdownCustomCss = document.getElementById("markdown-custom-css");
-  const postprocessRulesJson = document.getElementById(
-    "postprocess-rules-json",
-  );
-  const globalPromptTemplate = document.getElementById(
-    "global-prompt-template",
-  );
-  const summarySystemPrompt = document.getElementById("summary-system-prompt");
-  const memorySummarizerUserPrompt = document.getElementById(
-    "memory-summarizer-user-prompt",
-  );
-  const summaryMessagesPreProcessingJson = document.getElementById(
-    "summary-messages-preprocessing-json",
-  );
-  const memoryRelevanceFilterToggle = document.getElementById(
-    "memory-relevance-filter-enabled",
-  );
-  const personaInjectionTemplate = document.getElementById(
-    "persona-injection-template",
-  );
-  const writingInstructionsInjectionWhen = document.getElementById(
-    "writing-instructions-injection-when",
-  );
-  const shortcutsRaw = document.getElementById("shortcuts-raw");
-  const autoTitleSystemPrompt = document.getElementById(
-    "auto-title-system-prompt",
-  );
-  const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
-  const sectionHeaderMemoryContext = document.getElementById(
-    "section-header-memory-context",
-  );
-  const sectionHeaderCharacterPrompt = document.getElementById(
-    "section-header-character-prompt",
-  );
-  const sectionHeaderMessagesSoFar = document.getElementById(
-    "section-header-messages-so-far",
-  );
-  const sectionHeaderMessages = document.getElementById(
-    "section-header-messages",
-  );
-  const sectionHeaderMemoryLevelContext = document.getElementById(
-    "section-header-memory-level-context",
-  );
-  markdownCheck.checked = !!state.settings.markdownEnabled;
-  unreadSoundEnabled.checked = state.settings.unreadSoundEnabled !== false;
-  allowMessageHtml.checked = state.settings.allowMessageHtml === true;
-  streamEnabled.checked = state.settings.streamEnabled !== false;
-  if (trimMessagesCheckbox) {
-    trimMessagesCheckbox.checked = state.settings.trimMessages !== false;
-  }
-  autopairEnabled.checked = state.settings.autoPairEnabled !== false;
-  if (lockMemoryMessages) {
-    lockMemoryMessages.checked = state.settings.lockMemoryMessages === true;
+  if (markdownCustomCss) {
+    markdownCustomCss.value = state.settings.markdownCustomCss || "";
   }
   if (summaryThresholdInput) {
     const threshold =
