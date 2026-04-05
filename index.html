@@ -51,7 +51,7 @@
         <button
           id="pane-overlay-toggle"
           class="pane-overlay-toggle"
-          title="Toggle panel"
+          data-i18n-title="togglePanelTitle"
           aria-label="Toggle panel"
         >
           <svg
@@ -71,7 +71,7 @@
               id="home-btn"
               class="option-btn pane-top-option-btn"
               type="button"
-              title="Home"
+              data-i18n-title="homeTitle"
               aria-label="Home"
             >
               <img
@@ -113,7 +113,6 @@
             class="option-btn"
             data-open-modal="settings-modal"
             data-i18n-title="settings"
-            title="Settings"
             aria-label="Settings"
           >
             &#9881;
@@ -122,7 +121,6 @@
             class="option-btn"
             data-open-modal="personas-modal"
             data-i18n-title="personas"
-            title="Personas"
             aria-label="Personas"
           >
             &#128100;
@@ -131,7 +129,6 @@
             class="option-btn"
             data-open-modal="lore-modal"
             data-i18n-title="loreBooks"
-            title="Lorebooks"
             aria-label="Lorebooks"
           >
             &#128218;
@@ -140,7 +137,6 @@
             class="option-btn"
             data-open-modal="shortcuts-modal"
             data-i18n-title="shortcuts"
-            title="Shortcuts"
             aria-label="Shortcuts"
           >
             &#9000;
@@ -149,7 +145,6 @@
             class="option-btn"
             data-open-modal="tags-modal"
             data-i18n-title="tags"
-            title="Tags"
             aria-label="Tags"
           >
             &#127991;
@@ -158,7 +153,6 @@
             class="option-btn"
             data-open-modal="writing-instructions-modal"
             data-i18n-title="writingInstructions"
-            title="Writing Instructions"
             aria-label="Writing Instructions"
           >
             &#128221;
@@ -167,7 +161,6 @@
             class="option-btn"
             data-open-modal="database-modal"
             data-i18n-title="database"
-            title="Database"
             aria-label="Database"
           >
             &#128451;
@@ -176,7 +169,70 @@
             class="option-btn"
             data-open-modal="assets-modal"
             data-i18n-title="assets"
-            title="Assets"
+            aria-label="Assets"
+          >
+            &#128193;
+          </button>
+          <button
+            class="option-btn"
+            data-open-modal="guide-modal"
+            data-i18n-title="guide"
+            aria-label="Guide"
+          >
+            &#9881;
+          </button>
+          <button
+            class="option-btn"
+            data-open-modal="personas-modal"
+            data-i18n-title="personas"
+            aria-label="Personas"
+          >
+            &#128100;
+          </button>
+          <button
+            class="option-btn"
+            data-open-modal="lore-modal"
+            data-i18n-title="loreBooks"
+            aria-label="Lorebooks"
+          >
+            &#128218;
+          </button>
+          <button
+            class="option-btn"
+            data-open-modal="shortcuts-modal"
+            data-i18n-title="shortcuts"
+            aria-label="Shortcuts"
+          >
+            &#9000;
+          </button>
+          <button
+            class="option-btn"
+            data-open-modal="tags-modal"
+            data-i18n-title="tags"
+            aria-label="Tags"
+          >
+            &#127991;
+          </button>
+          <button
+            class="option-btn"
+            data-open-modal="writing-instructions-modal"
+            data-i18n-title="writingInstructions"
+            aria-label="Writing Instructions"
+          >
+            &#128221;
+          </button>
+          <button
+            class="option-btn"
+            data-open-modal="database-modal"
+            data-i18n-title="database"
+            aria-label="Database"
+          >
+            &#128451;
+          </button>
+          <button
+            class="option-btn"
+            data-open-modal="assets-modal"
+            data-i18n-title="assets"
             aria-label="Assets"
           >
             &#128190;
@@ -185,7 +241,6 @@
             id="guide-btn"
             class="option-btn"
             data-i18n-title="guide"
-            title="Guide"
             aria-label="Guide"
           >
             ?
@@ -227,7 +282,7 @@
                   class="icon-btn"
                   type="button"
                   aria-label="Clear filters"
-                  title="Clear filters"
+                  data-i18n-title="clearFiltersTitle"
                 >
                   &times;
                 </button>
@@ -309,7 +364,6 @@
             class="icon-btn small"
             type="button"
             data-i18n-title="toggleModel3dPanel"
-            title="Toggle 3D Model"
             style="margin-left: auto"
           >
             <svg
@@ -359,7 +413,6 @@
               id="evict-all-sfx-btn"
               class="icon-btn danger-icon-btn"
               data-i18n-title="evictAllSfx"
-              title="Stop all"
               aria-label="Stop all"
             >
               &times;
@@ -379,7 +432,6 @@
                 class="icon-btn small"
                 type="button"
                 data-i18n-title="toggleModel3dVisibility"
-                title="Show/Hide"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -396,7 +448,6 @@
                 class="icon-btn small danger-icon-btn"
                 type="button"
                 data-i18n-title="closeModel3dPanel"
-                title="Close"
               >
                 &times;
               </button>
@@ -465,8 +516,7 @@
         <button
           id="scroll-bottom-btn"
           class="icon-btn hidden"
-          data-i18n-title="scrollToBottom"
-          title="Scroll to bottom"
+          data-i18n-title="scrollToBottomTitle"
           aria-label="Scroll to bottom"
         >
           v
@@ -490,19 +540,17 @@
 
           <div class="input-row">
             <div id="user-input-container">
-              <textarea
-                id="user-input"
-                rows="2"
-                data-i18n-placeholder="promptPlaceholder"
-                placeholder="What do you say or do? Enter to send, Shift+Enter for newline"
-              ></textarea>
+                <textarea
+                  id="user-input"
+                  rows="2"
+                  data-i18n-placeholder="promptPlaceholder"
+                ></textarea>
               <div class="input-footer">
                 <button
                   id="attach-btn"
                   class="icon-btn small"
                   disabled
-                  data-i18n-title="attachFile"
-                  title="Attach file (coming soon)"
+                  data-i18n-title="attachFileTitle"
                   aria-label="Attach file"
                 >
                   +
@@ -522,41 +570,8 @@
                     id="memory-command-btn"
                     class="option-btn send-toggle-btn small"
                     type="button"
-                    data-i18n-title="memoryCommandButtonTitle"
-                    title="Memory command"
+                    data-i18n-title="memoryCommandTitle"
                     aria-label="Memory command"
-                  ></button>
-                  <button
-                    id="auto-tts-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="autoTtsTitleOff"
-                    title="Auto TTS: Off"
-                    aria-label="Toggle auto TTS"
-                  ></button>
-                  <button
-                    id="stt-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="sttTitleOff"
-                    title="STT: Off"
-                    aria-label="Toggle STT"
-                  ></button>
-                  <button
-                    id="stt-auto-send-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="sttAutoSendOn"
-                    title="STT Auto-send: On"
-                    aria-label="Toggle STT auto-send"
-                  ></button>
-                  <button
-                    id="ooc-mode-toggle"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="oocModeTitleOff"
-                    title="OOC mode: Off"
-                    aria-label="Enable OOC mode"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -575,7 +590,6 @@
                     class="option-btn send-toggle-btn small"
                     type="button"
                     data-i18n-title="autoReply"
-                    title="Auto-reply"
                     aria-label="Auto-reply"
                   >
                     🤖
@@ -585,7 +599,6 @@
                     class="option-btn send-toggle-btn small"
                     type="button"
                     data-i18n-title="enterToSend"
-                    title="ENTER to send"
                     aria-label="ENTER to send"
                   >
                     ⏎
@@ -594,8 +607,7 @@
                     id="shortcuts-toggle-btn"
                     class="option-btn send-toggle-btn small"
                     type="button"
-                    data-i18n-title="showShortcuts"
-                    title="Show shortcuts"
+                    data-i18n-title="showShortcutsTitle"
                     aria-label="Show shortcuts"
                   >
                     ⌨
@@ -604,9 +616,8 @@
                     id="chat-opacity-toggle-btn"
                     class="option-btn send-toggle-btn small"
                     type="button"
-                    data-i18n-title="chatOpacityToggle"
+                    data-i18n-title="chatOpacityToggleTitle"
                     aria-label="Adjust transparency"
-                    title="Adjust transparency"
                   >
                     α
                   </button>
@@ -789,7 +800,6 @@
               id="settings-export-btn"
               class="icon-btn small"
               data-i18n-title="exportSettingsTitle"
-              title="Export settings"
               aria-label="Export settings"
             >
               ⬇
@@ -798,7 +808,6 @@
               id="settings-import-btn"
               class="icon-btn small"
               data-i18n-title="importSettingsTitle"
-              title="Import settings"
               aria-label="Import settings"
             >
               ⬆
@@ -890,7 +899,7 @@
               <input
                 id="openrouter-api-key"
                 type="text"
-                placeholder="sk-or-v1-..."
+                data-i18n-placeholder="placeholderApiKey"
                 autocomplete="off"
                 spellcheck="false"
               />
@@ -900,7 +909,7 @@
               <input
                 id="horde-api-key"
                 type="text"
-                placeholder="0000000000 or your API key"
+                data-i18n-placeholder="placeholderHordeApiKey"
                 autocomplete="off"
                 spellcheck="false"
               />
@@ -921,7 +930,7 @@
               <input
                 id="lmstudio-base-url"
                 type="text"
-                placeholder="http://localhost:1234"
+                data-i18n-placeholder="placeholderLmStudioUrl"
                 autocomplete="off"
                 spellcheck="false"
               />
@@ -942,7 +951,7 @@
               <input
                 id="groq-api-key"
                 type="text"
-                placeholder="gsk_..."
+                data-i18n-placeholder="placeholderGroqApiKey"
                 autocomplete="off"
                 spellcheck="false"
               />
@@ -1086,7 +1095,7 @@
               <input
                 id="stop-strings"
                 type="text"
-                placeholder="e.g. ###, END"
+                data-i18n-placeholder="placeholderStopStrings"
                 autocomplete="off"
                 spellcheck="false"
               />
@@ -1254,7 +1263,7 @@
                   type="button"
                   id="ooc-system-avatar-remove"
                   class="avatar-remove-btn hidden"
-                  title="Remove"
+                  data-i18n-title="removeTitle"
                 >
                   &times;
                 </button>
@@ -1399,7 +1408,7 @@
               <textarea
                 id="global-prompt-template"
                 rows="7"
-                placeholder="Used when a character prompt is empty."
+                data-i18n-placeholder="placeholderDefaultCharacterPrompt"
               ></textarea>
             </div>
             <div class="form-field">
@@ -1409,7 +1418,7 @@
               <textarea
                 id="summary-system-prompt"
                 rows="3"
-                placeholder="System prompt for memory summarization."
+                data-i18n-placeholder="placeholderMemorySummarizerSystem"
               ></textarea>
             </div>
             <div class="form-field">
@@ -1419,6 +1428,7 @@
               <textarea
                 id="memory-summarizer-user-prompt"
                 rows="3"
+                data-i18n-placeholder="placeholderMemorySummarizerUser"
                 placeholder="User prompt for memory summarization"
               ></textarea>
             </div>
@@ -1437,7 +1447,7 @@
               <textarea
                 id="summary-messages-preprocessing-json"
                 rows="5"
-                placeholder="JSON array of regex replacements"
+                data-i18n-placeholder="placeholderPostprocessRules"
               ></textarea>
             </div>
             <div class="form-field">
@@ -1447,7 +1457,7 @@
               <textarea
                 id="persona-injection-template"
                 rows="5"
-                placeholder="Template for active persona injection."
+                data-i18n-placeholder="placeholderPersonaInjectionTemplate"
               ></textarea>
             </div>
             <div class="form-field">
@@ -1472,7 +1482,7 @@
                   <input
                     id="section-header-memory-context"
                     type="text"
-                    placeholder="***MEMORY CONTEXT***"
+                    data-i18n-placeholder="placeholderSectionHeaderMemory"
                   />
                 </div>
                 <div class="form-field">
@@ -1482,7 +1492,7 @@
                   <input
                     id="section-header-character-prompt"
                     type="text"
-                    placeholder="***CHARACTER PROMPT***"
+                    data-i18n-placeholder="placeholderSectionHeaderCharacter"
                   />
                 </div>
                 <div class="form-field">
@@ -1492,7 +1502,7 @@
                   <input
                     id="section-header-messages-so-far"
                     type="text"
-                    placeholder="***MESSAGES SO FAR***"
+                    data-i18n-placeholder="placeholderSectionHeaderMessagesSoFar"
                   />
                 </div>
                 <div class="form-field">
@@ -1500,7 +1510,7 @@
                   <input
                     id="section-header-messages"
                     type="text"
-                    placeholder="***MESSAGES***"
+                    data-i18n-placeholder="placeholderSectionHeaderMessages"
                   />
                 </div>
                 <div class="form-field">
@@ -1510,7 +1520,7 @@
                   <input
                     id="section-header-memory-level-context"
                     type="text"
-                    placeholder="***MEMORY LEVEL"
+                    data-i18n-placeholder="placeholderSectionHeaderMemoryLevel"
                   />
                 </div>
               </div>
@@ -1554,28 +1564,28 @@
               </select>
             </div>
           </div>
-          <div data-settings-group="shortcuts" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="cancelGenerationShortcut"
-                >Cancel Generation Shortcut</span
-              >
-              <input id="cancel-shortcut" type="text" placeholder="Ctrl+." />
+            <div data-settings-group="shortcuts" class="settings-group">
+              <div class="form-field">
+                <span data-i18n="cancelGenerationShortcut"
+                  >Cancel Generation Shortcut</span
+                >
+                <input id="cancel-shortcut" type="text" data-i18n-placeholder="placeholderShortcutCancel" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
+                <input id="home-shortcut" type="text" data-i18n-placeholder="placeholderShortcutHome" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="newCharacterShortcut"
+                  >New Character Shortcut</span
+                >
+                <input
+                  id="new-character-shortcut"
+                  type="text"
+                  data-i18n-placeholder="placeholderShortcutNewChar"
+                />
+              </div>
             </div>
-            <div class="form-field">
-              <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
-              <input id="home-shortcut" type="text" placeholder="Alt+H" />
-            </div>
-            <div class="form-field">
-              <span data-i18n="newCharacterShortcut"
-                >New Character Shortcut</span
-              >
-              <input
-                id="new-character-shortcut"
-                type="text"
-                placeholder="Alt+N"
-              />
-            </div>
-          </div>
           <div data-settings-group="defaults" class="settings-group">
             <div class="form-field">
               <span data-i18n="defaultPersonaInjectionPlacement"
@@ -1981,7 +1991,7 @@
               id="asset-play-btn"
               class="icon-btn"
               type="button"
-              title="Play"
+              data-i18n-title="playTitle"
             >
               &#9654;
             </button>
@@ -1989,7 +1999,7 @@
               id="asset-pause-btn"
               class="icon-btn"
               type="button"
-              title="Pause"
+              data-i18n-title="pauseTitle"
             >
               &#10074;&#10074;
             </button>
@@ -1997,7 +2007,7 @@
               id="asset-stop-btn"
               class="icon-btn"
               type="button"
-              title="Stop"
+              data-i18n-title="stopTitle"
             >
               &#9632;
             </button>
@@ -2145,7 +2155,7 @@
             </div>
             <div class="form-field">
               <span data-i18n="avatarUrlOptional">Avatar URL (optional)</span>
-              <input id="lore-avatar" type="text" placeholder="optional" />
+              <input id="lore-avatar" type="text" data-i18n-placeholder="placeholderLoreAvatar" />
             </div>
             <div class="form-field full">
               <span data-i18n="descriptionOptional">
@@ -2360,7 +2370,6 @@
               id="tag-manager-input"
               type="text"
               data-i18n-placeholder="tagInputPlaceholder"
-              placeholder="New tag"
             />
             <button id="add-tag-btn" class="primary-btn" type="button" disabled>
               +
@@ -2474,7 +2483,7 @@
             <textarea
               id="char-writing-instructions"
               rows="4"
-              placeholder="Reserved for future implementation."
+              data-i18n-placeholder="placeholderFutureImplementation"
             ></textarea>
           </div>
           <div class="full lang-field">
@@ -2484,7 +2493,7 @@
             <textarea
               id="char-one-time-extra-prompt"
               rows="4"
-              placeholder="Appended only for the first assistant generation."
+              data-i18n-placeholder="placeholderFirstAssistantGen"
             ></textarea>
           </div>
           <div class="full lang-field initial-messages-field">
@@ -2520,7 +2529,7 @@
                 id="char-tags-input"
                 list="tag-presets"
                 type="text"
-                placeholder="Roleplay, Female, Hero"
+                data-i18n-placeholder="placeholderTagsExample"
               />
             </div>
             <div id="char-tags-presets" class="tag-presets-list"></div>
@@ -2671,7 +2680,7 @@
                   id="kokoro-download-cancel"
                   class="icon-btn"
                   type="button"
-                  title="Cancel download"
+                  data-i18n-title="cancelDownloadTitle"
                 >
                   &times;
                 </button>
@@ -2788,8 +2797,7 @@
                 id="remove-model3d-btn"
                 class="icon-btn danger-icon-btn"
                 type="button"
-                data-i18n-title="removeModel3d"
-                title="Remove 3D model"
+                data-i18n-title="removeModel3dTitle"
               >
                 &times;
               </button>
@@ -2884,7 +2892,7 @@
           id="image-preview-download-btn"
           class="icon-btn image-preview-download-btn"
           type="button"
-          title="Download"
+          data-i18n-title="downloadAssetTitle"
           aria-label="Download"
         >
           v
@@ -2893,7 +2901,7 @@
           id="image-preview-close-btn"
           class="icon-btn image-preview-close-btn"
           type="button"
-          title="Close preview"
+          data-i18n-title="closePreviewTitle"
           aria-label="Close preview"
         >
           ×
@@ -3338,7 +3346,7 @@
                 type="button"
                 id="persona-remove-avatar"
                 class="avatar-remove-btn hidden"
-                title="Remove"
+                data-i18n-title="removeTitle"
               >
                 &times;
               </button>
