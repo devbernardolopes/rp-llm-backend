@@ -18063,7 +18063,12 @@ async function runMemoryRegeneration(entryId, promptText, level, slot) {
       state.settings.model,
       null,
       null,
-      { forceStream: false, isSummarization: true },
+      {
+        forceStream:
+          state.settings.defaultSummaryStream ??
+          DEFAULT_SETTINGS.defaultSummaryStream,
+        isSummarization: true,
+      },
     );
     const summary = String(result.content || "").trim();
     if (!summary) throw new Error(t("unknownError"));
