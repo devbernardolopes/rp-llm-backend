@@ -3336,6 +3336,7 @@ async function setupSettingsControls() {
   const autoTitleSystemPrompt = document.getElementById(
     "auto-title-system-prompt",
   );
+  const autoTitleUserPrompt = document.getElementById("auto-title-user-prompt");
   const sectionHeaderMemoryContext = document.getElementById(
     "section-header-memory-context",
   );
