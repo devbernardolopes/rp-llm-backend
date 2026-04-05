@@ -1552,6 +1552,89 @@
             </div>
           <div data-settings-group="defaults" class="settings-group">
             <div class="form-field">
+              <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
+              <select id="default-auto-title-provider">
+                <option value="openrouter" data-i18n="providerOpenRouter">
+                  OpenRouter
+                </option>
+                <option value="aihorde" data-i18n="providerAIHorde">
+                  AI Horde
+                </option>
+                <option value="lmstudio" data-i18n="providerLMStudio">
+                  LM Studio
+                </option>
+                <option value="groq" data-i18n="providerGroq">
+                  Groq
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="autoTitleModel">Auto-Title Model</span>
+              <select id="default-auto-title-model"></select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="autoTitleTemperature"
+                  >Auto-Title Temperature</span
+                >
+                <span id="default-auto-title-temp-value" class="muted"></span>
+              </div>
+              <input
+                id="default-auto-title-temp"
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value="0.25"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="summaryProvider">Summary Provider</span>
+              <select id="default-summary-provider">
+                <option value="openrouter" data-i18n="providerOpenRouter">
+                  OpenRouter
+                </option>
+                <option value="aihorde" data-i18n="providerAIHorde">
+                  AI Horde
+                </option>
+                <option value="lmstudio" data-i18n="providerLMStudio">
+                  LM Studio
+                </option>
+                <option value="groq" data-i18n="providerGroq">
+                  Groq
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="summaryModel">Summary Model</span>
+              <select id="default-summary-model"></select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="summaryTemperature">Summary Temperature</span>
+                <span id="default-summary-temp-value" class="muted"></span>
+              </div>
+              <input
+                id="default-summary-temp"
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value="0.25"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="defaultAvatarScale"
+                >Default Avatar Scale (In Chat)</span
+              >
+              <select id="default-avatar-scale">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+              </select>
+            </div>
+            <div class="form-field">
               <span data-i18n="defaultPersonaInjectionPlacement"
                 >Default Persona Injection Placement</span
               >
@@ -1598,60 +1681,6 @@
                 value="1"
               />
             </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="default-include-ooc" />
-              <span data-i18n="defaultIncludeOocInCompletions"
-                >Include OOC messages in completions</span
-              >
-            </span>
-            <div class="form-field">
-              <span data-i18n="defaultAvatarScale"
-                >Default Avatar Scale (In Chat)</span
-              >
-              <select id="default-avatar-scale">
-                <option value="1">1x</option>
-                <option value="2">2x</option>
-                <option value="3">3x</option>
-                <option value="4">4x</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
-              <select id="default-auto-title-provider">
-                <option value="openrouter" data-i18n="providerOpenRouter">
-                  OpenRouter
-                </option>
-                <option value="aihorde" data-i18n="providerAIHorde">
-                  AI Horde
-                </option>
-                <option value="lmstudio" data-i18n="providerLMStudio">
-                  LM Studio
-                </option>
-                <option value="groq" data-i18n="providerGroq">
-                  Groq
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="autoTitleModel">Auto-Title Model</span>
-              <select id="default-auto-title-model"></select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="autoTitleTemperature"
-                  >Auto-Title Temperature</span
-                >
-                <span id="default-auto-title-temp-value" class="muted"></span>
-              </div>
-              <input
-                id="default-auto-title-temp"
-                type="range"
-                min="0"
-                max="2"
-                step="0.05"
-                value="0.25"
-              />
-            </div>
             <div class="form-field">
               <span data-i18n="defaultAutoTitleMinMessages">
                 Default min. messages for auto-title
@@ -1664,41 +1693,12 @@
                 value="10"
               />
             </div>
-            <div class="form-field">
-              <span data-i18n="summaryProvider">Summary Provider</span>
-              <select id="default-summary-provider">
-                <option value="openrouter" data-i18n="providerOpenRouter">
-                  OpenRouter
-                </option>
-                <option value="aihorde" data-i18n="providerAIHorde">
-                  AI Horde
-                </option>
-                <option value="lmstudio" data-i18n="providerLMStudio">
-                  LM Studio
-                </option>
-                <option value="groq" data-i18n="providerGroq">
-                  Groq
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="summaryModel">Summary Model</span>
-              <select id="default-summary-model"></select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="summaryTemperature">Summary Temperature</span>
-                <span id="default-summary-temp-value" class="muted"></span>
-              </div>
-              <input
-                id="default-summary-temp"
-                type="range"
-                min="0"
-                max="2"
-                step="0.05"
-                value="0.25"
-              />
-            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="default-include-ooc" />
+              <span data-i18n="defaultIncludeOocInCompletions"
+                >Include OOC messages in completions</span
+              >
+            </span>
           </div>
         </div>
       </div>
