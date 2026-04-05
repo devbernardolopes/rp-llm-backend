@@ -7223,6 +7223,7 @@ function openModal(modalId) {
       if (textarea) {
         textarea.value = state.settings.shortcutsRaw || "";
         setupModalTextareas(modal);
+        markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
       }
     } else if (modalId === "tags-modal") {
       const input = document.getElementById("tag-manager-input");
