@@ -179,11 +179,12 @@ async function fetchSnippet(filename) {
   try {
     const response = await fetch(`snippets/${filename}`);
     if (!response.ok) {
-      console.warn(`Snippet not found: snippets/${filename}`);
+      console.warn(`Snippet not found: snippets/${filename}, status: ${response.status}`);
       return null;
     }
     const html = await response.text();
     snippetCache.set(filename, html);
+    console.log("Loaded snippet:", filename, "length:", html.length);
     return html;
   } catch (err) {
     console.warn(`Failed to load snippet: snippets/${filename}`, err);
@@ -212,6 +213,19 @@ async function loadSnippetsForModal(modalId) {
       }
     }
     return;
+  }
+  
+  // For other modals, use single content container
+  const containerId = modalId.replace("-modal", "-content");
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (container.dataset.snippetsLoaded === "1") return;
+  container.dataset.snippetsLoaded = "1";
+  for (const snippet of snippets) {
+    const html = await fetchSnippet(snippet);
+    if (html) {
+      container.insertAdjacentHTML("beforeend", html);
+    }
   }
 }
 
@@ -4480,13 +4494,17 @@ function setupSettingsTabsLayout() {
   });
 
   // Move settings-group elements into their corresponding panels
-  const movable = Array.from(container.children).filter((el) =>
-    el.hasAttribute("data-settings-group"),
-  );
-  movable.forEach((node) => {
-    const group = node.getAttribute("data-settings-group");
+  // Look inside the placeholder divs (e.g., settings-api-content)
+  const placeholders = container.querySelectorAll("[id$='-content']");
+  placeholders.forEach((placeholder) => {
+    const id = placeholder.id;
+    // Extract group name from id like "settings-api-content" -> "api"
+    const group = id.replace("settings-", "").replace("-content", "");
     const target = panels.get(group) || panels.get("appearance");
-    target.appendChild(node);
+    // Move all children from placeholder to the target panel
+    while (placeholder.firstChild) {
+      target.appendChild(placeholder.firstChild);
+    }
   });
 
   tabs.forEach((btn) => {
