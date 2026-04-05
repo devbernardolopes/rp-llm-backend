@@ -22531,7 +22531,8 @@ function normalizeContentParts(value) {
 function renderMessageHtml(content, role = "assistant") {
   let raw = String(content || "");
   if (role === "assistant" && currentCharacter?.usePostProcessing !== false) {
-    raw = applyPostProcessingRules(raw);
+    const skipCodeBlocks = state.settings.markdownEnabled;
+    raw = applyPostProcessingRules(raw, skipCodeBlocks);
   }
   if (role === "assistant") {
     raw = trimTrailingWhitespacePerLine(raw);
@@ -22624,9 +22625,31 @@ function markdownToHtml(input) {
   return rendered.join("");
 }
 
-function applyPostProcessingRules(text) {
+function applyPostProcessingRules(text, skipCodeBlocks = false) {
   const rules = parsePostProcessingRules(state.settings.postprocessRulesJson);
   if (rules.length === 0) return text;
+
+  if (skipCodeBlocks) {
+    const codeBlockRegex = /```[\s\S]*?```/g;
+    const codeBlocks = [];
+    const textWithoutCodeBlocks = text.replace(codeBlockRegex, (match) => {
+      codeBlocks.push(match);
+      return `__CODEBLOCK_${codeBlocks.length - 1}__`;
+    });
+
+    let out = textWithoutCodeBlocks;
+    for (const rule of rules) {
+      try {
+        const re = new RegExp(rule.pattern, rule.flags || "g");
+        out = out.replace(re, rule.replacement || "");
+      } catch {
+        // ignore malformed rule
+      }
+    }
+
+    return out.replace(/__CODEBLOCK_(\d+)__/g, (_, idx) => codeBlocks[idx]);
+  }
+
   let out = text;
   for (const rule of rules) {
     try {
