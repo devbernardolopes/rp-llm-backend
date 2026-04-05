@@ -97,6 +97,7 @@ const DEFAULT_SETTINGS = {
   defaultIncludeOocInCompletions: false,
   defaultAvatarScale: 4,
   defaultAutoTitleMinMessages: 10,
+  defaultAutoTitleStream: false,
   autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
   autoTitleUserPrompt: `Generate a concise roleplay thread title.
 Generate the title in language code: {{languageCode}}.
@@ -111,6 +112,7 @@ Requirements:
   autoTitleModel: "stepfun/step-3.5-flash:free",
   autoTitleTemperature: 0.25,
   autoTitleTopP: 0.9,
+  defaultSummaryStream: false,
   summaryMaxTokens: 1024,
   autoTitleMaxTokens: 64,
   sectionHeaderMemoryContext: "***MEMORY CONTEXT***",
@@ -3504,6 +3506,16 @@ async function setupSettingsControls() {
     if (summaryTempValue)
       summaryTempValue.textContent = summaryTemp.value;
   }
+  const autoTitleStream = document.getElementById("default-auto-title-stream");
+  const summaryStream = document.getElementById("default-summary-stream");
+  if (autoTitleStream) {
+    autoTitleStream.checked =
+      state.settings.defaultAutoTitleStream ?? DEFAULT_SETTINGS.defaultAutoTitleStream;
+  }
+  if (summaryStream) {
+    summaryStream.checked =
+      state.settings.defaultSummaryStream ?? DEFAULT_SETTINGS.defaultSummaryStream;
+  }
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
   hordeApiMethod.value = state.settings.hordeApiMethod || "native";
@@ -4153,6 +4165,18 @@ async function setupSettingsControls() {
       const value = Number(summaryTemp.value);
       state.settings.summaryTemperature = value;
       if (summaryTempValue) summaryTempValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  if (autoTitleStream) {
+    autoTitleStream.addEventListener("change", () => {
+      state.settings.defaultAutoTitleStream = autoTitleStream.checked;
+      saveSettings();
+    });
+  }
+  if (summaryStream) {
+    summaryStream.addEventListener("change", () => {
+      state.settings.defaultSummaryStream = summaryStream.checked;
       saveSettings();
     });
   }
@@ -14525,7 +14549,12 @@ async function maybeGenerateTitleBeforeBotReply() {
       state.settings.model,
       null,
       null,
-      { forceStream: false, isTitleGeneration: true },
+      {
+        forceStream:
+          state.settings.defaultAutoTitleStream ??
+          DEFAULT_SETTINGS.defaultAutoTitleStream,
+        isTitleGeneration: true,
+      },
     );
     const raw = String(result?.content || "").trim();
     if (!raw) {

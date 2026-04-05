@@ -683,5 +683,7 @@
   "placeholderTagInput": "Nouveau tag",
   "placeholderFutureImplementation": "Reserve pour une implementation future.",
   "placeholderFirstAssistantGen": "Ajoute uniquement pour la premiere generation d'assistant.",
-  "placeholderTagsExample": "Roleplay, Femelle, Heros"
+  "placeholderTagsExample": "Roleplay, Femelle, Heros",
+  "autoTitleStream": "Auto-Titre Stream",
+  "summaryStream": "Resume Stream"
 }

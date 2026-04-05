@@ -497,7 +497,12 @@ async function summarizeMemory(character) {
           state.settings.model,
           null,
           null,
-          { forceStream: false, isSummarization: true },
+          {
+            forceStream:
+              state.settings.defaultSummaryStream ??
+              DEFAULT_SETTINGS.defaultSummaryStream,
+            isSummarization: true,
+          },
         );
         summary = summaryResult.content;
        

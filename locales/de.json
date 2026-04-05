@@ -683,5 +683,7 @@
   "placeholderTagInput": "Neuer Tag",
   "placeholderFutureImplementation": "Für zukünftige Implementierung reserviert.",
   "placeholderFirstAssistantGen": "Wird nur für die erste Assistenten-Generierung angehängt.",
-  "placeholderTagsExample": "Rollenspiel, Weiblich, Held"
+  "placeholderTagsExample": "Rollenspiel, Weiblich, Held",
+  "autoTitleStream": "Auto-Titel Stream",
+  "summaryStream": "Zusammenfassung Stream"
 }
