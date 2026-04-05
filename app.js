@@ -195,16 +195,21 @@ async function loadSnippetsForModal(modalId) {
   const snippets = SNIPPET_MAP[modalId];
   if (!snippets) return;
   
-  // For settings-modal, load all snippets into modal-body
+  // For settings-modal, load each snippet into its placeholder
   if (modalId === "settings-modal") {
     const body = document.getElementById("settings-modal-body");
     if (!body || body.dataset.snippetsLoaded === "1") return;
     body.dataset.snippetsLoaded = "1";
     
     for (const snippet of snippets) {
+      // Extract group from filename like "settings-api.html" -> "api"
+      const group = snippet.replace("settings-", "").replace(".html", "");
+      // Find the placeholder div with matching data-settings-group
+      const placeholder = body.querySelector(`[data-settings-group="${group}"]`);
+      if (!placeholder) continue;
       const html = await fetchSnippet(snippet);
       if (html) {
-        body.insertAdjacentHTML("beforeend", html);
+        placeholder.insertAdjacentHTML("beforeend", html);
       }
     }
     return;
@@ -241,6 +246,78 @@ function populateSettingsTabValues() {
   if (lmstudioApiMethod) lmstudioApiMethod.value = state.settings.lmstudioApiMethod || "openai";
   if (groqApiKey) groqApiKey.value = state.settings.groqApiKey || "";
   if (aiProviderSelect) aiProviderSelect.value = state.settings.aiProvider || "openrouter";
+  
+  // Render OOC system avatar
+  renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
+  
+  // Threads tab settings
+  const autopairEnabled = document.getElementById("autopair-enabled");
+  const markdownEnabled = document.getElementById("markdown-enabled");
+  const allowMessageHtml = document.getElementById("allow-message-html");
+  const trimMessages = document.getElementById("trim-messages");
+  const lockMemoryMessages = document.getElementById("lock-memory-messages");
+  const crossWindowSync = document.getElementById("cross-window-sync-enabled");
+  const summaryThreshold = document.getElementById("summary-threshold");
+  const memoryMessagesToKeep = document.getElementById("memory-messages-to-keep");
+  const memorySlots = document.getElementById("memory-slots");
+  const autoUnloadThreshold = document.getElementById("auto-unload-threshold");
+  const loreMatchingMode = document.getElementById("lore-matching-mode");
+  const loreSemanticThreshold = document.getElementById("lore-semantic-threshold");
+  const chatMessageAlignment = document.getElementById("chat-message-alignment");
+  const postprocessRulesJson = document.getElementById("postprocess-rules-json");
+  
+  if (autopairEnabled) autopairEnabled.checked = state.settings.autopairEnabled;
+  if (markdownEnabled) markdownEnabled.checked = state.settings.markdownEnabled;
+  if (allowMessageHtml) allowMessageHtml.checked = state.settings.allowMessageHtml;
+  if (trimMessages) trimMessages.checked = state.settings.trimMessages;
+  if (lockMemoryMessages) lockMemoryMessages.checked = state.settings.lockMemoryMessages;
+  if (crossWindowSync) crossWindowSync.checked = state.settings.crossWindowSyncEnabled;
+  if (summaryThreshold) summaryThreshold.value = state.settings.summaryThreshold;
+  if (memoryMessagesToKeep) memoryMessagesToKeep.value = state.settings.memoryMessagesToKeep;
+  if (memorySlots) memorySlots.value = state.settings.memorySlots;
+  if (autoUnloadThreshold) autoUnloadThreshold.value = state.settings.autoUnloadThreshold;
+  if (loreMatchingMode) loreMatchingMode.value = state.settings.loreMatchingMode;
+  if (loreSemanticThreshold) loreSemanticThreshold.value = state.settings.loreSemanticThreshold;
+  if (chatMessageAlignment) chatMessageAlignment.value = state.settings.chatMessageAlignment;
+  if (postprocessRulesJson) postprocessRulesJson.value = state.settings.postprocessRules;
+  
+  // Prompting tab settings
+  const globalPromptTemplate = document.getElementById("global-prompt-template");
+  const summarySystemPrompt = document.getElementById("summary-system-prompt");
+  const memorySummarizerUserPrompt = document.getElementById("memory-summarizer-user-prompt");
+  const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
+  const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
+  const summaryMessagesPreprocessingJson = document.getElementById("summary-messages-preprocessing-json");
+  const personaInjectionTemplate = document.getElementById("persona-injection-template");
+  const autoTitleSystemPrompt = document.getElementById("auto-title-system-prompt");
+  const autoTitleUserPrompt = document.getElementById("auto-title-user-prompt");
+  const memoryRelevanceFilterEnabled = document.getElementById("memory-relevance-filter-enabled");
+  const useLocalSummarization = document.getElementById("use-local-summarization");
+  const useLocalAutoTitle = document.getElementById("use-local-auto-title");
+  const writingInstructionsInjectionWhen = document.getElementById("writing-instructions-injection-when");
+  
+  if (globalPromptTemplate) globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
+  if (summarySystemPrompt) summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
+  if (memorySummarizerUserPrompt) memorySummarizerUserPrompt.value = state.settings.memorySummarizerUserPrompt || "";
+  if (oocSystemPromptIntro) oocSystemPromptIntro.value = state.settings.oocSystemPromptIntro || "";
+  if (oocUserMessageFormat) oocUserMessageFormat.value = state.settings.oocUserMessageFormat || "";
+  if (summaryMessagesPreprocessingJson) summaryMessagesPreprocessingJson.value = state.settings.summaryMessagesPreprocessingJson || "";
+  if (personaInjectionTemplate) personaInjectionTemplate.value = state.settings.personaInjectionTemplate || "";
+  if (autoTitleSystemPrompt) autoTitleSystemPrompt.value = state.settings.autoTitleSystemPrompt || "";
+  if (autoTitleUserPrompt) autoTitleUserPrompt.value = state.settings.autoTitleUserPrompt || "";
+  if (memoryRelevanceFilterEnabled) memoryRelevanceFilterEnabled.checked = state.settings.memoryRelevanceFilterEnabled;
+  if (useLocalSummarization) useLocalSummarization.checked = state.settings.useLocalSummarization;
+  if (useLocalAutoTitle) useLocalAutoTitle.checked = state.settings.useLocalAutoTitle;
+  if (writingInstructionsInjectionWhen) writingInstructionsInjectionWhen.value = state.settings.writingInstructionsInjectionWhen;
+  
+  // Shortcuts tab settings
+  const cancelShortcut = document.getElementById("cancel-shortcut");
+  const homeShortcut = document.getElementById("home-shortcut");
+  const newCharacterShortcut = document.getElementById("new-character-shortcut");
+  if (cancelShortcut) cancelShortcut.value = state.settings.cancelShortcut || "";
+  if (homeShortcut) homeShortcut.value = state.settings.homeShortcut || "";
+  if (newCharacterShortcut) newCharacterShortcut.value = state.settings.newCharacterShortcut || "";
+  
   updateProviderVisibility();
 }
 
@@ -4466,41 +4543,11 @@ function setupSettingsTabsLayout() {
   const tabs = document.querySelectorAll("[data-settings-tab-btn]");
   if (!body || tabs.length === 0 || body.dataset.tabsReady === "1") return;
 
-  const groups = [
-    "api",
-    "appearance",
-    "threads",
-    "prompting",
-    "shortcuts",
-    "defaults",
-  ];
-  const panels = new Map();
-
-  // Use the form as container if available, otherwise body
-  const container = body.querySelector("form") || body;
-
-  groups.forEach((group) => {
-    const panel = document.createElement("div");
-    panel.className = "settings-tab-panel";
-    panel.dataset.settingsTabPanel = group;
-    if (group !== "api") panel.classList.add("hidden");
-    panels.set(group, panel);
-    container.appendChild(panel);
-  });
-
-  // Move settings-group elements into their corresponding panels
-  const movable = Array.from(container.children).filter((el) =>
-    el.hasAttribute("data-settings-group"),
-  );
-  movable.forEach((node) => {
-    const group = node.getAttribute("data-settings-group");
-    const target = panels.get(group) || panels.get("appearance");
-    target.appendChild(node);
-  });
+  const groups = ["api", "appearance", "threads", "prompting", "shortcuts", "defaults"];
 
   // Initialize: show only first tab, hide others
   const firstGroup = groups[0];
-  container.querySelectorAll("[data-settings-group]").forEach(g => {
+  body.querySelectorAll("[data-settings-group]").forEach(g => {
     const group = g.getAttribute("data-settings-group");
     if (group === firstGroup) {
       g.classList.remove("hidden");
@@ -4515,10 +4562,8 @@ function setupSettingsTabsLayout() {
       localStorage.setItem("rp-settings-last-tab", tab);
       tabs.forEach((b) => b.classList.toggle("active", b === btn));
       
-      // Get all settings-group elements directly
-      const allGroups = container.querySelectorAll("[data-settings-group]");
-      console.log("All groups found:", allGroups.length);
-      allGroups.forEach(g => {
+      // Show/hide settings-group elements directly
+      body.querySelectorAll("[data-settings-group]").forEach(g => {
         const group = g.getAttribute("data-settings-group");
         if (group === tab) {
           g.classList.remove("hidden");
