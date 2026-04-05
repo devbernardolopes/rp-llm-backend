@@ -3090,6 +3090,7 @@ async function setupSettingsControls() {
   const newCharacterShortcut = document.getElementById(
     "new-character-shortcut",
   );
+  const markdownCustomCss = document.getElementById("markdown-custom-css");
   if (markdownCustomCss) {
     markdownCustomCss.value = state.settings.markdownCustomCss || "";
   }
@@ -3590,24 +3591,24 @@ async function setupSettingsControls() {
     populateSettingsModels({ force: true }).catch(() => {});
   });
 
-  markdownCheck.addEventListener("change", () => {
+  markdownCheck?.addEventListener("change", () => {
     state.settings.markdownEnabled = markdownCheck.checked;
     saveSettings();
     if (currentThread) renderChat();
   });
 
-  unreadSoundEnabled.addEventListener("change", () => {
+  unreadSoundEnabled?.addEventListener("change", () => {
     state.settings.unreadSoundEnabled = unreadSoundEnabled.checked;
     saveSettings();
   });
 
-  allowMessageHtml.addEventListener("change", () => {
+  allowMessageHtml?.addEventListener("change", () => {
     state.settings.allowMessageHtml = allowMessageHtml.checked;
     saveSettings();
     if (currentThread) renderChat();
   });
 
-  streamEnabled.addEventListener("change", () => {
+  streamEnabled?.addEventListener("change", () => {
     state.settings.streamEnabled = streamEnabled.checked;
     saveSettings();
   });
@@ -3630,7 +3631,7 @@ async function setupSettingsControls() {
     });
   }
 
-  autopairEnabled.addEventListener("change", () => {
+  autopairEnabled?.addEventListener("change", () => {
     state.settings.autoPairEnabled = autopairEnabled.checked;
     saveSettings();
   });
