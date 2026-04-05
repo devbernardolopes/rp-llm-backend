@@ -1,0 +1,123 @@
+<div data-settings-group="appearance" class="settings-group">
+  <div class="form-field">
+    <span data-i18n="languageLabel">Interface Language</span>
+    <select id="ui-language-select">
+      <option value="auto">Auto (browser)</option>
+      <option value="en">English</option>
+      <option value="fr">Francais</option>
+      <option value="it">Italiano</option>
+      <option value="de">Deutsch</option>
+      <option value="es">Espanol</option>
+      <option value="pt-BR">Portugues (Brasil)</option>
+    </select>
+  </div>
+  <div class="form-field">
+    <span data-i18n="sttLanguageLabel">Speech-to-Text Language</span>
+    <select id="stt-language-select">
+      <option value="en">English</option>
+      <option value="fr">Francais</option>
+      <option value="it">Italiano</option>
+      <option value="de">Deutsch</option>
+      <option value="es">Espanol</option>
+      <option value="pt-BR">Portugues (Brasil)</option>
+    </select>
+  </div>
+  <div class="form-field">
+    <span data-i18n="sttModeLabel">STT Mode</span>
+    <select id="stt-mode-select">
+      <option value="push-to-talk" data-i18n="sttModePushToTalk">
+        Push-to-Talk
+      </option>
+      <option value="auto-stop" data-i18n="sttModeAutoStop">
+        Auto-Stop on Silence
+      </option>
+    </select>
+  </div>
+  <div class="form-field">
+    <span data-i18n="sttSilenceDurationLabel"
+      >Silence Duration (seconds)</span
+    >
+    <input
+      type="number"
+      id="stt-silence-duration"
+      min="1"
+      max="10"
+      value="2"
+    />
+  </div>
+  <div class="form-field">
+    <span data-i18n="themeLabel">Theme</span>
+    <select id="theme-select"></select>
+  </div>
+  <div class="form-field">
+    <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
+    <select id="marquee-behavior-select">
+      <option value="disabled" data-i18n="marqueeBehaviorDisabled">
+        Disabled
+      </option>
+      <option value="hover" data-i18n="marqueeBehaviorOnHover">
+        On Hover
+      </option>
+      <option value="always" data-i18n="marqueeBehaviorAlways">
+        Always
+      </option>
+    </select>
+  </div>
+  <div class="form-field">
+    <span data-i18n="botCardAvatarEffectLabel"
+      >BOT Card Avatar Effect</span
+    >
+    <select id="bot-card-avatar-effect">
+      <option value="none" data-i18n="botCardAvatarEffectNone">
+        None
+      </option>
+      <option
+        value="carousel"
+        data-i18n="botCardAvatarEffectCarousel"
+      >
+        Carousel
+      </option>
+      <option value="hover" data-i18n="botCardAvatarEffectHover">
+        On Hover
+      </option>
+    </select>
+  </div>
+  <div class="form-field">
+    <div class="label-inline">
+      <span data-i18n="botCardAvatarTransitionDelayLabel"
+        >Transition Delay</span
+      >
+      <span
+        id="bot-card-avatar-transition-delay-value"
+        class="muted"
+      ></span>
+    </div>
+    <input
+      id="bot-card-avatar-transition-delay-slider"
+      type="range"
+      min="4"
+      max="30"
+      step="1"
+      disabled
+    />
+  </div>
+  <div class="form-field">
+    <div class="label-inline">
+      <span data-i18n="toastDelayLabel">Toast Delay</span>
+      <span id="toast-delay-value" class="muted"></span>
+    </div>
+    <input
+      id="toast-delay-slider"
+      type="range"
+      min="1000"
+      max="10000"
+      step="200"
+    />
+  </div>
+  <span class="checkbox-line">
+    <input type="checkbox" id="unread-sound-enabled" />
+    <span data-i18n="unreadSoundEnabled"
+      >Play sound for unread messages</span
+    >
+  </span>
+</div>
