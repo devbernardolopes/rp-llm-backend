@@ -157,6 +157,56 @@ function normalizeExpressionKey(key) {
 
 // UI utilities - see ui-utils.js
 
+// HTML Snippet Map - maps modal IDs to their snippet files
+const SNIPPET_MAP = {
+  "shortcuts-modal": ["shortcuts.html"],
+  "settings-modal": [
+    "settings-api.html",
+    "settings-appearance.html",
+    "settings-threads.html",
+    "settings-prompting.html",
+    "settings-shortcuts.html",
+    "settings-defaults.html",
+  ],
+};
+
+const snippetCache = new Map();
+
+async function fetchSnippet(filename) {
+  if (snippetCache.has(filename)) {
+    return snippetCache.get(filename);
+  }
+  try {
+    const response = await fetch(`snippets/${filename}`);
+    if (!response.ok) {
+      console.warn(`Snippet not found: snippets/${filename}`);
+      return null;
+    }
+    const html = await response.text();
+    snippetCache.set(filename, html);
+    return html;
+  } catch (err) {
+    console.warn(`Failed to load snippet: snippets/${filename}`, err);
+    return null;
+  }
+}
+
+async function loadSnippetsForModal(modalId) {
+  const snippets = SNIPPET_MAP[modalId];
+  if (!snippets) return;
+  const containerId = modalId.replace("-modal", "-content");
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (container.dataset.snippetsLoaded === "1") return;
+  container.dataset.snippetsLoaded = "1";
+  for (const snippet of snippets) {
+    const html = await fetchSnippet(snippet);
+    if (html) {
+      container.insertAdjacentHTML("beforeend", html);
+    }
+  }
+}
+
 const state = {
   settings: { ...DEFAULT_SETTINGS },
   localeBundles: {},
@@ -7151,35 +7201,38 @@ function openModal(modalId) {
     resetModalTextareaCollapseStates(modal);
   });
   setModalDirtyState(modalId, false);
-  if (modalId === "personas-modal") {
-    renderPersonaModalList();
-  } else if (modalId === "settings-modal") {
-    const lastTab = localStorage.getItem("rp-settings-last-tab") || "api";
-    const tabBtn = document.querySelector(
-      `[data-settings-tab-btn="${lastTab}"]`,
-    );
-    if (tabBtn instanceof HTMLButtonElement) tabBtn.click();
-    else {
-      const firstTab = document.querySelector('[data-settings-tab-btn="api"]');
-      if (firstTab instanceof HTMLButtonElement) firstTab.click();
+  loadSnippetsForModal(modalId).then(() => {
+    if (modalId === "settings-modal") {
+      setupSettingsTabsLayout();
+      const lastTab = localStorage.getItem("rp-settings-last-tab") || "api";
+      const tabBtn = document.querySelector(
+        `[data-settings-tab-btn="${lastTab}"]`,
+      );
+      if (tabBtn instanceof HTMLButtonElement) tabBtn.click();
+      else {
+        const firstTab = document.querySelector('[data-settings-tab-btn="api"]');
+        if (firstTab instanceof HTMLButtonElement) firstTab.click();
+      }
+      updateToastDelayDisplay();
+      populateSettingsModels().catch(() => {});
+      populateAutoTitleSummaryModels().catch(() => {});
+    } else if (modalId === "personas-modal") {
+      renderPersonaModalList();
+    } else if (modalId === "shortcuts-modal") {
+      document.getElementById("shortcuts-raw").value =
+        state.settings.shortcutsRaw || "";
+    } else if (modalId === "tags-modal") {
+      const input = document.getElementById("tag-manager-input");
+      if (input) input.value = "";
+      state.tagManagerEditingTag = null;
+      renderTagManagerList();
+      updateTagManagerAddButtonState();
+    } else if (modalId === "writing-instructions-modal") {
+      openWritingInstructionsManager().catch(() => {});
+    } else if (modalId === "assets-modal") {
+      openAssetsManager().catch(() => {});
     }
-    updateToastDelayDisplay();
-    populateSettingsModels().catch(() => {});
-    populateAutoTitleSummaryModels().catch(() => {});
-  } else if (modalId === "shortcuts-modal") {
-    document.getElementById("shortcuts-raw").value =
-      state.settings.shortcutsRaw || "";
-  } else if (modalId === "tags-modal") {
-    const input = document.getElementById("tag-manager-input");
-    if (input) input.value = "";
-    state.tagManagerEditingTag = null;
-    renderTagManagerList();
-    updateTagManagerAddButtonState();
-  } else if (modalId === "writing-instructions-modal") {
-    openWritingInstructionsManager().catch(() => {});
-  } else if (modalId === "assets-modal") {
-    openAssetsManager().catch(() => {});
-  }
+  });
 }
 
 async function closeActiveModal() {

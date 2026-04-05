@@ -71,6 +71,39 @@ dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → c
 - When creating new modules, add them to the script loading order in `index.html` in the correct dependency order.
 - Use ES modules (`type="module"`) for new code that needs module support.
 
+### HTML Snippet Modularization
+
+Modals and complex UI sections are organized into snippet files in `/snippets/` folder for better maintainability. Snippets are loaded on first modal open and cached in memory.
+
+**Adding a new modal with snippets:**
+
+1. **Create snippet files** in `/snippets/` (e.g., `snippets/mymodal.html` for non-tabbed, or `snippets/mymodal-tabname.html` for tabbed)
+
+2. **Update index.html**: Replace modal-body content with placeholder:
+   ```html
+   <!-- Non-tabbed -->
+   <div id="mymodal-content" class="modal-body"></div>
+   <!-- Tabbed -->
+   <div id="mymodal-tab1-content"></div>
+   <div id="mymodal-tab2-content"></div>
+   ```
+
+3. **Update app.js**: Add mapping to `SNIPPET_MAP`:
+   ```js
+   const SNIPPET_MAP = {
+     "my-modal": ["mymodal.html"],
+     // or for tabbed:
+     "my-modal": ["mymodal-tab1.html", "mymodal-tab2.html"],
+   };
+   ```
+
+4. **For tabbed modals**: Call `setupMyModalTabsLayout()` inside the `loadSnippetsForModal().then()` callback in `openModal()`.
+
+**Key points:**
+- Snippets load only once (cached via `data-snippets-loaded` attribute)
+- If snippet fails to load, modal still shows (console warning only)
+- Tabbed modals need a setup function that moves content into tab panels
+
 ### AI Providers
 
 The system supports multiple AI providers. Each provider requires:
