@@ -3246,7 +3246,9 @@ async function setupSettingsControls() {
   if (markdownCustomCss) {
     markdownCustomCss.value = state.settings.markdownCustomCss || "";
   }
-  postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
+  if (postprocessRulesJson) {
+    postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
+  }
   const initialSliderMax = getSettingsMaxTokensUpperBound(modelSelect.value);
   state.settings.maxTokens = clampMaxTokens(
     state.settings.maxTokens,
@@ -3317,53 +3319,39 @@ async function setupSettingsControls() {
     warnBelow: 0.7,
     dangerAbove: 1.0,
   });
-  globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
-  summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
-  if (memorySummarizerUserPrompt) {
-    const userPromptValue =
-      state.settings.memorySummarizerUserPrompt ||
-      DEFAULT_SETTINGS.memorySummarizerUserPrompt;
-    state.settings.memorySummarizerUserPrompt = userPromptValue;
-    memorySummarizerUserPrompt.value = userPromptValue;
-  }
-  if (summaryMessagesPreProcessingJson) {
-    const preProcessingValue =
-      state.settings.summaryMessagesPreProcessingJson || "[]";
-    state.settings.summaryMessagesPreProcessingJson = preProcessingValue;
-    summaryMessagesPreProcessingJson.value = preProcessingValue;
-  }
-  personaInjectionTemplate.value =
-    state.settings.personaInjectionTemplate ||
-    DEFAULT_SETTINGS.personaInjectionTemplate;
-  const writingWhen = normalizeWritingInstructionsTiming(
-    state.settings.writingInstructionsInjectionWhen,
+  const globalPromptTemplate = document.getElementById("global-prompt-template");
+  const summarySystemPrompt = document.getElementById("summary-system-prompt");
+  const memorySummarizerUserPrompt = document.getElementById(
+    "memory-summarizer-user-prompt",
   );
-  state.settings.writingInstructionsInjectionWhen = writingWhen;
-  if (writingInstructionsInjectionWhen) {
-    writingInstructionsInjectionWhen.value = writingWhen;
-  }
-  shortcutsRaw.value = state.settings.shortcutsRaw || "";
-  if (autoTitleSystemPrompt) {
-    autoTitleSystemPrompt.value =
-      state.settings.autoTitleSystemPrompt ||
-      DEFAULT_SETTINGS.autoTitleSystemPrompt;
-  }
-  const autoTitleUserPrompt = document.getElementById("auto-title-user-prompt");
-  if (autoTitleUserPrompt) {
-    autoTitleUserPrompt.value =
-      state.settings.autoTitleUserPrompt ||
-      DEFAULT_SETTINGS.autoTitleUserPrompt;
-  }
-  if (sectionHeaderMemoryContext) {
-    sectionHeaderMemoryContext.value =
-      state.settings.sectionHeaderMemoryContext ||
-      DEFAULT_SETTINGS.sectionHeaderMemoryContext;
-  }
-  if (sectionHeaderCharacterPrompt) {
-    sectionHeaderCharacterPrompt.value =
-      state.settings.sectionHeaderCharacterPrompt ||
-      DEFAULT_SETTINGS.sectionHeaderCharacterPrompt;
-  }
+  const summaryMessagesPreProcessingJson = document.getElementById(
+    "summary-messages-preprocessing-json",
+  );
+  const postprocessRulesJson = document.getElementById("postprocess-rules-json");
+  const personaInjectionTemplate = document.getElementById(
+    "persona-injection-template",
+  );
+  const writingInstructionsInjectionWhen = document.getElementById(
+    "writing-instructions-injection-when",
+  );
+  const shortcutsRaw = document.getElementById("shortcuts-raw");
+  const autoTitleSystemPrompt = document.getElementById(
+    "auto-title-system-prompt",
+  );
+  const sectionHeaderMemoryContext = document.getElementById(
+    "section-header-memory-context",
+  );
+  const sectionHeaderCharacterPrompt = document.getElementById(
+    "section-header-character-prompt",
+  );
+  const sectionHeaderMessagesSoFar = document.getElementById(
+    "section-header-messages-so-far",
+  );
+  const sectionHeaderMessages = document.getElementById("section-header-messages");
+  const sectionHeaderMemoryLevelContext = document.getElementById(
+    "section-header-memory-level-context",
+  );
+
   if (sectionHeaderMessagesSoFar) {
     sectionHeaderMessagesSoFar.value =
       state.settings.sectionHeaderMessagesSoFar ||
