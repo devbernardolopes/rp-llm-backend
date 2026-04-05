@@ -3350,6 +3350,9 @@ async function setupSettingsControls() {
   const sectionHeaderMemoryLevelContext = document.getElementById(
     "section-header-memory-level-context",
   );
+  const memoryRelevanceFilterToggle = document.getElementById(
+    "memory-relevance-filter-enabled",
+  );
 
   if (sectionHeaderMessagesSoFar) {
     sectionHeaderMessagesSoFar.value =
