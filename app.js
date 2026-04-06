@@ -352,7 +352,7 @@ function populateSettingsTabValues() {
   if (loreMatchingMode) loreMatchingMode.value = state.settings.loreMatchingMode;
   if (loreSemanticThreshold) loreSemanticThreshold.value = state.settings.loreSemanticThreshold;
   if (chatMessageAlignment) chatMessageAlignment.value = state.settings.chatMessageAlignment;
-  if (postprocessRulesJson) postprocessRulesJson.value = state.settings.postprocessRules;
+  if (postprocessRulesJson) postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
   
   // Prompting tab settings
   const globalPromptTemplate = document.getElementById("global-prompt-template");
@@ -7422,6 +7422,7 @@ function openModal(modalId) {
         if (firstTab instanceof HTMLButtonElement) firstTab.click();
       }
       updateToastDelayDisplay();
+      populateThemeDropdown().catch(() => {});
       populateSettingsModels().catch(() => {});
       populateAutoTitleSummaryModels().catch(() => {});
       setupModalTextareas(modal);
