@@ -407,8 +407,8 @@ function populateSettingsTabValues() {
   const defaultIncludeOoc = document.getElementById("default-include-ooc");
   const defaultAutoTitleMinMessages = document.getElementById("default-auto-title-min-messages");
   
-  if (defaultAutoTitleProvider) defaultAutoTitleProvider.value = state.settings.defaultAutoTitleProvider || "openrouter";
-  if (defaultSummaryProvider) defaultSummaryProvider.value = state.settings.defaultSummaryProvider || "openrouter";
+  if (defaultAutoTitleProvider) defaultAutoTitleProvider.value = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  if (defaultSummaryProvider) defaultSummaryProvider.value = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
   if (defaultAutoTitleTemp) {
     defaultAutoTitleTemp.value = state.settings.defaultAutoTitleTemp || 0.25;
     const val = document.getElementById("default-auto-title-temp-value");
