@@ -158,16 +158,10 @@ function normalizeExpressionKey(key) {
 // UI utilities - see ui-utils.js
 
 // HTML Snippet Map - maps modal IDs to their snippet files
+// Note: settings-modal currently uses inline HTML in index.html (not snippets yet)
 const SNIPPET_MAP = {
   "shortcuts-modal": ["shortcuts.html"],
-  "settings-modal": [
-    "settings-api.html",
-    "settings-appearance.html",
-    "settings-threads.html",
-    "settings-prompting.html",
-    "settings-shortcuts.html",
-    "settings-defaults.html",
-  ],
+  // "settings-modal": currently using inline HTML
 };
 
 const snippetCache = new Map();
@@ -195,27 +189,6 @@ async function loadSnippetsForModal(modalId) {
   const snippets = SNIPPET_MAP[modalId];
   if (!snippets) return;
   
-  // For settings-modal, load each snippet into its placeholder
-  if (modalId === "settings-modal") {
-    const body = document.getElementById("settings-modal-body");
-    if (!body || body.dataset.snippetsLoaded === "1") return;
-    body.dataset.snippetsLoaded = "1";
-    
-    for (const snippet of snippets) {
-      // Extract group from filename like "settings-api.html" -> "api"
-      const group = snippet.replace("settings-", "").replace(".html", "");
-      // Find the placeholder div with matching data-settings-group
-      const placeholder = body.querySelector(`[data-settings-group="${group}"]`);
-      if (!placeholder) continue;
-      const html = await fetchSnippet(snippet);
-      if (html) {
-        placeholder.insertAdjacentHTML("beforeend", html);
-      }
-    }
-    return;
-  }
-  
-  // For other modals, use single content container
   const containerId = modalId.replace("-modal", "-content");
   const container = document.getElementById(containerId);
   if (!container) return;
