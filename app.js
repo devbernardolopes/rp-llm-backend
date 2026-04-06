@@ -21254,8 +21254,8 @@ async function callLMStudio(
             DEFAULT_SETTINGS.summaryTemperature)
           : clampTemperature(state.settings.temperature),
       top_p: Number(state.settings.topP) || 1,
-      frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
-      presence_penalty: Number(state.settings.presencePenalty) || 0,
+      frequency_penalty: 0,
+      presence_penalty: 0,
       ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
       stream: streamEnabled,
     };
@@ -21533,8 +21533,8 @@ async function callGroq(
           DEFAULT_SETTINGS.summaryTemperature)
         : clampTemperature(state.settings.temperature),
     top_p: Number(state.settings.topP) || 1,
-    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
-    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    frequency_penalty: 0,
+    presence_penalty: 0,
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
   };
@@ -21766,8 +21766,8 @@ async function callAIHordeOpenAI(
           DEFAULT_SETTINGS.summaryTemperature)
         : clampTemperature(state.settings.temperature),
     top_p: Number(state.settings.topP) || 1,
-    frequency_penalty: Number(state.settings.frequencyPenalty) || 0,
-    presence_penalty: Number(state.settings.presencePenalty) || 0,
+    frequency_penalty: 0,
+    presence_penalty: 0,
     ...((() => {
       const stopStrings = getStopStrings();
       return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
