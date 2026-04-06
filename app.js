@@ -304,7 +304,13 @@ function populateSettingsTabValues() {
   if (sttSilenceDuration) sttSilenceDuration.value = state.settings.sttSilenceDuration || 2;
   if (themeSelect) themeSelect.value = state.settings.theme || "default";
   if (marqueeBehaviorSelect) marqueeBehaviorSelect.value = state.settings.marqueeBehavior || "disabled";
-  if (botCardAvatarEffect) botCardAvatarEffect.value = state.settings.botCardAvatarEffect || "none";
+  if (botCardAvatarEffect) {
+    botCardAvatarEffect.value = state.settings.botCardAvatarEffect || "none";
+    const transitionSlider = document.getElementById("bot-card-avatar-transition-delay-slider");
+    if (transitionSlider) {
+      transitionSlider.disabled = state.settings.botCardAvatarEffect !== "carousel";
+    }
+  }
   if (botCardAvatarTransitionDelaySlider) {
     botCardAvatarTransitionDelaySlider.value = state.settings.botCardAvatarTransitionDelay || 4;
     const delayValue = document.getElementById("bot-card-avatar-transition-delay-value");
@@ -2341,11 +2347,9 @@ function restoreSettingsPromptingTextareaCollapseStates() {
   const raw = localStorage.getItem(key);
   const scrollRaw = localStorage.getItem(`${key}-scroll`);
   const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
-  const modal = document.getElementById("settings-modal");
-  if (!modal) return;
-  const panel = modal.querySelector('[data-settings-tab-panel="prompting"]');
+  const panel = document.querySelector('[data-settings-group="prompting"]');
   if (!panel) return;
-  panel.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+  panel.querySelectorAll("textarea").forEach((textarea) => {
     const entry = textareaCollapseStates.get(textarea);
     if (!entry) return;
     const hasContent = String(textarea.value || "").trim().length > 0;
@@ -4675,6 +4679,14 @@ function setupSettingsTabsLayout() {
         const group = g.getAttribute("data-settings-group");
         if (group === tab) {
           g.classList.remove("hidden");
+          // Set up collapsible textareas for newly visible tab
+          setupModalTextareas(g);
+          // Restore collapse states for prompting tab
+          if (group === "prompting") {
+            requestAnimationFrame(() => {
+              restoreSettingsPromptingTextareaCollapseStates();
+            });
+          }
         } else {
           g.classList.add("hidden");
         }
@@ -7412,6 +7424,7 @@ function openModal(modalId) {
       updateToastDelayDisplay();
       populateSettingsModels().catch(() => {});
       populateAutoTitleSummaryModels().catch(() => {});
+      setupModalTextareas(modal);
     } else if (modalId === "personas-modal") {
       renderPersonaModalList();
     } else if (modalId === "shortcuts-modal") {
