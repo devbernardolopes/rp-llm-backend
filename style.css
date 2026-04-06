@@ -261,6 +261,8 @@ body {
   padding-right: 0;
   width: 100%;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .thread-list::-webkit-scrollbar {
@@ -4477,11 +4479,24 @@ textarea {
     bottom: auto;
     width: auto;
     z-index: auto;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
 
   #left-pane.collapsed {
     transform: none;
     width: auto;
+  }
+
+  .thread-list {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .pane-bottom {
+    position: sticky;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom, 10px);
+    z-index: 5;
+    background: var(--panel);
   }
 
   #chat-view {
