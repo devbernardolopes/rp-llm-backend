@@ -18878,6 +18878,15 @@ async function getModelCatalogForProvider(provider, skipMainProviderCheck = fals
       }
     }
     return state.lmstudioModelCatalog;
+  } else if (provider === "groq") {
+    if (state.groqModelCatalog.length === 0) {
+      try {
+        state.groqModelCatalog = await fetchGroqModelCatalog();
+      } catch {
+        state.groqModelCatalog = [];
+      }
+    }
+    return state.groqModelCatalog;
   } else {
     if (state.modelCatalog.length === 0) {
       try {
