@@ -247,8 +247,102 @@ function populateSettingsTabValues() {
   if (groqApiKey) groqApiKey.value = state.settings.groqApiKey || "";
   if (aiProviderSelect) aiProviderSelect.value = state.settings.aiProvider || "openrouter";
   
+  // Add event listener for provider change (must be added after snippets load)
+  aiProviderSelect?.addEventListener("change", () => {
+    const oldProvider = state.settings.aiProvider || "openrouter";
+    const newProvider = aiProviderSelect.value;
+    if (oldProvider !== newProvider) {
+      const lastModels = state.settings.lastModelsPerProvider || {};
+      lastModels[oldProvider] = state.settings.model;
+      state.settings.lastModelsPerProvider = lastModels;
+    }
+    state.settings.aiProvider = newProvider;
+    const lastModels = state.settings.lastModelsPerProvider || {};
+    const savedModel = lastModels[newProvider];
+    if (savedModel) {
+      state.settings.model = savedModel;
+    }
+    updateProviderVisibility();
+    saveSettings();
+    populateSettingsModels({ force: true }).catch(() => {});
+  });
+  
+  // API Tab - Sliders
+  const maxTokensSlider = document.getElementById("max-tokens-slider");
+  const temperatureSlider = document.getElementById("temperature-slider");
+  const topPSlider = document.getElementById("top-p-slider");
+  const frequencyPenaltySlider = document.getElementById("frequency-penalty-slider");
+  const presencePenaltySlider = document.getElementById("presence-penalty-slider");
+  const stopStrings = document.getElementById("stop-strings");
+  const completionCooldownSlider = document.getElementById("completion-cooldown-slider");
+  const streamEnabled = document.getElementById("stream-enabled");
+  
+  if (maxTokensSlider) {
+    maxTokensSlider.value = state.settings.maxTokens;
+    const maxTokensValue = document.getElementById("max-tokens-value");
+    if (maxTokensValue) maxTokensValue.textContent = state.settings.maxTokens;
+  }
+  if (temperatureSlider) {
+    temperatureSlider.value = state.settings.temperature;
+    const temperatureValue = document.getElementById("temperature-value");
+    if (temperatureValue) temperatureValue.textContent = state.settings.temperature;
+  }
+  if (topPSlider) {
+    topPSlider.value = state.settings.topP;
+    const topPValue = document.getElementById("top-p-value");
+    if (topPValue) topPValue.textContent = state.settings.topP;
+  }
+  if (frequencyPenaltySlider) {
+    frequencyPenaltySlider.value = state.settings.frequencyPenalty;
+    const fpValue = document.getElementById("frequency-penalty-value");
+    if (fpValue) fpValue.textContent = state.settings.frequencyPenalty;
+  }
+  if (presencePenaltySlider) {
+    presencePenaltySlider.value = state.settings.presencePenalty;
+    const ppValue = document.getElementById("presence-penalty-value");
+    if (ppValue) ppValue.textContent = state.settings.presencePenalty;
+  }
+  if (stopStrings) stopStrings.value = state.settings.stopStrings || "";
+  if (completionCooldownSlider) {
+    completionCooldownSlider.value = state.settings.completionCooldown;
+    const ccValue = document.getElementById("completion-cooldown-value");
+    if (ccValue) ccValue.textContent = state.settings.completionCooldown;
+  }
+  if (streamEnabled) streamEnabled.checked = state.settings.streamEnabled;
+  
   // Render OOC system avatar
   renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
+  
+  // Appearance tab settings
+  const uiLanguageSelect = document.getElementById("ui-language-select");
+  const sttLanguageSelect = document.getElementById("stt-language-select");
+  const sttModeSelect = document.getElementById("stt-mode-select");
+  const sttSilenceDuration = document.getElementById("stt-silence-duration");
+  const themeSelect = document.getElementById("theme-select");
+  const marqueeBehaviorSelect = document.getElementById("marquee-behavior-select");
+  const botCardAvatarEffect = document.getElementById("bot-card-avatar-effect");
+  const botCardAvatarTransitionDelaySlider = document.getElementById("bot-card-avatar-transition-delay-slider");
+  const toastDelaySlider = document.getElementById("toast-delay-slider");
+  const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
+  
+  if (uiLanguageSelect) uiLanguageSelect.value = state.settings.uiLanguage || "auto";
+  if (sttLanguageSelect) sttLanguageSelect.value = state.settings.sttLanguage || "en";
+  if (sttModeSelect) sttModeSelect.value = state.settings.sttMode || "push-to-talk";
+  if (sttSilenceDuration) sttSilenceDuration.value = state.settings.sttSilenceDuration || 2;
+  if (themeSelect) themeSelect.value = state.settings.theme || "default";
+  if (marqueeBehaviorSelect) marqueeBehaviorSelect.value = state.settings.marqueeBehavior || "disabled";
+  if (botCardAvatarEffect) botCardAvatarEffect.value = state.settings.botCardAvatarEffect || "none";
+  if (botCardAvatarTransitionDelaySlider) {
+    botCardAvatarTransitionDelaySlider.value = state.settings.botCardAvatarTransitionDelay || 4;
+    const delayValue = document.getElementById("bot-card-avatar-transition-delay-value");
+    if (delayValue) delayValue.textContent = state.settings.botCardAvatarTransitionDelay;
+  }
+  if (toastDelaySlider) {
+    toastDelaySlider.value = state.settings.toastDelay;
+    const toastValue = document.getElementById("toast-delay-value");
+    if (toastValue) toastValue.textContent = state.settings.toastDelay;
+  }
+  if (unreadSoundEnabled) unreadSoundEnabled.checked = state.settings.unreadSoundEnabled;
   
   // Threads tab settings
   const autopairEnabled = document.getElementById("autopair-enabled");
@@ -317,6 +411,47 @@ function populateSettingsTabValues() {
   if (cancelShortcut) cancelShortcut.value = state.settings.cancelShortcut || "";
   if (homeShortcut) homeShortcut.value = state.settings.homeShortcut || "";
   if (newCharacterShortcut) newCharacterShortcut.value = state.settings.newCharacterShortcut || "";
+  
+  // Defaults tab settings
+  const defaultAutoTitleProvider = document.getElementById("default-auto-title-provider");
+  const defaultAutoTitleModel = document.getElementById("default-auto-title-model");
+  const defaultAutoTitleTemp = document.getElementById("default-auto-title-temp");
+  const defaultAutoTitleStream = document.getElementById("default-auto-title-stream");
+  const defaultSummaryProvider = document.getElementById("default-summary-provider");
+  const defaultSummaryModel = document.getElementById("default-summary-model");
+  const defaultSummaryTemp = document.getElementById("default-summary-temp");
+  const defaultSummaryStream = document.getElementById("default-summary-stream");
+  const defaultAvatarScale = document.getElementById("default-avatar-scale");
+  const defaultPersonaInjectionPlacement = document.getElementById("default-persona-injection-placement");
+  const defaultTtsProvider = document.getElementById("default-tts-provider");
+  const defaultTtsRate = document.getElementById("default-tts-rate");
+  const defaultIncludeOoc = document.getElementById("default-include-ooc");
+  const defaultAutoTitleMinMessages = document.getElementById("default-auto-title-min-messages");
+  
+  if (defaultAutoTitleProvider) defaultAutoTitleProvider.value = state.settings.defaultAutoTitleProvider || "openrouter";
+  if (defaultSummaryProvider) defaultSummaryProvider.value = state.settings.defaultSummaryProvider || "openrouter";
+  if (defaultAutoTitleTemp) {
+    defaultAutoTitleTemp.value = state.settings.defaultAutoTitleTemp || 0.25;
+    const val = document.getElementById("default-auto-title-temp-value");
+    if (val) val.textContent = defaultAutoTitleTemp.value;
+  }
+  if (defaultSummaryTemp) {
+    defaultSummaryTemp.value = state.settings.defaultSummaryTemp || 0.25;
+    const val = document.getElementById("default-summary-temp-value");
+    if (val) val.textContent = defaultSummaryTemp.value;
+  }
+  if (defaultAutoTitleStream) defaultAutoTitleStream.checked = state.settings.defaultAutoTitleStream;
+  if (defaultSummaryStream) defaultSummaryStream.checked = state.settings.defaultSummaryStream;
+  if (defaultAvatarScale) defaultAvatarScale.value = state.settings.defaultAvatarScale || 1;
+  if (defaultPersonaInjectionPlacement) defaultPersonaInjectionPlacement.value = state.settings.defaultPersonaInjectionPlacement || "none";
+  if (defaultTtsProvider) defaultTtsProvider.value = state.settings.defaultTtsProvider || "kokoro";
+  if (defaultTtsRate) {
+    defaultTtsRate.value = state.settings.defaultTtsRate || 1;
+    const val = document.getElementById("default-tts-rate-value");
+    if (val) val.textContent = defaultTtsRate.value;
+  }
+  if (defaultIncludeOoc) defaultIncludeOoc.checked = state.settings.defaultIncludeOocInCompletions;
+  if (defaultAutoTitleMinMessages) defaultAutoTitleMinMessages.value = state.settings.defaultAutoTitleMinMessages || 10;
   
   updateProviderVisibility();
 }

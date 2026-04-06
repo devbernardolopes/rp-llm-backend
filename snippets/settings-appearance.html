@@ -1,123 +1,81 @@
-<div data-settings-group="appearance" class="settings-group">
-  <div class="form-field">
-    <span data-i18n="languageLabel">Interface Language</span>
-    <select id="ui-language-select">
-      <option value="auto">Auto (browser)</option>
-      <option value="en">English</option>
-      <option value="fr">Francais</option>
-      <option value="it">Italiano</option>
-      <option value="de">Deutsch</option>
-      <option value="es">Espanol</option>
-      <option value="pt-BR">Portugues (Brasil)</option>
-    </select>
-  </div>
-  <div class="form-field">
-    <span data-i18n="sttLanguageLabel">Speech-to-Text Language</span>
-    <select id="stt-language-select">
-      <option value="en">English</option>
-      <option value="fr">Francais</option>
-      <option value="it">Italiano</option>
-      <option value="de">Deutsch</option>
-      <option value="es">Espanol</option>
-      <option value="pt-BR">Portugues (Brasil)</option>
-    </select>
-  </div>
-  <div class="form-field">
-    <span data-i18n="sttModeLabel">STT Mode</span>
-    <select id="stt-mode-select">
-      <option value="push-to-talk" data-i18n="sttModePushToTalk">
-        Push-to-Talk
-      </option>
-      <option value="auto-stop" data-i18n="sttModeAutoStop">
-        Auto-Stop on Silence
-      </option>
-    </select>
-  </div>
-  <div class="form-field">
-    <span data-i18n="sttSilenceDurationLabel"
-      >Silence Duration (seconds)</span
-    >
-    <input
-      type="number"
-      id="stt-silence-duration"
-      min="1"
-      max="10"
-      value="2"
-    />
-  </div>
-  <div class="form-field">
-    <span data-i18n="themeLabel">Theme</span>
-    <select id="theme-select"></select>
-  </div>
-  <div class="form-field">
-    <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
-    <select id="marquee-behavior-select">
-      <option value="disabled" data-i18n="marqueeBehaviorDisabled">
-        Disabled
-      </option>
-      <option value="hover" data-i18n="marqueeBehaviorOnHover">
-        On Hover
-      </option>
-      <option value="always" data-i18n="marqueeBehaviorAlways">
-        Always
-      </option>
-    </select>
-  </div>
-  <div class="form-field">
-    <span data-i18n="botCardAvatarEffectLabel"
-      >BOT Card Avatar Effect</span
-    >
-    <select id="bot-card-avatar-effect">
-      <option value="none" data-i18n="botCardAvatarEffectNone">
-        None
-      </option>
-      <option
-        value="carousel"
-        data-i18n="botCardAvatarEffectCarousel"
-      >
-        Carousel
-      </option>
-      <option value="hover" data-i18n="botCardAvatarEffectHover">
-        On Hover
-      </option>
-    </select>
-  </div>
-  <div class="form-field">
-    <div class="label-inline">
-      <span data-i18n="botCardAvatarTransitionDelayLabel"
-        >Transition Delay</span
-      >
-      <span
-        id="bot-card-avatar-transition-delay-value"
-        class="muted"
-      ></span>
+  Cancel
+</button>
+<button
+  id="apply-asset-editor-btn"
+  class="secondary-btn"
+  type="button"
+  data-i18n="apply"
+  disabled
+>
+  Apply
+</button>
+<button
+  id="save-asset-editor-btn"
+  class="primary-btn"
+  type="button"
+  data-i18n="save"
+  disabled
+>
+  Save
+</button>
+        </div>
+      </div>
     </div>
-    <input
-      id="bot-card-avatar-transition-delay-slider"
-      type="range"
-      min="4"
-      max="30"
-      step="1"
-      disabled
-    />
-  </div>
-  <div class="form-field">
-    <div class="label-inline">
-      <span data-i18n="toastDelayLabel">Toast Delay</span>
-      <span id="toast-delay-value" class="muted"></span>
-    </div>
-    <input
-      id="toast-delay-slider"
-      type="range"
-      min="1000"
-      max="10000"
-      step="200"
-    />
-  </div>
-  <span class="checkbox-line">
-    <input type="checkbox" id="unread-sound-enabled" />
-    <span data-i18n="unreadSoundEnabled"
-      >Play sound for unread messages</span
+
+    <div
+      id="personas-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="personas-title"
     >
-  </span>
+      <div class="modal-card wide">
+        <div class="modal-header">
+<h3 id="personas-title" data-i18n="personaManager">
+  Persona Manager
+</h3>
+<button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+<div class="lore-toolbar">
+  <button
+    id="create-persona-btn"
+    class="primary-btn"
+    type="button"
+    data-i18n="newPersona"
+  >
+    + New Persona
+  </button>
 </div>
+<div id="persona-list" class="lorebook-list"></div>
+        </div>
+      </div>
+      <!-- Hidden legacy form fields for backward compatibility -->
+      <input id="persona-name" type="hidden" />
+      <input id="persona-avatar" type="hidden" />
+      <input id="persona-avatar-file" type="hidden" />
+      <textarea id="persona-description" class="hidden"></textarea>
+      <textarea id="persona-internal-description" class="hidden"></textarea>
+      <input id="persona-is-default" type="hidden" />
+      <span id="persona-name-count" class="hidden">0/64</span>
+      <span id="persona-description-count" class="hidden">0/100</span>
+    </div>
+
+    <div
+      id="lore-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lore-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+<h3 id="lore-title" data-i18n="loreBookManagement">
+  Lorebook Management
+</h3>
+<button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+<div id="lore-list-view">
+  <div class="lore-toolbar">
+    <button

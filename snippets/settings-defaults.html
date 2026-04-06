@@ -1,67 +1,75 @@
-          <div data-settings-group="defaults" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
-              <select id="default-auto-title-provider">
-                <option value="openrouter" data-i18n="providerOpenRouter">
-                  OpenRouter
-                </option>
-                <option value="aihorde" data-i18n="providerAIHorde">
-                  AI Horde
-                </option>
-                <option value="lmstudio" data-i18n="providerLMStudio">
-                  LM Studio
-                </option>
-                <option value="groq" data-i18n="providerGroq">
-                  Groq
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="autoTitleModel">Auto-Title Model</span>
-              <select id="default-auto-title-model"></select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="autoTitleTemperature"
-                  >Auto-Title Temperature</span
-                >
-                <span id="default-auto-title-temp-value" class="muted"></span>
-              </div>
-              <input
-                id="default-auto-title-temp"
-                type="range"
-                min="0"
-                max="2"
-                step="0.05"
-                value="0.25"
-              />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="default-auto-title-stream" />
-              <span data-i18n="autoTitleStream">Auto-Title Stream</span>
-            </span>
-            <div class="form-field">
-              <span data-i18n="summaryProvider">Summary Provider</span>
-              <select id="default-summary-provider">
-                <option value="openrouter" data-i18n="providerOpenRouter">
-                  OpenRouter
-                </option>
-                <option value="aihorde" data-i18n="providerAIHorde">
-                  AI Horde
-                </option>
-                <option value="lmstudio" data-i18n="providerLMStudio">
-                  LM Studio
-                </option>
-                <option value="groq" data-i18n="providerGroq">
-                  Groq
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="summaryModel">Summary Model</span>
-              <select id="default-summary-model"></select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="summaryTemperature">Summary Temperature</span>
-                <span id="default-summary-temp-value" class="muted"></span>
+<button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div id="shortcuts-content" class="modal-body"></div>
+        <div class="modal-footer">
+<button
+  class="secondary-btn"
+  type="button"
+  data-close-modal
+  data-i18n="cancel"
+>
+  Cancel
+</button>
+<button
+  id="apply-shortcuts-btn"
+  class="secondary-btn"
+  type="button"
+  data-i18n="apply"
+  disabled
+>
+  Apply
+</button>
+<button
+  id="save-shortcuts-btn"
+  class="primary-btn"
+  type="button"
+  data-i18n="save"
+  disabled
+>
+  Save
+</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="database-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="database-title"
+    >
+      <div class="modal-card">
+        <div class="modal-header">
+<h3 id="database-title" data-i18n="databaseManagement">
+  Database Management
+</h3>
+<button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+<button id="export-db-btn" class="primary-btn" type="button">
+  Export Database
+</button>
+<button id="import-db-btn" class="secondary-btn" type="button">
+  Import Database
+</button>
+<button
+  id="reset-db-btn"
+  class="secondary-btn danger-btn"
+  type="button"
+  data-i18n="resetAppData"
+>
+  Reset App Data
+</button>
+<input
+  id="import-db-input"
+  type="file"
+  accept=".json,application/json"
+  class="hidden"
+/>
+<p id="database-hint" class="muted">
+  Import will overwrite the current local data (characters, threads,
+  settings, UI state, and more).
+</p>
+        </div>
+      </div>

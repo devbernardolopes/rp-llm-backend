@@ -1,248 +1,248 @@
-<div data-settings-group="api" class="settings-group">
-  <div class="form-field">
-    <span data-i18n="aiProviderLabel">AI Provider</span>
-    <select id="ai-provider-select">
-      <option value="openrouter" data-i18n="providerOpenRouter">
-        OpenRouter
-      </option>
-      <option value="aihorde" data-i18n="providerAIHorde">
-        AI Horde
-      </option>
-      <option value="lmstudio" data-i18n="providerLMStudio">
-        LM Studio
-      </option>
-      <option value="groq" data-i18n="providerGroq">
-        Groq
-      </option>
-    </select>
-  </div>
-  <div class="form-field" id="openrouter-api-key-container">
-    <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
-    <input
-      id="openrouter-api-key"
-      type="text"
-      data-i18n-placeholder="placeholderApiKey"
-      autocomplete="off"
-      spellcheck="false"
-    />
-  </div>
-  <div class="form-field hidden" id="horde-api-key-container">
-    <span data-i18n="aiHordeApiKey">AI Horde API Key</span>
-    <input
-      id="horde-api-key"
-      type="text"
-      data-i18n-placeholder="placeholderHordeApiKey"
-      autocomplete="off"
-      spellcheck="false"
-    />
-  </div>
-  <div class="form-field hidden" id="horde-api-method-container">
-    <span data-i18n="aiHordeApiMethod">AI Horde API Method</span>
-    <select id="horde-api-method">
-      <option value="native" data-i18n="aiHordeApiMethodNative">
-        Native REST API
-      </option>
-      <option value="openai" data-i18n="aiHordeApiMethodOpenai">
-        OpenAI-Compatible
-      </option>
-    </select>
-  </div>
-  <div class="form-field hidden" id="lmstudio-base-url-container">
-    <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span>
-    <input
-      id="lmstudio-base-url"
-      type="text"
-      data-i18n-placeholder="placeholderLmStudioUrl"
-      autocomplete="off"
-      spellcheck="false"
-    />
-  </div>
-  <div class="form-field hidden" id="lmstudio-api-method-container">
-    <span data-i18n="lmStudioApiMethod">LM Studio API Method</span>
-    <select id="lmstudio-api-method">
-      <option value="openai" data-i18n="lmStudioApiMethodOpenai">
-        OpenAI-Compatible
-      </option>
-      <option value="native" data-i18n="lmStudioApiMethodNative">
-        Native REST API
-      </option>
-    </select>
-  </div>
-  <div class="form-field hidden" id="groq-api-key-container">
-    <span data-i18n="groqApiKey">Groq API Key</span>
-    <input
-      id="groq-api-key"
-      type="text"
-      data-i18n-placeholder="placeholderGroqApiKey"
-      autocomplete="off"
-      spellcheck="false"
-    />
-  </div>
-  <div class="form-field">
-    <span data-i18n="modelLabel">Model</span>
-    <div class="model-select-wrapper">
-      <select id="model-select"></select>
-      <div id="model-select-display" class="model-select-display">
-        Loading...
-      </div>
-      <div
-        id="model-custom-dropdown"
-        class="model-custom-dropdown hidden"
-      >
-        <div
-          id="model-dropdown-options"
-          class="model-dropdown-options"
-        ></div>
+<div class="settings-group" data-settings-group="api"></div>
+<div class="settings-group" data-settings-group="appearance"></div>
+<div class="settings-group" data-settings-group="threads"></div>
+<div class="settings-group" data-settings-group="prompting"></div>
+<div class="settings-group" data-settings-group="shortcuts"></div>
+<div class="settings-group" data-settings-group="defaults"></div>
+        </div>
       </div>
     </div>
-  </div>
-  <div
-    class="settings-inline-row model-filter-row"
-    id="model-filter-row"
+
+    <div
+      id="assets-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="assets-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+<h3 id="assets-title" data-i18n="assetsManager">Assets Manager</h3>
+<button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+<div id="assets-dropzone-section">
+  <button
+    type="button"
+    id="assets-dropzone"
+    class="assets-dropzone"
+    tabindex="0"
+    aria-label="Upload asset"
   >
-    <div class="form-field">
-      <span data-i18n="pricingLabel">Pricing</span>
-      <select id="model-pricing-filter">
-        <option value="all" data-i18n="all">All</option>
-        <option value="free" data-i18n="free">Free</option>
-        <option value="paid" data-i18n="paid">Paid</option>
-      </select>
-    </div>
-    <div class="form-field">
-      <span data-i18n="modalityLabel">Modality</span>
-      <select id="model-modality-filter">
-        <option value="text-only" data-i18n="textToText">
-          Text - Text
-        </option>
-        <option value="all" data-i18n="all">All</option>
-      </select>
-    </div>
-    <div class="form-field">
-      <span data-i18n="orderLabel">Order</span>
-      <select id="model-sort-order">
-        <option value="name_asc" data-i18n="nameAsc">Name A-Z</option>
-        <option value="name_desc" data-i18n="nameDesc">
-          Name Z-A
-        </option>
-        <option value="created_desc" data-i18n="createdNewest">
-          Created Newest
-        </option>
-        <option value="created_asc" data-i18n="createdOldest">
-          Created Oldest
-        </option>
-      </select>
-    </div>
-    <button
-      id="model-refresh-btn"
-      class="secondary-btn"
-      type="button"
-      data-i18n="reload"
+    <span class="dropzone-plus">+</span>
+    <span class="dropzone-hint" data-i18n="assetsDropzoneHint"
+      >Drag & drop or click to add assets</span
     >
-      Reload
-    </button>
-  </div>
-  <div id="model-selected-meta" class="muted"></div>
-  <div id="model-roleplay-warning" class="model-warning hidden">
-    <span data-i18n="modelNotRecommendedRoleplay">
-      This model is NOT recommended for roleplaying.
-    </span>
-  </div>
-  <div class="form-field">
-    <div class="label-inline">
-      <span data-i18n="maxTokensLabel">Max Completion Tokens</span>
-      <span id="max-tokens-value" class="muted"></span>
+  </button>
+  <input
+    type="file"
+    id="assets-file-input"
+    accept="image/*,video/*,audio/*"
+    multiple
+    class="visually-hidden"
+  />
+</div>
+<div id="assets-list" class="lorebook-list"></div>
+        </div>
+      </div>
     </div>
-    <input
-      id="max-tokens-slider"
-      type="range"
-      min="512"
-      max="8192"
-      step="64"
-    />
-  </div>
-  <div class="form-field">
-    <div class="label-inline">
-      <span data-i18n="temperatureLabel">Temperature</span>
-      <span id="temperature-value" class="muted"></span>
-    </div>
-    <input
-      id="temperature-slider"
-      type="range"
-      min="0"
-      max="2"
-      step="0.05"
-    />
-  </div>
-  <div class="form-field">
-    <div class="label-inline">
-      <span data-i18n="topPLabel">Top P</span>
-      <span id="top-p-value" class="muted"></span>
-    </div>
-    <input
-      id="top-p-slider"
-      type="range"
-      min="0"
-      max="1"
-      step="0.05"
-    />
-  </div>
-  <div class="form-field">
-    <div class="label-inline">
-      <span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span>
-      <span id="frequency-penalty-value" class="muted"></span>
-    </div>
-    <input
-      id="frequency-penalty-slider"
-      type="range"
-      min="-2"
-      max="2"
-      step="0.1"
-    />
-  </div>
-  <div class="form-field">
-    <div class="label-inline">
-      <span data-i18n="presencePenaltyLabel">Presence Penalty</span>
-      <span id="presence-penalty-value" class="muted"></span>
-    </div>
-    <input
-      id="presence-penalty-slider"
-      type="range"
-      min="-2"
-      max="2"
-      step="0.1"
-    />
-  </div>
-  <div class="form-field">
-    <span data-i18n="stopStringsLabel">Stop Strings</span>
-    <input
-      id="stop-strings"
-      type="text"
-      data-i18n-placeholder="placeholderStopStrings"
-      autocomplete="off"
-      spellcheck="false"
-    />
-    <span class="field-hint" data-i18n="stopStringsHint"
-      >Comma-separated. Stops generation when these sequences
-      appear.</span
+
+    <div
+      id="memory-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="memory-modal-title"
     >
-  </div>
-  <div class="form-field">
-    <div class="label-inline">
-      <span data-i18n="completionCooldownLabel"
-        >Completion Cooldown</span
+      <div class="modal-card wide">
+        <div class="modal-header">
+<h3 id="memory-modal-title" data-i18n="memoryModalTitle">
+  Memory entries
+</h3>
+<button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+<p id="memory-modal-status" class="muted"></p>
+<div id="memory-modal-entries"></div>
+        </div>
+        <div class="modal-footer">
+<button
+  id="memory-modal-save"
+  class="primary-btn"
+  type="button"
+  data-i18n="save"
+  disabled
+>
+  Save
+</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="memory-regenerate-prompt-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="memory-regenerate-prompt-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+<h3
+  id="memory-regenerate-prompt-title"
+  data-i18n="memoryRegeneratePromptTitle"
+>
+  Regenerate Memory Entry
+</h3>
+<button
+  type="button"
+  class="icon-btn modal-close"
+  data-memory-regenerate-prompt-close
+  aria-label="Close"
+>
+  &times;
+</button>
+        </div>
+        <div class="modal-body">
+<div class="memory-regenerate-prompt-info">
+  <p id="memory-regenerate-prompt-entry-label" class="muted"></p>
+  <p
+    id="memory-regenerate-prompt-description"
+    class="muted"
+    data-i18n="memoryRegeneratePromptDescription"
+  >
+    Edit the USER prompt that generated this summary before
+    regenerating.
+  </p>
+</div>
+<textarea
+  id="memory-regenerate-prompt-input"
+  rows="8"
+  placeholder=""
+></textarea>
+<span
+  id="memory-regenerate-prompt-input-count"
+  class="textarea-collapse-count memory-regenerate-word-count"
+></span>
+        </div>
+        <div class="modal-footer">
+<button
+  type="button"
+  class="secondary-btn"
+  data-memory-regenerate-prompt-close
+  data-i18n="cancel"
+>
+  Cancel
+</button>
+<button
+  type="button"
+  class="primary-btn"
+  id="memory-regenerate-prompt-submit"
+  data-i18n="memoryEntryRegenerate"
+>
+  Regenerate
+</button>
+        </div>
+      </div>
+    </div>
+    <div
+      id="memory-regenerate-progress-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="memory-regenerate-progress-title"
+    >
+      <div class="modal-card medium">
+        <div class="modal-header">
+<h3
+  id="memory-regenerate-progress-title"
+  data-i18n="memoryRegenerateProgressTitle"
+>
+  Summary regeneration
+</h3>
+<button
+  type="button"
+  class="icon-btn modal-close"
+  data-memory-regenerate-progress-close-btn
+  aria-label="Close"
+>
+  &times;
+</button>
+        </div>
+        <div class="modal-body">
+<div class="chat-row chat-row-ooc memory-regenerate-progress-row">
+  <img
+    id="memory-regenerate-progress-avatar"
+    class="chat-avatar"
+    src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InRyYW5zcGFyZW50Ii8+PC9zdmc+"
+    alt="SYSTEM avatar"
+  />
+  <div class="message-block">
+    <div class="message-header">
+      <span data-i18n="systemRoleName">SYSTEM</span>
+      <span
+        id="memory-regenerate-progress-entry-label"
+        class="muted"
+      ></span>
+    </div>
+    <div class="message-content memory-regenerate-progress-content">
+      <span
+        class="spinner memory-regenerate-progress-spinner"
+        aria-hidden="true"
+      ></span>
+      <span
+        id="memory-regenerate-progress-status"
+        data-i18n="memoryRegenerateProgressPending"
       >
-      <span id="completion-cooldown-value" class="muted"></span>
+        Regenerating summary...
+      </span>
     </div>
-    <input
-      id="completion-cooldown-slider"
-      type="range"
-      min="0"
-      max="15"
-      step="1"
-    />
   </div>
-  <span class="checkbox-line">
-    <input type="checkbox" id="stream-enabled" checked />
-    <span data-i18n="streamMessages">Stream Messages</span>
-  </span>
+</div>
+        </div>
+        <div class="modal-footer">
+<button
+  type="button"
+  class="danger-btn"
+  id="memory-regenerate-progress-cancel"
+  data-i18n="memoryRegenerateProgressCancel"
+>
+  Cancel
+</button>
+<button
+  type="button"
+  class="primary-btn"
+  id="memory-regenerate-progress-close"
+  data-memory-regenerate-progress-close-btn
+  data-i18n="memoryRegenerateProgressClose"
+>
+  Close
+</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="asset-editor-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="asset-editor-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+<h3 id="asset-editor-title" data-i18n="assetEditor">Asset Editor</h3>
+<button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+<div class="form-field">
+  <div class="label-inline">
+    <span data-i18n="nameLabel">Name</span>
+    <span id="asset-name-count" class="muted">0/128</span>
+  </div>
+  <input id="asset-name" type="text" maxlength="128" />
+</div>
+<div class="form-field">
+  <span data-i18n="assetOriginalName">Original Filename</span>
+  <input id="asset-original-name" type="text" disabled />
 </div>
