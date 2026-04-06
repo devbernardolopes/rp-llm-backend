@@ -840,12 +840,874 @@
         </div>
         <div class="modal-body" id="settings-modal-body">
           <!-- <form id="settings-form" novalidate onsubmit="return false;"> -->
-          <div class="settings-group" data-settings-group="api"></div>
-          <div class="settings-group" data-settings-group="appearance"></div>
-          <div class="settings-group" data-settings-group="threads"></div>
-          <div class="settings-group" data-settings-group="prompting"></div>
-          <div class="settings-group" data-settings-group="shortcuts"></div>
-          <div class="settings-group" data-settings-group="defaults"></div>
+          <div data-settings-group="api" class="settings-group">
+            <div class="form-field">
+              <span data-i18n="aiProviderLabel">AI Provider</span>
+              <select id="ai-provider-select">
+                <option value="openrouter" data-i18n="providerOpenRouter">
+                  OpenRouter
+                </option>
+                <option value="aihorde" data-i18n="providerAIHorde">
+                  AI Horde
+                </option>
+                <option value="lmstudio" data-i18n="providerLMStudio">
+                  LM Studio
+                </option>
+                <option value="groq" data-i18n="providerGroq">
+                  Groq
+                </option>
+              </select>
+            </div>
+            <div class="form-field" id="openrouter-api-key-container">
+              <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
+              <input
+                id="openrouter-api-key"
+                type="text"
+                data-i18n-placeholder="placeholderApiKey"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="form-field hidden" id="horde-api-key-container">
+              <span data-i18n="aiHordeApiKey">AI Horde API Key</span>
+              <input
+                id="horde-api-key"
+                type="text"
+                data-i18n-placeholder="placeholderHordeApiKey"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="form-field hidden" id="horde-api-method-container">
+              <span data-i18n="aiHordeApiMethod">AI Horde API Method</span>
+              <select id="horde-api-method">
+                <option value="native" data-i18n="aiHordeApiMethodNative">
+                  Native REST API
+                </option>
+                <option value="openai" data-i18n="aiHordeApiMethodOpenai">
+                  OpenAI-Compatible
+                </option>
+              </select>
+            </div>
+            <div class="form-field hidden" id="lmstudio-base-url-container">
+              <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span>
+              <input
+                id="lmstudio-base-url"
+                type="text"
+                data-i18n-placeholder="placeholderLmStudioUrl"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="form-field hidden" id="lmstudio-api-method-container">
+              <span data-i18n="lmStudioApiMethod">LM Studio API Method</span>
+              <select id="lmstudio-api-method">
+                <option value="openai" data-i18n="lmStudioApiMethodOpenai">
+                  OpenAI-Compatible
+                </option>
+                <option value="native" data-i18n="lmStudioApiMethodNative">
+                  Native REST API
+                </option>
+              </select>
+            </div>
+            <div class="form-field hidden" id="groq-api-key-container">
+              <span data-i18n="groqApiKey">Groq API Key</span>
+              <input
+                id="groq-api-key"
+                type="text"
+                data-i18n-placeholder="placeholderGroqApiKey"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="modelLabel">Model</span>
+              <div class="model-select-wrapper">
+                <select id="model-select"></select>
+                <div id="model-select-display" class="model-select-display">
+                  Loading...
+                </div>
+                <div
+                  id="model-custom-dropdown"
+                  class="model-custom-dropdown hidden"
+                >
+                  <div
+                    id="model-dropdown-options"
+                    class="model-dropdown-options"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="settings-inline-row model-filter-row"
+              id="model-filter-row"
+            >
+              <div class="form-field">
+                <span data-i18n="pricingLabel">Pricing</span>
+                <select id="model-pricing-filter">
+                  <option value="all" data-i18n="all">All</option>
+                  <option value="free" data-i18n="free">Free</option>
+                  <option value="paid" data-i18n="paid">Paid</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <span data-i18n="modalityLabel">Modality</span>
+                <select id="model-modality-filter">
+                  <option value="text-only" data-i18n="textToText">
+                    Text - Text
+                  </option>
+                  <option value="all" data-i18n="all">All</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <span data-i18n="orderLabel">Order</span>
+                <select id="model-sort-order">
+                  <option value="name_asc" data-i18n="nameAsc">Name A-Z</option>
+                  <option value="name_desc" data-i18n="nameDesc">
+                    Name Z-A
+                  </option>
+                  <option value="created_desc" data-i18n="createdNewest">
+                    Created Newest
+                  </option>
+                  <option value="created_asc" data-i18n="createdOldest">
+                    Created Oldest
+                  </option>
+                </select>
+              </div>
+              <button
+                id="model-refresh-btn"
+                class="secondary-btn"
+                type="button"
+                data-i18n="reload"
+              >
+                Reload
+              </button>
+            </div>
+            <div id="model-selected-meta" class="muted"></div>
+            <div id="model-roleplay-warning" class="model-warning hidden">
+              <span data-i18n="modelNotRecommendedRoleplay">
+                This model is NOT recommended for roleplaying.
+              </span>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="maxTokensLabel">Max Completion Tokens</span>
+                <span id="max-tokens-value" class="muted"></span>
+              </div>
+              <input
+                id="max-tokens-slider"
+                type="range"
+                min="512"
+                max="8192"
+                step="64"
+              />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="temperatureLabel">Temperature</span>
+                <span id="temperature-value" class="muted"></span>
+              </div>
+              <input
+                id="temperature-slider"
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+              />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="topPLabel">Top P</span>
+                <span id="top-p-value" class="muted"></span>
+              </div>
+              <input
+                id="top-p-slider"
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+              />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span>
+                <span id="frequency-penalty-value" class="muted"></span>
+              </div>
+              <input
+                id="frequency-penalty-slider"
+                type="range"
+                min="-2"
+                max="2"
+                step="0.1"
+              />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="presencePenaltyLabel">Presence Penalty</span>
+                <span id="presence-penalty-value" class="muted"></span>
+              </div>
+              <input
+                id="presence-penalty-slider"
+                type="range"
+                min="-2"
+                max="2"
+                step="0.1"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="stopStringsLabel">Stop Strings</span>
+              <input
+                id="stop-strings"
+                type="text"
+                data-i18n-placeholder="placeholderStopStrings"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <span class="field-hint" data-i18n="stopStringsHint"
+                >Comma-separated. Stops generation when these sequences
+                appear.</span
+              >
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="completionCooldownLabel"
+                  >Completion Cooldown</span
+                >
+                <span id="completion-cooldown-value" class="muted"></span>
+              </div>
+              <input
+                id="completion-cooldown-slider"
+                type="range"
+                min="0"
+                max="15"
+                step="1"
+              />
+            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="stream-enabled" checked />
+              <span data-i18n="streamMessages">Stream Messages</span>
+            </span>
+          </div>
+          <div data-settings-group="appearance" class="settings-group">
+            <div class="form-field">
+              <span data-i18n="languageLabel">Interface Language</span>
+              <select id="ui-language-select">
+                <option value="auto">Auto (browser)</option>
+                <option value="en">English</option>
+                <option value="fr">Francais</option>
+                <option value="it">Italiano</option>
+                <option value="de">Deutsch</option>
+                <option value="es">Espanol</option>
+                <option value="pt-BR">Portugues (Brasil)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="sttLanguageLabel">Speech-to-Text Language</span>
+              <select id="stt-language-select">
+                <option value="en">English</option>
+                <option value="fr">Francais</option>
+                <option value="it">Italiano</option>
+                <option value="de">Deutsch</option>
+                <option value="es">Espanol</option>
+                <option value="pt-BR">Portugues (Brasil)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="sttModeLabel">STT Mode</span>
+              <select id="stt-mode-select">
+                <option value="push-to-talk" data-i18n="sttModePushToTalk">
+                  Push-to-Talk
+                </option>
+                <option value="auto-stop" data-i18n="sttModeAutoStop">
+                  Auto-Stop on Silence
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="sttSilenceDurationLabel"
+                >Silence Duration (seconds)</span
+              >
+              <input
+                type="number"
+                id="stt-silence-duration"
+                min="1"
+                max="10"
+                value="2"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="themeLabel">Theme</span>
+              <select id="theme-select"></select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
+              <select id="marquee-behavior-select">
+                <option value="disabled" data-i18n="marqueeBehaviorDisabled">
+                  Disabled
+                </option>
+                <option value="hover" data-i18n="marqueeBehaviorOnHover">
+                  On Hover
+                </option>
+                <option value="always" data-i18n="marqueeBehaviorAlways">
+                  Always
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="botCardAvatarEffectLabel"
+                >BOT Card Avatar Effect</span
+              >
+              <select id="bot-card-avatar-effect">
+                <option value="none" data-i18n="botCardAvatarEffectNone">
+                  None
+                </option>
+                <option
+                  value="carousel"
+                  data-i18n="botCardAvatarEffectCarousel"
+                >
+                  Carousel
+                </option>
+                <option value="hover" data-i18n="botCardAvatarEffectHover">
+                  On Hover
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="botCardAvatarTransitionDelayLabel"
+                  >Transition Delay</span
+                >
+                <span
+                  id="bot-card-avatar-transition-delay-value"
+                  class="muted"
+                ></span>
+              </div>
+              <input
+                id="bot-card-avatar-transition-delay-slider"
+                type="range"
+                min="4"
+                max="30"
+                step="1"
+                disabled
+              />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="toastDelayLabel">Toast Delay</span>
+                <span id="toast-delay-value" class="muted"></span>
+              </div>
+              <input
+                id="toast-delay-slider"
+                type="range"
+                min="1000"
+                max="10000"
+                step="200"
+              />
+            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="unread-sound-enabled" />
+              <span data-i18n="unreadSoundEnabled"
+                >Play sound for unread messages</span
+              >
+            </span>
+          </div>
+          <div data-settings-group="threads" class="settings-group">
+            <div class="form-field">
+              <span data-i18n="oocSystemAvatarLabel">OOC System Avatar</span>
+              <div
+                id="ooc-system-avatar-dropzone"
+                class="char-avatar-dropzone"
+                tabindex="0"
+                aria-label="Upload OOC avatar"
+              >
+                <img id="ooc-system-avatar-preview" class="hidden" />
+                <span class="dropzone-plus">+</span>
+                <span class="dropzone-hint">Drag & drop or click</span>
+                <button
+                  type="button"
+                  id="ooc-system-avatar-remove"
+                  class="avatar-remove-btn hidden"
+                  data-i18n-title="removeTitle"
+                >
+                  &times;
+                </button>
+              </div>
+              <input
+                type="file"
+                id="ooc-system-avatar-file-input"
+                accept="image/*"
+                class="hidden"
+              />
+            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="autopair-enabled" checked />
+              <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
+            </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="markdown-enabled" />
+              <span data-i18n="renderMarkdown"
+                >Render Markdown in messages</span
+              >
+            </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="allow-message-html" />
+              <span data-i18n="allowRawHtml">Allow raw HTML in messages</span>
+            </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="trim-messages" checked />
+              <span data-i18n="trimMessagesLabel">Trim messages</span>
+            </span>
+
+            <span class="checkbox-line">
+              <input type="checkbox" id="lock-memory-messages" />
+              <span data-i18n="lockMemoryMessages">Lock Memory Messages</span>
+            </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="cross-window-sync-enabled" />
+              <span data-i18n="crossWindowSync">Sync threads across tabs</span>
+            </span>
+            <div class="form-field">
+              <span data-i18n="summaryThresholdLabel">Summary Threshold</span>
+              <input
+                id="summary-threshold"
+                type="number"
+                min="5"
+                max="100"
+                step="1"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="memoryMessagesToKeepLabel"
+                >Amount of Messages to Keep</span
+              >
+              <input
+                id="memory-messages-to-keep"
+                type="number"
+                min="0"
+                max="30"
+                step="1"
+                value="3"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="memorySlotsLabel">Memory Slots</span>
+              <input
+                id="memory-slots"
+                type="number"
+                min="1"
+                max="10"
+                step="1"
+                value="5"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="unloadThresholdLabel"
+                >Message to Keep (0 = all)</span
+              >
+              <input
+                id="auto-unload-threshold"
+                type="number"
+                min="0"
+                max="1000"
+                step="1"
+                title=""
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="loreMatchingMode">Lore Matching Mode</span>
+              <select id="lore-matching-mode">
+                <option value="keyword" data-i18n="loreMatchingModeKeyword">
+                  Keyword (Word Boundary + Negative Keys + Proximity)
+                </option>
+                <option value="semantic" data-i18n="loreMatchingModeSemantic">
+                  Semantic (Uses Embeddings)
+                </option>
+              </select>
+            </div>
+            <div
+              class="form-field hidden"
+              id="lore-semantic-threshold-container"
+            >
+              <span data-i18n="loreSemanticThreshold">Semantic Threshold</span>
+              <input
+                id="lore-semantic-threshold"
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                value="0.5"
+              />
+              <span class="settings-hint" data-i18n="loreSemanticThresholdHint"
+                >Higher = stricter matching (0.5-0.7 recommended)</span
+              >
+            </div>
+            <div class="form-field">
+              <span data-i18n="chatMessageAlignment">Message Alignment</span>
+              <select id="chat-message-alignment">
+                <option value="left" data-i18n="messageAlignmentLeft">
+                  Left (Default)
+                </option>
+                <option value="center" data-i18n="messageAlignmentCenter">
+                  Center
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="postprocessRules"
+                >Post-processing Rules (JSON)</span
+              >
+              <!-- prettier-ignore -->
+              <textarea
+                  id="postprocess-rules-json"
+                  rows="8"
+                  placeholder="[{&quot;pattern&quot;:&quot;^«([\\s\\S]*)»$&quot;,&quot;flags&quot;:&quot;gm&quot;,&quot;replacement&quot;:&quot;<span style=&quot;color:#E6D97A&quot;>«$1»</span>&quot;}]"
+                ></textarea>
+            </div>
+          </div>
+          <div data-settings-group="prompting" class="settings-group">
+            <div class="form-field">
+              <span data-i18n="defaultCharacterPrompt"
+                >Default Character Prompt</span
+              >
+              <textarea
+                id="global-prompt-template"
+                rows="7"
+                data-i18n-placeholder="placeholderDefaultCharacterPrompt"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="memorySummarizerPrompt"
+                >Memory Summarizer System Prompt</span
+              >
+              <textarea
+                id="summary-system-prompt"
+                rows="3"
+                data-i18n-placeholder="placeholderMemorySummarizerSystem"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="memorySummarizerUserPrompt"
+                >User Prompt for Memory Summarization</span
+              >
+              <textarea
+                id="memory-summarizer-user-prompt"
+                rows="3"
+                data-i18n-placeholder="placeholderMemorySummarizerUser"
+                placeholder="User prompt for memory summarization"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="oocSystemPromptIntro">OOC System Prompt Intro</span>
+              <textarea id="ooc-system-prompt-intro" rows="2"></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="oocUserMessageFormat">OOC User Message Format</span>
+              <textarea id="ooc-user-message-format" rows="2"></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="summaryMessagesPreProcessingJson"
+                >Summary Messages Pre-processing (JSON)</span
+              >
+              <textarea
+                id="summary-messages-preprocessing-json"
+                rows="5"
+                data-i18n-placeholder="placeholderPostprocessRules"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="personaInjectionTemplate"
+                >Persona Injection Template</span
+              >
+              <textarea
+                id="persona-injection-template"
+                rows="5"
+                data-i18n-placeholder="placeholderPersonaInjectionTemplate"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="autoTitleSystemPrompt"
+                >Auto-title System Prompt</span
+              >
+              <textarea id="auto-title-system-prompt" rows="3"></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="autoTitleUserPrompt"
+                >Auto-title User Prompt</span
+              >
+              <textarea id="auto-title-user-prompt" rows="3"></textarea>
+            </div>
+            <details class="settings-collapse">
+              <summary data-i18n="sectionHeadersTitle">Section Headers</summary>
+              <div class="settings-collapse-body">
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderMemoryContext"
+                    >Memory Context Header</span
+                  >
+                  <input
+                    id="section-header-memory-context"
+                    type="text"
+                    data-i18n-placeholder="placeholderSectionHeaderMemory"
+                  />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderCharacterPrompt"
+                    >Character Prompt Header</span
+                  >
+                  <input
+                    id="section-header-character-prompt"
+                    type="text"
+                    data-i18n-placeholder="placeholderSectionHeaderCharacter"
+                  />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderMessagesSoFar"
+                    >Messages So Far Header</span
+                  >
+                  <input
+                    id="section-header-messages-so-far"
+                    type="text"
+                    data-i18n-placeholder="placeholderSectionHeaderMessagesSoFar"
+                  />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderMessages">Messages Header</span>
+                  <input
+                    id="section-header-messages"
+                    type="text"
+                    data-i18n-placeholder="placeholderSectionHeaderMessages"
+                  />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="sectionHeaderMemoryLevelContext"
+                    >Memory Level Context Header</span
+                  >
+                  <input
+                    id="section-header-memory-level-context"
+                    type="text"
+                    data-i18n-placeholder="placeholderSectionHeaderMemoryLevel"
+                  />
+                </div>
+              </div>
+            </details>
+            <span class="checkbox-line">
+              <input type="checkbox" id="memory-relevance-filter-enabled" />
+              <span data-i18n="memoryRelevanceFilterToggle"
+                >Use memory relevance filter</span
+              >
+            </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="use-local-summarization" />
+              <span data-i18n="useLocalSummarization"
+                >Use Local Summarization (faster, no API cost)</span
+              >
+            </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="use-local-auto-title" />
+              <span data-i18n="useLocalAutoTitle"
+                >Use Local Auto-Title (faster, no API cost)</span
+              >
+            </span>
+            <div class="form-field">
+              <span data-i18n="writingInstructionsInjectionTiming"
+                >Writing Instructions Injection Timing</span
+              >
+              <select id="writing-instructions-injection-when">
+                <option value="always" data-i18n="always">Always</option>
+                <option value="every_other" data-i18n="everyOther">
+                  Every Other
+                </option>
+                <option value="every_second" data-i18n="everySecond">
+                  Every Second
+                </option>
+                <option value="every_third" data-i18n="everyThird">
+                  Every Third
+                </option>
+                <option value="every_fourth" data-i18n="everyFourth">
+                  Every Fourth
+                </option>
+              </select>
+            </div>
+          </div>
+            <div data-settings-group="shortcuts" class="settings-group">
+              <div class="form-field">
+                <span data-i18n="cancelGenerationShortcut"
+                  >Cancel Generation Shortcut</span
+                >
+                <input id="cancel-shortcut" type="text" data-i18n-placeholder="placeholderShortcutCancel" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
+                <input id="home-shortcut" type="text" data-i18n-placeholder="placeholderShortcutHome" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="newCharacterShortcut"
+                  >New Character Shortcut</span
+                >
+                <input
+                  id="new-character-shortcut"
+                  type="text"
+                  data-i18n-placeholder="placeholderShortcutNewChar"
+                />
+              </div>
+            </div>
+          <div data-settings-group="defaults" class="settings-group">
+            <div class="form-field">
+              <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
+              <select id="default-auto-title-provider">
+                <option value="openrouter" data-i18n="providerOpenRouter">
+                  OpenRouter
+                </option>
+                <option value="aihorde" data-i18n="providerAIHorde">
+                  AI Horde
+                </option>
+                <option value="lmstudio" data-i18n="providerLMStudio">
+                  LM Studio
+                </option>
+                <option value="groq" data-i18n="providerGroq">
+                  Groq
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="autoTitleModel">Auto-Title Model</span>
+              <select id="default-auto-title-model"></select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="autoTitleTemperature"
+                  >Auto-Title Temperature</span
+                >
+                <span id="default-auto-title-temp-value" class="muted"></span>
+              </div>
+              <input
+                id="default-auto-title-temp"
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value="0.25"
+              />
+            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="default-auto-title-stream" />
+              <span data-i18n="autoTitleStream">Auto-Title Stream</span>
+            </span>
+            <div class="form-field">
+              <span data-i18n="summaryProvider">Summary Provider</span>
+              <select id="default-summary-provider">
+                <option value="openrouter" data-i18n="providerOpenRouter">
+                  OpenRouter
+                </option>
+                <option value="aihorde" data-i18n="providerAIHorde">
+                  AI Horde
+                </option>
+                <option value="lmstudio" data-i18n="providerLMStudio">
+                  LM Studio
+                </option>
+                <option value="groq" data-i18n="providerGroq">
+                  Groq
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="summaryModel">Summary Model</span>
+              <select id="default-summary-model"></select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="summaryTemperature">Summary Temperature</span>
+                <span id="default-summary-temp-value" class="muted"></span>
+              </div>
+              <input
+                id="default-summary-temp"
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value="0.25"
+              />
+            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="default-summary-stream" />
+              <span data-i18n="summaryStream">Summary Stream</span>
+            </span>
+            <div class="form-field">
+              <span data-i18n="defaultAvatarScale"
+                >Default Avatar Scale (In Chat)</span
+              >
+              <select id="default-avatar-scale">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="defaultPersonaInjectionPlacement"
+                >Default Persona Injection Placement</span
+              >
+              <select id="default-persona-injection-placement">
+                <option value="none" data-i18n="personaInjectionNone">
+                  None
+                </option>
+                <option
+                  value="end_system_prompt"
+                  data-i18n="atEndCharacterPrompt"
+                >
+                  At End of Character Prompt
+                </option>
+                <option value="once" data-i18n="personaInjectionOnce">
+                  Once
+                </option>
+                <option value="end_messages" data-i18n="atEndOfMessages">
+                  At End of Messages
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
+              <select id="default-tts-provider">
+                <option value="kokoro" data-i18n="ttsProviderKokoro">
+                  Kokoro.js (local)
+                </option>
+                <option value="browser" data-i18n="ttsProviderBrowser">
+                  Browser (speechSynthesis)
+                </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="defaultTtsRate">Default TTS Rate</span>
+                <span id="default-tts-rate-value" class="muted"></span>
+              </div>
+              <input
+                id="default-tts-rate"
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value="1"
+              />
+            </div>
+            <div class="form-field">
+              <span data-i18n="defaultAutoTitleMinMessages">
+                Default min. messages for auto-title
+              </span>
+              <input
+                id="default-auto-title-min-messages"
+                type="number"
+                min="1"
+                max="50"
+                value="10"
+              />
+            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="default-include-ooc" />
+              <span data-i18n="defaultIncludeOocInCompletions"
+                >Include OOC messages in completions</span
+              >
+            </span>
+          </div>
         </div>
       </div>
     </div>
