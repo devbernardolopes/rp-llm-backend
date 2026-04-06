@@ -78,17 +78,23 @@ Modals and complex UI sections are organized into snippet files in `/snippets/` 
 **Adding a new non-tabbed modal with snippets:**
 
 1. **Create snippet file** in `/snippets/` (e.g., `snippets/shortcuts.html`)
+
 2. **Update index.html**: Replace modal-body content with placeholder:
+
    ```html
    <div id="mymodal-content" class="modal-body"></div>
    ```
+
 3. **Update app.js**: Add mapping to `SNIPPET_MAP`:
+
    ```js
    const SNIPPET_MAP = {
      "my-modal": ["mymodal.html"],
    };
    ```
+
 4. **Add modal-specific initialization** in `openModal()`:
+
    ```js
    loadSnippetsForModal(modalId).then(() => {
      if (modalId === "my-modal") {
@@ -103,11 +109,13 @@ Modals and complex UI sections are organized into snippet files in `/snippets/` 
    ```
 
 **Modal-specific initialization patterns:**
+
 - `setupModalTextareas(modal)` - for textareas with auto-expand/collapsible behavior
 - `markModalDirtyOnInput(modalId, selectors)` - for form elements that should enable Save/Apply buttons
 - `populateSettingsTabValues()` - for Settings modal to populate all form field values
 
 **Key points:**
+
 - Snippets load only once (cached via `data-snippets-loaded` attribute)
 - If snippet fails to load, modal still shows (console warning only)
 - Modal-specific initialization must happen AFTER snippets load (inside `.then()` callback)
@@ -143,7 +151,7 @@ The system supports multiple AI providers. Each provider requires:
    - Handle stop strings, temperature, and other parameters
    - Add routing in `callOpenRouter()` for the provider
 
-5. **Localization (locales/*.json)**:
+5. **Localization (locales/\*.json)**:
    - Add provider name and API key labels to all locale files
 
 #### Existing Providers
