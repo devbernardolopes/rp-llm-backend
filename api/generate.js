@@ -28,26 +28,10 @@ async function getBrowser() {
       });
 
       console.log('Session created:', session.id);
-      console.log('Session object keys:', Object.keys(session));
-      console.log('connectUrl:', session.connectUrl);
-
-      // Construct WebSocket URL manually if needed
-      let wsEndpoint = session.connectUrl;
-      
-      // If connectUrl doesn't include the session ID and apiKey, construct it
-      if (!wsEndpoint.includes('sessionId')) {
-        wsEndpoint = `wss://connect.steel.dev?apiKey=${apiKey}&sessionId=${session.id}`;
-      }
-      
-      // Ensure it uses wss://
-      if (wsEndpoint.startsWith('https://')) {
-        wsEndpoint = wsEndpoint.replace('https://', 'wss://');
-      }
-
-      console.log('WebSocket endpoint:', wsEndpoint);
+      console.log('websocketUrl:', session.websocketUrl);
 
       const browser = await puppeteer.connect({
-        browserWSEndpoint: wsEndpoint,
+        browserWSEndpoint: session.websocketUrl,
         defaultViewport: { width: 1280, height: 720 },
       });
 
