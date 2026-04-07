@@ -1196,6 +1196,21 @@ function setupEvents() {
       handleMemoryCommandFromInput(input, "/mem");
     });
   }
+  const imageCommandBtn = document.getElementById("image-command-btn");
+  if (imageCommandBtn) {
+    imageCommandBtn.addEventListener("click", () => {
+      const input = document.getElementById("user-input");
+      if (!input) return;
+      const currentValue = input.value.trim();
+      if (currentValue && !currentValue.startsWith("/img ")) {
+        input.value = `/img ${currentValue}`;
+      } else if (!currentValue) {
+        input.value = "/img ";
+      }
+      input.focus();
+      adjustUserInputElementHeight(input);
+    });
+  }
   if (document.getElementById("auto-tts-toggle-btn")) {
     document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
     document
@@ -3047,6 +3062,194 @@ function handleMemoryCommandFromInput(input, raw = "") {
     adjustUserInputElementHeight(input);
   });
   return true;
+}
+
+function parseImageCommandOptions(input) {
+  const result = { prompt: "", seed: -1, shape: "square", guidanceScale: 7.0 };
+
+  const seedMatch = input.match(/--seed\s+(\d+)/i);
+  if (seedMatch) {
+    result.seed = parseInt(seedMatch[1], 10);
+    input = input.replace(seedMatch[0], "");
+  }
+
+  const shapeMatch = input.match(/--shape\s+(portrait|square|landscape)/i);
+  if (shapeMatch) {
+    result.shape = shapeMatch[1].toLowerCase();
+    input = input.replace(shapeMatch[0], "");
+  }
+
+  const guidanceMatch = input.match(/--guidance\s+([\d.]+)/i);
+  if (guidanceMatch) {
+    result.guidanceScale = parseFloat(guidanceMatch[1]);
+    input = input.replace(guidanceMatch[0], "");
+  }
+
+  result.prompt = input.trim();
+  return result;
+}
+
+function formatTimestamp(date) {
+  const pad = (n) => n.toString().padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
+}
+
+async function handleImageCommand(prompt, options = {}) {
+  if (!currentThread || !currentCharacter) return;
+  if (!prompt.trim()) {
+    showToast("Please provide a prompt for the image", "warning");
+    return;
+  }
+
+  const input = document.getElementById("user-input");
+  const threadId = currentThread?.id;
+
+  if (threadId) {
+    addPromptCommandEntry(threadId, `/img ${prompt}`);
+  }
+
+  if (input) {
+    input.value = "";
+    adjustUserInputElementHeight(input);
+  }
+
+  const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
+  const userMsg = {
+    role: "user",
+    content: prompt,
+    createdAt: Date.now(),
+    senderName: currentPersona?.name || "You",
+    senderAvatar: currentPersona?.avatar || "",
+    senderPersonaId: currentPersona?.id || null,
+    personaColor: entryPersonaColor,
+    isImagePrompt: true,
+  };
+
+  const placeholderMsg = {
+    role: "assistant",
+    content: "",
+    createdAt: Date.now(),
+    streaming: true,
+    generating: true,
+  };
+
+  conversationHistory.push(userMsg);
+  conversationHistory.push(placeholderMsg);
+
+  if (currentThread) {
+    currentThread.messages = [...conversationHistory];
+    updateThreadMessageCount(currentThread.id, conversationHistory);
+  }
+
+  await persistCurrentThread();
+
+  const log = document.getElementById("chat-log");
+  const displayHistory = getFilteredConversationHistoryForThread();
+
+  const userRow = buildMessageRow(
+    userMsg,
+    conversationHistory.length - 2,
+    false,
+    displayHistory,
+  );
+  log.appendChild(userRow);
+
+  const placeholderRow = buildMessageRow(
+    placeholderMsg,
+    conversationHistory.length - 1,
+    true,
+    displayHistory,
+  );
+  log.appendChild(placeholderRow);
+
+  scrollChatToBottom();
+
+  try {
+    const result = await window.perchance.generateImage(prompt, options);
+
+    if (result.status !== "success") {
+      throw new Error(result.status || "Image generation failed");
+    }
+
+    const imageBuffer = await window.perchance.downloadImage(result.imageId);
+
+    const timestamp = formatTimestamp(new Date());
+    const filename = `tti-${timestamp}-${result.seed}.png`;
+
+    const assetId = await saveAsset({
+      name: filename,
+      type: "image",
+      data: imageBuffer,
+    });
+
+    const assistantMsg = {
+      role: "assistant",
+      content: prompt,
+      createdAt: Date.now(),
+      imageAssetId: assetId,
+      imageSeed: result.seed,
+      imagePrompt: prompt,
+    };
+
+    const placeholderIndex = conversationHistory.indexOf(placeholderMsg);
+    if (placeholderIndex >= 0) {
+      conversationHistory[placeholderIndex] = assistantMsg;
+    } else {
+      conversationHistory.push(assistantMsg);
+    }
+
+    if (currentThread) {
+      currentThread.messages = [...conversationHistory];
+      updateThreadMessageCount(currentThread.id, conversationHistory);
+    }
+
+    await persistCurrentThread();
+
+    const newDisplayHistory = getFilteredConversationHistoryForThread();
+    const newPlaceholderRow = buildMessageRow(
+      assistantMsg,
+      conversationHistory.length - 1,
+      false,
+      newDisplayHistory,
+    );
+
+    placeholderRow.replaceWith(newPlaceholderRow);
+
+    scrollChatToBottom();
+  } catch (err) {
+    console.error("Image generation error:", err);
+
+    const errorMsg = {
+      role: "assistant",
+      content: `Image generation failed: ${err.message}`,
+      createdAt: Date.now(),
+      generationError: err.message,
+    };
+
+    const placeholderIndex = conversationHistory.indexOf(placeholderMsg);
+    if (placeholderIndex >= 0) {
+      conversationHistory[placeholderIndex] = errorMsg;
+    }
+
+    if (currentThread) {
+      currentThread.messages = [...conversationHistory];
+      updateThreadMessageCount(currentThread.id, conversationHistory);
+    }
+
+    await persistCurrentThread();
+
+    const newDisplayHistory = getFilteredConversationHistoryForThread();
+    const newPlaceholderRow = buildMessageRow(
+      errorMsg,
+      conversationHistory.length - 1,
+      false,
+      newDisplayHistory,
+    );
+
+    placeholderRow.replaceWith(newPlaceholderRow);
+
+    showToast(`Image generation failed: ${err.message}`, "error");
+  }
 }
 
 function onInputKeyDown(e) {
@@ -15903,6 +16106,11 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     renderMessageContent(content, message);
   }
 
+  if (message.imageAssetId && !streaming) {
+    content.dataset.imageAssetId = String(message.imageAssetId);
+    content.dataset.imagePrompt = message.imagePrompt || "";
+  }
+
   block.append(header, content);
   applyPersonaColorToUserMessageBlock(block, message);
   row.append(avatar, block);
@@ -15984,6 +16192,34 @@ function renderMessageContent(contentEl, message) {
   }
   if (String(message.generationError || "").trim()) {
     contentEl.appendChild(buildGenerationErrorNotice(message.generationError));
+  }
+
+  if (message.imageAssetId) {
+    loadMessageImage(contentEl, message.imageAssetId, message.imagePrompt);
+  }
+}
+
+async function loadMessageImage(contentEl, assetId, imagePrompt) {
+  const existingContainer = contentEl.querySelector(".message-image-container");
+  if (existingContainer) return;
+
+  try {
+    const asset = await getAssetById(assetId);
+    if (asset) {
+      const imgContainer = document.createElement("div");
+      imgContainer.className = "message-image-container";
+      const img = document.createElement("img");
+      img.src = getAssetDataUrl(asset);
+      img.className = "message-image";
+      img.alt = imagePrompt || "Generated image";
+      img.addEventListener("click", () => {
+        openImagePreview(img.src);
+      });
+      imgContainer.appendChild(img);
+      contentEl.appendChild(imgContainer);
+    }
+  } catch (err) {
+    console.warn("Failed to load image asset:", err);
   }
 }
 
@@ -16296,6 +16532,13 @@ async function sendMessage(options = {}) {
   const rawInput = input.value;
   const text = rawInput.trim();
   if (handleMemoryCommandFromInput(input, text)) {
+    return;
+  }
+  const imgCommandMatch = text.match(/^\/img\s+(.+)$/i);
+  if (imgCommandMatch) {
+    const prompt = imgCommandMatch[1].trim();
+    const options = parseImageCommandOptions(prompt);
+    handleImageCommand(options.prompt, options);
     return;
   }
   const aiCommandMatch = text.match(/^\/ai(?:\s+(.*))?$/i);

@@ -686,5 +686,6 @@
   "placeholderFirstAssistantGen": "Appended only for the first assistant generation.",
   "placeholderTagsExample": "Roleplay, Female, Hero",
   "autoTitleStream": "Auto-Title Stream",
-  "summaryStream": "Summary Stream"
+  "summaryStream": "Summary Stream",
+  "imageCommandTitle": "Generate image"
 }

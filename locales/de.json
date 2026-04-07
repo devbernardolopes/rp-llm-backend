@@ -685,5 +685,6 @@
   "placeholderFirstAssistantGen": "Wird nur für die erste Assistenten-Generierung angehängt.",
   "placeholderTagsExample": "Rollenspiel, Weiblich, Held",
   "autoTitleStream": "Auto-Titel Stream",
-  "summaryStream": "Zusammenfassung Stream"
+  "summaryStream": "Zusammenfassung Stream",
+  "imageCommandTitle": "Bild generieren"
 }
