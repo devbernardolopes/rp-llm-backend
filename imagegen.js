@@ -124,11 +124,42 @@ export async function checkWebGpuSupport() {
   }
 }
 
+export async function generateWithPerchance(prompt, options = {}) {
+  const { width = 512, height = 768, seed = -1, guidanceScale = 7.5, negativePrompt = '' } = options;
+
+  const response = await fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt,
+      width,
+      height,
+      seed,
+      guidanceScale,
+      negativePrompt,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || `Generation failed: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return {
+    image: data.image,
+    seed: data.seed,
+    width: data.width,
+    height: data.height,
+  };
+}
+
 if (typeof window !== "undefined") {
   window.imagegen = {
     initGenerator,
     loadModelIfNeeded,
     generateImage: generateImageWithProgress,
+    generateWithPerchance,
     getLoadedModel,
     isModelReady,
     getModelList,
