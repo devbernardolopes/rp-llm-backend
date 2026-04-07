@@ -4667,7 +4667,9 @@ textarea {
   }
 
   .pane-overlay-toggle {
-    display: none;
+    right: -14px;
+    z-index: 110;
+    display: flex;
   }
 
   .chat-input-wrapper {
