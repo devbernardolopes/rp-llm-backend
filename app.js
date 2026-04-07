@@ -755,7 +755,9 @@ async function init() {
   updateCooldownPinnedToast();
   updateDocumentTitleWithUnread();
   handleMobilePaneAutoHide();
+  updateLeftPaneWidthVariable();
   window.addEventListener("resize", handleMobilePaneAutoHide);
+  window.addEventListener("resize", updateLeftPaneWidthVariable);
   if (state.cooldownToastTimerId) {
     window.clearInterval(state.cooldownToastTimerId);
   }
@@ -7546,6 +7548,23 @@ function handleMobilePaneAutoHide() {
     pane.classList.add("collapsed");
     shell.classList.add("pane-collapsed");
   }
+
+  updateLeftPaneWidthVariable();
+}
+
+function updateLeftPaneWidthVariable() {
+  const shell = document.getElementById("app-shell");
+  if (!shell) return;
+
+  const pane = document.getElementById("left-pane");
+  const shouldOffset =
+    window.innerWidth >= MOBILE_BREAKPOINT &&
+    !(pane && pane.classList.contains("mobile-open"));
+  const width = shouldOffset && pane ? pane.getBoundingClientRect().width : 0;
+  shell.style.setProperty(
+    "--left-pane-width",
+    `${Math.max(0, Math.round(width))}px`,
+  );
 }
 
 function toggleMobilePane() {
@@ -7614,6 +7633,7 @@ function togglePane() {
   }
 
   updateCarouselForPaneState();
+  updateLeftPaneWidthVariable();
   setTimeout(constrainModel3DPanelPosition, 250);
 }
 

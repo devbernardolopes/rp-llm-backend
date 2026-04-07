@@ -4723,7 +4723,7 @@ textarea {
 
 @media (max-height: 520px) and (max-width: 900px) {
   .chat-input-wrapper {
-    left: calc(var(--left-pane-width, 360px) + env(safe-area-inset-left, 12px));
+    left: calc(var(--left-pane-width, 0px) + env(safe-area-inset-left, 12px));
     right: env(safe-area-inset-right, 12px);
     bottom: calc(env(safe-area-inset-bottom, 12px) + 6px);
     padding-bottom: 0;
