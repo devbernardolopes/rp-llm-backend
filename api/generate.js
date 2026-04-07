@@ -1,5 +1,5 @@
-const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 let browserPromise = null;
 
@@ -34,7 +34,7 @@ async function getBrowser() {
   return browserPromise;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
@@ -202,4 +202,4 @@ module.exports = async function handler(req, res) {
       }
     }
   }
-};
+}
