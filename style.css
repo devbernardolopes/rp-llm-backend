@@ -4670,6 +4670,43 @@ textarea {
   }
 }
 
+@media (max-height: 520px) and (max-width: 900px) {
+  .chat-input-wrapper {
+    left: env(safe-area-inset-left, 12px);
+    right: env(safe-area-inset-right, 12px);
+    bottom: calc(env(safe-area-inset-bottom, 12px) + 6px);
+    padding-bottom: 0;
+    position: fixed;
+    max-width: calc(100% - 24px);
+  }
+
+  #chat-view {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  }
+
+  .chat-log {
+    padding-bottom: calc(200px + env(safe-area-inset-bottom));
+  }
+
+  .input-row {
+    gap: 6px;
+  }
+
+  .input-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input-footer-right {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .input-footer-right #send-btn {
+    margin-left: auto;
+  }
+}
+
 .kokoro-download-row {
   display: flex;
   align-items: center;
