@@ -1,35 +1,9 @@
 import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
+import Steel from 'steel-sdk';
 
 export const maxDuration = 120;
 
 let sessionPromise = null;
-
-async function createSteelSession() {
-  const apiKey = process.env.STEEL_API_KEY;
-  if (!apiKey) {
-    throw new Error('STEEL_API_KEY not configured');
-  }
-
-  const response = await fetch('https://api.steel.dev/v1/sessions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      timeout: 300,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to create Steel session: ${response.status} ${errorText}`);
-  }
-
-  const data = await response.json();
-  return data;
-}
 
 async function getBrowser() {
   const isVercel = process.env.VERCEL === '1';
@@ -44,19 +18,25 @@ async function getBrowser() {
 
     sessionPromise = (async () => {
       console.log('Creating Steel session...');
-      const session = await createSteelSession();
-      console.log('Session created:', session.id);
 
-      const wsUrl = session.connectUrl;
-      console.log('Connecting to Steel browser...');
+      const client = new Steel({
+        steelAPIKey: apiKey,
+      });
+
+      const session = await client.sessions.create({
+        timeout: 300000, // 5 minutes
+      });
+
+      console.log('Session created:', session.id);
+      console.log('Session viewer:', session.sessionViewerUrl);
 
       const browser = await puppeteer.connect({
-        browserWSEndpoint: wsUrl,
+        browserWSEndpoint: session.connectUrl,
         defaultViewport: { width: 1280, height: 720 },
       });
 
       console.log('Connected to Steel browser');
-      return browser;
+      return { browser, session, client };
     })();
 
     return sessionPromise;
@@ -68,12 +48,14 @@ async function getBrowser() {
         ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
         : '/usr/bin/google-chrome';
 
-    return puppeteer.launch({
+    const browser = await puppeteer.launch({
       executablePath,
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
       defaultViewport: { width: 1280, height: 720 },
     });
+
+    return { browser, session: null, client: null };
   }
 }
 
@@ -86,7 +68,7 @@ export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   let page = null;
-  let browser = null;
+  let browserData = null;
 
   try {
     const { prompt, width = 512, height = 768, seed = -1, guidanceScale = 7.5, negativePrompt = '' } = req.body;
@@ -100,7 +82,8 @@ export default async function handler(req, res) {
     const actualSeed = seed === -1 ? Math.floor(Math.random() * 2 ** 31) : seed;
     const maxRetries = 5;
 
-    browser = await getBrowser();
+    browserData = await getBrowser();
+    const { browser, session, client } = browserData;
     page = await browser.newPage();
 
     let userKey = null;
@@ -209,6 +192,17 @@ export default async function handler(req, res) {
         const base64Data = base64Image.split(',')[1];
 
         await page.close();
+
+        // Release Steel session if using Steel
+        if (session && client) {
+          try {
+            await client.sessions.release(session.id);
+            console.log('Session released');
+          } catch (e) {
+            console.error('Error releasing session:', e);
+          }
+          sessionPromise = null;
+        }
 
         res.status(200).json({
           image: base64Data,
