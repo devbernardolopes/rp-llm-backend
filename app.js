@@ -1189,6 +1189,14 @@ function setupEvents() {
   document
     .getElementById("pane-overlay-toggle")
     .addEventListener("click", togglePane);
+  const mobilePaneToggle = document.getElementById("mobile-pane-toggle");
+  if (mobilePaneToggle) {
+    mobilePaneToggle.addEventListener("click", toggleMobilePane);
+  }
+  const mobilePaneBackdrop = document.getElementById("mobile-pane-backdrop");
+  if (mobilePaneBackdrop) {
+    mobilePaneBackdrop.addEventListener("click", closeMobilePane);
+  }
   const memoryCommandBtn = document.getElementById("memory-command-btn");
   if (memoryCommandBtn) {
     memoryCommandBtn.innerHTML = ICONS.brain;
@@ -7521,13 +7529,54 @@ const MOBILE_BREAKPOINT = 600;
 function handleMobilePaneAutoHide() {
   const pane = document.getElementById("left-pane");
   const shell = document.getElementById("app-shell");
+  const mobileToggle = document.getElementById("mobile-pane-toggle");
   if (!pane || !shell) return;
 
   const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
 
+  if (mobileToggle) {
+    mobileToggle.classList.toggle("hidden", !isMobile);
+    if (isMobile) {
+      pane.classList.remove("mobile-open");
+      mobileToggle.classList.remove("open");
+    }
+  }
+
   if (isMobile) {
     pane.classList.add("collapsed");
     shell.classList.add("pane-collapsed");
+  }
+}
+
+function toggleMobilePane() {
+  const pane = document.getElementById("left-pane");
+  const mobileToggle = document.getElementById("mobile-pane-toggle");
+  const backdrop = document.getElementById("mobile-pane-backdrop");
+  if (!pane) return;
+
+  pane.classList.toggle("mobile-open");
+  const isOpen = pane.classList.contains("mobile-open");
+  
+  if (mobileToggle) {
+    mobileToggle.classList.toggle("open", isOpen);
+  }
+  if (backdrop) {
+    backdrop.classList.toggle("hidden", !isOpen);
+  }
+}
+
+function closeMobilePane() {
+  const pane = document.getElementById("left-pane");
+  const mobileToggle = document.getElementById("mobile-pane-toggle");
+  const backdrop = document.getElementById("mobile-pane-backdrop");
+  if (!pane) return;
+
+  pane.classList.remove("mobile-open");
+  if (mobileToggle) {
+    mobileToggle.classList.remove("open");
+  }
+  if (backdrop) {
+    backdrop.classList.add("hidden");
   }
 }
 

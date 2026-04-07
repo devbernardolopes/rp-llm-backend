@@ -187,7 +187,19 @@
         </div>
       </aside>
 
+      <div id="mobile-pane-backdrop" class="mobile-pane-backdrop hidden"></div>
       <main id="main-view" class="view active">
+        <button
+          id="mobile-pane-toggle"
+          class="mobile-pane-toggle hidden"
+          type="button"
+          data-i18n-title="togglePanelTitle"
+          aria-label="Toggle panel"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
         <header class="main-header">
           <div id="home-model-pill" class="model-pill" data-i18n="modelPill">
             Model: -
