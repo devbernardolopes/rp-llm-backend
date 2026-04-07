@@ -25,6 +25,7 @@ async function getBrowser() {
 
       const session = await client.sessions.create({
         timeout: 300000, // 5 minutes
+        solveCaptcha: true, // Enable auto captcha solving
       });
 
       console.log('Session created:', session.id);
