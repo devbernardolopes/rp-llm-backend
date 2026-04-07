@@ -754,6 +754,8 @@ async function init() {
   updateScrollBottomButtonVisibility();
   updateCooldownPinnedToast();
   updateDocumentTitleWithUnread();
+  handleMobilePaneAutoHide();
+  window.addEventListener("resize", handleMobilePaneAutoHide);
   if (state.cooldownToastTimerId) {
     window.clearInterval(state.cooldownToastTimerId);
   }
@@ -7512,6 +7514,21 @@ function iconButton(iconKey, ariaLabel, handler) {
   btn.setAttribute("title", ariaLabel);
   btn.addEventListener("click", handler);
   return btn;
+}
+
+const MOBILE_BREAKPOINT = 600;
+
+function handleMobilePaneAutoHide() {
+  const pane = document.getElementById("left-pane");
+  const shell = document.getElementById("app-shell");
+  if (!pane || !shell) return;
+
+  const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+
+  if (isMobile) {
+    pane.classList.add("collapsed");
+    shell.classList.add("pane-collapsed");
+  }
 }
 
 function togglePane() {

@@ -35,6 +35,7 @@ body {
   font-family: "Segoe UI", Tahoma, sans-serif;
   background: radial-gradient(circle at top, #1a2538, var(--bg) 45%);
   color: var(--text);
+  height: 100dvh;
   height: 100vh;
   overflow: hidden;
 }
@@ -43,6 +44,7 @@ body {
   --left-pane-width: 360px;
   display: grid;
   grid-template-columns: 360px 1fr;
+  height: 100dvh;
   height: 100vh;
   min-height: 0;
   transition: grid-template-columns 0.2s ease;
@@ -4519,6 +4521,7 @@ textarea {
     bottom: env(safe-area-inset-bottom, 12px);
     z-index: 5;
     margin-top: 0;
+    max-height: calc(100dvh - 120px);
     max-height: calc(100vh - 120px);
     overflow-y: auto;
     padding-bottom: 80px;
@@ -4596,6 +4599,24 @@ textarea {
     height: 28px;
     padding: 0 8px;
     font-size: 11px;
+  }
+}
+
+@media (max-width: 600px) {
+  #left-pane {
+    display: none;
+  }
+
+  #app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  #app-shell.pane-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .pane-overlay-toggle {
+    display: none;
   }
 }
 
