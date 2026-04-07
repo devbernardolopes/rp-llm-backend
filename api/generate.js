@@ -1,5 +1,10 @@
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const maxDuration = 120;
 
@@ -10,27 +15,46 @@ async function getBrowser() {
 
   browserPromise = (async () => {
     const isVercel = process.env.VERCEL === '1';
-    let executablePath;
-    let args;
 
     if (isVercel) {
-      executablePath = await chromium.executablePath();
-      args = chromium.args;
+      // Set runtime fallback (primary should be in Vercel Dashboard)
+      if (!process.env.AWS_LAMBDA_JS_RUNTIME) {
+        process.env.AWS_LAMBDA_JS_RUNTIME = 'nodejs22.x';
+      }
+
+      // Disable graphics mode to prevent browser freezing
+      if (typeof chromium.setGraphicsMode === 'function') {
+        chromium.setGraphicsMode(false);
+      }
+
+      // Get executable path and set library path
+      const executablePath = await chromium.executablePath();
+      const execDir = path.dirname(executablePath);
+
+      // CRITICAL: Set LD_LIBRARY_PATH so Chromium can find libraries
+      process.env.LD_LIBRARY_PATH = execDir;
+
+      return puppeteer.launch({
+        executablePath,
+        headless: chromium.headless,
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+      });
     } else {
-      executablePath = process.platform === 'win32'
+      // Local development
+      const executablePath = process.platform === 'win32'
         ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
         : process.platform === 'darwin'
           ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
           : '/usr/bin/google-chrome';
-      args = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'];
-    }
 
-    return puppeteer.launch({
-      executablePath,
-      headless: chromium.headless,
-      args,
-      defaultViewport: chromium.defaultViewport,
-    });
+      return puppeteer.launch({
+        executablePath,
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+        defaultViewport: { width: 1280, height: 720 },
+      });
+    }
   })();
 
   return browserPromise;
