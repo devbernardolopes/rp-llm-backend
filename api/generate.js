@@ -30,8 +30,15 @@ async function getBrowser() {
       console.log('Session created:', session.id);
       console.log('websocketUrl:', session.websocketUrl);
 
+      // Add apiKey to WebSocket URL (required for authentication)
+      const wsUrl = session.websocketUrl.includes('?')
+        ? `${session.websocketUrl}&apiKey=${apiKey}`
+        : `${session.websocketUrl}?apiKey=${apiKey}`;
+
+      console.log('WebSocket URL with auth:', wsUrl);
+
       const browser = await puppeteer.connect({
-        browserWSEndpoint: session.websocketUrl,
+        browserWSEndpoint: wsUrl,
         defaultViewport: { width: 1280, height: 720 },
       });
 
