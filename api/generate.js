@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
+import chromium from '@sparticuz/chromium-min';
 
 let browserPromise = null;
 
@@ -8,11 +8,20 @@ async function getBrowser() {
 
   browserPromise = (async () => {
     const isVercel = process.env.VERCEL === '1';
-    let executablePath, args;
+    let executablePath;
+    let args;
 
     if (isVercel) {
       executablePath = await chromium.executablePath();
-      args = chromium.args.filter(arg => !arg.includes('--no-sandbox'));
+      args = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--disable-web-security',
+        '--single-process',
+      ];
     } else {
       executablePath = process.platform === 'win32'
         ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
@@ -24,10 +33,11 @@ async function getBrowser() {
 
     return puppeteer.launch({
       executablePath,
-      headless: true,
+      headless: chromium.headless,
       args,
       defaultViewport: { width: 1280, height: 720 },
       ignoreDefaultArgs: ['--disable-extensions'],
+      dumpIO: false,
     });
   })();
 
