@@ -1,63 +1,80 @@
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export const maxDuration = 120;
 
-let browserPromise = null;
+let sessionPromise = null;
+
+async function createSteelSession() {
+  const apiKey = process.env.STEEL_API_KEY;
+  if (!apiKey) {
+    throw new Error('STEEL_API_KEY not configured');
+  }
+
+  const response = await fetch('https://api.steel.dev/v1/sessions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      timeout: 300,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create Steel session: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data;
+}
 
 async function getBrowser() {
-  if (browserPromise) return browserPromise;
+  const isVercel = process.env.VERCEL === '1';
 
-  browserPromise = (async () => {
-    const isVercel = process.env.VERCEL === '1';
+  if (isVercel) {
+    const apiKey = process.env.STEEL_API_KEY;
+    if (!apiKey) {
+      throw new Error('STEEL_API_KEY environment variable not set');
+    }
 
-    if (isVercel) {
-      // Set runtime fallback (primary should be in Vercel Dashboard)
-      if (!process.env.AWS_LAMBDA_JS_RUNTIME) {
-        process.env.AWS_LAMBDA_JS_RUNTIME = 'nodejs22.x';
-      }
+    if (sessionPromise) return sessionPromise;
 
-      // Disable graphics mode to prevent browser freezing
-      if (typeof chromium.setGraphicsMode === 'function') {
-        chromium.setGraphicsMode(false);
-      }
+    sessionPromise = (async () => {
+      console.log('Creating Steel session...');
+      const session = await createSteelSession();
+      console.log('Session created:', session.id);
 
-      // Get executable path and set library path
-      const executablePath = await chromium.executablePath();
-      const execDir = path.dirname(executablePath);
+      const wsUrl = session.connectUrl;
+      console.log('Connecting to Steel browser...');
 
-      // CRITICAL: Set LD_LIBRARY_PATH so Chromium can find libraries
-      process.env.LD_LIBRARY_PATH = execDir;
-
-      return puppeteer.launch({
-        executablePath,
-        headless: chromium.headless,
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-      });
-    } else {
-      // Local development
-      const executablePath = process.platform === 'win32'
-        ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-        : process.platform === 'darwin'
-          ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-          : '/usr/bin/google-chrome';
-
-      return puppeteer.launch({
-        executablePath,
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+      const browser = await puppeteer.connect({
+        browserWSEndpoint: wsUrl,
         defaultViewport: { width: 1280, height: 720 },
       });
-    }
-  })();
 
-  return browserPromise;
+      console.log('Connected to Steel browser');
+      return browser;
+    })();
+
+    return sessionPromise;
+  } else {
+    // Local development - use local Chrome
+    const executablePath = process.platform === 'win32'
+      ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+      : process.platform === 'darwin'
+        ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+        : '/usr/bin/google-chrome';
+
+    return puppeteer.launch({
+      executablePath,
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+      defaultViewport: { width: 1280, height: 720 },
+    });
+  }
 }
 
 export default async function handler(req, res) {
@@ -69,6 +86,7 @@ export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   let page = null;
+  let browser = null;
 
   try {
     const { prompt, width = 512, height = 768, seed = -1, guidanceScale = 7.5, negativePrompt = '' } = req.body;
@@ -82,7 +100,7 @@ export default async function handler(req, res) {
     const actualSeed = seed === -1 ? Math.floor(Math.random() * 2 ** 31) : seed;
     const maxRetries = 5;
 
-    const browser = await getBrowser();
+    browser = await getBrowser();
     page = await browser.newPage();
 
     let userKey = null;

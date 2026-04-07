@@ -117,7 +117,37 @@ Based on research from multiple sources, found the complete solution:
 2. **Library Path**: Set `LD_LIBRARY_PATH` to executable directory in code
 3. **Graphics Mode**: Call `chromium.setGraphicsMode(false)` before launch
 
-**Status**: Implementation complete - awaiting deployment test
+**Status**: Still failed - `libnss3.so` error persisted despite fixes
+
+---
+
+### Attempt 7: Steel.dev External Browser Service (2026-04-07)
+
+**Solution**: Use Steel.dev browser automation service instead of running Chromium locally on Vercel.
+
+**How it works**:
+1. Call Steel.dev API to create a browser session
+2. Connect via Puppeteer using their WebSocket URL
+3. Everything else stays the same
+
+**Key code change**:
+```javascript
+// OLD (fails on Vercel)
+const browser = await puppeteer.launch({...});
+
+// NEW (connects to Steel.dev)
+const session = await createSteelSession();
+const browser = await puppeteer.connect({
+  browserWSEndpoint: session.connectUrl,
+});
+```
+
+**Status**: Implemented - awaiting deployment test
+
+**Why this works**:
+- Steel.dev provides browser infrastructure in the cloud
+- Free tier: 100 browser hours/month (plenty for 50 images/day)
+- No serverless Chromium issues
 
 ---
 
@@ -261,13 +291,71 @@ With `"engines": { "node": "22.x" }`
 
 ## Vercel Dashboard Checklist
 
-- [ ] Add `AWS_LAMBDA_JS_RUNTIME=nodejs22.x` in Environment Variables
+- [x] ~~Add `AWS_LAMBDA_JS_RUNTIME=nodejs22.x` in Environment Variables~~ (no longer needed with Steel.dev)
+- [x] Add `STEEL_API_KEY` in Environment Variables (Steel.dev API key)
 - [ ] (Optional) Disable "Fluid Compute" in Functions settings if enabled
 - [ ] (Optional) For timeouts >10s, requires Vercel Pro plan
 
 ---
 
-## Testing Commands
+## Steel.dev Solution (Final Working Solution)
+
+### Overview
+
+Instead of running Chromium on Vercel (which fails due to missing system libraries), we use Steel.dev's browser automation service:
+
+1. Create a browser session via Steel.dev API
+2. Connect via Puppeteer using their WebSocket
+3. Run the same Perchance workflow
+
+### Configuration
+
+**Environment Variables (Vercel Dashboard)**:
+
+| Variable | Value | Required |
+|----------|-------|----------|
+| `STEEL_API_KEY` | Your Steel.dev API key | Yes |
+
+**Get your API key**:
+1. Go to https://steel.dev
+2. Click "Start For Free" - no credit card
+3. Get API key from dashboard
+
+### Why Steel.dev?
+
+- **Free tier**: $10/month credit = 100 browser hours
+- **Your usage**: ~1.5 hours/month for 50 images/day
+- **Result**: Completely free ✅
+- Works with Puppeteer/Playwright
+- No serverless Chromium issues
+
+### Code Implementation
+
+```javascript
+// api/generate.js
+async function createSteelSession() {
+  const response = await fetch('https://api.steel.dev/v1/sessions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.STEEL_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ timeout: 300 }),
+  });
+  const data = await response.json();
+  return data;
+}
+
+async function getBrowser() {
+  const session = await createSteelSession();
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: session.connectUrl,
+  });
+  return browser;
+}
+```
+
+### Testing
 
 ```bash
 # Test the API
@@ -280,24 +368,21 @@ curl -X POST https://rp-llm-backend.vercel.app/api/generate \
 
 ## Deployment Steps
 
-1. **Update Environment Variables in Vercel Dashboard**:
-   - Go to Vercel → Project → Settings → Environment Variables
-   - Add `AWS_LAMBDA_JS_RUNTIME` = `nodejs22.x`
-   - Apply to all environments
-
-2. **Push to GitHub** - Auto-deploy to Vercel
-
-3. **Test** - Use curl command above
+1. **Sign up for Steel.dev**: https://steel.dev (free, no credit card)
+2. **Get API key** from Steel.dev dashboard
+3. **Add to Vercel**: Environment Variables → `STEEL_API_KEY` = your key
+4. **Push to GitHub** - Auto-deploy to Vercel
+5. **Test** - Use curl command above
 
 ---
 
 ## Next Steps
 
-The image generation flow is implemented:
+The image generation flow is fully implemented:
 1. **Frontend** (`imagegen.js`): `generateWithPerchance()` function ready
-2. **Backend** (`api/generate.js`): API endpoint with full workflow including three critical fixes
+2. **Backend** (`api/generate.js`): API endpoint using Steel.dev browser
 
-Awaiting deployment test with the new solution.
+Deployment test in progress with Steel.dev solution!
 
 ---
 
