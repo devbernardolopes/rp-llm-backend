@@ -3065,7 +3065,7 @@ function handleMemoryCommandFromInput(input, raw = "") {
 }
 
 function parseImageCommandOptions(input) {
-  const result = { prompt: "", seed: -1, shape: "square", guidanceScale: 7.0 };
+  const result = { prompt: "", seed: -1, model: "sd-turbo" };
 
   const seedMatch = input.match(/--seed\s+(\d+)/i);
   if (seedMatch) {
@@ -3073,16 +3073,10 @@ function parseImageCommandOptions(input) {
     input = input.replace(seedMatch[0], "");
   }
 
-  const shapeMatch = input.match(/--shape\s+(portrait|square|landscape)/i);
-  if (shapeMatch) {
-    result.shape = shapeMatch[1].toLowerCase();
-    input = input.replace(shapeMatch[0], "");
-  }
-
-  const guidanceMatch = input.match(/--guidance\s+([\d.]+)/i);
-  if (guidanceMatch) {
-    result.guidanceScale = parseFloat(guidanceMatch[1]);
-    input = input.replace(guidanceMatch[0], "");
+  const modelMatch = input.match(/--model\s+(sd-turbo|janus-pro-1b)/i);
+  if (modelMatch) {
+    result.model = modelMatch[1].toLowerCase();
+    input = input.replace(modelMatch[0], "");
   }
 
   result.prompt = input.trim();
@@ -3164,14 +3158,47 @@ async function handleImageCommand(prompt, options = {}) {
 
   scrollChatToBottom();
 
-  try {
-    const result = await window.perchance.generateImage(prompt, options);
+  let isFirstLoad = false;
 
-    if (result.status !== "success") {
-      throw new Error(result.status || "Image generation failed");
+  try {
+    isFirstLoad = !window.imagegen.isModelReady();
+
+    if (isFirstLoad) {
+      const loadingMsg = t("imageLoadingModel") || "Loading AI model...";
+      placeholderMsg.content = `${loadingMsg} (${t("imageFirstLoadNote") || "first use: ~500MB download"})`;
+      placeholderMsg.generationStatus = "image_loading_model";
+      const progressRow = buildMessageRow(
+        placeholderMsg,
+        conversationHistory.length - 1,
+        true,
+        displayHistory,
+      );
+      placeholderRow.replaceWith(progressRow);
+      scrollChatToBottom();
     }
 
-    const imageBuffer = await window.perchance.downloadImage(result.imageId);
+    const result = await window.imagegen.generateImage(prompt, options, (progress) => {
+      if (progress.phase === "downloading") {
+        const pct = Math.round(progress.pct || 0);
+        placeholderMsg.content = `${t("imageDownloading") || "Downloading model..."} ${pct}%`;
+        placeholderMsg.generationStatus = "image_downloading";
+      } else if (progress.phase === "generating") {
+        const pct = Math.round(progress.pct || 0);
+        placeholderMsg.content = `${t("imageGenerating") || "Generating image..."} ${pct}%`;
+        placeholderMsg.generationStatus = "image_generating";
+      }
+
+      const liveRow = log.querySelector('.chat-row[data-streaming="1"]');
+      if (liveRow) {
+        const contentEl = liveRow.querySelector(".message-content");
+        if (contentEl) {
+          contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(placeholderMsg.content)}`;
+        }
+      }
+    });
+
+    const arrayBuffer = await result.blob.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
 
     const timestamp = formatTimestamp(new Date());
     const filename = `tti-${timestamp}-${result.seed}.png`;

@@ -687,5 +687,9 @@
   "placeholderTagsExample": "Roleplay, Female, Hero",
   "autoTitleStream": "Auto-Title Stream",
   "summaryStream": "Summary Stream",
-  "imageCommandTitle": "Generate image"
+  "imageCommandTitle": "Generate image",
+  "imageLoadingModel": "Loading AI model...",
+  "imageFirstLoadNote": "first use: ~500MB download",
+  "imageDownloading": "Downloading model...",
+  "imageGenerating": "Generating image..."
 }

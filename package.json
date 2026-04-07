@@ -13,7 +13,9 @@
     "kokoro-js": "^1.2.1",
     "markdown-it": "^14.1.1",
     "num-words": "^1.2.3",
+    "onnxruntime-web": "^1.18.0",
     "playwright": "^1.59.1",
-    "sentiment": "^5.0.2"
+    "sentiment": "^5.0.2",
+    "web-txt2img": "^0.3.1"
   }
 }

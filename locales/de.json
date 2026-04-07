@@ -686,5 +686,9 @@
   "placeholderTagsExample": "Rollenspiel, Weiblich, Held",
   "autoTitleStream": "Auto-Titel Stream",
   "summaryStream": "Zusammenfassung Stream",
-  "imageCommandTitle": "Bild generieren"
+  "imageCommandTitle": "Bild generieren",
+  "imageLoadingModel": "KI-Modell wird geladen...",
+  "imageFirstLoadNote": "erste Verwendung: ~500MB Download",
+  "imageDownloading": "Modell wird heruntergeladen...",
+  "imageGenerating": "Bild wird generiert..."
 }

@@ -686,5 +686,9 @@
   "placeholderTagsExample": "Roleplay, Femmina, Eroe",
   "autoTitleStream": "Auto-Titolo Stream",
   "summaryStream": "Riepilogo Stream",
-  "imageCommandTitle": "Genera immagine"
+  "imageCommandTitle": "Genera immagine",
+  "imageLoadingModel": "Caricamento modello IA...",
+  "imageFirstLoadNote": "primo utilizzo: ~500MB download",
+  "imageDownloading": "Download modello...",
+  "imageGenerating": "Generazione immagine..."
 }
