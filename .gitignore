@@ -1,5 +1,6 @@
 .env
 node_modules/
+dist/
 test/
 _old-src
 assets/openrouter
