@@ -1,33 +1,66 @@
-import { NextResponse } from 'next/server';
-import { getBrowser } from '../../../lib/browser';
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 
-export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+let browserPromise = null;
 
-export async function POST(request) {
-  let browser = null;
+async function getBrowser() {
+  if (browserPromise) return browserPromise;
+
+  browserPromise = (async () => {
+    const isVercel = process.env.VERCEL === '1';
+    let executablePath, args;
+
+    if (isVercel) {
+      executablePath = await chromium.executablePath();
+      args = chromium.args.filter(arg => !arg.includes('--no-sandbox'));
+    } else {
+      executablePath = process.platform === 'win32'
+        ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+        : process.platform === 'darwin'
+          ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+          : '/usr/bin/google-chrome';
+      args = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'];
+    }
+
+    return puppeteer.launch({
+      executablePath,
+      headless: true,
+      args,
+      defaultViewport: { width: 1280, height: 720 },
+      ignoreDefaultArgs: ['--disable-extensions'],
+    });
+  })();
+
+  return browserPromise;
+}
+
+module.exports = async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  res.setHeader('Content-Type', 'application/json');
+
   let page = null;
 
   try {
-    const body = await request.json();
-    const { prompt, width = 512, height = 768, seed = -1, guidanceScale = 7.5, negativePrompt = '' } = body;
+    const { prompt, width = 512, height = 768, seed = -1, guidanceScale = 7.5, negativePrompt = '' } = req.body;
 
     if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
-      return NextResponse.json(
-        { error: 'Prompt is required' },
-        { status: 400 }
-      );
+      res.status(400).json({ error: 'Prompt is required' });
+      return;
     }
 
     const resolution = `${width}x${height}`;
     const actualSeed = seed === -1 ? Math.floor(Math.random() * 2 ** 31) : seed;
+    const maxRetries = 5;
 
-    browser = await getBrowser();
+    const browser = await getBrowser();
     page = await browser.newPage();
 
     let userKey = null;
     let adAccessCode = '';
-    const maxRetries = 5;
 
     for (let retryCount = 1; retryCount <= maxRetries; retryCount++) {
       if (!userKey) {
@@ -45,9 +78,9 @@ export async function POST(request) {
 
         if (verifyData.status === 'success' || verifyData.status === 'already_verified') {
           userKey = verifyData.userKey;
-        } else if (verifyData.status === 'captcha_required') {
+        } else if (verifyData.status === 'captcha_required' || verifyData.status === 'need_verification') {
           await page.goto('https://image-generation.perchance.org/embed', { waitUntil: 'networkidle0', timeout: 60000 });
-          
+
           const token = await page.evaluate(() => {
             return new Promise((resolve) => {
               if (window.turnstile) {
@@ -78,7 +111,7 @@ export async function POST(request) {
         }
       }
 
-      const generateUrl = `https://image-generation.perchance.org/api/generate?` + new URLSearchParams({
+      const generateUrl = 'https://image-generation.perchance.org/api/generate?' + new URLSearchParams({
         prompt: prompt,
         seed: actualSeed.toString(),
         resolution,
@@ -125,23 +158,21 @@ export async function POST(request) {
         });
 
         if (!base64Image) {
-          return NextResponse.json(
-            { error: 'Failed to extract image from page' },
-            { status: 500 }
-          );
+          res.status(500).json({ error: 'Failed to extract image from page' });
+          return;
         }
 
         const base64Data = base64Image.split(',')[1];
 
         await page.close();
-        page = null;
 
-        return NextResponse.json({
+        res.status(200).json({
           image: base64Data,
           seed: actualSeed,
           width,
           height,
         });
+        return;
       } else if (status === 'invalid_ad_access_code') {
         const accessCodeUrl = `https://perchance.org/api/getAccessCodeForAdPoweredStuff?__cacheBust=${Math.random()}`;
         await page.goto(accessCodeUrl, { waitUntil: 'networkidle0', timeout: 30000 });
@@ -152,29 +183,23 @@ export async function POST(request) {
         }
         await new Promise(resolve => setTimeout(resolve, 3000));
       } else {
-        return NextResponse.json(
-          { error: `Generation failed: ${status}`, retryCount },
-          { status: 500 }
-        );
+        res.status(500).json({ error: `Generation failed: ${status}`, retryCount });
+        return;
       }
     }
 
-    return NextResponse.json(
-      { error: 'Max retries exceeded' },
-      { status: 500 }
-    );
+    res.status(500).json({ error: 'Max retries exceeded' });
 
   } catch (error) {
     console.error('Image generation error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Image generation failed' },
-      { status: 500 }
-    );
+    res.status(500).json({ error: error.message || 'Image generation failed' });
   } finally {
     if (page) {
       try {
         await page.close();
-      } catch {}
+      } catch (e) {
+        // ignore close error
+      }
     }
   }
-}
+};
