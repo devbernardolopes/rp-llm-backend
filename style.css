@@ -34,6 +34,7 @@
   --bot-message-header-color: var(--muted);
   --message-border-radius: 10px;
   --message-padding: 8px 10px;
+  --message-font-size: 1rem;
   --avatar-bg: #253147;
   --avatar-border-radius: 8px;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
@@ -2390,6 +2391,7 @@ textarea {
 }
 
 .message-content {
+  font-size: var(--message-font-size);
   line-height: 1.62;
   white-space: pre-wrap;
   word-break: break-word;

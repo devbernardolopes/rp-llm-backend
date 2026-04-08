@@ -508,6 +508,7 @@
   "paginationPageAria": "Ir a la página {page}",
   "memoryCommandButtonTitle": "Comando de memoria",
   "crossWindowSync": "Sincronizar hilos entre pestañas",
+  "messageBubbleFontSize": "Tamaño de fuente de burbuja de mensaje",
   "threadTintColorTitle": "Color de la tarjeta del hilo (Mayús + Clic izquierdo = restablecer)",
   "pinCharacter": "Fijar",
   "unpinCharacter": "Desfijar",

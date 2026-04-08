@@ -85,6 +85,7 @@ const DEFAULT_SETTINGS = {
   unreadSoundEnabled: true,
   oocSystemAvatar: "",
   crossWindowSyncEnabled: true,
+  messageBubbleFontSize: "regular",
   autoUnloadThreshold: 0,
   loreMatchingMode: "keyword",
   loreSemanticThreshold: 0.5,
@@ -335,6 +336,7 @@ function populateSettingsTabValues() {
   const trimMessages = document.getElementById("trim-messages");
   const lockMemoryMessages = document.getElementById("lock-memory-messages");
   const crossWindowSync = document.getElementById("cross-window-sync-enabled");
+  const messageBubbleFontSize = document.getElementById("message-bubble-font-size");
   const summaryThreshold = document.getElementById("summary-threshold");
   const memoryMessagesToKeep = document.getElementById("memory-messages-to-keep");
   const memorySlots = document.getElementById("memory-slots");
@@ -350,6 +352,7 @@ function populateSettingsTabValues() {
   if (trimMessages) trimMessages.checked = state.settings.trimMessages;
   if (lockMemoryMessages) lockMemoryMessages.checked = state.settings.lockMemoryMessages;
   if (crossWindowSync) crossWindowSync.checked = state.settings.crossWindowSyncEnabled;
+  if (messageBubbleFontSize) messageBubbleFontSize.value = state.settings.messageBubbleFontSize || "regular";
   if (summaryThreshold) summaryThreshold.value = state.settings.summaryThreshold;
   if (memoryMessagesToKeep) memoryMessagesToKeep.value = state.settings.memoryMessagesToKeep;
   if (memorySlots) memorySlots.value = state.settings.memorySlots;
@@ -740,6 +743,7 @@ async function init() {
   loadSettings();
   applyChatOpacitySetting();
   applyChatInputButtonSize();
+  applyMessageBubbleFontSize();
   ensureTagCatalogInitialized();
   await applyInterfaceLanguage();
   loadUiState();
@@ -881,6 +885,12 @@ function applyChatInputButtonSize() {
     "chat-input-button-size-extra",
   );
   container.classList.add(`chat-input-button-size-${size}`);
+}
+
+function applyMessageBubbleFontSize() {
+  const size = state.settings.messageBubbleFontSize || "regular";
+  const fonts = { small: "0.85rem", regular: "1rem", big: "1.25rem" };
+  document.documentElement.style.setProperty("--message-font-size", fonts[size] || "1rem");
 }
 
 function setChatOpacityFromPercent(percent) {
@@ -4270,6 +4280,18 @@ async function setupSettingsControls() {
       state.settings.crossWindowSyncEnabled = crossWindowSyncEnabled.checked;
       saveSettings();
       applyCrossWindowSyncSetting();
+    });
+  }
+  const messageBubbleFontSizeSelect = document.getElementById(
+    "message-bubble-font-size",
+  );
+  if (messageBubbleFontSizeSelect) {
+    messageBubbleFontSizeSelect.value =
+      state.settings.messageBubbleFontSize || "regular";
+    messageBubbleFontSizeSelect.addEventListener("change", () => {
+      state.settings.messageBubbleFontSize = messageBubbleFontSizeSelect.value;
+      saveSettings();
+      applyMessageBubbleFontSize();
     });
   }
   const useLocalSummarization = document.getElementById(

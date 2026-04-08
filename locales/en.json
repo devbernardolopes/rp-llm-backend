@@ -509,6 +509,7 @@
   "paginationPageAria": "Go to page {page}",
   "memoryCommandButtonTitle": "Memory command",
   "crossWindowSync": "Sync threads across tabs",
+  "messageBubbleFontSize": "Message Bubble Font Size",
   "threadTintColorTitle": "Thread Card Color (Shift + Left Click = reset)",
   "pinCharacter": "Pin",
   "unpinCharacter": "Unpin",

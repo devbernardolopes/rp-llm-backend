@@ -508,6 +508,7 @@
   "paginationPageAria": "Aller à la page {page}",
   "memoryCommandButtonTitle": "Commande mémoire",
   "crossWindowSync": "Synchroniser les fils entre onglets",
+  "messageBubbleFontSize": "Taille de police de bulle de message",
   "threadTintColorTitle": "Couleur de la carte du fil (Maj + Clic gauche = réinitialiser)",
   "pinCharacter": "Épingler",
   "unpinCharacter": "Désépingler",

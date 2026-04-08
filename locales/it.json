@@ -508,6 +508,7 @@
   "paginationPageAria": "Vai alla pagina {page}",
   "memoryCommandButtonTitle": "Comando memoria",
   "crossWindowSync": "Sincronizza thread tra schede",
+  "messageBubbleFontSize": "Dimensione carattere bolla messaggio",
   "threadTintColorTitle": "Colore della scheda del thread (Maiusc + Clic sinistro = ripristina)",
   "pinCharacter": "Fissa",
   "unpinCharacter": "Definisci",

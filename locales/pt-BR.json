@@ -508,6 +508,7 @@
   "paginationPageAria": "Ir para a página {page}",
   "memoryCommandButtonTitle": "Comando de memória",
   "crossWindowSync": "Sincronizar threads entre abas",
+  "messageBubbleFontSize": "Tamanho da fonte da bolha de mensagem",
   "threadTintColorTitle": "Cor do Cartão do Tópico (Shift + Clique esquerdo = resetar)",
   "pinCharacter": "Fixar",
   "unpinCharacter": "Desafixar",

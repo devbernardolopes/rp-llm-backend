@@ -508,6 +508,7 @@
   "paginationPageAria": "Zur Seite {page} wechseln",
   "memoryCommandButtonTitle": "Speicherbefehl",
   "crossWindowSync": "Threads zwischen Tabs synchronisieren",
+  "messageBubbleFontSize": "Nachrichtenbläschen-Schriftgröße",
   "threadTintColorTitle": "Thread-Kartenfarbe (Umschalt + Linksklick = zurücksetzen)",
   "pinCharacter": "Anheften",
   "unpinCharacter": "Losheften",
