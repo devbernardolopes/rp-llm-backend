@@ -23,6 +23,8 @@
   "showShortcuts": "Tastenkürzel anzeigen",
   "autoReply": "Automatisch antworten",
   "enterToSend": "ENTER zum Senden",
+  "chatOptionsTitle": "Chat-Optionen",
+  "chatOpacityTitle": "Chat-Deckkraft",
   "settingsTitle": "Einstellungen",
   "togglePane": "Panel umschalten",
   "clear": "Leeren",

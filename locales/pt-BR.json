@@ -23,6 +23,8 @@
   "showShortcuts": "Mostrar Atalhos",
   "autoReply": "Resposta automática",
   "enterToSend": "ENTER para enviar",
+  "chatOptionsTitle": "Opções de chat",
+  "chatOpacityTitle": "Opacidade do chat",
   "settingsTitle": "Configurações",
   "togglePane": "Alternar painel",
   "clear": "Limpar",

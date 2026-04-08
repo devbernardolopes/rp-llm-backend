@@ -618,6 +618,25 @@
                     data-i18n-title="oocModeTitleOff"
                     aria-label="Toggle OOC mode"
                   ></button>
+                  <button
+                    id="chat-options-toggle-btn"
+                    class="option-btn send-toggle-btn small"
+                    type="button"
+                    data-i18n-title="chatOptionsTitle"
+                    aria-label="Chat options"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="1"></circle>
+                      <circle cx="19" cy="12" r="1"></circle>
+                      <circle cx="5" cy="12" r="1"></circle>
+                    </svg>
+                  </button>
                   <img
                     id="persona-selected-avatar"
                     class="persona-selected-avatar small"
@@ -632,6 +651,7 @@
                   <button id="send-btn" class="primary-btn"></button>
                 </div>
               </div>
+              <div id="chat-options-dropdown" class="chat-options-dropdown hidden"></div>
               <div id="chat-opacity-overlay" class="chat-opacity-overlay hidden">
                 <div class="chat-opacity-overlay-content">
                   <div

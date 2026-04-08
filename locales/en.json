@@ -23,6 +23,8 @@
   "showShortcuts": "Show Shortcuts",
   "autoReply": "Auto-reply",
   "enterToSend": "ENTER to send",
+  "chatOptionsTitle": "Chat Options",
+  "chatOpacityTitle": "Chat Opacity",
   "settingsTitle": "Settings",
   "togglePane": "Toggle pane",
   "clear": "Clear",

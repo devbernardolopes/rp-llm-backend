@@ -1476,6 +1476,12 @@ function setupEvents() {
       e.stopPropagation();
       showChatPersonaDropdown();
     });
+  document
+    .getElementById("chat-options-toggle-btn")
+    ?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showChatOptionsDropdown();
+    });
   document.getElementById("char-name").addEventListener("input", () => {
     updateNameLengthCounter("char-name", "char-name-count", 128);
     const titleEl = document.getElementById("character-title");
@@ -9705,6 +9711,99 @@ async function showChatPersonaDropdown() {
     }
   };
   setTimeout(() => document.addEventListener("click", closeDropdown), 0);
+}
+
+let chatOptionsDropdownOpen = false;
+let chatOptionsDropdown = null;
+
+function showChatOptionsDropdown() {
+  const btn = document.getElementById("chat-options-toggle-btn");
+  if (!btn) return;
+
+  if (chatOptionsDropdownOpen && chatOptionsDropdown) {
+    chatOptionsDropdownOpen = false;
+    if (chatOptionsDropdown.parentNode) {
+      chatOptionsDropdown.parentNode.removeChild(chatOptionsDropdown);
+    }
+    chatOptionsDropdown = null;
+    return;
+  }
+
+  chatOptionsDropdownOpen = true;
+  chatOptionsDropdown = document.createElement("div");
+  chatOptionsDropdown.className = "chat-options-dropdown";
+
+  const options = [
+    { id: "chat-opacity-toggle-btn", label: "chatOpacityTitle", getLabel: () => t("chatOpacityTitle") },
+    { id: "enter-to-send-enabled", label: "enterToSend", getLabel: () => t("enterToSend") },
+    { id: "auto-reply-enabled", label: "autoReply", getLabel: () => t("autoReply") },
+    { id: "stt-auto-send-toggle-btn", label: "sttAutoSendOff", getLabel: () => t("sttAutoSendOff") },
+    { id: "image-command-btn", label: "imageCommandTitle", getLabel: () => t("imageCommandTitle") },
+  ];
+
+  for (const opt of options) {
+    const el = document.getElementById(opt.id);
+    if (!el) continue;
+    const item = document.createElement("button");
+    item.className = "chat-options-dropdown-item";
+    item.type = "button";
+    item.setAttribute("data-for-id", opt.id);
+    const label = document.createElement("span");
+    label.className = "chat-options-dropdown-label";
+    label.textContent = opt.getLabel();
+    item.appendChild(label);
+    if (el.classList.contains("is-active") || el.checked) {
+      item.classList.add("is-active");
+    }
+    item.addEventListener("click", (e) => {
+      e.stopPropagation();
+      el.click();
+      updateChatOptionsDropdownState();
+    });
+    chatOptionsDropdown.appendChild(item);
+  }
+
+  const closeDropdown = (e) => {
+    if (
+      chatOptionsDropdown &&
+      !chatOptionsDropdown.contains(e.target) &&
+      e.target !== btn
+    ) {
+      chatOptionsDropdownOpen = false;
+      if (chatOptionsDropdown && chatOptionsDropdown.parentNode) {
+        chatOptionsDropdown.parentNode.removeChild(chatOptionsDropdown);
+      }
+      chatOptionsDropdown = null;
+      document.removeEventListener("click", closeDropdown);
+    }
+  };
+  setTimeout(() => document.addEventListener("click", closeDropdown), 0);
+
+  const rect = btn.getBoundingClientRect();
+  chatOptionsDropdown.style.position = "fixed";
+  chatOptionsDropdown.style.zIndex = "200";
+
+  const spaceBelow = window.innerHeight - rect.bottom;
+  if (spaceBelow < 300) {
+    chatOptionsDropdown.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+  } else {
+    chatOptionsDropdown.style.top = `${rect.bottom + 4}px`;
+  }
+  chatOptionsDropdown.style.left = `${Math.max(12, rect.left)}px`;
+
+  document.body.appendChild(chatOptionsDropdown);
+}
+
+function updateChatOptionsDropdownState() {
+  if (!chatOptionsDropdown) return;
+  const items = chatOptionsDropdown.querySelectorAll(".chat-options-dropdown-item");
+  for (const item of items) {
+    const forId = item.getAttribute("data-for-id");
+    const el = document.getElementById(forId);
+    if (el) {
+      item.classList.toggle("is-active", el.classList.contains("is-active") || el.checked);
+    }
+  }
 }
 
 function updatePersonaPickerDisplay() {
