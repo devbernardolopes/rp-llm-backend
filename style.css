@@ -4615,172 +4615,23 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .chat-input-wrapper {
-    position: absolute;
-    left: max(22px, env(safe-area-inset-left, 22px));
-    right: max(22px, env(safe-area-inset-right, 22px));
-    bottom: env(safe-area-inset-bottom, 12px);
-    z-index: 5;
-    margin-top: 0;
-    max-height: calc(100dvh - 200px);
-    max-height: calc(100vh - 200px);
-    overflow-y: auto;
-    padding-bottom: env(safe-area-inset-bottom, 12px);
-  }
-
-  .chat-input-wrapper .shortcuts-bar {
-    margin: 0;
-  }
-
-  .input-row {
-    flex-direction: column;
-    align-items: stretch;
-    padding-bottom: env(safe-area-inset-bottom, 12px);
-    margin-top: 0;
-    min-width: 0;
-  }
-
-  #user-input-container {
-    z-index: 1;
-    margin-bottom: 0;
-    min-width: 0;
-    width: 100%;
-  }
-
-  #user-input-container textarea {
-    min-width: 0;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .input-footer {
-    flex-wrap: wrap;
-  }
-
-  .input-footer-right {
-    flex-wrap: wrap;
-  }
-
-  .character-filters-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .character-filters-controls {
-    justify-content: flex-end;
-  }
-
-  .persona-picker,
-  .send-col {
-    min-width: 0;
-  }
-
-  .chat-header {
-    gap: 8px;
-  }
-
-  #chat-title {
-    flex: 1 1 100%;
-    order: 10;
-    margin-right: 0;
-  }
-
-  #chat-model-pill,
-  #chat-budget-pill {
-    order: 12;
-    flex: 1 1 calc(50% - 6px);
-  }
-
-  .settings-tabs {
-    padding-bottom: 8px;
-    gap: 5px;
-  }
-
-  .settings-tab-btn {
-    height: 28px;
-    padding: 0 8px;
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 600px) {
-  #left-pane {
+.chat-input-wrapper {
     position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: var(--pane-mobile-width);
-    max-width: 320px;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-    z-index: 50;
-    display: flex;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
-  }
-
-  #left-pane.mobile-open {
-    transform: translateX(0);
-  }
-
-  .mobile-pane-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 49;
-    display: block;
-  }
-
-  .mobile-pane-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    color: var(--text);
-    cursor: pointer;
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 40;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .mobile-pane-toggle svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .mobile-pane-toggle.open {
-    left: calc(85vw + 12px);
-    left: calc(min(85vw, 320px) + 12px);
-  }
-
-  #app-shell {
-    grid-template-columns: 1fr;
-  }
-
-  #app-shell.pane-collapsed {
-    grid-template-columns: 1fr;
-  }
-
-  .pane-overlay-toggle {
-    right: -14px;
-    z-index: 110;
-    display: flex;
-  }
-
-  .chat-input-wrapper {
     left: max(12px, env(safe-area-inset-left, 12px));
     right: max(12px, env(safe-area-inset-right, 12px));
-    bottom: calc(env(safe-area-inset-bottom, 12px) + 6px);
-    padding-bottom: 0;
+    bottom: max(12px, env(safe-area-inset-bottom, 12px));
+    z-index: 5;
+    margin-top: 0;
+    max-height: calc(100dvh - 120px);
+    max-height: calc(100vh - 120px);
+    overflow-y: visible;
+    padding-bottom: 12px;
   }
 
   #chat-view.keyboard-active .chat-input-wrapper {
-    bottom: calc(env(safe-area-inset-bottom, 12px) + 80px);
+    bottom: max(12px, env(safe-area-inset-bottom, 12px));
+    max-height: calc(100dvh - 280px);
+    max-height: calc(100vh - 280px);
   }
 
   #chat-view.keyboard-active .chat-log {
