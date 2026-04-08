@@ -14618,6 +14618,9 @@ function updateOocModeUi() {
   if (btn) {
     btn.classList.toggle("is-active", isActive);
     btn.disabled = !currentThread;
+    if (window.ICONS?.ooc) {
+      btn.innerHTML = window.ICONS.ooc;
+    }
     btn.setAttribute(
       "title",
       isActive ? t("oocModeTitleOn") : t("oocModeTitleOff"),

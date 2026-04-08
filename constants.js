@@ -56,6 +56,7 @@ const ICONS = {
   info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6"></path><circle cx="12" cy="7.5" r="1"></circle></svg>',
   context:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5a3 3 0 0 1 5.7-1.2A3.2 3.2 0 0 1 18 7v.2a3 3 0 0 1 1 5.7A3.2 3.2 0 0 1 16 18h-1a3 3 0 0 1-6 0H8a3.2 3.2 0 0 1-3-5.1A3 3 0 0 1 6 7v-.2A3.2 3.2 0 0 1 9 5z"></path><path d="M10 9.5v5"></path><path d="M14 9.5v5"></path><path d="M10 12h4"></path></svg>',
+  ooc: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h8M8 12h8M8 17h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>',
   model:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M9 9h6v6H9z"></path><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"></path></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.8-5.4 2.8 1-6.1-4.4-4.3 6.1-.9z"></path></svg>',
