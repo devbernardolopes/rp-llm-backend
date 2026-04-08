@@ -4740,10 +4740,8 @@ textarea {
     gap: 6px;
   }
 
-  .input-footer {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 8px;
+.input-footer {
+    flex-wrap: wrap;
     gap: 6px;
   }
 
@@ -4797,8 +4795,7 @@ textarea {
   }
 
   .input-footer {
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: wrap;
   }
 
   .input-footer-right {
