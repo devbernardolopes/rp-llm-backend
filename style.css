@@ -16,6 +16,15 @@
   --hover: #2a3a52;
   --chat-opacity: 1;
 
+  /* Breakpoints */
+  --mobile-breakpoint: 600px;
+  --tablet-breakpoint: 900px;
+
+  /* Pane widths */
+  --pane-width: 360px;
+  --pane-collapsed-width: 84px;
+  --pane-mobile-width: min(85vw, 320px);
+
   /* Chat bubble styling */
   --user-message-bg: var(--panel-2);
   --user-message-border: var(--line);
@@ -41,9 +50,9 @@ body {
 }
 
 #app-shell {
-  --left-pane-width: 360px;
+  --left-pane-width: var(--pane-width);
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: var(--pane-width) 1fr;
   height: 100dvh;
   height: 100vh;
   min-height: 0;
@@ -52,8 +61,8 @@ body {
 }
 
 #app-shell.pane-collapsed {
-  --left-pane-width: 84px;
-  grid-template-columns: 84px 1fr;
+  --left-pane-width: var(--pane-collapsed-width);
+  grid-template-columns: var(--pane-collapsed-width) 1fr;
 }
 
 #left-pane {
@@ -152,12 +161,6 @@ body {
 
 .pane-overlay-toggle.collapsed .pane-toggle-icon {
   transform: rotate(180deg);
-}
-
-@media (max-width: 768px) {
-  .pane-overlay-toggle {
-    right: -14px;
-  }
 }
 
 .pane-home-btn {
@@ -1682,7 +1685,7 @@ textarea {
 #scroll-bottom-btn {
   position: absolute;
   right: 44px;
-  bottom: 228px;
+  bottom: calc(100% - 100px);
   z-index: 25;
 }
 
@@ -1739,6 +1742,10 @@ textarea {
   border-bottom: 1px solid var(--line);
   padding-bottom: 12px;
   margin-bottom: 12px;
+}
+
+#toggle-model3d-panel-btn {
+  margin-left: auto;
 }
 
 #chat-title {
@@ -4522,10 +4529,10 @@ textarea {
     bottom: env(safe-area-inset-bottom, 12px);
     z-index: 5;
     margin-top: 0;
-    max-height: calc(100dvh - 120px);
-    max-height: calc(100vh - 120px);
+    max-height: calc(100dvh - 200px);
+    max-height: calc(100vh - 200px);
     overflow-y: auto;
-    padding-bottom: 80px;
+    padding-bottom: env(safe-area-inset-bottom, 12px);
   }
 
   .chat-input-wrapper .shortcuts-bar {
@@ -4609,7 +4616,7 @@ textarea {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 85vw;
+    width: var(--pane-mobile-width);
     max-width: 320px;
     transform: translateX(-100%);
     transition: transform 0.25s ease;

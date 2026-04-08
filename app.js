@@ -7526,7 +7526,10 @@ function iconButton(iconKey, ariaLabel, handler) {
   return btn;
 }
 
-const MOBILE_BREAKPOINT = 600;
+const MOBILE_BREAKPOINT = parseInt(
+  getComputedStyle(document.documentElement)
+    .getPropertyValue('--mobile-breakpoint') || '600'
+);
 
 function handleMobilePaneAutoHide() {
   const pane = document.getElementById("left-pane");
