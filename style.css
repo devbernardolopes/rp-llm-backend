@@ -4524,8 +4524,8 @@ textarea {
 
   .chat-input-wrapper {
     position: absolute;
-    left: 22px;
-    right: 22px;
+    left: max(22px, env(safe-area-inset-left, 22px));
+    right: max(22px, env(safe-area-inset-right, 22px));
     bottom: env(safe-area-inset-bottom, 12px);
     z-index: 5;
     margin-top: 0;
@@ -4680,8 +4680,8 @@ textarea {
   }
 
   .chat-input-wrapper {
-    left: env(safe-area-inset-left, 12px);
-    right: env(safe-area-inset-right, 12px);
+    left: max(12px, env(safe-area-inset-left, 12px));
+    right: max(12px, env(safe-area-inset-right, 12px));
     bottom: calc(env(safe-area-inset-bottom, 12px) + 6px);
     padding-bottom: 0;
   }
@@ -4732,12 +4732,11 @@ textarea {
 
 @media (max-height: 520px) and (max-width: 900px) {
   .chat-input-wrapper {
-    left: calc(var(--left-pane-width, 0px) + env(safe-area-inset-left, 12px));
-    right: env(safe-area-inset-right, 12px);
+    left: max(22px, env(safe-area-inset-left, 22px));
+    right: max(22px, env(safe-area-inset-right, 22px));
     bottom: calc(env(safe-area-inset-bottom, 12px) + 6px);
     padding-bottom: 0;
     position: fixed;
-    max-width: calc(100% - 24px);
   }
 
   #chat-view {
