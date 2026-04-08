@@ -1713,6 +1713,11 @@ textarea {
   overflow: hidden;
 }
 
+#chat-view.keyboard-active {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 #scroll-bottom-btn {
   position: absolute;
   right: 44px;

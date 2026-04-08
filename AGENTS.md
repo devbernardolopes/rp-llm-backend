@@ -71,6 +71,49 @@ dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → c
 - When creating new modules, add them to the script loading order in `index.html` in the correct dependency order.
 - Use ES modules (`type="module"`) for new code that needs module support.
 
+### AI Providers
+
+The system supports multiple AI providers. Each provider requires:
+
+1. **UI Elements (index.html)**:
+   - Add option to `ai-provider-select` dropdown
+   - Add API key/settings container (use `hidden` class for conditional visibility)
+   - Add to Auto-Title and Summary provider dropdowns if supported
+
+2. **Settings (app.js)**:
+   - Add default setting to `DEFAULT_SETTINGS`
+   - Add state property for model catalog (e.g., `groqModelCatalog: []`)
+   - Add element initialization in `initSettings()`
+   - Add event listener for input/change handling
+   - Update `updateProviderVisibility()` to show/hide provider-specific inputs
+
+3. **Model Catalog (app.js)**:
+   - Implement `fetch{Provider}ModelCatalog(signal)` function
+   - Implement `normalize{Provider}ModelItem(model)` function
+   - Add provider case in `populateSettingsModels()`
+   - Add catalog selection in `renderSettingsModelOptions()`
+
+4. **API Implementation (app.js)**:
+   - Implement `call{Provider}()` function following existing patterns
+   - Support streaming via Server-Sent Events
+   - Handle stop strings, temperature, and other parameters
+   - Add routing in `callOpenRouter()` for the provider
+
+5. **Localization (locales/\*.json)**:
+   - Add provider name and API key labels to all locale files
+
+#### Existing Providers
+
+- **OpenRouter**: OpenAI-compatible API with extensive model catalog
+- **AI Horde**: Distributed AI inference network (native and OpenAI-compatible modes)
+- **LM Studio**: Local LLM inference (OpenAI-compatible and native modes)
+- **Groq**: Fast LPU-based inference (OpenAI-compatible, dynamic model catalog)
+
+## Git Rules
+
+- Never run `git commit`, `git push`, `git add`, or any other git commands that modify the repository.
+- After completing a task where any file whas changed, always suggest a single-line, concise commit message in plain-text in its own separate paragraph.
+
 ### HTML Snippet Modularization
 
 Modals and complex UI sections are organized into snippet files in `/snippets/` folder for better maintainability. Snippets are loaded on first modal open and cached in memory.
@@ -122,46 +165,3 @@ Modals and complex UI sections are organized into snippet files in `/snippets/` 
 - For tabbed modals like Settings, call `setupModalTextareas()` when switching to each tab
 
 **Settings modal:** Currently uses inline HTML in `index.html` rather than snippets. This keeps all form elements available during app initialization and avoids complexity of tab-based snippet loading.
-
-### AI Providers
-
-The system supports multiple AI providers. Each provider requires:
-
-1. **UI Elements (index.html)**:
-   - Add option to `ai-provider-select` dropdown
-   - Add API key/settings container (use `hidden` class for conditional visibility)
-   - Add to Auto-Title and Summary provider dropdowns if supported
-
-2. **Settings (app.js)**:
-   - Add default setting to `DEFAULT_SETTINGS`
-   - Add state property for model catalog (e.g., `groqModelCatalog: []`)
-   - Add element initialization in `initSettings()`
-   - Add event listener for input/change handling
-   - Update `updateProviderVisibility()` to show/hide provider-specific inputs
-
-3. **Model Catalog (app.js)**:
-   - Implement `fetch{Provider}ModelCatalog(signal)` function
-   - Implement `normalize{Provider}ModelItem(model)` function
-   - Add provider case in `populateSettingsModels()`
-   - Add catalog selection in `renderSettingsModelOptions()`
-
-4. **API Implementation (app.js)**:
-   - Implement `call{Provider}()` function following existing patterns
-   - Support streaming via Server-Sent Events
-   - Handle stop strings, temperature, and other parameters
-   - Add routing in `callOpenRouter()` for the provider
-
-5. **Localization (locales/\*.json)**:
-   - Add provider name and API key labels to all locale files
-
-#### Existing Providers
-
-- **OpenRouter**: OpenAI-compatible API with extensive model catalog
-- **AI Horde**: Distributed AI inference network (native and OpenAI-compatible modes)
-- **LM Studio**: Local LLM inference (OpenAI-compatible and native modes)
-- **Groq**: Fast LPU-based inference (OpenAI-compatible, dynamic model catalog)
-
-## Git Rules
-
-- Never run `git commit`, `git push`, `git add`, or any other git commands that modify the repository.
-- After completing a task where any file whas changed, always suggest a single-line, concise commit message in plain-text in its own separate paragraph.

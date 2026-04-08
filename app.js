@@ -563,6 +563,9 @@ const state = {
   cooldownToastTimerId: null,
   cooldownQueueTickInFlight: false,
   unreadNeedsUserScrollThreadId: null,
+  textareaFocused: false,
+  virtualKeyboardActive: false,
+  lastStableViewportHeight: window.innerHeight,
   charModalDefinitions: [],
   charModalActiveLanguage: "",
   charModalActiveTab: "lang",
@@ -754,10 +757,26 @@ async function init() {
   updateScrollBottomButtonVisibility();
   updateCooldownPinnedToast();
   updateDocumentTitleWithUnread();
-  handleMobilePaneAutoHide();
+handleMobilePaneAutoHide();
   updateLeftPaneWidthVariable();
   window.addEventListener("resize", handleMobilePaneAutoHide);
   window.addEventListener("resize", updateLeftPaneWidthVariable);
+  if (window.visualViewport) {
+    state.lastStableViewportHeight = window.visualViewport.height;
+    window.visualViewport.addEventListener("resize", () => {
+      if (!state.virtualKeyboardActive) {
+        state.lastStableViewportHeight = window.visualViewport.height;
+      }
+      handleMobilePaneAutoHide();
+      updateLeftPaneWidthVariable();
+    });
+  }
+  window.addEventListener("orientationchange", () => {
+    setTimeout(() => {
+      handleMobilePaneAutoHide();
+      updateLeftPaneWidthVariable();
+    }, 100);
+  });
   if (state.cooldownToastTimerId) {
     window.clearInterval(state.cooldownToastTimerId);
   }
@@ -1704,9 +1723,11 @@ function setupEvents() {
     requestAnimationFrame(() => adjustUserInputElementHeight(input));
   });
   input.addEventListener("blur", () => {
+    state.textareaFocused = false;
     resetUserInputElementHeight(input);
   });
   input.addEventListener("focus", () => {
+    state.textareaFocused = true;
     requestAnimationFrame(() => adjustUserInputElementHeight(input));
   });
   input.addEventListener("click", () => {
@@ -7531,6 +7552,25 @@ const MOBILE_BREAKPOINT = parseInt(
     .getPropertyValue('--mobile-breakpoint') || '600'
 );
 
+function detectVirtualKeyboard() {
+  const vp = window.visualViewport;
+  if (!vp) {
+    return window.innerHeight < state.lastStableViewportHeight - 100;
+  }
+  const keyboardActive = vp.height < state.lastStableViewportHeight - 100;
+  if (keyboardActive !== state.virtualKeyboardActive) {
+    state.virtualKeyboardActive = keyboardActive;
+    if (!keyboardActive) {
+      state.lastStableViewportHeight = vp.height;
+    }
+    const chatView = document.getElementById("chat-view");
+    if (chatView) {
+      chatView.classList.toggle("keyboard-active", keyboardActive);
+    }
+  }
+  return keyboardActive;
+}
+
 function handleMobilePaneAutoHide() {
   const pane = document.getElementById("left-pane");
   const shell = document.getElementById("app-shell");
@@ -7538,16 +7578,19 @@ function handleMobilePaneAutoHide() {
   if (!pane || !shell) return;
 
   const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+  const vkActive = detectVirtualKeyboard();
 
   if (mobileToggle) {
     mobileToggle.classList.toggle("hidden", !isMobile);
     if (isMobile) {
-      pane.classList.remove("mobile-open");
-      mobileToggle.classList.remove("open");
+      if (!state.textareaFocused && !vkActive) {
+        pane.classList.remove("mobile-open");
+        mobileToggle.classList.remove("open");
+      }
     }
   }
 
-  if (isMobile) {
+  if (isMobile && !state.textareaFocused) {
     pane.classList.add("collapsed");
     shell.classList.add("pane-collapsed");
   }
@@ -7576,6 +7619,10 @@ function toggleMobilePane() {
   const backdrop = document.getElementById("mobile-pane-backdrop");
   if (!pane) return;
 
+  if (state.textareaFocused || state.virtualKeyboardActive) {
+    return;
+  }
+
   pane.classList.toggle("mobile-open");
   const isOpen = pane.classList.contains("mobile-open");
   
@@ -7588,6 +7635,9 @@ function toggleMobilePane() {
 }
 
 function closeMobilePane() {
+  if (state.textareaFocused || state.virtualKeyboardActive) {
+    return;
+  }
   const pane = document.getElementById("left-pane");
   const mobileToggle = document.getElementById("mobile-pane-toggle");
   const backdrop = document.getElementById("mobile-pane-backdrop");
