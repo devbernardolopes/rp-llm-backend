@@ -4813,6 +4813,14 @@ textarea {
   display: flex;
 }
 
+#chat-opacity-toggle-btn,
+#enter-to-send-enabled,
+#auto-reply-enabled,
+#stt-auto-send-toggle-btn,
+#image-command-btn {
+  display: none;
+}
+
 .kokoro-download-row {
   display: flex;
   align-items: center;
