@@ -4809,18 +4809,6 @@ textarea {
   }
 }
 
-#chat-opacity-toggle-btn,
-#enter-to-send-enabled,
-#auto-reply-enabled,
-#stt-auto-send-toggle-btn,
-#image-command-btn,
-#auto-tts-toggle-btn,
-#stt-toggle-btn,
-#shortcuts-toggle-btn,
-#memory-command-btn {
-  display: none;
-}
-
 #chat-options-toggle-btn {
   display: flex;
 }
