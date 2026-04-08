@@ -2616,6 +2616,63 @@ textarea {
 
 #attach-btn {
   flex-shrink: 0;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+}
+
+.chat-input-button-size-regular #attach-btn,
+.chat-input-button-size-regular .send-toggle-btn.small,
+.chat-input-button-size-regular #send-btn {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+}
+
+.chat-input-button-size-regular .persona-selected-avatar.small {
+  width: 28px;
+  height: 28px;
+}
+
+.chat-input-button-size-regular .send-toggle-btn.small {
+  font-size: 12px;
+  padding: 0;
+}
+
+.chat-input-button-size-big #attach-btn,
+.chat-input-button-size-big .send-toggle-btn.small,
+.chat-input-button-size-big #send-btn {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+}
+
+.chat-input-button-size-big .persona-selected-avatar.small {
+  width: 36px;
+  height: 36px;
+}
+
+.chat-input-button-size-big .send-toggle-btn.small {
+  font-size: 14px;
+  padding: 0;
+}
+
+.chat-input-button-size-extra #attach-btn,
+.chat-input-button-size-extra .send-toggle-btn.small,
+.chat-input-button-size-extra #send-btn {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+}
+
+.chat-input-button-size-extra .persona-selected-avatar.small {
+  width: 44px;
+  height: 44px;
+}
+
+.chat-input-button-size-extra .send-toggle-btn.small {
+  font-size: 16px;
+  padding: 0;
 }
 
 .model-pill.small {

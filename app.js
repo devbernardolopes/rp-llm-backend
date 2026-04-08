@@ -67,6 +67,7 @@ const DEFAULT_SETTINGS = {
   marqueeBehavior: "disabled",
   botCardAvatarEffect: "none",
   botCardAvatarTransitionDelay: 4,
+  chatInputButtonSize: "regular",
   completionCooldown: 2,
   lockMemoryMessages: false,
   summaryThreshold: 20,
@@ -315,6 +316,10 @@ function populateSettingsTabValues() {
     botCardAvatarTransitionDelaySlider.value = state.settings.botCardAvatarTransitionDelay || 4;
     const delayValue = document.getElementById("bot-card-avatar-transition-delay-value");
     if (delayValue) delayValue.textContent = state.settings.botCardAvatarTransitionDelay;
+  }
+  const chatInputButtonSizeSelect = document.getElementById("chat-input-button-size-select");
+  if (chatInputButtonSizeSelect) {
+    chatInputButtonSizeSelect.value = state.settings.chatInputButtonSize || "regular";
   }
   if (toastDelaySlider) {
     toastDelaySlider.value = state.settings.toastDelay;
@@ -734,6 +739,7 @@ function updateCarouselForPaneState() {}
 async function init() {
   loadSettings();
   applyChatOpacitySetting();
+  applyChatInputButtonSize();
   ensureTagCatalogInitialized();
   await applyInterfaceLanguage();
   loadUiState();
@@ -863,6 +869,18 @@ function applyChatOpacitySetting(value = null) {
   if (label) {
     label.textContent = `${Math.round(normalized * 100)}%`;
   }
+}
+
+function applyChatInputButtonSize() {
+  const size = state.settings.chatInputButtonSize || "regular";
+  const container = document.getElementById("user-input-container");
+  if (!container) return;
+  container.classList.remove(
+    "chat-input-button-size-regular",
+    "chat-input-button-size-big",
+    "chat-input-button-size-extra",
+  );
+  container.classList.add(`chat-input-button-size-${size}`);
 }
 
 function setChatOpacityFromPercent(percent) {
@@ -4487,6 +4505,13 @@ async function setupSettingsControls() {
       botCardAvatarTransitionDelayValue.textContent = `${value}s`;
     }
     saveSettings();
+  });
+
+  const chatInputButtonSizeSelect = document.getElementById("chat-input-button-size-select");
+  chatInputButtonSizeSelect?.addEventListener("change", () => {
+    state.settings.chatInputButtonSize = chatInputButtonSizeSelect.value;
+    saveSettings();
+    applyChatInputButtonSize();
   });
 
   globalPromptTemplate.addEventListener("input", () => {
