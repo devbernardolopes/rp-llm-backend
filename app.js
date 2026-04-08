@@ -566,6 +566,8 @@ const state = {
   textareaFocused: false,
   virtualKeyboardActive: false,
   lastStableViewportHeight: window.innerHeight,
+  lastChatAreaTap: 0,
+  paneExpansionBlocked: false,
   charModalDefinitions: [],
   charModalActiveLanguage: "",
   charModalActiveTab: "lang",
@@ -1724,6 +1726,7 @@ function setupEvents() {
   });
   input.addEventListener("blur", () => {
     state.textareaFocused = false;
+    state.lastChatAreaTap = Date.now();
     resetUserInputElementHeight(input);
   });
   input.addEventListener("focus", () => {
@@ -1731,7 +1734,11 @@ function setupEvents() {
     requestAnimationFrame(() => adjustUserInputElementHeight(input));
   });
   input.addEventListener("click", () => {
+    state.lastChatAreaTap = Date.now();
     if (state.promptHistoryOpen) closePromptHistory();
+  });
+  input.parentElement?.addEventListener("click", () => {
+    state.lastChatAreaTap = Date.now();
   });
   input.addEventListener("dblclick", openPromptHistory);
   input.addEventListener("pointerup", onInputPointerUp);
@@ -7579,20 +7586,33 @@ function handleMobilePaneAutoHide() {
 
   const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
   const vkActive = detectVirtualKeyboard();
+  const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
+  const RECENT_TAP_MS = 500;
+  const recentTap = Date.now() - state.lastChatAreaTap < RECENT_TAP_MS;
+  const currentlyCollapsed = pane.classList.contains("collapsed");
 
   if (mobileToggle) {
     mobileToggle.classList.toggle("hidden", !isMobile);
-    if (isMobile) {
-      if (!state.textareaFocused && !vkActive) {
-        pane.classList.remove("mobile-open");
-        mobileToggle.classList.remove("open");
-      }
-    }
   }
 
-  if (isMobile && !state.textareaFocused) {
-    pane.classList.add("collapsed");
-    shell.classList.add("pane-collapsed");
+  if (isMobile) {
+    if (!state.textareaFocused && !vkActive && !recentTap) {
+      pane.classList.remove("mobile-open");
+      mobileToggle?.classList.remove("open");
+    }
+    if (chatViewActive) {
+      if (!recentTap) {
+        if (!currentlyCollapsed) {
+          pane.classList.add("collapsed");
+          shell.classList.add("pane-collapsed");
+        }
+      }
+    } else {
+      if (currentlyCollapsed) {
+        pane.classList.remove("collapsed");
+        shell.classList.remove("pane-collapsed");
+      }
+    }
   }
 
   updateLeftPaneWidthVariable();
