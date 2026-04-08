@@ -4779,6 +4779,14 @@ textarea {
     padding-bottom: 0;
   }
 
+  #chat-view.keyboard-active .chat-input-wrapper {
+    bottom: calc(env(safe-area-inset-bottom, 12px) + 80px);
+  }
+
+  #chat-view.keyboard-active .chat-log {
+    padding-bottom: calc(280px + env(safe-area-inset-bottom, 0px));
+  }
+
   .chat-input-wrapper .shortcuts-bar {
     justify-content: flex-start;
     gap: 6px;
