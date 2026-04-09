@@ -22445,7 +22445,7 @@ async function callAIHordeOpenAI(
   const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
   const hordeApiKey = localKey || fallbackKey;
 
-  const baseUrl = "https://oai.aihorde.net";
+  const baseUrl = "https://stablehorde.net";
   const streamEnabled =
     options && Object.prototype.hasOwnProperty.call(options, "forceStream")
       ? Boolean(options.forceStream)

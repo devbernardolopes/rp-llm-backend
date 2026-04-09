@@ -700,7 +700,7 @@
   "imageGenerating": "Generation de l'image...",
   "infoAiProvider": "Selectionnez le fournisseur IA pour generate des reponses. Chaque fournisseur a differents modeles et prix.",
   "infoOpenRouterApiKey": "Votre cle API OpenRouter. Obtenez-en une sur [openrouter.ai](https://openrouter.ai). Necessaire pour le fournisseur OpenRouter.",
-  "infoAiHordeApiKey": "Votre cle API AI Horde (optionnel). Obtenez-en une sur [horde.ai](https://horde.ai) pour un traitement prioritaire.",
+  "infoAiHordeApiKey": "Votre cle API AI Horde (optionnel). Obtenez-en une sur [stablehorde.net](https://stablehorde.net) pour un traitement prioritaire.",
   "infoAiHordeApiMethod": "**Native** utilise l'API REST de Horde. **OpenAI-Compatible** utilise des endpoints style OpenRouter.",
   "infoLmStudioBaseUrl": "L'URL du serveur local pour LM Studio. Par defaut: `http://localhost:1234`",
   "infoLmStudioApiMethod": "**OpenAI-Compatible** utilise `/v1/chat/completions`. **Native** utilise l'endpoint natif de LM Studio.",
