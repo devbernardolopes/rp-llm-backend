@@ -975,6 +975,15 @@ textarea {
   display: none !important;
 }
 
+.mobile-pane-toggle-chat {
+  position: static;
+  display: none;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+}
+
 @media (max-width: 600px) {
   #app-shell {
     grid-template-columns: 0 1fr !important;
@@ -999,13 +1008,25 @@ textarea {
     overflow: auto !important;
   }
   
-  .mobile-pane-toggle {
+  .mobile-pane-toggle:not(.mobile-pane-toggle-chat) {
     display: flex !important;
   }
-}
-
-.mobile-pane-toggle.hidden {
-  display: none !important;
+  
+  .mobile-pane-toggle.mobile-pane-toggle-chat {
+    display: flex !important;
+  }
+  
+  .mobile-pane-toggle.hidden {
+    display: flex !important;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  .mobile-pane-toggle-chat.hidden {
+    display: flex !important;
+    opacity: 0.5;
+    pointer-events: none;
+  }
 }
 
 .mobile-pane-toggle svg {

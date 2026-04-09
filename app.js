@@ -1244,6 +1244,10 @@ function setupEvents() {
   if (mobilePaneToggle) {
     mobilePaneToggle.addEventListener("click", toggleMobilePane);
   }
+  const mobilePaneToggleChat = document.getElementById("mobile-pane-toggle-chat");
+  if (mobilePaneToggleChat) {
+    mobilePaneToggleChat.addEventListener("click", toggleMobilePane);
+  }
   const mobilePaneBackdrop = document.getElementById("mobile-pane-backdrop");
   if (mobilePaneBackdrop) {
     mobilePaneBackdrop.addEventListener("click", closeMobilePane);
@@ -7804,6 +7808,10 @@ function showMainView() {
   state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
   document.getElementById("chat-view").classList.remove("active");
+  const mainToggle = document.getElementById("mobile-pane-toggle");
+  const chatToggle = document.getElementById("mobile-pane-toggle-chat");
+  if (mainToggle) mainToggle.classList.remove("hidden");
+  if (chatToggle) chatToggle.classList.add("hidden");
   updateThreadRenameButtonState();
   updateAutoTtsToggleButton();
   updateChatInputToggles();
@@ -7817,6 +7825,10 @@ function showMainView() {
 function showChatView() {
   document.getElementById("chat-view").classList.add("active");
   document.getElementById("main-view").classList.remove("active");
+  const mainToggle = document.getElementById("mobile-pane-toggle");
+  const chatToggle = document.getElementById("mobile-pane-toggle-chat");
+  if (mainToggle) mainToggle.classList.add("hidden");
+  if (chatToggle) chatToggle.classList.remove("hidden");
   updateThreadRenameButtonState();
   updateAutoTtsToggleButton();
   updateChatInputToggles();
