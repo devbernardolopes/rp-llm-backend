@@ -1902,6 +1902,13 @@ function setupEvents() {
       if (btn.dataset.openModal === "lore-modal") {
         resetLoreEditorState();
         renderLorebookManagementList().then(() => openModal(btn.dataset.openModal));
+      } else if (btn.dataset.openModal === "writing-instructions-modal") {
+        const parentModal = document.getElementById("character-modal");
+        if (parentModal && !parentModal.classList.contains("hidden")) {
+          parentModal.classList.add("hidden");
+          state.activeModalId = "character-modal";
+        }
+        openModal(btn.dataset.openModal);
       } else {
         openModal(btn.dataset.openModal);
       }
@@ -7978,6 +7985,14 @@ async function closeActiveModal() {
     if (parentModal) {
       parentModal.classList.remove("hidden");
       state.activeModalId = "writing-instructions-modal";
+      return;
+    }
+  }
+  if (closingId === "writing-instructions-modal") {
+    const parentModal = document.getElementById("character-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "character-modal";
       return;
     }
   }
