@@ -7643,14 +7643,16 @@ function handleMobilePaneAutoHide() {
   const RECENT_TAP_MS = 500;
   const recentTap = Date.now() - state.lastChatAreaTap < RECENT_TAP_MS;
   const currentlyCollapsed = pane.classList.contains("collapsed");
+  const isMobileOpen = pane.classList.contains("mobile-open");
 
   if (mobileToggle) {
     mobileToggle.classList.toggle("hidden", !isMobile);
   }
 
   if (isMobile) {
-    if (!state.textareaFocused && !vkActive && !recentTap) {
+    if (!state.textareaFocused && !vkActive && !recentTap && isMobileOpen) {
       pane.classList.remove("mobile-open");
+      shell.classList.remove("pane-mobile-open");
       mobileToggle?.classList.remove("open");
     }
     if (chatViewActive) {

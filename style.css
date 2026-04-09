@@ -68,15 +68,30 @@ body {
 
 @media (max-width: 600px) {
   #app-shell {
-    grid-template-columns: 0 1fr;
-  }
-  
-  #app-shell.pane-collapsed {
-    grid-template-columns: 0 1fr;
+    grid-template-columns: 0 1fr !important;
+    --left-pane-width: 0;
   }
   
   #app-shell.pane-mobile-open {
-    grid-template-columns: min(85vw, 320px) 1fr;
+    grid-template-columns: min(85vw, 320px) 1fr !important;
+  }
+  
+  #left-pane {
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  #left-pane.mobile-open {
+    width: min(85vw, 320px) !important;
+    min-width: min(85vw, 320px) !important;
+    padding: 12px !important;
+    overflow: auto !important;
+  }
+  
+  .mobile-pane-toggle {
+    display: flex !important;
   }
 }
 
@@ -942,7 +957,7 @@ textarea {
   min-width: 40px;
   height: 40px;
   min-height: 40px;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 0;
@@ -954,6 +969,39 @@ textarea {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   font-size: 0;
   line-height: 1;
+}
+
+.mobile-pane-toggle.hidden {
+  display: none !important;
+}
+
+@media (max-width: 600px) {
+  #app-shell {
+    grid-template-columns: 0 1fr !important;
+    --left-pane-width: 0;
+  }
+  
+  #app-shell.pane-mobile-open {
+    grid-template-columns: min(85vw, 320px) 1fr !important;
+  }
+  
+  #left-pane {
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  #left-pane.mobile-open {
+    width: min(85vw, 320px) !important;
+    min-width: min(85vw, 320px) !important;
+    padding: 12px !important;
+    overflow: auto !important;
+  }
+  
+  .mobile-pane-toggle {
+    display: flex !important;
+  }
 }
 
 .mobile-pane-toggle.hidden {
