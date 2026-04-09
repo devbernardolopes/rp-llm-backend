@@ -13698,7 +13698,10 @@ async function importCharacterFromFile(e) {
 
     applyCharacterSettingsDefaults(character);
 
-    renderCharacters();
+    character.createdAt = Date.now();
+    const newId = await db.characters.add(character);
+    character.id = newId;
+    await renderCharacters();
     showToast(t("characterImported"), "success");
     openCharacterModal(character, null, true);
   } catch (err) {
