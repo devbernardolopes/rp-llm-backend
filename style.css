@@ -66,6 +66,20 @@ body {
   grid-template-columns: var(--pane-collapsed-width) 1fr;
 }
 
+@media (max-width: 600px) {
+  #app-shell {
+    grid-template-columns: 0 1fr;
+  }
+  
+  #app-shell.pane-collapsed {
+    grid-template-columns: 0 1fr;
+  }
+  
+  #app-shell.pane-mobile-open {
+    grid-template-columns: min(85vw, 320px) 1fr;
+  }
+}
+
 #left-pane {
   display: flex;
   flex-direction: column;
@@ -76,12 +90,35 @@ body {
   min-width: 74px;
   min-height: 0;
   overflow: visible;
-  transition: width 0.2s ease;
+  transition: width 0.2s ease, transform 0.2s ease;
   position: relative;
+  z-index: 30;
 }
 
 #left-pane.collapsed {
   width: 74px;
+}
+
+#left-pane.mobile-open {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(85vw, 320px);
+  transform: translateX(0);
+  z-index: 50;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.mobile-pane-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 45;
+}
+
+.mobile-pane-backdrop.hidden {
+  display: none;
 }
 
 #left-pane.collapsed .pane-title,
@@ -873,13 +910,14 @@ textarea {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
 }
 
 #main-view {
   padding: 6px 20px calc(10px + var(--safe-area-bottom));
   gap: 6px;
   min-height: 0;
+  flex: 1;
 }
 
 /* Mobile pane toggle - always visible on smaller screens */

@@ -7688,6 +7688,7 @@ function updateLeftPaneWidthVariable() {
 
 function toggleMobilePane() {
   const pane = document.getElementById("left-pane");
+  const shell = document.getElementById("app-shell");
   const mobileToggle = document.getElementById("mobile-pane-toggle");
   const backdrop = document.getElementById("mobile-pane-backdrop");
   if (!pane) return;
@@ -7699,6 +7700,9 @@ function toggleMobilePane() {
   pane.classList.toggle("mobile-open");
   const isOpen = pane.classList.contains("mobile-open");
   
+  if (shell) {
+    shell.classList.toggle("pane-mobile-open", isOpen);
+  }
   if (mobileToggle) {
     mobileToggle.classList.toggle("open", isOpen);
   }
@@ -7712,11 +7716,15 @@ function closeMobilePane() {
     return;
   }
   const pane = document.getElementById("left-pane");
+  const shell = document.getElementById("app-shell");
   const mobileToggle = document.getElementById("mobile-pane-toggle");
   const backdrop = document.getElementById("mobile-pane-backdrop");
   if (!pane) return;
 
   pane.classList.remove("mobile-open");
+  if (shell) {
+    shell.classList.remove("pane-mobile-open");
+  }
   if (mobileToggle) {
     mobileToggle.classList.remove("open");
   }
