@@ -722,5 +722,6 @@
   "infoTheme": "Visual theme for the interface. Choose light, dark, or custom themes.",
   "infoMarqueeBehavior": "Controls long text animation. **Disabled**: no animation. **On Hover**: animate when hovered. **Always**: always animate.",
   "infoBotCardAvatarEffect": "Animation effect for character cards on the home screen. **Carousel**: cycles through avatars. **On Hover**: shows on hover.",
-  "infoBotCardAvatarTransitionDelay": "Seconds between avatar transitions in carousel mode."
+  "infoBotCardAvatarTransitionDelay": "Seconds between avatar transitions in carousel mode.",
+  "showTokenCounts": "Show token counts"
 }

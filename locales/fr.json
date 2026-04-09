@@ -721,5 +721,6 @@
   "infoTheme": "Theme visuel de l'interface. Choisissez des themes clair, sombre ou personnalises.",
   "infoMarqueeBehavior": "Controle l'animation du long texte. **Desactive**: pas d'animation. **Au survol**: animer au survol. **Toujours**: toujours anime.",
   "infoBotCardAvatarEffect": "Effet d'animation pour les cartes de personnages sur l'ecran d'accueil. **Carousel**: fait derouler les avatars. **Au survol**: affiche au survol.",
-  "infoBotCardAvatarTransitionDelay": "Secondes entre les transitions d'avatar en mode carousel."
+  "infoBotCardAvatarTransitionDelay": "Secondes entre les transitions d'avatar en mode carousel.",
+  "showTokenCounts": "Afficher le nombre de tokens"
 }

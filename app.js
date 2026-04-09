@@ -95,6 +95,7 @@ const DEFAULT_SETTINGS = {
   sttSilenceDuration: 2,
   defaultPersonaInjectionPlacement: "end_system_prompt",
   defaultTtsProvider: "kokoro",
+  showTokenCounts: false,
   defaultTtsRate: 1,
   defaultIncludeOocInCompletions: false,
   defaultAvatarScale: 4,
@@ -761,6 +762,8 @@ async function init() {
   await ensurePersonasInitialized();
   await renderAll();
   applyCrossWindowSyncSetting();
+  applyShowTokenCountsSetting();
+  setupTokenCountListeners();
   preloadSummarizationIfEnabled();
   // applyMarkdownCustomCss(); // Disabled - using markdown-it library
   applyChatMessageAlignment();
@@ -4284,6 +4287,15 @@ async function setupSettingsControls() {
       state.settings.crossWindowSyncEnabled = crossWindowSyncEnabled.checked;
       saveSettings();
       applyCrossWindowSyncSetting();
+    });
+  }
+  const showTokenCounts = document.getElementById("show-token-counts");
+  if (showTokenCounts) {
+    showTokenCounts.checked = state.settings.showTokenCounts === true;
+    showTokenCounts.addEventListener("change", () => {
+      state.settings.showTokenCounts = showTokenCounts.checked;
+      saveSettings();
+      applyShowTokenCountsSetting();
     });
   }
   const messageBubbleFontSizeSelect = document.getElementById(
@@ -21193,6 +21205,74 @@ function applyCrossWindowSyncSetting() {
       state.syncTimerId = null;
     }
   }
+}
+
+function applyShowTokenCountsSetting() {
+  const tokenCounts = document.querySelectorAll(".token-count");
+  tokenCounts.forEach((el) => {
+    if (state.settings.showTokenCounts) {
+      el.classList.remove("hidden");
+    } else {
+      el.classList.add("hidden");
+    }
+  });
+  if (state.settings.showTokenCounts) {
+    updateAllTokenCounts();
+  }
+}
+
+function updateTokenCount(textareaId, countId) {
+  const textarea = document.getElementById(textareaId);
+  const countSpan = document.getElementById(countId);
+  if (!textarea || !countSpan) return;
+  const text = textarea.value || "";
+  estimateTokens(text).then((count) => {
+    countSpan.textContent = `${count} tokens`;
+  });
+}
+
+const tokenCountDebounceTimers = {};
+
+function debouncedUpdateTokenCount(textareaId, countId, delay = 200) {
+  if (tokenCountDebounceTimers[textareaId]) {
+    clearTimeout(tokenCountDebounceTimers[textareaId]);
+  }
+  tokenCountDebounceTimers[textareaId] = setTimeout(() => {
+    updateTokenCount(textareaId, countId);
+  }, delay);
+}
+
+function setupTokenCountListeners() {
+  const textareas = [
+    { id: "char-system-prompt", countId: "char-system-prompt-token-count" },
+    { id: "char-writing-instructions", countId: "char-writing-instructions-token-count" },
+    { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-token-count" },
+    { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-token-count" },
+    { id: "ooc-user-message-format", countId: "ooc-user-message-format-token-count" },
+  ];
+  textareas.forEach(({ id, countId }) => {
+    const textarea = document.getElementById(id);
+    if (textarea) {
+      textarea.addEventListener("input", () => {
+        if (state.settings.showTokenCounts) {
+          debouncedUpdateTokenCount(id, countId);
+        }
+      });
+    }
+  });
+}
+
+function updateAllTokenCounts() {
+  const textareas = [
+    { id: "char-system-prompt", countId: "char-system-prompt-token-count" },
+    { id: "char-writing-instructions", countId: "char-writing-instructions-token-count" },
+    { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-token-count" },
+    { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-token-count" },
+    { id: "ooc-user-message-format", countId: "ooc-user-message-format-token-count" },
+  ];
+  textareas.forEach(({ id, countId }) => {
+    updateTokenCount(id, countId);
+  });
 }
 
 function setupCrossWindowSync() {

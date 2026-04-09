@@ -1340,6 +1340,10 @@
               <input type="checkbox" id="cross-window-sync-enabled" />
               <span data-i18n="crossWindowSync">Sync threads across tabs</span>
             </span>
+            <span class="checkbox-line">
+              <input type="checkbox" id="show-token-counts" />
+              <span data-i18n="showTokenCounts">Show token counts</span>
+            </span>
             <div class="form-field">
               <span data-i18n="messageBubbleFontSize"
                 >Message Bubble Font Size</span
@@ -1481,11 +1485,17 @@
               ></textarea>
             </div>
             <div class="form-field">
-              <span data-i18n="oocSystemPromptIntro">OOC System Prompt Intro</span>
+              <div class="label-inline">
+                <span data-i18n="oocSystemPromptIntro">OOC System Prompt Intro</span>
+                <span id="ooc-system-prompt-intro-token-count" class="token-count muted hidden">0 tokens</span>
+              </div>
               <textarea id="ooc-system-prompt-intro" rows="2"></textarea>
             </div>
             <div class="form-field">
-              <span data-i18n="oocUserMessageFormat">OOC User Message Format</span>
+              <div class="label-inline">
+                <span data-i18n="oocUserMessageFormat">OOC User Message Format</span>
+                <span id="ooc-user-message-format-token-count" class="token-count muted hidden">0 tokens</span>
+              </div>
               <textarea id="ooc-user-message-format" rows="2"></textarea>
             </div>
             <div class="form-field">
@@ -2525,11 +2535,17 @@
             <input id="char-tagline" type="text" maxlength="128" />
           </div>
           <div class="full lang-field">
-            <span data-i18n="characterPrompt">Character Prompt</span>
+            <div class="label-inline">
+              <span data-i18n="characterPrompt">Character Prompt</span>
+              <span id="char-system-prompt-token-count" class="token-count muted hidden">0 tokens</span>
+            </div>
             <textarea id="char-system-prompt" rows="8"></textarea>
           </div>
           <div class="full lang-field">
-            <span data-i18n="writingInstructions">Writing Instructions</span>
+            <div class="label-inline">
+              <span data-i18n="writingInstructions">Writing Instructions</span>
+              <span id="char-writing-instructions-token-count" class="token-count muted hidden">0 tokens</span>
+            </div>
             <select id="char-writing-instructions-select"></select>
             <textarea
               id="char-writing-instructions"
@@ -2538,9 +2554,12 @@
             ></textarea>
           </div>
           <div class="full lang-field">
-            <span data-i18n="oneTimeExtraPrompt"
-              >One-time only Extra System/Character Prompt</span
-            >
+            <div class="label-inline">
+              <span data-i18n="oneTimeExtraPrompt"
+                >One-time only Extra System/Character Prompt</span
+              >
+              <span id="char-one-time-extra-prompt-token-count" class="token-count muted hidden">0 tokens</span>
+            </div>
             <textarea
               id="char-one-time-extra-prompt"
               rows="4"
@@ -3646,6 +3665,7 @@
     <script src="sfx.js"></script>
     <script src="lore.js"></script>
     <script src="memory-filter.js"></script>
+    <script src="token-counter.js"></script>
     <script src="stt/whisper.js"></script>
     <script src="tts/kokoro.js"></script>
     <script type="module" src="tts/index.js"></script>

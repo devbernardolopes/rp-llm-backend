@@ -721,5 +721,6 @@
   "infoTheme": "Tema visivo dell'interfaccia. Scegli temi chiari, scuri o personalizzati.",
   "infoMarqueeBehavior": "Controlla l'animazione del testo lungo. **Disattivato**: nessuna animazione. **Al passaggio**: anima al passaggio del mouse. **Sempre**: sempre animato.",
   "infoBotCardAvatarEffect": "Effetto di animazione per le schede personaggio nella schermata iniziale. **Carosello**: alterna gli avatar. **Al passaggio**: mostra al passaggio del mouse.",
-  "infoBotCardAvatarTransitionDelay": "Secondi tra le transizioni degli avatar in modalita carosello."
+  "infoBotCardAvatarTransitionDelay": "Secondi tra le transizioni degli avatar in modalita carosello.",
+  "showTokenCounts": "Mostra conteggio token"
 }
