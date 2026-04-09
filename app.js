@@ -13822,6 +13822,18 @@ async function buildDatabaseBackupPayload() {
     tables.memories = tables.memories.map(({ embedding, ...rest }) => rest);
   }
 
+  if (tables.personas) {
+    tables.personas = await Promise.all(
+      tables.personas.map(async (persona) => {
+        const processed = { ...persona };
+        if (processed.avatar instanceof Blob) {
+          processed.avatar = await blobToBase64(processed.avatar);
+        }
+        return processed;
+      })
+    );
+  }
+
   if (tables.assets) {
     tables.assets = await Promise.all(
       tables.assets.map(async (asset) => {
