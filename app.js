@@ -2616,7 +2616,9 @@ function updateNameLengthCounter(inputId, counterId, maxLen = 128) {
 function normalizeTagValue(value) {
   return String(value || "")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .toLowerCase()
+    .replace(/(?:^|\s)\S/g, (char) => char.toUpperCase());
 }
 
 function parseTagList(value) {
