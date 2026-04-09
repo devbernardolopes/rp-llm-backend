@@ -9651,8 +9651,11 @@ let infoPanel = null;
 
 function showInfoPanel(infoKey, buttonEl) {
   if (infoPanelOpen && infoPanel) {
+    if (buttonEl === infoPanel?._triggerButton) {
+      closeInfoPanel();
+      return;
+    }
     closeInfoPanel();
-    if (buttonEl === infoPanel?._triggerButton) return;
   }
 
   infoPanelOpen = true;
@@ -9691,6 +9694,7 @@ function showInfoPanel(infoKey, buttonEl) {
   if (left + panelRect.width > window.innerWidth - 10) {
     left = rect.left - panelRect.width - 8;
   }
+  if (left < 10) left = 10;
   if (top + panelRect.height > window.innerHeight - 10) {
     top = window.innerHeight - panelRect.height - 10;
   }
