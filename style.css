@@ -888,6 +888,13 @@ textarea {
   display: none;
 }
 
+@media (min-width: 601px) {
+  .pane-overlay-toggle,
+  .pane-overlay-toggle.collapsed {
+    display: flex;
+  }
+}
+
 .mobile-pane-toggle {
   position: fixed;
   top: 12px;
