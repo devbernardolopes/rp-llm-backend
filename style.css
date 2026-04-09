@@ -1827,21 +1827,21 @@ textarea {
   font-size: inherit;
   font-style: italic;
   font-weight: 600;
-  color: var(--muted);
-  background: transparent;
-  border: 1px solid var(--line);
+  color: #1a73e8;
+  background: #e8f0fe;
+  border: 1px solid #d4e4fc;
   border-radius: 50%;
   cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s, color 0.2s;
+  opacity: 0.8;
+  transition: opacity 0.2s, color 0.2s, background 0.2s;
   vertical-align: middle;
   flex-shrink: 0;
 }
 
 .info-btn:hover {
   opacity: 1;
-  color: var(--primary);
-  border-color: var(--primary);
+  background: #d4e4fc;
+  border-color: #1a73e8;
 }
 
 .info-panel {
