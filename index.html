@@ -906,7 +906,8 @@
           <!-- <form id="settings-form" novalidate onsubmit="return false;"> -->
           <div data-settings-group="api" class="settings-group">
             <div class="form-field">
-              <span data-i18n="aiProviderLabel">AI Provider</span>
+              <span data-i18n="aiProviderLabel">AI Provider</span
+              ><button type="button" class="info-btn" data-info="aiProvider">i</button>
               <select id="ai-provider-select">
                 <option value="openrouter" data-i18n="providerOpenRouter">
                   OpenRouter
@@ -923,7 +924,8 @@
               </select>
             </div>
             <div class="form-field" id="openrouter-api-key-container">
-              <span data-i18n="openRouterApiKey">OpenRouter API Key</span>
+              <span data-i18n="openRouterApiKey">OpenRouter API Key</span
+              ><button type="button" class="info-btn" data-info="openRouterApiKey">i</button>
               <input
                 id="openrouter-api-key"
                 type="text"
@@ -933,7 +935,8 @@
               />
             </div>
             <div class="form-field hidden" id="horde-api-key-container">
-              <span data-i18n="aiHordeApiKey">AI Horde API Key</span>
+              <span data-i18n="aiHordeApiKey">AI Horde API Key</span
+              ><button type="button" class="info-btn" data-info="aiHordeApiKey">i</button>
               <input
                 id="horde-api-key"
                 type="text"
@@ -943,7 +946,8 @@
               />
             </div>
             <div class="form-field hidden" id="horde-api-method-container">
-              <span data-i18n="aiHordeApiMethod">AI Horde API Method</span>
+              <span data-i18n="aiHordeApiMethod">AI Horde API Method</span
+              ><button type="button" class="info-btn" data-info="aiHordeApiMethod">i</button>
               <select id="horde-api-method">
                 <option value="native" data-i18n="aiHordeApiMethodNative">
                   Native REST API
@@ -954,7 +958,8 @@
               </select>
             </div>
             <div class="form-field hidden" id="lmstudio-base-url-container">
-              <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span>
+              <span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span
+              ><button type="button" class="info-btn" data-info="lmStudioBaseUrl">i</button>
               <input
                 id="lmstudio-base-url"
                 type="text"
@@ -964,7 +969,8 @@
               />
             </div>
             <div class="form-field hidden" id="lmstudio-api-method-container">
-              <span data-i18n="lmStudioApiMethod">LM Studio API Method</span>
+              <span data-i18n="lmStudioApiMethod">LM Studio API Method</span
+              ><button type="button" class="info-btn" data-info="lmStudioApiMethod">i</button>
               <select id="lmstudio-api-method">
                 <option value="openai" data-i18n="lmStudioApiMethodOpenai">
                   OpenAI-Compatible
@@ -975,7 +981,8 @@
               </select>
             </div>
             <div class="form-field hidden" id="groq-api-key-container">
-              <span data-i18n="groqApiKey">Groq API Key</span>
+              <span data-i18n="groqApiKey">Groq API Key</span
+              ><button type="button" class="info-btn" data-info="groqApiKey">i</button>
               <input
                 id="groq-api-key"
                 type="text"
@@ -985,7 +992,8 @@
               />
             </div>
             <div class="form-field">
-              <span data-i18n="modelLabel">Model</span>
+              <span data-i18n="modelLabel">Model</span
+              ><button type="button" class="info-btn" data-info="model">i</button>
               <div class="model-select-wrapper">
                 <select id="model-select"></select>
                 <div id="model-select-display" class="model-select-display">
@@ -1055,7 +1063,8 @@
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="maxTokensLabel">Max Completion Tokens</span>
+                <span data-i18n="maxTokensLabel">Max Completion Tokens</span
+                ><button type="button" class="info-btn" data-info="maxTokens">i</button>
                 <span id="max-tokens-value" class="muted"></span>
               </div>
               <input
@@ -1068,7 +1077,8 @@
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="temperatureLabel">Temperature</span>
+                <span data-i18n="temperatureLabel">Temperature</span
+                ><button type="button" class="info-btn" data-info="temperature">i</button>
                 <span id="temperature-value" class="muted"></span>
               </div>
               <input
@@ -1081,7 +1091,8 @@
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="topPLabel">Top P</span>
+                <span data-i18n="topPLabel">Top P</span
+                ><button type="button" class="info-btn" data-info="topP">i</button>
                 <span id="top-p-value" class="muted"></span>
               </div>
               <input
@@ -1094,7 +1105,8 @@
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span>
+                <span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span
+                ><button type="button" class="info-btn" data-info="frequencyPenalty">i</button>
                 <span id="frequency-penalty-value" class="muted"></span>
               </div>
               <input
@@ -1107,7 +1119,8 @@
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="presencePenaltyLabel">Presence Penalty</span>
+                <span data-i18n="presencePenaltyLabel">Presence Penalty</span
+                ><button type="button" class="info-btn" data-info="presencePenalty">i</button>
                 <span id="presence-penalty-value" class="muted"></span>
               </div>
               <input
@@ -1119,7 +1132,8 @@
               />
             </div>
             <div class="form-field">
-              <span data-i18n="stopStringsLabel">Stop Strings</span>
+              <span data-i18n="stopStringsLabel">Stop Strings</span
+              ><button type="button" class="info-btn" data-info="stopStrings">i</button>
               <input
                 id="stop-strings"
                 type="text"
@@ -1136,7 +1150,7 @@
               <div class="label-inline">
                 <span data-i18n="completionCooldownLabel"
                   >Completion Cooldown</span
-                >
+                ><button type="button" class="info-btn" data-info="completionCooldown">i</button>
                 <span id="completion-cooldown-value" class="muted"></span>
               </div>
               <input
@@ -1149,12 +1163,14 @@
             </div>
             <span class="checkbox-line">
               <input type="checkbox" id="stream-enabled" checked />
-              <span data-i18n="streamMessages">Stream Messages</span>
+              <span data-i18n="streamMessages">Stream Messages</span
+              ><button type="button" class="info-btn" data-info="streamMessages">i</button>
             </span>
           </div>
           <div data-settings-group="appearance" class="settings-group">
             <div class="form-field">
-              <span data-i18n="languageLabel">Interface Language</span>
+              <span data-i18n="languageLabel">Interface Language</span
+              ><button type="button" class="info-btn" data-info="language">i</button>
               <select id="ui-language-select">
                 <option value="auto">Auto (browser)</option>
                 <option value="en">English</option>
@@ -1166,7 +1182,8 @@
               </select>
             </div>
             <div class="form-field">
-              <span data-i18n="sttLanguageLabel">Speech-to-Text Language</span>
+              <span data-i18n="sttLanguageLabel">Speech-to-Text Language</span
+              ><button type="button" class="info-btn" data-info="sttLanguage">i</button>
               <select id="stt-language-select">
                 <option value="en">English</option>
                 <option value="fr">Francais</option>
@@ -1177,7 +1194,8 @@
               </select>
             </div>
             <div class="form-field">
-              <span data-i18n="sttModeLabel">STT Mode</span>
+              <span data-i18n="sttModeLabel">STT Mode</span
+              ><button type="button" class="info-btn" data-info="sttMode">i</button>
               <select id="stt-mode-select">
                 <option value="push-to-talk" data-i18n="sttModePushToTalk">
                   Push-to-Talk
@@ -1190,7 +1208,7 @@
             <div class="form-field">
               <span data-i18n="sttSilenceDurationLabel"
                 >Silence Duration (seconds)</span
-              >
+              ><button type="button" class="info-btn" data-info="sttSilenceDuration">i</button>
               <input
                 type="number"
                 id="stt-silence-duration"
@@ -1200,11 +1218,13 @@
               />
             </div>
             <div class="form-field">
-              <span data-i18n="themeLabel">Theme</span>
+              <span data-i18n="themeLabel">Theme</span
+              ><button type="button" class="info-btn" data-info="theme">i</button>
               <select id="theme-select"></select>
             </div>
             <div class="form-field">
-              <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span>
+              <span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span
+              ><button type="button" class="info-btn" data-info="marqueeBehavior">i</button>
               <select id="marquee-behavior-select">
                 <option value="disabled" data-i18n="marqueeBehaviorDisabled">
                   Disabled
@@ -1220,7 +1240,7 @@
             <div class="form-field">
               <span data-i18n="botCardAvatarEffectLabel"
                 >BOT Card Avatar Effect</span
-              >
+              ><button type="button" class="info-btn" data-info="botCardAvatarEffect">i</button>
               <select id="bot-card-avatar-effect">
                 <option value="none" data-i18n="botCardAvatarEffectNone">
                   None
@@ -1240,7 +1260,7 @@
               <div class="label-inline">
                 <span data-i18n="botCardAvatarTransitionDelayLabel"
                   >Transition Delay</span
-                >
+                ><button type="button" class="info-btn" data-info="botCardAvatarTransitionDelay">i</button>
                 <span
                   id="bot-card-avatar-transition-delay-value"
                   class="muted"

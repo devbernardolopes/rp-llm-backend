@@ -7890,6 +7890,13 @@ function openModal(modalId) {
       populateSettingsModels().catch(() => {});
       populateAutoTitleSummaryModels().catch(() => {});
       setupModalTextareas(modal);
+      document.querySelectorAll(".info-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const infoKey = btn.getAttribute("data-info");
+          if (infoKey) showInfoPanel(infoKey, btn);
+        });
+      });
     } else if (modalId === "personas-modal") {
       renderPersonaModalList();
     } else if (modalId === "shortcuts-modal") {
@@ -9639,6 +9646,71 @@ async function onPersonaSelectChange() {
 
 let chatPersonaDropdownOpen = false;
 let chatPersonaDropdown = null;
+let infoPanelOpen = false;
+let infoPanel = null;
+
+function showInfoPanel(infoKey, buttonEl) {
+  if (infoPanelOpen && infoPanel) {
+    closeInfoPanel();
+    if (buttonEl === infoPanel?._triggerButton) return;
+  }
+
+  infoPanelOpen = true;
+  infoPanel = document.createElement("div");
+  infoPanel.className = "info-panel";
+  infoPanel._triggerButton = buttonEl;
+
+  const content = t("info" + infoKey.charAt(0).toUpperCase() + infoKey.slice(1));
+  if (content && content !== "info" + infoKey.charAt(0).toUpperCase() + infoKey.slice(1)) {
+    if (state.settings.markdownEnabled && typeof window.markdownit === "function") {
+      const md = window.markdownit("default", {
+        html: false,
+        linkify: true,
+        typographer: false,
+        breaks: true,
+      });
+      infoPanel.innerHTML = md.render(content);
+    } else {
+      infoPanel.textContent = content;
+    }
+  } else {
+    infoPanel.textContent = "No info available.";
+  }
+
+  document.body.appendChild(infoPanel);
+
+  const rect = buttonEl.getBoundingClientRect();
+  const panelRect = infoPanel.getBoundingClientRect();
+  let left = rect.right + 8;
+  let top = rect.top;
+
+  if (left + panelRect.width > window.innerWidth - 10) {
+    left = rect.left - panelRect.width - 8;
+  }
+  if (top + panelRect.height > window.innerHeight - 10) {
+    top = window.innerHeight - panelRect.height - 10;
+  }
+  if (top < 10) top = 10;
+
+  infoPanel.style.left = `${left}px`;
+  infoPanel.style.top = `${top}px`;
+
+  const closeOnOutsideClick = (e) => {
+    if (infoPanel && !infoPanel.contains(e.target) && e.target !== buttonEl && !buttonEl.contains(e.target)) {
+      closeInfoPanel();
+      document.removeEventListener("click", closeOnOutsideClick);
+    }
+  };
+  setTimeout(() => document.addEventListener("click", closeOnOutsideClick), 0);
+}
+
+function closeInfoPanel() {
+  infoPanelOpen = false;
+  if (infoPanel && infoPanel.parentNode) {
+    infoPanel.parentNode.removeChild(infoPanel);
+  }
+  infoPanel = null;
+}
 
 async function showChatPersonaDropdown() {
   const avatarEl = document.getElementById("persona-selected-avatar");

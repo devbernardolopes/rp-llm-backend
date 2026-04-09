@@ -1,3 +1,5 @@
-# Chat with anyone. Anything. Anytime.
+# SCENARA
+
+**Chat with anyone. Anything. Anytime.**
 
 This is your personal AI companion platform where you can create and chat with virtual characters for fun, roleplay, creative writing, brainstorming, or just casual conversation. Think of it as a private, customizable alternative to public AI chat services—no filters, no limits, and completely under your control. You choose which AI brain powers your chats (from free community models to powerful local ones), design your own characters with unique personalities and backgrounds, and build ongoing conversations that remember context. Whether you want to practice social skills, explore storytelling, get creative ideas, or just talk to an AI that actually feels like a character—the choice is yours.
