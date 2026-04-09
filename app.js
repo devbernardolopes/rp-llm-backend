@@ -9670,6 +9670,10 @@ function showInfoPanel(infoKey, buttonEl) {
         breaks: true,
       });
       infoPanel.innerHTML = md.render(content);
+      infoPanel.querySelectorAll("a").forEach((a) => {
+        a.setAttribute("target", "_blank");
+        a.setAttribute("rel", "noopener noreferrer");
+      });
     } else {
       infoPanel.textContent = content;
     }

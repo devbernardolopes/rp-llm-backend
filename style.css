@@ -1823,7 +1823,7 @@ textarea {
   justify-content: center;
   width: 1.2em;
   height: 1.2em;
-  margin-left: 4px;
+  margin-left: 2px;
   font-size: inherit;
   font-style: italic;
   font-weight: 600;
@@ -1835,6 +1835,7 @@ textarea {
   opacity: 0.7;
   transition: opacity 0.2s, color 0.2s;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .info-btn:hover {
@@ -3837,6 +3838,17 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.label-inline .info-btn {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.label-with-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .modal-body input[type="range"] {
