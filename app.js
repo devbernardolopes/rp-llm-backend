@@ -19164,19 +19164,21 @@ function setupMemoryRegenerationControls() {
 
 function positionPromptHistoryPopover() {
   const popover = document.getElementById("prompt-history-popover");
+  const userInputContainer = document.getElementById("user-input-container");
   const chatView = document.getElementById("chat-view");
-  const inputRow = document.querySelector(".input-row");
   if (
     !popover ||
+    !userInputContainer ||
     !chatView ||
-    !inputRow ||
     popover.classList.contains("hidden")
   )
     return;
+  popover.style.top = "";
   popover.style.bottom = "";
-  popover.style.top = "0px";
-  const desiredTop = Math.max(0, inputRow.offsetTop - popover.offsetHeight - 8);
-  popover.style.top = `${desiredTop}px`;
+  const inputRect = userInputContainer.getBoundingClientRect();
+  const chatViewRect = chatView.getBoundingClientRect();
+  const desiredTop = inputRect.top - chatViewRect.top - popover.offsetHeight - 8;
+  popover.style.top = `${Math.max(8, desiredTop)}px`;
 }
 
 function setSendingState(sending) {
