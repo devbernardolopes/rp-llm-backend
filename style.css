@@ -882,7 +882,7 @@ textarea {
   min-height: 0;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (max-width: 900px) {
   .pane-overlay-toggle,
   .pane-overlay-toggle.collapsed {
     display: none !important;
@@ -2925,6 +2925,10 @@ textarea {
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  position: sticky;
+  bottom: 0;
+  background: var(--panel);
+  padding-bottom: env(safe-area-inset-bottom, 12px);
 }
 
 .shortcut-chip {
@@ -4662,118 +4666,7 @@ textarea {
   }
 }
 
-@media (max-width: 900px) {
-  #app-shell {
-    grid-template-columns: minmax(74px, 34vw) 1fr;
-    --left-pane-width: max(74px, 34vw);
-  }
-
-  #left-pane {
-    position: relative;
-    left: auto;
-    top: auto;
-    bottom: auto;
-    width: auto;
-    z-index: auto;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
-  }
-
-  #left-pane.collapsed {
-    transform: none;
-    width: auto;
-  }
-
-  .thread-list {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
-  }
-
-  .pane-bottom {
-    position: sticky;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom, 10px);
-    z-index: 5;
-    background: var(--panel);
-  }
-
-  #chat-view {
-    min-width: 0;
-    padding-bottom: env(safe-area-inset-bottom, 12px);
-  }
-
-  .chat-log {
-    padding-bottom: calc(220px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .two-col {
-    grid-template-columns: 1fr;
-  }
-
-.chat-input-wrapper {
-    position: fixed;
-    left: max(12px, env(safe-area-inset-left, 12px));
-    right: max(12px, env(safe-area-inset-right, 12px));
-    bottom: max(12px, env(safe-area-inset-bottom, 12px));
-    z-index: 5;
-    margin-top: 0;
-    max-height: calc(100dvh - 120px);
-    max-height: calc(100vh - 120px);
-    overflow-y: visible;
-    padding-bottom: 12px;
-  }
-
-  #chat-view.keyboard-active .chat-input-wrapper {
-    bottom: max(12px, env(safe-area-inset-bottom, 12px));
-    max-height: calc(100dvh - 280px);
-    max-height: calc(100vh - 280px);
-  }
-
-  #chat-view.keyboard-active .chat-log {
-    padding-bottom: calc(280px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .chat-input-wrapper .shortcuts-bar {
-    justify-content: flex-start;
-    gap: 6px;
-  }
-
-  .input-row {
-    gap: 6px;
-  }
-
-.input-footer {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .input-footer-right {
-    margin-left: 0;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 6px;
-  }
-
-  .input-footer-right .model-pill {
-    flex: 1 1 140px;
-    min-width: 0;
-  }
-
-  .input-footer-right button,
-  .input-footer-right select,
-  .input-footer-right .persona-selected-avatar {
-    flex: 0 0 auto;
-  }
-
-  .input-footer-right #send-btn {
-    margin-left: auto;
-  }
-
-  #persona-select {
-    min-width: 0;
-    width: min(200px, 100%);
-  }
-}
-
-@media (max-height: 520px) and (max-width: 900px) {
+@media (max-height: 520px) {
   .chat-input-wrapper {
     left: max(22px, env(safe-area-inset-left, 22px));
     right: max(22px, env(safe-area-inset-right, 22px));
@@ -4803,7 +4696,7 @@ textarea {
     justify-content: flex-start;
   }
 
-.input-footer-right #send-btn {
+  .input-footer-right #send-btn {
     margin-left: auto;
   }
 
