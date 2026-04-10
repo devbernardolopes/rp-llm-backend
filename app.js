@@ -3934,14 +3934,18 @@ async function setupSettingsControls() {
     state.settings.marqueeBehavior = behavior;
     marqueeBehaviorSelect.value = behavior;
   }
-  updateSettingsRangeTone(maxTokensSlider, Number(maxTokensSlider.value), {
-    warnBelow: 1024,
-    dangerAbove: 4096,
-  });
-  updateSettingsRangeTone(temperatureSlider, Number(temperatureSlider.value), {
-    warnBelow: 0.7,
-    dangerAbove: 1.0,
-  });
+  if (maxTokensSlider) {
+    updateSettingsRangeTone(maxTokensSlider, Number(maxTokensSlider.value), {
+      warnBelow: 1024,
+      dangerAbove: 4096,
+    });
+  }
+  if (temperatureSlider) {
+    updateSettingsRangeTone(temperatureSlider, Number(temperatureSlider.value), {
+      warnBelow: 0.7,
+      dangerAbove: 1.0,
+    });
+  }
   const globalPromptTemplate = document.getElementById("global-prompt-template");
   const summarySystemPrompt = document.getElementById("summary-system-prompt");
   const memorySummarizerUserPrompt = document.getElementById(
@@ -4459,13 +4463,13 @@ async function setupSettingsControls() {
     if (currentThread) renderChat();
   });
 
-  maxTokensSlider.addEventListener("input", () => {
+  maxTokensSlider?.addEventListener("input", () => {
     const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
     const value = clampMaxTokens(Number(maxTokensSlider.value), 512, maxUpper);
     state.settings.maxTokens = value;
     maxTokensSlider.max = String(maxUpper);
     maxTokensSlider.value = String(value);
-    maxTokensValue.textContent = String(value);
+    if (maxTokensValue) maxTokensValue.textContent = String(value);
     updateSettingsRangeTone(maxTokensSlider, value, {
       warnBelow: 1024,
       dangerAbove: 4096,
@@ -4474,10 +4478,10 @@ async function setupSettingsControls() {
     saveSettings();
   });
 
-  temperatureSlider.addEventListener("input", () => {
+  temperatureSlider?.addEventListener("input", () => {
     const value = clampTemperature(Number(temperatureSlider.value));
     state.settings.temperature = value;
-    temperatureValue.textContent = value.toFixed(2);
+    if (temperatureValue) temperatureValue.textContent = value.toFixed(2);
     updateSettingsRangeTone(temperatureSlider, value, {
       warnBelow: 0.7,
       dangerAbove: 1.0,
