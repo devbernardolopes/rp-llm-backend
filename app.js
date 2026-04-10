@@ -3874,16 +3874,20 @@ async function setupSettingsControls() {
     512,
     initialSliderMax,
   );
-  maxTokensSlider.min = "512";
-  maxTokensSlider.max = String(initialSliderMax);
-  maxTokensSlider.value = String(state.settings.maxTokens);
-  maxTokensValue.textContent = maxTokensSlider.value;
-  temperatureSlider.value = String(
-    clampTemperature(state.settings.temperature),
-  );
-  temperatureValue.textContent = clampTemperature(
-    state.settings.temperature,
-  ).toFixed(2);
+  if (maxTokensSlider) {
+    maxTokensSlider.min = "512";
+    maxTokensSlider.max = String(initialSliderMax);
+    maxTokensSlider.value = String(state.settings.maxTokens);
+    maxTokensValue.textContent = maxTokensSlider.value;
+  }
+  if (temperatureSlider) {
+    temperatureSlider.value = String(
+      clampTemperature(state.settings.temperature),
+    );
+    if (temperatureValue) temperatureValue.textContent = clampTemperature(
+      state.settings.temperature,
+    ).toFixed(2);
+  }
   if (topPSlider) {
     topPSlider.value = String(Number(state.settings.topP) || 1);
     topPValue.textContent = topPSlider.value;
@@ -4224,10 +4228,12 @@ async function setupSettingsControls() {
       512,
       maxUpper,
     );
-    maxTokensSlider.min = "512";
-    maxTokensSlider.max = String(maxUpper);
-    maxTokensSlider.value = String(state.settings.maxTokens);
-    maxTokensValue.textContent = String(state.settings.maxTokens);
+    if (maxTokensSlider) {
+      maxTokensSlider.min = "512";
+      maxTokensSlider.max = String(maxUpper);
+      maxTokensSlider.value = String(state.settings.maxTokens);
+    }
+    if (maxTokensValue) maxTokensValue.textContent = String(state.settings.maxTokens);
     refreshSelectedModelMeta(modelSelectedMeta);
     scheduleThreadBudgetIndicatorUpdate();
     saveSettings();
