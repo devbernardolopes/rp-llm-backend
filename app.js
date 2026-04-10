@@ -912,6 +912,10 @@ function applyBotCardSize() {
     "bot-card-size-big",
   );
   grid.classList.add(`bot-card-size-${size}`);
+  clearTimeout(state.marqueeRefreshTimer);
+  state.marqueeRefreshTimer = setTimeout(() => {
+    refreshAllHoverMarquees();
+  }, 100);
 }
 
 function setChatOpacityFromPercent(percent) {
@@ -7730,6 +7734,10 @@ function handleMobilePaneAutoHide() {
       }
     }
   }
+  clearTimeout(state.marqueeRefreshTimer);
+  state.marqueeRefreshTimer = setTimeout(() => {
+    refreshAllHoverMarquees();
+  }, 100);
 
   updateLeftPaneWidthVariable();
 }
