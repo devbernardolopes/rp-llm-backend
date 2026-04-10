@@ -67,6 +67,7 @@ const DEFAULT_SETTINGS = {
   marqueeBehavior: "disabled",
   botCardAvatarEffect: "none",
   botCardAvatarTransitionDelay: 4,
+  botCardSize: "big",
   chatInputButtonSize: "regular",
   completionCooldown: 2,
   lockMemoryMessages: false,
@@ -322,6 +323,10 @@ function populateSettingsTabValues() {
   const chatInputButtonSizeSelect = document.getElementById("chat-input-button-size-select");
   if (chatInputButtonSizeSelect) {
     chatInputButtonSizeSelect.value = state.settings.chatInputButtonSize || "regular";
+  }
+  const botCardSizeSelect = document.getElementById("bot-card-size-select");
+  if (botCardSizeSelect) {
+    botCardSizeSelect.value = state.settings.botCardSize || "big";
   }
   if (toastDelaySlider) {
     toastDelaySlider.value = state.settings.toastDelay;
@@ -745,6 +750,7 @@ async function init() {
   applyChatOpacitySetting();
   applyChatInputButtonSize();
   applyMessageBubbleFontSize();
+  applyBotCardSize();
   ensureTagCatalogInitialized();
   await applyInterfaceLanguage();
   loadUiState();
@@ -894,6 +900,18 @@ function applyMessageBubbleFontSize() {
   const size = state.settings.messageBubbleFontSize || "regular";
   const fonts = { small: "0.85rem", regular: "1rem", big: "1.25rem" };
   document.documentElement.style.setProperty("--message-font-size", fonts[size] || "1rem");
+}
+
+function applyBotCardSize() {
+  const size = state.settings.botCardSize || "big";
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  grid.classList.remove(
+    "bot-card-size-small",
+    "bot-card-size-regular",
+    "bot-card-size-big",
+  );
+  grid.classList.add(`bot-card-size-${size}`);
 }
 
 function setChatOpacityFromPercent(percent) {
@@ -4567,6 +4585,13 @@ async function setupSettingsControls() {
     applyChatInputButtonSize();
   });
 
+  const botCardSizeSelect = document.getElementById("bot-card-size-select");
+  botCardSizeSelect?.addEventListener("change", () => {
+    state.settings.botCardSize = botCardSizeSelect.value;
+    saveSettings();
+    applyBotCardSize();
+  });
+
   globalPromptTemplate.addEventListener("input", () => {
     state.settings.globalPromptTemplate = globalPromptTemplate.value;
     saveSettings();
@@ -4991,7 +5016,8 @@ function getSettingsGroupForNode(node) {
     id === "marquee-behavior-select" ||
     id === "bot-card-avatar-effect" ||
     id === "bot-card-avatar-transition-delay-slider" ||
-    id === "bot-card-avatar-transition-delay-value"
+    id === "bot-card-avatar-transition-delay-value" ||
+    id === "bot-card-size-select"
   ) {
     return "appearance";
   }

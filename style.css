@@ -1245,6 +1245,21 @@ textarea {
   padding-right: 4px;
 }
 
+.character-grid.bot-card-size-small {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.character-grid.bot-card-size-regular {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.character-grid.bot-card-size-big {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
 .character-pagination {
   width: 100%;
   border-top: 1px solid var(--line);
