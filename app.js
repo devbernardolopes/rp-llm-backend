@@ -18302,17 +18302,21 @@ async function deleteMessageAt(index) {
     showToast(t("memoryMessageLockedNotice"), "warning");
     return;
   }
-  const previewBase = String(target?.content || "").trim();
-  const truncatedPreview =
-    previewBase.length > 120 ? `${previewBase.slice(0, 120)}…` : previewBase;
-  const previewText = truncatedPreview
-    ? `\n\n"${truncatedPreview}"`
-    : truncatedPreview;
-  const ok = await openConfirmDialog(
-    t("deleteMessageTitle"),
-    tf("deleteMessageConfirm", { preview: previewText }),
-  );
-  if (!ok) return;
+  const isEmptyInitial =
+    target?.isInitial === true && !String(target?.content || "").trim();
+  if (!isEmptyInitial) {
+    const previewBase = String(target?.content || "").trim();
+    const truncatedPreview =
+      previewBase.length > 120 ? `${previewBase.slice(0, 120)}…` : previewBase;
+    const previewText = truncatedPreview
+      ? `\n\n"${truncatedPreview}"`
+      : truncatedPreview;
+    const ok = await openConfirmDialog(
+      t("deleteMessageTitle"),
+      tf("deleteMessageConfirm", { preview: previewText }),
+    );
+    if (!ok) return;
+  }
 
   // Determine if this is an API-generated assistant message (not manual, not OOC) and placement is "once"
   const isApiAssistant =
