@@ -17566,10 +17566,14 @@ async function sendOocInquiry(text) {
     pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
     const finishReasonValue = result.finishReason;
     const isOkFinish = finishReasonValue === "stop";
+    const NO_CONTENT = "(No content returned)";
+    const isNoContent = String(pendingAssistant.content || "").trim() === NO_CONTENT;
     if (!isOkFinish && !pendingAssistant.truncatedByFilter) {
       pendingAssistant.generationError = `finish_reason: ${
         finishReasonValue ?? "null"
       }`;
+    } else if (isNoContent) {
+      pendingAssistant.generationError = "No content returned";
     } else {
       pendingAssistant.generationError = "";
     }
@@ -17687,7 +17691,13 @@ async function regenerateOocMessage(index) {
     target.generationFetchDebug = result.generationFetchDebug || [];
     target.model = result.model || state.settings.model || "";
     target.temperature = Number(state.settings.temperature) || 0;
-    target.generationError = "";
+    const NO_CONTENT = "(No content returned)";
+    const isNoContent = String(target.content || "").trim() === NO_CONTENT;
+    if (isNoContent) {
+      target.generationError = "No content returned";
+    } else {
+      target.generationError = "";
+    }
     target.generationStatus = "";
     target.systemMessages = formatOocSystemMessageEntries(
       result.systemMessages,
@@ -17979,14 +17989,18 @@ async function generateBotReply() {
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
 
-    pending.content = assistantText || "(No content returned)";
+    const NO_CONTENT_RETURNED = "(No content returned)";
+    pending.content = assistantText || NO_CONTENT_RETURNED;
     pending.finishReason = String(result.finishReason || "");
     pending.nativeFinishReason = String(result.nativeFinishReason || "");
     pending.truncatedByFilter = result.truncatedByFilter === true;
     const finishReasonValue = result.finishReason;
     const isOkFinish = finishReasonValue === "stop";
+    const isNoContent = String(pending.content || "").trim() === NO_CONTENT_RETURNED;
     if (!isOkFinish && !pending.truncatedByFilter) {
       pending.generationError = `finish_reason: ${finishReasonValue ?? "null"}`;
+    } else if (isNoContent) {
+      pending.generationError = "No content returned";
     } else {
       pending.generationError = "";
     }
@@ -18332,7 +18346,13 @@ async function regenerateMessage(index) {
             )
           : [];
     messagesToSave[index].systemMessages = target.systemMessages;
-    target.generationError = "";
+    const NO_CONTENT = "(No content returned)";
+    const isNoContent = String(target.content || "").trim() === NO_CONTENT;
+    if (isNoContent) {
+      target.generationError = "No content returned";
+    } else {
+      target.generationError = "";
+    }
     target.generationStatus = "";
     messagesToSave[index] = { ...target };
     target.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
