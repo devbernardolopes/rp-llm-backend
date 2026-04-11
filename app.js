@@ -11398,9 +11398,15 @@ function updateWritingInstructionNameCount() {
 function updateWritingInstructionTextCount() {
   const textInput = document.getElementById("writing-instruction-text");
   const countSpan = document.getElementById("writing-instruction-text-count");
-  if (textInput && countSpan) {
-    countSpan.textContent = `${textInput.value.length}/20480`;
+  if (!textInput || !countSpan) return;
+  if (!state.settings.showTokenCounts) {
+    countSpan.textContent = "";
+    return;
   }
+  const text = textInput.value || "";
+  estimateTokens(text).then((count) => {
+    countSpan.textContent = `${count} tokens`;
+  });
 }
 
 function updateSaveWritingInstructionButton() {
