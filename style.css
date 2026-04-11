@@ -1045,6 +1045,28 @@ textarea {
     opacity: 0.5;
     pointer-events: none;
   }
+
+  #main-view {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .view.active {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .character-grid {
+    overflow-y: visible;
+    flex: 1;
+  }
+
+  .character-pagination {
+    position: relative;
+    bottom: auto;
+  }
 }
 
 .mobile-pane-toggle svg {
