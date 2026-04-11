@@ -17287,6 +17287,19 @@ async function sendMessage(options = {}) {
     await addManualAssistantMessage(aiCommandContent);
     return;
   }
+  if (currentThread?.oocModeEnabled === true) {
+    if (shouldTriggerAiOnly) {
+      if (currentThread) {
+        addPromptCommandEntry(currentThread.id, "/ai");
+      }
+      clearDraftInput();
+      await sendOocInquiry("");
+      return;
+    }
+    clearDraftInput();
+    await sendOocInquiry(text);
+    return;
+  }
   if (shouldTriggerAiOnly) {
     if (currentThread) {
       addPromptCommandEntry(currentThread.id, "/ai");
@@ -17296,11 +17309,6 @@ async function sendMessage(options = {}) {
     return;
   }
   clearDraftInput();
-
-  if (currentThread?.oocModeEnabled === true) {
-    await sendOocInquiry(text);
-    return;
-  }
 
   const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
   const userMsg = {
@@ -17858,7 +17866,16 @@ async function regenerateOocMessage(index) {
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
     const assistantText = result.content || target.content || "";
-    target.content = assistantText || "(No content returned)";
+    const trimmedText = assistantText.trim();
+    let wrappedContent = "(No content returned)";
+    if (trimmedText) {
+      if (trimmedText.startsWith("((OOC:") && trimmedText.endsWith("))")) {
+        wrappedContent = trimmedText;
+      } else {
+        wrappedContent = `((OOC: ${trimmedText}))`;
+      }
+    }
+    target.content = wrappedContent;
     target.finishReason = String(result.finishReason || "");
     target.nativeFinishReason = String(result.nativeFinishReason || "");
     target.truncatedByFilter = result.truncatedByFilter === true;
