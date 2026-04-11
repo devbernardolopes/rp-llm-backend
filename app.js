@@ -7776,7 +7776,18 @@ function toggleMobilePane() {
 
   pane.classList.toggle("mobile-open");
   const isOpen = pane.classList.contains("mobile-open");
-  
+
+  if (isOpen) {
+    pane.classList.remove("collapsed");
+    shell?.classList.remove("pane-collapsed");
+  } else {
+    const chatView = document.getElementById("chat-view");
+    if (chatView?.classList.contains("active")) {
+      pane.classList.add("collapsed");
+      shell?.classList.add("pane-collapsed");
+    }
+  }
+
   if (shell) {
     shell.classList.toggle("pane-mobile-open", isOpen);
   }
@@ -7799,6 +7810,12 @@ function closeMobilePane() {
   if (!pane) return;
 
   pane.classList.remove("mobile-open");
+  const chatView = document.getElementById("chat-view");
+  if (chatView?.classList.contains("active")) {
+    pane.classList.add("collapsed");
+    shell?.classList.add("pane-collapsed");
+  }
+
   if (shell) {
     shell.classList.remove("pane-mobile-open");
   }
