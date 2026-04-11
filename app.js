@@ -17865,6 +17865,10 @@ async function generateBotReply() {
       content: promptContext.personaInjectionForEndMessages,
     });
   }
+  const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
+  if (nonSystemMessages.length === 0) {
+    promptMessages.push({ role: "user", content: "Continue" });
+  }
   state.currentRequestMessages = promptMessages;
 
   const log = document.getElementById("chat-log");
