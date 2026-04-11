@@ -1165,6 +1165,9 @@ function setupEvents() {
       setModalDirtyState("character-modal", true);
       document.getElementById("char-language-modal")?.classList.add("hidden");
       await loadActiveCharacterDefinitionToForm();
+      if (state.settings.showTokenCounts) {
+        updateAllTokenCounts();
+      }
       setCharacterModalTab("lang");
       renderCharacterDefinitionTabs();
       restoreCharModalTextareaCollapseStates();
@@ -7958,6 +7961,9 @@ function openModal(modalId) {
       populateSettingsModels().catch(() => {});
       populateAutoTitleSummaryModels().catch(() => {});
       setupModalTextareas(modal);
+      if (state.settings.showTokenCounts) {
+        updateAllTokenCounts();
+      }
       document.querySelectorAll(".info-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -8531,6 +8537,9 @@ function renderCharacterDefinitionTabs() {
       saveCharModalTextareaCollapseStates();
       state.charModalActiveLanguage = def.language;
       await loadActiveCharacterDefinitionToForm();
+      if (state.settings.showTokenCounts) {
+        updateAllTokenCounts();
+      }
       setCharacterModalTab("lang");
       renderCharacterDefinitionTabs();
       restoreCharModalTextareaCollapseStates();
@@ -8590,6 +8599,9 @@ function renderCharacterDefinitionTabs() {
       }
       await loadActiveCharacterDefinitionToForm();
       renderCharacterDefinitionTabs();
+      if (state.settings.showTokenCounts) {
+        updateAllTokenCounts();
+      }
       setModalDirtyState("character-modal", true);
     });
     btn.appendChild(del);
@@ -9101,6 +9113,9 @@ async function openCharacterModal(
 
   renderCharacterDefinitionTabs();
   await loadActiveCharacterDefinitionToForm();
+  if (state.settings.showTokenCounts) {
+    updateAllTokenCounts();
+  }
   setCharacterModalTab("lang");
   populateCharacterLanguageSelectOptions();
 
