@@ -18065,7 +18065,11 @@ async function generateBotReply() {
     });
   }
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
-  if (nonSystemMessages.length === 0) {
+  const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
+  const needsContinuePrompt =
+    nonSystemMessages.length === 0 ||
+    (lastMessage && lastMessage.role === "assistant");
+  if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
   state.currentRequestMessages = promptMessages;
@@ -22190,6 +22194,14 @@ async function callOpenRouter(
         content: removeImageLinksFromContent(m.content),
       })),
   ];
+  const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
+  const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
+  const needsContinuePrompt =
+    nonSystemMessages.length === 0 ||
+    (lastMessage && lastMessage.role === "assistant");
+  if (needsContinuePrompt) {
+    promptMessages.push({ role: "user", content: "Continue" });
+  }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
     .map((msg) => ({
@@ -22308,7 +22320,11 @@ async function callLMStudio(
       })),
   ];
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
-  if (nonSystemMessages.length === 0) {
+  const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
+  const needsContinuePrompt =
+    nonSystemMessages.length === 0 ||
+    (lastMessage && lastMessage.role === "assistant");
+  if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
   const systemMessages = promptMessages
@@ -22651,7 +22667,11 @@ async function callGroq(
       })),
   ];
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
-  if (nonSystemMessages.length === 0) {
+  const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
+  const needsContinuePrompt =
+    nonSystemMessages.length === 0 ||
+    (lastMessage && lastMessage.role === "assistant");
+  if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
   const systemMessages = promptMessages
@@ -23178,7 +23198,11 @@ async function callAIHorde(
   ];
 
   const nonSystemMessages = messages.filter((m) => m.role !== "system");
-  if (nonSystemMessages.length === 0) {
+  const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
+  const needsContinuePrompt =
+    nonSystemMessages.length === 0 ||
+    (lastMessage && lastMessage.role === "assistant");
+  if (needsContinuePrompt) {
     messages.push({ role: "user", content: "Continue" });
   }
 
