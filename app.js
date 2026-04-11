@@ -21921,12 +21921,19 @@ async function callOpenRouter(
 
   const resolvedModel = resolveModelForRequest(model);
   const fallbackModel = getFallbackModel(resolvedModel, model);
+  const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
         // Filter out empty assistant messages
         if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        if (
+          m.role === "assistant" &&
+          String(m.content || "").trim() === NO_CONTENT_RETURNED
+        ) {
           return false;
         }
         return true;
@@ -22025,11 +22032,18 @@ async function callLMStudio(
   options = {},
 ) {
   const resolvedModel = resolveModelForRequest(model);
+  const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
         if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        if (
+          m.role === "assistant" &&
+          String(m.content || "").trim() === NO_CONTENT_RETURNED
+        ) {
           return false;
         }
         return true;
@@ -22351,11 +22365,18 @@ async function callGroq(
     ? resolvedModel.slice(5)
     : resolvedModel;
 
+  const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
         if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        if (
+          m.role === "assistant" &&
+          String(m.content || "").trim() === NO_CONTENT_RETURNED
+        ) {
           return false;
         }
         if (m.role === "user" && !String(m.content || "").trim()) {
@@ -22571,14 +22592,21 @@ async function callAIHordeOpenAI(
   model,
   onChunk = null,
   signal = null,
-  options = {},
+options = {},
 ) {
   const resolvedModel = resolveModelForRequest(model);
+  const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
         if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        if (
+          m.role === "assistant" &&
+          String(m.content || "").trim() === NO_CONTENT_RETURNED
+        ) {
           return false;
         }
         return true;
@@ -22851,12 +22879,19 @@ async function callAIHorde(
   const hordeApiKey = localKey || fallbackKey;
 
   const baseUrl = "https://stablehorde.net";
+  const NO_CONTENT_RETURNED = "(No content returned)";
 
   const messages = [
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
         if (m.role === "assistant" && !String(m.content || "").trim()) {
+          return false;
+        }
+        if (
+          m.role === "assistant" &&
+          String(m.content || "").trim() === NO_CONTENT_RETURNED
+        ) {
           return false;
         }
         return true;
