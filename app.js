@@ -16968,7 +16968,7 @@ function decorateMessageCodeBlocks(container) {
       async (event) => {
         event.preventDefault();
         event.stopPropagation();
-        await copyCodeBlockText(codeEl.textContent ?? "");
+        await copyCodeBlockText((codeEl.textContent ?? "").trim());
       },
     );
     copyBtn.classList.add("message-code-block-copy-btn");
