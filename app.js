@@ -22167,15 +22167,21 @@ async function callOpenRouter(
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
-        // Filter out empty assistant messages
+        // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         if (
           m.role === "assistant" &&
           String(m.content || "").trim() === NO_CONTENT_RETURNED
         ) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         return true;
       })
@@ -22278,14 +22284,21 @@ async function callLMStudio(
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
+        // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         if (
           m.role === "assistant" &&
           String(m.content || "").trim() === NO_CONTENT_RETURNED
         ) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         return true;
       })
@@ -22611,14 +22624,21 @@ async function callGroq(
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
+        // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         if (
           m.role === "assistant" &&
           String(m.content || "").trim() === NO_CONTENT_RETURNED
         ) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         if (m.role === "user" && !String(m.content || "").trim()) {
           return false;
@@ -22833,7 +22853,7 @@ async function callAIHordeOpenAI(
   model,
   onChunk = null,
   signal = null,
-options = {},
+  options = {},
 ) {
   const resolvedModel = resolveModelForRequest(model);
   const NO_CONTENT_RETURNED = "(No content returned)";
@@ -22841,14 +22861,21 @@ options = {},
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
+        // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         if (
           m.role === "assistant" &&
           String(m.content || "").trim() === NO_CONTENT_RETURNED
         ) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         return true;
       })
@@ -23126,14 +23153,21 @@ async function callAIHorde(
     { role: "system", content: systemPrompt },
     ...history
       .filter((m) => {
+        // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         if (
           m.role === "assistant" &&
           String(m.content || "").trim() === NO_CONTENT_RETURNED
         ) {
-          return false;
+          const hasUserMessage = history.some(
+            (msg) => msg.role === "user" && String(msg.content || "").trim(),
+          );
+          return hasUserMessage;
         }
         return true;
       })
