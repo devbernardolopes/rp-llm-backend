@@ -46,6 +46,7 @@ const DEFAULT_SETTINGS = {
   frequencyPenalty: 0,
   presencePenalty: 0,
   stopStrings: "",
+  modelProfiles: {},
   cancelShortcut: "Ctrl+.",
   homeShortcut: "Alt+H",
   newCharacterShortcut: "Alt+N",
@@ -280,6 +281,14 @@ function populateSettingsTabValues() {
     if (ppValue) ppValue.textContent = state.settings.presencePenalty;
   }
   if (stopStrings) stopStrings.value = state.settings.stopStrings || "";
+  
+  // Initialize model profiles
+  updateModelProfileSelect();
+  const currentProfile = getModelProfile(state.settings.model);
+  if (currentProfile) {
+    updateProfileFieldsUI(currentProfile);
+  }
+  
   if (completionCooldownSlider) {
     completionCooldownSlider.value = state.settings.completionCooldown;
     const ccValue = document.getElementById("completion-cooldown-value");
@@ -4252,6 +4261,8 @@ async function setupSettingsControls() {
     scheduleThreadBudgetIndicatorUpdate();
     saveSettings();
     updateModelPill();
+    applyModelProfileIfEnabled(modelSelect.value);
+    updateModelProfileSelect();
   });
 
   modelPricingFilter?.addEventListener("change", () => {
@@ -4519,6 +4530,109 @@ async function setupSettingsControls() {
   stopStringsInput?.addEventListener("input", () => {
     state.settings.stopStrings = stopStringsInput.value.trim();
     saveSettings();
+  });
+
+  const modelProfileSelect = document.getElementById("model-profile-select");
+  const modelProfileFields = document.getElementById("model-profile-fields");
+  const modelProfileName = document.getElementById("model-profile-name");
+  const modelProfileLoadAuto = document.getElementById("model-profile-load-auto");
+  const modelProfileStopStrings = document.getElementById("model-profile-stop-strings");
+  const profileTemperatureSlider = document.getElementById("profile-temperature-slider");
+  const profileTemperatureValue = document.getElementById("profile-temperature-value");
+  const profileTopPSlider = document.getElementById("profile-top-p-slider");
+  const profileTopPValue = document.getElementById("profile-top-p-value");
+  const profileFpSlider = document.getElementById("profile-frequency-penalty-slider");
+  const profileFpValue = document.getElementById("profile-frequency-penalty-value");
+  const profilePpSlider = document.getElementById("profile-presence-penalty-slider");
+  const profilePpValue = document.getElementById("profile-presence-penalty-value");
+  const profileMtSlider = document.getElementById("profile-max-tokens-slider");
+  const profileMtValue = document.getElementById("profile-max-tokens-value");
+  const saveModelProfileBtn = document.getElementById("save-model-profile-btn");
+  const deleteModelProfileBtn = document.getElementById("delete-model-profile-btn");
+
+  function updateProfileFieldsUI(profile) {
+    if (!profile) {
+      if (modelProfileFields) modelProfileFields.classList.add("hidden");
+      return;
+    }
+    if (modelProfileFields) modelProfileFields.classList.remove("hidden");
+    if (modelProfileName) modelProfileName.value = profile.model || "";
+    if (modelProfileLoadAuto) modelProfileLoadAuto.checked = profile.autoLoad || false;
+    if (modelProfileStopStrings) modelProfileStopStrings.value = profile.stopStrings || "";
+    if (profileTemperatureSlider) profileTemperatureSlider.value = profile.temperature ?? 0.8;
+    if (profileTemperatureValue) profileTemperatureValue.textContent = (profile.temperature ?? 0.8).toFixed(2);
+    if (profileTopPSlider) profileTopPSlider.value = profile.topP ?? 1;
+    if (profileTopPValue) profileTopPValue.textContent = (profile.topP ?? 1).toFixed(2);
+    if (profileFpSlider) profileFpSlider.value = profile.frequencyPenalty ?? 0;
+    if (profileFpValue) profileFpValue.textContent = (profile.frequencyPenalty ?? 0).toFixed(1);
+    if (profilePpSlider) profilePpSlider.value = profile.presencePenalty ?? 0;
+    if (profilePpValue) profilePpValue.textContent = (profile.presencePenalty ?? 0).toFixed(1);
+    if (profileMtSlider) profileMtSlider.value = profile.maxTokens ?? 4096;
+    if (profileMtValue) profileMtValue.textContent = profile.maxTokens ?? 4096;
+  }
+
+  modelProfileSelect?.addEventListener("change", () => {
+    const selectedModel = modelProfileSelect.value;
+    if (selectedModel) {
+      const profile = getModelProfile(selectedModel);
+      updateProfileFieldsUI(profile);
+      if (profile?.autoLoad) {
+        loadModelProfileToSettings(profile);
+      }
+    } else {
+      updateProfileFieldsUI(null);
+    }
+  });
+
+  profileTemperatureSlider?.addEventListener("input", () => {
+    const val = Number(profileTemperatureSlider.value);
+    if (profileTemperatureValue) profileTemperatureValue.textContent = val.toFixed(2);
+  });
+
+  profileTopPSlider?.addEventListener("input", () => {
+    const val = Number(profileTopPSlider.value);
+    if (profileTopPValue) profileTopPValue.textContent = val.toFixed(2);
+  });
+
+  profileFpSlider?.addEventListener("input", () => {
+    const val = Number(profileFpSlider.value);
+    if (profileFpValue) profileFpValue.textContent = val.toFixed(1);
+  });
+
+  profilePpSlider?.addEventListener("input", () => {
+    const val = Number(profilePpSlider.value);
+    if (profilePpValue) profilePpValue.textContent = val.toFixed(1);
+  });
+
+  profileMtSlider?.addEventListener("input", () => {
+    const val = Number(profileMtSlider.value);
+    if (profileMtValue) profileMtValue.textContent = val;
+  });
+
+  saveModelProfileBtn?.addEventListener("click", () => {
+    const profile = {
+      model: modelProfileName?.value || state.settings.model,
+      autoLoad: modelProfileLoadAuto?.checked || false,
+      stopStrings: modelProfileStopStrings?.value || "",
+      temperature: Number(profileTemperatureSlider?.value || 0.8),
+      topP: Number(profileTopPSlider?.value || 1),
+      frequencyPenalty: Number(profileFpSlider?.value || 0),
+      presencePenalty: Number(profilePpSlider?.value || 0),
+      maxTokens: Number(profileMtSlider?.value || 4096),
+    };
+    saveModelProfile(profile);
+    updateModelProfileSelect();
+    showToast(t("profileSaved"), "success");
+  });
+
+  deleteModelProfileBtn?.addEventListener("click", () => {
+    const modelName = modelProfileName?.value || state.settings.model;
+    if (modelName && confirm(t("confirmDeleteProfile") || `Delete profile for ${modelName}?`)) {
+      deleteModelProfile(modelName);
+      updateModelProfileSelect();
+      updateProfileFieldsUI(null);
+      showToast(t("profileDeleted"), "success");
+    }
   });
   completionCooldownSlider?.addEventListener("input", () => {
     const value = Number(completionCooldownSlider.value);
@@ -23641,6 +23755,106 @@ function truncateAtStopString(content, stopStrings) {
   const idx = findStopStringIndex(content, stopStrings);
   if (idx === -1) return { content, stopped: false };
   return { content: content.slice(0, idx), stopped: true };
+}
+
+function getModelProfile(modelName) {
+  const profiles = state.settings.modelProfiles || {};
+  return profiles[modelName] || null;
+}
+
+function saveModelProfile(profile) {
+  const modelName = profile.model;
+  if (!modelName) return;
+  const profiles = { ...(state.settings.modelProfiles || {}) };
+  profiles[modelName] = profile;
+  state.settings.modelProfiles = profiles;
+}
+
+function deleteModelProfile(modelName) {
+  if (!modelName) return;
+  const profiles = { ...(state.settings.modelProfiles || {}) };
+  delete profiles[modelName];
+  state.settings.modelProfiles = profiles;
+}
+
+function loadModelProfileToSettings(profile) {
+  if (profile.stopStrings !== undefined) {
+    state.settings.stopStrings = profile.stopStrings;
+    const stopStrInput = document.getElementById("stop-strings");
+    if (stopStrInput) stopStrInput.value = profile.stopStrings || "";
+  }
+  if (profile.temperature !== undefined) {
+    state.settings.temperature = profile.temperature;
+    const tempSlider = document.getElementById("temperature-slider");
+    const tempVal = document.getElementById("temperature-value");
+    if (tempSlider) tempSlider.value = profile.temperature;
+    if (tempVal) tempVal.textContent = profile.temperature.toFixed(2);
+  }
+  if (profile.topP !== undefined) {
+    state.settings.topP = profile.topP;
+    const topPSlider = document.getElementById("top-p-slider");
+    const topPVal = document.getElementById("top-p-value");
+    if (topPSlider) topPSlider.value = profile.topP;
+    if (topPVal) topPVal.textContent = profile.topP.toFixed(2);
+  }
+  if (profile.frequencyPenalty !== undefined) {
+    state.settings.frequencyPenalty = profile.frequencyPenalty;
+    const fpSlider = document.getElementById("frequency-penalty-slider");
+    const fpVal = document.getElementById("frequency-penalty-value");
+    if (fpSlider) fpSlider.value = profile.frequencyPenalty;
+    if (fpVal) fpVal.textContent = profile.frequencyPenalty.toFixed(1);
+  }
+  if (profile.presencePenalty !== undefined) {
+    state.settings.presencePenalty = profile.presencePenalty;
+    const ppSlider = document.getElementById("presence-penalty-slider");
+    const ppVal = document.getElementById("presence-penalty-value");
+    if (ppSlider) ppSlider.value = profile.presencePenalty;
+    if (ppVal) ppVal.textContent = profile.presencePenalty.toFixed(1);
+  }
+  if (profile.maxTokens !== undefined) {
+    state.settings.maxTokens = profile.maxTokens;
+    const mtSlider = document.getElementById("max-tokens-slider");
+    const mtVal = document.getElementById("max-tokens-value");
+    if (mtSlider) mtSlider.value = profile.maxTokens;
+    if (mtVal) mtVal.textContent = profile.maxTokens;
+  }
+}
+
+function getCurrentProfileData() {
+  return {
+    model: state.settings.model,
+    stopStrings: state.settings.stopStrings || "",
+    temperature: state.settings.temperature,
+    topP: state.settings.topP,
+    frequencyPenalty: state.settings.frequencyPenalty,
+    presencePenalty: state.settings.presencePenalty,
+    maxTokens: state.settings.maxTokens,
+  };
+}
+
+function updateModelProfileSelect() {
+  const select = document.getElementById("model-profile-select");
+  if (!select) return;
+  const currentModel = state.settings.model;
+  const profiles = state.settings.modelProfiles || {};
+  const profileNames = Object.keys(profiles);
+  select.innerHTML = '<option value="">-- Select Profile --</option>';
+  profileNames.forEach((name) => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  if (currentModel && profiles[currentModel]) {
+    select.value = currentModel;
+  }
+}
+
+function applyModelProfileIfEnabled(modelName) {
+  const profile = getModelProfile(modelName);
+  if (profile && profile.autoLoad) {
+    loadModelProfileToSettings(profile);
+  }
 }
 
 function normalizeApiRole(role) {

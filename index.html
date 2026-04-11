@@ -1142,6 +1142,68 @@
                 step="1"
               />
             </div>
+            <div class="settings-divider"></div>
+            <div class="form-field">
+              <span class="label-with-info"><span data-i18n="modelProfileLabel">Model Profile</span></span>
+              <select id="model-profile-select">
+                <option value="">-- Select Profile --</option>
+              </select>
+            </div>
+            <div id="model-profile-fields" class="hidden">
+              <div class="form-field">
+                <span data-i18n="profileNameLabel">Profile Name</span>
+                <input id="model-profile-name" type="text" autocomplete="off" />
+              </div>
+              <div class="form-field">
+                <label class="checkbox-line">
+                  <input type="checkbox" id="model-profile-load-auto" />
+                  <span data-i18n="autoLoadProfileLabel">Auto-load when model selected</span>
+                </label>
+              </div>
+              <div class="form-field">
+                <span class="label-with-info"><span data-i18n="profileStopStringsLabel">Profile Stop Strings</span></span>
+                <input id="model-profile-stop-strings" type="text" autocomplete="off" spellcheck="false" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="profileTemperatureLabel">Profile Temperature</span>
+                  <span id="profile-temperature-value" class="muted"></span>
+                </div>
+                <input id="profile-temperature-slider" type="range" min="0" max="2" step="0.05" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="profileTopPLabel">Profile Top P</span>
+                  <span id="profile-top-p-value" class="muted"></span>
+                </div>
+                <input id="profile-top-p-slider" type="range" min="0" max="1" step="0.05" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="profileFrequencyPenaltyLabel">Profile Frequency Penalty</span>
+                  <span id="profile-frequency-penalty-value" class="muted"></span>
+                </div>
+                <input id="profile-frequency-penalty-slider" type="range" min="-2" max="2" step="0.1" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="profilePresencePenaltyLabel">Profile Presence Penalty</span>
+                  <span id="profile-presence-penalty-value" class="muted"></span>
+                </div>
+                <input id="profile-presence-penalty-slider" type="range" min="-2" max="2" step="0.1" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span data-i18n="profileMaxTokensLabel">Profile Max Tokens</span>
+                  <span id="profile-max-tokens-value" class="muted"></span>
+                </div>
+                <input id="profile-max-tokens-slider" type="range" min="512" max="8192" step="64" />
+              </div>
+              <div class="button-row">
+                <button id="save-model-profile-btn" class="btn small" data-i18n="saveProfileBtn">Save Profile</button>
+                <button id="delete-model-profile-btn" class="btn small danger" data-i18n="deleteProfileBtn">Delete Profile</button>
+              </div>
+            </div>
             <span class="checkbox-line">
               <input type="checkbox" id="stream-enabled" checked />
               <span class="label-with-info"><span data-i18n="streamMessages">Stream Messages</span><button type="button" class="info-btn" data-info="streamMessages">i</button></span>
