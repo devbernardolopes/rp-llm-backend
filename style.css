@@ -116,11 +116,16 @@ body {
 @media (max-width: 600px) and (orientation: portrait) {
   .chat-input-wrapper {
     position: fixed;
-    bottom: env(safe-area-inset-bottom);
-    padding-bottom: 0;
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 34px);
     width: 100%;
     left: 0;
     right: 0;
+    z-index: 100;
+  }
+
+  .input-footer {
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 34px));
   }
 
   #chat-view {
