@@ -22905,7 +22905,11 @@ async function callAIHordeOpenAI(
       })),
   ];
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
-  if (nonSystemMessages.length === 0) {
+  const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
+  const needsContinuePrompt =
+    nonSystemMessages.length === 0 ||
+    (lastMessage && lastMessage.role === "assistant");
+  if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
   const systemMessages = promptMessages
