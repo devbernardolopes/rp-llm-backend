@@ -4849,13 +4849,6 @@ textarea {
   min-width: 0;
 }
 
-.flex-row > .token-count {
-  align-self: flex-end;
-  margin-bottom: 8px;
-  margin-left: -4px;
-  flex-shrink: 0;
-}
-
 .toast-container {
   position: fixed;
   right: 16px;

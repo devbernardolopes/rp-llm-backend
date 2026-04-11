@@ -1500,20 +1500,16 @@
             <div class="form-field">
               <div class="label-inline">
                 <span data-i18n="oocSystemPromptIntro">OOC System Prompt Intro</span>
+                <span id="ooc-system-prompt-intro-count" class="token-count muted hidden">0 tokens</span>
               </div>
-              <div class="flex-row">
-                <textarea id="ooc-system-prompt-intro" rows="2"></textarea>
-                <span id="ooc-system-prompt-intro-token-count" class="token-count muted hidden">0 tokens</span>
-              </div>
+              <textarea id="ooc-system-prompt-intro" rows="2"></textarea>
             </div>
             <div class="form-field">
               <div class="label-inline">
                 <span data-i18n="oocUserMessageFormat">OOC User Message Format</span>
+                <span id="ooc-user-message-format-count" class="token-count muted hidden">0 tokens</span>
               </div>
-              <div class="flex-row">
-                <textarea id="ooc-user-message-format" rows="2"></textarea>
-                <span id="ooc-user-message-format-token-count" class="token-count muted hidden">0 tokens</span>
-              </div>
+              <textarea id="ooc-user-message-format" rows="2"></textarea>
             </div>
             <div class="form-field">
               <span data-i18n="summaryMessagesPreProcessingJson"
@@ -2554,15 +2550,14 @@
           <div class="full lang-field">
             <div class="label-inline">
               <span data-i18n="characterPrompt">Character Prompt</span>
+              <span id="char-system-prompt-count" class="token-count muted hidden">0 tokens</span>
             </div>
-            <div class="flex-row">
-              <textarea id="char-system-prompt" rows="8"></textarea>
-              <span id="char-system-prompt-token-count" class="token-count muted hidden">0 tokens</span>
-            </div>
+            <textarea id="char-system-prompt" rows="8"></textarea>
           </div>
           <div class="full lang-field">
             <div class="label-inline">
               <span data-i18n="writingInstructions">Writing Instructions</span>
+              <span id="char-writing-instructions-count" class="token-count muted hidden">0 tokens</span>
             </div>
             <div class="flex-row">
               <select id="char-writing-instructions-select" class="flex-grow"></select>
@@ -2575,29 +2570,24 @@
                 &#128221;
               </button>
             </div>
-            <div class="flex-row">
-              <textarea
-                id="char-writing-instructions"
-                rows="4"
-                data-i18n-placeholder="placeholderFutureImplementation"
-              ></textarea>
-              <span id="char-writing-instructions-token-count" class="token-count muted hidden">0 tokens</span>
-            </div>
+            <textarea
+              id="char-writing-instructions"
+              rows="4"
+              data-i18n-placeholder="placeholderFutureImplementation"
+            ></textarea>
           </div>
           <div class="full lang-field">
             <div class="label-inline">
               <span data-i18n="oneTimeExtraPrompt"
                 >One-time only Extra System/Character Prompt</span
               >
+              <span id="char-one-time-extra-prompt-count" class="token-count muted hidden">0 tokens</span>
             </div>
-            <div class="flex-row">
-              <textarea
-                id="char-one-time-extra-prompt"
-                rows="4"
-                data-i18n-placeholder="placeholderFirstAssistantGen"
-              ></textarea>
-              <span id="char-one-time-extra-prompt-token-count" class="token-count muted hidden">0 tokens</span>
-            </div>
+            <textarea
+              id="char-one-time-extra-prompt"
+              rows="4"
+              data-i18n-placeholder="placeholderFirstAssistantGen"
+            ></textarea>
           </div>
           <div class="full lang-field initial-messages-field">
             <div class="initial-messages-header-row">

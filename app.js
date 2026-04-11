@@ -21316,11 +21316,11 @@ function debouncedUpdateTokenCount(textareaId, countId, delay = 200) {
 
 function setupTokenCountListeners() {
   const textareas = [
-    { id: "char-system-prompt", countId: "char-system-prompt-token-count" },
-    { id: "char-writing-instructions", countId: "char-writing-instructions-token-count" },
-    { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-token-count" },
-    { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-token-count" },
-    { id: "ooc-user-message-format", countId: "ooc-user-message-format-token-count" },
+    { id: "char-system-prompt", countId: "char-system-prompt-count" },
+    { id: "char-writing-instructions", countId: "char-writing-instructions-count" },
+    { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-count" },
+    { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-count" },
+    { id: "ooc-user-message-format", countId: "ooc-user-message-format-count" },
   ];
   textareas.forEach(({ id, countId }) => {
     const textarea = document.getElementById(id);
@@ -21336,11 +21336,11 @@ function setupTokenCountListeners() {
 
 function updateAllTokenCounts() {
   const textareas = [
-    { id: "char-system-prompt", countId: "char-system-prompt-token-count" },
-    { id: "char-writing-instructions", countId: "char-writing-instructions-token-count" },
-    { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-token-count" },
-    { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-token-count" },
-    { id: "ooc-user-message-format", countId: "ooc-user-message-format-token-count" },
+    { id: "char-system-prompt", countId: "char-system-prompt-count" },
+    { id: "char-writing-instructions", countId: "char-writing-instructions-count" },
+    { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-count" },
+    { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-count" },
+    { id: "ooc-user-message-format", countId: "ooc-user-message-format-count" },
   ];
   textareas.forEach(({ id, countId }) => {
     updateTokenCount(id, countId);
