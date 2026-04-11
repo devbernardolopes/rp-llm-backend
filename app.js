@@ -8583,6 +8583,7 @@ function renderCharacterDefinitionTabs() {
       }
       await loadActiveCharacterDefinitionToForm();
       renderCharacterDefinitionTabs();
+      setModalDirtyState("character-modal", true);
     });
     btn.appendChild(del);
     root.appendChild(btn);
@@ -11311,6 +11312,7 @@ function renderWritingInstructionTabs() {
       }
       loadActiveWritingInstructionToForm();
       renderWritingInstructionTabs();
+      setModalDirtyState("writing-instruction-editor-modal", true);
     });
     btn.appendChild(del);
     root.appendChild(btn);
