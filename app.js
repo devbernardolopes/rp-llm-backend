@@ -21383,6 +21383,7 @@ function setupTokenCountListeners() {
     { id: "persona-injection-template", countId: "persona-injection-template-count" },
     { id: "auto-title-system-prompt", countId: "auto-title-system-prompt-count" },
     { id: "auto-title-user-prompt", countId: "auto-title-user-prompt-count" },
+    { id: "writing-instruction-text", countId: "writing-instruction-text-count" },
   ];
   textareas.forEach(({ id, countId }) => {
     const textarea = document.getElementById(id);
@@ -21409,6 +21410,7 @@ function updateAllTokenCounts() {
     { id: "persona-injection-template", countId: "persona-injection-template-count" },
     { id: "auto-title-system-prompt", countId: "auto-title-system-prompt-count" },
     { id: "auto-title-user-prompt", countId: "auto-title-user-prompt-count" },
+    { id: "writing-instruction-text", countId: "writing-instruction-text-count" },
   ];
   textareas.forEach(({ id, countId }) => {
     updateTokenCount(id, countId);
