@@ -108,8 +108,23 @@ body {
     flex-shrink: 0;
   }
 
-  .mobile-pane-toggle {
+.mobile-pane-toggle {
     display: flex !important;
+  }
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .chat-input-wrapper {
+    position: fixed;
+    bottom: env(safe-area-inset-bottom);
+    padding-bottom: 0;
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  #chat-view {
+    padding-bottom: 50svh;
   }
 }
 
