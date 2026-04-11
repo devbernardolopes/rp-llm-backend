@@ -526,6 +526,7 @@ const state = {
   characterSortMode: "updated_desc",
   expandedCharacterTagIds: new Set(),
   expandedCharacterTagFilters: false,
+  writingInstructionsModalSource: null,
   modalDirty: {
     "character-modal": false,
     "personas-modal": false,
@@ -1928,7 +1929,9 @@ function setupEvents() {
         const parentModal = document.getElementById("character-modal");
         if (parentModal && !parentModal.classList.contains("hidden")) {
           parentModal.classList.add("hidden");
-          state.activeModalId = "character-modal";
+          state.writingInstructionsModalSource = "character-modal";
+        } else {
+          state.writingInstructionsModalSource = null;
         }
         openModal(btn.dataset.openModal);
       } else {
@@ -8035,11 +8038,15 @@ async function closeActiveModal() {
     }
   }
   if (closingId === "writing-instructions-modal") {
-    const parentModal = document.getElementById("character-modal");
-    if (parentModal) {
-      parentModal.classList.remove("hidden");
-      state.activeModalId = "character-modal";
-      return;
+    const sourceModalId = state.writingInstructionsModalSource;
+    state.writingInstructionsModalSource = null;
+    if (sourceModalId) {
+      const parentModal = document.getElementById(sourceModalId);
+      if (parentModal) {
+        parentModal.classList.remove("hidden");
+        state.activeModalId = sourceModalId;
+        return;
+      }
     }
   }
   if (closingId === "persona-editor-modal") {
