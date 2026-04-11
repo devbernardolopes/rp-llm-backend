@@ -4837,6 +4837,25 @@ textarea {
   color: var(--muted);
 }
 
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.flex-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.flex-row > .token-count {
+  align-self: flex-end;
+  margin-bottom: 8px;
+  margin-left: -4px;
+  flex-shrink: 0;
+}
+
 .toast-container {
   position: fixed;
   right: 16px;
