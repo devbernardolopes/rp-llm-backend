@@ -6973,7 +6973,12 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   pagesContainer.innerHTML = "";
   if (!hasCharacters || totalPages <= 0) return;
 
-  const windowSize = getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn);
+  const windowSize = getDynamicPageWindowSize(
+    pagesContainer,
+    prevBtn,
+    nextBtn,
+    totalPages,
+  );
   const pageRange = getCharacterPaginationRange(
     state.characterPage,
     totalPages,
@@ -7005,22 +7010,57 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   pagesContainer.appendChild(fragment);
 }
 
-function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn) {
-  const MIN_BUTTON_WIDTH = 36;
-  const BUTTON_GAP = 6;
-  const BUTTON_PADDING = 20;
+function measurePaginationButtonWidth(pagesContainer, labelText) {
+  const sample = document.createElement("button");
+  sample.type = "button";
+  sample.className = "pagination-page-btn";
+  sample.textContent = labelText;
+  sample.tabIndex = -1;
+  sample.setAttribute("aria-hidden", "true");
+  sample.style.position = "absolute";
+  sample.style.visibility = "hidden";
+  sample.style.pointerEvents = "none";
+  sample.style.left = "0";
+  sample.style.top = "0";
+  pagesContainer.appendChild(sample);
+  const width = sample.getBoundingClientRect().width;
+  sample.remove();
+  return width || 0;
+}
+
+function getFlexGapPx(element) {
+  const styles = window.getComputedStyle(element);
+  const gapRaw = styles.gap || styles.columnGap || "0px";
+  const gap = Number.parseFloat(gapRaw);
+  return Number.isFinite(gap) ? gap : 0;
+}
+
+function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn, totalPages) {
+  const MIN_BUTTONS = 3;
   const parent = pagesContainer.parentElement;
-  if (!parent) return 3;
-  const availableWidth =
-    parent.clientWidth -
-    prevBtn.offsetWidth -
-    nextBtn.offsetWidth -
-    BUTTON_GAP * 2;
-  if (availableWidth <= 0) return 3;
-  const maxButtons = Math.floor(
-    availableWidth / (MIN_BUTTON_WIDTH + BUTTON_PADDING),
+  if (!parent) return MIN_BUTTONS;
+
+  const parentWidth = parent.getBoundingClientRect().width;
+  const prevWidth = prevBtn.getBoundingClientRect().width;
+  const nextWidth = nextBtn.getBoundingClientRect().width;
+  const gap = getFlexGapPx(parent);
+
+  const availableWidth = parentWidth - prevWidth - nextWidth - gap * 2;
+  if (!(availableWidth > 0)) return MIN_BUTTONS;
+
+  const labelText = String(totalPages || 0);
+  const buttonWidth = Math.max(
+    1,
+    measurePaginationButtonWidth(pagesContainer, labelText),
   );
-  return Math.max(3, maxButtons);
+
+  // Use a small epsilon so fractional pixels at non-100% zoom don't undercount.
+  const epsilon = 0.75;
+  const maxButtons = Math.floor(
+    (availableWidth + gap + epsilon) / (buttonWidth + gap),
+  );
+
+  return Math.max(MIN_BUTTONS, maxButtons);
 }
 
 let paginationResizeObserver = null;
