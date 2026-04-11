@@ -121,7 +121,11 @@ body {
     width: 100%;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 300;
+  }
+
+  #left-pane.mobile-open {
+    z-index: 250;
   }
 
   .input-footer {
