@@ -22358,6 +22358,9 @@ async function callGroq(
         if (m.role === "assistant" && !String(m.content || "").trim()) {
           return false;
         }
+        if (m.role === "user" && !String(m.content || "").trim()) {
+          return false;
+        }
         return true;
       })
       .map((m) => ({
