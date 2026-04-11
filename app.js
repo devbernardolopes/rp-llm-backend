@@ -17820,7 +17820,12 @@ async function regenerateOocMessage(index) {
   messagesToSave[index].ooc = true;
 
   renderChat();
-  const row = document.getElementById("chat-log").children[index];
+  const unloadState = currentThread?.unloadState;
+  const loadedStartIndex = unloadState?.loadedStartIndex || 0;
+  const originalIndex = loadedStartIndex + index;
+  const row = document
+    .getElementById("chat-log")
+    ?.querySelector(`.chat-row[data-message-index="${originalIndex}"]`);
   const contentEl = row?.querySelector(".message-content");
   if (row) row.dataset.streaming = "1";
   refreshMessageControlStates();
