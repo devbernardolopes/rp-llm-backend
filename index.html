@@ -1461,16 +1461,101 @@
                 ></textarea>
             </div>
           </div>
-          <div data-settings-group="prompting" class="settings-group">
+<div data-settings-group="prompting" class="settings-group">
             <div class="form-field">
-              <span data-i18n="defaultCharacterPrompt"
-                >Default Character Prompt</span
-              >
+              <div class="label-inline">
+                <span data-i18n="defaultCharacterPrompt"
+                  >Default Character Prompt</span
+                >
+                <span id="global-prompt-template-count" class="token-count muted hidden">0 tokens</span>
+              </div>
               <textarea
                 id="global-prompt-template"
                 rows="7"
                 data-i18n-placeholder="placeholderDefaultCharacterPrompt"
               ></textarea>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="memorySummarizerPrompt"
+                  >Memory Summarizer System Prompt</span
+                >
+                <span id="summary-system-prompt-count" class="token-count muted hidden">0 tokens</span>
+              </div>
+              <textarea
+                id="summary-system-prompt"
+                rows="3"
+                data-i18n-placeholder="placeholderMemorySummarizerSystem"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="memorySummarizerUserPrompt"
+                  >User Prompt for Memory Summarization</span
+                >
+                <span id="memory-summarizer-user-prompt-count" class="token-count muted hidden">0 tokens</span>
+              </div>
+              <textarea
+                id="memory-summarizer-user-prompt"
+                rows="3"
+                data-i18n-placeholder="placeholderMemorySummarizerUser"
+                placeholder="User prompt for memory summarization"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="oocSystemPromptIntro">OOC System Prompt Intro</span>
+                <span id="ooc-system-prompt-intro-count" class="token-count muted hidden">0 tokens</span>
+              </div>
+              <textarea id="ooc-system-prompt-intro" rows="2"></textarea>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="oocUserMessageFormat">OOC User Message Format</span>
+                <span id="ooc-user-message-format-count" class="token-count muted hidden">0 tokens</span>
+              </div>
+              <textarea id="ooc-user-message-format" rows="2"></textarea>
+            </div>
+            <div class="form-field">
+              <span data-i18n="summaryMessagesPreProcessingJson"
+                >Summary Messages Pre-processing (JSON)</span
+              >
+              <textarea
+                id="summary-messages-preprocessing"
+                rows="2"
+                data-i18n-placeholder="placeholderSummaryMessagesPreProcessing"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="personaInjectionTemplate"
+                  >Persona Injection Template</span
+                >
+                <span id="persona-injection-template-count" class="token-count muted hidden">0 tokens</span>
+              </div>
+              <textarea
+                id="persona-injection-template"
+                rows="5"
+                data-i18n-placeholder="placeholderPersonaInjectionTemplate"
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="autoTitleSystemPrompt"
+                  >Auto-title System Prompt</span
+                >
+                <span id="auto-title-system-prompt-count" class="token-count muted hidden">0 tokens</span>
+              </div>
+              <textarea id="auto-title-system-prompt" rows="3"></textarea>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="autoTitleUserPrompt"
+                  >Auto-title User Prompt</span
+                >
+                <span id="auto-title-user-prompt-count" class="token-count muted hidden">0 tokens</span>
+              </div>
+              <textarea id="auto-title-user-prompt" rows="3"></textarea>
             </div>
             <div class="form-field">
               <span data-i18n="memorySummarizerPrompt"

@@ -21377,6 +21377,12 @@ function setupTokenCountListeners() {
     { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-count" },
     { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-count" },
     { id: "ooc-user-message-format", countId: "ooc-user-message-format-count" },
+    { id: "global-prompt-template", countId: "global-prompt-template-count" },
+    { id: "summary-system-prompt", countId: "summary-system-prompt-count" },
+    { id: "memory-summarizer-user-prompt", countId: "memory-summarizer-user-prompt-count" },
+    { id: "persona-injection-template", countId: "persona-injection-template-count" },
+    { id: "auto-title-system-prompt", countId: "auto-title-system-prompt-count" },
+    { id: "auto-title-user-prompt", countId: "auto-title-user-prompt-count" },
   ];
   textareas.forEach(({ id, countId }) => {
     const textarea = document.getElementById(id);
@@ -21397,6 +21403,12 @@ function updateAllTokenCounts() {
     { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-count" },
     { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-count" },
     { id: "ooc-user-message-format", countId: "ooc-user-message-format-count" },
+    { id: "global-prompt-template", countId: "global-prompt-template-count" },
+    { id: "summary-system-prompt", countId: "summary-system-prompt-count" },
+    { id: "memory-summarizer-user-prompt", countId: "memory-summarizer-user-prompt-count" },
+    { id: "persona-injection-template", countId: "persona-injection-template-count" },
+    { id: "auto-title-system-prompt", countId: "auto-title-system-prompt-count" },
+    { id: "auto-title-user-prompt", countId: "auto-title-user-prompt-count" },
   ];
   textareas.forEach(({ id, countId }) => {
     updateTokenCount(id, countId);
