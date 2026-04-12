@@ -136,14 +136,16 @@ function formatMemoryEntry(entry, idx) {
       : 1;
   const level = getEntryLevel(entry);
   const summaryText = String(entry?.summary || "");
-  const slots = getMemorySlots();
+  const settings = window.state?.settings;
+  const slots = getMemorySlotsValue(settings?.memorySlots);
   if (slots === 1) {
     return summaryText;
   }
+  const defaultHeader = "**ENTRY {slot} LEVEL {level}**";
   const headerTemplate =
-    window.state?.settings?.sectionHeaderMemoryEntry ||
+    settings?.sectionHeaderMemoryEntry ||
     window.DEFAULT_SETTINGS?.sectionHeaderMemoryEntry ||
-    "**ENTRY {slot} LEVEL {level}**";
+    defaultHeader;
   const header = headerTemplate
     .replace(/{slot}/g, slot)
     .replace(/{level}/g, level);
@@ -200,9 +202,7 @@ async function getMemorySummary(characterId, threadId) {
 
 function getMemorySlots() {
   const raw = window.state?.settings?.memorySlots;
-  const num = Number(raw);
-  if (!Number.isFinite(num)) return 5;
-  return Math.min(10, Math.max(1, Math.round(num)));
+  return getMemorySlotsValue(raw);
 }
 
 function getSummaryThresholdValue(raw) {
