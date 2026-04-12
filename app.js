@@ -2596,8 +2596,10 @@ function saveLoreEditorTextareaCollapseStates() {
       cardExpanded[entryId] = expanded;
     }
   });
+  const modalBody = modal.querySelector(".modal-body");
+  const modalScroll = modalBody ? modalBody.scrollTop : 0;
   db.lorebooks.update(lorebookId, {
-    entriesCollapseState: JSON.stringify({ states, cardExpanded }),
+    entriesCollapseState: JSON.stringify({ states, cardExpanded, scrollStates, modalScroll }),
   });
 }
 
@@ -2605,14 +2607,20 @@ function restoreLoreEditorTextareaCollapseStates(lorebook) {
   const collapseStateRaw = lorebook?.entriesCollapseState;
   let states = {};
   let cardExpanded = {};
+  let scrollStates = {};
+  let modalScroll = 0;
   if (collapseStateRaw) {
     try {
       const parsed = JSON.parse(collapseStateRaw);
       states = parsed.states || {};
       cardExpanded = parsed.cardExpanded || {};
+      scrollStates = parsed.scrollStates || {};
+      modalScroll = parsed.modalScroll || 0;
     } catch {
       states = {};
       cardExpanded = {};
+      scrollStates = {};
+      modalScroll = 0;
     }
   }
   const modal = document.getElementById("lore-editor-modal");
@@ -2640,7 +2648,14 @@ function restoreLoreEditorTextareaCollapseStates(lorebook) {
     } else {
       entry.setExpanded(hasContent);
     }
+    if (entryId && scrollStates[entryId]?.[fieldName] !== undefined) {
+      textarea.scrollTop = scrollStates[entryId][fieldName];
+    }
   });
+  const modalBody = modal.querySelector(".modal-body");
+  if (modalBody && modalScroll > 0) {
+    modalBody.scrollTop = modalScroll;
+  }
 }
 
 function captureTextareaLabel(textarea) {
