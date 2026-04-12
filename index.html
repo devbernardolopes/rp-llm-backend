@@ -1155,7 +1155,7 @@
                 <select id="model-profile-select" class="flex-grow">
                   <option value="">-- Select Profile --</option>
                 </select>
-                <button id="new-model-profile-btn" class="btn small" data-i18n="newProfileBtn">New Profile</button>
+                <button id="new-model-profile-btn" class="secondary-btn" data-i18n="newProfileBtn">New Profile</button>
               </div>
             </div>
             <div id="model-profile-fields" class="hidden">
@@ -1209,8 +1209,8 @@
                 <input id="profile-max-tokens-slider" type="range" min="512" max="8192" step="64" />
               </div>
               <div class="button-row">
-                <button id="save-model-profile-btn" class="btn small" data-i18n="saveProfileBtn">Save Profile</button>
-                <button id="delete-model-profile-btn" class="btn small danger" data-i18n="deleteProfileBtn">Delete Profile</button>
+                <button id="save-model-profile-btn" class="secondary-btn" data-i18n="saveProfileBtn">Save Profile</button>
+                <button id="delete-model-profile-btn" class="secondary-btn danger-btn" data-i18n="deleteProfileBtn">Delete Profile</button>
               </div>
             </div>
             <span class="checkbox-line">
@@ -3789,34 +3789,4 @@
     <script type="module" src="tts/index.js"></script>
     <script type="module" src="three-vrm-loader.js"></script>
   </body>
-  <style>
-    #assets-modal .modal-body {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    #assets-modal #assets-dropzone-section {
-      flex: 0 0 auto;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: transparent;
-    }
-    #assets-modal #assets-list {
-      flex: 1 1 auto;
-      overflow-y: auto;
-    }
-    .message-image-container {
-      margin-top: 8px;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .message-image {
-      max-width: 100%;
-      max-height: 400px;
-      cursor: pointer;
-      border-radius: 8px;
-      display: block;
-    }
-  </style>
 </html>

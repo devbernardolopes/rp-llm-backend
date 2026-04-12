@@ -3449,7 +3449,9 @@ textarea {
   align-items: center;
   gap: 8px;
 }
-.textarea-collapse-count {
+.textarea-collapse-count,
+.field-count,
+.token-count {
   color: var(--muted);
   font-size: 12px;
   min-width: 3ch;
@@ -5402,4 +5404,36 @@ textarea {
   left: 0;
   cursor: nw-resize;
   background: linear-gradient(135deg, transparent 50%, var(--line) 50%);
+}
+
+/* Assets Modal */
+#assets-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#assets-modal #assets-dropzone-section {
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: transparent;
+}
+#assets-modal #assets-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* Message Images */
+.message-image-container {
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.message-image {
+  max-width: 100%;
+  max-height: 400px;
+  cursor: pointer;
+  border-radius: 8px;
+  display: block;
 }
