@@ -524,6 +524,7 @@ const state = {
   summarizationInProgress: new Set(),
   selectedThreadIds: new Set(),
   characterTagFilters: [],
+  characterSearchQuery: "",
   characterPage: 1,
   characterCardsPerPage: 0,
   characterTotalPages: 0,
@@ -1554,10 +1555,26 @@ function setupEvents() {
         100,
       );
     });
+  const characterSearchInput = document.getElementById("character-search-input");
+  let searchDebounceTimeout = null;
+  if (characterSearchInput) {
+    characterSearchInput.value = state.characterSearchQuery || "";
+    characterSearchInput.addEventListener("input", () => {
+      clearTimeout(searchDebounceTimeout);
+      searchDebounceTimeout = setTimeout(() => {
+        state.characterSearchQuery = characterSearchInput.value;
+        saveUiState();
+        state.characterPage = 1;
+        renderCharacters();
+      }, 300);
+    });
+  }
   document
     .getElementById("character-tag-filter-clear")
     .addEventListener("click", async () => {
       state.characterTagFilters = [];
+      state.characterSearchQuery = "";
+      if (characterSearchInput) characterSearchInput.value = "";
       state.expandedCharacterTagIds.clear();
       saveUiState();
       renderCharacterTagFilterChips();
@@ -5355,6 +5372,9 @@ function loadUiState() {
         .map((t) => normalizeTagValue(t))
         .filter(Boolean);
     }
+    if (typeof parsed.characterSearchQuery === "string") {
+      state.characterSearchQuery = parsed.characterSearchQuery;
+    }
     if (
       typeof parsed.characterSortMode === "string" &&
       parsed.characterSortMode
@@ -5405,6 +5425,7 @@ function saveUiState() {
       characterTagFilters: Array.isArray(state.characterTagFilters)
         ? state.characterTagFilters
         : [],
+      characterSearchQuery: state.characterSearchQuery || "",
       characterPagination: {
         page: Math.max(1, Number(state.characterPage) || 1),
         perPage: CHARACTER_PAGE_SIZES.includes(
@@ -6455,7 +6476,16 @@ async function renderCharacters() {
   const activeFilters = Array.isArray(state.characterTagFilters)
     ? state.characterTagFilters.map((t) => t.toLowerCase())
     : [];
+  const searchQuery = String(state.characterSearchQuery || "").toLowerCase().trim();
   const filteredCharacters = characters.filter((char) => {
+    if (searchQuery) {
+      const name = String(char.name || "").toLowerCase();
+      const scenario = String(char.scenario || "").toLowerCase();
+      const description = String(char.description || "").toLowerCase();
+      if (!name.includes(searchQuery) && !scenario.includes(searchQuery) && !description.includes(searchQuery)) {
+        return false;
+      }
+    }
     if (activeFilters.length === 0) return true;
     const tags = Array.isArray(char.tags)
       ? char.tags.map((t) => String(t || "").toLowerCase())

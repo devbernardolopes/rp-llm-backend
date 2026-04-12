@@ -745,6 +745,7 @@
   "showTokenCounts": "Show token counts",
   "sectionHeaderLoreContext": "Lore Context Header",
   "placeholderSectionHeaderLore": "e.g. ***LORE CONTEXT***",
+  "searchPlaceholder": "Search...",
   "infoCharacterSortCreationDate": "Sort characters by their creation date. **Newest First** / **Oldest First**.",
   "infoCharacterSortUpdateDate": "Sort characters by their last update date. **Most Recently Updated** / **Least Recently Updated**.",
   "infoCharacterSortName": "Sort characters alphabetically by name. **A-Z** / **Z-A**.",

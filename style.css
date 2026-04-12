@@ -1210,7 +1210,7 @@ textarea {
 
 .character-filters-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
 }
 
@@ -1249,9 +1249,25 @@ textarea {
 
 .character-filters-controls {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   flex: 0 0 auto;
+}
+
+.filter-search-input {
+  width: 100px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  outline: none;
+}
+
+.filter-search-input:focus {
+  border-color: var(--accent);
 }
 
 .character-sort-field {
