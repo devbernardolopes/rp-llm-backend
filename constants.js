@@ -256,7 +256,7 @@ const CHARACTER_SORT_ICON_TEMPLATES = {
   created:
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="10" fill="%23f5f7ff" opacity="0.35"/><path d="M16 9v14M9 16h14" stroke="%231c2737" stroke-width="2" stroke-linecap="round"/></svg>',
   updated:
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M10 12a8 8 0 1 1 11.3 11.3L16 21" fill="none" stroke="%231c2737" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 9v-4h6" fill="none" stroke="%231c2737" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M16 10l4 6H12l4-6z" fill="%23f5f7ff" opacity="0.5"/><path d="M16 18v6M16 22v2" stroke="%231c2737" stroke-width="2" stroke-linecap="round"/></svg>',
   name: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text x="9" y="23" font-size="18" font-family="Segoe UI, system-ui" fill="%23f5f7ff">A</text><path d="M9 10l7 12l7-12" fill="none" stroke="%231c2737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   threads:
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="6" y="8" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.65"/><rect x="6" y="14" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.45"/><rect x="6" y="20" width="20" height="4" rx="2" fill="%23f5f7ff" opacity="0.25"/><path d="M9 8v14" fill="none" stroke="%231c2737" stroke-width="2" stroke-linecap="round"/></svg>',
