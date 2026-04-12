@@ -24051,6 +24051,7 @@ function saveModelProfile(profile) {
   const profiles = { ...(state.settings.modelProfiles || {}) };
   profiles[modelName] = profile;
   state.settings.modelProfiles = profiles;
+  saveSettings();
 }
 
 function deleteModelProfile(modelName) {
@@ -24058,6 +24059,7 @@ function deleteModelProfile(modelName) {
   const profiles = { ...(state.settings.modelProfiles || {}) };
   delete profiles[modelName];
   state.settings.modelProfiles = profiles;
+  saveSettings();
 }
 
 function loadModelProfileToSettings(profile) {
