@@ -8250,6 +8250,8 @@ function openModal(modalId) {
         updateAllTokenCounts();
       }
       document.querySelectorAll(".info-btn").forEach((btn) => {
+        if (btn.dataset.listenerAttached === "true") return;
+        btn.dataset.listenerAttached = "true";
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
           const infoKey = btn.getAttribute("data-info");
