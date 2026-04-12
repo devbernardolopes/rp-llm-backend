@@ -140,6 +140,7 @@ function getSectionHeader(key) {
 }
 
 window.getSectionHeader = getSectionHeader;
+window.DEFAULT_SETTINGS = DEFAULT_SETTINGS;
 
 const MODEL3D_EXPRESSION_ALIAS_MAP = {
   neutral: ['neutral', 'normal', 'base', 'default', 'Neutral', 'Normal'],
@@ -756,6 +757,7 @@ function updateCarouselForPaneState() {}
 
 async function init() {
   loadSettings();
+  window.state = state;
   applyChatOpacitySetting();
   applyChatInputButtonSize();
   applyMessageBubbleFontSize();
