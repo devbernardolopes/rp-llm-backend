@@ -741,5 +741,7 @@
   "infoMarqueeBehavior": "Controla a animação de texto longo. **Desativado**: sem animação. **Ao Passar**: animate ao passar o mouse. **Sempre**: sempre animado.",
   "infoBotCardAvatarEffect": "Efeito de animação para cartões de personagens na tela inicial. **Carrossel**: alterna entre avatares. **Ao Passar**: mostra ao passar o mouse.",
   "infoBotCardAvatarTransitionDelay": "Segundos entre transições de avatar no modo carrossel.",
-  "showTokenCounts": "Mostrar contagem de tokens"
+  "showTokenCounts": "Mostrar contagem de tokens",
+  "sectionHeaderLoreContext": "Cabecalho Contexto Lore",
+  "placeholderSectionHeaderLore": "ex. ***CONTEXTO LORE***"
 }

@@ -741,5 +741,7 @@
   "infoMarqueeBehavior": "Kontrolliert lange Textanimation. **Deaktiviert**: keine Animation. **Beim Hover**: animieren beim Daruberfahren. **Immer**: immer animiert.",
   "infoBotCardAvatarEffect": "Animationseffekt fur Charakterkarten auf dem Startbildschirm. **Karussell**: wechselt Avatare. **Beim Hover**: zeigt beim Daruberfahren.",
   "infoBotCardAvatarTransitionDelay": "Sekunden zwischen Avatar-Ubergangen im Karussell-Modus.",
-  "showTokenCounts": "Token-Anzahl anzeigen"
+  "showTokenCounts": "Token-Anzahl anzeigen",
+  "sectionHeaderLoreContext": "Lore Context Überschrift",
+  "placeholderSectionHeaderLore": "z.B. ***LORE KONTEXT***"
 }

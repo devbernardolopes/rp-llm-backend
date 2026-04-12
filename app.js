@@ -125,6 +125,7 @@ Requirements:
   sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
   sectionHeaderMessages: "***MESSAGES***",
   sectionHeaderMemoryLevelContext: "***MEMORY LEVEL",
+  sectionHeaderLoreContext: "***LORE CONTEXT***",
   oocSystemPromptIntro: "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
   oocUserMessageFormat: "((OOC: SYSTEM, reply in OOC manner. {content}))",
 };
@@ -4088,6 +4089,9 @@ async function setupSettingsControls() {
   const sectionHeaderMemoryLevelContext = document.getElementById(
     "section-header-memory-level-context",
   );
+  const sectionHeaderLoreContext = document.getElementById(
+    "section-header-lore-context",
+  );
   const memoryRelevanceFilterToggle = document.getElementById(
     "memory-relevance-filter-enabled",
   );
@@ -4151,6 +4155,11 @@ async function setupSettingsControls() {
     sectionHeaderMemoryLevelContext.value =
       state.settings.sectionHeaderMemoryLevelContext ||
       DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
+  }
+  if (sectionHeaderLoreContext) {
+    sectionHeaderLoreContext.value =
+      state.settings.sectionHeaderLoreContext ||
+      DEFAULT_SETTINGS.sectionHeaderLoreContext;
   }
   const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
   const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
@@ -4878,6 +4887,11 @@ async function setupSettingsControls() {
   sectionHeaderMemoryLevelContext?.addEventListener("input", () => {
     state.settings.sectionHeaderMemoryLevelContext =
       sectionHeaderMemoryLevelContext.value;
+    saveSettings();
+  });
+
+  sectionHeaderLoreContext?.addEventListener("input", () => {
+    state.settings.sectionHeaderLoreContext = sectionHeaderLoreContext.value;
     saveSettings();
   });
 
@@ -22018,7 +22032,7 @@ async function buildSystemPrompt(character, options = {}) {
 
   if (loreEntries.length > 0) {
     contextSections.push(
-      `***LORE CONTEXT***\n\n${loreEntries
+      `${getSectionHeader("sectionHeaderLoreContext")}\n\n${loreEntries
         .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
         .join("\n\n")}`,
     );
