@@ -22031,11 +22031,20 @@ async function buildSystemPrompt(character, options = {}) {
   }
 
   if (loreEntries.length > 0) {
-    contextSections.push(
-      `${getSectionHeader("sectionHeaderLoreContext")}\n\n${loreEntries
-        .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
-        .join("\n\n")}`,
-    );
+    const seenContent = new Set();
+    const uniqueEntries = loreEntries.filter((e) => {
+      const contentKey = `${e.lorebookName || "Lore"}|${e.content}`;
+      if (seenContent.has(contentKey)) return false;
+      seenContent.add(contentKey);
+      return true;
+    });
+    if (uniqueEntries.length > 0) {
+      contextSections.push(
+        `${getSectionHeader("sectionHeaderLoreContext")}\n\n${uniqueEntries
+          .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
+          .join("\n\n")}`,
+      );
+    }
   }
   if (memory) {
     contextSections.push(`${getSectionHeader("sectionHeaderMemoryContext")}\n\n${memory}`);
