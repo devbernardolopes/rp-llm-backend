@@ -95,6 +95,8 @@
               id="import-character-btn"
               class="option-btn pane-top-option-btn"
               type="button"
+              data-i18n-title="importCharacter"
+              aria-label="Import Character"
             >
               ⬇
             </button>
@@ -2239,9 +2241,15 @@
               class="primary-btn"
               type="button"
               data-i18n="newPersona"
-            >
-              + New Persona
-            </button>
+              data-i18n-title="newPersona"
+            ></button>
+            <button
+              id="import-persona-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="importPersona"
+              data-i18n-title="importPersona"
+            ></button>
           </div>
           <div id="persona-list" class="lorebook-list"></div>
         </div>
@@ -2279,17 +2287,15 @@
                 class="primary-btn"
                 type="button"
                 data-i18n="createLoreBook"
-              >
-                + Create Lorebook
-              </button>
+                data-i18n-title="createLoreBook"
+              ></button>
               <button
                 id="import-lorebook-btn"
                 class="secondary-btn"
                 type="button"
                 data-i18n="importLoreBook"
-              >
-                ^ Import Lorebook
-              </button>
+                data-i18n-title="importLoreBook"
+              ></button>
             </div>
             <div id="lorebook-list" class="lorebook-list"></div>
           </div>
@@ -2493,10 +2499,10 @@
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
-          <button id="export-db-btn" class="primary-btn" type="button">
+          <button id="export-db-btn" class="primary-btn" type="button" data-i18n="exportDatabase">
             Export Database
           </button>
-          <button id="import-db-btn" class="secondary-btn" type="button">
+          <button id="import-db-btn" class="secondary-btn" type="button" data-i18n="importDatabase">
             Import Database
           </button>
           <button
@@ -3401,9 +3407,15 @@
               class="primary-btn"
               type="button"
               data-i18n="addWritingInstruction"
-            >
-              + Add Writing Instruction
-            </button>
+              data-i18n-title="addWritingInstruction"
+            ></button>
+            <button
+              id="import-writing-instruction-btn"
+              class="secondary-btn"
+              type="button"
+              data-i18n="importWritingInstruction"
+              data-i18n-title="importWritingInstruction"
+            ></button>
           </div>
           <div id="writing-instructions-list" class="lorebook-list"></div>
         </div>

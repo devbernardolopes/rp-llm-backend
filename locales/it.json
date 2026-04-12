@@ -747,5 +747,7 @@
   "infoCharacterSortCreationDate": "Ordina personaggi per data di creazione. **Più recenti** / **Più vecchi**.",
   "infoCharacterSortUpdateDate": "Ordina personaggi per data di ultimo aggiornamento. **Più recente** / **Meno recente**.",
   "infoCharacterSortName": "Ordina personaggi in ordine alfabetico. **A-Z** / **Z-A**.",
-  "infoCharacterSortChats": "Ordina personaggi per numero di thread di chat. **Più chat** / **Meno chat**."
+  "infoCharacterSortChats": "Ordina personaggi per numero di thread di chat. **Più chat** / **Meno chat**.",
+  "importPersona": "↥ Importa Persona",
+  "importWritingInstruction": "↥ Importa Istruzione di scrittura"
 }

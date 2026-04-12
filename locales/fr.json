@@ -747,5 +747,7 @@
   "infoCharacterSortCreationDate": "Trier les personnages par date de création. **Plus récent** / **Plus ancien**.",
   "infoCharacterSortUpdateDate": "Trier les personnages par date de mise à jour. **Plus récent** / **Moins récent**.",
   "infoCharacterSortName": "Trier les personnages par ordre alphabétique. **A-Z** / **Z-A**.",
-  "infoCharacterSortChats": "Trier les personnages par nombre de fils de discussion. **Plus de chats** / **Moins de chats**."
+  "infoCharacterSortChats": "Trier les personnages par nombre de fils de discussion. **Plus de chats** / **Moins de chats**.",
+  "importPersona": "↥ Importer Persona",
+  "importWritingInstruction": "↥ Importer Instruction d'ecriture"
 }

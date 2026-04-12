@@ -225,7 +225,7 @@
   "savePersona": "Save Persona",
   "loreBookManagement": "Lorebook Management",
   "createLoreBook": "+ Create Lorebook",
-  "importLoreBook": "^ Import Lorebook",
+  "importLoreBook": "↥ Import Lorebook",
   "backToList": "< Back to List",
   "avatarUrlOptional": "Avatar URL (optional)",
   "descriptionOptional": "Description (optional)",
@@ -749,5 +749,7 @@
   "infoCharacterSortCreationDate": "Sort characters by their creation date. **Newest First** / **Oldest First**.",
   "infoCharacterSortUpdateDate": "Sort characters by their last update date. **Most Recently Updated** / **Least Recently Updated**.",
   "infoCharacterSortName": "Sort characters alphabetically by name. **A-Z** / **Z-A**.",
-  "infoCharacterSortChats": "Sort characters by number of chat threads. **Most Chats** / **Least Chats**."
+  "infoCharacterSortChats": "Sort characters by number of chat threads. **Most Chats** / **Least Chats**.",
+  "importPersona": "↥ Import Persona",
+  "importWritingInstruction": "↥ Import Writing Instruction"
 }
