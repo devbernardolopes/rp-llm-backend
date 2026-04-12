@@ -8239,6 +8239,8 @@ function openModal(modalId) {
         const firstTab = document.querySelector('[data-settings-tab-btn="api"]');
         if (firstTab instanceof HTMLButtonElement) firstTab.click();
       }
+      updateModelProfileSelect();
+      applyModelProfileIfEnabled(state.settings.model);
       updateToastDelayDisplay();
       populateThemeDropdown().catch(() => {});
       populateSettingsModels().catch(() => {});
