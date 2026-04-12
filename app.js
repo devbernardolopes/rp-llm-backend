@@ -5307,6 +5307,10 @@ function setupSettingsTabsLayout() {
               restoreSettingsPromptingTextareaCollapseStates();
             });
           }
+          // Populate model dropdowns for defaults tab
+          if (group === "defaults") {
+            populateAutoTitleSummaryModels().catch(() => {});
+          }
         } else {
           g.classList.add("hidden");
         }
