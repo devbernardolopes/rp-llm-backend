@@ -114,15 +114,15 @@ body {
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
-  #left-pane.mobile-open ~ #main #chat-view .chat-input-wrapper,
-  #left-pane.mobile-open ~ #main #chat-view .input-footer {
+  #left-pane.mobile-open ~ #chat-view .chat-input-wrapper,
+  #left-pane.mobile-open ~ #chat-view .input-footer {
     display: none;
   }
 }
 
 @media (max-width: 600px) and (orientation: landscape) {
-  #left-pane.mobile-open ~ #main #chat-view .chat-input-wrapper,
-  #left-pane.mobile-open ~ #main #chat-view .input-footer {
+  #left-pane.mobile-open ~ #chat-view .chat-input-wrapper,
+  #left-pane.mobile-open ~ #chat-view .input-footer {
     display: none;
   }
 
