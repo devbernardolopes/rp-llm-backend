@@ -285,10 +285,6 @@ function populateSettingsTabValues() {
   
   // Initialize model profiles
   updateModelProfileSelect();
-  const currentProfile = getModelProfile(state.settings.model);
-  if (currentProfile) {
-    updateProfileFieldsUI(currentProfile);
-  }
   
   if (completionCooldownSlider) {
     completionCooldownSlider.value = state.settings.completionCooldown;
