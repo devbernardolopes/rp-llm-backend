@@ -1145,9 +1145,12 @@
             <div class="settings-divider"></div>
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="modelProfileLabel">Model Profile</span></span>
-              <select id="model-profile-select">
-                <option value="">-- Select Profile --</option>
-              </select>
+              <div class="flex-row gap-2">
+                <select id="model-profile-select" class="flex-grow">
+                  <option value="">-- Select Profile --</option>
+                </select>
+                <button id="new-model-profile-btn" class="btn small" data-i18n="newProfileBtn">New Profile</button>
+              </div>
             </div>
             <div id="model-profile-fields" class="hidden">
               <div class="form-field">

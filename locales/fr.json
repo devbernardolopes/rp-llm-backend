@@ -184,6 +184,7 @@
   "stopStringsLabel": "Chaînes d'arrêt",
   "stopStringsHint": "Séparées par des virgules. Arrête la génération lorsque ces séquences apparaissent.",
   "modelProfileLabel": "Profil de modèle",
+  "newProfileBtn": "Nouveau profil",
   "profileNameLabel": "Nom du profil",
   "autoLoadProfileLabel": "Chargement automatique lors de la sélection du modèle",
   "profileStopStringsLabel": "Chaînes d'arrêt du profil",

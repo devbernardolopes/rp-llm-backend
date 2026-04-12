@@ -184,6 +184,7 @@
   "stopStringsLabel": "Stopp-Zeichenfolgen",
   "stopStringsHint": "Kommagetrennt. Stoppt die Generierung, wenn diese Sequenzen auftreten.",
   "modelProfileLabel": "Modellprofil",
+  "newProfileBtn": "Neues Profil",
   "profileNameLabel": "Profilname",
   "autoLoadProfileLabel": "Automatisch laden wenn Modell ausgewahlt",
   "profileStopStringsLabel": "Profil Stopp-Zeichenfolgen",

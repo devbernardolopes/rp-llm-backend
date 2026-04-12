@@ -184,6 +184,7 @@
   "stopStringsLabel": "Cadenas de parada",
   "stopStringsHint": "Separadas por comas. Detiene la generación cuando aparecen estas secuencias.",
   "modelProfileLabel": "Perfil de modelo",
+  "newProfileBtn": "Nuevo perfil",
   "profileNameLabel": "Nombre del perfil",
   "autoLoadProfileLabel": "Cargar automáticamente al seleccionar modelo",
   "profileStopStringsLabel": "Cadenas de parada del perfil",

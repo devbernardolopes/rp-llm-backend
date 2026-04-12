@@ -4549,6 +4549,7 @@ async function setupSettingsControls() {
   const profileMtValue = document.getElementById("profile-max-tokens-value");
   const saveModelProfileBtn = document.getElementById("save-model-profile-btn");
   const deleteModelProfileBtn = document.getElementById("delete-model-profile-btn");
+  const newModelProfileBtn = document.getElementById("new-model-profile-btn");
 
   function updateProfileFieldsUI(profile) {
     if (!profile) {
@@ -4633,6 +4634,12 @@ async function setupSettingsControls() {
       updateProfileFieldsUI(null);
       showToast(t("profileDeleted"), "success");
     }
+  });
+
+  newModelProfileBtn?.addEventListener("click", () => {
+    const profileData = getCurrentProfileData();
+    updateProfileFieldsUI(profileData);
+    if (modelProfileSelect) modelProfileSelect.value = "";
   });
   completionCooldownSlider?.addEventListener("input", () => {
     const value = Number(completionCooldownSlider.value);

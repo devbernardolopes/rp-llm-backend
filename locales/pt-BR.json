@@ -184,6 +184,7 @@
   "stopStringsLabel": "Strings de Parada",
   "stopStringsHint": "Separadas por vírgulas. Para a geração quando essas sequências aparecem.",
   "modelProfileLabel": "Perfil do Modelo",
+  "newProfileBtn": "Novo Perfil",
   "profileNameLabel": "Nome do Perfil",
   "autoLoadProfileLabel": "Carregar automaticamente ao selecionar modelo",
   "profileStopStringsLabel": "Strings de Parada do Perfil",

@@ -184,6 +184,7 @@
   "stopStringsLabel": "Stop Strings",
   "stopStringsHint": "Comma-separated. Stops generation when these sequences appear.",
   "modelProfileLabel": "Model Profile",
+  "newProfileBtn": "New Profile",
   "profileNameLabel": "Profile Name",
   "autoLoadProfileLabel": "Auto-load when model selected",
   "profileStopStringsLabel": "Profile Stop Strings",

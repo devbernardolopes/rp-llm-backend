@@ -184,6 +184,7 @@
   "stopStringsLabel": "Stringhe di arresto",
   "stopStringsHint": "Separate da virgole. Ferma la generazione quando appaiono queste sequenze.",
   "modelProfileLabel": "Profilo modello",
+  "newProfileBtn": "Nuovo profilo",
   "profileNameLabel": "Nome del profilo",
   "autoLoadProfileLabel": "Carica automaticamente alla selezione del modello",
   "profileStopStringsLabel": "Stringhe di arresto del profilo",
