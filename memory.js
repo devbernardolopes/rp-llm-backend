@@ -136,16 +136,17 @@ function formatMemoryEntry(entry, idx) {
       : 1;
   const level = getEntryLevel(entry);
   const summaryText = String(entry?.summary || "");
-  const settings = window.state?.settings;
-  const slots = getMemorySlotsValue(settings?.memorySlots);
+  const slots = getMemorySlots();
   if (slots === 1) {
     return summaryText;
   }
-  const defaultHeader = "**ENTRY {slot} LEVEL {level}**";
-  const headerTemplate =
-    settings?.sectionHeaderMemoryEntry ||
-    window.DEFAULT_SETTINGS?.sectionHeaderMemoryEntry ||
-    defaultHeader;
+  const getHeader = (key) => {
+    if (typeof window.getSectionHeader === "function") {
+      return window.getSectionHeader(key);
+    }
+    return "";
+  };
+  const headerTemplate = getHeader("sectionHeaderMemoryEntry") || "**ENTRY {slot} LEVEL {level}**";
   const header = headerTemplate
     .replace(/{slot}/g, slot)
     .replace(/{level}/g, level);
