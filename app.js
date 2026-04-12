@@ -19442,8 +19442,25 @@ async function renderMemoryModalEntries() {
     saveBtn.disabled = !hasChanges;
   };
 
+  const updateMemoryEntryTokenCount = (textarea) => {
+    if (!state.settings.showTokenCounts) return;
+    const countEl = document.getElementById(`${textarea.id}-count`);
+    if (!countEl) return;
+    const text = String(textarea.value || "").trim();
+    if (!text) {
+      countEl.textContent = "0 tokens";
+      return;
+    }
+    estimateTokens(text).then((count) => {
+      countEl.textContent = `${count} tokens`;
+    });
+  };
+
   editableTextareas.forEach((textarea) => {
-    textarea.addEventListener("input", updateSaveState);
+    textarea.addEventListener("input", () => {
+      updateSaveState();
+      updateMemoryEntryTokenCount(textarea);
+    });
   });
 
   updateSaveState();
@@ -19519,6 +19536,31 @@ async function handleMemoryEntryDelete(entry) {
 
 async function openMemoryModal() {
   await renderMemoryModalEntries();
+  const modal = document.getElementById("memory-modal");
+  if (modal) {
+    if (state.settings.showTokenCounts) {
+      const textareas = modal.querySelectorAll("#memory-modal-entries textarea");
+      for (const textarea of textareas) {
+        if (textarea.disabled) continue;
+        const countEl = document.createElement("span");
+        countEl.id = `${textarea.id}-count`;
+        countEl.className = "textarea-collapse-count token-count muted";
+        const text = String(textarea.value || "").trim();
+        if (text) {
+          estimateTokens(text).then((count) => {
+            countEl.textContent = `${count} tokens`;
+          });
+        } else {
+          countEl.textContent = "0 tokens";
+        }
+        const row = textarea.closest(".memory-entry-row");
+        if (row) {
+          row.appendChild(countEl);
+        }
+      }
+    }
+    setupModalTextareas(modal);
+  }
   openModal("memory-modal");
 }
 
