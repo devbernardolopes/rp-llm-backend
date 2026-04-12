@@ -125,6 +125,7 @@ Requirements:
   sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
   sectionHeaderMessages: "***MESSAGES***",
   sectionHeaderMemoryLevelContext: "***MEMORY LEVEL",
+  sectionHeaderMemoryEntry: "**ENTRY {slot} LEVEL {level}**",
   sectionHeaderLoreContext: "***LORE CONTEXT***",
   oocSystemPromptIntro: "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
   oocUserMessageFormat: "((OOC: SYSTEM, reply in OOC manner. {content}))",
@@ -4121,6 +4122,9 @@ async function setupSettingsControls() {
   const sectionHeaderMemoryLevelContext = document.getElementById(
     "section-header-memory-level-context",
   );
+  const sectionHeaderMemoryEntry = document.getElementById(
+    "section-header-memory-entry",
+  );
   const sectionHeaderLoreContext = document.getElementById(
     "section-header-lore-context",
   );
@@ -4187,6 +4191,11 @@ async function setupSettingsControls() {
     sectionHeaderMemoryLevelContext.value =
       state.settings.sectionHeaderMemoryLevelContext ||
       DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
+  }
+  if (sectionHeaderMemoryEntry) {
+    sectionHeaderMemoryEntry.value =
+      state.settings.sectionHeaderMemoryEntry ||
+      DEFAULT_SETTINGS.sectionHeaderMemoryEntry;
   }
   if (sectionHeaderLoreContext) {
     sectionHeaderLoreContext.value =
@@ -4919,6 +4928,12 @@ async function setupSettingsControls() {
   sectionHeaderMemoryLevelContext?.addEventListener("input", () => {
     state.settings.sectionHeaderMemoryLevelContext =
       sectionHeaderMemoryLevelContext.value;
+    saveSettings();
+  });
+
+  sectionHeaderMemoryEntry?.addEventListener("input", () => {
+    state.settings.sectionHeaderMemoryEntry =
+      sectionHeaderMemoryEntry.value;
     saveSettings();
   });
 

@@ -639,6 +639,8 @@
   "sectionHeaderMessagesSoFar": "Messages So Far Header",
   "sectionHeaderMessages": "Messages Header",
   "sectionHeaderMemoryLevelContext": "Memory Level Context Header",
+  "sectionHeaderMemoryEntry": "Memory Entry Header",
+  "placeholderSectionHeaderMemoryEntry": "**ENTRY {slot} LEVEL {level}**",
   "model3dTab": "3D",
   "addModel3d": "+ Add 3D Model",
   "noModel3dSelected": "No 3D model selected. Click 'Add 3D Model' to upload a VRM file.",

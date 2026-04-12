@@ -136,7 +136,18 @@ function formatMemoryEntry(entry, idx) {
       : 1;
   const level = getEntryLevel(entry);
   const summaryText = String(entry?.summary || "");
-  return `**ENTRY ${slot} LEVEL ${level}**\n${summaryText}`;
+  const slots = getMemorySlots();
+  if (slots === 1) {
+    return summaryText;
+  }
+  const headerTemplate =
+    window.state?.settings?.sectionHeaderMemoryEntry ||
+    window.DEFAULT_SETTINGS?.sectionHeaderMemoryEntry ||
+    "**ENTRY {slot} LEVEL {level}**";
+  const header = headerTemplate
+    .replace(/{slot}/g, slot)
+    .replace(/{level}/g, level);
+  return `${header}\n${summaryText}`;
 }
 
 function formatMemoryEntries(entries) {
@@ -185,6 +196,13 @@ async function getMemorySummary(characterId, threadId) {
   const relevantEntries =
     levelEntries.length > 0 ? levelEntries : entries;
   return formatMemoryEntries(relevantEntries);
+}
+
+function getMemorySlots() {
+  const raw = window.state?.settings?.memorySlots;
+  const num = Number(raw);
+  if (!Number.isFinite(num)) return 5;
+  return Math.min(10, Math.max(1, Math.round(num)));
 }
 
 function getSummaryThresholdValue(raw) {
