@@ -2252,6 +2252,8 @@ function setupModalTextareas(root = document) {
         saveFn = saveWiEditorTextareaCollapseStates;
       } else if (modal.id === "settings-modal") {
         saveFn = saveSettingsPromptingTextareaCollapseStates;
+      } else if (modal.id === "lore-editor-modal") {
+        saveFn = saveLoreEditorTextareaCollapseStates;
       }
     }
 
@@ -2563,6 +2565,80 @@ function restoreWiEditorTextareaCollapseStates() {
     }
     if (scrollStates[textarea.id] !== undefined) {
       textarea.scrollTop = scrollStates[textarea.id];
+    }
+  });
+}
+
+function saveLoreEditorTextareaCollapseStates() {
+  const lorebookId = state.lore.editingId;
+  if (!lorebookId) return;
+  const modal = document.getElementById("lore-editor-modal");
+  if (!modal) return;
+  const states = {};
+  const scrollStates = {};
+  const cardExpanded = {};
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const expanded = entry.header.getAttribute("aria-expanded") === "true";
+    const entryId = textarea.dataset.entryId;
+    if (entryId) {
+      states[entryId] = states[entryId] || {};
+      states[entryId][textarea.dataset.fieldName] = expanded;
+      scrollStates[entryId] = scrollStates[entryId] || {};
+      scrollStates[entryId][textarea.dataset.fieldName] = textarea.scrollTop;
+    }
+  });
+  modal.querySelectorAll(".lore-entry-card").forEach((card) => {
+    const entryId = card.querySelector(".lore-entry-title")?.dataset.entryId;
+    if (entryId) {
+      const expanded = card.querySelector(".lore-entry-title")?.getAttribute("aria-expanded") === "true";
+      cardExpanded[entryId] = expanded;
+    }
+  });
+  db.lorebooks.update(lorebookId, {
+    entriesCollapseState: JSON.stringify({ states, cardExpanded }),
+  });
+}
+
+function restoreLoreEditorTextareaCollapseStates(lorebook) {
+  const collapseStateRaw = lorebook?.entriesCollapseState;
+  let states = {};
+  let cardExpanded = {};
+  if (collapseStateRaw) {
+    try {
+      const parsed = JSON.parse(collapseStateRaw);
+      states = parsed.states || {};
+      cardExpanded = parsed.cardExpanded || {};
+    } catch {
+      states = {};
+      cardExpanded = {};
+    }
+  }
+  const modal = document.getElementById("lore-editor-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".lore-entry-card").forEach((card) => {
+    const entryId = card.querySelector(".lore-entry-title")?.dataset.entryId;
+    const head = card.querySelector(".lore-entry-title");
+    const body = card.querySelector(".lore-entry-body");
+    const icon = head?.querySelector(".lore-entry-icon");
+    if (entryId && head && body && icon) {
+      const shouldExpand = cardExpanded[entryId] !== undefined ? cardExpanded[entryId] : true;
+      head.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+      body.classList.toggle("collapsed", !shouldExpand);
+      icon.textContent = shouldExpand ? "▾" : "▴";
+    }
+  });
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry) return;
+    const entryId = textarea.dataset.entryId;
+    const fieldName = textarea.dataset.fieldName;
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    if (entryId && states[entryId]?.[fieldName] !== undefined) {
+      entry.setExpanded(states[entryId][fieldName]);
+    } else {
+      entry.setExpanded(hasContent);
     }
   });
 }
@@ -10854,6 +10930,11 @@ async function openLoreEditor(lorebook = null) {
     ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx))
     : [];
 
+  let lorebookWithCollapseState = lorebook;
+  if (state.lore.editingId) {
+    lorebookWithCollapseState = await db.lorebooks.get(state.lore.editingId);
+  }
+
   const nameField = document.getElementById("lore-name");
   if (nameField) nameField.value = normalized?.name || "";
   const avatarField = document.getElementById("lore-avatar");
@@ -10884,7 +10965,12 @@ async function openLoreEditor(lorebook = null) {
   await openModal("lore-editor-modal");
   const editorModal = document.getElementById("lore-editor-modal");
   if (editorModal) {
-    setTimeout(() => setupModalTextareas(editorModal), 0);
+    setTimeout(() => {
+      setupModalTextareas(editorModal);
+      if (lorebookWithCollapseState) {
+        restoreLoreEditorTextareaCollapseStates(lorebookWithCollapseState);
+      }
+    }, 0);
   }
 }
 
@@ -10896,10 +10982,21 @@ function renderLoreEntryEditors() {
     const card = document.createElement("div");
     card.className = "lore-entry-card";
 
-    const head = document.createElement("div");
+    const head = document.createElement("button");
+    head.type = "button";
     head.className = "lore-entry-title";
+    head.setAttribute("aria-expanded", "true");
+    head.dataset.entryId = String(entry.id);
     const label = document.createElement("span");
     label.textContent = `Entry ${String(index + 1).padStart(2, "0")}`;
+    const icon = document.createElement("span");
+    icon.className = "lore-entry-icon";
+    icon.textContent = "▾";
+    head.append(label, icon);
+
+    const cardBody = document.createElement("div");
+    cardBody.className = "lore-entry-body";
+
     const delBtn = iconButton("delete", "Delete entry", () => {
       state.lore.entries.splice(index, 1);
       if (state.lore.entries.length === 0) addLoreEntryEditor();
@@ -10907,9 +11004,14 @@ function renderLoreEntryEditors() {
       renderLoreEntryEditors();
     });
     delBtn.classList.add("danger-icon-btn");
-    head.append(label, delBtn);
 
+    const keysLabel = document.createElement("span");
+    keysLabel.className = "label-inline";
+    keysLabel.textContent = "Keys (comma-separated)";
     const keysInput = document.createElement("textarea");
+    keysInput.id = `lore-entry-${entry.id}-keys`;
+    keysInput.dataset.entryId = String(entry.id);
+    keysInput.dataset.fieldName = "keys";
     keysInput.rows = 2;
     keysInput.placeholder = "Keys (comma-separated)";
     keysInput.value = (entry.keys || []).join(", ");
@@ -10918,7 +11020,13 @@ function renderLoreEntryEditors() {
       state.modalDirty["lore-editor-modal"] = true;
     });
 
+    const secondaryLabel = document.createElement("span");
+    secondaryLabel.className = "label-inline";
+    secondaryLabel.textContent = "Secondary Keys (comma-separated, optional)";
     const secondaryInput = document.createElement("textarea");
+    secondaryInput.id = `lore-entry-${entry.id}-secondaryKeys`;
+    secondaryInput.dataset.entryId = String(entry.id);
+    secondaryInput.dataset.fieldName = "secondaryKeys";
     secondaryInput.rows = 2;
     secondaryInput.placeholder = "Secondary Keys (comma-separated, optional)";
     secondaryInput.value = (entry.secondaryKeys || []).join(", ");
@@ -10927,7 +11035,13 @@ function renderLoreEntryEditors() {
       state.modalDirty["lore-editor-modal"] = true;
     });
 
+    const contentLabel = document.createElement("span");
+    contentLabel.className = "label-inline";
+    contentLabel.textContent = "Entry content";
     const contentInput = document.createElement("textarea");
+    contentInput.id = `lore-entry-${entry.id}-content`;
+    contentInput.dataset.entryId = String(entry.id);
+    contentInput.dataset.fieldName = "content";
     contentInput.rows = 8;
     contentInput.maxLength = 10480;
     contentInput.placeholder = "Entry content";
@@ -10937,7 +11051,24 @@ function renderLoreEntryEditors() {
       state.modalDirty["lore-editor-modal"] = true;
     });
 
-    card.append(head, keysInput, secondaryInput, contentInput);
+    head.addEventListener("click", () => {
+      const expanded = head.getAttribute("aria-expanded") === "true";
+      head.setAttribute("aria-expanded", expanded ? "false" : "true");
+      cardBody.classList.toggle("collapsed", expanded);
+      icon.textContent = expanded ? "▴" : "▾";
+      saveLoreEditorTextareaCollapseStates();
+    });
+
+    cardBody.append(
+      delBtn,
+      keysLabel,
+      keysInput,
+      secondaryLabel,
+      secondaryInput,
+      contentLabel,
+      contentInput,
+    );
+    card.append(head, cardBody);
     root.appendChild(card);
   });
 }
@@ -11140,7 +11271,7 @@ async function collectLorebookFromEditor() {
     }
   }
 
-  return {
+  const payload = {
     name,
     avatar,
     description,
@@ -11152,6 +11283,15 @@ async function collectLorebookFromEditor() {
     entries,
     updatedAt: Date.now(),
   };
+
+  if (state.lore.editingId) {
+    const existing = await db.lorebooks.get(state.lore.editingId);
+    if (existing) {
+      payload.entriesCollapseState = existing.entriesCollapseState || null;
+    }
+  }
+
+  return payload;
 }
 
 async function saveLorebookFromEditor({ close = true } = {}) {

@@ -429,7 +429,7 @@ db.version(23)
     });
   });
 
-db.version(24)
+db.version(25)
   .stores({
     characters: "++id, name, pinned",
     lorebooks: "++id, name, createdAt, updatedAt",
@@ -442,12 +442,10 @@ db.version(24)
     themes: "id, name, isBuiltIn, createdAt",
   })
   .upgrade(async (tx) => {
-    const threads = tx.table("threads");
-    await threads.toCollection().modify((thread) => {
-      const panel = thread.model3dPanel || {};
-      if (!Object.prototype.hasOwnProperty.call(panel, "expression")) {
-        panel.expression = null;
+    const lorebooks = tx.table("lorebooks");
+    await lorebooks.toCollection().modify((lorebook) => {
+      if (!Object.prototype.hasOwnProperty.call(lorebook, "entriesCollapseState")) {
+        lorebook.entriesCollapseState = null;
       }
-      thread.model3dPanel = panel;
     });
   });
