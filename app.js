@@ -1715,6 +1715,14 @@ function setupEvents() {
     .getElementById("create-writing-instruction-btn")
     .addEventListener("click", () => openWritingInstructionEditor());
   document
+    .getElementById("import-writing-instruction-btn")
+    .addEventListener("click", () =>
+      document.getElementById("import-writing-instruction-input").click(),
+    );
+  document
+    .getElementById("import-writing-instruction-input")
+    .addEventListener("change", importWritingInstructionFromFile);
+  document
     .getElementById("cancel-writing-instruction-btn")
     .addEventListener("click", async () => {
       if (state.modalDirty["writing-instruction-editor-modal"]) {
@@ -11986,12 +11994,43 @@ async function exportWritingInstruction(writingInstructionId) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${wi.name.replace(/[^a-z0-9]/gi, "_")}.md`;
+  a.download = `wi_${wi.name.replace(/[^a-z0-9]/gi, "_")}.md`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast(t("writingInstructionExported"), "success");
+}
+
+async function importWritingInstructionFromFile(e) {
+  const input = e?.target;
+  const file = input?.files?.[0];
+  if (input) input.value = "";
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const fallbackName = file.name
+      ? file.name.replace(/\.[^.]+$/, "").replace(/^wi_/, "")
+      : "Imported";
+    const wi = {
+      name: fallbackName,
+      instructions: {
+        en: text,
+      },
+    };
+    const editorModal = document.getElementById("writing-instruction-editor-modal");
+    editorModal.classList.remove("hidden");
+    openWritingInstructionEditor(wi);
+    showToast(t("writingInstructionImported") || "Writing instruction ready for save.", "success");
+  } catch (err) {
+    console.error("Writing instruction import failed", err);
+    await openInfoDialog(
+      t("importFailedTitle"),
+      tf("importFailed", {
+        error: err?.message || t("unknownError"),
+      }),
+    );
+  }
 }
 
 function openWritingInstructionLanguageModal() {

@@ -98,7 +98,7 @@
               data-i18n-title="importCharacter"
               aria-label="Import Character"
             >
-              ⬇
+              ⬆
             </button>
             <input
               id="import-character-input"
@@ -2241,15 +2241,16 @@
               class="primary-btn"
               type="button"
               data-i18n="newPersona"
-              data-i18n-title="newPersona"
             ></button>
             <button
               id="import-persona-btn"
               class="secondary-btn"
               type="button"
-              data-i18n="importPersona"
               data-i18n-title="importPersona"
-            ></button>
+              aria-label="Import Persona"
+            >
+              ⬆
+            </button>
           </div>
           <div id="persona-list" class="lorebook-list"></div>
         </div>
@@ -2287,15 +2288,16 @@
                 class="primary-btn"
                 type="button"
                 data-i18n="createLoreBook"
-                data-i18n-title="createLoreBook"
               ></button>
               <button
                 id="import-lorebook-btn"
                 class="secondary-btn"
                 type="button"
-                data-i18n="importLoreBook"
                 data-i18n-title="importLoreBook"
-              ></button>
+                aria-label="Import Lorebook"
+              >
+                ⬆
+              </button>
             </div>
             <div id="lorebook-list" class="lorebook-list"></div>
           </div>
@@ -2437,6 +2439,13 @@
       id="import-lorebook-input"
       type="file"
       accept=".json,application/json"
+      class="hidden"
+    />
+
+    <input
+      id="import-writing-instruction-input"
+      type="file"
+      accept=".md,.markdown,.txt,text/plain"
       class="hidden"
     />
 
@@ -3407,15 +3416,16 @@
               class="primary-btn"
               type="button"
               data-i18n="addWritingInstruction"
-              data-i18n-title="addWritingInstruction"
             ></button>
             <button
               id="import-writing-instruction-btn"
               class="secondary-btn"
               type="button"
-              data-i18n="importWritingInstruction"
               data-i18n-title="importWritingInstruction"
-            ></button>
+              aria-label="Import Writing Instruction"
+            >
+              ⬆
+            </button>
           </div>
           <div id="writing-instructions-list" class="lorebook-list"></div>
         </div>
