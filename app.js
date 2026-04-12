@@ -10997,11 +10997,19 @@ function renderLoreEntryEditors() {
     const cardBody = document.createElement("div");
     cardBody.className = "lore-entry-body";
 
-    const delBtn = iconButton("delete", "Delete entry", () => {
+    const delBtn = iconButton("delete", "Delete entry", async () => {
       state.lore.entries.splice(index, 1);
       if (state.lore.entries.length === 0) addLoreEntryEditor();
       state.modalDirty["lore-editor-modal"] = true;
       renderLoreEntryEditors();
+      const modal = document.getElementById("lore-editor-modal");
+      if (modal) {
+        setupModalTextareas(modal);
+        if (state.lore.editingId) {
+          const lorebook = await db.lorebooks.get(state.lore.editingId);
+          if (lorebook) restoreLoreEditorTextareaCollapseStates(lorebook);
+        }
+      }
     });
     delBtn.classList.add("danger-icon-btn");
 
