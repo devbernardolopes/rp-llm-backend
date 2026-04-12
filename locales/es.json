@@ -743,5 +743,9 @@
   "infoBotCardAvatarTransitionDelay": "Segundos entre transiciones de avatar en modo carrusel.",
   "showTokenCounts": "Mostrar conteo de tokens",
   "sectionHeaderLoreContext": "Encabezado Contexto de Lore",
-  "placeholderSectionHeaderLore": "ej. ***CONTEXTO LORE***"
+  "placeholderSectionHeaderLore": "ej. ***CONTEXTO LORE***",
+  "infoCharacterSortCreationDate": "Ordenar personajes por fecha de creación. **Más recientes** / **Más antiguos**.",
+  "infoCharacterSortUpdateDate": "Ordenar personajes por última actualización. **Más reciente** / **Menos reciente**.",
+  "infoCharacterSortName": "Ordenar personajes alfabéticamente. **A-Z** / **Z-A**.",
+  "infoCharacterSortChats": "Ordenar personajes por número de hilos de chat. **Más chats** / **Menos chats**."
 }

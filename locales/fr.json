@@ -743,5 +743,9 @@
   "infoBotCardAvatarTransitionDelay": "Secondes entre les transitions d'avatar en mode carousel.",
   "showTokenCounts": "Afficher le nombre de tokens",
   "sectionHeaderLoreContext": "En-tete Contexte Lore",
-  "placeholderSectionHeaderLore": "ex. ***CONTEXTE LORE***"
+  "placeholderSectionHeaderLore": "ex. ***CONTEXTE LORE***",
+  "infoCharacterSortCreationDate": "Trier les personnages par date de création. **Plus récent** / **Plus ancien**.",
+  "infoCharacterSortUpdateDate": "Trier les personnages par date de mise à jour. **Plus récent** / **Moins récent**.",
+  "infoCharacterSortName": "Trier les personnages par ordre alphabétique. **A-Z** / **Z-A**.",
+  "infoCharacterSortChats": "Trier les personnages par nombre de fils de discussion. **Plus de chats** / **Moins de chats**."
 }

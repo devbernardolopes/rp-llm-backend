@@ -1575,6 +1575,16 @@ function setupEvents() {
       state.characterPage = 1;
       await renderCharacters();
     });
+    sortBtn.classList.add("sort-info");
+    const parts = getCharacterSortParts(state.characterSortMode);
+    const infoKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
+    sortBtn.setAttribute("data-info", infoKey);
+    sortBtn.addEventListener("mouseenter", () => {
+      const infoKeyAttr = sortBtn.getAttribute("data-info");
+      if (infoKeyAttr) {
+        showHoverInfoPanel(infoKeyAttr, sortBtn);
+      }
+    });
   }
   document
     .getElementById("character-sort-dir-btn")
@@ -3193,6 +3203,7 @@ function updateCharacterSortButton() {
   icon.src = getCharacterSortIconUrl(parts.base);
   icon.alt = label;
   btn.setAttribute("aria-label", label);
+  btn.setAttribute("data-info", labelKey);
 }
 
 function renderCharacterTagFilterChips() {
@@ -10101,6 +10112,70 @@ function closeInfoPanel() {
     infoPanel.parentNode.removeChild(infoPanel);
   }
   infoPanel = null;
+}
+
+let hoverInfoPanelTimeout = null;
+function showHoverInfoPanel(infoKey, buttonEl) {
+  clearTimeout(hoverInfoPanelTimeout);
+  closeInfoPanel();
+
+  infoPanelOpen = true;
+  infoPanel = document.createElement("div");
+  infoPanel.className = "info-panel";
+  infoPanel._triggerButton = buttonEl;
+
+  const content = t("info" + infoKey.charAt(0).toUpperCase() + infoKey.slice(1));
+  if (content && content !== "info" + infoKey.charAt(0).toUpperCase() + infoKey.slice(1)) {
+    if (state.settings.markdownEnabled && typeof window.markdownit === "function") {
+      const md = window.markdownit("default", {
+        html: false,
+        linkify: true,
+        typographer: false,
+        breaks: true,
+      });
+      infoPanel.innerHTML = md.render(content);
+      infoPanel.querySelectorAll("a").forEach((a) => {
+        a.setAttribute("target", "_blank");
+        a.setAttribute("rel", "noopener noreferrer");
+      });
+    } else {
+      infoPanel.textContent = content;
+    }
+  } else {
+    infoPanel.textContent = "No info available.";
+  }
+
+  document.body.appendChild(infoPanel);
+
+  const rect = buttonEl.getBoundingClientRect();
+  const panelRect = infoPanel.getBoundingClientRect();
+  let left = rect.right + 8;
+  let top = rect.top;
+
+  if (left + panelRect.width > window.innerWidth - 10) {
+    left = rect.left - panelRect.width - 8;
+  }
+  if (left < 10) left = 10;
+  if (top + panelRect.height > window.innerHeight - 10) {
+    top = window.innerHeight - panelRect.height - 10;
+  }
+  if (top < 10) top = 10;
+
+  infoPanel.style.left = `${left}px`;
+  infoPanel.style.top = `${top}px`;
+
+  const closeHoverInfo = () => {
+    clearTimeout(hoverInfoPanelTimeout);
+    hoverInfoPanelTimeout = setTimeout(() => {
+      closeInfoPanel();
+    }, 200);
+  };
+
+  buttonEl.addEventListener("mouseleave", closeHoverInfo, { once: true });
+  infoPanel.addEventListener("mouseleave", closeHoverInfo, { once: true });
+  infoPanel.addEventListener("mouseenter", () => {
+    clearTimeout(hoverInfoPanelTimeout);
+  }, { once: true });
 }
 
 async function showChatPersonaDropdown() {
