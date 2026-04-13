@@ -24848,7 +24848,7 @@ function getMarkdownParser(forUserContent = false) {
   if (typeof window.markdownit !== "function") {
     return null;
   }
-  const allowHtml = forUserContent && state.settings.allowMessageHtml === true;
+  const allowHtml = state.settings.allowMessageHtml === true;
   const cacheKey = forUserContent ? "user" : "ui";
   const cache = state.markdownParserCache?.[cacheKey];
   if (cache && cache.allowHtml === allowHtml) {
@@ -24876,8 +24876,15 @@ function renderMessageHtml(content, role = "assistant") {
   if (role === "assistant") {
     raw = trimTrailingWhitespacePerLine(raw);
   }
+  const allowHtml = state.settings.allowMessageHtml === true;
   if (!state.settings.markdownEnabled) {
-    return raw.replace(/\n/g, "<br>");
+    if (allowHtml) {
+      return raw.replace(/\n/g, "<br>");
+    }
+    return escapeHtml(raw).replace(/\n/g, "<br>");
+  }
+  if (!allowHtml) {
+    return markdownToHtml(raw);
   }
   const md = getMarkdownParser(true);
   if (md) {
@@ -24909,9 +24916,8 @@ function normalizeAssistantMessages(messages) {
 }
 
 function markdownToHtml(input) {
-  let html = state.settings.allowMessageHtml
-    ? escapeHtml(input)
-    : String(input);
+  const allowHtml = state.settings.allowMessageHtml === true;
+  let html = allowHtml ? String(input) : escapeHtml(input);
 
   html = html.replace(
     /```([\s\S]*?)```/g,
