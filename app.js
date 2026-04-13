@@ -5919,7 +5919,10 @@ function openConfirmDialog(title, message) {
     state.confirmMode = "confirm";
     document.getElementById("confirm-title").textContent =
       title || t("confirm");
-    document.getElementById("confirm-message").textContent = message || "";
+    const messageContent = document.getElementById("confirm-message-content");
+    if (messageContent) {
+      messageContent.textContent = message || "";
+    }
     state.confirmResolver = resolve;
     modal.classList.remove("hidden");
   });
@@ -5957,7 +5960,10 @@ function openInfoDialog(title, message) {
     state.confirmMode = "info";
     document.getElementById("confirm-title").textContent =
       title || t("message");
-    document.getElementById("confirm-message").textContent = message || "";
+    const messageContent = document.getElementById("confirm-message-content");
+    if (messageContent) {
+      messageContent.textContent = message || "";
+    }
     state.confirmResolver = () => resolve(true);
     modal.classList.remove("hidden");
   });

@@ -3305,6 +3305,12 @@ textarea {
   z-index: 250;
 }
 
+.confirm-message-content {
+  max-height: 40vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
 #text-input-modal {
   z-index: 210;
 }
