@@ -19472,14 +19472,29 @@ async function renderMemoryModalEntries() {
     if (isLocked) {
       textarea.disabled = true;
       textarea.title = t("memoryModalLevelLocked");
-    } else {
-      editableTextareas.push(textarea);
     }
     const wrapper = document.createElement("div");
-    wrapper.className = "memory-entry";
-    const row = document.createElement("div");
-    row.className = "memory-entry-row";
-    row.appendChild(textarea);
+    wrapper.className = "memory-entry textarea-collapse";
+    const header = document.createElement("button");
+    header.type = "button";
+    header.className = "textarea-collapse-header";
+    header.setAttribute("aria-expanded", "true");
+    const title = document.createElement("span");
+    title.textContent = tf("memoryModalEntryLabel", { level: entryLevel, slot });
+    const rightGroup = document.createElement("span");
+    rightGroup.className = "textarea-collapse-header-right";
+    const countEl = document.createElement("span");
+    countEl.id = `${textarea.id}-count`;
+    countEl.className = "textarea-collapse-count token-count muted";
+    rightGroup.appendChild(countEl);
+    const icon = document.createElement("span");
+    icon.className = "textarea-collapse-icon";
+    rightGroup.appendChild(icon);
+    header.append(title, rightGroup);
+    const body = document.createElement("div");
+    body.className = "textarea-collapse-body";
+    wrapper.append(header, body);
+    body.appendChild(textarea);
     if (!isLocked) {
       const entryData = {
         id: Number(entry.id),
@@ -19521,12 +19536,52 @@ async function renderMemoryModalEntries() {
         "danger-btn",
       );
       actions.append(regenBtn, deleteBtn);
-      row.appendChild(actions);
+      body.appendChild(actions);
     }
-    wrapper.appendChild(row);
+    const entry = { header, body, icon };
+    entry.refresh = () => {
+      const hasContent = String(textarea.value || "").trim().length > 0;
+      header.classList.toggle("has-content", hasContent);
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      icon.textContent = expanded ? "▾" : "▴";
+    };
+    const setExpanded = (next) => {
+      const current = header.getAttribute("aria-expanded") === "true";
+      if (next === current) {
+        entry.refresh();
+        if (next) autoExpandTextarea(textarea);
+        return;
+      }
+      header.setAttribute("aria-expanded", next ? "true" : "false");
+      body.classList.toggle("collapsed", !next);
+      if (next) autoExpandTextarea(textarea);
+      entry.refresh();
+    };
+    header.addEventListener("click", () => {
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      setExpanded(!expanded);
+    });
+    textarea.addEventListener("input", () => {
+      const expanded = header.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        autoExpandTextarea(textarea);
+      }
+      entry.refresh();
+      refreshTextareaTokenCount(textarea);
+    });
+    textareaCollapseStates.set(textarea, { ...entry, setExpanded });
+    const hasContent = String(textarea.value || "").trim().length > 0;
+    entry.refresh();
+    autoExpandTextarea(textarea);
+    if (!isLocked) {
+      editableTextareas.push(textarea);
+    }
     entriesRoot.appendChild(wrapper);
   });
 
+  editableTextareas.forEach((textarea) => {
+    textarea.dataset.collapsible = "1";
+  });
   setupModalTextareas(modal);
 
   const collapseMemoryEntries = () => {
@@ -19676,10 +19731,8 @@ async function openMemoryModal() {
     if (state.settings.showTokenCounts) {
       const textareas = modal.querySelectorAll("#memory-modal-entries textarea");
       for (const textarea of textareas) {
-        if (textarea.disabled) continue;
-        const countEl = document.createElement("span");
-        countEl.id = `${textarea.id}-count`;
-        countEl.className = "textarea-collapse-count token-count muted";
+        const countEl = document.getElementById(`${textarea.id}-count`);
+        if (!countEl) continue;
         const text = String(textarea.value || "").trim();
         if (text) {
           estimateTokens(text).then((count) => {
@@ -19687,10 +19740,6 @@ async function openMemoryModal() {
           });
         } else {
           countEl.textContent = "0 tokens";
-        }
-        const row = textarea.closest(".memory-entry-row");
-        if (row) {
-          row.appendChild(countEl);
         }
       }
     }
@@ -22555,6 +22604,20 @@ function refreshTextareaWordCount(textarea) {
   const countEl = document.getElementById(`${textarea.id}-count`);
   if (!countEl) return;
   countEl.textContent = String(countWords(textarea.value));
+}
+
+function refreshTextareaTokenCount(textarea) {
+  if (!textarea || !textarea.id) return;
+  const countEl = document.getElementById(`${textarea.id}-count`);
+  if (!countEl) return;
+  const text = String(textarea.value || "").trim();
+  if (text) {
+    estimateTokens(text).then((count) => {
+      countEl.textContent = `${count} tokens`;
+    });
+  } else {
+    countEl.textContent = "0 tokens";
+  }
 }
 
 function countWords(text) {
