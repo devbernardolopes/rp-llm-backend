@@ -24844,11 +24844,11 @@ function normalizeContentParts(value) {
   return "";
 }
 
-function getMarkdownParser(forUserContent = false) {
+function getMarkdownParser(forUserContent = false, forceHtml = false) {
   if (typeof window.markdownit !== "function") {
     return null;
   }
-  const allowHtml = state.settings.allowMessageHtml === true;
+  const allowHtml = forceHtml || state.settings.allowMessageHtml === true;
   const cacheKey = forUserContent ? "user" : "ui";
   const cache = state.markdownParserCache?.[cacheKey];
   if (cache && cache.allowHtml === allowHtml) {
@@ -24883,10 +24883,7 @@ function renderMessageHtml(content, role = "assistant") {
     }
     return escapeHtml(raw).replace(/\n/g, "<br>");
   }
-  if (!allowHtml) {
-    return markdownToHtml(raw);
-  }
-  const md = getMarkdownParser(true);
+  const md = getMarkdownParser(true, true);
   if (md) {
     return md.render(raw);
   }
