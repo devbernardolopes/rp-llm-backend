@@ -752,5 +752,7 @@
   "importWritingInstruction": "↥ Importar Instrucao de escrita",
   "confirmDeleteInitialMessage": "Esta mensagem inicial tem conteudo. Tem certeza que deseja excluir?",
   "autoTitleStopStrings": "Auto-Titulo Stop Strings",
-  "summaryStopStrings": "Resumo Stop Strings"
+  "summaryStopStrings": "Resumo Stop Strings",
+  "messageButtonSize": "Tamanho do botao de mensagem",
+  "infoMessageButtonSize": "Controla o tamanho dos botoes de acao (editar, copiar, excluir, regenerar) dentro das bolhas de mensagem. **Pequeno**: botoes compactos, **Regular**: tamanho medio, **Grande**: botoes maiores para tapping mais facil."
 }

@@ -752,5 +752,7 @@
   "importWritingInstruction": "↥ Schreib-anweisung importieren",
   "confirmDeleteInitialMessage": "Diese Initialnachricht hat Inhalt. Sind Sie sicher, dass Sie sie löschen möchten?",
   "autoTitleStopStrings": "Auto-Titel Stop Strings",
-  "summaryStopStrings": "Zusammenfassung Stop Strings"
+  "summaryStopStrings": "Zusammenfassung Stop Strings",
+  "messageButtonSize": "Nachrichtenschaltflächengröße",
+  "infoMessageButtonSize": "Steuert die Größe der Aktionsschaltflächen (Bearbeiten, Kopieren, Löschen, Regenerieren) in Nachrichtenblasen. **Klein**: kompakte Schaltflächen, **Regular**: mittlere Größe, **Groß**: größere Schaltflächen für einfacheres Tippen."
 }

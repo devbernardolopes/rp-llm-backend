@@ -2639,9 +2639,38 @@ textarea {
   padding: 0;
 }
 
-.message-controls .icon-btn svg {
+.msg-btn-size-small .message-controls .icon-btn {
+  width: 22px;
+  height: 22px;
+}
+
+.msg-btn-size-regular .message-controls .icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.msg-btn-size-big .message-controls .icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.msg-btn-size-small .message-controls .icon-btn svg {
   width: 12px;
   height: 12px;
+}
+
+.msg-btn-size-regular .message-controls .icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.msg-btn-size-big .message-controls .icon-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .message-controls .msg-tts-btn:not(:disabled) {

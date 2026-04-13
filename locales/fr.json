@@ -752,5 +752,7 @@
   "importWritingInstruction": "↥ Importer Instruction d'ecriture",
   "confirmDeleteInitialMessage": "Ce message initial contient du contenu. Etes-vous sur de vouloir le supprimer?",
   "autoTitleStopStrings": "Auto-Titre Stop Strings",
-  "summaryStopStrings": "Resume Stop Strings"
+  "summaryStopStrings": "Resume Stop Strings",
+  "messageButtonSize": "Taille du bouton de message",
+  "infoMessageButtonSize": "Controle la taille des boutons d'action (modifier, copier, supprimer, regenerer) a l'interieur des bulles de message. **Petit**: boutons compacts, **Regular**: taille moyenne, **Grand**: boutons plus grands pour un tapotement plus facile."
 }

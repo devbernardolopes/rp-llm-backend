@@ -88,6 +88,7 @@ const DEFAULT_SETTINGS = {
   oocSystemAvatar: "",
   crossWindowSyncEnabled: true,
   messageBubbleFontSize: "regular",
+  messageButtonSize: "small",
   autoUnloadThreshold: 0,
   loreMatchingMode: "keyword",
   loreSemanticThreshold: 0.5,
@@ -764,6 +765,7 @@ async function init() {
   applyChatOpacitySetting();
   applyChatInputButtonSize();
   applyMessageBubbleFontSize();
+  applyMessageButtonSize();
   applyBotCardSize();
   ensureTagCatalogInitialized();
   await applyInterfaceLanguage();
@@ -914,6 +916,14 @@ function applyMessageBubbleFontSize() {
   const size = state.settings.messageBubbleFontSize || "regular";
   const fonts = { small: "0.85rem", regular: "1rem", big: "1.25rem" };
   document.documentElement.style.setProperty("--message-font-size", fonts[size] || "1rem");
+}
+
+function applyMessageButtonSize() {
+  const size = state.settings.messageButtonSize || "small";
+  const chatLog = document.getElementById("chat-log");
+  if (!chatLog) return;
+  chatLog.classList.remove("msg-btn-size-small", "msg-btn-size-regular", "msg-btn-size-big");
+  chatLog.classList.add(`msg-btn-size-${size}`);
 }
 
 function applyBotCardSize() {
@@ -4519,6 +4529,18 @@ async function setupSettingsControls() {
       state.settings.messageBubbleFontSize = messageBubbleFontSizeSelect.value;
       saveSettings();
       applyMessageBubbleFontSize();
+    });
+  }
+  const messageButtonSizeSelect = document.getElementById(
+    "message-button-size",
+  );
+  if (messageButtonSizeSelect) {
+    messageButtonSizeSelect.value =
+      state.settings.messageButtonSize || "small";
+    messageButtonSizeSelect.addEventListener("change", () => {
+      state.settings.messageButtonSize = messageButtonSizeSelect.value;
+      saveSettings();
+      applyMessageButtonSize();
     });
   }
   const useLocalSummarization = document.getElementById(

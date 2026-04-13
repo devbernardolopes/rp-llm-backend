@@ -530,6 +530,7 @@
   "memoryCommandButtonTitle": "Memory command",
   "crossWindowSync": "Sync threads across tabs",
   "messageBubbleFontSize": "Message Bubble Font Size",
+  "messageButtonSize": "Message Button Size",
   "threadTintColorTitle": "Thread Card Color (Shift + Left Click = reset)",
   "pinCharacter": "Pin",
   "unpinCharacter": "Unpin",
@@ -757,5 +758,6 @@
   "importWritingInstruction": "↥ Import Writing Instruction",
   "confirmDeleteInitialMessage": "This initial message has content. Are you sure you want to delete it?",
   "autoTitleStopStrings": "Auto-Title Stop Strings",
-  "summaryStopStrings": "Summary Stop Strings"
+  "summaryStopStrings": "Summary Stop Strings",
+  "infoMessageButtonSize": "Controls the size of action buttons (edit, copy, delete, regenerate) inside message bubbles. **Small**: compact buttons, **Regular**: medium size, **Big**: larger buttons for easier tapping."
 }

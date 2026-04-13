@@ -752,5 +752,7 @@
   "importWritingInstruction": "↥ Importa Istruzione di scrittura",
   "confirmDeleteInitialMessage": "Questo messaggio iniziale ha del contenuto. Sei sicuro di volerlo eliminare?",
   "autoTitleStopStrings": "Auto-Titolo Stop Strings",
-  "summaryStopStrings": "Riepilogo Stop Strings"
+  "summaryStopStrings": "Riepilogo Stop Strings",
+  "messageButtonSize": "Dimensione pulsante messaggio",
+  "infoMessageButtonSize": "Controlla la dimensione dei pulsanti di azione (modifica, copia, elimina, rigenera) all'interno delle bolle di messaggio. **Piccolo**: pulsanti compatti, **Regular**: dimensione media, **Grande**: pulsanti piu grandi per un tocco piu facile."
 }
