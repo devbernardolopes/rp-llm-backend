@@ -619,6 +619,7 @@ const state = {
     timestamp: 0,
     ttl: 5000, // 5 seconds cache TTL
   },
+  markdownParser: null,
 };
 
 let cachedInitialMessageDisplayIndex = null;
@@ -10212,14 +10213,6 @@ let infoPanelOpen = false;
 let infoPanel = null;
 
 function showInfoPanel(infoKey, buttonEl) {
-  if (infoPanelOpen && infoPanel) {
-    if (buttonEl === infoPanel?._triggerButton) {
-      closeInfoPanel();
-      return;
-    }
-    closeInfoPanel();
-  }
-
   infoPanelOpen = true;
   infoPanel = document.createElement("div");
   infoPanel.className = "info-panel";
@@ -10227,22 +10220,19 @@ function showInfoPanel(infoKey, buttonEl) {
 
   const content = t("info" + infoKey.charAt(0).toUpperCase() + infoKey.slice(1));
   if (content && content !== "info" + infoKey.charAt(0).toUpperCase() + infoKey.slice(1)) {
-    if (state.settings.markdownEnabled && typeof window.markdownit === "function") {
-      const md = window.markdownit("default", {
-        html: false,
-        linkify: true,
-        typographer: false,
-        breaks: true,
-      });
-      infoPanel.innerHTML = md.render(content);
-      infoPanel.querySelectorAll("a").forEach((a) => {
-        a.setAttribute("target", "_blank");
-        a.setAttribute("rel", "noopener noreferrer");
-      });
+    if (state.settings.markdownEnabled) {
+      const md = getMarkdownParser();
+      if (md) {
+        infoPanel.innerHTML = md.render(content);
+        infoPanel.querySelectorAll("a").forEach((a) => {
+          a.setAttribute("target", "_blank");
+          a.setAttribute("rel", "noopener noreferrer");
+        });
+      }
     } else {
       infoPanel.textContent = content;
     }
-  } else {
+} else {
     infoPanel.textContent = "No info available.";
   }
 
@@ -10294,18 +10284,15 @@ function showHoverInfoPanel(infoKey, buttonEl) {
 
   const content = t("info" + infoKey.charAt(0).toUpperCase() + infoKey.slice(1));
   if (content && content !== "info" + infoKey.charAt(0).toUpperCase() + infoKey.slice(1)) {
-    if (state.settings.markdownEnabled && typeof window.markdownit === "function") {
-      const md = window.markdownit("default", {
-        html: false,
-        linkify: true,
-        typographer: false,
-        breaks: true,
-      });
-      infoPanel.innerHTML = md.render(content);
-      infoPanel.querySelectorAll("a").forEach((a) => {
-        a.setAttribute("target", "_blank");
-        a.setAttribute("rel", "noopener noreferrer");
-      });
+    if (state.settings.markdownEnabled) {
+      const md = getMarkdownParser();
+      if (md) {
+        infoPanel.innerHTML = md.render(content);
+        infoPanel.querySelectorAll("a").forEach((a) => {
+          a.setAttribute("target", "_blank");
+          a.setAttribute("rel", "noopener noreferrer");
+        });
+      }
     } else {
       infoPanel.textContent = content;
     }
@@ -24794,6 +24781,23 @@ function normalizeContentParts(value) {
   return "";
 }
 
+function getMarkdownParser() {
+  if (typeof window.markdownit !== "function") {
+    return null;
+  }
+  const allowHtml = state.settings.allowMessageHtml === true;
+  if (!state.markdownParser || state.markdownParser.allowHtml !== allowHtml) {
+    state.markdownParser = window.markdownit("default", {
+      html: allowHtml,
+      linkify: true,
+      typographer: false,
+      breaks: true,
+    });
+    state.markdownParser.allowHtml = allowHtml;
+  }
+  return state.markdownParser;
+}
+
 function renderMessageHtml(content, role = "assistant") {
   let raw = String(content || "");
   if (role === "assistant" && currentCharacter?.usePostProcessing !== false) {
@@ -24808,13 +24812,8 @@ function renderMessageHtml(content, role = "assistant") {
       ? escapeHtml(raw).replace(/\n/g, "<br>")
       : raw.replace(/\n/g, "<br>");
   }
-  if (typeof window.markdownit === "function") {
-    const md = window.markdownit("default", {
-      html: !state.settings.allowMessageHtml,
-      linkify: true,
-      typographer: false,
-      breaks: true,
-    });
+  const md = getMarkdownParser();
+  if (md) {
     return md.render(raw);
   }
   return markdownToHtml(raw);
