@@ -750,5 +750,7 @@
   "infoCharacterSortChats": "Trier les personnages par nombre de fils de discussion. **Plus de chats** / **Moins de chats**.",
   "importPersona": "↥ Importer Persona",
   "importWritingInstruction": "↥ Importer Instruction d'ecriture",
-  "confirmDeleteInitialMessage": "Ce message initial contient du contenu. Etes-vous sur de vouloir le supprimer?"
+  "confirmDeleteInitialMessage": "Ce message initial contient du contenu. Etes-vous sur de vouloir le supprimer?",
+  "autoTitleStopStrings": "Auto-Titre Stop Strings",
+  "summaryStopStrings": "Resume Stop Strings"
 }

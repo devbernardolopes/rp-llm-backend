@@ -750,5 +750,7 @@
   "infoCharacterSortChats": "Ordenar personajes por número de hilos de chat. **Más chats** / **Menos chats**.",
   "importPersona": "↥ Importar Persona",
   "importWritingInstruction": "↥ Importar Instruccion de escritura",
-  "confirmDeleteInitialMessage": "Esta mensaje inicial tiene contenido. Esta seguro de que desea eliminarlo?"
+  "confirmDeleteInitialMessage": "Esta mensaje inicial tiene contenido. Esta seguro de que desea eliminarlo?",
+  "autoTitleStopStrings": "Auto-Titulo Stop Strings",
+  "summaryStopStrings": "Resumen Stop Strings"
 }

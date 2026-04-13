@@ -116,9 +116,12 @@ Requirements:
   autoTitleProvider: "openrouter",
   autoTitleModel: "stepfun/step-3.5-flash:free",
   autoTitleTemperature: 0.25,
+  autoTitleStopStrings: "",
   autoTitleTopP: 0.9,
   defaultSummaryStream: false,
   summaryMaxTokens: 1024,
+  summaryTemperature: 0.25,
+  summaryStopStrings: "",
   autoTitleMaxTokens: 64,
   sectionHeaderMemoryContext: "***MEMORY CONTEXT***",
   sectionHeaderCharacterPrompt: "***CHARACTER PROMPT***",
@@ -4279,6 +4282,10 @@ async function setupSettingsControls() {
     if (autoTitleTempValue)
       autoTitleTempValue.textContent = autoTitleTemp.value;
   }
+  const autoTitleStopStrings = document.getElementById("default-auto-title-stop-strings");
+  if (autoTitleStopStrings) {
+    autoTitleStopStrings.value = state.settings.autoTitleStopStrings || "";
+  }
   if (summaryProvider) {
     summaryProvider.value =
       state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
@@ -4293,6 +4300,10 @@ async function setupSettingsControls() {
     );
     if (summaryTempValue)
       summaryTempValue.textContent = summaryTemp.value;
+  }
+  const summaryStopStrings = document.getElementById("default-summary-stop-strings");
+  if (summaryStopStrings) {
+    summaryStopStrings.value = state.settings.summaryStopStrings || "";
   }
   const autoTitleStream = document.getElementById("default-auto-title-stream");
   const summaryStream = document.getElementById("default-summary-stream");
@@ -5087,6 +5098,13 @@ async function setupSettingsControls() {
       saveSettings();
     });
   }
+  const autoTitleStopStringsInput = document.getElementById("default-auto-title-stop-strings");
+  if (autoTitleStopStringsInput) {
+    autoTitleStopStringsInput.addEventListener("input", () => {
+      state.settings.autoTitleStopStrings = autoTitleStopStringsInput.value.trim();
+      saveSettings();
+    });
+  }
   if (summaryProvider) {
     summaryProvider.addEventListener("change", () => {
       const oldProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
@@ -5115,6 +5133,13 @@ async function setupSettingsControls() {
       const value = Number(summaryTemp.value);
       state.settings.summaryTemperature = value;
       if (summaryTempValue) summaryTempValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  const summaryStopStringsInput = document.getElementById("default-summary-stop-strings");
+  if (summaryStopStringsInput) {
+    summaryStopStringsInput.addEventListener("input", () => {
+      state.settings.summaryStopStrings = summaryStopStringsInput.value.trim();
       saveSettings();
     });
   }
@@ -20271,6 +20296,13 @@ async function populateAutoTitleSummaryModels() {
 }
 
 function getBestModelForProvider(provider, currentModel, catalog, lastModels) {
+  if (!currentModel && lastModels[provider]) {
+    const lastModel = lastModels[provider];
+    const existsInCatalog = catalog.some((m) => m.id === lastModel);
+    if (existsInCatalog) {
+      return lastModel;
+    }
+  }
   if (!currentModel) {
     return catalog.length > 0 ? catalog[0].id : "";
   }
@@ -22657,7 +22689,14 @@ async function callOpenRouter(
         ? 0
         : Number(state.settings.presencePenalty) || 0,
     ...((() => {
-      const stopStrings = getStopStrings();
+      let stopStrings = null;
+      if (isTitleGeneration) {
+        stopStrings = getAutoTitleStopStrings();
+      } else if (isSummarization) {
+        stopStrings = getSummaryStopStrings();
+      } else {
+        stopStrings = getStopStrings();
+      }
       return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
     })()),
     stream: isTitleGeneration
@@ -22676,6 +22715,7 @@ async function callOpenRouter(
       attempts,
       onChunk,
       signal,
+      options,
     );
     return { ...response, systemMessages };
   } catch (primaryErr) {
@@ -22687,6 +22727,7 @@ async function callOpenRouter(
       fallbackAttempts,
       onChunk,
       signal,
+      options,
     );
     return { ...fallbackResponse, systemMessages };
   }
@@ -22806,7 +22847,14 @@ async function callLMStudio(
     };
   } else {
     endpoint = "/v1/chat/completions";
-    const stopStrings = getStopStrings();
+    let stopStrings = null;
+    if (isTitleGeneration) {
+      stopStrings = getAutoTitleStopStrings();
+    } else if (isSummarization) {
+      stopStrings = getSummaryStopStrings();
+    } else {
+      stopStrings = getStopStrings();
+    }
     body = {
       model: lmstudioModel,
       messages: promptMessages,
@@ -22858,7 +22906,14 @@ async function callLMStudio(
       let buffer = "";
       let content = "";
       let stoppedByStopString = false;
-      const stopStrings = getStopStrings();
+      let stopStrings = null;
+      if (isTitleGeneration) {
+        stopStrings = getAutoTitleStopStrings();
+      } else if (isSummarization) {
+        stopStrings = getSummaryStopStrings();
+      } else {
+        stopStrings = getStopStrings();
+      }
 
       while (true) {
         if (stoppedByStopString) break;
@@ -22980,7 +23035,14 @@ async function callLMStudio(
       }
 
       let stoppedByStopString = false;
-      const stopStrings = getStopStrings();
+      let stopStrings = null;
+      if (isTitleGeneration) {
+        stopStrings = getAutoTitleStopStrings();
+      } else if (isSummarization) {
+        stopStrings = getSummaryStopStrings();
+      } else {
+        stopStrings = getStopStrings();
+      }
       if (stopStrings && stopStrings.length > 0) {
         const truncation = truncateAtStopString(content, stopStrings);
         if (truncation.stopped) {
@@ -23106,7 +23168,14 @@ async function callGroq(
       ? Boolean(options.forceStream)
       : !!state.settings.streamEnabled;
 
-  const stopStrings = getStopStrings();
+  let stopStrings = null;
+  if (isTitleGeneration) {
+    stopStrings = getAutoTitleStopStrings();
+  } else if (isSummarization) {
+    stopStrings = getSummaryStopStrings();
+  } else {
+    stopStrings = getStopStrings();
+  }
   const body = {
     model: groqModel,
     messages: promptMessages,
@@ -23352,11 +23421,13 @@ async function callAIHordeOpenAI(
       ? Boolean(options.forceStream)
       : !!state.settings.streamEnabled;
 
-  const headers = {
-    "Content-Type": "application/json",
-  };
-  if (hordeApiKey) {
-    headers["Authorization"] = `Bearer ${hordeApiKey}`;
+  let stopStrings = null;
+  if (isTitleGeneration) {
+    stopStrings = getAutoTitleStopStrings();
+  } else if (isSummarization) {
+    stopStrings = getSummaryStopStrings();
+  } else {
+    stopStrings = getStopStrings();
   }
 
   const body = {
@@ -23373,10 +23444,7 @@ async function callAIHordeOpenAI(
     top_p: Number(state.settings.topP) || 1,
     frequency_penalty: 0,
     presence_penalty: 0,
-    ...((() => {
-      const stopStrings = getStopStrings();
-      return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
-    })()),
+    ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
   };
 
@@ -23410,7 +23478,6 @@ async function callAIHordeOpenAI(
       let buffer = "";
       let content = "";
       let stoppedByStopString = false;
-      const stopStrings = getStopStrings();
 
       while (true) {
         if (stoppedByStopString) break;
@@ -23500,7 +23567,14 @@ async function callAIHordeOpenAI(
       let content = json?.choices?.[0]?.message?.content || "";
       let finishReason = json?.choices?.[0]?.finish_reason || "stop";
       let stoppedByStopString = false;
-      const stopStrings = getStopStrings();
+      let stopStrings = null;
+      if (isTitleGeneration) {
+        stopStrings = getAutoTitleStopStrings();
+      } else if (isSummarization) {
+        stopStrings = getSummaryStopStrings();
+      } else {
+        stopStrings = getStopStrings();
+      }
       if (stopStrings && stopStrings.length > 0) {
         const truncation = truncateAtStopString(content, stopStrings);
         if (truncation.stopped) {
@@ -23685,9 +23759,16 @@ async function callAIHorde(
     const workerName = result.generations?.[0]?.worker_name || "";
 
     let content = generatedText;
-    let stoppedByStopString = false;
-    const stopStrings = getStopStrings();
-    if (stopStrings && stopStrings.length > 0) {
+      let stoppedByStopString = false;
+      let stopStrings = null;
+      if (isTitleGeneration) {
+        stopStrings = getAutoTitleStopStrings();
+      } else if (isSummarization) {
+        stopStrings = getSummaryStopStrings();
+      } else {
+        stopStrings = getStopStrings();
+      }
+      if (stopStrings && stopStrings.length > 0) {
       const truncation = truncateAtStopString(content, stopStrings);
       if (truncation.stopped) {
         content = truncation.content;
@@ -23835,7 +23916,7 @@ function getFallbackModel(resolvedModel, originalModel) {
   return resolvedModel === originalModel ? null : originalModel;
 }
 
-async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
+async function requestCompletionWithRetry(body, attempts, onChunk, signal, options = {}) {
   let lastError = null;
   const cooldownEnabled = Number(state.settings.completionCooldown) > 0;
   if (cooldownEnabled) {
@@ -23862,7 +23943,7 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal) {
       }
 
       if (body.stream) {
-        const streamed = await readStreamedCompletion(res, body.model, onChunk);
+        const streamed = await readStreamedCompletion(res, body.model, onChunk, options);
         if (streamed.content) {
           return {
             ...streamed,
@@ -23991,7 +24072,7 @@ function getAppReferer() {
   return "http://localhost";
 }
 
-async function readStreamedCompletion(res, fallbackModel, onChunk) {
+async function readStreamedCompletion(res, fallbackModel, onChunk, options = {}) {
   if (!res.body) {
     throw new Error("No response stream available.");
   }
@@ -24009,7 +24090,16 @@ async function readStreamedCompletion(res, fallbackModel, onChunk) {
   let nativeFinishReason = "";
   let truncatedByFilter = false;
   let stoppedByStopString = false;
-  const stopStrings = getStopStrings();
+  const isTitleGeneration = options?.isTitleGeneration === true;
+  const isSummarization = options?.isSummarization === true;
+  let stopStrings = null;
+  if (isTitleGeneration) {
+    stopStrings = getAutoTitleStopStrings();
+  } else if (isSummarization) {
+    stopStrings = getSummaryStopStrings();
+  } else {
+    stopStrings = getStopStrings();
+  }
 
   while (true) {
     const { done, value } = await reader.read();
@@ -24231,6 +24321,18 @@ function clampTemperature(value) {
 
 function getStopStrings() {
   const raw = state.settings.stopStrings || "";
+  if (!raw.trim()) return null;
+  return raw.split(",").map((s) => s.trimStart()).filter(Boolean);
+}
+
+function getAutoTitleStopStrings() {
+  const raw = state.settings.autoTitleStopStrings || "";
+  if (!raw.trim()) return null;
+  return raw.split(",").map((s) => s.trimStart()).filter(Boolean);
+}
+
+function getSummaryStopStrings() {
+  const raw = state.settings.summaryStopStrings || "";
   if (!raw.trim()) return null;
   return raw.split(",").map((s) => s.trimStart()).filter(Boolean);
 }

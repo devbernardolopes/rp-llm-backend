@@ -755,5 +755,7 @@
   "infoCharacterSortChats": "Sort characters by number of chat threads. **Most Chats** / **Least Chats**.",
   "importPersona": "↥ Import Persona",
   "importWritingInstruction": "↥ Import Writing Instruction",
-  "confirmDeleteInitialMessage": "This initial message has content. Are you sure you want to delete it?"
+  "confirmDeleteInitialMessage": "This initial message has content. Are you sure you want to delete it?",
+  "autoTitleStopStrings": "Auto-Title Stop Strings",
+  "summaryStopStrings": "Summary Stop Strings"
 }
