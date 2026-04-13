@@ -24788,8 +24788,7 @@ function getMarkdownParser(forUserContent = false) {
   const allowHtml = forUserContent && state.settings.allowMessageHtml === true;
   const cacheKey = forUserContent ? "user" : "ui";
   const cache = state.markdownParserCache?.[cacheKey];
-  const now = Date.now();
-  if (cache && now - cache.timestamp < 60000) {
+  if (cache && cache.allowHtml === allowHtml) {
     return cache.parser;
   }
   if (!state.markdownParserCache) {
@@ -24801,7 +24800,7 @@ function getMarkdownParser(forUserContent = false) {
     typographer: false,
     breaks: true,
   });
-  state.markdownParserCache[cacheKey] = { parser, timestamp: now };
+  state.markdownParserCache[cacheKey] = { parser, allowHtml };
   return parser;
 }
 
@@ -24815,9 +24814,7 @@ function renderMessageHtml(content, role = "assistant") {
     raw = trimTrailingWhitespacePerLine(raw);
   }
   if (!state.settings.markdownEnabled) {
-    return state.settings.allowMessageHtml
-      ? escapeHtml(raw).replace(/\n/g, "<br>")
-      : raw.replace(/\n/g, "<br>");
+    return raw.replace(/\n/g, "<br>");
   }
   const md = getMarkdownParser(true);
   if (md) {
