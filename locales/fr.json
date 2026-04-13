@@ -754,5 +754,10 @@
   "autoTitleStopStrings": "Auto-Titre Stop Strings",
   "summaryStopStrings": "Resume Stop Strings",
   "messageButtonSize": "Taille du bouton de message",
+  "aiMessageButtonsTitle": "Boutons de message IA",
+  "showAiMsgEditBtn": "Modifier le message",
+  "showAiMsgMetadataBtn": "Metadonnees du message",
+  "showAiMsgGenParamsBtn": "Parametres de generation",
+  "showAiMsgForkBtn": "Fork le chat a partir d'ici",
   "infoMessageButtonSize": "Controle la taille des boutons d'action (modifier, copier, supprimer, regenerer) a l'interieur des bulles de message. **Petit**: boutons compacts, **Regular**: taille moyenne, **Grand**: boutons plus grands pour un tapotement plus facile."
 }

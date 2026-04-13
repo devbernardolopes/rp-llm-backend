@@ -754,5 +754,10 @@
   "autoTitleStopStrings": "Auto-Titolo Stop Strings",
   "summaryStopStrings": "Riepilogo Stop Strings",
   "messageButtonSize": "Dimensione pulsante messaggio",
+  "aiMessageButtonsTitle": "Bottoni messaggio IA",
+  "showAiMsgEditBtn": "Modifica messaggio",
+  "showAiMsgMetadataBtn": "Metadati messaggio",
+  "showAiMsgGenParamsBtn": "Parametri generazione",
+  "showAiMsgForkBtn": "Fork chat da qui",
   "infoMessageButtonSize": "Controlla la dimensione dei pulsanti di azione (modifica, copia, elimina, rigenera) all'interno delle bolle di messaggio. **Piccolo**: pulsanti compatti, **Regular**: dimensione media, **Grande**: pulsanti piu grandi per un tocco piu facile."
 }

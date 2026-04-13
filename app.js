@@ -89,6 +89,10 @@ const DEFAULT_SETTINGS = {
   crossWindowSyncEnabled: true,
   messageBubbleFontSize: "regular",
   messageButtonSize: "small",
+  showAiMsgEditBtn: true,
+  showAiMsgMetadataBtn: true,
+  showAiMsgGenParamsBtn: true,
+  showAiMsgForkBtn: true,
   autoUnloadThreshold: 0,
   loreMatchingMode: "keyword",
   loreSemanticThreshold: 0.5,
@@ -4541,6 +4545,38 @@ async function setupSettingsControls() {
       state.settings.messageButtonSize = messageButtonSizeSelect.value;
       saveSettings();
       applyMessageButtonSize();
+    });
+  }
+  const showAiMsgEditBtn = document.getElementById("show-ai-msg-edit-btn");
+  if (showAiMsgEditBtn) {
+    showAiMsgEditBtn.checked = state.settings.showAiMsgEditBtn !== false;
+    showAiMsgEditBtn.addEventListener("change", () => {
+      state.settings.showAiMsgEditBtn = showAiMsgEditBtn.checked;
+      saveSettings();
+    });
+  }
+  const showAiMsgMetadataBtn = document.getElementById("show-ai-msg-metadata-btn");
+  if (showAiMsgMetadataBtn) {
+    showAiMsgMetadataBtn.checked = state.settings.showAiMsgMetadataBtn !== false;
+    showAiMsgMetadataBtn.addEventListener("change", () => {
+      state.settings.showAiMsgMetadataBtn = showAiMsgMetadataBtn.checked;
+      saveSettings();
+    });
+  }
+  const showAiMsgGenParamsBtn = document.getElementById("show-ai-msg-gen-params-btn");
+  if (showAiMsgGenParamsBtn) {
+    showAiMsgGenParamsBtn.checked = state.settings.showAiMsgGenParamsBtn !== false;
+    showAiMsgGenParamsBtn.addEventListener("change", () => {
+      state.settings.showAiMsgGenParamsBtn = showAiMsgGenParamsBtn.checked;
+      saveSettings();
+    });
+  }
+  const showAiMsgForkBtn = document.getElementById("show-ai-msg-fork-btn");
+  if (showAiMsgForkBtn) {
+    showAiMsgForkBtn.checked = state.settings.showAiMsgForkBtn !== false;
+    showAiMsgForkBtn.addEventListener("change", () => {
+      state.settings.showAiMsgForkBtn = showAiMsgForkBtn.checked;
+      saveSettings();
     });
   }
   const useLocalSummarization = document.getElementById(
@@ -17071,7 +17107,9 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       isLockedMemoryMessage ||
       isOocMessage;
     applyEditButtonEditedStyle(editBtn, message);
-    controls.appendChild(editBtn);
+    if (state.settings.showAiMsgEditBtn !== false) {
+      controls.appendChild(editBtn);
+    }
 
     const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
       await copyMessage(message.content || "");
@@ -17079,13 +17117,16 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     copyBtn.classList.add("msg-copy-btn");
     copyBtn.disabled = disableControlsForRow;
     controls.appendChild(copyBtn);
-    const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
-      await openMessageMetadataModal(index);
-    });
-    infoBtn.classList.add("msg-info-btn");
-    applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
-    controls.appendChild(infoBtn);
-    const modelInfoBtn = iconButton(
+    if (state.settings.showAiMsgMetadataBtn !== false) {
+      const infoBtn = iconButton("info", t("msgMetadataTitle"), async () => {
+        await openMessageMetadataModal(index);
+      });
+      infoBtn.classList.add("msg-info-btn");
+      applyInfoButtonAvailability(infoBtn, message, disableControlsForRow);
+      controls.appendChild(infoBtn);
+    }
+    if (state.settings.showAiMsgGenParamsBtn !== false) {
+      const modelInfoBtn = iconButton(
       "model",
       t("msgModelInfoTitle"),
       async () => {
@@ -17124,6 +17165,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
     }
     controls.appendChild(modelInfoBtn);
+    }
     const systemPromptBtn = iconButton(
       "badge",
       t("msgSystemPromptTitle"),
@@ -17183,13 +17225,15 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     controls.appendChild(copyBtn);
   }
 
-  const forkBtn = iconButton("fork", t("msgForkTitle"), async () => {
-    await forkThreadFromMessage(index);
-  });
-  forkBtn.classList.add("msg-fork-btn");
-  forkBtn.dataset.messageIndex = String(index);
-  forkBtn.disabled = disableControlsForRow;
-  controls.appendChild(forkBtn);
+  if (state.settings.showAiMsgForkBtn !== false) {
+    const forkBtn = iconButton("fork", t("msgForkTitle"), async () => {
+      await forkThreadFromMessage(index);
+    });
+    forkBtn.classList.add("msg-fork-btn");
+    forkBtn.dataset.messageIndex = String(index);
+    forkBtn.disabled = disableControlsForRow;
+    controls.appendChild(forkBtn);
+  }
 
   if (message.isInitial) {
     const initialControls = document.createElement("span");

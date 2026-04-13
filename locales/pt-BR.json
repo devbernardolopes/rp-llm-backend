@@ -754,5 +754,10 @@
   "autoTitleStopStrings": "Auto-Titulo Stop Strings",
   "summaryStopStrings": "Resumo Stop Strings",
   "messageButtonSize": "Tamanho do botao de mensagem",
+  "aiMessageButtonsTitle": "Botoes de mensagem IA",
+  "showAiMsgEditBtn": "Editar mensagem",
+  "showAiMsgMetadataBtn": "Metadados da mensagem",
+  "showAiMsgGenParamsBtn": "Parametros de geracao",
+  "showAiMsgForkBtn": "Fork chat a partir daqui",
   "infoMessageButtonSize": "Controla o tamanho dos botoes de acao (editar, copiar, excluir, regenerar) dentro das bolhas de mensagem. **Pequeno**: botoes compactos, **Regular**: tamanho medio, **Grande**: botoes maiores para tapping mais facil."
 }

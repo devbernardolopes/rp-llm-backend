@@ -754,5 +754,10 @@
   "autoTitleStopStrings": "Auto-Titel Stop Strings",
   "summaryStopStrings": "Zusammenfassung Stop Strings",
   "messageButtonSize": "Nachrichtenschaltflächengröße",
+  "aiMessageButtonsTitle": "KI-Nachrichtenschaltflächen",
+  "showAiMsgEditBtn": "Nachricht bearbeiten",
+  "showAiMsgMetadataBtn": "Nachrichtenmetadaten",
+  "showAiMsgGenParamsBtn": "Generierungsparameter",
+  "showAiMsgForkBtn": "Chat hier verzweigen",
   "infoMessageButtonSize": "Steuert die Größe der Aktionsschaltflächen (Bearbeiten, Kopieren, Löschen, Regenerieren) in Nachrichtenblasen. **Klein**: kompakte Schaltflächen, **Regular**: mittlere Größe, **Groß**: größere Schaltflächen für einfacheres Tippen."
 }
