@@ -449,3 +449,32 @@ db.version(25)
       }
     });
   });
+
+db.version(26)
+  .stores({
+    characters: "++id, name, pinned",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories: "++id, characterId, summary, createdAt, slotNumber, levelNumber, summarySystemContent, summaryUserContent, embedding",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+    themes: "id, name, isBuiltIn, createdAt",
+  })
+  .upgrade(async (tx) => {
+    const chars = tx.table("characters");
+    const threads = tx.table("threads");
+    const allThreads = await threads.toArray();
+    const counts = new Map();
+    for (const thread of allThreads) {
+      const charId = Number(thread.characterId);
+      if (Number.isInteger(charId)) {
+        counts.set(charId, (counts.get(charId) || 0) + 1);
+      }
+    }
+    await chars.toCollection().modify((char) => {
+      const id = Number(char.id);
+      char.threadCount = counts.get(id) || 0;
+    });
+  });

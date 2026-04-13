@@ -6578,13 +6578,6 @@ async function renderCharacters() {
   if (filters) {
     filters.classList.toggle("hidden", characters.length === 0);
   }
-  const threads = await db.threads.toArray();
-  const threadCountByCharId = new Map();
-  threads.forEach((thread) => {
-    const id = Number(thread.characterId);
-    if (!Number.isInteger(id)) return;
-    threadCountByCharId.set(id, (threadCountByCharId.get(id) || 0) + 1);
-  });
 
   const activeFilters = Array.isArray(state.characterTagFilters)
     ? state.characterTagFilters.map((t) => t.toLowerCase())
@@ -6622,8 +6615,8 @@ async function renderCharacters() {
     const createdB = Number(b.createdAt || 0);
     const updatedA = Number(a.updatedAt || 0);
     const updatedB = Number(b.updatedAt || 0);
-    const threadsA = Number(threadCountByCharId.get(Number(a.id)) || 0);
-    const threadsB = Number(threadCountByCharId.get(Number(b.id)) || 0);
+    const threadsA = Number(a.threadCount) || 0;
+    const threadsB = Number(b.threadCount) || 0;
 
     if (mode === "name_asc") return nameA.localeCompare(nameB);
     if (mode === "name_desc") return nameB.localeCompare(nameA);
@@ -6692,7 +6685,7 @@ async function renderCharacters() {
       char,
       char?.selectedCardLanguage,
     );
-    const threadCount = threadCountByCharId.get(Number(char.id)) || 0;
+    const threadCount = Number(char.threadCount) || 0;
     const card = document.createElement("article");
     card.className = "character-card";
     card.dataset.characterId = String(char.id);
@@ -7404,8 +7397,18 @@ function measurePaginationButtonWidth(pagesContainer, labelText) {
   sample.style.top = "0";
   pagesContainer.appendChild(sample);
   const width = sample.getBoundingClientRect().width;
-  sample.remove();
+sample.remove();
   return width || 0;
+}
+
+async function updateCharacterThreadCount(characterId, delta) {
+  const charId = Number(characterId);
+  if (!Number.isInteger(charId)) return;
+  const char = await db.characters.get(charId);
+  if (!char) return;
+  const currentCount = Number(char.threadCount) || 0;
+  const newCount = Math.max(0, currentCount + delta);
+  await db.characters.update(charId, { threadCount: newCount });
 }
 
 function getFlexGapPx(element) {
@@ -13974,6 +13977,7 @@ async function duplicateCharacter(characterId) {
     avatars: Array.isArray(source.avatars) ? [...source.avatars] : [],
     name: `${source.name} Copy`,
     pinned: false,
+    threadCount: 0,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -14833,6 +14837,7 @@ async function startNewThread(characterId, forcedPersonaId = null) {
   };
 
   const threadId = await db.threads.add(newThread);
+  await updateCharacterThreadCount(newThread.characterId, 1);
   broadcastSyncEvent({
     type: "thread-updated",
     threadId,
@@ -14911,6 +14916,7 @@ async function forkThreadFromMessage(messageIndex) {
   };
 
   const newThreadId = await db.threads.add(copy);
+  await updateCharacterThreadCount(copy.characterId, 1);
   broadcastSyncEvent({
     type: "thread-updated",
     threadId: newThreadId,
@@ -15109,6 +15115,7 @@ async function duplicateThread(threadId) {
   };
 
   const newThreadId = await db.threads.add(copy);
+  await updateCharacterThreadCount(copy.characterId, 1);
   const memoryMapping = await duplicateThreadMemories(
     source.characterId,
     source.id,
@@ -15264,6 +15271,9 @@ async function deleteThread(threadId) {
   );
   if (!ok) return;
 
+  const thread = await db.threads.get(threadId);
+  const characterId = thread?.characterId;
+
   localStorage.removeItem(`rp-thread-scroll-${threadId}`);
 
   if (
@@ -15286,6 +15296,9 @@ async function deleteThread(threadId) {
     // thread might already be gone
   }
   await db.threads.delete(threadId);
+  if (characterId) {
+    await updateCharacterThreadCount(characterId, -1);
+  }
   state.selectedThreadIds.delete(Number(threadId));
   broadcastSyncEvent({
     type: "thread-updated",
