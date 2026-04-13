@@ -24781,21 +24781,28 @@ function normalizeContentParts(value) {
   return "";
 }
 
-function getMarkdownParser() {
+function getMarkdownParser(forUserContent = false) {
   if (typeof window.markdownit !== "function") {
     return null;
   }
-  const allowHtml = state.settings.allowMessageHtml === true;
-  if (!state.markdownParser || state.markdownParser.allowHtml !== allowHtml) {
-    state.markdownParser = window.markdownit("default", {
-      html: allowHtml,
-      linkify: true,
-      typographer: false,
-      breaks: true,
-    });
-    state.markdownParser.allowHtml = allowHtml;
+  const allowHtml = forUserContent && state.settings.allowMessageHtml === true;
+  const cacheKey = forUserContent ? "user" : "ui";
+  const cache = state.markdownParserCache?.[cacheKey];
+  const now = Date.now();
+  if (cache && now - cache.timestamp < 60000) {
+    return cache.parser;
   }
-  return state.markdownParser;
+  if (!state.markdownParserCache) {
+    state.markdownParserCache = {};
+  }
+  const parser = window.markdownit("default", {
+    html: allowHtml,
+    linkify: true,
+    typographer: false,
+    breaks: true,
+  });
+  state.markdownParserCache[cacheKey] = { parser, timestamp: now };
+  return parser;
 }
 
 function renderMessageHtml(content, role = "assistant") {
@@ -24812,7 +24819,7 @@ function renderMessageHtml(content, role = "assistant") {
       ? escapeHtml(raw).replace(/\n/g, "<br>")
       : raw.replace(/\n/g, "<br>");
   }
-  const md = getMarkdownParser();
+  const md = getMarkdownParser(true);
   if (md) {
     return md.render(raw);
   }
