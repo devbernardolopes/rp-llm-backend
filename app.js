@@ -22587,9 +22587,12 @@ async function callOpenRouter(
         ? summaryModel
         : model;
     const apiMethod = state.settings.hordeApiMethod || "native";
+    console.log("[DEBUG] aihorde provider, apiMethod:", apiMethod);
     if (apiMethod === "openai") {
+      console.log("[DEBUG] Calling callAIHordeOpenAI");
       return callAIHordeOpenAI(systemPrompt, history, effectiveModel, onChunk, signal, options);
     }
+    console.log("[DEBUG] Calling callAIHorde");
     return callAIHorde(systemPrompt, history, effectiveModel, onChunk, signal, options);
   }
 
@@ -23359,6 +23362,7 @@ async function callAIHordeOpenAI(
   signal = null,
   options = {},
 ) {
+  console.log("[DEBUG] callAIHordeOpenAI invoked");
   const resolvedModel = resolveModelForRequest(model);
   const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
