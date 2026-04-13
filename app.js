@@ -8217,6 +8217,10 @@ function toggleMobilePane() {
   if (backdrop) {
     backdrop.classList.toggle("hidden", !isOpen);
   }
+  clearTimeout(state.marqueeRefreshTimer);
+  state.marqueeRefreshTimer = setTimeout(() => {
+    refreshAllHoverMarquees();
+  }, 150);
 }
 
 function closeMobilePane() {
@@ -8245,6 +8249,10 @@ function closeMobilePane() {
   if (backdrop) {
     backdrop.classList.add("hidden");
   }
+  clearTimeout(state.marqueeRefreshTimer);
+  state.marqueeRefreshTimer = setTimeout(() => {
+    refreshAllHoverMarquees();
+  }, 150);
 }
 
 function togglePane() {
@@ -8283,6 +8291,10 @@ function togglePane() {
   updateCarouselForPaneState();
   updateLeftPaneWidthVariable();
   setTimeout(constrainModel3DPanelPosition, 250);
+  clearTimeout(state.marqueeRefreshTimer);
+  state.marqueeRefreshTimer = setTimeout(() => {
+    refreshAllHoverMarquees();
+  }, 150);
 }
 
 function adjustModel3DPanelForPaneChange(deltaX) {
