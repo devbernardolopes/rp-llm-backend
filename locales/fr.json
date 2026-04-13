@@ -749,5 +749,6 @@
   "infoCharacterSortName": "Trier les personnages par ordre alphabétique. **A-Z** / **Z-A**.",
   "infoCharacterSortChats": "Trier les personnages par nombre de fils de discussion. **Plus de chats** / **Moins de chats**.",
   "importPersona": "↥ Importer Persona",
-  "importWritingInstruction": "↥ Importer Instruction d'ecriture"
+  "importWritingInstruction": "↥ Importer Instruction d'ecriture",
+  "confirmDeleteInitialMessage": "Ce message initial contient du contenu. Etes-vous sur de vouloir le supprimer?"
 }

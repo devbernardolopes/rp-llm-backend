@@ -754,5 +754,6 @@
   "infoCharacterSortName": "Sort characters alphabetically by name. **A-Z** / **Z-A**.",
   "infoCharacterSortChats": "Sort characters by number of chat threads. **Most Chats** / **Least Chats**.",
   "importPersona": "↥ Import Persona",
-  "importWritingInstruction": "↥ Import Writing Instruction"
+  "importWritingInstruction": "↥ Import Writing Instruction",
+  "confirmDeleteInitialMessage": "This initial message has content. Are you sure you want to delete it?"
 }

@@ -749,5 +749,6 @@
   "infoCharacterSortName": "Ordina personaggi in ordine alfabetico. **A-Z** / **Z-A**.",
   "infoCharacterSortChats": "Ordina personaggi per numero di thread di chat. **Più chat** / **Meno chat**.",
   "importPersona": "↥ Importa Persona",
-  "importWritingInstruction": "↥ Importa Istruzione di scrittura"
+  "importWritingInstruction": "↥ Importa Istruzione di scrittura",
+  "confirmDeleteInitialMessage": "Questo messaggio iniziale ha del contenuto. Sei sicuro di volerlo eliminare?"
 }
