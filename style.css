@@ -1112,8 +1112,9 @@ textarea {
   }
 
   .character-grid {
-    overflow-y: visible;
+    overflow-y: auto;
     flex: 1;
+    min-height: 0;
   }
 
   .character-pagination {
