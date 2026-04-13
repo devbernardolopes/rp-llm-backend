@@ -1581,7 +1581,6 @@ function setupEvents() {
       state.characterTagFilters = [];
       state.characterSearchQuery = "";
       if (characterSearchInput) characterSearchInput.value = "";
-      state.expandedCharacterTagIds.clear();
       saveUiState();
       renderCharacterTagFilterChips();
       state.characterPage = 1;
