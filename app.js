@@ -24916,7 +24916,8 @@ function normalizeAssistantMessages(messages) {
 }
 
 function markdownToHtml(input) {
-  let html = String(input);
+  const allowHtml = state.settings.allowMessageHtml === true;
+  let html = allowHtml ? String(input) : escapeHtml(input);
 
   html = html.replace(
     /```([\s\S]*?)```/g,
