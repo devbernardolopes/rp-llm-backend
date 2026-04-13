@@ -10471,6 +10471,7 @@ function showChatOptionsDropdown() {
   chatOptionsDropdown.className = "chat-options-dropdown";
 
   const options = [
+    { id: "auto-tts-toggle-btn", label: "autoTtsTitleOff", getLabel: () => t("autoTtsTitleOff") },
     { id: "chat-opacity-toggle-btn", label: "chatOpacityTitle", getLabel: () => t("chatOpacityTitle") },
     { id: "enter-to-send-enabled", label: "enterToSend", getLabel: () => t("enterToSend") },
     { id: "auto-reply-enabled", label: "autoReply", getLabel: () => t("autoReply") },
