@@ -19538,8 +19538,8 @@ async function renderMemoryModalEntries() {
       actions.append(regenBtn, deleteBtn);
       body.appendChild(actions);
     }
-    const entry = { header, body, icon };
-    entry.refresh = () => {
+    const entryObj = { header, body, icon };
+    entryObj.refresh = () => {
       const hasContent = String(textarea.value || "").trim().length > 0;
       header.classList.toggle("has-content", hasContent);
       const expanded = header.getAttribute("aria-expanded") === "true";
@@ -19548,14 +19548,14 @@ async function renderMemoryModalEntries() {
     const setExpanded = (next) => {
       const current = header.getAttribute("aria-expanded") === "true";
       if (next === current) {
-        entry.refresh();
+        entryObj.refresh();
         if (next) autoExpandTextarea(textarea);
         return;
       }
       header.setAttribute("aria-expanded", next ? "true" : "false");
       body.classList.toggle("collapsed", !next);
       if (next) autoExpandTextarea(textarea);
-      entry.refresh();
+      entryObj.refresh();
     };
     header.addEventListener("click", () => {
       const expanded = header.getAttribute("aria-expanded") === "true";
@@ -19566,12 +19566,12 @@ async function renderMemoryModalEntries() {
       if (expanded) {
         autoExpandTextarea(textarea);
       }
-      entry.refresh();
+      entryObj.refresh();
       refreshTextareaTokenCount(textarea);
     });
-    textareaCollapseStates.set(textarea, { ...entry, setExpanded });
+    textareaCollapseStates.set(textarea, { ...entryObj, setExpanded });
     const hasContent = String(textarea.value || "").trim().length > 0;
-    entry.refresh();
+    entryObj.refresh();
     autoExpandTextarea(textarea);
     if (!isLocked) {
       editableTextareas.push(textarea);
