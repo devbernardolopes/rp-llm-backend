@@ -4154,6 +4154,9 @@ async function setupSettingsControls() {
   if (globalPromptTemplate) {
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   }
+  if (sectionHeaderMemoryContext) {
+    sectionHeaderMemoryContext.value = getSectionHeader("sectionHeaderMemoryContext");
+  }
   if (summarySystemPrompt) {
     summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
   }
@@ -4195,7 +4198,9 @@ async function setupSettingsControls() {
       state.settings.autoTitleUserPrompt ||
       DEFAULT_SETTINGS.autoTitleUserPrompt;
   }
-
+  if (sectionHeaderCharacterPrompt) {
+    sectionHeaderCharacterPrompt.value = getSectionHeader("sectionHeaderCharacterPrompt");
+  }
   if (sectionHeaderMessagesSoFar) {
     sectionHeaderMessagesSoFar.value =
       state.settings.sectionHeaderMessagesSoFar ||
