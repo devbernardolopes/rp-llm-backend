@@ -1840,10 +1840,11 @@ textarea {
 }
 
 .new-chat-btn-wrap {
-  padding: 8px 12px 12px;
+  padding: 4px 12px 12px;
 }
 
 .new-chat-btn {
+  width: 100%;
   background: #2d5a3d;
   color: #a8e6b8;
   border: 1px solid #3d7a50;
