@@ -7225,6 +7225,15 @@ async function renderCharacters() {
       }
     });
 
+    const deleteCharBtn = iconButton(
+      "delete",
+      t("deleteCharacterAria"),
+      async (e) => {
+        e.stopPropagation();
+        await deleteCharacter(char.id);
+      },
+    );
+    deleteCharBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteCharBtn);
 
     actions.appendChild(
