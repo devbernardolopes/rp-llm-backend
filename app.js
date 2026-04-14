@@ -6983,6 +6983,11 @@ async function renderCharacters() {
     tagline.textContent = taglineText;
     applyHoverMarquee(tagline, taglineText);
 
+    const nameTaglineWrap = document.createElement("div");
+    nameTaglineWrap.className = "character-name-tagline-wrap";
+    nameTaglineWrap.appendChild(name);
+    nameTaglineWrap.appendChild(tagline);
+
     const langFlagsWrap = document.createElement("div");
     langFlagsWrap.className = "character-lang-flags";
     const definitions = resolved.definitions || [];
@@ -7250,7 +7255,7 @@ async function renderCharacters() {
       }),
     );
 
-    card.append(avatarWrap, name, tagline, langFlagsWrap);
+    card.append(avatarWrap, nameTaglineWrap, langFlagsWrap);
     if (tags.length > 0) card.appendChild(tagsWrap);
     card.append(actions);
 
