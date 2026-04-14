@@ -1149,6 +1149,7 @@ textarea {
 
 .character-grid {
   min-height: 0;
+  scrollbar-width: none;
 }
 
 .character-pagination {
