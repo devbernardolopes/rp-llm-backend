@@ -7225,30 +7225,6 @@ async function renderCharacters() {
       }
     });
 
-    actions.appendChild(newChatBtn);
-
-    card.addEventListener("mouseenter", () => {
-      newChatBtn.classList.add("card-hover-highlight");
-    });
-    card.addEventListener("mouseleave", () => {
-      newChatBtn.classList.remove("card-hover-highlight");
-    });
-    card.addEventListener("focusin", () => {
-      newChatBtn.classList.add("card-hover-highlight");
-    });
-    card.addEventListener("focusout", () => {
-      newChatBtn.classList.remove("card-hover-highlight");
-    });
-
-    const deleteCharBtn = iconButton(
-      "delete",
-      t("deleteCharacterAria"),
-      async (e) => {
-        e.stopPropagation();
-        await deleteCharacter(char.id);
-      },
-    );
-    deleteCharBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteCharBtn);
 
     actions.appendChild(
@@ -7264,6 +7240,17 @@ async function renderCharacters() {
         await exportCharacter(char.id);
       }),
     );
+
+    card.append(avatarWrap, name, tagline, langFlagsWrap);
+    if (tags.length > 0) card.appendChild(tagsWrap);
+    card.append(actions);
+
+    const newChatWrap = document.createElement("div");
+    newChatWrap.className = "new-chat-btn-wrap";
+    newChatBtn.classList.remove("secondary-btn");
+    newChatBtn.classList.add("primary-btn");
+    newChatWrap.appendChild(newChatBtn);
+    card.appendChild(newChatWrap);
 
     card.append(avatarWrap, name, tagline, langFlagsWrap);
     if (tags.length > 0) card.appendChild(tagsWrap);
