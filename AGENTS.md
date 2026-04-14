@@ -71,6 +71,11 @@ dexie.js → markdown-it.js → embeddings.js → summarizer/summarizer.js → c
 - When creating new modules, add them to the script loading order in `index.html` in the correct dependency order.
 - Use ES modules (`type="module"`) for new code that needs module support.
 
+### Git Rules
+
+- Never run `git commit`, `git push`, `git add`, or any other git commands that modify the repository.
+- Always give a single-line, concise commit message suggestion in plain-text in its own separate paragraph at the end of your response (except when in plan mode).
+
 ### AI Providers
 
 The system supports multiple AI providers. Each provider requires:
@@ -108,11 +113,6 @@ The system supports multiple AI providers. Each provider requires:
 - **AI Horde**: Distributed AI inference network (native and OpenAI-compatible modes)
 - **LM Studio**: Local LLM inference (OpenAI-compatible and native modes)
 - **Groq**: Fast LPU-based inference (OpenAI-compatible, dynamic model catalog)
-
-## Git Rules
-
-- Never run `git commit`, `git push`, `git add`, or any other git commands that modify the repository.
-- After completing a task where any file whas changed, always suggest a single-line, concise commit message in plain-text in its own separate paragraph.
 
 ### HTML Snippet Modularization
 

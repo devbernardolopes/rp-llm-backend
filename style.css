@@ -3641,7 +3641,7 @@ textarea {
 
 .modal-header,
 .modal-footer {
-  padding: 12px;
+  padding: 6px 12px;
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
