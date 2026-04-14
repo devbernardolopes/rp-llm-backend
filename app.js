@@ -19580,10 +19580,7 @@ async function renderMemoryModalEntries() {
     entriesRoot.appendChild(wrapper);
   });
 
-  editableTextareas.forEach((textarea) => {
-    textarea.dataset.collapsible = "1";
-  });
-  setupModalTextareas(modal);
+  
 
   const collapseMemoryEntries = () => {
     const modalBody = modal.querySelector(".modal-body");
@@ -19744,7 +19741,6 @@ async function openMemoryModal() {
         }
       }
     }
-    setupModalTextareas(modal);
   }
   openModal("memory-modal");
 }
