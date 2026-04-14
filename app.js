@@ -440,12 +440,12 @@ function populateSettingsTabValues() {
   if (defaultAutoTitleProvider) defaultAutoTitleProvider.value = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
   if (defaultSummaryProvider) defaultSummaryProvider.value = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
   if (defaultAutoTitleTemp) {
-    defaultAutoTitleTemp.value = state.settings.defaultAutoTitleTemp || 0.25;
+    defaultAutoTitleTemp.value = state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature;
     const val = document.getElementById("default-auto-title-temp-value");
     if (val) val.textContent = defaultAutoTitleTemp.value;
   }
   if (defaultSummaryTemp) {
-    defaultSummaryTemp.value = state.settings.defaultSummaryTemp || 0.25;
+    defaultSummaryTemp.value = state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature;
     const val = document.getElementById("default-summary-temp-value");
     if (val) val.textContent = defaultSummaryTemp.value;
   }
