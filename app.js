@@ -7251,10 +7251,6 @@ async function renderCharacters() {
     newChatBtn.classList.add("primary-btn");
     newChatWrap.appendChild(newChatBtn);
     card.appendChild(newChatWrap);
-
-    card.append(avatarWrap, name, tagline, langFlagsWrap);
-    if (tags.length > 0) card.appendChild(tagsWrap);
-    card.append(actions);
     grid.appendChild(card);
   });
 
