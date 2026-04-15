@@ -344,6 +344,11 @@ function populateSettingsTabValues() {
   if (botCardSizeSelect) {
     botCardSizeSelect.value = state.settings.botCardSize || "big";
   }
+  const characterCardsPerPageSelect = document.getElementById("character-cards-per-page");
+  if (characterCardsPerPageSelect) {
+    const perPage = Number(state.characterCardsPerPage);
+    characterCardsPerPageSelect.value = CHARACTER_PAGE_SIZES.includes(perPage) ? perPage : 0;
+  }
   if (toastDelaySlider) {
     toastDelaySlider.value = state.settings.toastDelay;
     const toastValue = document.getElementById("toast-delay-value");
@@ -1929,7 +1934,6 @@ function setupEvents() {
   });
   const paginationPrev = document.getElementById("character-pagination-prev");
   const paginationNext = document.getElementById("character-pagination-next");
-  const paginationSize = document.getElementById("character-pagination-size");
 
   paginationPrev?.addEventListener("click", () => {
     if (state.characterPage <= 1) return;
@@ -1946,17 +1950,6 @@ function setupEvents() {
     const grid = document.getElementById("character-grid");
     if (grid) grid.scrollTo({ top: 0 });
     renderCharacters();
-  });
-
-  paginationSize?.addEventListener("change", async (event) => {
-    const value = Number(event.target?.value);
-    if (!CHARACTER_PAGE_SIZES.includes(value)) return;
-    state.characterCardsPerPage = value;
-    state.characterPage = 1;
-    saveUiState();
-    const grid = document.getElementById("character-grid");
-    if (grid) grid.scrollTo({ top: 0 });
-    await renderCharacters();
   });
   const chatOpacityOverlay = document.getElementById("chat-opacity-overlay");
   chatOpacityOverlay?.addEventListener("click", (e) => {
@@ -4950,6 +4943,16 @@ async function setupSettingsControls() {
     applyBotCardSize();
   });
 
+  const characterCardsPerPageSelect = document.getElementById("character-cards-per-page");
+  characterCardsPerPageSelect?.addEventListener("change", async () => {
+    const value = Number(characterCardsPerPageSelect?.value);
+    if (!CHARACTER_PAGE_SIZES.includes(value)) return;
+    state.characterCardsPerPage = value;
+    state.characterPage = 1;
+    saveUiState();
+    await renderCharacters();
+  });
+
   globalPromptTemplate.addEventListener("input", () => {
     state.settings.globalPromptTemplate = globalPromptTemplate.value;
     saveSettings();
@@ -7318,8 +7321,7 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   const prevBtn = document.getElementById("character-pagination-prev");
   const nextBtn = document.getElementById("character-pagination-next");
   const sizeSelect = document.getElementById("character-pagination-size");
-  if (!container || !pagesContainer || !prevBtn || !nextBtn || !sizeSelect)
-    return;
+  if (!container || !pagesContainer || !prevBtn || !nextBtn) return;
 
   const hasCharacters = totalItems > 0;
   container.classList.toggle("hidden", !hasCharacters);
@@ -7330,12 +7332,14 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   nextBtn.disabled =
     !hasCharacters || totalPages <= 0 || state.characterPage >= totalPages;
 
-  const sanitizedPerPage = CHARACTER_PAGE_SIZES.includes(
-    Number(state.characterCardsPerPage),
-  )
-    ? Number(state.characterCardsPerPage)
-    : 0;
-  sizeSelect.value = String(sanitizedPerPage);
+  if (sizeSelect) {
+    const sanitizedPerPage = CHARACTER_PAGE_SIZES.includes(
+      Number(state.characterCardsPerPage),
+    )
+      ? Number(state.characterCardsPerPage)
+      : 0;
+    sizeSelect.value = String(sanitizedPerPage);
+  }
 
   pagesContainer.innerHTML = "";
   if (!hasCharacters || totalPages <= 0) return;

@@ -296,22 +296,6 @@
               &#8594;
             </button>
           </div>
-          <label class="pagination-size-label">
-            <span data-i18n="paginationResultsPerPage">Cards per page</span>
-            <select
-              id="character-pagination-size"
-              class="pagination-size-select"
-              aria-label="Cards per page"
-            >
-              <option value="0" data-i18n="paginationUnlimited">
-                Unlimited
-              </option>
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
-          </label>
         </section>
       </main>
 
@@ -1280,6 +1264,16 @@
                 <option value="always" data-i18n="marqueeBehaviorAlways">
                   Always
                 </option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span class="label-with-info"><span data-i18n="paginationResultsPerPage">Cards per page</span><button type="button" class="info-btn" data-info="characterCardsPerPage">i</button></span>
+              <select id="character-cards-per-page">
+                <option value="0" data-i18n="paginationUnlimited">Unlimited</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
               </select>
             </div>
             <div class="form-field">
