@@ -14341,6 +14341,23 @@ async function exportCharacter(characterId) {
   delete processedCharacter.avatar;
   delete processedCharacter.avatars;
 
+  const globalSfx = [];
+  const globalCreatorNotes = [];
+  if (Array.isArray(processedCharacter.definitions)) {
+    for (const def of processedCharacter.definitions) {
+      if (Array.isArray(def.sfx)) {
+        globalSfx.push(...def.sfx);
+      }
+      if (def.creatorNotes) {
+        globalCreatorNotes.push(def.creatorNotes);
+      }
+      delete def.sfx;
+      delete def.creatorNotes;
+    }
+  }
+  processedCharacter.sfx = globalSfx;
+  processedCharacter.creatorNotes = globalCreatorNotes.join("\n\n");
+
   const uniqueWiIds = new Set();
   const charWiId = processedCharacter.writingInstructionId;
   if (charWiId && charWiId !== "none") {
