@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "version": "12.0.6",
+  "version": "12.1.0",
   "scripts": {
     "version:patch": "npm version patch && node scripts/sync-config-version.js",
     "version:minor": "npm version minor && node scripts/sync-config-version.js",
