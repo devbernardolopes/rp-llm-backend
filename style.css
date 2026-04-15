@@ -57,13 +57,17 @@ body {
   height: 100dvh;
   height: 100vh;
   min-height: 0;
-  transition: flex 0.2s ease;
   position: relative;
   align-items: stretch;
 }
 
+#app-shell.pane-collapsed {
+  --left-pane-width: var(--pane-collapsed-width);
+}
+
 #app-shell > aside {
   flex-shrink: 0;
+  transition: width 0.2s ease;
 }
 
 #app-shell > main,
