@@ -21358,9 +21358,9 @@ function normalizeHordeModelItem(model) {
     maxCompletionTokens: maxLength,
     isModerated: false,
     hordeStats: {
-      workers: model?.workers || 0,
+      workers: model?.count || 0,
       queued: model?.queued || 0,
-      speed: model?.speed || 0,
+      speed: model?.performance || 0,
       eta: model?.eta || 0,
     },
   };
