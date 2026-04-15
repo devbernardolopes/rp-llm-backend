@@ -1850,24 +1850,29 @@ textarea {
   gap: 6px;
   align-items: center;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
+  -ms-overflow-style: none;
   padding-bottom: 2px;
 }
 
 @media (min-width: 601px) {
   .character-tags {
     scrollbar-width: auto;
-    -ms-overflow-style: none;
+    -ms-overflow-style: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
   .character-tags::-webkit-scrollbar {
-    display: none;
-  }
-  .character-tags:hover {
-    -ms-overflow-style: auto;
-    scrollbar-width: auto;
-  }
-  .character-tags:hover::-webkit-scrollbar {
     display: block;
+    height: 8px;
+  }
+  .character-tags::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .character-tags::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 4px;
   }
 }
 
