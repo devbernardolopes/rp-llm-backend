@@ -1795,7 +1795,6 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  width: 100%;
   box-sizing: border-box;
   margin: 0;
   padding-left: 0;
