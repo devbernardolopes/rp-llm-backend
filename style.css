@@ -1792,11 +1792,44 @@ textarea {
 
 .character-lang-flags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
   box-sizing: border-box;
   margin: 0;
   padding-left: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+@media (min-width: 601px) {
+  .character-lang-flags {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .character-lang-flags::-webkit-scrollbar {
+    display: none;
+    height: 0;
+  }
+  .character-lang-flags:hover {
+    scrollbar-width: auto;
+    -ms-overflow-style: auto;
+  }
+  .character-lang-flags:hover::-webkit-scrollbar {
+    display: block;
+    height: 8px;
+  }
+  .character-lang-flags:hover::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .character-lang-flags:hover::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 4px;
+  }
+  .character-lang-flags:hover::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+  }
 }
 
 .character-lang-flag {
@@ -1858,21 +1891,30 @@ textarea {
 
 @media (min-width: 601px) {
   .character-tags {
-    scrollbar-width: auto;
-    -ms-overflow-style: auto;
-    overflow-x: auto;
-    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   .character-tags::-webkit-scrollbar {
+    display: none;
+    height: 0;
+  }
+  .character-tags:hover {
+    scrollbar-width: auto;
+    -ms-overflow-style: auto;
+  }
+  .character-tags:hover::-webkit-scrollbar {
     display: block;
     height: 8px;
   }
-  .character-tags::-webkit-scrollbar-track {
+  .character-tags:hover::-webkit-scrollbar-track {
     background: transparent;
   }
-  .character-tags::-webkit-scrollbar-thumb {
+  .character-tags:hover::-webkit-scrollbar-thumb {
     background: var(--line);
     border-radius: 4px;
+  }
+  .character-tags:hover::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
   }
 }
 
