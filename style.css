@@ -1132,10 +1132,12 @@ textarea {
 
 /* Main view - flexible scrolling */
 #main-view {
-  padding: 6px 12px calc(60px + var(--safe-area-bottom));
+  padding: 6px 12px calc(10px + var(--safe-area-bottom));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .view.active {
@@ -1150,6 +1152,10 @@ textarea {
 .character-grid {
   min-height: 0;
   scrollbar-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  flex: 1;
 }
 
 .character-pagination {
@@ -1162,7 +1168,6 @@ textarea {
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0;
-  z-index: 10;
 }
 
 .character-pagination-group {
