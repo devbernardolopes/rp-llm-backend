@@ -71,28 +71,19 @@ body {
   min-width: 0;
   flex: 1 1 auto;
   overflow: hidden;
-}
-
-#main-view,
-#chat-view {
-  display: none;
-  width: 100%;
-  height: 100%;
-}
-
-#main-view.active,
-#chat-view.active {
   display: flex;
   flex-direction: column;
+}
+
+.view {
+  display: none !important;
+}
+
+.view.active {
+  display: flex !important;
+  flex-direction: column;
+  min-height: 0;
   overflow: auto;
-}
-
-#app-shell.pane-collapsed {
-  --left-pane-width: var(--pane-collapsed-width);
-}
-
-#app-shell.pane-collapsed > #left-pane {
-  flex-shrink: 0;
 }
 
 @media (max-width: 600px) {
@@ -1017,42 +1008,6 @@ textarea {
   background: #3a2020;
 }
 
-.view {
-  display: none;
-  min-height: 0;
-}
-
-.view.active {
-  display: flex !important;
-  flex-direction: column;
-  min-height: 0;
-  overflow: auto;
-  width: 100%;
-  height: 100%;
-}
-
-.view {
-  display: none;
-  min-height: 0;
-}
-
-.view.active {
-  display: flex !important;
-  flex-direction: column;
-  min-height: 0;
-  overflow: auto;
-  width: 100%;
-  height: 100%;
-}
-
-#main-view {
-  padding: 6px 20px calc(10px + var(--safe-area-bottom));
-  gap: 6px;
-  min-height: 0;
-  flex: 1;
-}
-
-/* Mobile pane toggle - always visible on smaller screens */
 .pane-overlay-toggle,
 .pane-overlay-toggle.collapsed {
   display: none;
@@ -1103,12 +1058,12 @@ textarea {
 
 @media (max-width: 600px) {
   #app-shell {
-    grid-template-columns: 0 1fr !important;
+    flex-direction: row;
     --left-pane-width: 0;
   }
   
   #app-shell.pane-mobile-open {
-    grid-template-columns: min(85vw, 320px) 1fr !important;
+    flex-direction: row;
   }
   
   #left-pane {
