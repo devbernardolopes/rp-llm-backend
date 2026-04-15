@@ -63,15 +63,17 @@ body {
 
 #app-shell > aside {
   grid-row: 1;
+  grid-column: 1;
+  position: relative;
 }
 
 #app-shell > main,
 #app-shell > section {
   grid-column: 2;
   min-width: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 #app-shell.pane-collapsed {
@@ -1005,7 +1007,6 @@ textarea {
 .view {
   display: none;
   min-height: 0;
-  overflow: hidden;
 }
 
 .view.active {
@@ -1014,6 +1015,12 @@ textarea {
   min-height: 0;
   overflow: auto;
   width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
 }
 
 #main-view {
