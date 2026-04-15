@@ -14290,7 +14290,12 @@ async function exportCharacter(characterId) {
     return;
   }
 
-  const safeName = (character.name || "character").replace(/[^\w-]+/g, "_");
+  const safeName =
+    (character.name || "character")
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .slice(0, 128) || "character";
 
   const processedCharacter = { ...character };
 
@@ -14337,7 +14342,7 @@ async function exportCharacter(characterId) {
   const charBlob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
-  downloadBlob(charBlob, `${safeName}.rpchar.json`);
+  downloadBlob(charBlob, `bot_${safeName}.scenara.json`);
 
   let exportedWiCount = 0;
   for (const wiId of uniqueWiIds) {
