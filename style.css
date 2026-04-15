@@ -1938,7 +1938,7 @@ textarea {
 }
 
 .character-tags .tag-extra {
-  display: none;
+  display: inline-block;
 }
 
 .character-tags.tags-expanded .tag-extra {
