@@ -5861,6 +5861,12 @@ function getModalActionButtons(modalId) {
       saveBtn: document.getElementById("text-input-save"),
     };
   }
+  if (modalId === "writing-instruction-editor-modal") {
+    return {
+      applyBtn: document.getElementById("apply-writing-instructions-btn"),
+      saveBtn: document.getElementById("save-writing-instructions-btn"),
+    };
+  }
   const prefix = String(modalId || "").replace(/-modal$/, "");
   return {
     applyBtn: document.getElementById(`apply-${prefix}-btn`),
@@ -12055,6 +12061,7 @@ function renderWritingInstructionTabs() {
       loadActiveWritingInstructionToForm();
       restoreWiEditorTextareaCollapseStates();
       renderWritingInstructionTabs();
+      updateWritingInstructionDirtyState();
     });
     const del = document.createElement("button");
     del.type = "button";
@@ -12154,28 +12161,18 @@ function updateSaveWritingInstructionButton() {
 
 function updateWritingInstructionDirtyState() {
   const original = state_writingInstructions.originalState;
-  console.log("updateWritingInstructionDirtyState CALLED");
-  console.log("original:", JSON.stringify(original));
-  console.log("definitions:", JSON.stringify(state_writingInstructions.definitions));
-  console.log("activeLanguage:", state_writingInstructions.activeLanguage);
   if (!original) return;
   const currentName = String(
     document.getElementById("writing-instruction-name")?.value || "",
   ).trim();
-  console.log("currentName:", currentName);
   const hasNameChange = currentName !== original.name;
-  console.log("hasNameChange:", hasNameChange);
   const hasInstructionsChange = state_writingInstructions.definitions.some(
     (def) => {
       const origInst = (original.instructions?.[def.language] || "").trim();
-      const currentInst = (def.instructions || "").trim();
-      console.log("Checking lang", def.language, ": current='"+currentInst+"' orig='"+origInst+"' diff:", currentInst !== origInst);
-      return currentInst !== origInst;
+      return (def.instructions || "").trim() !== origInst;
     },
   );
-  console.log("hasInstructionsChange:", hasInstructionsChange);
   const hasChanges = hasNameChange || hasInstructionsChange;
-  console.log("Final hasChanges:", hasChanges);
   setModalDirtyState("writing-instruction-editor-modal", hasChanges);
 }
 
