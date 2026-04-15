@@ -2188,10 +2188,6 @@ function setupEvents() {
     "#persona-editor-color",
   ]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
-  markModalDirtyOnInput("writing-instruction-editor-modal", [
-    "#writing-instruction-name",
-    "#writing-instruction-text",
-  ]);
   markModalDirtyOnInput("lore-editor-modal", [
     "#lore-name",
     "#lore-avatar",
@@ -12236,40 +12232,49 @@ function updateWritingInstructionTextCount() {
   });
 }
 
-function updateSaveWritingInstructionButton() {
-  saveActiveWritingInstructionFromForm();
-  const saveBtn = document.getElementById("save-writing-instructions-btn");
-  const applyBtn = document.getElementById("apply-writing-instructions-btn");
-  if (saveBtn || applyBtn) {
-    const isDirty = !!state.modalDirty["writing-instruction-editor-modal"];
-    if (saveBtn) saveBtn.disabled = !isDirty;
-    if (applyBtn) applyBtn.disabled = !isDirty;
+function getWritingInstructionEditorCurrentState() {
+  const name = String(
+    document.getElementById("writing-instruction-name")?.value || "",
+  ).trim();
+  const instructions = {};
+  state_writingInstructions.definitions.forEach((def) => {
+    instructions[def.language] = String(def.instructions || "").trim();
+  });
+  return { name, instructions };
+}
+
+function areWritingInstructionStatesEqual(currentState, originalState) {
+  if (!currentState || !originalState) return false;
+  if (currentState.name !== originalState.name) return false;
+  const currentInstructions = currentState.instructions || {};
+  const originalInstructions = originalState.instructions || {};
+  const currentLanguages = Object.keys(currentInstructions);
+  const originalLanguages = Object.keys(originalInstructions);
+  if (currentLanguages.length !== originalLanguages.length) return false;
+  for (const language of currentLanguages) {
+    if (!Object.prototype.hasOwnProperty.call(originalInstructions, language)) {
+      return false;
+    }
+    if (currentInstructions[language] !== originalInstructions[language]) {
+      return false;
+    }
   }
+  return true;
+}
+
+function updateSaveWritingInstructionButton() {
+  updateWritingInstructionDirtyState();
 }
 
 function updateWritingInstructionDirtyState() {
   const original = state_writingInstructions.originalState;
-  console.log("=== updateWritingInstructionDirtyState ===");
-  console.log("original:", JSON.stringify(original));
-  console.log("definitions:", JSON.stringify(state_writingInstructions.definitions));
-  if (!original) return;
-  const currentName = String(
-    document.getElementById("writing-instruction-name")?.value || "",
-  ).trim();
-  console.log("currentName:", currentName);
-  const hasNameChange = currentName !== original.name;
-  console.log("hasNameChange:", hasNameChange);
-  const hasInstructionsChange = state_writingInstructions.definitions.some(
-    (def) => {
-      const origInst = (original.instructions?.[def.language] || "").trim();
-      const currentInst = (def.instructions || "").trim();
-      console.log(`Lang ${def.language}: current="${currentInst}" orig="${origInst}" diff=${currentInst !== origInst}`);
-      return currentInst !== origInst;
-    },
-  );
-  console.log("hasInstructionsChange:", hasInstructionsChange);
-  const hasChanges = hasNameChange || hasInstructionsChange;
-  console.log("Final hasChanges:", hasChanges);
+  if (!original) {
+    setModalDirtyState("writing-instruction-editor-modal", false);
+    return;
+  }
+  saveActiveWritingInstructionFromForm();
+  const currentState = getWritingInstructionEditorCurrentState();
+  const hasChanges = !areWritingInstructionStatesEqual(currentState, original);
   setModalDirtyState("writing-instruction-editor-modal", hasChanges);
 }
 
