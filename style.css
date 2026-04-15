@@ -1757,8 +1757,10 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 2px;
   width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding-left: 0;
 }
 
 .character-lang-flag {
@@ -1766,8 +1768,9 @@ textarea {
   cursor: pointer;
   opacity: 0.4;
   transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
-  padding: 4px;
   border-radius: 4px;
+  display: flex;
+  align-items: center;
 }
 
 .character-lang-flag:hover {
