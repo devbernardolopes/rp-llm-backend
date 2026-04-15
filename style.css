@@ -61,6 +61,12 @@ body {
   position: relative;
 }
 
+#app-shell > main,
+#app-shell > section {
+  grid-column: 2;
+  min-width: 0;
+}
+
 #app-shell.pane-collapsed {
   --left-pane-width: var(--pane-collapsed-width);
   grid-template-columns: var(--pane-collapsed-width) 1fr;
@@ -996,8 +1002,8 @@ textarea {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  flex: 1;
   overflow: auto;
+  width: 100%;
 }
 
 #main-view {
@@ -2133,7 +2139,7 @@ textarea {
   padding: 18px 22px calc(18px + var(--safe-area-bottom));
   position: relative;
   min-height: 0;
-  overflow: hidden;
+  box-sizing: border-box;
 }
 
 #chat-view.keyboard-active {
