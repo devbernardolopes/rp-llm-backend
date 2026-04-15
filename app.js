@@ -1076,6 +1076,11 @@ function setupEvents() {
     setCharacterModalTab("tags");
     renderCharacterDefinitionTabs();
   });
+  document.getElementById("char-notes-tab-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    setCharacterModalTab("notes");
+    renderCharacterDefinitionTabs();
+  });
   document.getElementById("char-sfx-tab-btn").addEventListener("click", () => {
     saveActiveCharacterDefinitionFromForm();
     setCharacterModalTab("sfx");
@@ -9009,6 +9014,7 @@ function setCharacterModalTab(tab = "lang") {
   const showLang = normalized === "lang";
   const showConfig = normalized === "config";
   const showTags = normalized === "tags";
+  const showNotes = normalized === "notes";
   const showSfx = normalized === "sfx";
   const showModel3d = normalized === "model3d";
   document
@@ -9021,6 +9027,9 @@ function setCharacterModalTab(tab = "lang") {
     .querySelectorAll(".tags-field")
     .forEach((el) => el.classList.toggle("hidden", !showTags));
   document
+    .querySelectorAll(".notes-field")
+    .forEach((el) => el.classList.toggle("hidden", !showNotes));
+  document
     .querySelectorAll(".sfx-field")
     .forEach((el) => el.classList.toggle("hidden", !showSfx));
   document
@@ -9030,6 +9039,8 @@ function setCharacterModalTab(tab = "lang") {
   if (configBtn) configBtn.classList.toggle("active", showConfig);
   const tagsBtn = document.getElementById("char-tags-tab-btn");
   if (tagsBtn) tagsBtn.classList.toggle("active", showTags);
+  const notesBtn = document.getElementById("char-notes-tab-btn");
+  if (notesBtn) notesBtn.classList.toggle("active", showNotes);
   const sfxBtn = document.getElementById("char-sfx-tab-btn");
   if (sfxBtn) sfxBtn.classList.toggle("active", showSfx);
   const model3dBtn = document.getElementById("char-model3d-tab-btn");
@@ -9156,6 +9167,9 @@ function saveActiveCharacterDefinitionFromForm() {
   def.name = String(document.getElementById("char-name")?.value || "").trim();
   def.tagline = String(
     document.getElementById("char-tagline")?.value || "",
+  ).trim();
+  def.creatorNotes = String(
+    document.getElementById("char-notes")?.value || "",
   ).trim();
   def.systemPrompt = String(
     document.getElementById("char-system-prompt")?.value || "",
@@ -9463,6 +9477,7 @@ async function loadActiveCharacterDefinitionToForm() {
   if (!def) return;
   document.getElementById("char-name").value = def.name || "";
   updateNameLengthCounter("char-name", "char-name-count", 128);
+  document.getElementById("char-notes").value = def.creatorNotes || "";
   const titleEl = document.getElementById("character-title");
   if (titleEl) {
     titleEl.textContent = def.name || "BOT";
@@ -14444,6 +14459,7 @@ async function importCharacterFromFile(e) {
       }
       const scenario = String(data.scenario || "").trim();
       const postHistory = String(data.post_history_instructions || "").trim();
+      const creatorNotes = String(data.creator_notes || "").trim();
       let tags = [];
       if (Array.isArray(data.tags)) {
         const normalizedTags = data.tags.map((t) => normalizeTagValue(t));
@@ -14492,6 +14508,7 @@ async function importCharacterFromFile(e) {
             tagline: "",
             systemPrompt: prompt,
             oneTimeExtraPrompt: scenario,
+            creatorNotes: creatorNotes || "",
             writingInstructions: postHistory || "",
             writingInstructionId: String(writingInstructionId || ""),
             initialMessagesRaw: initialMessagesRaw,

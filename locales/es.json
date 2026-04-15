@@ -767,5 +767,6 @@
   "noLorebooksAvailable": "No hay lorebooks disponibles para agregar.",
   "removeLorebook": "Eliminar lorebook",
   "removeLorebookTitle": "Eliminar Lorebook",
-  "confirmRemoveLorebook": "Esta seguro de que desea eliminar \"{name}\" de este personaje?"
+  "confirmRemoveLorebook": "Esta seguro de que desea eliminar \"{name}\" de este personaje?",
+  "notesTab": "Notas"
 }

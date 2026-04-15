@@ -2671,6 +2671,14 @@
               Tags
             </button>
             <button
+              id="char-notes-tab-btn"
+              class="settings-tab-btn"
+              type="button"
+              data-i18n="notesTab"
+            >
+              Notes
+            </button>
+            <button
               id="char-model3d-tab-btn"
               class="settings-tab-btn"
               type="button"
@@ -2783,6 +2791,10 @@
               />
             </div>
             <div id="char-tags-presets" class="tag-presets-list"></div>
+          </div>
+          <div class="full notes-field hidden">
+            <span data-i18n="notesTab">Notes</span>
+            <textarea id="char-notes" rows="8"></textarea>
           </div>
           <div class="full lang-field hidden persona-injection-field">
             <span data-i18n="personaInjectionPlacement"
