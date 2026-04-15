@@ -9352,14 +9352,15 @@ function addInitialMessageDraft(language) {
   setModalDirtyState("character-modal", true);
 }
 
-function removeInitialMessageDraft(language, index) {
+async function removeInitialMessageDraft(language, index) {
   if (!language) return;
   const drafts = getInitialMessageDrafts(language);
   if (index < 0 || index >= drafts.length) return;
 
   const entryContent = String(drafts[index] || "").trim();
   if (entryContent.length > 0) {
-    const proceed = confirm(
+    const proceed = await openConfirmDialog(
+      t("confirm"),
       t("confirmDeleteInitialMessage") ||
         "This initial message has content. Are you sure you want to delete it?"
     );

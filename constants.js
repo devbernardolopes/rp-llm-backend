@@ -683,7 +683,7 @@ const I18N = {
     createCharacterTitle: "Create Character",
     editCharacterTitle: "Edit Character",
     characterPrompt: "Character Prompt",
-    oneTimeExtraPrompt: "One-time only Extra System/Character Prompt",
+    oneTimeExtraPrompt: "One-time Only Extra Prompt",
     writingInstructions: "Writing Instructions",
     writingInstructionsNone: "None",
     apply: "Apply",
