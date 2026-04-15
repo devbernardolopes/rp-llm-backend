@@ -17889,10 +17889,6 @@ function beginInlineMessageEdit(index, contentEl) {
   if (contentEl.querySelector(".message-editor")) return;
   state.editingMessageIndex = index;
 
-  const contentHeight = Math.max(
-    90,
-    Math.ceil(contentEl.getBoundingClientRect().height),
-  );
   const contentWidth = Math.max(
     180,
     Math.ceil(contentEl.getBoundingClientRect().width),
@@ -17900,20 +17896,18 @@ function beginInlineMessageEdit(index, contentEl) {
   const editor = document.createElement("textarea");
   editor.className = "message-editor";
   editor.value = String(message.content || "");
-  editor.style.minHeight = `${contentHeight}px`;
-  editor.style.height = `${contentHeight}px`;
   editor.style.width = `${contentWidth}px`;
   editor.style.maxWidth = "100%";
   contentEl.innerHTML = "";
   contentEl.appendChild(editor);
   editor.focus();
   editor.setSelectionRange(editor.value.length, editor.value.length);
-  autoSizeMessageEditor(editor, contentHeight);
+  autoSizeMessageEditor(editor);
 
   const original = String(message.content || "");
   let cancelled = false;
   editor.addEventListener("input", () =>
-    autoSizeMessageEditor(editor, contentHeight),
+    autoSizeMessageEditor(editor),
   );
   editor.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -17964,10 +17958,10 @@ function beginInlineMessageEdit(index, contentEl) {
   );
 }
 
-function autoSizeMessageEditor(editor, minHeight = 90) {
+function autoSizeMessageEditor(editor) {
   if (!editor) return;
   editor.style.height = "auto";
-  editor.style.height = `${Math.max(minHeight, editor.scrollHeight)}px`;
+  editor.style.height = `${Math.max(60, editor.scrollHeight)}px`;
 }
 
 function cancelActiveMessageEdit() {
