@@ -775,5 +775,16 @@
   "removeLorebook": "Remove lorebook",
   "removeLorebookTitle": "Remove Lorebook",
   "confirmRemoveLorebook": "Are you sure you want to remove \"{name}\" from this character?",
-  "notesTab": "Notes"
+  "notesTab": "Notes",
+  "loadingModels": "Loading models...",
+  "cooldownActive": "Please wait {seconds}s before reloading models",
+  "workersLabel": "Workers",
+  "speedLabel": "Speed",
+  "etaLabel": "ETA",
+  "workersMost": "Workers (Most)",
+  "workersLeast": "Workers (Least)",
+  "speedFastest": "Speed (Fastest)",
+  "speedSlowest": "Speed (Slowest)",
+  "etaSoonest": "ETA (Soonest)",
+  "etaLatest": "ETA (Latest)"
 }

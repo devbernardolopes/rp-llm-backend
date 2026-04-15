@@ -1024,6 +1024,9 @@
               class="settings-inline-row model-filter-row"
               id="model-filter-row"
             >
+              <div id="model-loading-status" class="muted hidden">
+                <span data-i18n="loadingModels">Loading models...</span>
+              </div>
               <div class="form-field">
                 <span data-i18n="pricingLabel">Pricing</span>
                 <select id="model-pricing-filter">
@@ -1056,14 +1059,16 @@
                   </option>
                 </select>
               </div>
-              <button
-                id="model-refresh-btn"
-                class="secondary-btn"
-                type="button"
-                data-i18n="reload"
-              >
-                Reload
-              </button>
+              <div class="form-field form-field-btn">
+                <button
+                  id="model-refresh-btn"
+                  class="secondary-btn"
+                  type="button"
+                  data-i18n="reload"
+                >
+                  Reload
+                </button>
+              </div>
             </div>
             <div id="model-selected-meta" class="muted"></div>
             <div id="model-roleplay-warning" class="model-warning hidden">

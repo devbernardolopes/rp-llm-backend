@@ -591,6 +591,11 @@ const state = {
     controller: null,
     requestId: 0,
   },
+  modelLoadCooldown: {
+    provider: null,
+    timestamp: 0,
+    cooldownMs: 5000,
+  },
   budgetIndicator: {
     timerId: null,
     seq: 0,
@@ -20493,6 +20498,22 @@ async function populateSettingsModels(options = {}) {
   if (!modelSelect) return;
   const force = options?.force === true;
   const provider = state.settings.aiProvider || "openrouter";
+  const now = Date.now();
+
+  if (
+    force &&
+    state.modelLoadCooldown.provider === provider &&
+    now - state.modelLoadCooldown.timestamp < state.modelLoadCooldown.cooldownMs
+  ) {
+    const remaining = Math.ceil(
+      (state.modelLoadCooldown.cooldownMs - (now - state.modelLoadCooldown.timestamp)) / 1000,
+    );
+    showToast(
+      tf("cooldownActive", { seconds: String(remaining) }),
+      "warning",
+    );
+    return;
+  }
 
   if (state.modelLoad.controller) {
     state.modelLoad.controller.abort();
@@ -20501,6 +20522,18 @@ async function populateSettingsModels(options = {}) {
   state.modelLoad.controller = controller;
   const requestId = Number(state.modelLoad.requestId || 0) + 1;
   state.modelLoad.requestId = requestId;
+
+  const pricingFilter = document.getElementById("model-pricing-filter");
+  const modalityFilter = document.getElementById("model-modality-filter");
+  const sortOrderSelect = document.getElementById("model-sort-order");
+  const refreshBtn = document.getElementById("model-refresh-btn");
+  const loadingStatus = document.getElementById("model-loading-status");
+
+  if (pricingFilter) pricingFilter.disabled = true;
+  if (modalityFilter) modalityFilter.disabled = true;
+  if (sortOrderSelect) sortOrderSelect.disabled = true;
+  if (refreshBtn) refreshBtn.disabled = true;
+  if (loadingStatus) loadingStatus.classList.remove("hidden");
 
   modelSelect.innerHTML = "";
   const loadingOpt = document.createElement("option");
@@ -20581,7 +20614,77 @@ async function populateSettingsModels(options = {}) {
     if (requestId === state.modelLoad.requestId) {
       state.modelLoad.controller = null;
       modelSelect.disabled = false;
+      if (pricingFilter) pricingFilter.disabled = false;
+      if (modalityFilter) modalityFilter.disabled = false;
+      if (sortOrderSelect) sortOrderSelect.disabled = false;
+      if (refreshBtn) refreshBtn.disabled = false;
+      if (loadingStatus) loadingStatus.classList.add("hidden");
+      state.modelLoadCooldown.provider = provider;
+      state.modelLoadCooldown.timestamp = Date.now();
     }
+  }
+}
+
+function updateModelSortOrderOptions() {
+  const sortOrderSelect = document.getElementById("model-sort-order");
+  if (!sortOrderSelect) return;
+  const provider = state.settings.aiProvider || "openrouter";
+
+  const baseOptions = [
+    { value: "name_asc", label: "nameAsc" },
+    { value: "name_desc", label: "nameDesc" },
+  ];
+
+  const hordeOptions = [
+    { value: "workers_desc", label: "workersMost" },
+    { value: "workers_asc", label: "workersLeast" },
+    { value: "speed_desc", label: "speedFastest" },
+    { value: "speed_asc", label: "speedSlowest" },
+    { value: "eta_asc", label: "etaSoonest" },
+    { value: "eta_desc", label: "etaLatest" },
+  ];
+
+  const openrouterOnlyOptions = [
+    { value: "created_desc", label: "createdNewest" },
+    { value: "created_asc", label: "createdOldest" },
+  ];
+
+  const currentValue = sortOrderSelect.value;
+  const allowedValues = [];
+
+  sortOrderSelect.innerHTML = "";
+
+  if (provider === "aihorde") {
+    for (const opt of [...baseOptions, ...hordeOptions]) {
+      const el = document.createElement("option");
+      el.value = opt.value;
+      el.textContent = tf(opt.label);
+      el.dataset.i18n = opt.label;
+      sortOrderSelect.appendChild(el);
+      allowedValues.push(opt.value);
+    }
+  } else if (provider === "openrouter") {
+    for (const opt of [...baseOptions, ...openrouterOnlyOptions]) {
+      const el = document.createElement("option");
+      el.value = opt.value;
+      el.textContent = tf(opt.label);
+      el.dataset.i18n = opt.label;
+      sortOrderSelect.appendChild(el);
+      allowedValues.push(opt.value);
+    }
+  } else {
+    for (const opt of baseOptions) {
+      const el = document.createElement("option");
+      el.value = opt.value;
+      el.textContent = tf(opt.label);
+      el.dataset.i18n = opt.label;
+      sortOrderSelect.appendChild(el);
+      allowedValues.push(opt.value);
+    }
+  }
+
+  if (!allowedValues.includes(currentValue)) {
+    sortOrderSelect.value = "name_asc";
   }
 }
 
@@ -20620,6 +20723,12 @@ function renderSettingsModelOptions() {
     "name_desc",
     "created_asc",
     "created_desc",
+    "workers_desc",
+    "workers_asc",
+    "speed_desc",
+    "speed_asc",
+    "eta_asc",
+    "eta_desc",
   ].includes(state.settings.modelSortOrder)
     ? state.settings.modelSortOrder
     : "name_asc";
@@ -20646,6 +20755,18 @@ function renderSettingsModelOptions() {
     if (sortOrder === "name_desc") return b.name.localeCompare(a.name);
     if (sortOrder === "created_asc") return a.created - b.created;
     if (sortOrder === "created_desc") return b.created - a.created;
+    if (sortOrder === "workers_desc")
+      return (Number(b.hordeStats?.workers) || 0) - (Number(a.hordeStats?.workers) || 0);
+    if (sortOrder === "workers_asc")
+      return (Number(a.hordeStats?.workers) || 0) - (Number(b.hordeStats?.workers) || 0);
+    if (sortOrder === "speed_desc")
+      return (Number(b.hordeStats?.speed) || 0) - (Number(a.hordeStats?.speed) || 0);
+    if (sortOrder === "speed_asc")
+      return (Number(a.hordeStats?.speed) || 0) - (Number(b.hordeStats?.speed) || 0);
+    if (sortOrder === "eta_asc")
+      return (Number(a.hordeStats?.eta) || 0) - (Number(b.hordeStats?.eta) || 0);
+    if (sortOrder === "eta_desc")
+      return (Number(b.hordeStats?.eta) || 0) - (Number(a.hordeStats?.eta) || 0);
     return a.name.localeCompare(b.name);
   });
 
@@ -21412,11 +21533,8 @@ function updateProviderVisibility() {
     }
   }
   if (modelFilterRow) {
-    if (provider === "openrouter") {
-      modelFilterRow.classList.remove("hidden");
-    } else {
-      modelFilterRow.classList.add("hidden");
-    }
+    modelFilterRow.classList.remove("hidden");
+    updateModelSortOrderOptions();
   }
 }
 

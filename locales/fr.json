@@ -770,5 +770,16 @@
   "removeLorebook": "Supprimer le lorebook",
   "removeLorebookTitle": "Supprimer le Lorebook",
   "confirmRemoveLorebook": "Etes-vous sur de vouloir supprimer \"{name}\" de ce personnage?",
-  "notesTab": "Notes"
+  "notesTab": "Notes",
+  "loadingModels": "Chargement des modeles...",
+  "cooldownActive": "Veuillez patienter {seconds}s avant de recharger les modeles",
+  "workersLabel": "Travailleurs",
+  "speedLabel": "Vitesse",
+  "etaLabel": "ETA",
+  "workersMost": "Travailleurs (Plus)",
+  "workersLeast": "Travailleurs (Moins)",
+  "speedFastest": "Vitesse (Plus rapide)",
+  "speedSlowest": "Vitesse (Plus lente)",
+  "etaSoonest": "ETA (Plus proche)",
+  "etaLatest": "ETA (Plus eloigne)"
 }
