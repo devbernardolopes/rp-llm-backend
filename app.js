@@ -1812,14 +1812,14 @@ function setupEvents() {
     .addEventListener("input", () => {
       updateWritingInstructionNameCount();
       saveActiveWritingInstructionFromForm();
-      updateSaveWritingInstructionButton();
+      updateWritingInstructionDirtyState();
     });
   document
     .getElementById("writing-instruction-text")
     .addEventListener("input", () => {
       updateWritingInstructionTextCount();
       saveActiveWritingInstructionFromForm();
-      updateSaveWritingInstructionButton();
+      updateWritingInstructionDirtyState();
     });
   document
     .getElementById("confirm-yes-btn")
@@ -11820,6 +11820,7 @@ let state_writingInstructions = {
   editingId: null,
   definitions: [],
   activeLanguage: "",
+  originalState: null,
 };
 
 async function getAllWritingInstructions() {
@@ -11917,11 +11918,14 @@ async function renderWritingInstructionsList() {
 }
 
 async function openWritingInstructionEditor(writingInstruction = null) {
-  setModalDirtyState("writing-instruction-editor-modal", false);
   const normalized = normalizeWritingInstructionRecord(
     writingInstruction || {},
   );
   state_writingInstructions.editingId = normalized.id || null;
+  state_writingInstructions.originalState = {
+    name: normalized.name || "",
+    instructions: { ...(normalized.instructions || {}) },
+  };
   const interfaceLang = state.settings.interfaceLanguage || "en";
   if (
     !normalized.instructions ||
@@ -11953,6 +11957,7 @@ async function openWritingInstructionEditor(writingInstruction = null) {
     state.activeModalId = "writing-instruction-editor-modal";
     setupModalTextareas(editorModal);
     restoreWiEditorTextareaCollapseStates();
+    updateWritingInstructionDirtyState();
   }
 }
 
@@ -12017,7 +12022,7 @@ function renderWritingInstructionTabs() {
       }
       loadActiveWritingInstructionToForm();
       renderWritingInstructionTabs();
-      setModalDirtyState("writing-instruction-editor-modal", true);
+      updateWritingInstructionDirtyState();
     });
     btn.appendChild(del);
     root.appendChild(btn);
@@ -12050,7 +12055,7 @@ function loadActiveWritingInstructionToForm() {
     autoExpandTextarea(textField);
     updateWritingInstructionTextCount();
   }
-  updateSaveWritingInstructionButton();
+  updateWritingInstructionDirtyState();
 }
 
 function updateWritingInstructionNameCount() {
@@ -12076,18 +12081,31 @@ function updateWritingInstructionTextCount() {
 }
 
 function updateSaveWritingInstructionButton() {
-  // Sync current form values to state_writingInstructions.definitions
   saveActiveWritingInstructionFromForm();
   const saveBtn = document.getElementById("save-writing-instructions-btn");
-  if (!saveBtn) return;
-  const name = String(
+  const applyBtn = document.getElementById("apply-writing-instructions-btn");
+  if (saveBtn || applyBtn) {
+    const isDirty = !!state.modalDirty["writing-instruction-editor-modal"];
+    if (saveBtn) saveBtn.disabled = !isDirty;
+    if (applyBtn) applyBtn.disabled = !isDirty;
+  }
+}
+
+function updateWritingInstructionDirtyState() {
+  const original = state_writingInstructions.originalState;
+  if (!original) return;
+  const currentName = String(
     document.getElementById("writing-instruction-name")?.value || "",
   ).trim();
-  const hasAllContent = state_writingInstructions.definitions.every(
-    (d) => String(d.instructions || "").trim().length > 0,
+  const hasNameChange = currentName !== original.name;
+  const hasInstructionsChange = state_writingInstructions.definitions.some(
+    (def) => {
+      const origInst = original.instructions?.[def.language] || "";
+      return def.instructions !== origInst;
+    },
   );
-  const isDirty = !!state.modalDirty["writing-instruction-editor-modal"];
-  saveBtn.disabled = !name || !hasAllContent || !isDirty;
+  const hasChanges = hasNameChange || hasInstructionsChange;
+  setModalDirtyState("writing-instruction-editor-modal", hasChanges);
 }
 
 async function saveWritingInstruction({ close = true } = {}) {
@@ -12131,6 +12149,10 @@ async function saveWritingInstruction({ close = true } = {}) {
     showToast(t("writingInstructionCreated"), "success");
   }
   setModalDirtyState("writing-instruction-editor-modal", false);
+  state_writingInstructions.originalState = {
+    name,
+    instructions: { ...instructions },
+  };
   await renderWritingInstructionsList();
   if (close) {
     closeActiveModal();
@@ -12283,6 +12305,7 @@ async function addWritingInstructionLanguage() {
   closeWritingInstructionLanguageModal();
   loadActiveWritingInstructionToForm();
   renderWritingInstructionTabs();
+  updateWritingInstructionDirtyState();
 }
 
 const PLACEHOLDER_STATUSES = new Set([
