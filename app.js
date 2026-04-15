@@ -1057,6 +1057,7 @@ function setupEvents() {
   document
     .getElementById("shortcuts-toggle-btn")
     .addEventListener("click", toggleShortcutsVisibility);
+  document.getElementById("scroll-shortcuts-btn")?.addEventListener("click", toggleShortcutsVisibility);
   document.getElementById("home-btn").addEventListener("click", showMainView);
   document
     .getElementById("chat-title")
@@ -6417,6 +6418,7 @@ async function removeTagFromCatalog(tag) {
 async function renderShortcutsBar() {
   const bar = document.getElementById("shortcuts-bar");
   const toggleBtn = document.getElementById("shortcuts-toggle-btn");
+  const scrollBtn = document.getElementById("scroll-shortcuts-btn");
   if (!bar) return;
   const entries = parseShortcutEntries(state.settings.shortcutsRaw);
   bar.innerHTML = "";
@@ -6426,6 +6428,9 @@ async function renderShortcutsBar() {
     toggleBtn.classList.toggle("is-active", isVisible);
     toggleBtn.title = isVisible ? t("hideShortcuts") : t("showShortcuts");
     toggleBtn.disabled = entries.length === 0;
+  }
+  if (scrollBtn) {
+    scrollBtn.classList.toggle("hidden", !isVisible || entries.length === 0);
   }
   if (!isVisible || entries.length === 0) return;
 
