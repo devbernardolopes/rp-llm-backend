@@ -54,6 +54,7 @@ body {
   --left-pane-width: var(--pane-width);
   display: grid;
   grid-template-columns: var(--pane-width) 1fr;
+  grid-template-rows: 1fr;
   height: 100dvh;
   height: 100vh;
   min-height: 0;
@@ -61,10 +62,13 @@ body {
   position: relative;
 }
 
-#app-shell > main,
-#app-shell > section {
+#app-shell > aside {
+  grid-row: 1;
+}
+
+#app-shell > aside ~ :not(.mobile-pane-backdrop) {
   grid-column: 2;
-  min-width: 0;
+  grid-row: 1;
 }
 
 #app-shell.pane-collapsed {
