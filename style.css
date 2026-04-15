@@ -1840,6 +1840,7 @@ textarea {
   border-radius: 4px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .character-lang-flag:hover {
