@@ -996,7 +996,7 @@ textarea {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
 }
 
 #main-view {
@@ -1138,6 +1138,7 @@ textarea {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .view.active {
@@ -1159,8 +1160,8 @@ textarea {
 }
 
 .character-pagination {
-  position: sticky;
-  bottom: calc(12px + var(--safe-area-bottom));
+  position: relative;
+  bottom: 0;
   background: var(--bg);
   padding: 12px;
   margin: 0 -12px;
@@ -1168,6 +1169,7 @@ textarea {
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0;
+  flex-grow: 0;
 }
 
 .character-pagination-group {
@@ -1393,7 +1395,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1 1 auto;
+  flex: 1 1 100%;
   min-width: 0;
 }
 
@@ -1405,6 +1407,7 @@ textarea {
   overflow: visible;
   flex: 1 1 auto;
   min-width: 0;
+  justify-content: center;
 }
 
 .pagination-arrow,
