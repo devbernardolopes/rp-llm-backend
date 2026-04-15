@@ -2490,6 +2490,13 @@ textarea {
   gap: 12px;
   min-height: 0;
   padding-right: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chat-log::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .chat-row.chat-row-ooc .message-block {
