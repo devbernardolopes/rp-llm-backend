@@ -70,7 +70,7 @@ body {
 #app-shell > section {
   min-width: 0;
   flex: 1 1 auto;
-  width: 100%;
+  overflow: hidden;
 }
 
 #main-view,
@@ -84,10 +84,15 @@ body {
 #chat-view.active {
   display: flex;
   flex-direction: column;
+  overflow: auto;
 }
 
 #app-shell.pane-collapsed {
   --left-pane-width: var(--pane-collapsed-width);
+}
+
+#app-shell.pane-collapsed > #left-pane {
+  flex-shrink: 0;
 }
 
 @media (max-width: 600px) {
