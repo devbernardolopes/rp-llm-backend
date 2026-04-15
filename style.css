@@ -1003,7 +1003,7 @@ textarea {
 }
 
 .view.active {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   min-height: 0;
   overflow: auto;
