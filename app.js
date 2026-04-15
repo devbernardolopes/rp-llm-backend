@@ -14318,6 +14318,29 @@ async function exportCharacter(characterId) {
     processedCharacter.avatar = await blobToBase64(processedCharacter.avatar);
   }
 
+  if (Array.isArray(processedCharacter.definitions)) {
+    for (const def of processedCharacter.definitions) {
+      if (def.avatar instanceof Blob) {
+        def.avatar = await blobToBase64(def.avatar);
+      }
+      if (Array.isArray(def.avatars)) {
+        def.avatars = await Promise.all(
+          def.avatars.map(async (avatar) => {
+            if (avatar.data instanceof Blob) {
+              const base64 = await blobToBase64(avatar.data);
+              return { ...avatar, data: base64 };
+            }
+            return avatar;
+          })
+        );
+      }
+    }
+  }
+
+  delete processedCharacter.threadCount;
+  delete processedCharacter.avatar;
+  delete processedCharacter.avatars;
+
   const uniqueWiIds = new Set();
   const charWiId = processedCharacter.writingInstructionId;
   if (charWiId && charWiId !== "none") {
