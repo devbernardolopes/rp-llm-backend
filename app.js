@@ -8304,6 +8304,7 @@ function adjustModel3DPanelForPaneChange(deltaX) {
 }
 
 function showMainView() {
+  closeMobilePane();
   clearChatViewBackground();
   if (currentThread) {
     const log = document.getElementById("chat-log");
@@ -15300,9 +15301,8 @@ async function deleteThread(threadId) {
 }
 
 async function openThread(threadId) {
-  const chatViewActive = document
-    .getElementById("chat-view")
-    ?.classList.contains("active");
+  closeMobilePane();
+  const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
   if (chatViewActive && Number(currentThread?.id) === Number(threadId)) {
     return;
   }
