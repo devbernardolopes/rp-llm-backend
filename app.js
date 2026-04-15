@@ -2122,6 +2122,7 @@ function setupEvents() {
   markModalDirtyOnInput("character-modal", [
     "#char-name",
     "#char-tagline",
+    "#char-notes",
     "#char-system-prompt",
     "#char-one-time-extra-prompt",
     "#char-writing-instructions",
