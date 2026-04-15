@@ -1098,6 +1098,13 @@ function setupEvents() {
     saveActiveCharacterDefinitionFromForm();
     openAssetSelectorForSfx();
   });
+  document.getElementById("add-lorebook-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    openLorebookSelector();
+  });
+  document.getElementById("select-lorebook-search")?.addEventListener("input", (e) => {
+    renderLorebookSelectorList(e.target.value);
+  });
   document.getElementById("add-model3d-btn").addEventListener("click", () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -12930,6 +12937,69 @@ async function openAssetSelectorForSfx() {
   modal.classList.remove("hidden");
 }
 
+async function openLorebookSelector() {
+  const modal = document.getElementById("select-lorebook-modal");
+  if (!modal) return;
+  await renderLorebookSelectorList();
+  const searchInput = document.getElementById("select-lorebook-search");
+  if (searchInput) searchInput.value = "";
+  state.activeModalId = "select-lorebook-modal";
+  modal.classList.remove("hidden");
+}
+
+async function renderLorebookSelectorList(filter = "") {
+  const list = document.getElementById("select-lorebook-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const allLore = await db.lorebooks.orderBy("id").toArray();
+  const activeDef = getActiveCharacterDefinition();
+  const existingIds = new Set((activeDef?.lorebookIds || []).map(Number));
+  const filterLower = filter.toLowerCase();
+
+  const filtered = allLore.filter(
+    (entry) =>
+      !existingIds.has(Number(entry.id)) &&
+      (!filter || (entry.name || "").toLowerCase().includes(filterLower)),
+  );
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<p class="muted">${t("noLorebooksAvailable")}</p>`;
+    return;
+  }
+
+  filtered.forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "lorebook-row char-lorebook-row";
+    row.style.cursor = "pointer";
+    row.addEventListener("click", () => {
+      const currentIds = getSelectedLorebookIds();
+      const newIds = [...currentIds, Number(entry.id)];
+      renderCharacterLorebookList(newIds);
+      closeModal("select-lorebook-modal");
+    });
+
+    const info = document.createElement("div");
+    info.className = "lorebook-info";
+
+    const name = document.createElement("span");
+    name.className = "lorebook-name";
+    name.textContent = entry.name || "Untitled";
+
+    const idSpan = document.createElement("span");
+    idSpan.className = "lorebook-id muted";
+    idSpan.textContent = `#${entry.id}`;
+
+    info.append(name, idSpan);
+
+    const addIcon = document.createElement("span");
+    addIcon.className = "muted";
+    addIcon.innerHTML = "+";
+
+    row.append(info, addIcon);
+    list.appendChild(row);
+  });
+}
+
 async function renderAssetSelectorList() {
   const list = document.getElementById("select-asset-list");
   if (!list) return;
@@ -13615,54 +13685,54 @@ function updateCharacterPromptPlaceholder() {
 
 async function renderCharacterLorebookList(selectedIds = []) {
   const root = document.getElementById("char-lorebooks-list");
-  const allLore = await db.lorebooks.orderBy("id").toArray();
   const selected = new Set((selectedIds || []).map(Number));
 
-  root.innerHTML = "";
-  if (allLore.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "muted";
-    empty.textContent = "No Lorebooks available.";
-    root.appendChild(empty);
+  if (selected.size === 0) {
+    root.innerHTML = `<p class="muted">${t("noLorebooksAdded")}</p>`;
     return;
   }
 
+  const allLore = await db.lorebooks.where("id").anyOf([...selected]).toArray();
+
+  root.innerHTML = "";
   allLore.forEach((entry) => {
-    const label = document.createElement("label");
-    label.className = "check-item lorebook-entry";
+    const row = document.createElement("div");
+    row.className = "lorebook-row char-lorebook-row";
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = String(entry.id);
-    checkbox.checked = selected.has(Number(entry.id));
-    checkbox.addEventListener("change", () => {
-      setModalDirtyState("character-modal", true);
-    });
+    const info = document.createElement("div");
+    info.className = "lorebook-info";
 
-    const textWrapper = document.createElement("span");
-    textWrapper.className = "lorebook-entry-text";
-
-    const nameSpan = document.createElement("span");
-    nameSpan.className = "lorebook-entry-name";
-    nameSpan.textContent = entry.name || "Untitled";
+    const name = document.createElement("span");
+    name.className = "lorebook-name";
+    name.textContent = entry.name || "Untitled";
 
     const idSpan = document.createElement("span");
-    idSpan.className = "lorebook-entry-id";
+    idSpan.className = "lorebook-id muted";
     idSpan.textContent = `#${entry.id}`;
 
-    textWrapper.append(nameSpan, idSpan);
-    label.append(checkbox, textWrapper);
-    root.appendChild(label);
+    info.append(name, idSpan);
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "icon-btn danger-icon-btn";
+    removeBtn.title = t("removeLorebook");
+    removeBtn.innerHTML = "&times;";
+    removeBtn.addEventListener("click", () => {
+      setModalDirtyState("character-modal", true);
+      renderCharacterLorebookList(getSelectedLorebookIds());
+    });
+
+    row.append(info, removeBtn);
+    row.dataset.lorebookId = entry.id;
+    root.appendChild(row);
   });
 }
 
 function getSelectedLorebookIds() {
   return Array.from(
-    document.querySelectorAll(
-      "#char-lorebooks-list input[type='checkbox']:checked",
-    ),
+    document.querySelectorAll("#char-lorebooks-list .char-lorebook-row"),
   )
-    .map((el) => Number(el.value))
+    .map((el) => Number(el.dataset.lorebookId))
     .filter((id) => Number.isInteger(id));
 }
 

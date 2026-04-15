@@ -759,5 +759,11 @@
   "showAiMsgMetadataBtn": "Metadonnees du message",
   "showAiMsgGenParamsBtn": "Parametres de generation",
   "showAiMsgForkBtn": "Fork le chat a partir d'ici",
-  "infoMessageButtonSize": "Controle la taille des boutons d'action (modifier, copier, supprimer, regenerer) a l'interieur des bulles de message. **Petit**: boutons compacts, **Regular**: taille moyenne, **Grand**: boutons plus grands pour un tapotement plus facile."
+  "infoMessageButtonSize": "Controle la taille des boutons d'action (modifier, copier, supprimer, regenerer) a l'interieur des bulles de message. **Petit**: boutons compacts, **Regular**: taille moyenne, **Grand**: boutons plus grands pour un tapotement plus facile.",
+  "addLorebook": "+ Ajouter un Lorebook",
+  "selectLorebook": "Ajouter un Lorebook",
+  "searchLorebooksPlaceholder": "Rechercher des lorebooks...",
+  "noLorebooksAdded": "Aucun lorebook ajoute.",
+  "noLorebooksAvailable": "Aucun lorebook disponible a ajouter.",
+  "removeLorebook": "Supprimer le lorebook"
 }

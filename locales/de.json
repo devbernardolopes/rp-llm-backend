@@ -759,5 +759,11 @@
   "showAiMsgMetadataBtn": "Nachrichtenmetadaten",
   "showAiMsgGenParamsBtn": "Generierungsparameter",
   "showAiMsgForkBtn": "Chat hier verzweigen",
-  "infoMessageButtonSize": "Steuert die Größe der Aktionsschaltflächen (Bearbeiten, Kopieren, Löschen, Regenerieren) in Nachrichtenblasen. **Klein**: kompakte Schaltflächen, **Regular**: mittlere Größe, **Groß**: größere Schaltflächen für einfacheres Tippen."
+  "infoMessageButtonSize": "Steuert die Größe der Aktionsschaltflächen (Bearbeiten, Kopieren, Löschen, Regenerieren) in Nachrichtenblasen. **Klein**: kompakte Schaltflächen, **Regular**: mittlere Größe, **Groß**: größere Schaltflächen für einfacheres Tippen.",
+  "addLorebook": "+ Lorebook hinzufügen",
+  "selectLorebook": "Lorebook hinzufügen",
+  "searchLorebooksPlaceholder": "Lorebooks suchen...",
+  "noLorebooksAdded": "Keine Lorebooks hinzugefügt.",
+  "noLorebooksAvailable": "Keine Lorebooks zum Hinzufügen verfügbar.",
+  "removeLorebook": "Lorebook entfernen"
 }

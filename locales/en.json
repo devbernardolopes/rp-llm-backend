@@ -764,5 +764,11 @@
   "confirmDeleteInitialMessage": "This initial message has content. Are you sure you want to delete it?",
   "autoTitleStopStrings": "Auto-Title Stop Strings",
   "summaryStopStrings": "Summary Stop Strings",
-  "infoMessageButtonSize": "Controls the size of action buttons (edit, copy, delete, regenerate) inside message bubbles. **Small**: compact buttons, **Regular**: medium size, **Big**: larger buttons for easier tapping."
+  "infoMessageButtonSize": "Controls the size of action buttons (edit, copy, delete, regenerate) inside message bubbles. **Small**: compact buttons, **Regular**: medium size, **Big**: larger buttons for easier tapping.",
+  "addLorebook": "+ Add Lorebook",
+  "selectLorebook": "Add Lorebook",
+  "searchLorebooksPlaceholder": "Search lorebooks...",
+  "noLorebooksAdded": "No lorebooks added.",
+  "noLorebooksAvailable": "No lorebooks available to add.",
+  "removeLorebook": "Remove lorebook"
 }

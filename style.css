@@ -4808,6 +4808,24 @@ textarea {
   align-items: start;
 }
 
+.char-lorebook-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 6px 10px;
+}
+
+.char-lorebook-row .lorebook-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.char-lorebook-row .lorebook-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .lorebook-avatar {
   width: 54px;
   height: 54px;
@@ -5393,6 +5411,10 @@ textarea {
 }
 
 .model3d-toolbar {
+  margin-bottom: 12px;
+}
+
+.lorebook-toolbar {
   margin-bottom: 12px;
 }
 

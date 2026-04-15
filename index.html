@@ -2995,10 +2995,17 @@
             <span data-i18n="loreBooksForCharacter"
               >Lorebooks for this character</span
             >
-            <div
-              id="char-lorebooks-list"
-              class="check-list lorebook-list"
-            ></div>
+            <div class="lorebook-toolbar">
+              <button
+                id="add-lorebook-btn"
+                class="primary-btn"
+                type="button"
+                data-i18n="addLorebook"
+              >
+                + Add Lorebook
+              </button>
+            </div>
+            <div id="char-lorebooks-list" class="lorebook-list"></div>
           </div>
           <div class="full global-field">
             <span data-i18n="loreCooldown"
@@ -3156,6 +3163,35 @@
         >
           ×
         </button>
+      </div>
+    </div>
+
+    <!-- Lorebook Selector Modal -->
+    <div
+      id="select-lorebook-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="select-lorebook-title"
+    >
+      <div class="modal-card wide">
+        <div class="modal-header">
+          <h3 id="select-lorebook-title" data-i18n="selectLorebook">
+            Add Lorebook
+          </h3>
+          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-field full">
+            <input
+              type="text"
+              id="select-lorebook-search"
+              placeholder="Search lorebooks..."
+              data-i18n-placeholder="searchLorebooksPlaceholder"
+            />
+          </div>
+          <div id="select-lorebook-list" class="lorebook-list"></div>
+        </div>
       </div>
     </div>
 

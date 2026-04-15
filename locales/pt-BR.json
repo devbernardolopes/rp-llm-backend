@@ -759,5 +759,11 @@
   "showAiMsgMetadataBtn": "Metadados da mensagem",
   "showAiMsgGenParamsBtn": "Parametros de geracao",
   "showAiMsgForkBtn": "Fork chat a partir daqui",
-  "infoMessageButtonSize": "Controla o tamanho dos botoes de acao (editar, copiar, excluir, regenerar) dentro das bolhas de mensagem. **Pequeno**: botoes compactos, **Regular**: tamanho medio, **Grande**: botoes maiores para tapping mais facil."
+  "infoMessageButtonSize": "Controla o tamanho dos botoes de acao (editar, copiar, excluir, regenerar) dentro das bolhas de mensagem. **Pequeno**: botoes compactos, **Regular**: tamanho medio, **Grande**: botoes maiores para tapping mais facil.",
+  "addLorebook": "+ Adicionar Lorebook",
+  "selectLorebook": "Adicionar Lorebook",
+  "searchLorebooksPlaceholder": "Buscar lorebooks...",
+  "noLorebooksAdded": "Nenhum lorebook adicionado.",
+  "noLorebooksAvailable": "Nenhum lorebook disponivel para adicionar.",
+  "removeLorebook": "Remover lorebook"
 }
