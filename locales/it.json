@@ -522,6 +522,8 @@
   "personaColor": "Colore",
   "paginationPreviousPage": "Pagina precedente",
   "paginationNextPage": "Pagina successiva",
+  "paginationFirstPage": "Prima pagina",
+  "paginationLastPage": "Ultima pagina",
   "paginationResultsPerPage": "Schede per pagina",
   "paginationUnlimited": "Illimitato",
   "paginationPageAria": "Vai alla pagina {page}",

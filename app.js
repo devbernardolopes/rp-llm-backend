@@ -1947,6 +1947,16 @@ function setupEvents() {
   });
   const paginationPrev = document.getElementById("character-pagination-prev");
   const paginationNext = document.getElementById("character-pagination-next");
+  const paginationFirst = document.getElementById("character-pagination-first");
+  const paginationLast = document.getElementById("character-pagination-last");
+
+  paginationFirst?.addEventListener("click", () => {
+    if (state.characterPage <= 1) return;
+    state.characterPage = 1;
+    const grid = document.getElementById("character-grid");
+    if (grid) grid.scrollTo({ top: 0 });
+    renderCharacters();
+  });
 
   paginationPrev?.addEventListener("click", () => {
     if (state.characterPage <= 1) return;
@@ -1960,6 +1970,15 @@ function setupEvents() {
     const maxPages = Math.max(1, state.characterTotalPages || 1);
     if (state.characterPage >= maxPages) return;
     state.characterPage += 1;
+    const grid = document.getElementById("character-grid");
+    if (grid) grid.scrollTo({ top: 0 });
+    renderCharacters();
+  });
+
+  paginationLast?.addEventListener("click", () => {
+    const maxPages = Math.max(1, state.characterTotalPages || 1);
+    if (state.characterPage >= maxPages) return;
+    state.characterPage = maxPages;
     const grid = document.getElementById("character-grid");
     if (grid) grid.scrollTo({ top: 0 });
     renderCharacters();
@@ -7445,17 +7464,22 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   const pagesContainer = document.getElementById("character-pagination-pages");
   const prevBtn = document.getElementById("character-pagination-prev");
   const nextBtn = document.getElementById("character-pagination-next");
+  const firstBtn = document.getElementById("character-pagination-first");
+  const lastBtn = document.getElementById("character-pagination-last");
   const sizeSelect = document.getElementById("character-pagination-size");
   if (!container || !pagesContainer || !prevBtn || !nextBtn) return;
 
+  const isUnlimited = Number(state.characterCardsPerPage) === 0;
   const hasCharacters = totalItems > 0;
-  container.classList.toggle("hidden", !hasCharacters);
+  container.classList.toggle("hidden", isUnlimited || !hasCharacters);
   state.characterTotalPages = totalPages;
   state.characterTotalItems = totalItems;
 
+  const hasMultiplePages = totalPages > 1;
+  if (firstBtn) firstBtn.disabled = !hasCharacters || !hasMultiplePages || state.characterPage <= 1;
   prevBtn.disabled = !hasCharacters || state.characterPage <= 1;
-  nextBtn.disabled =
-    !hasCharacters || totalPages <= 0 || state.characterPage >= totalPages;
+  nextBtn.disabled = !hasCharacters || totalPages <= 0 || state.characterPage >= totalPages;
+  if (lastBtn) lastBtn.disabled = !hasCharacters || totalPages <= 0 || state.characterPage >= totalPages;
 
   if (sizeSelect) {
     const sanitizedPerPage = CHARACTER_PAGE_SIZES.includes(
@@ -7467,12 +7491,14 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   }
 
   pagesContainer.innerHTML = "";
-  if (!hasCharacters || totalPages <= 0) return;
+  if (!hasCharacters || totalPages <= 0 || isUnlimited) return;
 
   const windowSize = getDynamicPageWindowSize(
     pagesContainer,
     prevBtn,
     nextBtn,
+    firstBtn,
+    lastBtn,
     totalPages,
   );
   const pageRange = getCharacterPaginationRange(
@@ -7541,7 +7567,7 @@ function getFlexGapPx(element) {
   return Number.isFinite(gap) ? gap : 0;
 }
 
-function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn, totalPages) {
+function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn, firstBtn, lastBtn, totalPages) {
   const MIN_BUTTONS = 3;
   const parent = pagesContainer.parentElement;
   if (!parent) return MIN_BUTTONS;
@@ -7549,9 +7575,11 @@ function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn, totalPages) 
   const parentWidth = parent.getBoundingClientRect().width;
   const prevWidth = prevBtn.getBoundingClientRect().width;
   const nextWidth = nextBtn.getBoundingClientRect().width;
+  const firstWidth = firstBtn ? firstBtn.getBoundingClientRect().width : 0;
+  const lastWidth = lastBtn ? lastBtn.getBoundingClientRect().width : 0;
   const gap = getFlexGapPx(parent);
 
-  const availableWidth = parentWidth - prevWidth - nextWidth - gap * 2;
+  const availableWidth = parentWidth - prevWidth - nextWidth - firstWidth - lastWidth - gap * 4;
   if (!(availableWidth > 0)) return MIN_BUTTONS;
 
   const labelText = String(totalPages || 0);

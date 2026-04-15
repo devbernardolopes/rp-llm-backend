@@ -524,6 +524,8 @@
   "personaColor": "Color",
   "paginationPreviousPage": "Previous page",
   "paginationNextPage": "Next page",
+  "paginationFirstPage": "First page",
+  "paginationLastPage": "Last page",
   "paginationResultsPerPage": "Cards per page",
   "paginationUnlimited": "Unlimited",
   "paginationPageAria": "Go to page {page}",

@@ -522,6 +522,8 @@
   "personaColor": "Farbe",
   "paginationPreviousPage": "Vorherige Seite",
   "paginationNextPage": "Nächste Seite",
+  "paginationFirstPage": "Erste Seite",
+  "paginationLastPage": "Letzte Seite",
   "paginationResultsPerPage": "Karten pro Seite",
   "paginationUnlimited": "Unbegrenzt",
   "paginationPageAria": "Zur Seite {page} wechseln",

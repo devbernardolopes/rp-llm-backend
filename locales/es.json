@@ -522,6 +522,8 @@
   "personaColor": "Color",
   "paginationPreviousPage": "Página anterior",
   "paginationNextPage": "Página siguiente",
+  "paginationFirstPage": "Primera página",
+  "paginationLastPage": "Última página",
   "paginationResultsPerPage": "Tarjetas por página",
   "paginationUnlimited": "Ilimitado",
   "paginationPageAria": "Ir a la página {page}",
