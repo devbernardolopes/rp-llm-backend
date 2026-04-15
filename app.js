@@ -8166,23 +8166,8 @@ function handleMobilePaneAutoHide() {
 }
 
 function updateLeftPaneWidthVariable() {
-  const shell = document.getElementById("app-shell");
-  if (!shell) return;
-
-  const pane = document.getElementById("left-pane");
-  const shouldOffset =
-    window.innerWidth >= MOBILE_BREAKPOINT &&
-    !(pane && pane.classList.contains("mobile-open")) &&
-    !(pane && pane.classList.contains("collapsed"));
-  if (shouldOffset && pane) {
-    const width = pane.getBoundingClientRect().width;
-    shell.style.setProperty(
-      "--left-pane-width",
-      `${Math.max(0, Math.round(width))}px`,
-    );
-  } else if (!shouldOffset) {
-    shell.style.removeProperty("--left-pane-width");
-  }
+  // This function is now a no-op - CSS handles the width variable
+  // Inline style setting was conflicting with CSS class-based rules
 }
 
 function toggleMobilePane() {
