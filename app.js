@@ -10008,29 +10008,29 @@ async function saveCharacterFromModal({ close = true } = {}) {
   let savedCharacterId = null;
   const isImport = state.pendingImportedCharacter != null;
   if (isImport) {
-    const pendingChar = state.pendingImportedCharacter;
-    pendingChar.definitions = defs;
-    pendingChar.selectedCardLanguage = selectedCardLanguage;
-    pendingChar.oneTimeExtraPrompt = String(primaryDef?.oneTimeExtraPrompt || "").trim();
-    pendingChar.writingInstructions = String(primaryDef?.writingInstructions || "").trim();
-    pendingChar.writingInstructionId = String(primaryDef?.writingInstructionId || "");
-    pendingChar.initialMessagesRaw = String(primaryDef?.initialMessagesRaw || "");
-    pendingChar.initialMessages = Array.isArray(primaryDef?.initialMessages)
+    const importChar = JSON.parse(JSON.stringify(state.pendingImportedCharacter));
+    importChar.definitions = defs;
+    importChar.selectedCardLanguage = selectedCardLanguage;
+    importChar.oneTimeExtraPrompt = String(primaryDef?.oneTimeExtraPrompt || "").trim();
+    importChar.writingInstructions = String(primaryDef?.writingInstructions || "").trim();
+    importChar.writingInstructionId = String(primaryDef?.writingInstructionId || "");
+    importChar.initialMessagesRaw = String(primaryDef?.initialMessagesRaw || "");
+    importChar.initialMessages = Array.isArray(primaryDef?.initialMessages)
       ? primaryDef.initialMessages
       : [];
-    pendingChar.useMemory = document.getElementById("char-use-memory").checked;
-    pendingChar.usePostProcessing = document.getElementById("char-use-postprocess").checked;
-    pendingChar.autoTriggerAiFirstMessage = document.getElementById("char-auto-trigger-first-ai").checked;
-    pendingChar.autoTitleEnabled = document.getElementById("char-auto-title").checked;
-    pendingChar.autoTitleMinMessages = Number(document.getElementById("char-auto-title-min-messages").value) || 10;
-    pendingChar.personaPrefixEnabled = document.getElementById("char-persona-prefix").checked;
-    pendingChar.includeOocInCompletions = document.getElementById("char-include-ooc").checked;
-    pendingChar.personaInjectionPlacement = String(primaryDef?.personaInjectionPlacement || "end_system_prompt");
-    pendingChar.avatarScale = Number(document.getElementById("char-avatar-scale").value) || 1;
-    pendingChar.tags = Array.isArray(payload.tags) ? payload.tags : [];
-    pendingChar.model3d = state.charModalModel3d;
-    pendingChar.updatedAt = Date.now();
-    const newId = await db.characters.add(pendingChar);
+    importChar.useMemory = document.getElementById("char-use-memory").checked;
+    importChar.usePostProcessing = document.getElementById("char-use-postprocess").checked;
+    importChar.autoTriggerAiFirstMessage = document.getElementById("char-auto-trigger-first-ai").checked;
+    importChar.autoTitleEnabled = document.getElementById("char-auto-title").checked;
+    importChar.autoTitleMinMessages = Number(document.getElementById("char-auto-title-min-messages").value) || 10;
+    importChar.personaPrefixEnabled = document.getElementById("char-persona-prefix").checked;
+    importChar.includeOocInCompletions = document.getElementById("char-include-ooc").checked;
+    importChar.personaInjectionPlacement = String(primaryDef?.personaInjectionPlacement || "end_system_prompt");
+    importChar.avatarScale = Number(document.getElementById("char-avatar-scale").value) || 1;
+    importChar.tags = Array.isArray(payload.tags) ? payload.tags : [];
+    importChar.model3d = state.charModalModel3d;
+    importChar.updatedAt = Date.now();
+    const newId = await db.characters.add(importChar);
     savedCharacterId = Number(newId);
     state.editingCharacterId = savedCharacterId;
     state.pendingImportedCharacter = null;
@@ -14923,10 +14923,9 @@ async function importCharacterFromFile(e) {
 
     applyCharacterSettingsDefaults(character);
 
+    delete character.id;
     state.pendingImportedCharacter = character;
     character.createdAt = Date.now();
-    delete character.id;
-    character.id = null;
     showToast(t("characterImported"), "success");
     openCharacterModal(null, null, true, character);
   } catch (err) {
