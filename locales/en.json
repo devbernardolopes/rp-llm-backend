@@ -264,7 +264,7 @@
   "createCharacterTitle": "Create Character",
   "editCharacterTitle": "Edit Character",
   "characterPrompt": "Character Prompt",
-  "oneTimeExtraPrompt": "One-time only Extra System/Character Prompt",
+  "oneTimeExtraPrompt": "One-time Only Extra Prompt",
   "writingInstructions": "Writing Instructions",
   "customInstructions": "Custom Instructions",
   "initialMessages": "Initial Messages",

@@ -263,7 +263,7 @@
   "createCharacterTitle": "Crea personaggio",
   "editCharacterTitle": "Modifica personaggio",
   "characterPrompt": "Prompt del personaggio",
-  "oneTimeExtraPrompt": "Prompt sistema/personaggio extra una tantum",
+  "oneTimeExtraPrompt": "Prompt extra una tantum",
   "writingInstructions": "Istruzioni di scrittura",
   "customInstructions": "Istruzioni personalizzate",
   "initialMessages": "Messaggi iniziali",

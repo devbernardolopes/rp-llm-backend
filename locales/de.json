@@ -263,7 +263,7 @@
   "createCharacterTitle": "Charakter erstellen",
   "editCharacterTitle": "Charakter bearbeiten",
   "characterPrompt": "Charakter-Prompt",
-  "oneTimeExtraPrompt": "Einmaliger zusätzlicher System-/Charakter-Prompt",
+  "oneTimeExtraPrompt": "Einmaliger zusätzlicher Prompt",
   "writingInstructions": "Schreibanweisungen",
   "customInstructions": "Benutzerdefinierte Anweisungen",
   "initialMessages": "Startnachrichten",
