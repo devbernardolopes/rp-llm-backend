@@ -12166,18 +12166,27 @@ function updateSaveWritingInstructionButton() {
 
 function updateWritingInstructionDirtyState() {
   const original = state_writingInstructions.originalState;
+  console.log("=== updateWritingInstructionDirtyState ===");
+  console.log("original:", JSON.stringify(original));
+  console.log("definitions:", JSON.stringify(state_writingInstructions.definitions));
   if (!original) return;
   const currentName = String(
     document.getElementById("writing-instruction-name")?.value || "",
   ).trim();
+  console.log("currentName:", currentName);
   const hasNameChange = currentName !== original.name;
+  console.log("hasNameChange:", hasNameChange);
   const hasInstructionsChange = state_writingInstructions.definitions.some(
     (def) => {
       const origInst = (original.instructions?.[def.language] || "").trim();
-      return (def.instructions || "").trim() !== origInst;
+      const currentInst = (def.instructions || "").trim();
+      console.log(`Lang ${def.language}: current="${currentInst}" orig="${origInst}" diff=${currentInst !== origInst}`);
+      return currentInst !== origInst;
     },
   );
+  console.log("hasInstructionsChange:", hasInstructionsChange);
   const hasChanges = hasNameChange || hasInstructionsChange;
+  console.log("Final hasChanges:", hasChanges);
   setModalDirtyState("writing-instruction-editor-modal", hasChanges);
 }
 
