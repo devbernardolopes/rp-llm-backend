@@ -8555,11 +8555,16 @@ function openModal(modalId) {
       if (state.settings.showTokenCounts) {
         updateAllTokenCounts();
       }
-      document.querySelectorAll(".info-btn").forEach((btn) => {
+        document.querySelectorAll(".info-btn").forEach((btn) => {
         if (btn.dataset.listenerAttached === "true") return;
         btn.dataset.listenerAttached = "true";
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
+          if (infoPanel && infoPanel._triggerButton === btn) {
+            closeInfoPanel();
+            return;
+          }
+          closeInfoPanel();
           const infoKey = btn.getAttribute("data-info");
           if (infoKey) showInfoPanel(infoKey, btn);
         });
