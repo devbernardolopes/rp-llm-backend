@@ -296,6 +296,8 @@ const BOT_LANGUAGE_FLAG_ICON_CODES = {
   he: "il",
   hi: "in",
   id: "id",
+  th: "th",
+  vi: "vi",
 };
 
 const BOT_LANGUAGE_NAMES = {
