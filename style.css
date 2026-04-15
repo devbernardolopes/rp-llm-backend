@@ -2869,7 +2869,7 @@ textarea {
   word-break: break-word;
 }
 
-.message-content.markdown-rendered {
+.message-content.markdown-rendered :is(ul, ol) {
   white-space: normal;
 }
 
