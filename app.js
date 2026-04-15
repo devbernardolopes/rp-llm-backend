@@ -509,6 +509,7 @@ const state = {
   unsavedResolver: null,
   importedCharacterLorebookId: null,
   characterModalImportCancelled: false,
+  pendingImportedCharacter: null,
   activeShortcut: null,
   abortController: null,
   marqueeRefreshTimer: null,
@@ -8755,12 +8756,12 @@ async function closeActiveModal() {
     state.charModalPendingThreadDeleteIds = [];
     state.charModalModel3d = null;
     state.charModalCache = {};
-    if (
-      state.characterModalImportCancelled &&
-      state.importedCharacterLorebookId
-    ) {
-      await db.lorebooks.delete(state.importedCharacterLorebookId);
-      state.importedCharacterLorebookId = null;
+    if (state.characterModalImportCancelled) {
+      if (state.importedCharacterLorebookId) {
+        await db.lorebooks.delete(state.importedCharacterLorebookId);
+        state.importedCharacterLorebookId = null;
+      }
+      state.pendingImportedCharacter = null;
     }
     state.characterModalImportCancelled = false;
   }
@@ -9690,11 +9691,23 @@ async function openCharacterModal(
   character = null,
   selectedCardLanguage = null,
   startDirty = false,
+  pendingImport = null,
 ) {
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
   state.characterModalImportCancelled = false;
+  if (pendingImport) {
+    character = pendingImport;
+    state.characterModalImportCancelled = true;
+    state.charModalDefinitions = normalizeCharacterDefinitions(character);
+    if (character.creatorNotes) {
+      state.charModalDefinitions[0].creatorNotes = character.creatorNotes;
+    }
+    if (character.sfx) {
+      state.charModalDefinitions[0].sfx = character.sfx;
+    }
+  }
   if (character?.id) {
     state.charModalDraftNamespace = `char-${character.id}`;
     state.charModalCache[character.id] = { ...character };
@@ -9718,7 +9731,9 @@ async function openCharacterModal(
     ];
   }
   renderCharAvatars();
-  state.charModalDefinitions = normalizeCharacterDefinitions(character);
+  if (!state.characterModalImportCancelled) {
+    state.charModalDefinitions = normalizeCharacterDefinitions(character);
+  }
   const cardLanguage =
     selectedCardLanguage || character?.selectedCardLanguage || "";
   const hasCardLanguage =
@@ -9991,7 +10006,37 @@ async function saveCharacterFromModal({ close = true } = {}) {
   }
 
   let savedCharacterId = null;
-  if (state.editingCharacterId) {
+  const isImport = state.pendingImportedCharacter != null;
+  if (isImport) {
+    const pendingChar = state.pendingImportedCharacter;
+    pendingChar.definitions = defs;
+    pendingChar.selectedCardLanguage = selectedCardLanguage;
+    pendingChar.oneTimeExtraPrompt = String(primaryDef?.oneTimeExtraPrompt || "").trim();
+    pendingChar.writingInstructions = String(primaryDef?.writingInstructions || "").trim();
+    pendingChar.writingInstructionId = String(primaryDef?.writingInstructionId || "");
+    pendingChar.initialMessagesRaw = String(primaryDef?.initialMessagesRaw || "");
+    pendingChar.initialMessages = Array.isArray(primaryDef?.initialMessages)
+      ? primaryDef.initialMessages
+      : [];
+    pendingChar.useMemory = document.getElementById("char-use-memory").checked;
+    pendingChar.usePostProcessing = document.getElementById("char-use-postprocess").checked;
+    pendingChar.autoTriggerAiFirstMessage = document.getElementById("char-auto-trigger-first-ai").checked;
+    pendingChar.autoTitleEnabled = document.getElementById("char-auto-title").checked;
+    pendingChar.autoTitleMinMessages = Number(document.getElementById("char-auto-title-min-messages").value) || 10;
+    pendingChar.personaPrefixEnabled = document.getElementById("char-persona-prefix").checked;
+    pendingChar.includeOocInCompletions = document.getElementById("char-include-ooc").checked;
+    pendingChar.personaInjectionPlacement = String(primaryDef?.personaInjectionPlacement || "end_system_prompt");
+    pendingChar.avatarScale = Number(document.getElementById("char-avatar-scale").value) || 1;
+    pendingChar.tags = Array.isArray(payload.tags) ? payload.tags : [];
+    pendingChar.model3d = state.charModalModel3d;
+    pendingChar.updatedAt = Date.now();
+    const newId = await db.characters.add(pendingChar);
+    savedCharacterId = Number(newId);
+    state.editingCharacterId = savedCharacterId;
+    state.pendingImportedCharacter = null;
+    state.characterModalImportCancelled = false;
+    showToast(t("characterCreated"), "success");
+  } else if (state.editingCharacterId) {
     savedCharacterId = Number(state.editingCharacterId);
     await db.characters.update(state.editingCharacterId, payload);
     if (
@@ -10018,7 +10063,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
       }
     }
     showToast(t("characterUpdated"), "success");
-  } else {
+  } else if (!isImport) {
     payload.createdAt = Date.now();
     const newId = await db.characters.add(payload);
     state.editingCharacterId = newId;
@@ -14878,12 +14923,12 @@ async function importCharacterFromFile(e) {
 
     applyCharacterSettingsDefaults(character);
 
+    state.pendingImportedCharacter = character;
     character.createdAt = Date.now();
-    const newId = await db.characters.add(character);
-    character.id = newId;
-    await renderCharacters();
+    delete character.id;
+    character.id = null;
     showToast(t("characterImported"), "success");
-    openCharacterModal(character, null, true);
+    openCharacterModal(null, null, true, character);
   } catch (err) {
     await openInfoDialog(t("importFailedTitle"), err.message);
   }
