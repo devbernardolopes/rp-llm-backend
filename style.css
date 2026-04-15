@@ -1734,6 +1734,7 @@ textarea {
 .character-name-tagline-wrap {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .character-tagline {
@@ -1751,6 +1752,7 @@ textarea {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 2px;
+  width: 100%;
 }
 
 .character-lang-flag {
