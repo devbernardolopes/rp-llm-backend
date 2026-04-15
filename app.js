@@ -8172,12 +8172,17 @@ function updateLeftPaneWidthVariable() {
   const pane = document.getElementById("left-pane");
   const shouldOffset =
     window.innerWidth >= MOBILE_BREAKPOINT &&
-    !(pane && pane.classList.contains("mobile-open"));
-  const width = shouldOffset && pane ? pane.getBoundingClientRect().width : 0;
-  shell.style.setProperty(
-    "--left-pane-width",
-    `${Math.max(0, Math.round(width))}px`,
-  );
+    !(pane && pane.classList.contains("mobile-open")) &&
+    !(pane && pane.classList.contains("collapsed"));
+  if (shouldOffset && pane) {
+    const width = pane.getBoundingClientRect().width;
+    shell.style.setProperty(
+      "--left-pane-width",
+      `${Math.max(0, Math.round(width))}px`,
+    );
+  } else if (!shouldOffset) {
+    shell.style.removeProperty("--left-pane-width");
+  }
 }
 
 function toggleMobilePane() {
