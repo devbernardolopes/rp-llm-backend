@@ -3780,6 +3780,10 @@ textarea {
   padding-bottom: 16px;
 }
 
+#settings-modal-body .form-field {
+  margin-bottom: 12px;
+}
+
 .settings-header-actions {
   display: flex;
   align-items: center;
