@@ -2869,6 +2869,10 @@ textarea {
   word-break: break-word;
 }
 
+.message-content.markdown-rendered {
+  white-space: normal;
+}
+
 .message-content :is(p, blockquote, ul, ol, pre):last-child {
   margin-bottom: 0;
 }

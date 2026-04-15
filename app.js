@@ -17684,6 +17684,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
 
   const content = document.createElement("div");
   content.className = "message-content";
+  content.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
   content.addEventListener("dblclick", () => {
     if (isOocMessage) return;
     const rowEl = content.closest(".chat-row");
@@ -17767,6 +17768,7 @@ function getAssistantStreamingStatusInfo(message) {
 
 function renderMessageContent(contentEl, message) {
   if (!contentEl || !message) return;
+  contentEl.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
   const status = String(message?.generationStatus || "").trim();
   if (status === "summarizing") {
     contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
