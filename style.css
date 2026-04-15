@@ -54,7 +54,6 @@ body {
   --left-pane-width: var(--pane-width);
   display: grid;
   grid-template-columns: var(--pane-width) 1fr;
-  grid-template-rows: 1fr;
   height: 100dvh;
   height: 100vh;
   min-height: 0;
@@ -66,9 +65,13 @@ body {
   grid-row: 1;
 }
 
-#app-shell > aside ~ :not(.mobile-pane-backdrop) {
+#app-shell > main,
+#app-shell > section {
   grid-column: 2;
-  grid-row: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 #app-shell.pane-collapsed {
@@ -179,6 +182,8 @@ body {
 #left-pane {
   display: flex;
   flex-direction: column;
+  grid-row: 1;
+  grid-column: 1;
   background: var(--panel);
   border-right: 1px solid var(--line);
   padding: 12px;
@@ -1000,11 +1005,7 @@ textarea {
 .view {
   display: none;
   min-height: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  overflow: hidden;
 }
 
 .view.active {
@@ -1013,9 +1014,6 @@ textarea {
   min-height: 0;
   overflow: auto;
   width: 100%;
-  height: 100%;
-  position: relative;
-  z-index: 1;
 }
 
 #main-view {
@@ -1202,6 +1200,8 @@ textarea {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  box-sizing: border-box;
 }
 
 .main-header {
