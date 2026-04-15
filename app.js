@@ -7006,7 +7006,11 @@ async function renderCharacters() {
 
     const langFlagsWrap = document.createElement("div");
     langFlagsWrap.className = "character-lang-flags";
+    const charIdStr = String(char.id);
+    const langFlagsScrollKey = `rp-char-flags-scroll-${charIdStr}`;
+    const langFlagsScrollData = JSON.parse(localStorage.getItem(langFlagsScrollKey) || "null");
     const definitions = resolved.definitions || [];
+    const langFlagsCount = definitions.length;
     const activeLang =
       resolved.activeLanguage || definitions[0]?.language || "en";
     card.dataset.activeCardLanguage = activeLang;
@@ -7039,6 +7043,21 @@ async function renderCharacters() {
         }
       });
       langFlagsWrap.appendChild(flag);
+    });
+
+    if (
+      langFlagsScrollData &&
+      langFlagsScrollData.count === langFlagsCount &&
+      langFlagsScrollData.scrollLeft > 0
+    ) {
+      window.requestAnimationFrame(() => {
+        langFlagsWrap.scrollLeft = langFlagsScrollData.scrollLeft;
+      });
+    }
+    langFlagsWrap.addEventListener("scroll", () => {
+      const currentCount = langFlagsWrap.querySelectorAll(".character-lang-flag").length;
+      const data = { count: currentCount, scrollLeft: langFlagsWrap.scrollLeft };
+      localStorage.setItem(langFlagsScrollKey, JSON.stringify(data));
     });
 
     const tags = (Array.isArray(char.tags) ? char.tags : [])
@@ -7094,6 +7113,24 @@ async function renderCharacters() {
         await renderCharacters();
       });
       tagsWrap.appendChild(chip);
+    });
+
+    const tagsScrollKey = `rp-char-tags-scroll-${charIdStr}`;
+    const tagsScrollData = JSON.parse(localStorage.getItem(tagsScrollKey) || "null");
+    const tagsCount = tags.length;
+    if (
+      tagsScrollData &&
+      tagsScrollData.count === tagsCount &&
+      tagsScrollData.scrollLeft > 0
+    ) {
+      window.requestAnimationFrame(() => {
+        tagsWrap.scrollLeft = tagsScrollData.scrollLeft;
+      });
+    }
+    tagsWrap.addEventListener("scroll", () => {
+      const currentCount = tagsWrap.querySelectorAll(".tag-chip").length;
+      const data = { count: currentCount, scrollLeft: tagsWrap.scrollLeft };
+      localStorage.setItem(tagsScrollKey, JSON.stringify(data));
     });
 
     const actions = document.createElement("div");
@@ -8551,6 +8588,14 @@ async function closeActiveModal() {
     }
   }
   if (closingId === "select-asset-modal") {
+    const parentModal = document.getElementById("character-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "character-modal";
+      return;
+    }
+  }
+  if (closingId === "select-lorebook-modal") {
     const parentModal = document.getElementById("character-modal");
     if (parentModal) {
       parentModal.classList.remove("hidden");
@@ -12974,8 +13019,11 @@ async function renderLorebookSelectorList(filter = "") {
     row.addEventListener("click", () => {
       const currentIds = getSelectedLorebookIds();
       const newIds = [...currentIds, Number(entry.id)];
+      setModalDirtyState("character-modal", true);
       renderCharacterLorebookList(newIds);
-      document.getElementById("select-lorebook-modal")?.classList.add("hidden");
+      const modal = document.getElementById("select-lorebook-modal");
+      modal?.classList.add("hidden");
+      state.activeModalId = "character-modal";
     });
 
     const info = document.createElement("div");
