@@ -1816,6 +1816,7 @@ textarea {
   font-size: 11px;
   padding: 3px 8px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .tag-chip.active-filter {

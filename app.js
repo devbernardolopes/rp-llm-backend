@@ -7079,29 +7079,6 @@ async function renderCharacters() {
       });
       tagsWrap.appendChild(chip);
     });
-    if (tags.length > 3) {
-      const more = document.createElement("button");
-      more.type = "button";
-      more.className = "tag-more-btn";
-      more.textContent = expanded ? t("less") : t("more");
-      more.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (expanded) state.expandedCharacterTagIds.delete(Number(char.id));
-        else state.expandedCharacterTagIds.add(Number(char.id));
-        const card = e.target.closest(".character-card");
-        if (card) {
-          const tagsDiv = card.querySelector(".character-tags");
-          if (tagsDiv) {
-            tagsDiv.classList.toggle("tags-expanded");
-          }
-          e.target.textContent = tagsDiv.classList.contains("tags-expanded")
-            ? t("less")
-            : t("more");
-        }
-      });
-      tagsWrap.appendChild(more);
-      if (expanded) tagsWrap.classList.add("tags-expanded");
-    }
 
     const actions = document.createElement("div");
     actions.className = "card-actions";
