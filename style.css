@@ -190,6 +190,26 @@ body {
   }
 }
 
+#app-shell.pane-collapsed > aside {
+  width: var(--pane-collapsed-width);
+}
+
+#left-pane {
+  display: flex;
+  flex-direction: column;
+  width: var(--left-pane-width);
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  padding: 12px;
+  gap: 12px;
+  min-width: 74px;
+  min-height: 0;
+  overflow: visible;
+  transition: width 0.2s ease, transform 0.2s ease;
+  position: relative;
+  z-index: 30;
+}
+
 #left-pane {
   display: flex;
   flex-direction: column;
@@ -207,7 +227,7 @@ body {
 }
 
 #left-pane.collapsed {
-  width: 74px;
+  width: var(--pane-collapsed-width);
 }
 
 #left-pane.mobile-open {
