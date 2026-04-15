@@ -6432,6 +6432,64 @@ async function renderShortcutsBar() {
       await applyShortcutEntry(entry);
     });
     btn.addEventListener("dblclick", () => applyShortcutEntry(entry, true));
+
+    let shortcutTooltip = null;
+    let shortcutTooltipTimeout = null;
+
+    btn.addEventListener("mouseenter", () => {
+      clearTimeout(shortcutTooltipTimeout);
+      if (shortcutTooltip) return;
+
+      shortcutTooltip = document.createElement("div");
+      shortcutTooltip.className = "info-panel";
+
+      let tooltipContent = entry.message;
+      if (state.settings.markdownEnabled) {
+        const md = getMarkdownParser();
+        if (md) {
+          const truncated = entry.message.length > 200
+            ? entry.message.slice(0, 200) + "..."
+            : entry.message;
+          shortcutTooltip.innerHTML = md.render(truncated);
+        } else {
+          shortcutTooltip.textContent = tooltipContent;
+        }
+      } else {
+        const truncated = entry.message.length > 200
+          ? entry.message.slice(0, 200) + "..."
+          : entry.message;
+        shortcutTooltip.textContent = truncated;
+      }
+
+      document.body.appendChild(shortcutTooltip);
+
+      const rect = btn.getBoundingClientRect();
+      const panelRect = shortcutTooltip.getBoundingClientRect();
+      let left = rect.left;
+      let top = rect.bottom + 8;
+
+      if (left + panelRect.width > window.innerWidth - 10) {
+        left = window.innerWidth - panelRect.width - 10;
+      }
+      if (top + panelRect.height > window.innerHeight - 10) {
+        top = rect.top - panelRect.height - 8;
+      }
+      if (left < 10) left = 10;
+      if (top < 10) top = 10;
+
+      shortcutTooltip.style.left = `${left}px`;
+      shortcutTooltip.style.top = `${top}px`;
+    });
+
+    btn.addEventListener("mouseleave", () => {
+      shortcutTooltipTimeout = setTimeout(() => {
+        if (shortcutTooltip && shortcutTooltip.parentNode) {
+          shortcutTooltip.parentNode.removeChild(shortcutTooltip);
+        }
+        shortcutTooltip = null;
+      }, 150);
+    });
+
     bar.appendChild(btn);
   });
 }
