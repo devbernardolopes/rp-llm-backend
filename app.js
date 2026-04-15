@@ -8715,6 +8715,7 @@ async function closeActiveModal() {
     }
     state.characterModalImportCancelled = false;
   }
+  closeInfoPanel();
   state.activeModalId = null;
   setModalDirtyState(closingId, false);
   updateDocumentTitleWithUnread();
