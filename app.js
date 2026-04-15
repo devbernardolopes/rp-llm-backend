@@ -8297,11 +8297,7 @@ function adjustModel3DPanelForPaneChange(deltaX) {
   panel.style.left = currentLeft + 'px';
 }
 
-function showMainView() {
-  if (window.innerWidth < MOBILE_BREAKPOINT) {
-    closeMobilePane();
-  }
-  clearChatViewBackground();
+function unloadChatView() {
   if (currentThread) {
     const log = document.getElementById("chat-log");
     if (log) {
@@ -8317,9 +8313,39 @@ function showMainView() {
       db.threads.update(currentThread.id, { draftInput: draftValue });
     }
   }
+  const log = document.getElementById("chat-log");
+  if (log) {
+    releaseAllChatRowResources(log);
+    log.innerHTML = "";
+  }
+  const input = document.getElementById("user-input");
+  if (input) input.value = "";
+  conversationHistory = [];
+  currentThread = null;
+  currentCharacter = null;
+  state.editingMessageIndex = null;
+  state.unreadNeedsUserScrollThreadId = null;
+  state.lastBotMessageId = null;
+  state.lastUserMessageId = null;
+  clearChatViewBackground();
+
+  const panel = document.getElementById('model3d-panel');
+  if (panel && !panel.classList.contains('hidden')) {
+    panel.classList.add('hidden');
+    panel.dataset.hidden = 'true';
+    if (window.disposeModel3D) {
+      window.disposeModel3D();
+    }
+  }
+}
+
+function showMainView() {
+  if (window.innerWidth < MOBILE_BREAKPOINT) {
+    closeMobilePane();
+  }
+  unloadChatView();
   window.stopTtsPlayback();
   stopAllSfx();
-  state.unreadNeedsUserScrollThreadId = null;
   document.getElementById("main-view").classList.add("active");
   document.getElementById("chat-view").classList.remove("active");
   const mainToggle = document.getElementById("mobile-pane-toggle");
