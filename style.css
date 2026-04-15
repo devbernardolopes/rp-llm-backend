@@ -2359,6 +2359,11 @@ textarea {
   width: 100%;
 }
 
+.model-select-wrapper.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 #model-select {
   position: absolute;
   opacity: 0;

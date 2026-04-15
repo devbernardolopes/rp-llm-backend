@@ -4472,19 +4472,19 @@ async function setupSettingsControls() {
   modelPricingFilter?.addEventListener("change", () => {
     state.settings.modelPricingFilter = modelPricingFilter.value;
     saveSettings();
-    populateSettingsModels({ force: true }).catch(() => {});
+    renderSettingsModelOptions();
   });
 
   modelModalityFilter?.addEventListener("change", () => {
     state.settings.modelModalityFilter = modelModalityFilter.value;
     saveSettings();
-    populateSettingsModels({ force: true }).catch(() => {});
+    renderSettingsModelOptions();
   });
 
   modelSortOrder?.addEventListener("change", () => {
     state.settings.modelSortOrder = modelSortOrder.value;
     saveSettings();
-    populateSettingsModels({ force: true }).catch(() => {});
+    renderSettingsModelOptions();
   });
 
   modelRefreshBtn?.addEventListener("click", () => {
@@ -20528,12 +20528,14 @@ async function populateSettingsModels(options = {}) {
   const sortOrderSelect = document.getElementById("model-sort-order");
   const refreshBtn = document.getElementById("model-refresh-btn");
   const loadingStatus = document.getElementById("model-loading-status");
+  const modelSelectWrapper = document.getElementById("model-select-wrapper");
 
   if (pricingFilter) pricingFilter.disabled = true;
   if (modalityFilter) modalityFilter.disabled = true;
   if (sortOrderSelect) sortOrderSelect.disabled = true;
   if (refreshBtn) refreshBtn.disabled = true;
   if (loadingStatus) loadingStatus.classList.remove("hidden");
+  if (modelSelectWrapper) modelSelectWrapper.classList.add("loading");
 
   modelSelect.innerHTML = "";
   const loadingOpt = document.createElement("option");
@@ -20611,6 +20613,7 @@ async function populateSettingsModels(options = {}) {
       );
     }
   } finally {
+    const wrapper = document.getElementById("model-select-wrapper");
     if (requestId === state.modelLoad.requestId) {
       state.modelLoad.controller = null;
       modelSelect.disabled = false;
@@ -20619,6 +20622,7 @@ async function populateSettingsModels(options = {}) {
       if (sortOrderSelect) sortOrderSelect.disabled = false;
       if (refreshBtn) refreshBtn.disabled = false;
       if (loadingStatus) loadingStatus.classList.add("hidden");
+      if (wrapper) wrapper.classList.remove("loading");
       state.modelLoadCooldown.provider = provider;
       state.modelLoadCooldown.timestamp = Date.now();
     }
@@ -21534,6 +21538,14 @@ function updateProviderVisibility() {
   }
   if (modelFilterRow) {
     modelFilterRow.classList.remove("hidden");
+    const pricingField = document.getElementById("model-pricing-field");
+    const modalityField = document.getElementById("model-modality-field");
+    if (pricingField) {
+      pricingField.classList.toggle("hidden", provider !== "openrouter");
+    }
+    if (modalityField) {
+      modalityField.classList.toggle("hidden", provider !== "openrouter");
+    }
     updateModelSortOrderOptions();
   }
 }

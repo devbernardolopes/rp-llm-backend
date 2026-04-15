@@ -1004,7 +1004,7 @@
             </div>
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="modelLabel">Model</span><button type="button" class="info-btn" data-info="model">i</button></span>
-              <div class="model-select-wrapper">
+              <div class="model-select-wrapper" id="model-select-wrapper">
                 <select id="model-select"></select>
                 <div id="model-select-display" class="model-select-display">
                   Loading...
@@ -1027,7 +1027,7 @@
               <div id="model-loading-status" class="muted hidden">
                 <span data-i18n="loadingModels">Loading models...</span>
               </div>
-              <div class="form-field">
+              <div class="form-field" id="model-pricing-field">
                 <span data-i18n="pricingLabel">Pricing</span>
                 <select id="model-pricing-filter">
                   <option value="all" data-i18n="all">All</option>
@@ -1035,7 +1035,7 @@
                   <option value="paid" data-i18n="paid">Paid</option>
                 </select>
               </div>
-              <div class="form-field">
+              <div class="form-field" id="model-modality-field">
                 <span data-i18n="modalityLabel">Modality</span>
                 <select id="model-modality-filter">
                   <option value="text-only" data-i18n="textToText">
