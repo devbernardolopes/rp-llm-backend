@@ -9005,11 +9005,13 @@ function setCharacterModalTab(tab = "lang") {
       ? "config"
       : tab === "tags"
         ? "tags"
-        : tab === "sfx"
-          ? "sfx"
-          : tab === "model3d"
-            ? "model3d"
-            : "lang";
+        : tab === "notes"
+          ? "notes"
+          : tab === "sfx"
+            ? "sfx"
+            : tab === "model3d"
+              ? "model3d"
+              : "lang";
   state.charModalActiveTab = normalized;
   const showLang = normalized === "lang";
   const showConfig = normalized === "config";
