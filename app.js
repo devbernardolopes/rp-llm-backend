@@ -5134,7 +5134,7 @@ async function setupSettingsControls() {
     });
   }
   if (autoTitleProvider) {
-    autoTitleProvider.addEventListener("change", () => {
+    autoTitleProvider.addEventListener("change", async () => {
       const oldProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
       const newProvider = autoTitleProvider.value;
       if (oldProvider !== newProvider) {
@@ -5147,7 +5147,10 @@ async function setupSettingsControls() {
       }
       state.settings.autoTitleProvider = newProvider;
       saveSettings();
-      populateAutoTitleSummaryModels().catch(() => {});
+
+      try {
+        await populateAutoTitleSummaryModels();
+      } catch {}
     });
   }
   if (autoTitleModel) {
@@ -5172,7 +5175,7 @@ async function setupSettingsControls() {
     });
   }
   if (summaryProvider) {
-    summaryProvider.addEventListener("change", () => {
+    summaryProvider.addEventListener("change", async () => {
       const oldProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
       const newProvider = summaryProvider.value;
       if (oldProvider !== newProvider) {
@@ -5185,7 +5188,10 @@ async function setupSettingsControls() {
       }
       state.settings.summaryProvider = newProvider;
       saveSettings();
-      populateAutoTitleSummaryModels().catch(() => {});
+
+      try {
+        await populateAutoTitleSummaryModels();
+      } catch {}
     });
   }
   if (summaryModel) {
@@ -20440,6 +20446,15 @@ async function populateAutoTitleSummaryModels() {
 
   renderModelSelectOptions(autoTitleModel, autoTitleCatalog, autoTitleSelectedModel);
   renderModelSelectOptions(summaryModel, summaryCatalog, summarySelectedModel);
+
+  if (autoTitleSelectedModel && state.settings.autoTitleModel !== autoTitleSelectedModel) {
+    state.settings.autoTitleModel = autoTitleSelectedModel;
+    saveSettings();
+  }
+  if (summarySelectedModel && state.settings.summaryModel !== summarySelectedModel) {
+    state.settings.summaryModel = summarySelectedModel;
+    saveSettings();
+  }
 }
 
 function getBestModelForProvider(provider, currentModel, catalog, lastModels) {
