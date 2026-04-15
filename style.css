@@ -1856,6 +1856,12 @@ textarea {
   padding-bottom: 2px;
 }
 
+@media (min-width: 601px) {
+  .character-tags {
+    scrollbar-width: auto;
+  }
+}
+
 .tag-chip {
   appearance: none;
   border: 1px solid #3a4a68;
