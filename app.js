@@ -14338,8 +14338,6 @@ async function exportCharacter(characterId) {
   }
 
   delete processedCharacter.threadCount;
-  delete processedCharacter.avatar;
-  delete processedCharacter.avatars;
 
   const globalSfx = [];
   const globalCreatorNotes = [];
