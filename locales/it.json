@@ -765,5 +765,7 @@
   "searchLorebooksPlaceholder": "Cerca lorebooks...",
   "noLorebooksAdded": "Nessun lorebook aggiunto.",
   "noLorebooksAvailable": "Nessun lorebook disponibile da aggiungere.",
-  "removeLorebook": "Rimuovi lorebook"
+  "removeLorebook": "Rimuovi lorebook",
+  "removeLorebookTitle": "Rimuovi Lorebook",
+  "confirmRemoveLorebook": "Sei sicuro di voler rimuovere \"{name}\" da questo personaggio?"
 }

@@ -12975,7 +12975,7 @@ async function renderLorebookSelectorList(filter = "") {
       const currentIds = getSelectedLorebookIds();
       const newIds = [...currentIds, Number(entry.id)];
       renderCharacterLorebookList(newIds);
-      closeModal("select-lorebook-modal");
+      document.getElementById("select-lorebook-modal")?.classList.add("hidden");
     });
 
     const info = document.createElement("div");
@@ -13717,9 +13717,15 @@ async function renderCharacterLorebookList(selectedIds = []) {
     removeBtn.className = "icon-btn danger-icon-btn";
     removeBtn.title = t("removeLorebook");
     removeBtn.innerHTML = "&times;";
-    removeBtn.addEventListener("click", () => {
+    removeBtn.addEventListener("click", async () => {
+      const lorebookName = entry.name || "Untitled";
+      const message = t("confirmRemoveLorebook").replace("{name}", lorebookName);
+      const ok = await openConfirmDialog(t("removeLorebookTitle"), message);
+      if (!ok) return;
       setModalDirtyState("character-modal", true);
-      renderCharacterLorebookList(getSelectedLorebookIds());
+      const currentIds = getSelectedLorebookIds();
+      const newIds = currentIds.filter((id) => id !== Number(entry.id));
+      renderCharacterLorebookList(newIds);
     });
 
     row.append(info, removeBtn);

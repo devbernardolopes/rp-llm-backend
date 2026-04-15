@@ -770,5 +770,7 @@
   "searchLorebooksPlaceholder": "Search lorebooks...",
   "noLorebooksAdded": "No lorebooks added.",
   "noLorebooksAvailable": "No lorebooks available to add.",
-  "removeLorebook": "Remove lorebook"
+  "removeLorebook": "Remove lorebook",
+  "removeLorebookTitle": "Remove Lorebook",
+  "confirmRemoveLorebook": "Are you sure you want to remove \"{name}\" from this character?"
 }
