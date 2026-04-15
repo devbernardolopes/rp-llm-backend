@@ -1857,6 +1857,17 @@ textarea {
 @media (min-width: 601px) {
   .character-tags {
     scrollbar-width: auto;
+    -ms-overflow-style: none;
+  }
+  .character-tags::-webkit-scrollbar {
+    display: none;
+  }
+  .character-tags:hover {
+    -ms-overflow-style: auto;
+    scrollbar-width: auto;
+  }
+  .character-tags:hover::-webkit-scrollbar {
+    display: block;
   }
 }
 
