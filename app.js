@@ -8787,6 +8787,9 @@ async function handleModalSaveAction(modalId) {
   if (modalId === "lore-editor-modal") {
     return saveLorebookFromEditor({ close: false });
   }
+  if (modalId === "writing-instruction-editor-modal") {
+    return saveWritingInstruction({ close: false });
+  }
   if (modalId === "writing-instructions-modal") {
     return saveWritingInstruction();
   }
