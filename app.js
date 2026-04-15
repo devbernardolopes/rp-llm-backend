@@ -7240,6 +7240,20 @@ async function renderCharacters() {
     newChatWrap.className = "new-chat-btn-wrap";
     newChatBtn.classList.remove("secondary-btn");
     newChatBtn.classList.add("primary-btn");
+
+    card.addEventListener("mouseenter", () => {
+      newChatBtn.classList.add("card-hover-highlight");
+    });
+    card.addEventListener("mouseleave", () => {
+      newChatBtn.classList.remove("card-hover-highlight");
+    });
+    card.addEventListener("focusin", () => {
+      newChatBtn.classList.add("card-hover-highlight");
+    });
+    card.addEventListener("focusout", () => {
+      newChatBtn.classList.remove("card-hover-highlight");
+    });
+
     newChatWrap.appendChild(newChatBtn);
     card.appendChild(newChatWrap);
     grid.appendChild(card);
