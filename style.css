@@ -3416,6 +3416,13 @@ textarea {
   flex-direction: column;
   gap: 6px;
   padding: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.prompt-history-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .prompt-history-item {
