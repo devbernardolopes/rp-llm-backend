@@ -6493,7 +6493,7 @@ async function renderShortcutsBar() {
           shortcutTooltip.parentNode.removeChild(shortcutTooltip);
         }
         shortcutTooltip = null;
-      }, 150);
+      }, 50);
     });
 
     bar.appendChild(btn);
