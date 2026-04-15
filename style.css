@@ -65,6 +65,10 @@ body {
   --left-pane-width: var(--pane-collapsed-width);
 }
 
+#app-shell:not(.pane-collapsed) {
+  --left-pane-width: var(--pane-width);
+}
+
 #app-shell > aside {
   flex-shrink: 0;
   transition: width 0.2s ease;
