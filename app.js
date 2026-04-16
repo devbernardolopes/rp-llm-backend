@@ -2365,6 +2365,28 @@ function setupModalTextareas(root = document) {
   });
 }
 
+function refreshTextareaCollapseLabels() {
+  document.querySelectorAll(".textarea-collapse").forEach((wrapper) => {
+    const textarea = wrapper.querySelector("textarea");
+    if (!textarea) return;
+    const entry = textareaCollapseStates.get(textarea);
+    if (!entry?.header) return;
+    const labelInfo = captureTextareaLabel(textarea);
+    const labelText =
+      labelInfo?.text ||
+      textarea.getAttribute("placeholder") ||
+      textarea.getAttribute("title") ||
+      "Input";
+    const titleSpan = entry.header.querySelector("span");
+    if (titleSpan) {
+      titleSpan.textContent = labelText;
+    }
+    if (labelInfo?.element) {
+      labelInfo.element.style.display = "none";
+    }
+  });
+}
+
 function resetModalTextareaCollapseStates(root = document) {
   if (!root) return;
   const modal = root.matches?.(".modal") ? root : root.closest?.(".modal");
@@ -5278,6 +5300,8 @@ async function setupSettingsControls() {
       await renderShortcutsBar();
       await renderCharacters();
       updateModelPill();
+      setupModalTextareas();
+      refreshTextareaCollapseLabels();
     });
   }
   if (sttLanguageSelect) {
