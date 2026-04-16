@@ -15193,7 +15193,11 @@ function renderExportSelectSections(data) {
       html += ` <span class="export-section-count">(${count})</span>`;
     }
     if (section.isSingle) {
-      html += `<label class="export-section-select-all"><input type="checkbox" data-select-all="${section.id}" checked> ${section.id === "settings" ? t("exportAllSettings") : t("selectAll")}</label>`;
+      if (section.id === "settings") {
+        html += `<label class="export-section-select-all"><input type="checkbox" data-select-check="${section.id}" checked> ${t("exportAllSettings")}</label>`;
+      } else {
+        html += `<label class="export-section-select-all"><input type="checkbox" data-select-check="${section.id}" checked> ${t("exportSectionShortcuts")}</label>`;
+      }
     } else if (section.items.length > 1) {
       html += `<button type="button" class="export-section-select-all" data-select-all="${section.id}">${t("selectUnselectAll")}</button>`;
     }
@@ -15229,12 +15233,26 @@ function renderExportSelectSections(data) {
     cb.addEventListener("change", handleExportSectionChange);
   });
 
+  body.querySelectorAll("input[type='checkbox'][data-select-check]").forEach((cb) => {
+    cb.addEventListener("change", (e) => {
+      const section = e.target.dataset.selectCheck;
+      const content = e.target.closest(".export-section").querySelector(`.export-section-content input[data-section="${section}"]`);
+      if (content) {
+        content.checked = e.target.checked;
+      }
+    });
+  });
+
   body.querySelectorAll("[data-select-all]").forEach((el) => {
-    el.addEventListener("click", handleExportSelectAll);
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      handleExportSelectAll(e);
+    });
   });
 
   body.querySelectorAll(".export-section-header.collapsible").forEach((legend) => {
     legend.addEventListener("click", (e) => {
+      if (e.target.closest(".export-section-select-all")) return;
       const fieldset = legend.closest(".export-section");
       const content = fieldset.querySelector(".export-section-content");
       const toggle = legend.querySelector(".export-section-toggle");
@@ -15556,7 +15574,8 @@ function validateDatabaseBackupPayload(payload) {
   if (!payload || typeof payload !== "object") {
     throw new Error("Invalid backup payload.");
   }
-  if (String(payload.schema || "").trim() !== "rp-db-backup-v1") {
+  const schema = String(payload.schema || "").trim();
+  if (schema !== "rp-db-backup-v1" && schema !== "rp-db-backup-v1-selective") {
     throw new Error("Unsupported backup schema.");
   }
   if (!payload.tables || typeof payload.tables !== "object") {
