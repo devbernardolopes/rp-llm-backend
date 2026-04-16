@@ -1018,7 +1018,7 @@ function setupEvents() {
     .addEventListener("change", importCharacterFromFile);
   document
     .getElementById("export-db-btn")
-    .addEventListener("click", exportDatabaseBackup);
+    .addEventListener("click", openExportSelectModal);
   document
     .getElementById("import-db-btn")
     .addEventListener("click", () =>
@@ -1027,6 +1027,12 @@ function setupEvents() {
   document
     .getElementById("import-db-input")
     .addEventListener("change", importDatabaseBackupFromFile);
+  document
+    .getElementById("export-select-cancel")
+    ?.addEventListener("click", closeActiveModal);
+  document
+    .getElementById("export-select-export")
+    ?.addEventListener("click", exportSelectedData);
   document
     .getElementById("settings-export-btn")
     .addEventListener("click", exportSettings);
@@ -15090,6 +15096,428 @@ async function buildDatabaseBackupPayload() {
   }
   return {
     schema: "rp-db-backup-v1",
+    exportedAt: new Date().toISOString(),
+    dbName: db.name,
+    dbVersion: Number(db.verno || 0),
+    tables,
+    localStorage: localState,
+  };
+}
+
+async function openExportSelectModal() {
+  closeActiveModal();
+  const modal = document.getElementById("export-select-modal");
+  if (!modal) return;
+  state.activeModalId = "export-select-modal";
+  modal.classList.remove("hidden");
+
+  const exportBody = document.getElementById("export-select-body");
+  if (!exportBody) return;
+  exportBody.innerHTML = '<p class="muted">Loading...</p>';
+
+  const [
+    characters,
+    threads,
+    personas,
+    lorebooks,
+    writingInstructions,
+    assets,
+  ] = await Promise.all([
+    db.characters.toArray(),
+    db.threads.toArray(),
+    db.personas.toArray(),
+    db.lorebooks.toArray(),
+    db.writingInstructions.toArray(),
+    db.assets.toArray(),
+  ]);
+
+  const charMap = new Map(characters.map((c) => [c.id, c]));
+  const tagSet = new Set();
+  characters.forEach((c) => {
+    (c.tags || []).forEach((t) => tagSet.add(t));
+  });
+  const allTags = Array.from(tagSet).sort();
+
+  renderExportSelectSections({
+    characters,
+    threads,
+    personas,
+    lorebooks,
+    allTags,
+    writingInstructions,
+    assets,
+    charMap,
+  });
+}
+
+function renderExportSelectSections(data) {
+  const { characters, threads, personas, lorebooks, allTags, writingInstructions, assets, charMap } = data;
+  const body = document.getElementById("export-select-body");
+  if (!body) return;
+
+  const charIdSet = new Set(characters.map((c) => c.id));
+  const threadCharMap = new Map();
+  threads.forEach((t) => {
+    const charId = Number(t.characterId);
+    if (!threadCharMap.has(charId)) threadCharMap.set(charId, []);
+    threadCharMap.get(charId).push(t);
+  });
+
+  let html = "";
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionSettings")}</legend>`;
+  html += `<label class="export-checkbox"><input type="checkbox" data-section="settings" checked> ${t("exportAllSettings")}</label>`;
+  html += `</fieldset>`;
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionCharacters")}</legend>`;
+  characters.forEach((char) => {
+    const name = htmlEscape(char.name || t("unnamedCharacter") || "Unnamed");
+    const id = Number(char.id);
+    html += `<label class="export-checkbox"><input type="checkbox" data-section="characters" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
+  });
+  html += `</fieldset>`;
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionThreads")}</legend>`;
+  if (threads.length === 0) {
+    html += `<p class="muted">${t("noThreads")}</p>`;
+  } else {
+    threads.forEach((thread) => {
+      const id = Number(thread.id);
+      const charId = Number(thread.characterId);
+      const char = charMap.get(charId);
+      const charName = char ? htmlEscape(char.name) : t("deletedCharacter");
+      const title = htmlEscape(thread.title || t("untitledThread") || "Untitled");
+      const disabled = charIdSet.has(charId) ? "" : ' disabled';
+      const checked = charIdSet.has(charId) ? " checked" : "";
+      html += `<label class="export-checkbox"><input type="checkbox" data-section="threads" data-id="${id}" data-char-id="${charId}"${checked}${disabled}> ${title} <span class="muted">(${charName})</span></label>`;
+    });
+  }
+  html += `</fieldset>`;
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionPersonas")}</legend>`;
+  personas.forEach((persona) => {
+    const name = htmlEscape(persona.name || t("unnamedPersona") || "Unnamed");
+    const id = Number(persona.id);
+    html += `<label class="export-checkbox"><input type="checkbox" data-section="personas" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
+  });
+  html += `</fieldset>`;
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionLorebooks")}</legend>`;
+  lorebooks.forEach((lorebook) => {
+    const name = htmlEscape(lorebook.name || t("unnamedLorebook") || "Unnamed");
+    const id = Number(lorebook.id);
+    html += `<label class="export-checkbox"><input type="checkbox" data-section="lorebooks" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
+  });
+  html += `</fieldset>`;
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionShortcuts")}</legend>`;
+  html += `<label class="export-checkbox"><input type="checkbox" data-section="shortcuts" checked> ${t("exportSectionShortcuts")}</label>`;
+  html += `</fieldset>`;
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionTags")}</legend>`;
+  allTags.forEach((tag) => {
+    const tagEsc = htmlEscape(tag);
+    const anyCharHasTag = characters.some((c) => (c.tags || []).includes(tag));
+    html += `<label class="export-checkbox"><input type="checkbox" data-section="tags" data-tag="${tagEsc}" ${anyCharHasTag ? "checked" : "disabled"}> ${tagEsc}</label>`;
+  });
+  html += `</fieldset>`;
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionWritingInstructions")}</legend>`;
+  writingInstructions.forEach((wi) => {
+    const name = htmlEscape(wi.name || t("unnamedWritingInstruction") || "Unnamed");
+    const id = Number(wi.id);
+    html += `<label class="export-checkbox"><input type="checkbox" data-section="writingInstructions" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
+  });
+  html += `</fieldset>`;
+
+  html += `<fieldset class="export-section"><legend>${t("exportSectionAssets")}</legend>`;
+  assets.forEach((asset) => {
+    const name = htmlEscape(asset.name || t("unnamedAsset") || "Unnamed");
+    const id = Number(asset.id);
+    const type = asset.type || "unknown";
+    html += `<label class="export-checkbox"><input type="checkbox" data-section="assets" data-id="${id}" checked> ${name} <span class="muted">(${type})</span></label>`;
+  });
+  html += `</fieldset>`;
+
+  body.innerHTML = html;
+
+  body.querySelectorAll("input[type='checkbox'][data-section]").forEach((cb) => {
+    cb.addEventListener("change", handleExportSectionChange);
+  });
+}
+
+function handleExportSectionChange(e) {
+  const target = e.target;
+  const section = target.dataset.section;
+  const id = Number(target.dataset.id);
+  const charId = Number(target.dataset.charId);
+  const tag = target.dataset.tag;
+
+  const body = document.getElementById("export-select-body");
+  if (!body) return;
+
+  if (section === "characters") {
+    const charCheckboxes = body.querySelectorAll("input[data-section='characters']");
+    const selectedCharIds = new Set();
+    charCheckboxes.forEach((cb) => {
+      if (cb.checked) selectedCharIds.add(Number(cb.dataset.id));
+    });
+
+    const threadCheckboxes = body.querySelectorAll("input[data-section='threads']");
+    threadCheckboxes.forEach((cb) => {
+      const cbCharId = Number(cb.dataset.charId);
+      if (selectedCharIds.has(cbCharId)) {
+        cb.disabled = false;
+        cb.parentElement.classList.remove("disabled");
+      } else {
+        cb.checked = false;
+        cb.disabled = true;
+        cb.parentElement.classList.add("disabled");
+      }
+    });
+  }
+}
+
+function getExportSelections() {
+  const body = document.getElementById("export-select-body");
+  if (!body) return null;
+
+  const selections = {
+    settings: false,
+    characters: [],
+    threads: [],
+    personas: [],
+    lorebooks: [],
+    shortcuts: false,
+    tags: [],
+    writingInstructions: [],
+    assets: [],
+  };
+
+  body.querySelectorAll("input[data-section='settings']").forEach((cb) => {
+    if (cb.checked) selections.settings = true;
+  });
+
+  body.querySelectorAll("input[data-section='characters']:checked").forEach((cb) => {
+    selections.characters.push(Number(cb.dataset.id));
+  });
+
+  body.querySelectorAll("input[data-section='threads']:checked").forEach((cb) => {
+    selections.threads.push(Number(cb.dataset.id));
+  });
+
+  body.querySelectorAll("input[data-section='personas']:checked").forEach((cb) => {
+    selections.personas.push(Number(cb.dataset.id));
+  });
+
+  body.querySelectorAll("input[data-section='lorebooks']:checked").forEach((cb) => {
+    selections.lorebooks.push(Number(cb.dataset.id));
+  });
+
+  body.querySelectorAll("input[data-section='shortcuts']:checked").forEach((cb) => {
+    if (cb.checked) selections.shortcuts = true;
+  });
+
+  body.querySelectorAll("input[data-section='tags']:not(:disabled)").forEach((cb) => {
+    if (cb.checked) selections.tags.push(cb.dataset.tag);
+  });
+
+  body.querySelectorAll("input[data-section='writingInstructions']:checked").forEach((cb) => {
+    selections.writingInstructions.push(Number(cb.dataset.id));
+  });
+
+  body.querySelectorAll("input[data-section='assets']:checked").forEach((cb) => {
+    selections.assets.push(Number(cb.dataset.id));
+  });
+
+  return selections;
+}
+
+async function exportSelectedData() {
+  const selections = getExportSelections();
+  if (!selections) return;
+
+  const hasSelection =
+    selections.settings ||
+    selections.characters.length > 0 ||
+    selections.threads.length > 0 ||
+    selections.personas.length > 0 ||
+    selections.lorebooks.length > 0 ||
+    selections.shortcuts ||
+    selections.tags.length > 0 ||
+    selections.writingInstructions.length > 0 ||
+    selections.assets.length > 0;
+
+  if (!hasSelection) {
+    showToast(t("exportSelectAtLeastOne"), "error");
+    return;
+  }
+
+  try {
+    const payload = await buildSelectiveExportPayload(selections);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+
+    if ("showSaveFilePicker" in window) {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `rp_llm_backend_backup_${Date.now()}.json`,
+        types: [
+          {
+            description: "JSON Files",
+            accept: { "application/json": [".json"] },
+          },
+        ],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } else {
+      const safeDate = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .replace("T", "_")
+        .replace("Z", "");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `rp_llm_backend_backup_${safeDate}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }
+
+    closeActiveModal();
+    showToast(t("databaseExported"), "success");
+  } catch (err) {
+    if (err.name !== "AbortError") {
+      showToast(
+        tf("databaseExportFailed", { error: err.message || t("unknownError") }),
+        "error",
+      );
+    }
+  }
+}
+
+async function buildSelectiveExportPayload(selections) {
+  const tables = {};
+  const charIdSet = new Set(selections.characters);
+
+  if (charIdSet.size > 0) {
+    const chars = await db.characters.where("id").anyOf(selections.characters).toArray();
+    tables.characters = await Promise.all(
+      chars.map(async (char) => {
+        const processed = { ...char };
+        if (Array.isArray(processed.avatars)) {
+          processed.avatars = await Promise.all(
+            processed.avatars.map(async (avatar) => {
+              if (avatar.data instanceof Blob) {
+                const base64 = await blobToBase64(avatar.data);
+                return { ...avatar, data: base64 };
+              }
+              return avatar;
+            })
+          );
+        }
+        if (processed.avatar instanceof Blob) {
+          processed.avatar = await blobToBase64(processed.avatar);
+        }
+        if (Array.isArray(processed.definitions)) {
+          for (const def of processed.definitions) {
+            if (def.avatar instanceof Blob) {
+              def.avatar = await blobToBase64(def.avatar);
+            }
+            if (Array.isArray(def.avatars)) {
+              def.avatars = await Promise.all(
+                def.avatars.map(async (avatar) => {
+                  if (avatar.data instanceof Blob) {
+                    const base64 = await blobToBase64(avatar.data);
+                    return { ...avatar, data: base64 };
+                  }
+                  return avatar;
+                })
+              );
+            }
+          }
+        }
+        if (selections.tags.length > 0) {
+          processed.tags = (processed.tags || []).filter((t) =>
+            selections.tags.includes(t)
+          );
+        }
+        return processed;
+      })
+    );
+  }
+
+  if (selections.threads.length > 0) {
+    tables.threads = await db.threads
+      .where("id")
+      .anyOf(selections.threads)
+      .toArray();
+  }
+
+  if (selections.personas.length > 0) {
+    const personas = await db.personas
+      .where("id")
+      .anyOf(selections.personas)
+      .toArray();
+    tables.personas = await Promise.all(
+      personas.map(async (persona) => {
+        const processed = { ...persona };
+        if (processed.avatar instanceof Blob) {
+          processed.avatar = await blobToBase64(processed.avatar);
+        }
+        return processed;
+      })
+    );
+  }
+
+  if (selections.lorebooks.length > 0) {
+    tables.lorebooks = await db.lorebooks
+      .where("id")
+      .anyOf(selections.lorebooks)
+      .toArray();
+  }
+
+  if (selections.writingInstructions.length > 0) {
+    tables.writingInstructions = await db.writingInstructions
+      .where("id")
+      .anyOf(selections.writingInstructions)
+      .toArray();
+  }
+
+  if (selections.assets.length > 0) {
+    const assets = await db.assets
+      .where("id")
+      .anyOf(selections.assets)
+      .toArray();
+    tables.assets = await Promise.all(
+      assets.map(async (asset) => {
+        if (asset.data instanceof Blob) {
+          const base64 = await blobToBase64(asset.data);
+          return { ...asset, data: base64 };
+        }
+        return asset;
+      })
+    );
+  }
+
+  const localState = {};
+  if (selections.settings) {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith("rp-")) continue;
+      if (!selections.shortcuts && key === "rp-shortcuts") continue;
+      localState[key] = localStorage.getItem(key);
+    }
+  } else if (selections.shortcuts) {
+    const shortcutsKey = "rp-shortcuts";
+    localState[shortcutsKey] = localStorage.getItem(shortcutsKey);
+  }
+
+  return {
+    schema: "rp-db-backup-v1-selective",
     exportedAt: new Date().toISOString(),
     dbName: db.name,
     dbVersion: Number(db.verno || 0),
