@@ -15165,93 +15165,87 @@ function renderExportSelectSections(data) {
   if (!body) return;
 
   const charIdSet = new Set(characters.map((c) => c.id));
-  const threadCharMap = new Map();
-  threads.forEach((t) => {
-    const charId = Number(t.characterId);
-    if (!threadCharMap.has(charId)) threadCharMap.set(charId, []);
-    threadCharMap.get(charId).push(t);
-  });
+
+  const sections = [
+    { id: "settings", title: t("exportSectionSettings"), items: [], isSingle: true },
+    { id: "characters", title: t("exportSectionCharacters"), items: characters.map((c) => ({ id: c.id, name: c.name || t("unnamedCharacter"), label: `${escapeHtml(c.name || t("unnamedCharacter"))} <span class="muted">#${c.id}</span>` })) },
+    { id: "threads", title: t("exportSectionThreads"), items: threads.map((t) => ({ id: t.id, charId: t.characterId, name: t.title, charName: charMap.get(t.characterId)?.name, label: `${escapeHtml(t.title || t("untitledThread"))} <span class="muted">(${charMap.get(t.characterId)?.name ? escapeHtml(charMap.get(t.characterId).name) : t("deletedCharacter")})</span>` })) },
+    { id: "personas", title: t("exportSectionPersonas"), items: personas.map((p) => ({ id: p.id, name: p.name, label: `${escapeHtml(p.name || t("unnamedPersona"))} <span class="muted">#${p.id}</span>` })) },
+    { id: "lorebooks", title: t("exportSectionLorebooks"), items: lorebooks.map((l) => ({ id: l.id, name: l.name, label: `${escapeHtml(l.name || t("unnamedLorebook"))} <span class="muted">#${l.id}</span>` })) },
+    { id: "shortcuts", title: t("exportSectionShortcuts"), items: [], isSingle: true },
+    { id: "tags", title: t("exportSectionTags"), items: allTags.map((tag) => ({ tag, name: tag, label: tag, anyCharHas: characters.some((c) => (c.tags || []).includes(tag)) })) },
+    { id: "writingInstructions", title: t("exportSectionWritingInstructions"), items: writingInstructions.map((w) => ({ id: w.id, name: w.name, label: `${escapeHtml(w.name || t("unnamedWritingInstruction"))} <span class="muted">#${w.id}</span>` })) },
+    { id: "assets", title: t("exportSectionAssets"), items: assets.map((a) => ({ id: a.id, name: a.name, type: a.type, label: `${escapeHtml(a.name || t("unnamedAsset"))} <span class="muted">(${a.type || "unknown"})</span>` })) },
+  ];
 
   let html = "";
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionSettings")}</legend>`;
-  html += `<label class="export-checkbox"><input type="checkbox" data-section="settings" checked> ${t("exportAllSettings")}</label>`;
-  html += `</fieldset>`;
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionCharacters")}</legend>`;
-  characters.forEach((char) => {
-    const name = escapeHtml(char.name || t("unnamedCharacter") || "Unnamed");
-    const id = Number(char.id);
-    html += `<label class="export-checkbox"><input type="checkbox" data-section="characters" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
+  sections.forEach((section, idx) => {
+    const collapsible = !section.isSingle && section.items.length > 0;
+    const defaultCollapsed = idx >= 5;
+    html += `<fieldset class="export-section" data-section="${section.id}">`;
+    html += `<legend class="export-section-header${collapsible ? " collapsible" : ""}">`;
+    if (collapsible) {
+      html += `<span class="export-section-toggle">${defaultCollapsed ? "&#9656;" : "&#9660;"}</span>`;
+    }
+    html += `<span class="export-section-title">${section.title}</span>`;
+    if (collapsible) {
+      const count = section.items.length;
+      html += ` <span class="export-section-count">(${count})</span>`;
+    }
+    if (section.isSingle) {
+      html += `<label class="export-section-select-all"><input type="checkbox" data-select-all="${section.id}" checked> ${section.id === "settings" ? t("exportAllSettings") : t("selectAll")}</label>`;
+    } else if (section.items.length > 1) {
+      html += `<button type="button" class="export-section-select-all" data-select-all="${section.id}">${t("selectUnselectAll")}</button>`;
+    }
+    html += `</legend>`;
+    html += `<div class="export-section-content${defaultCollapsed ? " collapsed" : ""}">`;
+    if (section.isSingle) {
+      if (section.id === "settings") {
+        html += `<label class="export-checkbox"><input type="checkbox" data-section="${section.id}" checked> ${t("exportAllSettings")}</label>`;
+      } else {
+        html += `<label class="export-checkbox"><input type="checkbox" data-section="${section.id}" checked> ${t("exportSectionShortcuts")}</label>`;
+      }
+    } else if (section.items.length === 0) {
+      html += `<p class="muted">${section.id === "threads" ? t("noThreads") : t("none")}</p>`;
+    } else {
+      section.items.forEach((item) => {
+        if (section.id === "threads") {
+          const charId = Number(item.charId);
+          const enabled = charIdSet.has(charId);
+          html += `<label class="export-checkbox${!enabled ? " disabled" : ""}"><input type="checkbox" data-section="${section.id}" data-id="${item.id}" data-char-id="${charId}"${enabled ? " checked" : " disabled"}> ${item.label}</label>`;
+        } else if (section.id === "tags") {
+          html += `<label class="export-checkbox${!item.anyCharHas ? " disabled" : ""}"><input type="checkbox" data-section="${section.id}" data-tag="${item.tag}"${item.anyCharHas ? " checked" : " disabled"}> ${escapeHtml(item.label)}</label>`;
+        } else {
+          html += `<label class="export-checkbox"><input type="checkbox" data-section="${section.id}" data-id="${item.id}" checked> ${item.label}</label>`;
+        }
+      });
+    }
+    html += `</div></fieldset>`;
   });
-  html += `</fieldset>`;
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionThreads")}</legend>`;
-  if (threads.length === 0) {
-    html += `<p class="muted">${t("noThreads")}</p>`;
-  } else {
-    threads.forEach((thread) => {
-      const id = Number(thread.id);
-      const charId = Number(thread.characterId);
-      const char = charMap.get(charId);
-      const charName = char ? escapeHtml(char.name) : t("deletedCharacter");
-      const title = escapeHtml(thread.title || t("untitledThread") || "Untitled");
-      const disabled = charIdSet.has(charId) ? "" : ' disabled';
-      const checked = charIdSet.has(charId) ? " checked" : "";
-      html += `<label class="export-checkbox"><input type="checkbox" data-section="threads" data-id="${id}" data-char-id="${charId}"${checked}${disabled}> ${title} <span class="muted">(${charName})</span></label>`;
-    });
-  }
-  html += `</fieldset>`;
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionPersonas")}</legend>`;
-  personas.forEach((persona) => {
-    const name = escapeHtml(persona.name || t("unnamedPersona") || "Unnamed");
-    const id = Number(persona.id);
-    html += `<label class="export-checkbox"><input type="checkbox" data-section="personas" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
-  });
-  html += `</fieldset>`;
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionLorebooks")}</legend>`;
-  lorebooks.forEach((lorebook) => {
-    const name = escapeHtml(lorebook.name || t("unnamedLorebook") || "Unnamed");
-    const id = Number(lorebook.id);
-    html += `<label class="export-checkbox"><input type="checkbox" data-section="lorebooks" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
-  });
-  html += `</fieldset>`;
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionShortcuts")}</legend>`;
-  html += `<label class="export-checkbox"><input type="checkbox" data-section="shortcuts" checked> ${t("exportSectionShortcuts")}</label>`;
-  html += `</fieldset>`;
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionTags")}</legend>`;
-  allTags.forEach((tag) => {
-    const tagEsc = escapeHtml(tag);
-    const anyCharHasTag = characters.some((c) => (c.tags || []).includes(tag));
-    html += `<label class="export-checkbox"><input type="checkbox" data-section="tags" data-tag="${tagEsc}" ${anyCharHasTag ? "checked" : "disabled"}> ${tagEsc}</label>`;
-  });
-  html += `</fieldset>`;
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionWritingInstructions")}</legend>`;
-  writingInstructions.forEach((wi) => {
-    const name = escapeHtml(wi.name || t("unnamedWritingInstruction") || "Unnamed");
-    const id = Number(wi.id);
-    html += `<label class="export-checkbox"><input type="checkbox" data-section="writingInstructions" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
-  });
-  html += `</fieldset>`;
-
-  html += `<fieldset class="export-section"><legend>${t("exportSectionAssets")}</legend>`;
-  assets.forEach((asset) => {
-    const name = escapeHtml(asset.name || t("unnamedAsset") || "Unnamed");
-    const id = Number(asset.id);
-    const type = asset.type || "unknown";
-    html += `<label class="export-checkbox"><input type="checkbox" data-section="assets" data-id="${id}" checked> ${name} <span class="muted">(${type})</span></label>`;
-  });
-  html += `</fieldset>`;
 
   body.innerHTML = html;
 
   body.querySelectorAll("input[type='checkbox'][data-section]").forEach((cb) => {
     cb.addEventListener("change", handleExportSectionChange);
+  });
+
+  body.querySelectorAll("[data-select-all]").forEach((el) => {
+    el.addEventListener("click", handleExportSelectAll);
+  });
+
+  body.querySelectorAll(".export-section-header.collapsible").forEach((legend) => {
+    legend.addEventListener("click", (e) => {
+      const fieldset = legend.closest(".export-section");
+      const content = fieldset.querySelector(".export-section-content");
+      const toggle = legend.querySelector(".export-section-toggle");
+      if (content.classList.contains("collapsed")) {
+        content.classList.remove("collapsed");
+        if (toggle) toggle.innerHTML = "&#9660;";
+      } else {
+        content.classList.add("collapsed");
+        if (toggle) toggle.innerHTML = "&#9656;";
+      }
+    });
   });
 }
 
@@ -15284,6 +15278,29 @@ function handleExportSectionChange(e) {
         cb.parentElement.classList.add("disabled");
       }
     });
+  }
+}
+
+function handleExportSelectAll(e) {
+  const sectionId = e.target.dataset.selectAll;
+  if (!sectionId) return;
+
+  const body = document.getElementById("export-select-body");
+  if (!body) return;
+
+  const fieldset = body.querySelector(`.export-section[data-section="${sectionId}"]`);
+  if (!fieldset) return;
+
+  const checkboxes = fieldset.querySelectorAll(`input[type="checkbox"][data-section="${sectionId}"]:not(:disabled)`);
+  const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
+
+  checkboxes.forEach((cb) => {
+    cb.checked = !allChecked;
+  });
+
+  const btn = fieldset.querySelector(`[data-select-all="${sectionId}"]`);
+  if (btn && sectionId !== "settings" && sectionId !== "shortcuts") {
+    btn.textContent = allChecked ? t("selectUnselectAll") : t("selectUnselectAll");
   }
 }
 

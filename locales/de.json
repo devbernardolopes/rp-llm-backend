@@ -803,5 +803,8 @@
   "unnamedLorebook": "Unbenannter Lorebook",
   "unnamedWritingInstruction": "Unbenannte Schreib-anweisung",
   "unnamedAsset": "Unbenannte Ressource",
-  "exportSelectAtLeastOne": "Bitte wahlen Sie mindestens ein Element zum Exportieren."
+  "exportSelectAtLeastOne": "Bitte wahlen Sie mindestens ein Element zum Exportieren.",
+  "selectAll": "Alle auswahlen",
+  "selectUnselectAll": "Alle aus-/abwahlen",
+  "none": "Keine"
 }

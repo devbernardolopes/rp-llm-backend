@@ -3611,10 +3611,60 @@ textarea {
   margin-bottom: 12px;
 }
 
-.export-section legend {
+.export-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
   color: var(--text);
   padding: 0 4px;
+}
+
+.export-section-header.collapsible {
+  cursor: pointer;
+  user-select: none;
+}
+
+.export-section-header.collapsible:hover {
+  background: var(--hover);
+  border-radius: 4px;
+}
+
+.export-section-toggle {
+  font-size: 10px;
+  width: 16px;
+  display: inline-block;
+}
+
+.export-section-title {
+  flex: 1;
+}
+
+.export-section-count {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.export-section-select-all {
+  font-size: 12px;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 8px;
+  margin-left: auto;
+}
+
+.export-section-select-all:hover {
+  text-decoration: underline;
+}
+
+.export-section-content {
+  margin-top: 8px;
+}
+
+.export-section-content.collapsed {
+  display: none;
 }
 
 .export-checkbox {

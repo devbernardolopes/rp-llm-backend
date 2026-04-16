@@ -803,5 +803,8 @@
   "unnamedLorebook": "Lorebook sans nom",
   "unnamedWritingInstruction": "Instruction sans nom",
   "unnamedAsset": "Ressource sans nom",
-  "exportSelectAtLeastOne": "Veuillez selectionner au moins un element a exporter."
+  "exportSelectAtLeastOne": "Veuillez selectionner au moins un element a exporter.",
+  "selectAll": "Tout selectionner",
+  "selectUnselectAll": "Tout selectionner/deselectionner",
+  "none": "Aucun"
 }

@@ -808,5 +808,8 @@
   "unnamedLorebook": "Unnamed Lorebook",
   "unnamedWritingInstruction": "Unnamed Writing Instruction",
   "unnamedAsset": "Unnamed Asset",
-  "exportSelectAtLeastOne": "Please select at least one item to export."
+  "exportSelectAtLeastOne": "Please select at least one item to export.",
+  "selectAll": "Select All",
+  "selectUnselectAll": "Select/Unselect All",
+  "none": "None"
 }
