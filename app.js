@@ -10077,6 +10077,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
     importChar.avatarScale = Number(document.getElementById("char-avatar-scale").value) || 1;
     importChar.tags = Array.isArray(payload.tags) ? payload.tags : [];
     importChar.model3d = state.charModalModel3d;
+    importChar.lorebookIds = selectedLorebookIds;
     importChar.updatedAt = Date.now();
     const newId = await db.characters.add(importChar);
     savedCharacterId = Number(newId);
