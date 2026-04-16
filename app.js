@@ -15111,6 +15111,15 @@ async function openExportSelectModal() {
   state.activeModalId = "export-select-modal";
   modal.classList.remove("hidden");
 
+  const modalOuter = modal.querySelector(".modal-outer");
+  const closeOnOuterClick = (e) => {
+    if (e.target === modalOuter) {
+      closeActiveModal();
+      modalOuter.removeEventListener("click", closeOnOuterClick);
+    }
+  };
+  modalOuter.addEventListener("click", closeOnOuterClick);
+
   const exportBody = document.getElementById("export-select-body");
   if (!exportBody) return;
   exportBody.innerHTML = '<p class="muted">Loading...</p>';
@@ -15171,7 +15180,7 @@ function renderExportSelectSections(data) {
 
   html += `<fieldset class="export-section"><legend>${t("exportSectionCharacters")}</legend>`;
   characters.forEach((char) => {
-    const name = htmlEscape(char.name || t("unnamedCharacter") || "Unnamed");
+    const name = escapeHtml(char.name || t("unnamedCharacter") || "Unnamed");
     const id = Number(char.id);
     html += `<label class="export-checkbox"><input type="checkbox" data-section="characters" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
   });
@@ -15185,8 +15194,8 @@ function renderExportSelectSections(data) {
       const id = Number(thread.id);
       const charId = Number(thread.characterId);
       const char = charMap.get(charId);
-      const charName = char ? htmlEscape(char.name) : t("deletedCharacter");
-      const title = htmlEscape(thread.title || t("untitledThread") || "Untitled");
+      const charName = char ? escapeHtml(char.name) : t("deletedCharacter");
+      const title = escapeHtml(thread.title || t("untitledThread") || "Untitled");
       const disabled = charIdSet.has(charId) ? "" : ' disabled';
       const checked = charIdSet.has(charId) ? " checked" : "";
       html += `<label class="export-checkbox"><input type="checkbox" data-section="threads" data-id="${id}" data-char-id="${charId}"${checked}${disabled}> ${title} <span class="muted">(${charName})</span></label>`;
@@ -15196,7 +15205,7 @@ function renderExportSelectSections(data) {
 
   html += `<fieldset class="export-section"><legend>${t("exportSectionPersonas")}</legend>`;
   personas.forEach((persona) => {
-    const name = htmlEscape(persona.name || t("unnamedPersona") || "Unnamed");
+    const name = escapeHtml(persona.name || t("unnamedPersona") || "Unnamed");
     const id = Number(persona.id);
     html += `<label class="export-checkbox"><input type="checkbox" data-section="personas" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
   });
@@ -15204,7 +15213,7 @@ function renderExportSelectSections(data) {
 
   html += `<fieldset class="export-section"><legend>${t("exportSectionLorebooks")}</legend>`;
   lorebooks.forEach((lorebook) => {
-    const name = htmlEscape(lorebook.name || t("unnamedLorebook") || "Unnamed");
+    const name = escapeHtml(lorebook.name || t("unnamedLorebook") || "Unnamed");
     const id = Number(lorebook.id);
     html += `<label class="export-checkbox"><input type="checkbox" data-section="lorebooks" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
   });
@@ -15216,7 +15225,7 @@ function renderExportSelectSections(data) {
 
   html += `<fieldset class="export-section"><legend>${t("exportSectionTags")}</legend>`;
   allTags.forEach((tag) => {
-    const tagEsc = htmlEscape(tag);
+    const tagEsc = escapeHtml(tag);
     const anyCharHasTag = characters.some((c) => (c.tags || []).includes(tag));
     html += `<label class="export-checkbox"><input type="checkbox" data-section="tags" data-tag="${tagEsc}" ${anyCharHasTag ? "checked" : "disabled"}> ${tagEsc}</label>`;
   });
@@ -15224,7 +15233,7 @@ function renderExportSelectSections(data) {
 
   html += `<fieldset class="export-section"><legend>${t("exportSectionWritingInstructions")}</legend>`;
   writingInstructions.forEach((wi) => {
-    const name = htmlEscape(wi.name || t("unnamedWritingInstruction") || "Unnamed");
+    const name = escapeHtml(wi.name || t("unnamedWritingInstruction") || "Unnamed");
     const id = Number(wi.id);
     html += `<label class="export-checkbox"><input type="checkbox" data-section="writingInstructions" data-id="${id}" checked> ${name} <span class="muted">#${id}</span></label>`;
   });
@@ -15232,7 +15241,7 @@ function renderExportSelectSections(data) {
 
   html += `<fieldset class="export-section"><legend>${t("exportSectionAssets")}</legend>`;
   assets.forEach((asset) => {
-    const name = htmlEscape(asset.name || t("unnamedAsset") || "Unnamed");
+    const name = escapeHtml(asset.name || t("unnamedAsset") || "Unnamed");
     const id = Number(asset.id);
     const type = asset.type || "unknown";
     html += `<label class="export-checkbox"><input type="checkbox" data-section="assets" data-id="${id}" checked> ${name} <span class="muted">(${type})</span></label>`;
