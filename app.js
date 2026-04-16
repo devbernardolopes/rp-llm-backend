@@ -2366,25 +2366,45 @@ function setupModalTextareas(root = document) {
 }
 
 function refreshTextareaCollapseLabels() {
-  applyDataI18n();
   document.querySelectorAll(".textarea-collapse").forEach((wrapper) => {
     const textarea = wrapper.querySelector("textarea");
     if (!textarea) return;
     const entry = textareaCollapseStates.get(textarea);
     if (!entry?.header) return;
-    const labelInfo = captureTextareaLabel(textarea);
-    const labelText =
-      labelInfo?.text ||
-      textarea.getAttribute("placeholder") ||
-      textarea.getAttribute("title") ||
-      "Input";
+    const parent = textarea.parentElement;
+    if (!parent) return;
+    const children = Array.from(parent.children);
+    const idx = children.indexOf(textarea);
+    let labelEl = null;
+    for (let i = idx - 1; i >= 0; i -= 1) {
+      const el = children[i];
+      if (!el) continue;
+      if (el.matches("span, label")) {
+        const text = String(el.textContent || "").trim();
+        if (text && !/^\d+\/\d+$/.test(text)) {
+          labelEl = el;
+          break;
+        }
+      }
+      if (el.matches(".label-inline, .writing-instructions-header")) {
+        const span = el.querySelector("span");
+        if (span) {
+          const text = String(span.textContent || "").trim();
+          if (text && !/^\d+\/\d+$/.test(text)) {
+            labelEl = span;
+            break;
+          }
+        }
+      }
+    }
+    if (!labelEl) return;
+    labelEl.style.display = "";
+    const labelText = String(labelEl.textContent || "").trim();
     const titleSpan = entry.header.querySelector("span");
     if (titleSpan) {
       titleSpan.textContent = labelText;
     }
-    if (labelInfo?.element) {
-      labelInfo.element.style.display = "none";
-    }
+    labelEl.style.display = "none";
   });
 }
 
