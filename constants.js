@@ -609,7 +609,6 @@ const I18N = {
     messageAlignmentLeft: "Left (Default)",
     messageAlignmentCenter: "Center",
     resetAppData: "Reset App Data",
-    resetAppDataSoon: "Reset app data will be added soon.",
     openRouterApiKey: "OpenRouter API Key",
     modelLabel: "Model",
     pricingLabel: "Pricing",

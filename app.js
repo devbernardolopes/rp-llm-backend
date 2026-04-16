@@ -1047,9 +1047,7 @@ function setupEvents() {
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V3"></path><path d="M8 9l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>';
   document
     .getElementById("reset-db-btn")
-    ?.addEventListener("click", () =>
-      showToast(t("resetAppDataSoon"), "success"),
-    );
+    ?.addEventListener("click", resetAppData);
   document
     .getElementById("guide-btn")
     ?.addEventListener("click", () =>
@@ -15042,6 +15040,49 @@ async function importDatabaseBackupFromFile(e) {
   } catch (err) {
     showToast(
       tf("databaseImportFailed", { error: err.message || t("unknownError") }),
+      "error",
+    );
+  }
+}
+
+async function resetAppData() {
+  const ok = await openConfirmDialog(
+    t("resetAppData"),
+    t("resetAppDataConfirm"),
+  );
+  if (!ok) return;
+
+  try {
+    await db.transaction("rw", db.tables, async () => {
+      await db.characters.clear();
+      await db.lorebooks.clear();
+      await db.memories.clear();
+      await db.sessions.clear();
+      await db.threads.clear();
+      await db.writingInstructions.clear();
+      await db.assets.clear();
+      await db.personas.clear();
+    });
+
+    localStorage.clear();
+
+    const defaultPersonaId = await db.personas.add({
+      name: "You",
+      avatar: "",
+      description: "",
+      internalDescription: "",
+      isDefault: true,
+      color: DEFAULT_PERSONA_COLOR,
+      order: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    showToast(t("resetAppDataSuccess"), "success");
+    window.setTimeout(() => window.location.reload(), 800);
+  } catch (err) {
+    showToast(
+      tf("resetAppDataFailed", { error: err.message || t("unknownError") }),
       "error",
     );
   }

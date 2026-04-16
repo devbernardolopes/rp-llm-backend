@@ -806,5 +806,8 @@
   "exportSelectAtLeastOne": "Por favor selecione pelo menos um item para exportar.",
   "selectAll": "Selecionar tudo",
   "selectUnselectAll": "Selecionar/desselecionar tudo",
-  "none": "Nenhum"
+  "none": "Nenhum",
+  "resetAppDataConfirm": "Isso excluira TODOS os personagens, conversas, lorebooks, personas, instrucoes de escrita, ativos e configuracoes. Esta acao nao pode ser desfeita. Tem certeza?",
+  "resetAppDataSuccess": "Os dados do aplicativo foram redefinidos.",
+  "resetAppDataFailed": "Falha ao redefinir os dados do aplicativo: {error}"
 }

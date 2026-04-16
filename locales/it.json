@@ -806,5 +806,8 @@
   "exportSelectAtLeastOne": "Per favore seleziona almeno un elemento da esportare.",
   "selectAll": "Seleziona tutto",
   "selectUnselectAll": "Seleziona/deseleziona tutto",
-  "none": "Nessuno"
+  "none": "Nessuno",
+  "resetAppDataConfirm": "Questo eliminera TUTTI i personaggi, thread, lorebook, persone, istruzioni di scrittura, asset e impostazioni. Questa azione non puo essere annullata. Sei sicuro?",
+  "resetAppDataSuccess": "I dati dell'app sono stati ripristinati.",
+  "resetAppDataFailed": "Errore nel ripristino dei dati dell'app: {error}"
 }

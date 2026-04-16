@@ -806,5 +806,8 @@
   "exportSelectAtLeastOne": "Bitte wahlen Sie mindestens ein Element zum Exportieren.",
   "selectAll": "Alle auswahlen",
   "selectUnselectAll": "Alle aus-/abwahlen",
-  "none": "Keine"
+  "none": "Keine",
+  "resetAppDataConfirm": "Dies löscht ALLE Charaktere, Threads, Lorebooks, Personas, Schreib-Anweisungen, Assets und Einstellungen. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?",
+  "resetAppDataSuccess": "App-Daten wurden zurückgesetzt.",
+  "resetAppDataFailed": "App-Daten konnten nicht zurückgesetzt werden: {error}"
 }

@@ -806,5 +806,8 @@
   "exportSelectAtLeastOne": "Veuillez selectionner au moins un element a exporter.",
   "selectAll": "Tout selectionner",
   "selectUnselectAll": "Tout selectionner/deselectionner",
-  "none": "Aucun"
+  "none": "Aucun",
+  "resetAppDataConfirm": "Cela supprimera TOUS les personnages, fils, lorebooks, personas, instructions d'ecriture, actifs et parametres. Cette action est irreversible. Etes-vous sur?",
+  "resetAppDataSuccess": "Les donnees de l'application ont ete reinitialisees.",
+  "resetAppDataFailed": "Echec de la reinitialisation des donnees de l'application: {error}"
 }
