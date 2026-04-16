@@ -2366,6 +2366,7 @@ function setupModalTextareas(root = document) {
 }
 
 function refreshTextareaCollapseLabels() {
+  applyDataI18n();
   document.querySelectorAll(".textarea-collapse").forEach((wrapper) => {
     const textarea = wrapper.querySelector("textarea");
     if (!textarea) return;
