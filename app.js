@@ -11683,10 +11683,6 @@ async function renderLorebookManagementList() {
     const title = document.createElement("div");
     title.className = "lorebook-title";
     title.textContent = lorebook.name || "Untitled Lorebook";
-    const meta = document.createElement("div");
-    meta.className = "lorebook-meta";
-    meta.textContent = `Created: ${formatDateTime(lorebook.createdAt)}\nUpdated: ${formatDateTime(lorebook.updatedAt)}`;
-    meta.style.whiteSpace = "pre-line";
     const usage = document.createElement("div");
     usage.className = "lorebook-usage";
     const usageLabel = document.createElement("span");
@@ -11719,13 +11715,10 @@ async function renderLorebookManagementList() {
         usage.appendChild(chip);
       });
     }
-    main.append(title, meta, usage);
+    main.append(title, usage);
 
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
-    actions.appendChild(
-      iconButton("edit", "Edit Lorebook", () => openLoreEditor(lorebook)),
-    );
     actions.appendChild(
       iconButton("duplicate", "Duplicate Lorebook", async () => {
         await duplicateLorebook(lorebook.id);
