@@ -3,37 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="assets/favicon/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="assets/favicon/favicon-16x16.png"
-    />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png" />
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png" />
     <link rel="manifest" href="assets/favicon/site.webmanifest" />
     <title>Scenara</title>
-    <script
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5021422329745536"
-      crossorigin="anonymous"
-    ></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5021422329745536" crossorigin="anonymous"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="assets/flag-icons/css/flag-icons.min.css" />
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
     <script type="importmap">
       {
@@ -51,61 +31,20 @@
   <body>
     <div id="app-shell">
       <aside id="left-pane" class="expanded">
-        <button
-          id="pane-overlay-toggle"
-          class="pane-overlay-toggle"
-          data-i18n-title="togglePanelTitle"
-          aria-label="Toggle panel"
-        >
-          <svg
-            class="pane-toggle-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+        <button id="pane-overlay-toggle" class="pane-overlay-toggle" data-i18n-title="togglePanelTitle" aria-label="Toggle panel">
+          <svg class="pane-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
         <div class="pane-top">
           <div class="pane-top-header">
             <span id="pane-scenara-title" class="pane-scenara-title">SCENARA</span>
-            <button
-              id="home-btn"
-              class="option-btn pane-top-option-btn"
-              type="button"
-              data-i18n-title="homeTitle"
-              aria-label="Home"
-            >
-              <img
-                src="assets/favicon/favicon-32x32.png"
-                alt=""
-                aria-hidden="true"
-              />
+            <button id="home-btn" class="option-btn pane-top-option-btn" type="button" data-i18n-title="homeTitle" aria-label="Home">
+              <img src="assets/favicon/favicon-32x32.png" alt="" aria-hidden="true" />
             </button>
-            <button
-              id="create-character-btn"
-              class="option-btn pane-top-option-btn"
-              type="button"
-              data-i18n-title="createCharacter"
-            >
-              +
-            </button>
-            <button
-              id="import-character-btn"
-              class="option-btn pane-top-option-btn"
-              type="button"
-              data-i18n-title="importCharacter"
-              aria-label="Import Character"
-            >
-              ⬆
-            </button>
-            <input
-              id="import-character-input"
-              type="file"
-              accept=".json,application/json"
-              class="hidden"
-            />
+            <button id="create-character-btn" class="option-btn pane-top-option-btn" type="button" data-i18n-title="createCharacter">+</button>
+            <button id="import-character-btn" class="option-btn pane-top-option-btn" type="button" data-i18n-title="importCharacter" aria-label="Import Character">⬆</button>
+            <input id="import-character-input" type="file" accept=".json,application/json" class="hidden" />
           </div>
         </div>
 
@@ -114,237 +53,71 @@
         </div>
 
         <div class="pane-bottom">
-          <button
-            class="option-btn"
-            data-open-modal="settings-modal"
-            data-i18n-title="settings"
-            aria-label="Settings"
-          >
-            &#9881;
-          </button>
-          <button
-            class="option-btn"
-            data-open-modal="personas-modal"
-            data-i18n-title="personas"
-            aria-label="Personas"
-          >
-            &#128100;
-          </button>
-          <button
-            class="option-btn"
-            data-open-modal="lore-modal"
-            data-i18n-title="loreBooks"
-            aria-label="Lorebooks"
-          >
-            &#128218;
-          </button>
-          <button
-            class="option-btn"
-            data-open-modal="shortcuts-modal"
-            data-i18n-title="shortcuts"
-            aria-label="Shortcuts"
-          >
-            &#9000;
-          </button>
-          <button
-            class="option-btn"
-            data-open-modal="tags-modal"
-            data-i18n-title="tags"
-            aria-label="Tags"
-          >
-            &#127991;
-          </button>
-          <button
-            class="option-btn"
-            data-open-modal="writing-instructions-modal"
-            data-i18n-title="writingInstructions"
-            aria-label="Writing Instructions"
-          >
-            &#128221;
-          </button>
-          <button
-            class="option-btn"
-            data-open-modal="database-modal"
-            data-i18n-title="database"
-            aria-label="Database"
-          >
-            &#128451;
-          </button>
-          <button
-            class="option-btn"
-            data-open-modal="assets-modal"
-            data-i18n-title="assets"
-            aria-label="Assets"
-          >
-            &#128190;
-          </button>
-          <button
-            id="guide-btn"
-            class="option-btn"
-            data-i18n-title="guide"
-            aria-label="Guide"
-          >
-            ?
-          </button>
+          <button class="option-btn" data-open-modal="settings-modal" data-i18n-title="settings" aria-label="Settings">&#9881;</button>
+          <button class="option-btn" data-open-modal="personas-modal" data-i18n-title="personas" aria-label="Personas">&#128100;</button>
+          <button class="option-btn" data-open-modal="lore-modal" data-i18n-title="loreBooks" aria-label="Lorebooks">&#128218;</button>
+          <button class="option-btn" data-open-modal="shortcuts-modal" data-i18n-title="shortcuts" aria-label="Shortcuts">&#9000;</button>
+          <button class="option-btn" data-open-modal="tags-modal" data-i18n-title="tags" aria-label="Tags">&#127991;</button>
+          <button class="option-btn" data-open-modal="writing-instructions-modal" data-i18n-title="writingInstructions" aria-label="Writing Instructions">&#128221;</button>
+          <button class="option-btn" data-open-modal="database-modal" data-i18n-title="database" aria-label="Database">&#128451;</button>
+          <button class="option-btn" data-open-modal="assets-modal" data-i18n-title="assets" aria-label="Assets">&#128190;</button>
+          <button id="guide-btn" class="option-btn" data-i18n-title="guide" aria-label="Guide">?</button>
         </div>
       </aside>
 
       <div id="mobile-pane-backdrop" class="mobile-pane-backdrop hidden"></div>
       <main id="main-view" class="view active">
-        <button
-          id="mobile-pane-toggle"
-          class="mobile-pane-toggle hidden"
-          type="button"
-          data-i18n-title="togglePanelTitle"
-          aria-label="Toggle panel"
-        >
+        <button id="mobile-pane-toggle" class="mobile-pane-toggle hidden" type="button" data-i18n-title="togglePanelTitle" aria-label="Toggle panel">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
         <header class="main-header">
-          <div id="home-model-pill" class="model-pill" data-i18n="modelPill">
-            Model: -
-          </div>
+          <div id="home-model-pill" class="model-pill" data-i18n="modelPill">Model: -</div>
         </header>
         <section id="character-filters" class="character-filters">
           <div class="character-filters-head">
             <div class="character-filters-row">
               <div id="character-tag-filter-chips" class="filter-chips"></div>
               <div class="character-filters-controls">
-                <input
-                  id="character-search-input"
-                  type="text"
-                  class="filter-search-input"
-                  placeholder="Search..."
-                  data-i18n-placeholder="searchPlaceholder"
-                />
+                <input id="character-search-input" type="text" class="filter-search-input" placeholder="Search..." data-i18n-placeholder="searchPlaceholder" />
                 <div class="character-sort-field">
-                  <button
-                    id="character-sort-btn"
-                    class="icon-btn character-sort-btn sort-info"
-                    type="button"
-                  >
+                  <button id="character-sort-btn" class="icon-btn character-sort-btn sort-info" type="button">
                     <img id="character-sort-icon" alt="" />
                   </button>
                 </div>
-                <button
-                  id="character-sort-dir-btn"
-                  class="icon-btn sort-dir-btn"
-                  type="button"
-                  aria-label="Toggle sort direction"
-                >
-                  &#8593;
-                </button>
-                <button
-                  id="character-tag-filter-clear"
-                  class="icon-btn"
-                  type="button"
-                  aria-label="Clear filters"
-                  data-i18n-title="clearFiltersTitle"
-                >
-                  &times;
-                </button>
+                <button id="character-sort-dir-btn" class="icon-btn sort-dir-btn" type="button" aria-label="Toggle sort direction">&#8593;</button>
+                <button id="character-tag-filter-clear" class="icon-btn" type="button" aria-label="Clear filters" data-i18n-title="clearFiltersTitle">&times;</button>
               </div>
             </div>
-            <button
-              id="character-filters-toggle"
-              class="icon-btn filters-toggle-btn"
-              type="button"
-              data-i18n-title="toggleFilters"
-              aria-label="Toggle filters"
-            >
-              &#9650;
-            </button>
+            <button id="character-filters-toggle" class="icon-btn filters-toggle-btn" type="button" data-i18n-title="toggleFilters" aria-label="Toggle filters">&#9650;</button>
           </div>
           <div class="character-filters-body">
-            <div
-              id="character-filter-active-cue"
-              class="filter-active-cue hidden"
-              data-i18n="tagFiltersActive"
-            >
-              Tag filters active.
-            </div>
+            <div id="character-filter-active-cue" class="filter-active-cue hidden" data-i18n="tagFiltersActive">Tag filters active.</div>
           </div>
         </section>
         <section id="character-grid" class="character-grid"></section>
         <section id="character-pagination" class="character-pagination hidden">
           <div class="character-pagination-group">
-            <button
-              id="character-pagination-first"
-              class="pagination-arrow"
-              type="button"
-              data-i18n-title="paginationFirstPage"
-              aria-label="First page"
-              disabled
-            >
-              &#171;
-            </button>
-            <button
-              id="character-pagination-prev"
-              class="pagination-arrow"
-              type="button"
-              data-i18n-title="paginationPreviousPage"
-              aria-label="Previous page"
-              disabled
-            >
-              &#8592;
-            </button>
-            <div
-              id="character-pagination-pages"
-              class="pagination-pages"
-              aria-live="polite"
-            ></div>
-            <button
-              id="character-pagination-next"
-              class="pagination-arrow"
-              type="button"
-              data-i18n-title="paginationNextPage"
-              aria-label="Next page"
-              disabled
-            >
-              &#8594;
-            </button>
-            <button
-              id="character-pagination-last"
-              class="pagination-arrow"
-              type="button"
-              data-i18n-title="paginationLastPage"
-              aria-label="Last page"
-              disabled
-            >
-              &#187;
-            </button>
+            <button id="character-pagination-first" class="pagination-arrow" type="button" data-i18n-title="paginationFirstPage" aria-label="First page" disabled>&#171;</button>
+            <button id="character-pagination-prev" class="pagination-arrow" type="button" data-i18n-title="paginationPreviousPage" aria-label="Previous page" disabled>&#8592;</button>
+            <div id="character-pagination-pages" class="pagination-pages" aria-live="polite"></div>
+            <button id="character-pagination-next" class="pagination-arrow" type="button" data-i18n-title="paginationNextPage" aria-label="Next page" disabled>&#8594;</button>
+            <button id="character-pagination-last" class="pagination-arrow" type="button" data-i18n-title="paginationLastPage" aria-label="Last page" disabled>&#187;</button>
           </div>
         </section>
       </main>
 
       <section id="chat-view" class="view">
         <header class="chat-header">
-          <button
-            id="mobile-pane-toggle-chat"
-            class="mobile-pane-toggle mobile-pane-toggle-chat hidden"
-            type="button"
-            data-i18n-title="togglePanelTitle"
-            aria-label="Toggle panel"
-          >
+          <button id="mobile-pane-toggle-chat" class="mobile-pane-toggle mobile-pane-toggle-chat hidden" type="button" data-i18n-title="togglePanelTitle" aria-label="Toggle panel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 18l6-6-6-6" />
             </svg>
           </button>
           <div id="chat-title">Thread</div>
-          <button
-            id="toggle-model3d-panel-btn"
-            class="icon-btn small"
-            type="button"
-            data-i18n-title="toggleModel3dPanel"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <button id="toggle-model3d-panel-btn" class="icon-btn small" type="button" data-i18n-title="toggleModel3dPanel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 2L2 7l10 5 10-5-10-5z" />
               <path d="M2 17l10 5 10-5" />
               <path d="M2 12l10 5 10-5" />
@@ -352,44 +125,16 @@
           </button>
         </header>
 
-        <div
-          id="initial-message-controls"
-          class="initial-message-controls hidden"
-          aria-live="polite"
-        >
-          <button
-            id="initial-message-prev-btn"
-            class="icon-btn small"
-            type="button"
-            data-i18n-title="initialMessageCarouselPrevTitle"
-          >
-            ‹
-          </button>
-          <span
-            id="initial-message-counter"
-            class="initial-message-counter muted"
-          ></span>
-          <button
-            id="initial-message-next-btn"
-            class="icon-btn small"
-            type="button"
-            data-i18n-title="initialMessageCarouselNextTitle"
-          >
-            ›
-          </button>
+        <div id="initial-message-controls" class="initial-message-controls hidden" aria-live="polite">
+          <button id="initial-message-prev-btn" class="icon-btn small" type="button" data-i18n-title="initialMessageCarouselPrevTitle">‹</button>
+          <span id="initial-message-counter" class="initial-message-counter muted"></span>
+          <button id="initial-message-next-btn" class="icon-btn small" type="button" data-i18n-title="initialMessageCarouselNextTitle">›</button>
         </div>
 
         <div id="active-sfx-panel" class="active-sfx-panel hidden">
           <div class="active-sfx-header">
             <span data-i18n="activeSfx">Active SFX</span>
-            <button
-              id="evict-all-sfx-btn"
-              class="icon-btn danger-icon-btn"
-              data-i18n-title="evictAllSfx"
-              aria-label="Stop all"
-            >
-              &times;
-            </button>
+            <button id="evict-all-sfx-btn" class="icon-btn danger-icon-btn" data-i18n-title="evictAllSfx" aria-label="Stop all">&times;</button>
           </div>
           <div class="active-sfx-list"></div>
         </div>
@@ -400,67 +145,21 @@
           <div id="model3d-panel-header" class="model3d-panel-header">
             <span data-i18n="model3dPanelTitle">3D Model</span>
             <div class="model3d-panel-controls">
-              <button
-                id="model3d-toggle-visibility-btn"
-                class="icon-btn small"
-                type="button"
-                data-i18n-title="toggleModel3dVisibility"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+              <button id="model3d-toggle-visibility-btn" class="icon-btn small" type="button" data-i18n-title="toggleModel3dVisibility">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               </button>
-              <button
-                id="model3d-close-btn"
-                class="icon-btn small danger-icon-btn"
-                type="button"
-                data-i18n-title="closeModel3dPanel"
-              >
-                &times;
-              </button>
+              <button id="model3d-close-btn" class="icon-btn small danger-icon-btn" type="button" data-i18n-title="closeModel3dPanel">&times;</button>
             </div>
           </div>
-          <div
-            id="model3d-expression-controls"
-            class="model3d-expression-controls"
-          >
-            <span
-              data-i18n="model3dExpressionsLabel"
-              class="model3d-expression-label"
-            >
-              Expressions
-            </span>
+          <div id="model3d-expression-controls" class="model3d-expression-controls">
+            <span data-i18n="model3dExpressionsLabel" class="model3d-expression-label"> Expressions </span>
             <div class="model3d-expression-buttons">
-              <button
-                type="button"
-                class="model3d-expression-btn"
-                data-expression="neutral"
-                data-i18n="model3dExpressionNeutral"
-              >
-                Neutral
-              </button>
-              <button
-                type="button"
-                class="model3d-expression-btn"
-                data-expression="smile"
-                data-i18n="model3dExpressionSmile"
-              >
-                Smile
-              </button>
-              <button
-                type="button"
-                class="model3d-expression-btn"
-                data-expression="surprised"
-                data-i18n="model3dExpressionSurprised"
-              >
-                Surprised
-              </button>
+              <button type="button" class="model3d-expression-btn" data-expression="neutral" data-i18n="model3dExpressionNeutral">Neutral</button>
+              <button type="button" class="model3d-expression-btn" data-expression="smile" data-i18n="model3dExpressionSmile">Smile</button>
+              <button type="button" class="model3d-expression-btn" data-expression="surprised" data-i18n="model3dExpressionSurprised">Surprised</button>
             </div>
           </div>
           <div id="model3d-canvas-container" class="model3d-canvas-container">
@@ -469,50 +168,16 @@
               <span data-i18n="loadingModel3d">Loading model...</span>
             </div>
           </div>
-          <div
-            id="model3d-resize-handle-nw"
-            class="model3d-resize-handle model3d-resize-handle-nw"
-          ></div>
-          <div
-            id="model3d-resize-handle-ne"
-            class="model3d-resize-handle model3d-resize-handle-ne"
-          ></div>
-          <div
-            id="model3d-resize-handle-sw"
-            class="model3d-resize-handle model3d-resize-handle-sw"
-          ></div>
-          <div
-            id="model3d-resize-handle-se"
-            class="model3d-resize-handle model3d-resize-handle-se"
-          ></div>
+          <div id="model3d-resize-handle-nw" class="model3d-resize-handle model3d-resize-handle-nw"></div>
+          <div id="model3d-resize-handle-ne" class="model3d-resize-handle model3d-resize-handle-ne"></div>
+          <div id="model3d-resize-handle-sw" class="model3d-resize-handle model3d-resize-handle-sw"></div>
+          <div id="model3d-resize-handle-se" class="model3d-resize-handle model3d-resize-handle-se"></div>
         </div>
-        <button
-          id="scroll-bottom-btn"
-          class="icon-btn hidden"
-          data-i18n-title="scrollToBottomTitle"
-          aria-label="Scroll to bottom"
-        >
-          v
-        </button>
-        <button
-          id="scroll-shortcuts-btn"
-          class="icon-btn hidden"
-          data-i18n-title="hideShortcuts"
-          aria-label="Hide shortcuts"
-        >
-          ^
-        </button>
+        <button id="scroll-bottom-btn" class="icon-btn hidden" data-i18n-title="scrollToBottomTitle" aria-label="Scroll to bottom">v</button>
+        <button id="scroll-shortcuts-btn" class="icon-btn hidden" data-i18n-title="hideShortcuts" aria-label="Hide shortcuts">^</button>
 
-        <div
-          id="prompt-history-popover"
-          class="popover hidden"
-          role="dialog"
-          data-i18n-title="promptHistory"
-          aria-label="Prompt history"
-        >
-          <div class="popover-title" data-i18n="previousPrompts">
-            Previous prompts
-          </div>
+        <div id="prompt-history-popover" class="popover hidden" role="dialog" data-i18n-title="promptHistory" aria-label="Prompt history">
+          <div class="popover-title" data-i18n="previousPrompts">Previous prompts</div>
           <div id="prompt-history-list" class="prompt-history-list"></div>
         </div>
 
@@ -521,195 +186,55 @@
 
           <div class="input-row">
             <div id="user-input-container">
-                <textarea
-                  id="user-input"
-                  rows="2"
-                  data-i18n-placeholder="promptPlaceholder"
-                ></textarea>
+              <textarea id="user-input" rows="2" data-i18n-placeholder="promptPlaceholder"></textarea>
               <div class="input-footer">
                 <div class="input-footer-right">
-                  <div
-                    id="chat-model-pill"
-                    class="model-pill small"
-                    data-i18n="modelPill"
-                  >
-                    Model: -
-                  </div>
-                  <div id="chat-budget-pill" class="model-pill small">
-                    Max out: -
-                  </div>
-                  <button
-                    id="attach-btn"
-                    class="icon-btn small hidden"
-                    disabled
-                    data-i18n-title="attachFileTitle"
-                    aria-label="Attach file"
-                  >
-                    +
-                  </button>
-                  <button
-                    id="memory-command-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="memoryCommandTitle"
-                    aria-label="Memory command"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
+                  <div id="chat-model-pill" class="model-pill small" data-i18n="modelPill">Model: -</div>
+                  <div id="chat-budget-pill" class="model-pill small">Max out: -</div>
+                  <button id="attach-btn" class="icon-btn small hidden" disabled data-i18n-title="attachFileTitle" aria-label="Attach file">+</button>
+                  <button id="memory-command-btn" class="option-btn send-toggle-btn small" type="button" data-i18n-title="memoryCommandTitle" aria-label="Memory command">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                       <ellipse cx="8" cy="10" rx="2" ry="3"></ellipse>
                       <ellipse cx="16" cy="10" rx="2" ry="3"></ellipse>
                       <path d="M6 14c2-2 6-2 12 0"></path>
                     </svg>
                   </button>
-                  <button
-                    id="image-command-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="imageCommandTitle"
-                    aria-label="Generate image"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
+                  <button id="image-command-btn" class="option-btn send-toggle-btn small" type="button" data-i18n-title="imageCommandTitle" aria-label="Generate image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                       <circle cx="8.5" cy="8.5" r="1.5"></circle>
                       <polyline points="21 15 16 10 5 21"></polyline>
                     </svg>
                   </button>
-                  <button
-                    id="stt-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="sttTitleOff"
-                    aria-label="Toggle STT"
-                  ></button>
-                  <button
-                    id="stt-auto-send-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="sttAutoSendOff"
-                    aria-label="Toggle STT auto-send"
-                  ></button>
-                  <button
-                    id="auto-reply-enabled"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="autoReply"
-                    aria-label="Auto-reply"
-                  >
-                    🤖
-                  </button>
-                  <button
-                    id="enter-to-send-enabled"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="enterToSend"
-                    aria-label="ENTER to send"
-                  >
-                    ⏎
-                  </button>
-                  <button
-                    id="shortcuts-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="showShortcutsTitle"
-                    aria-label="Show shortcuts"
-                  >
-                    ⌨
-                  </button>
-                  <button
-                    id="chat-opacity-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="chatOpacityToggleTitle"
-                    aria-label="Adjust transparency"
-                  >
-                    α
-                  </button>
-                  <button
-                    id="ooc-mode-toggle"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="oocModeTitleOff"
-                    aria-label="Toggle OOC mode"
-                  ></button>
-                  <button
-                    id="chat-options-toggle-btn"
-                    class="option-btn send-toggle-btn small"
-                    type="button"
-                    data-i18n-title="chatOptionsTitle"
-                    aria-label="Chat options"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
+                  <button id="stt-toggle-btn" class="option-btn send-toggle-btn small" type="button" data-i18n-title="sttTitleOff" aria-label="Toggle STT"></button>
+                  <button id="stt-auto-send-toggle-btn" class="option-btn send-toggle-btn small" type="button" data-i18n-title="sttAutoSendOff" aria-label="Toggle STT auto-send"></button>
+                  <button id="auto-reply-enabled" class="option-btn send-toggle-btn small" type="button" data-i18n-title="autoReply" aria-label="Auto-reply">🤖</button>
+                  <button id="enter-to-send-enabled" class="option-btn send-toggle-btn small" type="button" data-i18n-title="enterToSend" aria-label="ENTER to send">⏎</button>
+                  <button id="shortcuts-toggle-btn" class="option-btn send-toggle-btn small" type="button" data-i18n-title="showShortcutsTitle" aria-label="Show shortcuts">⌨</button>
+                  <button id="chat-opacity-toggle-btn" class="option-btn send-toggle-btn small" type="button" data-i18n-title="chatOpacityToggleTitle" aria-label="Adjust transparency">α</button>
+                  <button id="ooc-mode-toggle" class="option-btn send-toggle-btn small" type="button" data-i18n-title="oocModeTitleOff" aria-label="Toggle OOC mode"></button>
+                  <button id="chat-options-toggle-btn" class="option-btn send-toggle-btn small" type="button" data-i18n-title="chatOptionsTitle" aria-label="Chat options">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="1"></circle>
                       <circle cx="19" cy="12" r="1"></circle>
                       <circle cx="5" cy="12" r="1"></circle>
                     </svg>
                   </button>
-                  <img
-                    id="persona-selected-avatar"
-                    class="persona-selected-avatar small"
-                    data-i18n-title="selectedPersonaAvatar"
-                    alt="Persona avatar"
-                  />
-                  <select
-                    id="persona-select"
-                    data-i18n-title="selectPersona"
-                    aria-label="Select persona"
-                  ></select>
+                  <img id="persona-selected-avatar" class="persona-selected-avatar small" data-i18n-title="selectedPersonaAvatar" alt="Persona avatar" />
+                  <select id="persona-select" data-i18n-title="selectPersona" aria-label="Select persona"></select>
                   <button id="send-btn" class="primary-btn"></button>
                 </div>
               </div>
               <div id="chat-options-dropdown" class="chat-options-dropdown hidden"></div>
-              <button
-                id="auto-tts-toggle-btn"
-                class="hidden"
-                type="button"
-              ></button>
+              <button id="auto-tts-toggle-btn" class="hidden" type="button"></button>
               <div id="chat-opacity-overlay" class="chat-opacity-overlay hidden">
                 <div class="chat-opacity-overlay-content">
-                  <div
-                    class="chat-opacity-overlay-title"
-                    data-i18n="chatOpacityTitle"
-                  >
-                    Transparency
-                  </div>
+                  <div class="chat-opacity-overlay-title" data-i18n="chatOpacityTitle">Transparency</div>
                   <div class="chat-opacity-slider-row">
-                    <input
-                      id="chat-opacity-slider"
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                    />
-                    <span
-                      id="chat-opacity-value"
-                      class="chat-opacity-value"
-                    ></span>
+                    <input id="chat-opacity-slider" type="range" min="0" max="100" step="1" />
+                    <span id="chat-opacity-value" class="chat-opacity-value"></span>
                   </div>
-                  <button
-                    id="chat-opacity-overlay-close"
-                    type="button"
-                    class="secondary-btn"
-                    data-i18n="chatOpacityClose"
-                  >
-                    Done
-                  </button>
+                  <button id="chat-opacity-overlay-close" type="button" class="secondary-btn" data-i18n="chatOpacityClose">Done</button>
                 </div>
               </div>
             </div>
@@ -720,30 +245,13 @@
 
     <div id="modal-layer"></div>
 
-    <div
-      id="toast-container"
-      class="toast-container"
-      aria-live="polite"
-      aria-atomic="true"
-    ></div>
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-    <div
-      id="confirm-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="confirm-title"
-    >
+    <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
       <div class="modal-card">
         <div class="modal-header">
           <h3 id="confirm-title">Confirm</h3>
-          <button
-            class="icon-btn modal-close"
-            id="confirm-cancel-btn"
-            aria-label="Close confirmation"
-          >
-            &times;
-          </button>
+          <button class="icon-btn modal-close" id="confirm-cancel-btn" aria-label="Close confirmation">&times;</button>
         </div>
         <div class="modal-body">
           <div id="confirm-message-content" class="confirm-message-content"></div>
@@ -755,68 +263,27 @@
       </div>
     </div>
 
-    <div
-      id="unsaved-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="unsaved-title"
-    >
+    <div id="unsaved-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="unsaved-title">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 id="unsaved-title" data-i18n="unsavedChangesTitle">
-            Unsaved Changes
-          </h3>
+          <h3 id="unsaved-title" data-i18n="unsavedChangesTitle">Unsaved Changes</h3>
         </div>
         <div class="modal-body">
           <p id="unsaved-message" data-i18n="unsavedChangesConfirm"></p>
         </div>
         <div class="modal-footer">
-          <button
-            id="unsaved-back-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="back"
-          >
-            Back
-          </button>
-          <button
-            id="unsaved-close-btn"
-            class="secondary-btn danger-btn"
-            type="button"
-            data-i18n="closeWithoutSaving"
-          >
-            Close Without Saving
-          </button>
-          <button
-            id="unsaved-save-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="saveAndClose"
-          >
-            Save and Close
-          </button>
+          <button id="unsaved-back-btn" class="secondary-btn" type="button" data-i18n="back">Back</button>
+          <button id="unsaved-close-btn" class="secondary-btn danger-btn" type="button" data-i18n="closeWithoutSaving">Close Without Saving</button>
+          <button id="unsaved-save-btn" class="primary-btn" type="button" data-i18n="saveAndClose">Save and Close</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="text-input-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="text-input-title"
-    >
+    <div id="text-input-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="text-input-title">
       <div class="modal-card">
         <div class="modal-header">
           <h3 id="text-input-title">Rename</h3>
-          <button
-            class="icon-btn modal-close"
-            id="text-input-cancel-x"
-            aria-label="Close input modal"
-          >
-            &times;
-          </button>
+          <button class="icon-btn modal-close" id="text-input-cancel-x" aria-label="Close input modal">&times;</button>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -831,94 +298,25 @@
       </div>
     </div>
 
-    <div
-      id="settings-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-title"
-    >
+    <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <div class="modal-card">
         <div class="modal-header">
           <h3 id="settings-title" data-i18n="settingsTitle">Settings</h3>
           <div class="settings-header-actions">
-            <button
-              id="settings-export-btn"
-              class="icon-btn small"
-              data-i18n-title="exportSettingsTitle"
-              aria-label="Export settings"
-            >
-              ⇩
-            </button>
-            <button
-              id="settings-import-btn"
-              class="icon-btn small"
-              data-i18n-title="importSettingsTitle"
-              aria-label="Import settings"
-            >
-              ⇩
-            </button>
-            <input
-              type="file"
-              id="settings-import-input"
-              accept=".json"
-              class="hidden"
-            />
+            <button id="settings-export-btn" class="icon-btn small" data-i18n-title="exportSettingsTitle" aria-label="Export settings">⇩</button>
+            <button id="settings-import-btn" class="icon-btn small" data-i18n-title="importSettingsTitle" aria-label="Import settings">⇩</button>
+            <input type="file" id="settings-import-input" accept=".json" class="hidden" />
             <span id="settings-version" class="muted settings-version"></span>
-            <button class="icon-btn modal-close" data-close-modal>
-              &times;
-            </button>
+            <button class="icon-btn modal-close" data-close-modal>&times;</button>
           </div>
         </div>
         <div class="settings-tabs" id="settings-tabs">
-          <button
-            class="settings-tab-btn active"
-            type="button"
-            data-settings-tab-btn="api"
-            data-i18n="tabApi"
-          >
-            API
-          </button>
-          <button
-            class="settings-tab-btn"
-            type="button"
-            data-settings-tab-btn="appearance"
-            data-i18n="tabAppearance"
-          >
-            Appearance
-          </button>
-          <button
-            class="settings-tab-btn"
-            type="button"
-            data-settings-tab-btn="threads"
-            data-i18n="tabThreads"
-          >
-            Threads
-          </button>
-          <button
-            class="settings-tab-btn"
-            type="button"
-            data-settings-tab-btn="prompting"
-            data-i18n="tabPrompting"
-          >
-            Prompting
-          </button>
-          <button
-            class="settings-tab-btn"
-            type="button"
-            data-settings-tab-btn="shortcuts"
-            data-i18n="tabShortcuts"
-          >
-            Shortcuts
-          </button>
-          <button
-            class="settings-tab-btn"
-            type="button"
-            data-settings-tab-btn="defaults"
-            data-i18n="tabDefaults"
-          >
-            Defaults
-          </button>
+          <button class="settings-tab-btn active" type="button" data-settings-tab-btn="api" data-i18n="tabApi">API</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="appearance" data-i18n="tabAppearance">Appearance</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="threads" data-i18n="tabThreads">Threads</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="prompting" data-i18n="tabPrompting">Prompting</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="shortcuts" data-i18n="tabShortcuts">Shortcuts</button>
+          <button class="settings-tab-btn" type="button" data-settings-tab-btn="defaults" data-i18n="tabDefaults">Defaults</button>
         </div>
         <div class="modal-body" id="settings-modal-body">
           <!-- <form id="settings-form" novalidate onsubmit="return false;"> -->
@@ -926,104 +324,53 @@
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="aiProviderLabel">AI Provider</span><button type="button" class="info-btn" data-info="aiProvider">i</button></span>
               <select id="ai-provider-select">
-                <option value="openrouter" data-i18n="providerOpenRouter">
-                  OpenRouter
-                </option>
-                <option value="aihorde" data-i18n="providerAIHorde">
-                  AI Horde
-                </option>
-                <option value="lmstudio" data-i18n="providerLMStudio">
-                  LM Studio
-                </option>
-                <option value="groq" data-i18n="providerGroq">
-                  Groq
-                </option>
+                <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
+                <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
+                <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
+                <option value="groq" data-i18n="providerGroq">Groq</option>
               </select>
             </div>
             <div class="form-field" id="openrouter-api-key-container">
               <span class="label-with-info"><span data-i18n="openRouterApiKey">OpenRouter API Key</span><button type="button" class="info-btn" data-info="openRouterApiKey">i</button></span>
-              <input
-                id="openrouter-api-key"
-                type="text"
-                data-i18n-placeholder="placeholderApiKey"
-                autocomplete="off"
-                spellcheck="false"
-              />
+              <input id="openrouter-api-key" type="text" data-i18n-placeholder="placeholderApiKey" autocomplete="off" spellcheck="false" />
             </div>
             <div class="form-field hidden" id="horde-api-key-container">
               <span class="label-with-info"><span data-i18n="aiHordeApiKey">AI Horde API Key</span><button type="button" class="info-btn" data-info="aiHordeApiKey">i</button></span>
-              <input
-                id="horde-api-key"
-                type="text"
-                data-i18n-placeholder="placeholderHordeApiKey"
-                autocomplete="off"
-                spellcheck="false"
-              />
+              <input id="horde-api-key" type="text" data-i18n-placeholder="placeholderHordeApiKey" autocomplete="off" spellcheck="false" />
             </div>
             <div class="form-field hidden" id="horde-api-method-container">
               <span class="label-with-info"><span data-i18n="aiHordeApiMethod">AI Horde API Method</span><button type="button" class="info-btn" data-info="aiHordeApiMethod">i</button></span>
               <select id="horde-api-method">
-                <option value="native" data-i18n="aiHordeApiMethodNative">
-                  Native REST API
-                </option>
-                <option value="openai" data-i18n="aiHordeApiMethodOpenai">
-                  OpenAI-Compatible
-                </option>
+                <option value="native" data-i18n="aiHordeApiMethodNative">Native REST API</option>
+                <option value="openai" data-i18n="aiHordeApiMethodOpenai">OpenAI-Compatible</option>
               </select>
             </div>
             <div class="form-field hidden" id="lmstudio-base-url-container">
               <span class="label-with-info"><span data-i18n="lmStudioBaseUrl">LM Studio Base URL</span><button type="button" class="info-btn" data-info="lmStudioBaseUrl">i</button></span>
-              <input
-                id="lmstudio-base-url"
-                type="text"
-                data-i18n-placeholder="placeholderLmStudioUrl"
-                autocomplete="off"
-                spellcheck="false"
-              />
+              <input id="lmstudio-base-url" type="text" data-i18n-placeholder="placeholderLmStudioUrl" autocomplete="off" spellcheck="false" />
             </div>
             <div class="form-field hidden" id="lmstudio-api-method-container">
               <span class="label-with-info"><span data-i18n="lmStudioApiMethod">LM Studio API Method</span><button type="button" class="info-btn" data-info="lmStudioApiMethod">i</button></span>
               <select id="lmstudio-api-method">
-                <option value="openai" data-i18n="lmStudioApiMethodOpenai">
-                  OpenAI-Compatible
-                </option>
-                <option value="native" data-i18n="lmStudioApiMethodNative">
-                  Native REST API
-                </option>
+                <option value="openai" data-i18n="lmStudioApiMethodOpenai">OpenAI-Compatible</option>
+                <option value="native" data-i18n="lmStudioApiMethodNative">Native REST API</option>
               </select>
             </div>
             <div class="form-field hidden" id="groq-api-key-container">
               <span class="label-with-info"><span data-i18n="groqApiKey">Groq API Key</span><button type="button" class="info-btn" data-info="groqApiKey">i</button></span>
-              <input
-                id="groq-api-key"
-                type="text"
-                data-i18n-placeholder="placeholderGroqApiKey"
-                autocomplete="off"
-                spellcheck="false"
-              />
+              <input id="groq-api-key" type="text" data-i18n-placeholder="placeholderGroqApiKey" autocomplete="off" spellcheck="false" />
             </div>
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="modelLabel">Model</span><button type="button" class="info-btn" data-info="model">i</button></span>
               <div class="model-select-wrapper" id="model-select-wrapper">
                 <select id="model-select"></select>
-                <div id="model-select-display" class="model-select-display">
-                  Loading...
-                </div>
-                <div
-                  id="model-custom-dropdown"
-                  class="model-custom-dropdown hidden"
-                >
-                  <div
-                    id="model-dropdown-options"
-                    class="model-dropdown-options"
-                  ></div>
+                <div id="model-select-display" class="model-select-display">Loading...</div>
+                <div id="model-custom-dropdown" class="model-custom-dropdown hidden">
+                  <div id="model-dropdown-options" class="model-dropdown-options"></div>
                 </div>
               </div>
             </div>
-            <div
-              class="settings-inline-row model-filter-row"
-              id="model-filter-row"
-            >
+            <div class="settings-inline-row model-filter-row" id="model-filter-row">
               <div id="model-loading-status" class="muted hidden">
                 <span data-i18n="loadingModels">Loading models...</span>
               </div>
@@ -1038,9 +385,7 @@
               <div class="form-field" id="model-modality-field">
                 <span data-i18n="modalityLabel">Modality</span>
                 <select id="model-modality-filter">
-                  <option value="text-only" data-i18n="textToText">
-                    Text - Text
-                  </option>
+                  <option value="text-only" data-i18n="textToText">Text - Text</option>
                   <option value="all" data-i18n="all">All</option>
                 </select>
               </div>
@@ -1048,246 +393,151 @@
                 <span data-i18n="orderLabel">Order</span>
                 <select id="model-sort-order">
                   <option value="name_asc" data-i18n="nameAsc">Name A-Z</option>
-                  <option value="name_desc" data-i18n="nameDesc">
-                    Name Z-A
-                  </option>
-                  <option value="created_desc" data-i18n="createdNewest">
-                    Created Newest
-                  </option>
-                  <option value="created_asc" data-i18n="createdOldest">
-                    Created Oldest
-                  </option>
+                  <option value="name_desc" data-i18n="nameDesc">Name Z-A</option>
+                  <option value="created_desc" data-i18n="createdNewest">Created Newest</option>
+                  <option value="created_asc" data-i18n="createdOldest">Created Oldest</option>
                 </select>
               </div>
               <div class="form-field form-field-btn">
-                <button
-                  id="model-refresh-btn"
-                  class="secondary-btn"
-                  type="button"
-                  data-i18n="reload"
-                >
-                  Reload
-                </button>
+                <button id="model-refresh-btn" class="secondary-btn" type="button" data-i18n="reload">Reload</button>
               </div>
             </div>
             <div id="model-selected-meta" class="muted"></div>
             <div id="model-roleplay-warning" class="model-warning hidden">
-            
-            <div class="form-field">
-              <div class="label-inline">
-                <span class="label-with-info"><span data-i18n="maxTokensLabel">Max Completion Tokens</span><button type="button" class="info-btn" data-info="maxTokens">i</button></span>
-                <span id="max-tokens-value" class="muted"></span>
-              </div>
-              <input
-                id="max-tokens-slider"
-                type="range"
-                min="512"
-                max="8192"
-                step="64"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span class="label-with-info"><span data-i18n="temperatureLabel">Temperature</span><button type="button" class="info-btn" data-info="temperature">i</button></span>
-                <span id="temperature-value" class="muted"></span>
-              </div>
-              <input
-                id="temperature-slider"
-                type="range"
-                min="0"
-                max="2"
-                step="0.05"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span class="label-with-info"><span data-i18n="topPLabel">Top P</span><button type="button" class="info-btn" data-info="topP">i</button></span>
-                <span id="top-p-value" class="muted"></span>
-              </div>
-              <input
-                id="top-p-slider"
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span class="label-with-info"><span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span><button type="button" class="info-btn" data-info="frequencyPenalty">i</button></span>
-                <span id="frequency-penalty-value" class="muted"></span>
-              </div>
-              <input
-                id="frequency-penalty-slider"
-                type="range"
-                min="-2"
-                max="2"
-                step="0.1"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span class="label-with-info"><span data-i18n="presencePenaltyLabel">Presence Penalty</span><button type="button" class="info-btn" data-info="presencePenalty">i</button></span>
-                <span id="presence-penalty-value" class="muted"></span>
-              </div>
-              <input
-                id="presence-penalty-slider"
-                type="range"
-                min="-2"
-                max="2"
-                step="0.1"
-              />
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span class="label-with-info"><span data-i18n="completionCooldownLabel"
-                  >Completion Cooldown</span><button type="button" class="info-btn" data-info="completionCooldown">i</button></span>
-                <span id="completion-cooldown-value" class="muted"></span>
-              </div>
-              <input
-                id="completion-cooldown-slider"
-                type="range"
-                min="0"
-                max="15"
-                step="1"
-              />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="stream-enabled" checked />
-              <span class="label-with-info"><span data-i18n="stream">Stream</span><button type="button" class="info-btn" data-info="stream">i</button></span>
-            </span>
-            <div class="form-field">
-              <span class="label-with-info"><span data-i18n="stopStringsLabel">Stop Strings</span><button type="button" class="info-btn" data-info="stopStrings">i</button></span>
-              <input
-                id="stop-strings"
-                type="text"
-                data-i18n-placeholder="placeholderStopStrings"
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </div>
-            <fieldset class="settings-collapsible">
-              <legend class="settings-collapsible-header">
-                <span class="settings-collapsible-toggle">&#9656;</span>
-                <span data-i18n="autoTitleSettings">Auto-Title</span>
-              </legend>
-              <div class="settings-collapsible-content collapsed">
-                <div class="form-field">
-                  <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
-                  <select id="default-auto-title-provider">
-                    <option value="openrouter" data-i18n="providerOpenRouter">
-                      OpenRouter
-                    </option>
-                    <option value="aihorde" data-i18n="providerAIHorde">
-                      AI Horde
-                    </option>
-                    <option value="lmstudio" data-i18n="providerLMStudio">
-                      LM Studio
-                    </option>
-                    <option value="groq" data-i18n="providerGroq">
-                      Groq
-                    </option>
-                  </select>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span class="label-with-info"><span data-i18n="maxTokensLabel">Max Completion Tokens</span><button type="button" class="info-btn" data-info="maxTokens">i</button></span>
+                  <span id="max-tokens-value" class="muted"></span>
                 </div>
-                <div class="form-field">
-                  <span data-i18n="autoTitleModel">Auto-Title Model</span>
-                  <select id="default-auto-title-model"></select>
+                <input id="max-tokens-slider" type="range" min="512" max="8192" step="64" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span class="label-with-info"><span data-i18n="temperatureLabel">Temperature</span><button type="button" class="info-btn" data-info="temperature">i</button></span>
+                  <span id="temperature-value" class="muted"></span>
                 </div>
-                <div class="form-field">
-                  <div class="label-inline">
-                    <span data-i18n="autoTitleTemperature"
-                      >Auto-Title Temperature</span
-                    >
-                    <span id="default-auto-title-temp-value" class="muted"></span>
+                <input id="temperature-slider" type="range" min="0" max="2" step="0.05" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span class="label-with-info"><span data-i18n="topPLabel">Top P</span><button type="button" class="info-btn" data-info="topP">i</button></span>
+                  <span id="top-p-value" class="muted"></span>
+                </div>
+                <input id="top-p-slider" type="range" min="0" max="1" step="0.05" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span class="label-with-info"><span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span><button type="button" class="info-btn" data-info="frequencyPenalty">i</button></span>
+                  <span id="frequency-penalty-value" class="muted"></span>
+                </div>
+                <input id="frequency-penalty-slider" type="range" min="-2" max="2" step="0.1" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span class="label-with-info"><span data-i18n="presencePenaltyLabel">Presence Penalty</span><button type="button" class="info-btn" data-info="presencePenalty">i</button></span>
+                  <span id="presence-penalty-value" class="muted"></span>
+                </div>
+                <input id="presence-penalty-slider" type="range" min="-2" max="2" step="0.1" />
+              </div>
+              <div class="form-field">
+                <div class="label-inline">
+                  <span class="label-with-info"
+                    ><span data-i18n="completionCooldownLabel">Completion Cooldown</span><button type="button" class="info-btn" data-info="completionCooldown">i</button></span
+                  >
+                  <span id="completion-cooldown-value" class="muted"></span>
+                </div>
+                <input id="completion-cooldown-slider" type="range" min="0" max="15" step="1" />
+              </div>
+              <span class="checkbox-line">
+                <input type="checkbox" id="stream-enabled" checked />
+                <span class="label-with-info"><span data-i18n="stream">Stream</span><button type="button" class="info-btn" data-info="stream">i</button></span>
+              </span>
+              <div class="form-field">
+                <span class="label-with-info"><span data-i18n="stopStringsLabel">Stop Strings</span><button type="button" class="info-btn" data-info="stopStrings">i</button></span>
+                <input id="stop-strings" type="text" data-i18n-placeholder="placeholderStopStrings" autocomplete="off" spellcheck="false" />
+              </div>
+              <fieldset class="settings-collapsible">
+                <legend class="settings-collapsible-header">
+                  <span class="settings-collapsible-toggle">&#9656;</span>
+                  <span data-i18n="autoTitleSettings">Auto-Title</span>
+                </legend>
+                <div class="settings-collapsible-content collapsed">
+                  <div class="form-field">
+                    <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
+                    <select id="default-auto-title-provider">
+                      <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
+                      <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
+                      <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
+                      <option value="groq" data-i18n="providerGroq">Groq</option>
+                    </select>
                   </div>
-                  <input
-                    id="default-auto-title-temp"
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.05"
-                    value="0.25"
-                  />
-                </div>
-                <div class="form-field">
-                  <span data-i18n="autoTitleStopStrings">Auto-Title Stop Strings</span>
-                  <input
-                    id="default-auto-title-stop-strings"
-                    type="text"
-                    placeholder="e.g. | stop1, stop2"
-                  />
-                </div>
-                <span class="checkbox-line">
-                  <input type="checkbox" id="default-auto-title-stream" />
-                  <span data-i18n="autoTitleStream">Auto-Title Stream</span>
-                </span>
-              </div>
-            </fieldset>
-            <fieldset class="settings-collapsible">
-              <legend class="settings-collapsible-header">
-                <span class="settings-collapsible-toggle">&#9656;</span>
-                <span data-i18n="summarySettings">Summary</span>
-              </legend>
-              <div class="settings-collapsible-content collapsed">
-                <div class="form-field">
-                  <span data-i18n="summaryProvider">Summary Provider</span>
-                  <select id="default-summary-provider">
-                    <option value="openrouter" data-i18n="providerOpenRouter">
-                      OpenRouter
-                    </option>
-                    <option value="aihorde" data-i18n="providerAIHorde">
-                      AI Horde
-                    </option>
-                    <option value="lmstudio" data-i18n="providerLMStudio">
-                      LM Studio
-                    </option>
-                    <option value="groq" data-i18n="providerGroq">
-                      Groq
-                    </option>
-                  </select>
-                </div>
-                <div class="form-field">
-                  <span data-i18n="summaryModel">Summary Model</span>
-                  <select id="default-summary-model"></select>
-                </div>
-                <div class="form-field">
-                  <div class="label-inline">
-                    <span data-i18n="summaryTemperature">Summary Temperature</span>
-                    <span id="default-summary-temp-value" class="muted"></span>
+                  <div class="form-field">
+                    <span data-i18n="autoTitleModel">Auto-Title Model</span>
+                    <select id="default-auto-title-model"></select>
                   </div>
-                  <input
-                    id="default-summary-temp"
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.05"
-                    value="0.25"
-                  />
+                  <div class="form-field">
+                    <div class="label-inline">
+                      <span data-i18n="autoTitleTemperature">Auto-Title Temperature</span>
+                      <span id="default-auto-title-temp-value" class="muted"></span>
+                    </div>
+                    <input id="default-auto-title-temp" type="range" min="0" max="2" step="0.05" value="0.25" />
+                  </div>
+                  <div class="form-field">
+                    <span data-i18n="autoTitleStopStrings">Auto-Title Stop Strings</span>
+                    <input id="default-auto-title-stop-strings" type="text" placeholder="e.g. | stop1, stop2" />
+                  </div>
+                  <span class="checkbox-line">
+                    <input type="checkbox" id="default-auto-title-stream" />
+                    <span data-i18n="autoTitleStream">Auto-Title Stream</span>
+                  </span>
                 </div>
-                <div class="form-field">
-                  <span data-i18n="summaryStopStrings">Summary Stop Strings</span>
-                  <input
-                    id="default-summary-stop-strings"
-                    type="text"
-                    placeholder="e.g. | stop1, stop2"
-                  />
+              </fieldset>
+              <fieldset class="settings-collapsible">
+                <legend class="settings-collapsible-header">
+                  <span class="settings-collapsible-toggle">&#9656;</span>
+                  <span data-i18n="summarySettings">Summary</span>
+                </legend>
+                <div class="settings-collapsible-content collapsed">
+                  <div class="form-field">
+                    <span data-i18n="summaryProvider">Summary Provider</span>
+                    <select id="default-summary-provider">
+                      <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
+                      <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
+                      <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
+                      <option value="groq" data-i18n="providerGroq">Groq</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <span data-i18n="summaryModel">Summary Model</span>
+                    <select id="default-summary-model"></select>
+                  </div>
+                  <div class="form-field">
+                    <div class="label-inline">
+                      <span data-i18n="summaryTemperature">Summary Temperature</span>
+                      <span id="default-summary-temp-value" class="muted"></span>
+                    </div>
+                    <input id="default-summary-temp" type="range" min="0" max="2" step="0.05" value="0.25" />
+                  </div>
+                  <div class="form-field">
+                    <span data-i18n="summaryStopStrings">Summary Stop Strings</span>
+                    <input id="default-summary-stop-strings" type="text" placeholder="e.g. | stop1, stop2" />
+                  </div>
+                  <span class="checkbox-line">
+                    <input type="checkbox" id="default-summary-stream" />
+                    <span data-i18n="summaryStream">Summary Stream</span>
+                  </span>
                 </div>
-                <span class="checkbox-line">
-                  <input type="checkbox" id="default-summary-stream" />
-                  <span data-i18n="summaryStream">Summary Stream</span>
-                </span>
+              </fieldset>
+
+              <div class="form-field">
+                <span class="label-with-info"><span data-i18n="modelProfileLabel">Model Profile</span></span>
+                <div class="flex-row gap-2">
+                  <select id="model-profile-select" class="flex-grow">
+                    <option value="">-- Select Profile --</option>
+                  </select>
+                  <button id="new-model-profile-btn" class="secondary-btn" data-i18n="newProfileBtn">New Profile</button>
+                </div>
               </div>
-            </fieldset>
-            
-            <div class="form-field">
-              <span class="label-with-info"><span data-i18n="modelProfileLabel">Model Profile</span></span>
-              <div class="flex-row gap-2">
-                <select id="model-profile-select" class="flex-grow">
-                  <option value="">-- Select Profile --</option>
-                </select>
-                <button id="new-model-profile-btn" class="secondary-btn" data-i18n="newProfileBtn">New Profile</button>
-              </div>
-            </div>
             </div>
             <div id="model-profile-fields" class="hidden">
               <div class="form-field">
@@ -1344,6 +594,7 @@
                 <button id="delete-model-profile-btn" class="secondary-btn danger-btn" data-i18n="deleteProfileBtn">Delete Profile</button>
               </div>
             </div>
+          </div>
           <div data-settings-group="appearance" class="settings-group">
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="languageLabel">Interface Language</span><button type="button" class="info-btn" data-info="language">i</button></span>
@@ -1371,24 +622,15 @@
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="sttModeLabel">STT Mode</span><button type="button" class="info-btn" data-info="sttMode">i</button></span>
               <select id="stt-mode-select">
-                <option value="push-to-talk" data-i18n="sttModePushToTalk">
-                  Push-to-Talk
-                </option>
-                <option value="auto-stop" data-i18n="sttModeAutoStop">
-                  Auto-Stop on Silence
-                </option>
+                <option value="push-to-talk" data-i18n="sttModePushToTalk">Push-to-Talk</option>
+                <option value="auto-stop" data-i18n="sttModeAutoStop">Auto-Stop on Silence</option>
               </select>
             </div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="sttSilenceDurationLabel"
-                >Silence Duration (seconds)</span><button type="button" class="info-btn" data-info="sttSilenceDuration">i</button></span>
-              <input
-                type="number"
-                id="stt-silence-duration"
-                min="1"
-                max="10"
-                value="2"
-              />
+              <span class="label-with-info"
+                ><span data-i18n="sttSilenceDurationLabel">Silence Duration (seconds)</span><button type="button" class="info-btn" data-info="sttSilenceDuration">i</button></span
+              >
+              <input type="number" id="stt-silence-duration" min="1" max="10" value="2" />
             </div>
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="themeLabel">Theme</span><button type="button" class="info-btn" data-info="theme">i</button></span>
@@ -1397,15 +639,9 @@
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span><button type="button" class="info-btn" data-info="marqueeBehavior">i</button></span>
               <select id="marquee-behavior-select">
-                <option value="disabled" data-i18n="marqueeBehaviorDisabled">
-                  Disabled
-                </option>
-                <option value="hover" data-i18n="marqueeBehaviorOnHover">
-                  On Hover
-                </option>
-                <option value="always" data-i18n="marqueeBehaviorAlways">
-                  Always
-                </option>
+                <option value="disabled" data-i18n="marqueeBehaviorDisabled">Disabled</option>
+                <option value="hover" data-i18n="marqueeBehaviorOnHover">On Hover</option>
+                <option value="always" data-i18n="marqueeBehaviorAlways">Always</option>
               </select>
             </div>
             <div class="form-field">
@@ -1419,66 +655,38 @@
               </select>
             </div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="botCardAvatarEffectLabel"
-                >BOT Card Avatar Effect</span><button type="button" class="info-btn" data-info="botCardAvatarEffect">i</button></span>
+              <span class="label-with-info"
+                ><span data-i18n="botCardAvatarEffectLabel">BOT Card Avatar Effect</span><button type="button" class="info-btn" data-info="botCardAvatarEffect">i</button></span
+              >
               <select id="bot-card-avatar-effect">
-                <option value="none" data-i18n="botCardAvatarEffectNone">
-                  None
-                </option>
-                <option
-                  value="carousel"
-                  data-i18n="botCardAvatarEffectCarousel"
-                >
-                  Carousel
-                </option>
-                <option value="hover" data-i18n="botCardAvatarEffectHover">
-                  On Hover
-                </option>
+                <option value="none" data-i18n="botCardAvatarEffectNone">None</option>
+                <option value="carousel" data-i18n="botCardAvatarEffectCarousel">Carousel</option>
+                <option value="hover" data-i18n="botCardAvatarEffectHover">On Hover</option>
               </select>
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span class="label-with-info"><span data-i18n="botCardAvatarTransitionDelayLabel"
-                  >Transition Delay</span><button type="button" class="info-btn" data-info="botCardAvatarTransitionDelay">i</button></span>
-                <span
-                  id="bot-card-avatar-transition-delay-value"
-                  class="muted"
-                ></span>
+                <span class="label-with-info"
+                  ><span data-i18n="botCardAvatarTransitionDelayLabel">Transition Delay</span><button type="button" class="info-btn" data-info="botCardAvatarTransitionDelay">i</button></span
+                >
+                <span id="bot-card-avatar-transition-delay-value" class="muted"></span>
               </div>
-              <input
-                id="bot-card-avatar-transition-delay-slider"
-                type="range"
-                min="4"
-                max="30"
-                step="1"
-                disabled
-              />
+              <input id="bot-card-avatar-transition-delay-slider" type="range" min="4" max="30" step="1" disabled />
             </div>
             <div class="form-field">
-              <span data-i18n="chatInputButtonSizeLabel"
-                >Chat Input Button Size</span
-              >
+              <span data-i18n="chatInputButtonSizeLabel">Chat Input Button Size</span>
               <select id="chat-input-button-size-select">
-                <option value="regular" data-i18n="chatInputButtonSizeRegular">
-                  Regular
-                </option>
-                <option value="big" data-i18n="chatInputButtonSizeBig"> Big </option>
-                <option value="extra" data-i18n="chatInputButtonSizeExtra">
-                  Extra
-                </option>
+                <option value="regular" data-i18n="chatInputButtonSizeRegular">Regular</option>
+                <option value="big" data-i18n="chatInputButtonSizeBig">Big</option>
+                <option value="extra" data-i18n="chatInputButtonSizeExtra">Extra</option>
               </select>
             </div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="botCardSizeLabel"
-                >BOT Card Size</span><button type="button" class="info-btn" data-info="botCardSize">i</button></span>
+              <span class="label-with-info"><span data-i18n="botCardSizeLabel">BOT Card Size</span><button type="button" class="info-btn" data-info="botCardSize">i</button></span>
               <select id="bot-card-size-select">
-                <option value="small" data-i18n="botCardSizeSmall">
-                  Small
-                </option>
-                <option value="regular" data-i18n="botCardSizeRegular">
-                  Regular
-                </option>
-                <option value="big" data-i18n="botCardSizeBig"> Big </option>
+                <option value="small" data-i18n="botCardSizeSmall">Small</option>
+                <option value="regular" data-i18n="botCardSizeRegular">Regular</option>
+                <option value="big" data-i18n="botCardSizeBig">Big</option>
               </select>
             </div>
             <div class="form-field">
@@ -1486,48 +694,23 @@
                 <span data-i18n="toastDelayLabel">Toast Delay</span>
                 <span id="toast-delay-value" class="muted"></span>
               </div>
-              <input
-                id="toast-delay-slider"
-                type="range"
-                min="1000"
-                max="10000"
-                step="200"
-              />
+              <input id="toast-delay-slider" type="range" min="1000" max="10000" step="200" />
             </div>
             <span class="checkbox-line">
               <input type="checkbox" id="unread-sound-enabled" />
-              <span data-i18n="unreadSoundEnabled"
-                >Play sound for unread messages</span
-              >
+              <span data-i18n="unreadSoundEnabled">Play sound for unread messages</span>
             </span>
           </div>
           <div data-settings-group="threads" class="settings-group">
             <div class="form-field">
               <span data-i18n="oocSystemAvatarLabel">OOC System Avatar</span>
-              <div
-                id="ooc-system-avatar-dropzone"
-                class="char-avatar-dropzone"
-                tabindex="0"
-                aria-label="Upload OOC avatar"
-              >
+              <div id="ooc-system-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload OOC avatar">
                 <img id="ooc-system-avatar-preview" class="hidden" />
                 <span class="dropzone-plus">+</span>
                 <span class="dropzone-hint">Drag & drop or click</span>
-                <button
-                  type="button"
-                  id="ooc-system-avatar-remove"
-                  class="avatar-remove-btn hidden"
-                  data-i18n-title="removeTitle"
-                >
-                  &times;
-                </button>
+                <button type="button" id="ooc-system-avatar-remove" class="avatar-remove-btn hidden" data-i18n-title="removeTitle">&times;</button>
               </div>
-              <input
-                type="file"
-                id="ooc-system-avatar-file-input"
-                accept="image/*"
-                class="hidden"
-              />
+              <input type="file" id="ooc-system-avatar-file-input" accept="image/*" class="hidden" />
             </div>
             <span class="checkbox-line">
               <input type="checkbox" id="autopair-enabled" checked />
@@ -1535,9 +718,7 @@
             </span>
             <span class="checkbox-line">
               <input type="checkbox" id="markdown-enabled" />
-              <span data-i18n="renderMarkdown"
-                >Render Markdown in messages</span
-              >
+              <span data-i18n="renderMarkdown">Render Markdown in messages</span>
             </span>
             <span class="checkbox-line">
               <input type="checkbox" id="allow-message-html" />
@@ -1561,9 +742,7 @@
               <span data-i18n="showTokenCounts">Show token counts</span>
             </span>
             <div class="form-field">
-              <span data-i18n="messageBubbleFontSize"
-                >Message Bubble Font Size</span
-              >
+              <span data-i18n="messageBubbleFontSize">Message Bubble Font Size</span>
               <select id="message-bubble-font-size">
                 <option value="small">Small</option>
                 <option value="regular" selected>Regular</option>
@@ -1601,94 +780,41 @@
             </details>
             <div class="form-field">
               <span data-i18n="summaryThresholdLabel">Summary Threshold</span>
-              <input
-                id="summary-threshold"
-                type="number"
-                min="5"
-                max="100"
-                step="1"
-              />
+              <input id="summary-threshold" type="number" min="5" max="100" step="1" />
             </div>
             <div class="form-field">
-              <span data-i18n="memoryMessagesToKeepLabel"
-                >Amount of Messages to Keep</span
-              >
-              <input
-                id="memory-messages-to-keep"
-                type="number"
-                min="0"
-                max="30"
-                step="1"
-                value="3"
-              />
+              <span data-i18n="memoryMessagesToKeepLabel">Amount of Messages to Keep</span>
+              <input id="memory-messages-to-keep" type="number" min="0" max="30" step="1" value="3" />
             </div>
             <div class="form-field">
               <span data-i18n="memorySlotsLabel">Memory Slots</span>
-              <input
-                id="memory-slots"
-                type="number"
-                min="1"
-                max="10"
-                step="1"
-                value="5"
-              />
+              <input id="memory-slots" type="number" min="1" max="10" step="1" value="5" />
             </div>
             <div class="form-field">
-              <span data-i18n="unloadThresholdLabel"
-                >Message to Keep (0 = all)</span
-              >
-              <input
-                id="auto-unload-threshold"
-                type="number"
-                min="0"
-                max="1000"
-                step="1"
-                title=""
-              />
+              <span data-i18n="unloadThresholdLabel">Message to Keep (0 = all)</span>
+              <input id="auto-unload-threshold" type="number" min="0" max="1000" step="1" title="" />
             </div>
             <div class="form-field">
               <span data-i18n="loreMatchingMode">Lore Matching Mode</span>
               <select id="lore-matching-mode">
-                <option value="keyword" data-i18n="loreMatchingModeKeyword">
-                  Keyword (Word Boundary + Negative Keys + Proximity)
-                </option>
-                <option value="semantic" data-i18n="loreMatchingModeSemantic">
-                  Semantic (Uses Embeddings)
-                </option>
+                <option value="keyword" data-i18n="loreMatchingModeKeyword">Keyword (Word Boundary + Negative Keys + Proximity)</option>
+                <option value="semantic" data-i18n="loreMatchingModeSemantic">Semantic (Uses Embeddings)</option>
               </select>
             </div>
-            <div
-              class="form-field hidden"
-              id="lore-semantic-threshold-container"
-            >
+            <div class="form-field hidden" id="lore-semantic-threshold-container">
               <span data-i18n="loreSemanticThreshold">Semantic Threshold</span>
-              <input
-                id="lore-semantic-threshold"
-                type="number"
-                min="0"
-                max="1"
-                step="0.05"
-                value="0.5"
-              />
-              <span class="settings-hint" data-i18n="loreSemanticThresholdHint"
-                >Higher = stricter matching (0.5-0.7 recommended)</span
-              >
+              <input id="lore-semantic-threshold" type="number" min="0" max="1" step="0.05" value="0.5" />
+              <span class="settings-hint" data-i18n="loreSemanticThresholdHint">Higher = stricter matching (0.5-0.7 recommended)</span>
             </div>
             <div class="form-field">
               <span data-i18n="chatMessageAlignment">Message Alignment</span>
               <select id="chat-message-alignment">
-                <option value="left" data-i18n="messageAlignmentLeft">
-                  Left (Default)
-                </option>
-                <option value="center" data-i18n="messageAlignmentCenter">
-                  Center
-                </option>
+                <option value="left" data-i18n="messageAlignmentLeft">Left (Default)</option>
+                <option value="center" data-i18n="messageAlignmentCenter">Center</option>
               </select>
             </div>
             <div class="form-field">
-              <span data-i18n="postprocessRules"
-                >Post-processing Rules (JSON)</span
-              >
+              <span data-i18n="postprocessRules">Post-processing Rules (JSON)</span>
               <!-- prettier-ignore -->
               <textarea
                   id="postprocess-rules-json"
@@ -1700,43 +826,24 @@
           <div data-settings-group="prompting" class="settings-group">
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="defaultCharacterPrompt"
-                  >Default Character Prompt</span
-                >
+                <span data-i18n="defaultCharacterPrompt">Default Character Prompt</span>
                 <span id="global-prompt-template-count" class="token-count muted hidden">0 tokens</span>
               </div>
-              <textarea
-                id="global-prompt-template"
-                rows="7"
-                data-i18n-placeholder="placeholderDefaultCharacterPrompt"
-              ></textarea>
+              <textarea id="global-prompt-template" rows="7" data-i18n-placeholder="placeholderDefaultCharacterPrompt"></textarea>
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="memorySummarizerPrompt"
-                  >Memory Summarizer System Prompt</span
-                >
+                <span data-i18n="memorySummarizerPrompt">Memory Summarizer System Prompt</span>
                 <span id="summary-system-prompt-count" class="token-count muted hidden">0 tokens</span>
               </div>
-              <textarea
-                id="summary-system-prompt"
-                rows="3"
-                data-i18n-placeholder="placeholderMemorySummarizerSystem"
-              ></textarea>
+              <textarea id="summary-system-prompt" rows="3" data-i18n-placeholder="placeholderMemorySummarizerSystem"></textarea>
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="memorySummarizerUserPrompt"
-                  >User Prompt for Memory Summarization</span
-                >
+                <span data-i18n="memorySummarizerUserPrompt">User Prompt for Memory Summarization</span>
                 <span id="memory-summarizer-user-prompt-count" class="token-count muted hidden">0 tokens</span>
               </div>
-              <textarea
-                id="memory-summarizer-user-prompt"
-                rows="3"
-                data-i18n-placeholder="placeholderMemorySummarizerUser"
-                placeholder="User prompt for memory summarization"
-              ></textarea>
+              <textarea id="memory-summarizer-user-prompt" rows="3" data-i18n-placeholder="placeholderMemorySummarizerUser" placeholder="User prompt for memory summarization"></textarea>
             </div>
             <div class="form-field">
               <div class="label-inline">
@@ -1753,42 +860,26 @@
               <textarea id="ooc-user-message-format" rows="2"></textarea>
             </div>
             <div class="form-field">
-              <span data-i18n="summaryMessagesPreProcessingJson"
-                >Summary Messages Pre-processing (JSON)</span
-              >
-              <textarea
-                id="summary-messages-preprocessing"
-                rows="2"
-                data-i18n-placeholder="placeholderSummaryMessagesPreProcessing"
-              ></textarea>
+              <span data-i18n="summaryMessagesPreProcessingJson">Summary Messages Pre-processing (JSON)</span>
+              <textarea id="summary-messages-preprocessing" rows="2" data-i18n-placeholder="placeholderSummaryMessagesPreProcessing"></textarea>
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="personaInjectionTemplate"
-                  >Persona Injection Template</span
-                >
+                <span data-i18n="personaInjectionTemplate">Persona Injection Template</span>
                 <span id="persona-injection-template-count" class="token-count muted hidden">0 tokens</span>
               </div>
-              <textarea
-                id="persona-injection-template"
-                rows="5"
-                data-i18n-placeholder="placeholderPersonaInjectionTemplate"
-              ></textarea>
+              <textarea id="persona-injection-template" rows="5" data-i18n-placeholder="placeholderPersonaInjectionTemplate"></textarea>
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="autoTitleSystemPrompt"
-                  >Auto-title System Prompt</span
-                >
+                <span data-i18n="autoTitleSystemPrompt">Auto-title System Prompt</span>
                 <span id="auto-title-system-prompt-count" class="token-count muted hidden">0 tokens</span>
               </div>
               <textarea id="auto-title-system-prompt" rows="3"></textarea>
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="autoTitleUserPrompt"
-                  >Auto-title User Prompt</span
-                >
+                <span data-i18n="autoTitleUserPrompt">Auto-title User Prompt</span>
                 <span id="auto-title-user-prompt-count" class="token-count muted hidden">0 tokens</span>
               </div>
               <textarea id="auto-title-user-prompt" rows="3"></textarea>
@@ -1797,227 +888,120 @@
               <summary data-i18n="sectionHeadersTitle">Section Headers</summary>
               <div class="settings-collapse-body">
                 <div class="form-field">
-                  <span data-i18n="sectionHeaderMemoryContext"
-                    >Memory Context Header</span
-                  >
-                  <input
-                    id="section-header-memory-context"
-                    type="text"
-                    data-i18n-placeholder="placeholderSectionHeaderMemory"
-                  />
+                  <span data-i18n="sectionHeaderMemoryContext">Memory Context Header</span>
+                  <input id="section-header-memory-context" type="text" data-i18n-placeholder="placeholderSectionHeaderMemory" />
                 </div>
                 <div class="form-field">
-                  <span data-i18n="sectionHeaderCharacterPrompt"
-                    >Character Prompt Header</span
-                  >
-                  <input
-                    id="section-header-character-prompt"
-                    type="text"
-                    data-i18n-placeholder="placeholderSectionHeaderCharacter"
-                  />
+                  <span data-i18n="sectionHeaderCharacterPrompt">Character Prompt Header</span>
+                  <input id="section-header-character-prompt" type="text" data-i18n-placeholder="placeholderSectionHeaderCharacter" />
                 </div>
                 <div class="form-field">
-                  <span data-i18n="sectionHeaderMessagesSoFar"
-                    >Messages So Far Header</span
-                  >
-                  <input
-                    id="section-header-messages-so-far"
-                    type="text"
-                    data-i18n-placeholder="placeholderSectionHeaderMessagesSoFar"
-                  />
+                  <span data-i18n="sectionHeaderMessagesSoFar">Messages So Far Header</span>
+                  <input id="section-header-messages-so-far" type="text" data-i18n-placeholder="placeholderSectionHeaderMessagesSoFar" />
                 </div>
                 <div class="form-field">
                   <span data-i18n="sectionHeaderMessages">Messages Header</span>
-                  <input
-                    id="section-header-messages"
-                    type="text"
-                    data-i18n-placeholder="placeholderSectionHeaderMessages"
-                  />
+                  <input id="section-header-messages" type="text" data-i18n-placeholder="placeholderSectionHeaderMessages" />
                 </div>
                 <div class="form-field">
-                  <span data-i18n="sectionHeaderMemoryLevelContext"
-                    >Memory Level Context Header</span
-                  >
-                  <input
-                    id="section-header-memory-level-context"
-                    type="text"
-                    data-i18n-placeholder="placeholderSectionHeaderMemoryLevel"
-                  />
+                  <span data-i18n="sectionHeaderMemoryLevelContext">Memory Level Context Header</span>
+                  <input id="section-header-memory-level-context" type="text" data-i18n-placeholder="placeholderSectionHeaderMemoryLevel" />
                 </div>
                 <div class="form-field">
-                  <span data-i18n="sectionHeaderMemoryEntry"
-                    >Memory Entry Header</span
-                  >
-                  <input
-                    id="section-header-memory-entry"
-                    type="text"
-                    data-i18n-placeholder="placeholderSectionHeaderMemoryEntry"
-                  />
+                  <span data-i18n="sectionHeaderMemoryEntry">Memory Entry Header</span>
+                  <input id="section-header-memory-entry" type="text" data-i18n-placeholder="placeholderSectionHeaderMemoryEntry" />
                 </div>
                 <div class="form-field">
-                  <span data-i18n="sectionHeaderLoreContext"
-                    >Lore Context Header</span
-                  >
-                  <input
-                    id="section-header-lore-context"
-                    type="text"
-                    data-i18n-placeholder="placeholderSectionHeaderLore"
-                  />
+                  <span data-i18n="sectionHeaderLoreContext">Lore Context Header</span>
+                  <input id="section-header-lore-context" type="text" data-i18n-placeholder="placeholderSectionHeaderLore" />
                 </div>
               </div>
             </details>
             <span class="checkbox-line">
               <input type="checkbox" id="memory-relevance-filter-enabled" />
-              <span data-i18n="memoryRelevanceFilterToggle"
-                >Use memory relevance filter</span
-              >
+              <span data-i18n="memoryRelevanceFilterToggle">Use memory relevance filter</span>
             </span>
             <span class="checkbox-line">
               <input type="checkbox" id="use-local-summarization" />
-              <span data-i18n="useLocalSummarization"
-                >Use Local Summarization (faster, no API cost)</span
-              >
+              <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
             </span>
             <span class="checkbox-line">
               <input type="checkbox" id="use-local-auto-title" />
-              <span data-i18n="useLocalAutoTitle"
-                >Use Local Auto-Title (faster, no API cost)</span
-              >
+              <span data-i18n="useLocalAutoTitle">Use Local Auto-Title (faster, no API cost)</span>
             </span>
             <div class="form-field">
-              <span data-i18n="writingInstructionsInjectionTiming"
-                >Writing Instructions Injection Timing</span
-              >
+              <span data-i18n="writingInstructionsInjectionTiming">Writing Instructions Injection Timing</span>
               <select id="writing-instructions-injection-when">
                 <option value="always" data-i18n="always">Always</option>
-                <option value="every_other" data-i18n="everyOther">
-                  Every Other
-                </option>
-                <option value="every_second" data-i18n="everySecond">
-                  Every Second
-                </option>
-                <option value="every_third" data-i18n="everyThird">
-                  Every Third
-                </option>
-                <option value="every_fourth" data-i18n="everyFourth">
-                  Every Fourth
-                </option>
+                <option value="every_other" data-i18n="everyOther">Every Other</option>
+                <option value="every_second" data-i18n="everySecond">Every Second</option>
+                <option value="every_third" data-i18n="everyThird">Every Third</option>
+                <option value="every_fourth" data-i18n="everyFourth">Every Fourth</option>
               </select>
             </div>
           </div>
           <div data-settings-group="shortcuts" class="settings-group">
             <div class="form-field">
-              <span data-i18n="cancelGenerationShortcut"
-                >Cancel Generation Shortcut</span
-              >
+              <span data-i18n="cancelGenerationShortcut">Cancel Generation Shortcut</span>
               <input id="cancel-shortcut" type="text" data-i18n-placeholder="placeholderShortcutCancel" />
-              </div>
-              <div class="form-field">
-                <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
-                <input id="home-shortcut" type="text" data-i18n-placeholder="placeholderShortcutHome" />
-              </div>
-              <div class="form-field">
-                <span data-i18n="newCharacterShortcut"
-                  >New Character Shortcut</span
-                >
-                <input
-                  id="new-character-shortcut"
-                  type="text"
-                  data-i18n-placeholder="placeholderShortcutNewChar"
-                />
-              </div>
+            </div>
+            <div class="form-field">
+              <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
+              <input id="home-shortcut" type="text" data-i18n-placeholder="placeholderShortcutHome" />
+            </div>
+            <div class="form-field">
+              <span data-i18n="newCharacterShortcut">New Character Shortcut</span>
+              <input id="new-character-shortcut" type="text" data-i18n-placeholder="placeholderShortcutNewChar" />
             </div>
           </div>
+        </div>
 
-          <div data-settings-group="defaults" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="defaultAvatarScale"
-                >Default Avatar Scale (In Chat)</span
-              >
-              <select id="default-avatar-scale">
-                <option value="1">1x</option>
-                <option value="2">2x</option>
-                <option value="3">3x</option>
-                <option value="4">4x</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="defaultPersonaInjectionPlacement"
-                >Default Persona Injection Placement</span
-              >
-              <select id="default-persona-injection-placement">
-                <option value="none" data-i18n="personaInjectionNone">
-                  None
-                </option>
-                <option
-                  value="end_system_prompt"
-                  data-i18n="atEndCharacterPrompt"
-                >
-                  At End of Character Prompt
-                </option>
-                <option value="once" data-i18n="personaInjectionOnce">
-                  Once
-                </option>
-                <option value="end_messages" data-i18n="atEndOfMessages">
-                  At End of Messages
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
-              <select id="default-tts-provider">
-                <option value="kokoro" data-i18n="ttsProviderKokoro">
-                  Kokoro.js (local)
-                </option>
-                <option value="browser" data-i18n="ttsProviderBrowser">
-                  Browser (speechSynthesis)
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="defaultTtsRate">Default TTS Rate</span>
-                <span id="default-tts-rate-value" class="muted"></span>
-              </div>
-              <input
-                id="default-tts-rate"
-                type="range"
-                min="0.5"
-                max="2"
-                step="0.1"
-                value="1"
-              />
-            </div>
-            <div class="form-field">
-              <span data-i18n="defaultAutoTitleMinMessages">
-                Default min. messages for auto-title
-              </span>
-              <input
-                id="default-auto-title-min-messages"
-                type="number"
-                min="1"
-                max="50"
-                value="10"
-              />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="default-include-ooc" />
-              <span data-i18n="defaultIncludeOocInCompletions"
-                >Include OOC messages in completions</span
-              >
-            </span>
+        <div data-settings-group="defaults" class="settings-group">
+          <div class="form-field">
+            <span data-i18n="defaultAvatarScale">Default Avatar Scale (In Chat)</span>
+            <select id="default-avatar-scale">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+            </select>
           </div>
+          <div class="form-field">
+            <span data-i18n="defaultPersonaInjectionPlacement">Default Persona Injection Placement</span>
+            <select id="default-persona-injection-placement">
+              <option value="none" data-i18n="personaInjectionNone">None</option>
+              <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
+              <option value="once" data-i18n="personaInjectionOnce">Once</option>
+              <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
+            <select id="default-tts-provider">
+              <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
+              <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="defaultTtsRate">Default TTS Rate</span>
+              <span id="default-tts-rate-value" class="muted"></span>
+            </div>
+            <input id="default-tts-rate" type="range" min="0.5" max="2" step="0.1" value="1" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="defaultAutoTitleMinMessages"> Default min. messages for auto-title </span>
+            <input id="default-auto-title-min-messages" type="number" min="1" max="50" value="10" />
+          </div>
+          <span class="checkbox-line">
+            <input type="checkbox" id="default-include-ooc" />
+            <span data-i18n="defaultIncludeOocInCompletions">Include OOC messages in completions</span>
+          </span>
         </div>
       </div>
     </div>
 
-    <div
-      id="assets-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="assets-title"
-    >
+    <div id="assets-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="assets-title">
       <div class="modal-card wide">
         <div class="modal-header">
           <h3 id="assets-title" data-i18n="assetsManager">Assets Manager</h3>
@@ -2025,43 +1009,21 @@
         </div>
         <div class="modal-body">
           <div id="assets-dropzone-section">
-            <button
-              type="button"
-              id="assets-dropzone"
-              class="assets-dropzone"
-              tabindex="0"
-              aria-label="Upload asset"
-            >
+            <button type="button" id="assets-dropzone" class="assets-dropzone" tabindex="0" aria-label="Upload asset">
               <span class="dropzone-plus">+</span>
-              <span class="dropzone-hint" data-i18n="assetsDropzoneHint"
-                >Drag & drop or click to add assets</span
-              >
+              <span class="dropzone-hint" data-i18n="assetsDropzoneHint">Drag & drop or click to add assets</span>
             </button>
-            <input
-              type="file"
-              id="assets-file-input"
-              accept="image/*,video/*,audio/*"
-              multiple
-              class="visually-hidden"
-            />
+            <input type="file" id="assets-file-input" accept="image/*,video/*,audio/*" multiple class="visually-hidden" />
           </div>
           <div id="assets-list" class="lorebook-list"></div>
         </div>
       </div>
     </div>
 
-    <div
-      id="memory-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="memory-modal-title"
-    >
+    <div id="memory-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="memory-modal-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="memory-modal-title" data-i18n="memoryModalTitle">
-            Memory entries
-          </h3>
+          <h3 id="memory-modal-title" data-i18n="memoryModalTitle">Memory entries</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
@@ -2069,108 +1031,36 @@
           <div id="memory-modal-entries"></div>
         </div>
         <div class="modal-footer">
-          <button
-            id="memory-modal-save"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
+          <button id="memory-modal-save" class="primary-btn" type="button" data-i18n="save" disabled>Save</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="memory-regenerate-prompt-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="memory-regenerate-prompt-title"
-    >
+    <div id="memory-regenerate-prompt-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="memory-regenerate-prompt-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3
-            id="memory-regenerate-prompt-title"
-            data-i18n="memoryRegeneratePromptTitle"
-          >
-            Regenerate Memory Entry
-          </h3>
-          <button
-            type="button"
-            class="icon-btn modal-close"
-            data-memory-regenerate-prompt-close
-            aria-label="Close"
-          >
-            &times;
-          </button>
+          <h3 id="memory-regenerate-prompt-title" data-i18n="memoryRegeneratePromptTitle">Regenerate Memory Entry</h3>
+          <button type="button" class="icon-btn modal-close" data-memory-regenerate-prompt-close aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
           <div class="memory-regenerate-prompt-info">
             <p id="memory-regenerate-prompt-entry-label" class="muted"></p>
-            <p
-              id="memory-regenerate-prompt-description"
-              class="muted"
-              data-i18n="memoryRegeneratePromptDescription"
-            >
-              Edit the USER prompt that generated this summary before
-              regenerating.
-            </p>
+            <p id="memory-regenerate-prompt-description" class="muted" data-i18n="memoryRegeneratePromptDescription">Edit the USER prompt that generated this summary before regenerating.</p>
           </div>
-          <textarea
-            id="memory-regenerate-prompt-input"
-            rows="8"
-            placeholder=""
-          ></textarea>
-          <span
-            id="memory-regenerate-prompt-input-count"
-            class="textarea-collapse-count memory-regenerate-word-count"
-          ></span>
+          <textarea id="memory-regenerate-prompt-input" rows="8" placeholder=""></textarea>
+          <span id="memory-regenerate-prompt-input-count" class="textarea-collapse-count memory-regenerate-word-count"></span>
         </div>
         <div class="modal-footer">
-          <button
-            type="button"
-            class="secondary-btn"
-            data-memory-regenerate-prompt-close
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="primary-btn"
-            id="memory-regenerate-prompt-submit"
-            data-i18n="memoryEntryRegenerate"
-          >
-            Regenerate
-          </button>
+          <button type="button" class="secondary-btn" data-memory-regenerate-prompt-close data-i18n="cancel">Cancel</button>
+          <button type="button" class="primary-btn" id="memory-regenerate-prompt-submit" data-i18n="memoryEntryRegenerate">Regenerate</button>
         </div>
       </div>
     </div>
-    <div
-      id="memory-regenerate-progress-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="memory-regenerate-progress-title"
-    >
+    <div id="memory-regenerate-progress-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="memory-regenerate-progress-title">
       <div class="modal-card medium">
         <div class="modal-header">
-          <h3
-            id="memory-regenerate-progress-title"
-            data-i18n="memoryRegenerateProgressTitle"
-          >
-            Summary regeneration
-          </h3>
-          <button
-            type="button"
-            class="icon-btn modal-close"
-            data-memory-regenerate-progress-close-btn
-            aria-label="Close"
-          >
-            &times;
-          </button>
+          <h3 id="memory-regenerate-progress-title" data-i18n="memoryRegenerateProgressTitle">Summary regeneration</h3>
+          <button type="button" class="icon-btn modal-close" data-memory-regenerate-progress-close-btn aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
           <div class="chat-row chat-row-ooc memory-regenerate-progress-row">
@@ -2183,55 +1073,23 @@
             <div class="message-block">
               <div class="message-header">
                 <span data-i18n="systemRoleName">SYSTEM</span>
-                <span
-                  id="memory-regenerate-progress-entry-label"
-                  class="muted"
-                ></span>
+                <span id="memory-regenerate-progress-entry-label" class="muted"></span>
               </div>
               <div class="message-content memory-regenerate-progress-content">
-                <span
-                  class="spinner memory-regenerate-progress-spinner"
-                  aria-hidden="true"
-                ></span>
-                <span
-                  id="memory-regenerate-progress-status"
-                  data-i18n="memoryRegenerateProgressPending"
-                >
-                  Regenerating summary...
-                </span>
+                <span class="spinner memory-regenerate-progress-spinner" aria-hidden="true"></span>
+                <span id="memory-regenerate-progress-status" data-i18n="memoryRegenerateProgressPending"> Regenerating summary... </span>
               </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button
-            type="button"
-            class="danger-btn"
-            id="memory-regenerate-progress-cancel"
-            data-i18n="memoryRegenerateProgressCancel"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="primary-btn"
-            id="memory-regenerate-progress-close"
-            data-memory-regenerate-progress-close-btn
-            data-i18n="memoryRegenerateProgressClose"
-          >
-            Close
-          </button>
+          <button type="button" class="danger-btn" id="memory-regenerate-progress-cancel" data-i18n="memoryRegenerateProgressCancel">Cancel</button>
+          <button type="button" class="primary-btn" id="memory-regenerate-progress-close" data-memory-regenerate-progress-close-btn data-i18n="memoryRegenerateProgressClose">Close</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="asset-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="asset-editor-title"
-    >
+    <div id="asset-editor-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="asset-editor-title">
       <div class="modal-card wide">
         <div class="modal-header">
           <h3 id="asset-editor-title" data-i18n="assetEditor">Asset Editor</h3>
@@ -2253,99 +1111,31 @@
             <span data-i18n="assetType">Type</span>
             <input id="asset-type" type="text" disabled />
           </div>
-          <div
-            id="asset-preview-container"
-            class="asset-preview-container"
-          ></div>
+          <div id="asset-preview-container" class="asset-preview-container"></div>
           <div id="asset-audio-controls" class="asset-audio-controls hidden">
-            <button
-              id="asset-play-btn"
-              class="icon-btn"
-              type="button"
-              data-i18n-title="playTitle"
-            >
-              &#9654;
-            </button>
-            <button
-              id="asset-pause-btn"
-              class="icon-btn"
-              type="button"
-              data-i18n-title="pauseTitle"
-            >
-              &#10074;&#10074;
-            </button>
-            <button
-              id="asset-stop-btn"
-              class="icon-btn"
-              type="button"
-              data-i18n-title="stopTitle"
-            >
-              &#9632;
-            </button>
+            <button id="asset-play-btn" class="icon-btn" type="button" data-i18n-title="playTitle">&#9654;</button>
+            <button id="asset-pause-btn" class="icon-btn" type="button" data-i18n-title="pauseTitle">&#10074;&#10074;</button>
+            <button id="asset-stop-btn" class="icon-btn" type="button" data-i18n-title="stopTitle">&#9632;</button>
           </div>
         </div>
         <div class="modal-footer">
-          <button
-            id="cancel-asset-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="apply-asset-editor-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-            disabled
-          >
-            Apply
-          </button>
-          <button
-            id="save-asset-editor-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
+          <button id="cancel-asset-btn" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+          <button id="apply-asset-editor-btn" class="secondary-btn" type="button" data-i18n="apply" disabled>Apply</button>
+          <button id="save-asset-editor-btn" class="primary-btn" type="button" data-i18n="save" disabled>Save</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="personas-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="personas-title"
-    >
+    <div id="personas-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="personas-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="personas-title" data-i18n="personaManager">
-            Persona Manager
-          </h3>
+          <h3 id="personas-title" data-i18n="personaManager">Persona Manager</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
           <div class="lore-toolbar">
-            <button
-              id="create-persona-btn"
-              class="primary-btn"
-              type="button"
-              data-i18n="newPersona"
-            ></button>
-            <button
-              id="import-persona-btn"
-              class="secondary-btn"
-              type="button"
-              data-i18n-title="importPersona"
-              aria-label="Import Persona"
-            >
-              ⬆
-            </button>
+            <button id="create-persona-btn" class="primary-btn" type="button" data-i18n="newPersona"></button>
+            <button id="import-persona-btn" class="secondary-btn" type="button" data-i18n-title="importPersona" aria-label="Import Persona">⬆</button>
           </div>
           <div id="persona-list" class="lorebook-list"></div>
         </div>
@@ -2361,38 +1151,17 @@
       <span id="persona-description-count" class="hidden">0/100</span>
     </div>
 
-    <div
-      id="lore-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="lore-title"
-    >
+    <div id="lore-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="lore-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="lore-title" data-i18n="loreBookManagement">
-            Lorebook Management
-          </h3>
+          <h3 id="lore-title" data-i18n="loreBookManagement">Lorebook Management</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
           <div id="lore-list-view">
             <div class="lore-toolbar">
-              <button
-                id="create-lorebook-btn"
-                class="primary-btn"
-                type="button"
-                data-i18n="createLoreBook"
-              ></button>
-              <button
-                id="import-lorebook-btn"
-                class="secondary-btn"
-                type="button"
-                data-i18n-title="importLoreBook"
-                aria-label="Import Lorebook"
-              >
-                ⬆
-              </button>
+              <button id="create-lorebook-btn" class="primary-btn" type="button" data-i18n="createLoreBook"></button>
+              <button id="import-lorebook-btn" class="secondary-btn" type="button" data-i18n-title="importLoreBook" aria-label="Import Lorebook">⬆</button>
             </div>
             <div id="lorebook-list" class="lorebook-list"></div>
           </div>
@@ -2400,30 +1169,15 @@
       </div>
     </div>
 
-    <div
-      id="lore-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="lore-editor-title"
-    >
+    <div id="lore-editor-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="lore-editor-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="lore-editor-title" data-i18n="loreBookEditor">
-            Lorebook Editor
-          </h3>
+          <h3 id="lore-editor-title" data-i18n="loreBookEditor">Lorebook Editor</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
           <div class="lore-toolbar">
-            <button
-              id="lore-editor-back-btn"
-              class="secondary-btn"
-              type="button"
-              data-i18n="backToList"
-            >
-              Back to List
-            </button>
+            <button id="lore-editor-back-btn" class="secondary-btn" type="button" data-i18n="backToList">Back to List</button>
           </div>
           <div class="two-col lore-editor-grid">
             <div class="form-field">
@@ -2435,34 +1189,16 @@
               <input id="lore-avatar" type="text" data-i18n-placeholder="placeholderLoreAvatar" />
             </div>
             <div class="form-field full">
-              <span data-i18n="descriptionOptional">
-                Description (optional)
-              </span>
-              <textarea
-                id="lore-description"
-                rows="3"
-                maxlength="512"
-              ></textarea>
+              <span data-i18n="descriptionOptional"> Description (optional) </span>
+              <textarea id="lore-description" rows="3" maxlength="512"></textarea>
             </div>
             <div class="form-field">
               <span data-i18n="scanDepth">Scan Depth</span>
-              <input
-                id="lore-scan-depth"
-                type="number"
-                min="5"
-                max="100"
-                step="1"
-              />
+              <input id="lore-scan-depth" type="number" min="5" max="100" step="1" />
             </div>
             <div class="form-field">
               <span data-i18n="tokenBudget">Token Budget</span>
-              <input
-                id="lore-token-budget"
-                type="number"
-                min="100"
-                max="1000"
-                step="10"
-              />
+              <input id="lore-token-budget" type="number" min="100" max="1000" step="10" />
             </div>
             <span class="checkbox-line">
               <input id="lore-recursive-scanning" type="checkbox" />
@@ -2471,97 +1207,34 @@
             <div class="form-field">
               <span data-i18n="lorebookInjectionMode">Injection Mode</span>
               <select id="lore-injection-mode">
-                <option value="cooldown" data-i18n="lorebookCooldown">
-                  Cooldown
-                </option>
-                <option
-                  value="once_per_context"
-                  data-i18n="lorebookOncePerContext"
-                >
-                  Once per Context
-                </option>
+                <option value="cooldown" data-i18n="lorebookCooldown">Cooldown</option>
+                <option value="once_per_context" data-i18n="lorebookOncePerContext">Once per Context</option>
               </select>
             </div>
             <div class="form-field" id="lore-suppression-window-field">
-              <span data-i18n="lorebookSuppressionWindow"
-                >Suppression Window (messages)</span
-              >
-              <input
-                id="lore-suppression-window"
-                type="number"
-                min="1"
-                max="100"
-                step="1"
-                value="10"
-              />
+              <span data-i18n="lorebookSuppressionWindow">Suppression Window (messages)</span>
+              <input id="lore-suppression-window" type="number" min="1" max="100" step="1" value="10" />
             </div>
           </div>
           <div class="lore-entry-head">
             <h4 id="lore-entries-title">Entries</h4>
-            <button
-              id="add-lore-entry-btn"
-              class="secondary-btn"
-              type="button"
-              data-i18n="addEntry"
-            >
-              + Add Entry
-            </button>
+            <button id="add-lore-entry-btn" class="secondary-btn" type="button" data-i18n="addEntry">+ Add Entry</button>
           </div>
           <div id="lore-entries-list" class="lore-entries-list"></div>
         </div>
         <div class="modal-footer">
-          <button
-            id="cancel-lore-editor-btn"
-            class="secondary-btn"
-            type="button"
-            data-close-modal
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="apply-lore-editor-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-            disabled
-          >
-            Apply
-          </button>
-          <button
-            id="save-lorebook-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
+          <button id="cancel-lore-editor-btn" class="secondary-btn" type="button" data-close-modal data-i18n="cancel">Cancel</button>
+          <button id="apply-lore-editor-btn" class="secondary-btn" type="button" data-i18n="apply" disabled>Apply</button>
+          <button id="save-lorebook-btn" class="primary-btn" type="button" data-i18n="save" disabled>Save</button>
         </div>
       </div>
     </div>
 
-    <input
-      id="import-lorebook-input"
-      type="file"
-      accept=".json,application/json"
-      class="hidden"
-    />
+    <input id="import-lorebook-input" type="file" accept=".json,application/json" class="hidden" />
 
-    <input
-      id="import-writing-instruction-input"
-      type="file"
-      accept=".md,.markdown,.txt,text/plain"
-      class="hidden"
-    />
+    <input id="import-writing-instruction-input" type="file" accept=".md,.markdown,.txt,text/plain" class="hidden" />
 
-    <div
-      id="shortcuts-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="shortcuts-title"
-    >
+    <div id="shortcuts-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
       <div class="modal-card">
         <div class="modal-header">
           <h3 id="shortcuts-title" data-i18n="shortcuts">Shortcuts</h3>
@@ -2569,124 +1242,46 @@
         </div>
         <div id="shortcuts-content" class="modal-body"></div>
         <div class="modal-footer">
-          <button
-            class="secondary-btn"
-            type="button"
-            data-close-modal
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="apply-shortcuts-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-            disabled
-          >
-            Apply
-          </button>
-          <button
-            id="save-shortcuts-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
+          <button class="secondary-btn" type="button" data-close-modal data-i18n="cancel">Cancel</button>
+          <button id="apply-shortcuts-btn" class="secondary-btn" type="button" data-i18n="apply" disabled>Apply</button>
+          <button id="save-shortcuts-btn" class="primary-btn" type="button" data-i18n="save" disabled>Save</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="database-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="database-title"
-    >
+    <div id="database-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="database-title">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 id="database-title" data-i18n="databaseManagement">
-            Database Management
-          </h3>
+          <h3 id="database-title" data-i18n="databaseManagement">Database Management</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
-          <button id="export-db-btn" class="primary-btn" type="button" data-i18n="exportDatabase">
-            Export Database
-          </button>
-          <button id="import-db-btn" class="secondary-btn" type="button" data-i18n="importDatabase">
-            Import Database
-          </button>
-          <button
-            id="reset-db-btn"
-            class="secondary-btn danger-btn"
-            type="button"
-            data-i18n="resetAppData"
-          >
-            Reset App Data
-          </button>
-          <input
-            id="import-db-input"
-            type="file"
-            accept=".json,application/json"
-            class="hidden"
-          />
-          <p id="database-hint" class="muted">
-            Import will overwrite the current local data (characters, threads,
-            settings, UI state, and more).
-          </p>
+          <button id="export-db-btn" class="primary-btn" type="button" data-i18n="exportDatabase">Export Database</button>
+          <button id="import-db-btn" class="secondary-btn" type="button" data-i18n="importDatabase">Import Database</button>
+          <button id="reset-db-btn" class="secondary-btn danger-btn" type="button" data-i18n="resetAppData">Reset App Data</button>
+          <input id="import-db-input" type="file" accept=".json,application/json" class="hidden" />
+          <p id="database-hint" class="muted">Import will overwrite the current local data (characters, threads, settings, UI state, and more).</p>
         </div>
       </div>
     </div>
 
-    <div
-      id="export-select-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="export-select-title"
-    >
+    <div id="export-select-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="export-select-title">
       <div class="modal-outer">
         <div class="modal-card wide">
           <div class="modal-header">
-            <h3 id="export-select-title" data-i18n="exportSelectTitle">
-              Export Selection
-            </h3>
+            <h3 id="export-select-title" data-i18n="exportSelectTitle">Export Selection</h3>
             <button class="icon-btn modal-close" data-close-modal>&times;</button>
           </div>
           <div class="modal-body" id="export-select-body"></div>
           <div class="modal-footer">
-            <button
-              id="export-select-cancel"
-              class="secondary-btn"
-              type="button"
-              data-i18n="cancel"
-            >
-              Cancel
-            </button>
-            <button
-              id="export-select-export"
-              class="primary-btn"
-              type="button"
-              data-i18n="export"
-            >
-              Export
-            </button>
+            <button id="export-select-cancel" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+            <button id="export-select-export" class="primary-btn" type="button" data-i18n="export">Export</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div
-      id="tags-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="tags-title"
-    >
+    <div id="tags-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tags-title">
       <div class="modal-card">
         <div class="modal-header">
           <h3 id="tags-title" data-i18n="tagManager">Tag Manager</h3>
@@ -2694,27 +1289,15 @@
         </div>
         <div class="modal-body">
           <div class="tag-manager-input-row">
-            <input
-              id="tag-manager-input"
-              type="text"
-              data-i18n-placeholder="tagInputPlaceholder"
-            />
-            <button id="add-tag-btn" class="primary-btn" type="button" disabled>
-              +
-            </button>
+            <input id="tag-manager-input" type="text" data-i18n-placeholder="tagInputPlaceholder" />
+            <button id="add-tag-btn" class="primary-btn" type="button" disabled>+</button>
           </div>
           <div id="tag-manager-list" class="tag-manager-list"></div>
         </div>
       </div>
     </div>
 
-    <div
-      id="character-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="character-title"
-    >
+    <div id="character-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="character-title">
       <div class="modal-card wide">
         <div class="modal-header">
           <h3 id="character-title">BOT</h3>
@@ -2722,76 +1305,23 @@
         </div>
         <div id="char-avatars-section" class="char-avatars-section">
           <div id="char-avatars-container" class="char-avatars-container">
-            <button
-              type="button"
-              id="char-avatar-dropzone"
-              class="char-avatar-dropzone"
-              tabindex="0"
-              aria-label="Upload avatar"
-            >
+            <button type="button" id="char-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
               <span class="dropzone-plus">+</span>
               <span class="dropzone-hint">Drag & drop or click</span>
             </button>
-            <input
-              type="file"
-              id="char-avatar-file-input"
-              accept="image/*,video/mp4"
-              multiple
-              class="visually-hidden"
-            />
+            <input type="file" id="char-avatar-file-input" accept="image/*,video/mp4" multiple class="visually-hidden" />
           </div>
         </div>
         <div id="char-def-tabs" class="settings-tabs">
           <div class="char-def-tabs-row">
-            <button
-              id="char-config-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="botConfiguration"
-            >
-              Config
-            </button>
-            <button
-              id="char-sfx-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="sfxTab"
-            >
-              SFX
-            </button>
-            <button
-              id="char-tags-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="tagsTab"
-            >
-              Tags
-            </button>
-            <button
-              id="char-notes-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="notesTab"
-            >
-              Notes
-            </button>
-            <button
-              id="char-model3d-tab-btn"
-              class="settings-tab-btn"
-              type="button"
-              data-i18n="model3dTab"
-            >
-              3D
-            </button>
+            <button id="char-config-tab-btn" class="settings-tab-btn" type="button" data-i18n="botConfiguration">Config</button>
+            <button id="char-sfx-tab-btn" class="settings-tab-btn" type="button" data-i18n="sfxTab">SFX</button>
+            <button id="char-tags-tab-btn" class="settings-tab-btn" type="button" data-i18n="tagsTab">Tags</button>
+            <button id="char-notes-tab-btn" class="settings-tab-btn" type="button" data-i18n="notesTab">Notes</button>
+            <button id="char-model3d-tab-btn" class="settings-tab-btn" type="button" data-i18n="model3dTab">3D</button>
             <span class="char-def-tabs-divider"></span>
             <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
-            <button
-              id="char-add-lang-btn"
-              class="settings-tab-btn"
-              type="button"
-            >
-              +
-            </button>
+            <button id="char-add-lang-btn" class="settings-tab-btn" type="button">+</button>
           </div>
         </div>
         <div class="modal-body two-col">
@@ -2823,69 +1353,33 @@
             </div>
             <div class="flex-row">
               <select id="char-writing-instructions-select" class="flex-grow"></select>
-              <button
-                class="option-btn"
-                data-open-modal="writing-instructions-modal"
-                data-i18n-title="writingInstructions"
-                aria-label="Writing Instructions"
-              >
-                &#128221;
-              </button>
+              <button class="option-btn" data-open-modal="writing-instructions-modal" data-i18n-title="writingInstructions" aria-label="Writing Instructions">&#128221;</button>
             </div>
-            <textarea
-              id="char-writing-instructions"
-              rows="4"
-              data-i18n-placeholder="placeholderFutureImplementation"
-            ></textarea>
+            <textarea id="char-writing-instructions" rows="4" data-i18n-placeholder="placeholderFutureImplementation"></textarea>
           </div>
           <div class="full lang-field">
             <div class="label-inline">
-              <span data-i18n="oneTimeExtraPrompt"
-                >One-time only Extra System/Character Prompt</span
-              >
+              <span data-i18n="oneTimeExtraPrompt">One-time only Extra System/Character Prompt</span>
               <span id="char-one-time-extra-prompt-count" class="token-count muted hidden">0 tokens</span>
             </div>
-            <textarea
-              id="char-one-time-extra-prompt"
-              rows="4"
-              data-i18n-placeholder="placeholderFirstAssistantGen"
-            ></textarea>
+            <textarea id="char-one-time-extra-prompt" rows="4" data-i18n-placeholder="placeholderFirstAssistantGen"></textarea>
           </div>
           <div class="full lang-field initial-messages-field">
             <div class="initial-messages-header-row">
               <span data-i18n="initialMessages">Initial Messages</span>
-              <button
-                id="add-initial-message-btn"
-                type="button"
-                class="icon-btn small"
-                data-i18n-title="addInitialMessage"
-              >
-                <span
-                  class="visually-hidden"
-                  data-i18n="addInitialMessage"
-                ></span>
+              <button id="add-initial-message-btn" type="button" class="icon-btn small" data-i18n-title="addInitialMessage">
+                <span class="visually-hidden" data-i18n="addInitialMessage"></span>
               </button>
             </div>
-            <span
-              class="muted initial-messages-hint"
-              data-i18n="initialMessagesHint"
-            ></span>
+            <span class="muted initial-messages-hint" data-i18n="initialMessagesHint"></span>
             <div class="initial-messages-editor">
-              <div
-                id="char-initial-messages-list"
-                class="initial-messages-list"
-              ></div>
+              <div id="char-initial-messages-list" class="initial-messages-list"></div>
             </div>
           </div>
           <div class="full tags-field hidden">
             <div class="char-tags-sticky-wrapper">
               <span data-i18n="tagsCommaSeparated">Tags (comma-separated)</span>
-              <input
-                id="char-tags-input"
-                list="tag-presets"
-                type="text"
-                data-i18n-placeholder="placeholderTagsExample"
-              />
+              <input id="char-tags-input" list="tag-presets" type="text" data-i18n-placeholder="placeholderTagsExample" />
             </div>
             <div id="char-tags-presets" class="tag-presets-list"></div>
           </div>
@@ -2894,25 +1388,12 @@
             <textarea id="char-notes" rows="8"></textarea>
           </div>
           <div class="full lang-field hidden persona-injection-field">
-            <span data-i18n="personaInjectionPlacement"
-              >Persona Injection Placement</span
-            >
+            <span data-i18n="personaInjectionPlacement">Persona Injection Placement</span>
             <select id="char-persona-injection-placement">
-              <option value="none" data-i18n="personaInjectionNone">
-                None
-              </option>
-              <option
-                value="end_system_prompt"
-                data-i18n="atEndCharacterPrompt"
-              >
-                At End of Character Prompt
-              </option>
-              <option value="once" data-i18n="personaInjectionOnce">
-                Once
-              </option>
-              <option value="end_messages" data-i18n="atEndOfMessages">
-                At End of Messages
-              </option>
+              <option value="none" data-i18n="personaInjectionNone">None</option>
+              <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
+              <option value="once" data-i18n="personaInjectionOnce">Once</option>
+              <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
             </select>
           </div>
           <div class="global-field full">
@@ -2924,53 +1405,35 @@
           <div class="global-field full">
             <span class="checkbox-line">
               <input id="char-use-postprocess" type="checkbox" checked />
-              <span data-i18n="enablePostprocess"
-                >Enable Post-processing Rules</span
-              >
+              <span data-i18n="enablePostprocess">Enable Post-processing Rules</span>
             </span>
           </div>
           <div class="global-field full">
             <span class="checkbox-line">
               <input id="char-auto-trigger-first-ai" type="checkbox" checked />
-              <span data-i18n="autoTriggerAiFirst"
-                >Auto-trigger AI first message</span
-              >
+              <span data-i18n="autoTriggerAiFirst">Auto-trigger AI first message</span>
             </span>
           </div>
           <div class="global-field full">
             <span class="checkbox-line">
               <input id="char-auto-title" type="checkbox" checked />
-              <span data-i18n="autoTitleThreads"
-                >Auto-generate thread titles</span
-              >
+              <span data-i18n="autoTitleThreads">Auto-generate thread titles</span>
             </span>
           </div>
           <div class="global-field full">
             <span class="checkbox-line">
               <input id="char-persona-prefix" type="checkbox" checked />
-              <span data-i18n="prefixUserMessagesWithPersona"
-                >Prefix user messages with active persona</span
-              >
+              <span data-i18n="prefixUserMessagesWithPersona">Prefix user messages with active persona</span>
             </span>
           </div>
           <div class="global-field full">
-            <span data-i18n="autoTitleMinMessages"
-              >Min. messages for auto-title</span
-            >
-            <input
-              id="char-auto-title-min-messages"
-              type="number"
-              min="1"
-              max="50"
-              value="10"
-            />
+            <span data-i18n="autoTitleMinMessages">Min. messages for auto-title</span>
+            <input id="char-auto-title-min-messages" type="number" min="1" max="50" value="10" />
           </div>
           <div class="global-field full">
             <span class="checkbox-line">
               <input id="char-include-ooc" type="checkbox" />
-              <span data-i18n="includeOocMessages"
-                >Include OOC messages in completions</span
-              >
+              <span data-i18n="includeOocMessages">Include OOC messages in completions</span>
             </span>
           </div>
           <div class="global-field full">
@@ -2985,21 +1448,15 @@
           <div class="full lang-field">
             <span data-i18n="ttsProvider">TTS Provider</span>
             <select id="char-tts-provider">
-              <option value="kokoro" data-i18n="ttsProviderKokoro" selected>
-                Kokoro.js (local)
-              </option>
-              <option value="browser" data-i18n="ttsProviderBrowser">
-                Browser (speechSynthesis)
-              </option>
+              <option value="kokoro" data-i18n="ttsProviderKokoro" selected>Kokoro.js (local)</option>
+              <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
             </select>
           </div>
           <div id="char-tts-kokoro-config" class="kokoro-config hidden">
             <div class="full lang-field">
               <span data-i18n="kokoroDevice">Kokoro Device</span>
               <select id="char-tts-kokoro-device">
-                <option value="webgpu" data-i18n="kokoroDeviceWebgpu">
-                  WebGPU
-                </option>
+                <option value="webgpu" data-i18n="kokoroDeviceWebgpu">WebGPU</option>
                 <option value="wasm" data-i18n="kokoroDeviceWasm">WASM</option>
               </select>
             </div>
@@ -3020,29 +1477,16 @@
               <span data-i18n="kokoroVoice">Kokoro Voice</span>
               <div class="tts-control-row">
                 <select id="char-tts-kokoro-voice">
-                  <option data-i18n="kokoroVoicesLoading">
-                    Loading Kokoro voices...
-                  </option>
+                  <option data-i18n="kokoroVoicesLoading">Loading Kokoro voices...</option>
                 </select>
                 <div class="tts-test-slot" data-slot="kokoro"></div>
               </div>
             </div>
             <div class="full lang-field hidden" id="char-tts-kokoro-download">
               <div class="kokoro-download-row">
-                <span
-                  id="kokoro-download-label"
-                  data-i18n="kokoroDownloadingVoice"
-                  >Downloading voice...</span
-                >
+                <span id="kokoro-download-label" data-i18n="kokoroDownloadingVoice">Downloading voice...</span>
                 <span id="kokoro-download-percent">0%</span>
-                <button
-                  id="kokoro-download-cancel"
-                  class="icon-btn"
-                  type="button"
-                  data-i18n-title="cancelDownloadTitle"
-                >
-                  &times;
-                </button>
+                <button id="kokoro-download-cancel" class="icon-btn" type="button" data-i18n-title="cancelDownloadTitle">&times;</button>
               </div>
             </div>
           </div>
@@ -3051,168 +1495,71 @@
               <span data-i18n="ttsRate">TTS Rate</span>
               <span id="char-tts-rate-value" class="muted"></span>
             </div>
-            <input
-              id="char-tts-rate"
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.1"
-              value="1"
-            />
+            <input id="char-tts-rate" type="range" min="0.5" max="2" step="0.1" value="1" />
           </div>
-          <div
-            class="full lang-field tts-extra-field"
-            id="char-tts-language-field"
-          >
+          <div class="full lang-field tts-extra-field" id="char-tts-language-field">
             <span data-i18n="ttsLanguage">TTS Language</span>
             <select id="char-tts-language"></select>
           </div>
-          <div
-            class="full lang-field tts-extra-field"
-            id="char-tts-voice-field"
-          >
+          <div class="full lang-field tts-extra-field" id="char-tts-voice-field">
             <span data-i18n="ttsVoice">TTS Voice</span>
             <div class="tts-control-row">
               <select id="char-tts-voice"></select>
               <div class="tts-test-slot" data-slot="tts">
-                <button
-                  id="char-tts-test-btn"
-                  class="icon-btn tts-test-btn"
-                  type="button"
-                  data-i18n-title="testCharacterVoice"
-                ></button>
+                <button id="char-tts-test-btn" class="icon-btn tts-test-btn" type="button" data-i18n-title="testCharacterVoice"></button>
               </div>
             </div>
           </div>
-          <div
-            class="full lang-field tts-extra-field"
-            id="char-tts-pitch-field"
-          >
+          <div class="full lang-field tts-extra-field" id="char-tts-pitch-field">
             <div class="label-inline">
               <span data-i18n="ttsPitch">TTS Pitch</span>
               <span id="char-tts-pitch-value" class="muted"></span>
             </div>
-            <input
-              id="char-tts-pitch"
-              type="range"
-              min="0"
-              max="2"
-              step="0.1"
-            />
+            <input id="char-tts-pitch" type="range" min="0" max="2" step="0.1" />
           </div>
           <div class="full lang-field">
-            <span data-i18n="loreBooksForCharacter"
-              >Lorebooks for this character</span
-            >
+            <span data-i18n="loreBooksForCharacter">Lorebooks for this character</span>
             <div class="lorebook-toolbar">
-              <button
-                id="add-lorebook-btn"
-                class="primary-btn"
-                type="button"
-                data-i18n="addLorebook"
-              >
-                + Add Lorebook
-              </button>
+              <button id="add-lorebook-btn" class="primary-btn" type="button" data-i18n="addLorebook">+ Add Lorebook</button>
             </div>
             <div id="char-lorebooks-list" class="lorebook-list"></div>
           </div>
           <div class="full global-field">
-            <span data-i18n="loreCooldown"
-              >Lore re-injection cooldown (messages)</span
-            >
-            <input
-              id="char-lore-cooldown"
-              type="number"
-              min="0"
-              max="100"
-              value="20"
-            />
+            <span data-i18n="loreCooldown">Lore re-injection cooldown (messages)</span>
+            <input id="char-lore-cooldown" type="number" min="0" max="100" value="20" />
           </div>
           <div class="full sfx-field hidden">
             <div class="sfx-toolbar">
-              <button
-                id="add-sfx-btn"
-                class="primary-btn"
-                type="button"
-                data-i18n="addSfx"
-              >
-                + Add SFX
-              </button>
+              <button id="add-sfx-btn" class="primary-btn" type="button" data-i18n="addSfx">+ Add SFX</button>
             </div>
             <div id="char-sfx-list" class="asset-list"></div>
           </div>
           <div class="full model3d-field hidden">
             <div class="model3d-toolbar">
-              <button
-                id="add-model3d-btn"
-                class="primary-btn"
-                type="button"
-                data-i18n="addModel3d"
-              >
-                + Add 3D Model
-              </button>
+              <button id="add-model3d-btn" class="primary-btn" type="button" data-i18n="addModel3d">+ Add 3D Model</button>
             </div>
             <div id="char-model3d-preview" class="model3d-preview">
-              <span class="muted" data-i18n="noModel3dSelected"
-                >No 3D model selected</span
-              >
+              <span class="muted" data-i18n="noModel3dSelected">No 3D model selected</span>
             </div>
             <div id="char-model3d-info" class="model3d-info hidden">
               <span id="char-model3d-name" class="model3d-name"></span>
-              <button
-                id="remove-model3d-btn"
-                class="icon-btn danger-icon-btn"
-                type="button"
-                data-i18n-title="removeModel3dTitle"
-              >
-                &times;
-              </button>
+              <button id="remove-model3d-btn" class="icon-btn danger-icon-btn" type="button" data-i18n-title="removeModel3dTitle">&times;</button>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="secondary-btn" data-close-modal data-i18n="cancel">
-            Cancel
-          </button>
-          <button
-            id="apply-character-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-            disabled
-          >
-            Apply
-          </button>
-          <button
-            id="save-character-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
+          <button class="secondary-btn" data-close-modal data-i18n="cancel">Cancel</button>
+          <button id="apply-character-btn" class="secondary-btn" type="button" data-i18n="apply" disabled>Apply</button>
+          <button id="save-character-btn" class="primary-btn" type="button" data-i18n="save" disabled>Save</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="char-language-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="char-language-title"
-    >
+    <div id="char-language-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="char-language-title">
       <div class="modal-card">
         <div class="modal-header">
           <h3 id="char-language-title" data-i18n="addLanguage">Add Language</h3>
-          <button
-            class="icon-btn modal-close"
-            id="char-language-cancel-x"
-            aria-label="Close"
-          >
-            &times;
-          </button>
+          <button class="icon-btn modal-close" id="char-language-cancel-x" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -3220,84 +1567,35 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button
-            id="char-language-cancel"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="char-language-add"
-            class="primary-btn"
-            type="button"
-            data-i18n="add"
-          >
-            Add
-          </button>
+          <button id="char-language-cancel" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+          <button id="char-language-add" class="primary-btn" type="button" data-i18n="add">Add</button>
         </div>
       </div>
     </div>
 
     <datalist id="tag-presets"></datalist>
 
-    <div
-      id="image-preview-modal"
-      class="modal hidden image-preview-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Media preview"
-    >
+    <div id="image-preview-modal" class="modal hidden image-preview-modal" role="dialog" aria-modal="true" aria-label="Media preview">
       <div class="modal-card image-preview-card">
         <img id="image-preview-img" alt="Preview" />
         <video id="image-preview-video" controls class="hidden"></video>
       </div>
       <div class="image-preview-controls">
-        <button
-          id="image-preview-download-btn"
-          class="icon-btn image-preview-download-btn"
-          type="button"
-          data-i18n-title="downloadAssetTitle"
-          aria-label="Download"
-        >
-          v
-        </button>
-        <button
-          id="image-preview-close-btn"
-          class="icon-btn image-preview-close-btn"
-          type="button"
-          data-i18n-title="closePreviewTitle"
-          aria-label="Close preview"
-        >
-          ×
-        </button>
+        <button id="image-preview-download-btn" class="icon-btn image-preview-download-btn" type="button" data-i18n-title="downloadAssetTitle" aria-label="Download">v</button>
+        <button id="image-preview-close-btn" class="icon-btn image-preview-close-btn" type="button" data-i18n-title="closePreviewTitle" aria-label="Close preview">×</button>
       </div>
     </div>
 
     <!-- Lorebook Selector Modal -->
-    <div
-      id="select-lorebook-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="select-lorebook-title"
-    >
+    <div id="select-lorebook-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="select-lorebook-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="select-lorebook-title" data-i18n="selectLorebook">
-            Add Lorebook
-          </h3>
+          <h3 id="select-lorebook-title" data-i18n="selectLorebook">Add Lorebook</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
           <div class="form-field full">
-            <input
-              type="text"
-              id="select-lorebook-search"
-              placeholder="Search lorebooks..."
-              data-i18n-placeholder="searchLorebooksPlaceholder"
-            />
+            <input type="text" id="select-lorebook-search" placeholder="Search lorebooks..." data-i18n-placeholder="searchLorebooksPlaceholder" />
           </div>
           <div id="select-lorebook-list" class="lorebook-list"></div>
         </div>
@@ -3305,18 +1603,10 @@
     </div>
 
     <!-- SFX Asset Selector Modal -->
-    <div
-      id="select-asset-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="select-asset-title"
-    >
+    <div id="select-asset-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="select-asset-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="select-asset-title" data-i18n="selectAssetForSfx">
-            Select Asset for SFX
-          </h3>
+          <h3 id="select-asset-title" data-i18n="selectAssetForSfx">Select Asset for SFX</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
@@ -3326,13 +1616,7 @@
     </div>
 
     <!-- SFX Editor Modal -->
-    <div
-      id="sfx-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="sfx-editor-title"
-    >
+    <div id="sfx-editor-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="sfx-editor-title">
       <div class="modal-card wide">
         <div class="modal-header">
           <h3 id="sfx-editor-title" data-i18n="sfxEditor">SFX Editor</h3>
@@ -3340,95 +1624,49 @@
         </div>
         <div class="modal-body">
           <div class="form-field full">
-            <div
-              id="sfx-asset-preview-container"
-              class="asset-preview-container"
-            ></div>
+            <div id="sfx-asset-preview-container" class="asset-preview-container"></div>
           </div>
           <div class="form-field full">
             <span data-i18n="sfxRuleName">Rule Name</span>
-            <input
-              type="text"
-              id="sfx-name"
-              placeholder="e.g., Rainy mood, Door bell"
-            />
+            <input type="text" id="sfx-name" placeholder="e.g., Rainy mood, Door bell" />
           </div>
           <div class="form-field full">
             <span data-i18n="sfxType">SFX Type</span>
             <select id="sfx-type">
-              <option value="sound" data-i18n="sfxTypeSound">
-                Sound Effect
-              </option>
-              <option value="background" data-i18n="sfxTypeBackground">
-                Background
-              </option>
-              <option value="overlay" data-i18n="sfxTypeOverlay">
-                Overlay
-              </option>
-              <option value="avatar" data-i18n="sfxTypeAvatar">
-                Avatar Swap
-              </option>
+              <option value="sound" data-i18n="sfxTypeSound">Sound Effect</option>
+              <option value="background" data-i18n="sfxTypeBackground">Background</option>
+              <option value="overlay" data-i18n="sfxTypeOverlay">Overlay</option>
+              <option value="avatar" data-i18n="sfxTypeAvatar">Avatar Swap</option>
             </select>
           </div>
           <div class="form-field full">
             <span data-i18n="triggerLabel">Trigger</span>
             <select id="sfx-trigger">
               <option value="start" data-i18n="triggerStart">Start</option>
-              <option value="keyword" data-i18n="triggerKeyword">
-                Keyword
-              </option>
-              <option value="action_pattern" data-i18n="triggerActionPattern">
-                Action Pattern
-              </option>
-              <option value="turn_interval" data-i18n="triggerTurnInterval">
-                Every N Turns
-              </option>
+              <option value="keyword" data-i18n="triggerKeyword">Keyword</option>
+              <option value="action_pattern" data-i18n="triggerActionPattern">Action Pattern</option>
+              <option value="turn_interval" data-i18n="triggerTurnInterval">Every N Turns</option>
               <option value="always" data-i18n="triggerAlways">Always</option>
             </select>
           </div>
           <div class="form-field full hidden" id="sfx-keywords-field">
             <span data-i18n="triggerKeywords">Trigger Keywords</span>
-            <input
-              type="text"
-              id="sfx-trigger-keywords"
-              placeholder="rain, storm, thunder"
-            />
-            <small class="muted" data-i18n="triggerKeywordsHelp"
-              >Comma-separated. Any match triggers.</small
-            >
+            <input type="text" id="sfx-trigger-keywords" placeholder="rain, storm, thunder" />
+            <small class="muted" data-i18n="triggerKeywordsHelp">Comma-separated. Any match triggers.</small>
           </div>
           <div class="form-field full hidden" id="sfx-keywords-secondary-field">
             <span data-i18n="triggerKeywordsSecondary">Secondary Keywords</span>
-            <input
-              type="text"
-              id="sfx-trigger-keywords-secondary"
-              placeholder="dark, cloudy"
-            />
-            <small class="muted" data-i18n="triggerKeywordsSecondaryHelp"
-              >All must match (optional).</small
-            >
+            <input type="text" id="sfx-trigger-keywords-secondary" placeholder="dark, cloudy" />
+            <small class="muted" data-i18n="triggerKeywordsSecondaryHelp">All must match (optional).</small>
           </div>
           <div class="form-field full hidden" id="sfx-action-pattern-field">
-            <span data-i18n="triggerActionPatternLabel"
-              >Action Pattern (Regex)</span
-            >
-            <input
-              type="text"
-              id="sfx-trigger-action-pattern"
-              placeholder="\*.*(laugh|smile)\*"
-            />
-            <small class="muted" data-i18n="triggerActionPatternHelp"
-              >Matches *action* text. Use regex format.</small
-            >
+            <span data-i18n="triggerActionPatternLabel">Action Pattern (Regex)</span>
+            <input type="text" id="sfx-trigger-action-pattern" placeholder="\*.*(laugh|smile)\*" />
+            <small class="muted" data-i18n="triggerActionPatternHelp">Matches *action* text. Use regex format.</small>
           </div>
           <div class="form-field full hidden" id="sfx-turn-interval-field">
             <span data-i18n="triggerTurnIntervalLabel">Every N Turns</span>
-            <input
-              type="number"
-              id="sfx-trigger-turn-interval"
-              value="5"
-              min="1"
-            />
+            <input type="number" id="sfx-trigger-turn-interval" value="5" min="1" />
           </div>
           <div class="form-field full hidden" id="sfx-cooldown-field">
             <span data-i18n="triggerCooldown">Cooldown (seconds)</span>
@@ -3438,39 +1676,19 @@
             <span data-i18n="evictionLabel">Eviction</span>
             <select id="sfx-eviction">
               <option value="never" data-i18n="evictionNever">Never</option>
-              <option value="keyword" data-i18n="evictionKeyword">
-                Keyword
-              </option>
-              <option value="message_count" data-i18n="evictionMessageCount">
-                After N Messages
-              </option>
+              <option value="keyword" data-i18n="evictionKeyword">Keyword</option>
+              <option value="message_count" data-i18n="evictionMessageCount">After N Messages</option>
               <option value="manual" data-i18n="evictionManual">Manual</option>
             </select>
           </div>
           <div class="form-field full hidden" id="sfx-eviction-keywords-field">
             <span data-i18n="evictionKeywords">Eviction Keywords</span>
-            <input
-              type="text"
-              id="sfx-eviction-keywords"
-              placeholder="sunny, clear, stop"
-            />
-            <small class="muted" data-i18n="evictionKeywordsHelp"
-              >When these keywords appear, stop the SFX.</small
-            >
+            <input type="text" id="sfx-eviction-keywords" placeholder="sunny, clear, stop" />
+            <small class="muted" data-i18n="evictionKeywordsHelp">When these keywords appear, stop the SFX.</small>
           </div>
-          <div
-            class="form-field full hidden"
-            id="sfx-eviction-message-count-field"
-          >
-            <span data-i18n="evictionMessageCountLabel"
-              >Stop after N messages</span
-            >
-            <input
-              type="number"
-              id="sfx-eviction-message-count"
-              value="10"
-              min="1"
-            />
+          <div class="form-field full hidden" id="sfx-eviction-message-count-field">
+            <span data-i18n="evictionMessageCountLabel">Stop after N messages</span>
+            <input type="number" id="sfx-eviction-message-count" value="10" min="1" />
           </div>
           <div class="form-field full hidden" id="sfx-playback-options">
             <span data-i18n="playbackOptions">Playback Options</span>
@@ -3491,46 +1709,20 @@
           </div>
           <div class="form-field half hidden" id="sfx-volume-field">
             <span data-i18n="volumeLabel">Volume</span>
-            <input
-              type="range"
-              id="sfx-volume"
-              min="0"
-              max="1"
-              step="0.1"
-              value="1"
-            />
+            <input type="range" id="sfx-volume" min="0" max="1" step="0.1" value="1" />
             <span id="sfx-volume-value">100%</span>
           </div>
           <div class="form-field half hidden" id="sfx-fade-in-field">
             <span data-i18n="fadeInLabel">Fade In (ms)</span>
-            <input
-              type="number"
-              id="sfx-fade-in"
-              value="0"
-              min="0"
-              step="100"
-            />
+            <input type="number" id="sfx-fade-in" value="0" min="0" step="100" />
           </div>
           <div class="form-field half hidden" id="sfx-fade-out-field">
             <span data-i18n="fadeOutLabel">Fade Out (ms)</span>
-            <input
-              type="number"
-              id="sfx-fade-out"
-              value="0"
-              min="0"
-              step="100"
-            />
+            <input type="number" id="sfx-fade-out" value="0" min="0" step="100" />
           </div>
           <div class="form-field half hidden" id="sfx-opacity-field">
             <span data-i18n="opacityLabel">Opacity</span>
-            <input
-              type="range"
-              id="sfx-opacity"
-              min="0"
-              max="1"
-              step="0.1"
-              value="1"
-            />
+            <input type="range" id="sfx-opacity" min="0" max="1" step="0.1" value="1" />
             <span id="sfx-opacity-value">100%</span>
           </div>
           <div class="form-field half hidden" id="sfx-layer-field">
@@ -3539,44 +1731,17 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button
-            id="cancel-sfx-editor-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="save-sfx-editor-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-            disabled
-          >
-            Save
-          </button>
+          <button id="cancel-sfx-editor-btn" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+          <button id="save-sfx-editor-btn" class="primary-btn" type="button" data-i18n="save" disabled>Save</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="message-metadata-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="message-metadata-title"
-    >
+    <div id="message-metadata-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="message-metadata-title">
       <div class="modal-card wide">
         <div class="modal-header">
           <h3 id="message-metadata-title">Message Metadata</h3>
-          <button
-            class="icon-btn modal-close"
-            data-close-modal
-            aria-label="Close metadata"
-          >
-            &times;
-          </button>
+          <button class="icon-btn modal-close" data-close-modal aria-label="Close metadata">&times;</button>
         </div>
         <div class="modal-body">
           <pre id="message-metadata-json" class="metadata-json"></pre>
@@ -3584,61 +1749,26 @@
       </div>
     </div>
 
-    <div
-      id="writing-instructions-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="writing-instructions-title"
-    >
+    <div id="writing-instructions-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="writing-instructions-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3
-            id="writing-instructions-title"
-            data-i18n="writingInstructionsManager"
-          >
-            Writing Instructions Manager
-          </h3>
+          <h3 id="writing-instructions-title" data-i18n="writingInstructionsManager">Writing Instructions Manager</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
           <div class="lore-toolbar">
-            <button
-              id="create-writing-instruction-btn"
-              class="primary-btn"
-              type="button"
-              data-i18n="addWritingInstruction"
-            ></button>
-            <button
-              id="import-writing-instruction-btn"
-              class="secondary-btn"
-              type="button"
-              data-i18n-title="importWritingInstruction"
-              aria-label="Import Writing Instruction"
-            >
-              ⬆
-            </button>
+            <button id="create-writing-instruction-btn" class="primary-btn" type="button" data-i18n="addWritingInstruction"></button>
+            <button id="import-writing-instruction-btn" class="secondary-btn" type="button" data-i18n-title="importWritingInstruction" aria-label="Import Writing Instruction">⬆</button>
           </div>
           <div id="writing-instructions-list" class="lorebook-list"></div>
         </div>
       </div>
     </div>
 
-    <div
-      id="writing-instruction-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="writing-instruction-editor-title"
-    >
+    <div id="writing-instruction-editor-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="writing-instruction-editor-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3
-            id="writing-instruction-editor-title"
-            data-i18n="writingInstructionEditor"
-          >
-            Writing Instruction Editor
-          </h3>
+          <h3 id="writing-instruction-editor-title" data-i18n="writingInstructionEditor">Writing Instruction Editor</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
@@ -3646,34 +1776,15 @@
             <div class="form-field full">
               <div class="label-inline">
                 <span data-i18n="nameLabel">Name</span>
-                <span
-                  id="writing-instruction-name-count"
-                  class="muted label-count"
-                  >0/64</span
-                >
+                <span id="writing-instruction-name-count" class="muted label-count">0/64</span>
               </div>
-              <input
-                id="writing-instruction-name"
-                type="text"
-                minlength="1"
-                maxlength="64"
-              />
+              <input id="writing-instruction-name" type="text" minlength="1" maxlength="64" />
             </div>
           </div>
           <div id="writing-instruction-tabs" class="settings-tabs">
             <div class="char-def-tabs-row">
-              <div
-                id="writing-instruction-tabs-left"
-                class="char-def-tabs-left"
-              ></div>
-              <button
-                id="writing-instruction-add-lang-btn"
-                class="settings-tab-btn"
-                type="button"
-                onclick="openWritingInstructionLanguageModal()"
-              >
-                +
-              </button>
+              <div id="writing-instruction-tabs-left" class="char-def-tabs-left"></div>
+              <button id="writing-instruction-add-lang-btn" class="settings-tab-btn" type="button" onclick="openWritingInstructionLanguageModal()">+</button>
             </div>
           </div>
           <div id="writing-instruction-content-area" class="full lang-field">
@@ -3681,119 +1792,52 @@
               <span data-i18n="writingInstructions">Writing Instructions</span>
               <span id="writing-instruction-text-count" class="token-count muted hidden">0 tokens</span>
             </div>
-            <textarea
-              id="writing-instruction-text"
-              rows="8"
-              maxlength="20480"
-            ></textarea>
+            <textarea id="writing-instruction-text" rows="8" maxlength="20480"></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button
-            id="cancel-writing-instruction-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="apply-writing-instructions-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="apply"
-          >
-            Apply
-          </button>
-          <button
-            id="save-writing-instructions-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="save"
-          >
-            Save
-          </button>
+          <button id="cancel-writing-instruction-btn" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+          <button id="apply-writing-instructions-btn" class="secondary-btn" type="button" data-i18n="apply">Apply</button>
+          <button id="save-writing-instructions-btn" class="primary-btn" type="button" data-i18n="save">Save</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="persona-editor-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="persona-editor-title"
-    >
+    <div id="persona-editor-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="persona-editor-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3 id="persona-editor-title" data-i18n="personaEditor">
-            Persona Editor
-          </h3>
+          <h3 id="persona-editor-title" data-i18n="personaEditor">Persona Editor</h3>
           <button class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
           <div id="persona-avatar-dropzone-container" class="form-field">
-            <div
-              id="persona-avatar-dropzone"
-              class="char-avatar-dropzone"
-              tabindex="0"
-              aria-label="Upload avatar"
-            >
+            <div id="persona-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload avatar">
               <img id="persona-avatar-preview" class="hidden" />
               <span class="dropzone-plus">+</span>
               <span class="dropzone-hint">Drag & drop or click</span>
-              <button
-                type="button"
-                id="persona-remove-avatar"
-                class="avatar-remove-btn hidden"
-                data-i18n-title="removeTitle"
-              >
-                &times;
-              </button>
+              <button type="button" id="persona-remove-avatar" class="avatar-remove-btn hidden" data-i18n-title="removeTitle">&times;</button>
             </div>
-            <input
-              type="file"
-              id="persona-avatar-file-input"
-              accept="image/*"
-              class="hidden"
-            />
+            <input type="file" id="persona-avatar-file-input" accept="image/*" class="hidden" />
           </div>
           <div class="two-col lore-editor-grid">
             <div class="form-field full">
               <div class="label-inline">
                 <span data-i18n="nameLabel">Name</span>
-                <span id="persona-editor-name-count" class="muted label-count"
-                  >0/64</span
-                >
+                <span id="persona-editor-name-count" class="muted label-count">0/64</span>
               </div>
               <input id="persona-editor-name" type="text" maxlength="64" />
             </div>
           </div>
           <div class="form-field">
             <div class="label-inline">
-              <span data-i18n="personaDescription"
-                >Description (max 100 chars)</span
-              >
-              <span
-                id="persona-editor-description-count"
-                class="muted label-count"
-                >0/100</span
-              >
+              <span data-i18n="personaDescription">Description (max 100 chars)</span>
+              <span id="persona-editor-description-count" class="muted label-count">0/100</span>
             </div>
-            <textarea
-              id="persona-editor-description"
-              rows="3"
-              maxlength="100"
-            ></textarea>
+            <textarea id="persona-editor-description" rows="3" maxlength="100"></textarea>
           </div>
           <div class="form-field">
-            <span data-i18n="personaInternalDescription"
-              >Internal Description (optional)</span
-            >
-            <textarea
-              id="persona-editor-internal-description"
-              rows="4"
-            ></textarea>
+            <span data-i18n="personaInternalDescription">Internal Description (optional)</span>
+            <textarea id="persona-editor-internal-description" rows="4"></textarea>
           </div>
           <div class="form-field">
             <span data-i18n="personaColor">Color</span>
@@ -3805,45 +1849,17 @@
           </span>
         </div>
         <div class="modal-footer">
-          <button
-            id="cancel-persona-btn"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="save-persona-btn"
-            class="primary-btn"
-            type="button"
-            data-i18n="savePersona"
-          >
-            Save
-          </button>
+          <button id="cancel-persona-btn" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+          <button id="save-persona-btn" class="primary-btn" type="button" data-i18n="savePersona">Save</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="writing-instruction-language-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="writing-instruction-language-title"
-    >
+    <div id="writing-instruction-language-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="writing-instruction-language-title">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 id="writing-instruction-language-title" data-i18n="addLanguage">
-            Add Language
-          </h3>
-          <button
-            class="icon-btn modal-close"
-            id="writing-instruction-language-cancel-x"
-            aria-label="Close"
-          >
-            &times;
-          </button>
+          <h3 id="writing-instruction-language-title" data-i18n="addLanguage">Add Language</h3>
+          <button class="icon-btn modal-close" id="writing-instruction-language-cancel-x" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
           <div class="form-field">
@@ -3851,43 +1867,17 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button
-            id="writing-instruction-language-cancel"
-            class="secondary-btn"
-            type="button"
-            data-i18n="cancel"
-          >
-            Cancel
-          </button>
-          <button
-            id="writing-instruction-language-add"
-            class="primary-btn"
-            type="button"
-            data-i18n="add"
-          >
-            Add
-          </button>
+          <button id="writing-instruction-language-cancel" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
+          <button id="writing-instruction-language-add" class="primary-btn" type="button" data-i18n="add">Add</button>
         </div>
       </div>
     </div>
 
-    <div
-      id="message-model-info-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="message-model-info-title"
-    >
+    <div id="message-model-info-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="message-model-info-title">
       <div class="modal-card">
         <div class="modal-header">
           <h3 id="message-model-info-title">Generation Parameters</h3>
-          <button
-            class="icon-btn modal-close"
-            data-close-modal
-            aria-label="Close"
-          >
-            &times;
-          </button>
+          <button class="icon-btn modal-close" data-close-modal aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
           <div class="model-info-row">
@@ -3895,82 +1885,39 @@
             <span id="message-model-info-model" class="model-info-value"></span>
           </div>
           <div class="model-info-row">
-            <span class="model-info-label" data-i18n="temperatureLabel"></span
-            >:&nbsp;
-            <span
-              id="message-model-info-temperature"
-              class="model-info-value"
-            ></span>
+            <span class="model-info-label" data-i18n="temperatureLabel"></span>:&nbsp;
+            <span id="message-model-info-temperature" class="model-info-value"></span>
           </div>
           <div class="model-info-row">
-            <span class="model-info-label" data-i18n="maxTokensLabel"></span
-            >:&nbsp;
-            <span
-              id="message-model-info-max-tokens"
-              class="model-info-value"
-            ></span>
+            <span class="model-info-label" data-i18n="maxTokensLabel"></span>:&nbsp;
+            <span id="message-model-info-max-tokens" class="model-info-value"></span>
           </div>
           <div class="model-info-row">
             <span class="model-info-label" data-i18n="topPLabel"></span>:&nbsp;
             <span id="message-model-info-top-p" class="model-info-value"></span>
           </div>
           <div class="model-info-row">
-            <span
-              class="model-info-label"
-              data-i18n="frequencyPenaltyLabel"
-            ></span
-            >:&nbsp;
-            <span
-              id="message-model-info-frequency-penalty"
-              class="model-info-value"
-            ></span>
+            <span class="model-info-label" data-i18n="frequencyPenaltyLabel"></span>:&nbsp;
+            <span id="message-model-info-frequency-penalty" class="model-info-value"></span>
           </div>
           <div class="model-info-row">
-            <span
-              class="model-info-label"
-              data-i18n="presencePenaltyLabel"
-            ></span
-            >:&nbsp;
-            <span
-              id="message-model-info-presence-penalty"
-              class="model-info-value"
-            ></span>
+            <span class="model-info-label" data-i18n="presencePenaltyLabel"></span>:&nbsp;
+            <span id="message-model-info-presence-penalty" class="model-info-value"></span>
           </div>
           <div class="model-info-row">
-            <span class="model-info-label" data-i18n="streamLabel"></span
-            >:&nbsp;
-            <span
-              id="message-model-info-stream"
-              class="model-info-value"
-            ></span>
+            <span class="model-info-label" data-i18n="streamLabel"></span>:&nbsp;
+            <span id="message-model-info-stream" class="model-info-value"></span>
           </div>
           <!-- </form> -->
         </div>
       </div>
     </div>
 
-    <div
-      id="message-system-prompt-modal"
-      class="modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="message-system-prompt-title"
-    >
+    <div id="message-system-prompt-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="message-system-prompt-title">
       <div class="modal-card wide">
         <div class="modal-header">
-          <h3
-            id="message-system-prompt-title"
-            data-i18n="msgSystemPromptModalTitle"
-          >
-            System prompt
-          </h3>
-          <button
-            class="icon-btn modal-close"
-            data-close-modal
-            aria-label="Close"
-          >
-            &times;
-          </button>
+          <h3 id="message-system-prompt-title" data-i18n="msgSystemPromptModalTitle">System prompt</h3>
+          <button class="icon-btn modal-close" data-close-modal aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
           <div id="message-system-prompt-list" class="system-prompt-list"></div>
