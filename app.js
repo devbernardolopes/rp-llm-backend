@@ -124,6 +124,7 @@ const DEFAULT_SETTINGS = {
   defaultAvatarScale: 4,
   defaultAutoTitleMinMessages: 10,
   defaultAutoTitleStream: false,
+  enableAutoTitleSettings: true,
   autoTitleSystemPrompt: "You create concise, descriptive chat thread titles.",
   autoTitleUserPrompt: `Generate a concise roleplay thread title.
 Generate the title in language code: {{languageCode}}.
@@ -140,6 +141,7 @@ Requirements:
   autoTitleStopStrings: "",
   autoTitleTopP: 0.9,
   defaultSummaryStream: false,
+  enableSummarySettings: true,
   summaryMaxTokens: 1024,
   summaryTemperature: 0.25,
   summaryStopStrings: "",
@@ -434,10 +436,12 @@ function populateSettingsTabValues() {
   const defaultAutoTitleModel = document.getElementById("default-auto-title-model");
   const defaultAutoTitleTemp = document.getElementById("default-auto-title-temp");
   const defaultAutoTitleStream = document.getElementById("default-auto-title-stream");
+  const enableAutoTitleSettings = document.getElementById("enable-auto-title-settings");
   const defaultSummaryProvider = document.getElementById("default-summary-provider");
   const defaultSummaryModel = document.getElementById("default-summary-model");
   const defaultSummaryTemp = document.getElementById("default-summary-temp");
   const defaultSummaryStream = document.getElementById("default-summary-stream");
+  const enableSummarySettings = document.getElementById("enable-summary-settings");
   const defaultAvatarScale = document.getElementById("default-avatar-scale");
   const defaultPersonaInjectionPlacement = document.getElementById("default-persona-injection-placement");
   const defaultTtsProvider = document.getElementById("default-tts-provider");
@@ -458,7 +462,9 @@ function populateSettingsTabValues() {
     if (val) val.textContent = defaultSummaryTemp.value;
   }
   if (defaultAutoTitleStream) defaultAutoTitleStream.checked = state.settings.defaultAutoTitleStream;
+  if (enableAutoTitleSettings) enableAutoTitleSettings.checked = state.settings.enableAutoTitleSettings ?? DEFAULT_SETTINGS.enableAutoTitleSettings;
   if (defaultSummaryStream) defaultSummaryStream.checked = state.settings.defaultSummaryStream;
+  if (enableSummarySettings) enableSummarySettings.checked = state.settings.enableSummarySettings ?? DEFAULT_SETTINGS.enableSummarySettings;
   if (defaultAvatarScale) defaultAvatarScale.value = state.settings.defaultAvatarScale || 1;
   if (defaultPersonaInjectionPlacement) defaultPersonaInjectionPlacement.value = state.settings.defaultPersonaInjectionPlacement || "none";
   if (defaultTtsProvider) defaultTtsProvider.value = state.settings.defaultTtsProvider || "kokoro";
@@ -4546,9 +4552,16 @@ async function setupSettingsControls() {
     });
   }
   const autoTitleStopStringsInput = document.getElementById("default-auto-title-stop-strings");
+  const enableAutoTitleSettingsToggle = document.getElementById("enable-auto-title-settings");
   if (autoTitleStopStringsInput) {
     autoTitleStopStringsInput.addEventListener("input", () => {
       state.settings.autoTitleStopStrings = autoTitleStopStringsInput.value.trim();
+      saveSettings();
+    });
+  }
+  if (enableAutoTitleSettingsToggle) {
+    enableAutoTitleSettingsToggle.addEventListener("change", () => {
+      state.settings.enableAutoTitleSettings = enableAutoTitleSettingsToggle.checked;
       saveSettings();
     });
   }
@@ -4587,9 +4600,16 @@ async function setupSettingsControls() {
     });
   }
   const summaryStopStringsInput = document.getElementById("default-summary-stop-strings");
+  const enableSummarySettingsToggle = document.getElementById("enable-summary-settings");
   if (summaryStopStringsInput) {
     summaryStopStringsInput.addEventListener("input", () => {
       state.settings.summaryStopStrings = summaryStopStringsInput.value.trim();
+      saveSettings();
+    });
+  }
+  if (enableSummarySettingsToggle) {
+    enableSummarySettingsToggle.addEventListener("change", () => {
+      state.settings.enableSummarySettings = enableSummarySettingsToggle.checked;
       saveSettings();
     });
   }
@@ -20905,30 +20925,33 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
   const titleModel = state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
   const titleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
   const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+  const mainChatModel = state.settings.model || DEFAULT_SETTINGS.model;
 
-  const effectiveProvider = isTitleGeneration || isSummarization ? (isTitleGeneration ? titleProvider : summaryProvider) : provider;
+  const autoTitleSettingsEnabled = isAutoTitleSettingsEnabled();
+  const summarySettingsEnabled = isSummarySettingsEnabled();
+  const effectiveProvider = isTitleGeneration ? (autoTitleSettingsEnabled ? titleProvider : provider) : isSummarization ? (summarySettingsEnabled ? summaryProvider : provider) : provider;
+  const effectiveModel = isTitleGeneration ? (autoTitleSettingsEnabled ? titleModel : mainChatModel) : isSummarization ? (summarySettingsEnabled ? summaryModel : mainChatModel) : model;
+
+  const requestOptions = {
+    ...options,
+    useSeparateAutoTitleSettings: autoTitleSettingsEnabled,
+    useSeparateSummarySettings: summarySettingsEnabled,
+  };
 
   if (effectiveProvider === "aihorde") {
-    const effectiveModel = isTitleGeneration ? titleModel : isSummarization ? summaryModel : model;
-    const apiMethod = state.settings.hordeApiMethod || "native";
-    if (apiMethod === "openai") {
-      return callAIHordeOpenAI(systemPrompt, history, effectiveModel, onChunk, signal, options);
-    }
-    return callAIHorde(systemPrompt, history, effectiveModel, onChunk, signal, options);
+    return callAIHordeOpenAI(systemPrompt, history, effectiveModel, onChunk, signal, requestOptions);
   }
 
   if (effectiveProvider === "lmstudio") {
-    const effectiveModel = isTitleGeneration ? titleModel : isSummarization ? summaryModel : model;
-    return callLMStudio(systemPrompt, history, effectiveModel, onChunk, signal, options);
+    return callLMStudio(systemPrompt, history, effectiveModel, onChunk, signal, requestOptions);
   }
 
   if (effectiveProvider === "groq") {
-    const effectiveModel = isTitleGeneration ? titleModel : isSummarization ? summaryModel : model;
-    return callGroq(systemPrompt, history, effectiveModel, onChunk, signal, options);
+    return callGroq(systemPrompt, history, effectiveModel, onChunk, signal, requestOptions);
   }
 
-  const resolvedModel = resolveModelForRequest(model);
-  const fallbackModel = getFallbackModel(resolvedModel, model);
+  const resolvedModel = resolveModelForRequest(effectiveModel);
+  const fallbackModel = getFallbackModel(resolvedModel, effectiveModel);
   const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
     { role: "system", content: systemPrompt },
@@ -20965,29 +20988,18 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
   const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
   const streamForced = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : null;
   const body = {
-    model: isTitleGeneration ? titleModel : isSummarization ? summaryModel : resolvedModel,
+    model: resolvedModel,
     messages: promptMessages,
     max_completion_tokens: effectiveMaxTokens,
-    temperature: isTitleGeneration
-      ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
-      : isSummarization
-        ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
-        : clampTemperature(state.settings.temperature),
-    top_p: isTitleGeneration ? 0.9 : isSummarization ? 0.9 : Number(state.settings.topP) || 1,
-    frequency_penalty: isTitleGeneration ? 0 : isSummarization ? 0 : Number(state.settings.frequencyPenalty) || 0,
-    presence_penalty: isTitleGeneration ? 0 : isSummarization ? 0 : Number(state.settings.presencePenalty) || 0,
+    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
+    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
+    frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
+    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization),
     ...(() => {
-      let stopStrings = null;
-      if (isTitleGeneration) {
-        stopStrings = getAutoTitleStopStrings();
-      } else if (isSummarization) {
-        stopStrings = getSummaryStopStrings();
-      } else {
-        stopStrings = getStopStrings();
-      }
+      const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
       return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
     })(),
-    stream: isTitleGeneration ? false : streamForced === null ? !!state.settings.streamEnabled : Boolean(streamForced),
+    stream: getEffectiveRequestStream(requestOptions, isTitleGeneration, isSummarization),
   };
 
   state.currentRequestMessages = body.messages;
@@ -21044,13 +21056,15 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
+  const useSeparateAutoTitleSettings = options?.useSeparateAutoTitleSettings ?? isAutoTitleSettingsEnabled();
+  const useSeparateSummarySettings = options?.useSeparateSummarySettings ?? isSummarySettingsEnabled();
   const lmstudioModel = resolvedModel.startsWith("lmstudio/") ? resolvedModel.slice(9) : resolvedModel;
 
   state.currentRequestMessages = promptMessages;
 
   const baseUrl = getLMStudioBaseUrl();
   const apiMethod = state.settings.lmstudioApiMethod || "openai";
-  const streamEnabled = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
+  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization);
 
   let endpoint, body;
 
@@ -21068,19 +21082,13 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
     const topK = Number(state.settings.topK);
     const repeatPenalty = Number(state.settings.repeatPenalty);
     const contextLength = Number(state.settings.contextLength);
-    const autoTitleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
-    const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
-    const shouldDisableStore = (isTitleGeneration && autoTitleProvider === "lmstudio" && apiMethod === "native") || (isSummarization && summaryProvider === "lmstudio" && apiMethod === "native");
+    const shouldDisableStore = apiMethod === "native" && (isTitleGeneration || isSummarization);
     body = {
       model: lmstudioModel,
       input,
       system_prompt: systemMessagesList.length > 0 ? systemMessagesList[0].content : undefined,
-      temperature: isTitleGeneration
-        ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
-        : isSummarization
-          ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
-          : clampTemperature(state.settings.temperature),
-      top_p: Number(state.settings.topP) || 1,
+      temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
+      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
       top_k: topK > 0 ? topK : undefined,
       repeat_penalty: repeatPenalty !== 1 ? repeatPenalty : undefined,
       max_output_tokens: effectiveMaxTokens,
@@ -21090,26 +21098,15 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
     };
   } else {
     endpoint = "/v1/chat/completions";
-    let stopStrings = null;
-    if (isTitleGeneration) {
-      stopStrings = getAutoTitleStopStrings();
-    } else if (isSummarization) {
-      stopStrings = getSummaryStopStrings();
-    } else {
-      stopStrings = getStopStrings();
-    }
+    const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
     body = {
       model: lmstudioModel,
       messages: promptMessages,
       max_tokens: effectiveMaxTokens,
-      temperature: isTitleGeneration
-        ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
-        : isSummarization
-          ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
-          : clampTemperature(state.settings.temperature),
-      top_p: Number(state.settings.topP) || 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
+      temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
+      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
+      frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
+      presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization),
       ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
       stream: streamEnabled,
     };
@@ -21383,28 +21380,17 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
   state.currentRequestMessages = promptMessages;
 
   const baseUrl = "https://api.groq.com/openai/v1";
-  const streamEnabled = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
+  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization);
 
-  let stopStrings = null;
-  if (isTitleGeneration) {
-    stopStrings = getAutoTitleStopStrings();
-  } else if (isSummarization) {
-    stopStrings = getSummaryStopStrings();
-  } else {
-    stopStrings = getStopStrings();
-  }
+  const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
   const body = {
     model: groqModel,
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
-    temperature: isTitleGeneration
-      ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
-      : isSummarization
-        ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
-        : clampTemperature(state.settings.temperature),
-    top_p: Number(state.settings.topP) || 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
+    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
+    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
+    frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
+    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization),
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
   };
@@ -21610,7 +21596,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
 
   const hordeApiMethod = String(state.settings.hordeApiMethod || "native").toLowerCase();
   const baseUrl = hordeApiMethod === "openai" ? "https://oai.aihorde.net" : "https://stablehorde.net";
-  const streamEnabled = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
+  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization);
 
   const headers = {
     "Content-Type": "application/json",
@@ -21619,27 +21605,16 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
     headers["Authorization"] = `Bearer ${hordeApiKey}`;
   }
 
-  let stopStrings = null;
-  if (isTitleGeneration) {
-    stopStrings = getAutoTitleStopStrings();
-  } else if (isSummarization) {
-    stopStrings = getSummaryStopStrings();
-  } else {
-    stopStrings = getStopStrings();
-  }
+  const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
 
   const body = {
     model: hordeModel,
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
-    temperature: isTitleGeneration
-      ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
-      : isSummarization
-        ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
-        : clampTemperature(state.settings.temperature),
-    top_p: Number(state.settings.topP) || 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
+    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
+    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
+    frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
+    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization),
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
   };
@@ -21824,11 +21799,17 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
+  const useSeparateAutoTitleSettings = options?.useSeparateAutoTitleSettings ?? isAutoTitleSettingsEnabled();
+  const useSeparateSummarySettings = options?.useSeparateSummarySettings ?? isSummarySettingsEnabled();
 
   const temperature = isTitleGeneration
-    ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
+    ? useSeparateAutoTitleSettings
+      ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
+      : clampTemperature(state.settings.temperature)
     : isSummarization
-      ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
+      ? useSeparateSummarySettings
+        ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
+        : clampTemperature(state.settings.temperature)
       : clampTemperature(state.settings.temperature);
 
   const effectiveMaxTokens = isTitleGeneration
@@ -21883,7 +21864,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
       n: 1,
       max_length: effectiveMaxTokens,
       temperature,
-      top_p: Number(state.settings.topP) || 1,
+      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
       top_k: 0,
       top_a: 0,
       typical: 0,
@@ -21938,14 +21919,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
 
     let content = generatedText;
     let stoppedByStopString = false;
-    let stopStrings = null;
-    if (isTitleGeneration) {
-      stopStrings = getAutoTitleStopStrings();
-    } else if (isSummarization) {
-      stopStrings = getSummaryStopStrings();
-    } else {
-      stopStrings = getStopStrings();
-    }
+    const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
     if (stopStrings && stopStrings.length > 0) {
       const truncation = truncateAtStopString(content, stopStrings);
       if (truncation.stopped) {
@@ -22494,6 +22468,77 @@ function getSummaryStopStrings() {
     .split(",")
     .map((s) => s.trimStart())
     .filter(Boolean);
+}
+
+function isAutoTitleSettingsEnabled() {
+  return state.settings.enableAutoTitleSettings ?? DEFAULT_SETTINGS.enableAutoTitleSettings;
+}
+
+function isSummarySettingsEnabled() {
+  return state.settings.enableSummarySettings ?? DEFAULT_SETTINGS.enableSummarySettings;
+}
+
+function getEffectiveRequestTemperature(isTitleGeneration, isSummarization) {
+  if (isTitleGeneration) {
+    return isAutoTitleSettingsEnabled() ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature) : clampTemperature(state.settings.temperature);
+  }
+  if (isSummarization) {
+    return isSummarySettingsEnabled() ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature) : clampTemperature(state.settings.temperature);
+  }
+  return clampTemperature(state.settings.temperature);
+}
+
+function getEffectiveRequestTopP(isTitleGeneration, isSummarization) {
+  if (isTitleGeneration) {
+    return isAutoTitleSettingsEnabled() ? 0.9 : Number(state.settings.topP) || 1;
+  }
+  if (isSummarization) {
+    return isSummarySettingsEnabled() ? 0.9 : Number(state.settings.topP) || 1;
+  }
+  return Number(state.settings.topP) || 1;
+}
+
+function getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization) {
+  if (isTitleGeneration) {
+    return isAutoTitleSettingsEnabled() ? 0 : Number(state.settings.frequencyPenalty) || 0;
+  }
+  if (isSummarization) {
+    return isSummarySettingsEnabled() ? 0 : Number(state.settings.frequencyPenalty) || 0;
+  }
+  return Number(state.settings.frequencyPenalty) || 0;
+}
+
+function getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization) {
+  if (isTitleGeneration) {
+    return isAutoTitleSettingsEnabled() ? 0 : Number(state.settings.presencePenalty) || 0;
+  }
+  if (isSummarization) {
+    return isSummarySettingsEnabled() ? 0 : Number(state.settings.presencePenalty) || 0;
+  }
+  return Number(state.settings.presencePenalty) || 0;
+}
+
+function getEffectiveRequestStopStrings(isTitleGeneration, isSummarization) {
+  if (isTitleGeneration) {
+    return isAutoTitleSettingsEnabled() ? getAutoTitleStopStrings() : getStopStrings();
+  }
+  if (isSummarization) {
+    return isSummarySettingsEnabled() ? getSummaryStopStrings() : getStopStrings();
+  }
+  return getStopStrings();
+}
+
+function getEffectiveRequestStream(options, isTitleGeneration, isSummarization) {
+  if (options && Object.prototype.hasOwnProperty.call(options, "forceStream")) {
+    if (isTitleGeneration) {
+      return isAutoTitleSettingsEnabled() ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
+    }
+    if (isSummarization) {
+      return isSummarySettingsEnabled() ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
+    }
+    return Boolean(options.forceStream);
+  }
+  return !!state.settings.streamEnabled;
 }
 
 function findStopStringIndex(content, stopStrings) {
