@@ -9,9 +9,7 @@ function toggleAllLoreEntries() {
   const btn = document.getElementById("toggle-all-lore-entries-btn");
   const root = document.getElementById("lore-entries-list");
   if (btn && root) {
-    btn.textContent = loreEntriesExpanded
-      ? t("collapseAll") || "Collapse All"
-      : t("expandAll") || "Expand All";
+    btn.textContent = loreEntriesExpanded ? t("collapseAll") || "Collapse All" : t("expandAll") || "Expand All";
     root.querySelectorAll(".lore-entry-card").forEach((card) => {
       const head = card.querySelector(".lore-entry-title");
       const body = card.querySelector(".lore-entry-body");
@@ -58,9 +56,7 @@ const DEFAULT_SETTINGS = {
   autoPairEnabled: true,
   trimMessages: true,
   maxTokens: Number(CONFIG.maxTokens) > 0 ? Number(CONFIG.maxTokens) : 8192,
-  temperature: Number.isFinite(Number(CONFIG.temperature))
-    ? Number(CONFIG.temperature)
-    : 0.8,
+  temperature: Number.isFinite(Number(CONFIG.temperature)) ? Number(CONFIG.temperature) : 0.8,
   topP: 1,
   topK: 0,
   repeatPenalty: 1,
@@ -74,8 +70,7 @@ const DEFAULT_SETTINGS = {
   newCharacterShortcut: "Alt+N",
   globalPromptTemplate: "Stay in character and respond naturally.",
   summarySystemPrompt: "You are a helpful summarization assistant.",
-  personaInjectionTemplate:
-    "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
+  personaInjectionTemplate: "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
   writingInstructionsInjectionWhen: "always",
   markdownCustomCss:
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
@@ -96,8 +91,7 @@ const DEFAULT_SETTINGS = {
   lockMemoryMessages: false,
   summaryThreshold: 20,
   memoryMessagesToKeep: 3,
-  memorySummarizerUserPrompt:
-    "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
+  memorySummarizerUserPrompt: "Summarize the following message exchange content in 1-5 sentences, focusing on key events, decisions, and relationship developments. Be concise and factual.",
   summaryMessagesPreProcessingJson: "[]",
   memoryRelevanceFilterEnabled: false,
   memorySlots: 5,
@@ -162,33 +156,20 @@ Requirements:
 };
 
 function getSectionHeader(key) {
-  return (
-    state.settings[key] ||
-    DEFAULT_SETTINGS[key] ||
-    ""
-  );
+  return state.settings[key] || DEFAULT_SETTINGS[key] || "";
 }
 
 window.getSectionHeader = getSectionHeader;
 window.DEFAULT_SETTINGS = DEFAULT_SETTINGS;
 
 const MODEL3D_EXPRESSION_ALIAS_MAP = {
-  neutral: ['neutral', 'normal', 'base', 'default', 'Neutral', 'Normal'],
-  smile: ['smile', 'Smile', 'joy', 'Joy', 'happy', 'Happy', 'grin', 'Grin'],
-  surprised: [
-    'surprised',
-    'Surprised',
-    'surprise',
-    'Surprise',
-    'shock',
-    'Shock',
-    'oh',
-    'Oh',
-  ],
+  neutral: ["neutral", "normal", "base", "default", "Neutral", "Normal"],
+  smile: ["smile", "Smile", "joy", "Joy", "happy", "Happy", "grin", "Grin"],
+  surprised: ["surprised", "Surprised", "surprise", "Surprise", "shock", "Shock", "oh", "Oh"],
 };
 
 function normalizeExpressionKey(key) {
-  return (key || '').toString().trim().toLowerCase();
+  return (key || "").toString().trim().toLowerCase();
 }
 
 // Theme management
@@ -226,7 +207,7 @@ async function fetchSnippet(filename) {
 async function loadSnippetsForModal(modalId) {
   const snippets = SNIPPET_MAP[modalId];
   if (!snippets) return;
-  
+
   const containerId = modalId.replace("-modal", "-content");
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -257,7 +238,7 @@ function populateSettingsTabValues() {
   if (lmstudioApiMethod) lmstudioApiMethod.value = state.settings.lmstudioApiMethod || "openai";
   if (groqApiKey) groqApiKey.value = state.settings.groqApiKey || "";
   if (aiProviderSelect) aiProviderSelect.value = state.settings.aiProvider || "openrouter";
-  
+
   // Add event listener for provider change (must be added after snippets load)
   aiProviderSelect?.addEventListener("change", () => {
     const oldProvider = state.settings.aiProvider || "openrouter";
@@ -277,7 +258,7 @@ function populateSettingsTabValues() {
     saveSettings();
     populateSettingsModels({ force: true }).catch(() => {});
   });
-  
+
   // API Tab - Sliders
   const maxTokensSlider = document.getElementById("max-tokens-slider");
   const temperatureSlider = document.getElementById("temperature-slider");
@@ -287,7 +268,7 @@ function populateSettingsTabValues() {
   const stopStrings = document.getElementById("stop-strings");
   const completionCooldownSlider = document.getElementById("completion-cooldown-slider");
   const streamEnabled = document.getElementById("stream-enabled");
-  
+
   if (maxTokensSlider) {
     maxTokensSlider.value = state.settings.maxTokens;
     const maxTokensValue = document.getElementById("max-tokens-value");
@@ -314,20 +295,20 @@ function populateSettingsTabValues() {
     if (ppValue) ppValue.textContent = state.settings.presencePenalty;
   }
   if (stopStrings) stopStrings.value = state.settings.stopStrings || "";
-  
+
   // Initialize model profiles
   updateModelProfileSelect();
-  
+
   if (completionCooldownSlider) {
     completionCooldownSlider.value = state.settings.completionCooldown;
     const ccValue = document.getElementById("completion-cooldown-value");
     if (ccValue) ccValue.textContent = state.settings.completionCooldown;
   }
   if (streamEnabled) streamEnabled.checked = state.settings.streamEnabled;
-  
+
   // Render OOC system avatar
   renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
-  
+
   // Appearance tab settings
   const uiLanguageSelect = document.getElementById("ui-language-select");
   const sttLanguageSelect = document.getElementById("stt-language-select");
@@ -339,7 +320,7 @@ function populateSettingsTabValues() {
   const botCardAvatarTransitionDelaySlider = document.getElementById("bot-card-avatar-transition-delay-slider");
   const toastDelaySlider = document.getElementById("toast-delay-slider");
   const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
-  
+
   if (uiLanguageSelect) uiLanguageSelect.value = state.settings.uiLanguage || "auto";
   if (sttLanguageSelect) sttLanguageSelect.value = state.settings.sttLanguage || "en";
   if (sttModeSelect) sttModeSelect.value = state.settings.sttMode || "push-to-talk";
@@ -377,7 +358,7 @@ function populateSettingsTabValues() {
     if (toastValue) toastValue.textContent = state.settings.toastDelay;
   }
   if (unreadSoundEnabled) unreadSoundEnabled.checked = state.settings.unreadSoundEnabled;
-  
+
   // Threads tab settings
   const autopairEnabled = document.getElementById("autopair-enabled");
   const markdownEnabled = document.getElementById("markdown-enabled");
@@ -394,7 +375,7 @@ function populateSettingsTabValues() {
   const loreSemanticThreshold = document.getElementById("lore-semantic-threshold");
   const chatMessageAlignment = document.getElementById("chat-message-alignment");
   const postprocessRulesJson = document.getElementById("postprocess-rules-json");
-  
+
   if (autopairEnabled) autopairEnabled.checked = state.settings.autopairEnabled;
   if (markdownEnabled) markdownEnabled.checked = state.settings.markdownEnabled;
   if (allowMessageHtml) allowMessageHtml.checked = state.settings.allowMessageHtml;
@@ -410,7 +391,7 @@ function populateSettingsTabValues() {
   if (loreSemanticThreshold) loreSemanticThreshold.value = state.settings.loreSemanticThreshold;
   if (chatMessageAlignment) chatMessageAlignment.value = state.settings.chatMessageAlignment;
   if (postprocessRulesJson) postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
-  
+
   // Prompting tab settings
   const globalPromptTemplate = document.getElementById("global-prompt-template");
   const summarySystemPrompt = document.getElementById("summary-system-prompt");
@@ -425,7 +406,7 @@ function populateSettingsTabValues() {
   const useLocalSummarization = document.getElementById("use-local-summarization");
   const useLocalAutoTitle = document.getElementById("use-local-auto-title");
   const writingInstructionsInjectionWhen = document.getElementById("writing-instructions-injection-when");
-  
+
   if (globalPromptTemplate) globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   if (summarySystemPrompt) summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
   if (memorySummarizerUserPrompt) memorySummarizerUserPrompt.value = state.settings.memorySummarizerUserPrompt || "";
@@ -439,7 +420,7 @@ function populateSettingsTabValues() {
   if (useLocalSummarization) useLocalSummarization.checked = state.settings.useLocalSummarization;
   if (useLocalAutoTitle) useLocalAutoTitle.checked = state.settings.useLocalAutoTitle;
   if (writingInstructionsInjectionWhen) writingInstructionsInjectionWhen.value = state.settings.writingInstructionsInjectionWhen;
-  
+
   // Shortcuts tab settings
   const cancelShortcut = document.getElementById("cancel-shortcut");
   const homeShortcut = document.getElementById("home-shortcut");
@@ -447,7 +428,7 @@ function populateSettingsTabValues() {
   if (cancelShortcut) cancelShortcut.value = state.settings.cancelShortcut || "";
   if (homeShortcut) homeShortcut.value = state.settings.homeShortcut || "";
   if (newCharacterShortcut) newCharacterShortcut.value = state.settings.newCharacterShortcut || "";
-  
+
   // Defaults tab settings
   const defaultAutoTitleProvider = document.getElementById("default-auto-title-provider");
   const defaultAutoTitleModel = document.getElementById("default-auto-title-model");
@@ -463,7 +444,7 @@ function populateSettingsTabValues() {
   const defaultTtsRate = document.getElementById("default-tts-rate");
   const defaultIncludeOoc = document.getElementById("default-include-ooc");
   const defaultAutoTitleMinMessages = document.getElementById("default-auto-title-min-messages");
-  
+
   if (defaultAutoTitleProvider) defaultAutoTitleProvider.value = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
   if (defaultSummaryProvider) defaultSummaryProvider.value = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
   if (defaultAutoTitleTemp) {
@@ -488,7 +469,7 @@ function populateSettingsTabValues() {
   }
   if (defaultIncludeOoc) defaultIncludeOoc.checked = state.settings.defaultIncludeOocInCompletions;
   if (defaultAutoTitleMinMessages) defaultAutoTitleMinMessages.value = state.settings.defaultAutoTitleMinMessages || 10;
-  
+
   updateProviderVisibility();
 }
 
@@ -703,11 +684,7 @@ const handleVisibilityChange = debounce(() => {
     });
   }
 
-  if (
-    !document.hidden &&
-    currentThread &&
-    document.getElementById("chat-view")?.classList.contains("active")
-  ) {
+  if (!document.hidden && currentThread && document.getElementById("chat-view")?.classList.contains("active")) {
     let changed = false;
     let lastUnreadAssistantIndex = -1;
     for (let i = 0; i < conversationHistory.length; i++) {
@@ -726,11 +703,7 @@ const handleVisibilityChange = debounce(() => {
       // Defer heavy renders to avoid blocking
       queueMicrotask(() => {
         renderThreads().catch(() => {});
-        if (
-          lastUnreadAssistantIndex >= 0 &&
-          currentThread.autoTtsEnabled === true &&
-          window.ttsState?.voiceSupportReady
-        ) {
+        if (lastUnreadAssistantIndex >= 0 && currentThread.autoTtsEnabled === true && window.ttsState?.voiceSupportReady) {
           window.toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
         }
       });
@@ -752,10 +725,7 @@ const handleFocus = debounce(() => {
   const now = Date.now();
   if (now - lastFocusTime < 200) return;
   lastFocusTime = now;
-  if (
-    !currentThread ||
-    !document.getElementById("chat-view")?.classList.contains("active")
-  ) {
+  if (!currentThread || !document.getElementById("chat-view")?.classList.contains("active")) {
     return;
   }
   let changed = false;
@@ -776,11 +746,7 @@ const handleFocus = debounce(() => {
     // Defer heavy renders to avoid blocking
     queueMicrotask(() => {
       renderThreads().catch(() => {});
-      if (
-        lastUnreadAssistantIndex >= 0 &&
-        currentThread.autoTtsEnabled === true &&
-        window.ttsState?.voiceSupportReady
-      ) {
+      if (lastUnreadAssistantIndex >= 0 && currentThread.autoTtsEnabled === true && window.ttsState?.voiceSupportReady) {
         window.toggleMessageSpeech(lastUnreadAssistantIndex).catch(() => {});
       }
     });
@@ -832,7 +798,7 @@ async function init() {
   updateScrollBottomButtonVisibility();
   updateCooldownPinnedToast();
   updateDocumentTitleWithUnread();
-handleMobilePaneAutoHide();
+  handleMobilePaneAutoHide();
   updateLeftPaneWidthVariable();
   window.addEventListener("resize", handleMobilePaneAutoHide);
   window.addEventListener("resize", updateLeftPaneWidthVariable);
@@ -869,10 +835,7 @@ handleMobilePaneAutoHide();
   }, 250);
 }
 
-async function hydrateGenerationQueue(
-  threads = null,
-  loadFullMessages = false,
-) {
+async function hydrateGenerationQueue(threads = null, loadFullMessages = false) {
   let list;
   if (Array.isArray(threads)) {
     list = [...threads];
@@ -881,16 +844,8 @@ async function hydrateGenerationQueue(
   } else {
     list = await loadThreadsMetadataOnly();
   }
-  const queued = list
-    .filter((t) => String(t.pendingGenerationReason || "").trim())
-    .sort(
-      (a, b) =>
-        Number(a.pendingGenerationQueuedAt || 0) -
-        Number(b.pendingGenerationQueuedAt || 0),
-    );
-  state.generationQueue = queued
-    .map((t) => Number(t.id))
-    .filter(Number.isInteger);
+  const queued = list.filter((t) => String(t.pendingGenerationReason || "").trim()).sort((a, b) => Number(a.pendingGenerationQueuedAt || 0) - Number(b.pendingGenerationQueuedAt || 0));
+  state.generationQueue = queued.map((t) => Number(t.id)).filter(Number.isInteger);
   return list;
 }
 
@@ -900,9 +855,7 @@ async function loadThreadsMetadataOnly() {
     const { messages, ...meta } = thread;
     if (!meta.unloadState) {
       const hasInitialMessages = (messages || []).some((m) => m.isInitial);
-      const nonInitialCount = (messages || []).filter(
-        (m) => !m.isInitial,
-      ).length;
+      const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
       meta.unloadState = {
         loadLimit: 0,
         totalMessageCount: nonInitialCount + (hasInitialMessages ? 1 : 0),
@@ -924,10 +877,7 @@ function ensureTagCatalogInitialized() {
 function applyChatOpacitySetting(value = null) {
   const raw = value !== null ? value : state.settings.chatOpacity;
   const normalized = normalizeChatOpacityValue(raw);
-  document.documentElement.style.setProperty(
-    "--chat-opacity",
-    String(normalized),
-  );
+  document.documentElement.style.setProperty("--chat-opacity", String(normalized));
   const slider = document.getElementById("chat-opacity-slider");
   if (slider && document.activeElement !== slider) {
     slider.value = String(Math.round(normalized * 100));
@@ -942,11 +892,7 @@ function applyChatInputButtonSize() {
   const size = state.settings.chatInputButtonSize || "regular";
   const container = document.getElementById("user-input-container");
   if (!container) return;
-  container.classList.remove(
-    "chat-input-button-size-regular",
-    "chat-input-button-size-big",
-    "chat-input-button-size-extra",
-  );
+  container.classList.remove("chat-input-button-size-regular", "chat-input-button-size-big", "chat-input-button-size-extra");
   container.classList.add(`chat-input-button-size-${size}`);
 }
 
@@ -968,11 +914,7 @@ function applyBotCardSize() {
   const size = state.settings.botCardSize || "big";
   const grid = document.getElementById("character-grid");
   if (!grid) return;
-  grid.classList.remove(
-    "bot-card-size-small",
-    "bot-card-size-regular",
-    "bot-card-size-big",
-  );
+  grid.classList.remove("bot-card-size-small", "bot-card-size-regular", "bot-card-size-big");
   grid.classList.add(`bot-card-size-${size}`);
   clearTimeout(state.marqueeRefreshTimer);
   state.marqueeRefreshTimer = setTimeout(() => {
@@ -998,8 +940,7 @@ async function toggleChatOpacityOverlay(force = null) {
   const overlay = document.getElementById("chat-opacity-overlay");
   if (!overlay) return;
   const currentlyActive = overlay.classList.contains("is-active");
-  const shouldShow =
-    force === true ? true : force === false ? false : !currentlyActive;
+  const shouldShow = force === true ? true : force === false ? false : !currentlyActive;
   if (shouldShow === currentlyActive) return;
   const input = document.getElementById("user-input");
   const sendBtn = document.getElementById("send-btn");
@@ -1027,83 +968,39 @@ async function toggleChatOpacityOverlay(force = null) {
 }
 
 function setupEvents() {
-  document
-    .getElementById("create-character-btn")
-    .addEventListener("click", () => openCharacterModal());
-  document
-    .getElementById("import-character-btn")
-    .addEventListener("click", () =>
-      document.getElementById("import-character-input").click(),
-    );
-  document
-    .getElementById("import-character-input")
-    .addEventListener("change", importCharacterFromFile);
-  document
-    .getElementById("export-db-btn")
-    .addEventListener("click", openExportSelectModal);
-  document
-    .getElementById("import-db-btn")
-    .addEventListener("click", () =>
-      document.getElementById("import-db-input").click(),
-    );
-  document
-    .getElementById("import-db-input")
-    .addEventListener("change", importDatabaseBackupFromFile);
-  document
-    .getElementById("export-select-cancel")
-    ?.addEventListener("click", closeActiveModal);
-  document
-    .getElementById("export-select-export")
-    ?.addEventListener("click", exportSelectedData);
-  document
-    .getElementById("settings-export-btn")
-    .addEventListener("click", exportSettings);
-  document
-    .getElementById("settings-import-btn")
-    .addEventListener("click", importSettings);
-  document
-    .getElementById("settings-import-input")
-    .addEventListener("change", handleSettingsImport);
+  document.getElementById("create-character-btn").addEventListener("click", () => openCharacterModal());
+  document.getElementById("import-character-btn").addEventListener("click", () => document.getElementById("import-character-input").click());
+  document.getElementById("import-character-input").addEventListener("change", importCharacterFromFile);
+  document.getElementById("export-db-btn").addEventListener("click", openExportSelectModal);
+  document.getElementById("import-db-btn").addEventListener("click", () => document.getElementById("import-db-input").click());
+  document.getElementById("import-db-input").addEventListener("change", importDatabaseBackupFromFile);
+  document.getElementById("export-select-cancel")?.addEventListener("click", closeActiveModal);
+  document.getElementById("export-select-export")?.addEventListener("click", exportSelectedData);
+  document.getElementById("settings-export-btn").addEventListener("click", exportSettings);
+  document.getElementById("settings-import-btn").addEventListener("click", importSettings);
+  document.getElementById("settings-import-input").addEventListener("change", handleSettingsImport);
   document.getElementById("settings-export-btn").innerHTML = ICONS.export;
   document.getElementById("settings-import-btn").innerHTML =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V3"></path><path d="M8 9l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>';
-  document
-    .getElementById("reset-db-btn")
-    ?.addEventListener("click", resetAppData);
-  document
-    .getElementById("guide-btn")
-    ?.addEventListener("click", () =>
-      showToast(t("guideComingSoon"), "success"),
-    );
-  document
-    .getElementById("save-character-btn")
-    .addEventListener("click", () => saveCharacterFromModal());
-  document
-    .getElementById("apply-character-btn")
-    ?.addEventListener("click", () => applyCharacterFromModal());
-  document
-    .getElementById("char-tts-test-btn")
-    .addEventListener("click", playCharacterTtsTestFromModal);
+  document.getElementById("reset-db-btn")?.addEventListener("click", resetAppData);
+  document.getElementById("guide-btn")?.addEventListener("click", () => showToast(t("guideComingSoon"), "success"));
+  document.getElementById("save-character-btn").addEventListener("click", () => saveCharacterFromModal());
+  document.getElementById("apply-character-btn")?.addEventListener("click", () => applyCharacterFromModal());
+  document.getElementById("char-tts-test-btn").addEventListener("click", playCharacterTtsTestFromModal);
   updateCharTtsTestButtonState();
   document.getElementById("send-btn").addEventListener("click", sendMessage);
-  document
-    .getElementById("shortcuts-toggle-btn")
-    .addEventListener("click", toggleShortcutsVisibility);
+  document.getElementById("shortcuts-toggle-btn").addEventListener("click", toggleShortcutsVisibility);
   document.getElementById("scroll-shortcuts-btn")?.addEventListener("click", toggleShortcutsVisibility);
   document.getElementById("home-btn").addEventListener("click", showMainView);
-  document
-    .getElementById("chat-title")
-    ?.addEventListener("dblclick", (event) => {
-      event.preventDefault();
-      renameCurrentThread();
-    });
-  document
-    .getElementById("char-config-tab-btn")
-    .addEventListener("click", () => {
-      saveActiveCharacterDefinitionFromForm();
-      setCharacterModalTab("config");
-      renderCharacterDefinitionTabs();
-    });
+  document.getElementById("chat-title")?.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+    renameCurrentThread();
+  });
+  document.getElementById("char-config-tab-btn").addEventListener("click", () => {
+    saveActiveCharacterDefinitionFromForm();
+    setCharacterModalTab("config");
+    renderCharacterDefinitionTabs();
+  });
   document.getElementById("char-tags-tab-btn").addEventListener("click", () => {
     saveActiveCharacterDefinitionFromForm();
     setCharacterModalTab("tags");
@@ -1184,29 +1081,21 @@ function setupEvents() {
   document.getElementById("toggle-model3d-panel-btn")?.addEventListener("click", () => {
     toggleModel3DPanel();
   });
-  const expressionControls = document.getElementById(
-    "model3d-expression-controls",
-  );
-  expressionControls
-    ?.querySelectorAll("button[data-expression]")
-    .forEach((button) => {
-      button.addEventListener("click", () => {
-        const expression = button.dataset.expression;
-        if (expression) {
-          setModel3DExpression(expression);
-        }
-      });
+  const expressionControls = document.getElementById("model3d-expression-controls");
+  expressionControls?.querySelectorAll("button[data-expression]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const expression = button.dataset.expression;
+      if (expression) {
+        setModel3DExpression(expression);
+      }
     });
+  });
   renderModel3DExpressionControls();
-  document
-    .getElementById("char-writing-instructions-select")
-    .addEventListener("change", () => {
-      setModalDirtyState("character-modal", true);
-      updateCharWritingInstructionsVisibility();
-    });
-  const addInitialMessageBtn = document.getElementById(
-    "add-initial-message-btn",
-  );
+  document.getElementById("char-writing-instructions-select").addEventListener("change", () => {
+    setModalDirtyState("character-modal", true);
+    updateCharWritingInstructionsVisibility();
+  });
+  const addInitialMessageBtn = document.getElementById("add-initial-message-btn");
   if (addInitialMessageBtn) {
     addInitialMessageBtn.innerHTML = ICONS.plus;
     addInitialMessageBtn.addEventListener("click", (event) => {
@@ -1214,52 +1103,40 @@ function setupEvents() {
       addInitialMessageDraft(state.charModalActiveLanguage);
     });
   }
-  document
-    .getElementById("char-language-cancel")
-    .addEventListener("click", () => {
-      document.getElementById("char-language-modal")?.classList.add("hidden");
-    });
-  document
-    .getElementById("char-language-cancel-x")
-    .addEventListener("click", () => {
-      document.getElementById("char-language-modal")?.classList.add("hidden");
-    });
-  document
-    .getElementById("char-language-add")
-    .addEventListener("click", async () => {
-      const select = document.getElementById("char-language-select");
-      const code = normalizeBotLanguageCode(select?.value || "");
-      if (!code) return;
-      if (state.charModalDefinitions.some((d) => d.language === code)) return;
-      const primaryName = String(
-        state.charModalDefinitions[0]?.name || "",
-      ).trim();
-      const newDefinition = createEmptyCharacterDefinition(code);
-      if (primaryName) {
-        newDefinition.name = primaryName;
-      }
-      state.charModalDefinitions.push(newDefinition);
-      state.charModalActiveLanguage = code;
-      setModalDirtyState("character-modal", true);
-      document.getElementById("char-language-modal")?.classList.add("hidden");
-      await loadActiveCharacterDefinitionToForm();
-      if (state.settings.showTokenCounts) {
-        updateAllTokenCounts();
-      }
-      setCharacterModalTab("lang");
-      renderCharacterDefinitionTabs();
-      restoreCharModalTextareaCollapseStates();
-    });
-  document
-    .getElementById("cancel-sfx-editor-btn")
-    ?.addEventListener("click", () => {
-      closeActiveModal();
-    });
-  document
-    .getElementById("save-sfx-editor-btn")
-    ?.addEventListener("click", async () => {
-      await saveSfxEntryFromEditor();
-    });
+  document.getElementById("char-language-cancel").addEventListener("click", () => {
+    document.getElementById("char-language-modal")?.classList.add("hidden");
+  });
+  document.getElementById("char-language-cancel-x").addEventListener("click", () => {
+    document.getElementById("char-language-modal")?.classList.add("hidden");
+  });
+  document.getElementById("char-language-add").addEventListener("click", async () => {
+    const select = document.getElementById("char-language-select");
+    const code = normalizeBotLanguageCode(select?.value || "");
+    if (!code) return;
+    if (state.charModalDefinitions.some((d) => d.language === code)) return;
+    const primaryName = String(state.charModalDefinitions[0]?.name || "").trim();
+    const newDefinition = createEmptyCharacterDefinition(code);
+    if (primaryName) {
+      newDefinition.name = primaryName;
+    }
+    state.charModalDefinitions.push(newDefinition);
+    state.charModalActiveLanguage = code;
+    setModalDirtyState("character-modal", true);
+    document.getElementById("char-language-modal")?.classList.add("hidden");
+    await loadActiveCharacterDefinitionToForm();
+    if (state.settings.showTokenCounts) {
+      updateAllTokenCounts();
+    }
+    setCharacterModalTab("lang");
+    renderCharacterDefinitionTabs();
+    restoreCharModalTextareaCollapseStates();
+  });
+  document.getElementById("cancel-sfx-editor-btn")?.addEventListener("click", () => {
+    closeActiveModal();
+  });
+  document.getElementById("save-sfx-editor-btn")?.addEventListener("click", async () => {
+    await saveSfxEntryFromEditor();
+  });
 
   // SFX editor field change handlers
   document.getElementById("sfx-trigger")?.addEventListener("change", () => {
@@ -1290,63 +1167,33 @@ function setupEvents() {
   });
 
   // Active SFX panel evict all button
-  document
-    .getElementById("evict-all-sfx-btn")
-    ?.addEventListener("click", async () => {
-      await evictAllSfx();
-    });
+  document.getElementById("evict-all-sfx-btn")?.addEventListener("click", async () => {
+    await evictAllSfx();
+  });
 
-  document
-    .getElementById("pane-toggle-chat")
-    ?.addEventListener("click", togglePane);
-  document
-    .getElementById("scroll-bottom-btn")
-    .addEventListener("click", () => scrollChatToBottom(true));
-  document
-    .getElementById("initial-message-prev-btn")
-    ?.addEventListener("click", () => cycleInitialMessagePreview(-1));
-  document
-    .getElementById("initial-message-next-btn")
-    ?.addEventListener("click", () => cycleInitialMessagePreview(1));
-  document
-    .getElementById("image-preview-download-btn")
-    .addEventListener("click", (e) => {
-      e.stopPropagation();
-      downloadImagePreview();
-    });
-  document
-    .getElementById("image-preview-close-btn")
-    .addEventListener("click", (e) => {
-      e.stopPropagation();
-      closeImagePreview();
-    });
-  document
-    .getElementById("image-preview-img")
-    .addEventListener("wheel", onImagePreviewWheel, { passive: false });
-  document
-    .getElementById("image-preview-img")
-    .addEventListener("dragstart", (e) => e.preventDefault());
-  document
-    .getElementById("image-preview-img")
-    .addEventListener("pointerdown", onImagePreviewPointerDown);
-  document
-    .getElementById("image-preview-img")
-    .addEventListener("pointermove", onImagePreviewPointerMove);
-  document
-    .getElementById("image-preview-img")
-    .addEventListener("pointerup", onImagePreviewPointerEnd);
-  document
-    .getElementById("image-preview-img")
-    .addEventListener("pointercancel", onImagePreviewPointerEnd);
-  document
-    .getElementById("image-preview-img")
-    .addEventListener("dblclick", (e) => {
-      e.preventDefault();
-      resetImagePreviewZoom();
-    });
-  document
-    .getElementById("pane-overlay-toggle")
-    .addEventListener("click", togglePane);
+  document.getElementById("pane-toggle-chat")?.addEventListener("click", togglePane);
+  document.getElementById("scroll-bottom-btn").addEventListener("click", () => scrollChatToBottom(true));
+  document.getElementById("initial-message-prev-btn")?.addEventListener("click", () => cycleInitialMessagePreview(-1));
+  document.getElementById("initial-message-next-btn")?.addEventListener("click", () => cycleInitialMessagePreview(1));
+  document.getElementById("image-preview-download-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    downloadImagePreview();
+  });
+  document.getElementById("image-preview-close-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeImagePreview();
+  });
+  document.getElementById("image-preview-img").addEventListener("wheel", onImagePreviewWheel, { passive: false });
+  document.getElementById("image-preview-img").addEventListener("dragstart", (e) => e.preventDefault());
+  document.getElementById("image-preview-img").addEventListener("pointerdown", onImagePreviewPointerDown);
+  document.getElementById("image-preview-img").addEventListener("pointermove", onImagePreviewPointerMove);
+  document.getElementById("image-preview-img").addEventListener("pointerup", onImagePreviewPointerEnd);
+  document.getElementById("image-preview-img").addEventListener("pointercancel", onImagePreviewPointerEnd);
+  document.getElementById("image-preview-img").addEventListener("dblclick", (e) => {
+    e.preventDefault();
+    resetImagePreviewZoom();
+  });
+  document.getElementById("pane-overlay-toggle").addEventListener("click", togglePane);
   const mobilePaneToggle = document.getElementById("mobile-pane-toggle");
   if (mobilePaneToggle) {
     mobilePaneToggle.addEventListener("click", toggleMobilePane);
@@ -1385,9 +1232,7 @@ function setupEvents() {
   }
   if (document.getElementById("auto-tts-toggle-btn")) {
     document.getElementById("auto-tts-toggle-btn").innerHTML = ICONS.speaker;
-    document
-      .getElementById("auto-tts-toggle-btn")
-      .addEventListener("click", toggleThreadAutoTts);
+    document.getElementById("auto-tts-toggle-btn").addEventListener("click", toggleThreadAutoTts);
   }
   if (document.getElementById("stt-toggle-btn")) {
     document.getElementById("stt-toggle-btn").innerHTML = ICONS.mic;
@@ -1402,20 +1247,14 @@ function setupEvents() {
     });
 
     sttBtn.addEventListener("mouseup", () => {
-      if (
-        state.settings.sttMode === "push-to-talk" &&
-        state.stt.isPushToTalkActive
-      ) {
+      if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
         state.stt.isPushToTalkActive = false;
         stopSttRecording();
       }
     });
 
     sttBtn.addEventListener("mouseleave", () => {
-      if (
-        state.settings.sttMode === "push-to-talk" &&
-        state.stt.isPushToTalkActive
-      ) {
+      if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
         state.stt.isPushToTalkActive = false;
         stopSttRecording();
       }
@@ -1430,10 +1269,7 @@ function setupEvents() {
     });
 
     sttBtn.addEventListener("touchend", () => {
-      if (
-        state.settings.sttMode === "push-to-talk" &&
-        state.stt.isPushToTalkActive
-      ) {
+      if (state.settings.sttMode === "push-to-talk" && state.stt.isPushToTalkActive) {
         state.stt.isPushToTalkActive = false;
         stopSttRecording();
       }
@@ -1447,9 +1283,7 @@ function setupEvents() {
   }
   if (document.getElementById("stt-auto-send-toggle-btn")) {
     document.getElementById("stt-auto-send-toggle-btn").innerHTML = "&#10148;";
-    document
-      .getElementById("stt-auto-send-toggle-btn")
-      .addEventListener("click", toggleSttAutoSend);
+    document.getElementById("stt-auto-send-toggle-btn").addEventListener("click", toggleSttAutoSend);
     state.stt.autoSend = state.settings.sttAutoSend;
     updateSttAutoSendButton();
   }
@@ -1460,18 +1294,10 @@ function setupEvents() {
     el.addEventListener("dragover", onTextAreaFileDragOver);
     el.addEventListener("drop", onTextAreaFileDrop);
   });
-  document
-    .getElementById("char-tags-input")
-    .addEventListener("input", renderCharacterTagPresetButtons);
-  document
-    .getElementById("char-tts-language")
-    .addEventListener("change", () => populateCharTtsVoiceSelect());
-  document
-    .getElementById("char-tts-rate")
-    .addEventListener("input", updateCharTtsRatePitchLabels);
-  document
-    .getElementById("char-tts-pitch")
-    .addEventListener("input", updateCharTtsRatePitchLabels);
+  document.getElementById("char-tags-input").addEventListener("input", renderCharacterTagPresetButtons);
+  document.getElementById("char-tts-language").addEventListener("change", () => populateCharTtsVoiceSelect());
+  document.getElementById("char-tts-rate").addEventListener("input", updateCharTtsRatePitchLabels);
+  document.getElementById("char-tts-pitch").addEventListener("input", updateCharTtsRatePitchLabels);
   const ttsProviderSelect = document.getElementById("char-tts-provider");
   if (ttsProviderSelect) {
     ttsProviderSelect.addEventListener("change", () => {
@@ -1495,68 +1321,52 @@ function setupEvents() {
     });
   }
   refreshCharTtsProviderFields();
-  document
-    .getElementById("save-persona-btn")
-    .addEventListener("click", savePersonaFromEditor);
-  document
-    .getElementById("cancel-persona-btn")
-    .addEventListener("click", () => {
-      state.activeModalId = "persona-editor-modal";
-      closeActiveModal();
-    });
-  document
-    .getElementById("create-persona-btn")
-    .addEventListener("click", () => openPersonaEditor(null));
-  document
-    .getElementById("persona-avatar-file-input")
-    .addEventListener("change", onPersonaAvatarFileChange);
-  document
-    .getElementById("persona-remove-avatar")
-    .addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      state.currentPersonaAvatarBlob = null;
-      const dropzone = document.getElementById("persona-avatar-dropzone");
-      const preview = document.getElementById("persona-avatar-preview");
-      const removeBtn = document.getElementById("persona-remove-avatar");
-      preview.classList.add("hidden");
-      dropzone.classList.remove("has-avatar");
-      removeBtn.classList.add("hidden");
-    });
-  document
-    .getElementById("persona-avatar-dropzone")
-    .addEventListener("click", () => {
-      document.getElementById("persona-avatar-file-input").click();
-    });
-  document
-    .getElementById("persona-avatar-dropzone")
-    .addEventListener("dragover", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  document
-    .getElementById("persona-avatar-dropzone")
-    .addEventListener("drop", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const files = e.dataTransfer?.files;
-      if (files && files.length > 0) {
-        const file = files[0];
-        if (file.type.startsWith("image/")) {
-          const blob = new Blob([await file.arrayBuffer()], {
-            type: file.type,
-          });
-          state.currentPersonaAvatarBlob = blob;
-          const preview = document.getElementById("persona-avatar-preview");
-          const dropzone = document.getElementById("persona-avatar-dropzone");
-          const removeBtn = document.getElementById("persona-remove-avatar");
-          preview.src = URL.createObjectURL(blob);
-          preview.classList.remove("hidden");
-          dropzone.classList.add("has-avatar");
-          removeBtn.classList.remove("hidden");
-        }
+  document.getElementById("save-persona-btn").addEventListener("click", savePersonaFromEditor);
+  document.getElementById("cancel-persona-btn").addEventListener("click", () => {
+    state.activeModalId = "persona-editor-modal";
+    closeActiveModal();
+  });
+  document.getElementById("create-persona-btn").addEventListener("click", () => openPersonaEditor(null));
+  document.getElementById("persona-avatar-file-input").addEventListener("change", onPersonaAvatarFileChange);
+  document.getElementById("persona-remove-avatar").addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    state.currentPersonaAvatarBlob = null;
+    const dropzone = document.getElementById("persona-avatar-dropzone");
+    const preview = document.getElementById("persona-avatar-preview");
+    const removeBtn = document.getElementById("persona-remove-avatar");
+    preview.classList.add("hidden");
+    dropzone.classList.remove("has-avatar");
+    removeBtn.classList.add("hidden");
+  });
+  document.getElementById("persona-avatar-dropzone").addEventListener("click", () => {
+    document.getElementById("persona-avatar-file-input").click();
+  });
+  document.getElementById("persona-avatar-dropzone").addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  document.getElementById("persona-avatar-dropzone").addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith("image/")) {
+        const blob = new Blob([await file.arrayBuffer()], {
+          type: file.type,
+        });
+        state.currentPersonaAvatarBlob = blob;
+        const preview = document.getElementById("persona-avatar-preview");
+        const dropzone = document.getElementById("persona-avatar-dropzone");
+        const removeBtn = document.getElementById("persona-remove-avatar");
+        preview.src = URL.createObjectURL(blob);
+        preview.classList.remove("hidden");
+        dropzone.classList.add("has-avatar");
+        removeBtn.classList.remove("hidden");
       }
-    });
+    }
+  });
   const oocDropzone = document.getElementById("ooc-system-avatar-dropzone");
   const oocFileInput = document.getElementById("ooc-system-avatar-file-input");
   const oocRemoveBtn = document.getElementById("ooc-system-avatar-remove");
@@ -1588,21 +1398,15 @@ function setupEvents() {
       await handleOocSystemAvatarFile(files[0]);
     }
   });
-  document
-    .getElementById("persona-select")
-    .addEventListener("change", onPersonaSelectChange);
-  document
-    .getElementById("persona-selected-avatar")
-    .addEventListener("click", (e) => {
-      e.stopPropagation();
-      showChatPersonaDropdown();
-    });
-  document
-    .getElementById("chat-options-toggle-btn")
-    ?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      showChatOptionsDropdown();
-    });
+  document.getElementById("persona-select").addEventListener("change", onPersonaSelectChange);
+  document.getElementById("persona-selected-avatar").addEventListener("click", (e) => {
+    e.stopPropagation();
+    showChatPersonaDropdown();
+  });
+  document.getElementById("chat-options-toggle-btn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showChatOptionsDropdown();
+  });
   document.getElementById("char-name").addEventListener("input", () => {
     updateNameLengthCounter("char-name", "char-name-count", 128);
     const titleEl = document.getElementById("character-title");
@@ -1617,15 +1421,9 @@ function setupEvents() {
   document.getElementById("persona-name").addEventListener("input", () => {
     updateNameLengthCounter("persona-name", "persona-name-count", 64);
   });
-  document
-    .getElementById("persona-description")
-    .addEventListener("input", () => {
-      updateNameLengthCounter(
-        "persona-description",
-        "persona-description-count",
-        100,
-      );
-    });
+  document.getElementById("persona-description").addEventListener("input", () => {
+    updateNameLengthCounter("persona-description", "persona-description-count", 100);
+  });
   const characterSearchInput = document.getElementById("character-search-input");
   let searchDebounceTimeout = null;
   if (characterSearchInput) {
@@ -1640,17 +1438,15 @@ function setupEvents() {
       }, 300);
     });
   }
-  document
-    .getElementById("character-tag-filter-clear")
-    .addEventListener("click", async () => {
-      state.characterTagFilters = [];
-      state.characterSearchQuery = "";
-      if (characterSearchInput) characterSearchInput.value = "";
-      saveUiState();
-      renderCharacterTagFilterChips();
-      state.characterPage = 1;
-      await renderCharacters();
-    });
+  document.getElementById("character-tag-filter-clear").addEventListener("click", async () => {
+    state.characterTagFilters = [];
+    state.characterSearchQuery = "";
+    if (characterSearchInput) characterSearchInput.value = "";
+    saveUiState();
+    renderCharacterTagFilterChips();
+    state.characterPage = 1;
+    await renderCharacters();
+  });
   const sortBtn = document.getElementById("character-sort-btn");
   if (sortBtn) {
     sortBtn.addEventListener("click", async () => {
@@ -1673,17 +1469,14 @@ function setupEvents() {
       }
     });
   }
-  document
-    .getElementById("character-sort-dir-btn")
-    .addEventListener("click", async () => {
-      const parts = getCharacterSortParts(state.characterSortMode);
-      state.characterSortMode =
-        parts.dir === "desc" ? `${parts.base}_asc` : `${parts.base}_desc`;
-      saveUiState();
-      renderCharacterTagFilterChips();
-      state.characterPage = 1;
-      await renderCharacters();
-    });
+  document.getElementById("character-sort-dir-btn").addEventListener("click", async () => {
+    const parts = getCharacterSortParts(state.characterSortMode);
+    state.characterSortMode = parts.dir === "desc" ? `${parts.base}_asc` : `${parts.base}_desc`;
+    saveUiState();
+    renderCharacterTagFilterChips();
+    state.characterPage = 1;
+    await renderCharacters();
+  });
   const filters = document.getElementById("character-filters");
   filters?.addEventListener("click", (e) => {
     if (filters.classList.contains("collapsed")) {
@@ -1696,87 +1489,48 @@ function setupEvents() {
       return;
     }
     const target = e.target;
-    const isInteractive =
-      target.closest?.("button, a, input, select, textarea") ||
-      target.closest?.(".tag-chip");
+    const isInteractive = target.closest?.("button, a, input, select, textarea") || target.closest?.(".tag-chip");
     if (isInteractive) return;
     filters.classList.add("collapsed");
     localStorage.setItem("rp-filters-collapsed", "true");
     updateCharacterFiltersToggleUi();
   });
-  document
-    .getElementById("character-filters-toggle")
-    .addEventListener("click", (e) => {
-      e.stopPropagation();
-      const filters = document.getElementById("character-filters");
-      filters.classList.toggle("collapsed");
-      localStorage.setItem(
-        "rp-filters-collapsed",
-        filters.classList.contains("collapsed"),
-      );
-      updateCharacterFiltersToggleUi();
-      if (!filters.classList.contains("collapsed")) {
-        requestAnimationFrame(() => {
-          renderCharacterTagFilterChips();
-        });
-      }
-    });
-  document
-    .getElementById("save-shortcuts-btn")
-    .addEventListener("click", saveShortcutsFromModal);
-  document
-    .getElementById("apply-shortcuts-btn")
-    ?.addEventListener("click", () => saveShortcutsFromModal({ close: false }));
-  document
-    .getElementById("add-tag-btn")
-    .addEventListener("click", addTagFromManagerInput);
-  document
-    .getElementById("tag-manager-input")
-    .addEventListener("input", updateTagManagerAddButtonState);
-  document
-    .getElementById("tag-manager-input")
-    .addEventListener("keydown", (e) => {
-      if (e.key !== "Enter") return;
-      e.preventDefault();
-      if (!document.getElementById("add-tag-btn").disabled) {
-        addTagFromManagerInput().catch(() => {});
-      }
-    });
-  document
-    .getElementById("create-lorebook-btn")
-    .addEventListener("click", () => openLoreEditor());
-  document
-    .getElementById("import-lorebook-btn")
-    .addEventListener("click", () =>
-      document.getElementById("import-lorebook-input").click(),
-    );
-  document
-    .getElementById("import-lorebook-input")
-    .addEventListener("change", importLorebookFromFile);
-  document
-    .getElementById("lore-editor-back-btn")
-    .addEventListener("click", closeLoreEditor);
-  document
-    .getElementById("cancel-lore-editor-btn")
-    .addEventListener("click", closeLoreEditor);
-  document
-    .getElementById("add-lore-entry-btn")
-    .addEventListener("click", () => {
-      addLoreEntryEditor();
-      renderLoreEntryEditors();
-    });
-  document
-    .getElementById("toggle-all-lore-entries-btn")
-    ?.addEventListener("click", toggleAllLoreEntries);
-  document
-    .getElementById("save-lore-editor-btn")
-    .addEventListener("click", () => saveLorebookFromEditor({ close: true }));
-  document
-    .getElementById("apply-lore-editor-btn")
-    ?.addEventListener("click", () => saveLorebookFromEditor({ close: false }));
-  document
-    .getElementById("lore-injection-mode")
-    ?.addEventListener("change", toggleSuppressionWindowField);
+  document.getElementById("character-filters-toggle").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const filters = document.getElementById("character-filters");
+    filters.classList.toggle("collapsed");
+    localStorage.setItem("rp-filters-collapsed", filters.classList.contains("collapsed"));
+    updateCharacterFiltersToggleUi();
+    if (!filters.classList.contains("collapsed")) {
+      requestAnimationFrame(() => {
+        renderCharacterTagFilterChips();
+      });
+    }
+  });
+  document.getElementById("save-shortcuts-btn").addEventListener("click", saveShortcutsFromModal);
+  document.getElementById("apply-shortcuts-btn")?.addEventListener("click", () => saveShortcutsFromModal({ close: false }));
+  document.getElementById("add-tag-btn").addEventListener("click", addTagFromManagerInput);
+  document.getElementById("tag-manager-input").addEventListener("input", updateTagManagerAddButtonState);
+  document.getElementById("tag-manager-input").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (!document.getElementById("add-tag-btn").disabled) {
+      addTagFromManagerInput().catch(() => {});
+    }
+  });
+  document.getElementById("create-lorebook-btn").addEventListener("click", () => openLoreEditor());
+  document.getElementById("import-lorebook-btn").addEventListener("click", () => document.getElementById("import-lorebook-input").click());
+  document.getElementById("import-lorebook-input").addEventListener("change", importLorebookFromFile);
+  document.getElementById("lore-editor-back-btn").addEventListener("click", closeLoreEditor);
+  document.getElementById("cancel-lore-editor-btn").addEventListener("click", closeLoreEditor);
+  document.getElementById("add-lore-entry-btn").addEventListener("click", () => {
+    addLoreEntryEditor();
+    renderLoreEntryEditors();
+  });
+  document.getElementById("toggle-all-lore-entries-btn")?.addEventListener("click", toggleAllLoreEntries);
+  document.getElementById("save-lore-editor-btn").addEventListener("click", () => saveLorebookFromEditor({ close: true }));
+  document.getElementById("apply-lore-editor-btn")?.addEventListener("click", () => saveLorebookFromEditor({ close: false }));
+  document.getElementById("lore-injection-mode")?.addEventListener("change", toggleSuppressionWindowField);
 
   function toggleSuppressionWindowField() {
     const field = document.getElementById("lore-suppression-window-field");
@@ -1787,122 +1541,77 @@ function setupEvents() {
   }
   window.toggleSuppressionWindowField = toggleSuppressionWindowField;
 
-  document
-    .getElementById("create-writing-instruction-btn")
-    .addEventListener("click", () => openWritingInstructionEditor());
-  document
-    .getElementById("import-writing-instruction-btn")
-    .addEventListener("click", () =>
-      document.getElementById("import-writing-instruction-input").click(),
-    );
-  document
-    .getElementById("import-writing-instruction-input")
-    .addEventListener("change", importWritingInstructionFromFile);
-  document
-    .getElementById("cancel-writing-instruction-btn")
-    .addEventListener("click", async () => {
-      if (state.modalDirty["writing-instruction-editor-modal"]) {
-        const action = await openUnsavedChangesDialog();
-        if (action === "back") return;
-        if (action === "close") {
-          setModalDirtyState("writing-instruction-editor-modal", false);
-          closeActiveModal();
-          const parentModal = document.getElementById(
-            "writing-instructions-modal",
-          );
-          if (parentModal) {
-            parentModal.classList.remove("hidden");
-            state.activeModalId = "writing-instructions-modal";
-          }
-          return;
+  document.getElementById("create-writing-instruction-btn").addEventListener("click", () => openWritingInstructionEditor());
+  document.getElementById("import-writing-instruction-btn").addEventListener("click", () => document.getElementById("import-writing-instruction-input").click());
+  document.getElementById("import-writing-instruction-input").addEventListener("change", importWritingInstructionFromFile);
+  document.getElementById("cancel-writing-instruction-btn").addEventListener("click", async () => {
+    if (state.modalDirty["writing-instruction-editor-modal"]) {
+      const action = await openUnsavedChangesDialog();
+      if (action === "back") return;
+      if (action === "close") {
+        setModalDirtyState("writing-instruction-editor-modal", false);
+        closeActiveModal();
+        const parentModal = document.getElementById("writing-instructions-modal");
+        if (parentModal) {
+          parentModal.classList.remove("hidden");
+          state.activeModalId = "writing-instructions-modal";
         }
-        if (action === "save") {
-          const saved = await saveWritingInstruction({ close: true });
-          if (!saved) return;
-        }
+        return;
       }
-      closeActiveModal();
-      const parentModal = document.getElementById("writing-instructions-modal");
-      if (parentModal) {
-        parentModal.classList.remove("hidden");
-        state.activeModalId = "writing-instructions-modal";
+      if (action === "save") {
+        const saved = await saveWritingInstruction({ close: true });
+        if (!saved) return;
       }
-    });
-  document
-    .getElementById("apply-writing-instructions-btn")
-    .addEventListener("click", () => saveWritingInstruction({ close: false }));
-  document
-    .getElementById("save-writing-instructions-btn")
-    .addEventListener("click", () => saveWritingInstruction({ close: true }));
-  document
-    .getElementById("writing-instruction-add-lang-btn")
-    .addEventListener("click", openWritingInstructionLanguageModal);
-  document
-    .getElementById("writing-instruction-language-cancel")
-    .addEventListener("click", closeWritingInstructionLanguageModal);
-  document
-    .getElementById("writing-instruction-language-cancel-x")
-    .addEventListener("click", closeWritingInstructionLanguageModal);
-  document
-    .getElementById("writing-instruction-language-add")
-    .addEventListener("click", addWritingInstructionLanguage);
-  document
-    .getElementById("writing-instruction-name")
-    .addEventListener("input", () => {
-      updateWritingInstructionNameCount();
-      saveActiveWritingInstructionFromForm();
-      updateWritingInstructionDirtyState();
-    });
-  document
-    .getElementById("writing-instruction-text")
-    .addEventListener("input", () => {
-      updateWritingInstructionTextCount();
-      saveActiveWritingInstructionFromForm();
-      updateWritingInstructionDirtyState();
-    });
-  document
-    .getElementById("confirm-yes-btn")
-    .addEventListener("click", () => resolveConfirmDialog(true));
-  document
-    .getElementById("confirm-no-btn")
-    .addEventListener("click", () => resolveConfirmDialog(false));
-  document
-    .getElementById("confirm-cancel-btn")
-    .addEventListener("click", () => resolveConfirmDialog(false));
-  document
-    .getElementById("text-input-save")
-    .addEventListener("click", () => resolveTextInputDialog(true));
-  document
-    .getElementById("text-input-cancel")
-    .addEventListener("click", () => closeActiveModal());
-  document
-    .getElementById("text-input-cancel-x")
-    .addEventListener("click", () => closeActiveModal());
+    }
+    closeActiveModal();
+    const parentModal = document.getElementById("writing-instructions-modal");
+    if (parentModal) {
+      parentModal.classList.remove("hidden");
+      state.activeModalId = "writing-instructions-modal";
+    }
+  });
+  document.getElementById("apply-writing-instructions-btn").addEventListener("click", () => saveWritingInstruction({ close: false }));
+  document.getElementById("save-writing-instructions-btn").addEventListener("click", () => saveWritingInstruction({ close: true }));
+  document.getElementById("writing-instruction-add-lang-btn").addEventListener("click", openWritingInstructionLanguageModal);
+  document.getElementById("writing-instruction-language-cancel").addEventListener("click", closeWritingInstructionLanguageModal);
+  document.getElementById("writing-instruction-language-cancel-x").addEventListener("click", closeWritingInstructionLanguageModal);
+  document.getElementById("writing-instruction-language-add").addEventListener("click", addWritingInstructionLanguage);
+  document.getElementById("writing-instruction-name").addEventListener("input", () => {
+    updateWritingInstructionNameCount();
+    saveActiveWritingInstructionFromForm();
+    updateWritingInstructionDirtyState();
+  });
+  document.getElementById("writing-instruction-text").addEventListener("input", () => {
+    updateWritingInstructionTextCount();
+    saveActiveWritingInstructionFromForm();
+    updateWritingInstructionDirtyState();
+  });
+  document.getElementById("confirm-yes-btn").addEventListener("click", () => resolveConfirmDialog(true));
+  document.getElementById("confirm-no-btn").addEventListener("click", () => resolveConfirmDialog(false));
+  document.getElementById("confirm-cancel-btn").addEventListener("click", () => resolveConfirmDialog(false));
+  document.getElementById("text-input-save").addEventListener("click", () => resolveTextInputDialog(true));
+  document.getElementById("text-input-cancel").addEventListener("click", () => closeActiveModal());
+  document.getElementById("text-input-cancel-x").addEventListener("click", () => closeActiveModal());
 
   setupModalTextareas();
 
-  document
-    .getElementById("memory-modal-save")
-    ?.addEventListener("click", async () => {
-      try {
-        const saved = await handleMemoryModalSave();
-        if (saved) {
-          closeActiveModal();
-        }
-      } catch {
-        // errors are handled inside handleMemoryModalSave
+  document.getElementById("memory-modal-save")?.addEventListener("click", async () => {
+    try {
+      const saved = await handleMemoryModalSave();
+      if (saved) {
+        closeActiveModal();
       }
-    });
+    } catch {
+      // errors are handled inside handleMemoryModalSave
+    }
+  });
 
   const input = document.getElementById("user-input");
   const chatLog = document.getElementById("chat-log");
   input.addEventListener("keydown", onInputKeyDown);
   input.addEventListener("input", () => {
     if (state.promptHistoryOpen) closePromptHistory();
-    if (
-      state.activeShortcut &&
-      input.value !== state.activeShortcut.initialValue
-    ) {
+    if (state.activeShortcut && input.value !== state.activeShortcut.initialValue) {
       state.activeShortcut = null;
     }
     scheduleThreadBudgetIndicatorUpdate();
@@ -1937,10 +1646,7 @@ function setupEvents() {
     updateScrollBottomButtonVisibility();
     updateUnloadButtonVisibility();
     if (currentThread) {
-      localStorage.setItem(
-        `rp-thread-scroll-${currentThread.id}`,
-        chatLog.scrollTop,
-      );
+      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, chatLog.scrollTop);
     }
     // Auto-load more messages when scrolled near top
     const threshold = state.settings.autoUnloadThreshold || 0;
@@ -1976,9 +1682,7 @@ function setupEvents() {
     ro.observe(input);
   }
 
-  const chatOpacityToggleBtn = document.getElementById(
-    "chat-opacity-toggle-btn",
-  );
+  const chatOpacityToggleBtn = document.getElementById("chat-opacity-toggle-btn");
   chatOpacityToggleBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     toggleChatOpacityOverlay().catch(() => {});
@@ -2030,20 +1734,16 @@ function setupEvents() {
       e.stopPropagation();
     }
   });
-  document
-    .getElementById("chat-opacity-overlay-close")
-    ?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      toggleChatOpacityOverlay(false).catch(() => {});
-    });
-  document
-    .getElementById("chat-opacity-slider")
-    ?.addEventListener("input", (e) => {
-      const target = e.target;
-      if (!(target instanceof HTMLInputElement)) return;
-      const value = Number(target.value);
-      setChatOpacityFromPercent(value);
-    });
+  document.getElementById("chat-opacity-overlay-close")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleChatOpacityOverlay(false).catch(() => {});
+  });
+  document.getElementById("chat-opacity-slider")?.addEventListener("input", (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    const value = Number(target.value);
+    setChatOpacityFromPercent(value);
+  });
   document.addEventListener("click", onGlobalClick);
   document.addEventListener("keydown", onGlobalKeyDown);
 
@@ -2077,9 +1777,7 @@ function setupEvents() {
             if (action === "close") {
               setModalDirtyState("writing-instruction-editor-modal", false);
               closeActiveModal();
-              const parentModal = document.getElementById(
-                "writing-instructions-modal",
-              );
+              const parentModal = document.getElementById("writing-instructions-modal");
               if (parentModal) {
                 parentModal.classList.remove("hidden");
                 state.activeModalId = "writing-instructions-modal";
@@ -2091,9 +1789,7 @@ function setupEvents() {
           });
         } else {
           closeActiveModal();
-          const parentModal = document.getElementById(
-            "writing-instructions-modal",
-          );
+          const parentModal = document.getElementById("writing-instructions-modal");
           if (parentModal) {
             parentModal.classList.remove("hidden");
             state.activeModalId = "writing-instructions-modal";
@@ -2141,19 +1837,13 @@ function setupEvents() {
         resolveConfirmDialog(false);
       } else if (modal.id === "unsaved-modal") {
         resolveUnsavedDialog("back");
-      } else if (
-        modal.id === "memory-modal" &&
-        isMemoryRegeneratePromptOpen()
-      ) {
+      } else if (modal.id === "memory-modal" && isMemoryRegeneratePromptOpen()) {
         hideMemoryRegeneratePromptModal();
       } else if (modal.id === "memory-regenerate-prompt-modal") {
         hideMemoryRegeneratePromptModal();
       } else if (modal.id === "memory-regenerate-progress-modal") {
         if (memoryRegenerationInFlight) {
-          openConfirmDialog(
-            t("confirm"),
-            t("memoryRegenerateProgressCancelConfirm"),
-          ).then((confirmed) => {
+          openConfirmDialog(t("confirm"), t("memoryRegenerateProgressCancelConfirm")).then((confirmed) => {
             if (confirmed) {
               hideMemoryRegenerateProgressModal();
             }
@@ -2167,15 +1857,9 @@ function setupEvents() {
     });
   });
 
-  document
-    .getElementById("unsaved-back-btn")
-    ?.addEventListener("click", () => resolveUnsavedDialog("back"));
-  document
-    .getElementById("unsaved-close-btn")
-    ?.addEventListener("click", () => resolveUnsavedDialog("close"));
-  document
-    .getElementById("unsaved-save-btn")
-    ?.addEventListener("click", () => resolveUnsavedDialog("save"));
+  document.getElementById("unsaved-back-btn")?.addEventListener("click", () => resolveUnsavedDialog("back"));
+  document.getElementById("unsaved-close-btn")?.addEventListener("click", () => resolveUnsavedDialog("close"));
+  document.getElementById("unsaved-save-btn")?.addEventListener("click", () => resolveUnsavedDialog("save"));
 
   markModalDirtyOnInput("character-modal", [
     "#char-name",
@@ -2205,29 +1889,10 @@ function setupEvents() {
     "#char-tts-kokoro-dtype",
     "#char-tts-kokoro-voice",
   ]);
-  markModalDirtyOnInput("personas-modal", [
-    "#persona-name",
-    "#persona-avatar",
-    "#persona-description",
-    "#persona-internal-description",
-    "#persona-is-default",
-  ]);
-  markModalDirtyOnInput("persona-editor-modal", [
-    "#persona-editor-name",
-    "#persona-editor-description",
-    "#persona-editor-internal-description",
-    "#persona-editor-is-default",
-    "#persona-editor-color",
-  ]);
+  markModalDirtyOnInput("personas-modal", ["#persona-name", "#persona-avatar", "#persona-description", "#persona-internal-description", "#persona-is-default"]);
+  markModalDirtyOnInput("persona-editor-modal", ["#persona-editor-name", "#persona-editor-description", "#persona-editor-internal-description", "#persona-editor-is-default", "#persona-editor-color"]);
   markModalDirtyOnInput("shortcuts-modal", ["#shortcuts-raw"]);
-  markModalDirtyOnInput("lore-editor-modal", [
-    "#lore-name",
-    "#lore-avatar",
-    "#lore-description",
-    "#lore-scan-depth",
-    "#lore-token-budget",
-    "#lore-recursive-scanning",
-  ]);
+  markModalDirtyOnInput("lore-editor-modal", ["#lore-name", "#lore-avatar", "#lore-description", "#lore-scan-depth", "#lore-token-budget", "#lore-recursive-scanning"]);
   markModalDirtyOnInput("sfx-editor-modal", [
     "#sfx-name",
     "#sfx-type",
@@ -2252,11 +1917,7 @@ function setupEvents() {
   updateModalActionButtons("character-modal");
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
-  updateNameLengthCounter(
-    "persona-description",
-    "persona-description-count",
-    100,
-  );
+  updateNameLengthCounter("persona-description", "persona-description-count", 100);
   updateToastDelayDisplay();
   setupSettingsTabsLayout();
 }
@@ -2267,10 +1928,7 @@ const initialMessageCollapseStateCache = new Map();
 function setupModalTextareas(root = document) {
   const scope = root || document;
   const selector = scope === document ? ".modal textarea" : "textarea";
-  const textareas = Array.from(scope.querySelectorAll(selector)).filter(
-    (textarea) =>
-      textarea.closest(".modal") && !textarea.classList.contains("hidden"),
-  );
+  const textareas = Array.from(scope.querySelectorAll(selector)).filter((textarea) => textarea.closest(".modal") && !textarea.classList.contains("hidden"));
   textareas.forEach((textarea) => {
     const baseRows = Number(textarea.getAttribute("rows") || 3);
     textarea.dataset.baseRows = baseRows;
@@ -2287,11 +1945,7 @@ function setupModalTextareas(root = document) {
     }
     textarea.dataset.collapsible = "1";
     const labelInfo = captureTextareaLabel(textarea);
-    const labelText =
-      labelInfo?.text ||
-      textarea.getAttribute("placeholder") ||
-      textarea.getAttribute("title") ||
-      "Input";
+    const labelText = labelInfo?.text || textarea.getAttribute("placeholder") || textarea.getAttribute("title") || "Input";
     if (labelInfo?.element) {
       labelInfo.element.style.display = "none";
     }
@@ -2307,8 +1961,7 @@ function setupModalTextareas(root = document) {
     title.textContent = labelText;
     const rightGroup = document.createElement("span");
     rightGroup.className = "textarea-collapse-header-right";
-    const countEl =
-      textarea.id && document.getElementById(`${textarea.id}-count`);
+    const countEl = textarea.id && document.getElementById(`${textarea.id}-count`);
     if (countEl) {
       rightGroup.appendChild(countEl);
     }
@@ -2328,9 +1981,7 @@ function setupModalTextareas(root = document) {
       const expanded = header.getAttribute("aria-expanded") === "true";
       icon.textContent = expanded ? "▾" : "▴";
     };
-    const scrollContainer =
-      textarea.closest(".system-prompt-list") ||
-      textarea.closest(".modal-body");
+    const scrollContainer = textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
     entry.setExpanded = (next) => {
       const current = header.getAttribute("aria-expanded") === "true";
       if (next === current) {
@@ -2457,11 +2108,7 @@ function getCharModalCollapseStorageKey() {
 
 function getInitialMessageCollapseStorageKey(language) {
   if (!language) return null;
-  const namespace =
-    state.charModalDraftNamespace ||
-    (state.editingCharacterId
-      ? `char-${state.editingCharacterId}`
-      : "new");
+  const namespace = state.charModalDraftNamespace || (state.editingCharacterId ? `char-${state.editingCharacterId}` : "new");
   return `rp-char-initial-msg-collapse-${namespace}-${language}`;
 }
 
@@ -2626,9 +2273,7 @@ function saveSettingsPromptingTextareaCollapseStates() {
   const scrollStates = {};
   const modal = document.getElementById("settings-modal");
   if (!modal) return;
-  const panel = modal.querySelector('[data-settings-tab-panel="prompting"]');
-  if (!panel) return;
-  panel.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
     const entry = textareaCollapseStates.get(textarea);
     if (!entry) return;
     const expanded = entry.header.getAttribute("aria-expanded") === "true";
@@ -2644,9 +2289,9 @@ function restoreSettingsPromptingTextareaCollapseStates() {
   const raw = localStorage.getItem(key);
   const scrollRaw = localStorage.getItem(`${key}-scroll`);
   const scrollStates = scrollRaw ? JSON.parse(scrollRaw) : {};
-  const panel = document.querySelector('[data-settings-group="prompting"]');
-  if (!panel) return;
-  panel.querySelectorAll("textarea").forEach((textarea) => {
+  const modal = document.getElementById("settings-modal");
+  if (!modal) return;
+  modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
     const entry = textareaCollapseStates.get(textarea);
     if (!entry) return;
     const hasContent = String(textarea.value || "").trim().length > 0;
@@ -2849,8 +2494,7 @@ function getLabelFromElement(el) {
 
 function autoExpandTextarea(textarea) {
   if (!textarea) return;
-  const scrollContainer =
-    textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
+  const scrollContainer = textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
   const scrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
   textarea.style.height = "auto";
   textarea.style.overflow = "hidden";
@@ -2858,10 +2502,7 @@ function autoExpandTextarea(textarea) {
   const computed = window.getComputedStyle(textarea);
   const lineHeight = parseFloat(computed.lineHeight) || 24;
   const baseRows = Number(textarea.dataset.baseRows) || 4;
-  const minHeight = Math.max(
-    Number(textarea.dataset.minHeight) || 0,
-    lineHeight * baseRows,
-  );
+  const minHeight = Math.max(Number(textarea.dataset.minHeight) || 0, lineHeight * baseRows);
   textarea.dataset.minHeight = minHeight;
   const applyHeight = () => {
     const newHeight = Math.max(textarea.scrollHeight, minHeight);
@@ -2909,10 +2550,7 @@ function parseTagList(value) {
     .split(",")
     .map((v) => normalizeTagValue(v))
     .filter(Boolean)
-    .filter(
-      (v, i, arr) =>
-        arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i,
-    );
+    .filter((v, i, arr) => arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i);
 }
 
 function formatTagList(tags) {
@@ -2924,11 +2562,7 @@ function formatTagList(tags) {
 
 function normalizeInitialMessageRole(role) {
   const normalized = normalizeApiRole(role);
-  if (
-    normalized !== "system" &&
-    normalized !== "user" &&
-    normalized !== "assistant"
-  ) {
+  if (normalized !== "system" && normalized !== "user" && normalized !== "assistant") {
     return null;
   }
   return normalized;
@@ -2961,11 +2595,7 @@ function parseInitialMessagesInput(raw) {
   } catch {
     return singleAssistantFallback();
   }
-  const arr = Array.isArray(parsed)
-    ? parsed
-    : Array.isArray(parsed?.messages)
-      ? parsed.messages
-      : null;
+  const arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.messages) ? parsed.messages : null;
   if (!arr) {
     return singleAssistantFallback();
   }
@@ -2976,9 +2606,7 @@ function parseInitialMessagesInput(raw) {
     }
     const role = normalizeInitialMessageRole(entry.role || entry.apiRole);
     if (!role) {
-      throw new Error(
-        `Initial message #${idx + 1} has invalid role. Use system, user, or assistant.`,
-      );
+      throw new Error(`Initial message #${idx + 1} has invalid role. Use system, user, or assistant.`);
     }
     const content = normalizeContentParts(entry.content);
     if (!String(content || "").trim()) return;
@@ -2995,8 +2623,7 @@ function parseTaggedInitialMessages(text) {
   const lines = String(text || "")
     .replace(/\r\n/g, "\n")
     .split("\n");
-  const roleLinePattern =
-    /^\s*\[(AI|BOT|ASSISTANT|USER|SYSTEM)\]\s*:?\s*(.*)$/i;
+  const roleLinePattern = /^\s*\[(AI|BOT|ASSISTANT|USER|SYSTEM)\]\s*:?\s*(.*)$/i;
   const messages = [];
   const leadingLines = [];
   let sawRoleTag = false;
@@ -3026,12 +2653,7 @@ function parseTaggedInitialMessages(text) {
     sawRoleTag = true;
     pushCurrent();
     const rawRole = String(match[1] || "").toLowerCase();
-    const role =
-      rawRole === "ai" || rawRole === "bot" || rawRole === "assistant"
-        ? "assistant"
-        : rawRole === "system"
-          ? "system"
-          : "user";
+    const role = rawRole === "ai" || rawRole === "bot" || rawRole === "assistant" ? "assistant" : rawRole === "system" ? "system" : "user";
     current = {
       role,
       lines: [String(match[2] || "")],
@@ -3056,8 +2678,7 @@ function formatInitialMessagesForEditor(messages) {
   return list
     .map((m) => {
       const role = normalizeApiRole(m?.apiRole || m?.role);
-      const label =
-        role === "assistant" ? "AI" : role === "system" ? "SYSTEM" : "USER";
+      const label = role === "assistant" ? "AI" : role === "system" ? "SYSTEM" : "USER";
       const content = String(m?.content || "");
       return `[${label}]: ${content}`;
     })
@@ -3071,20 +2692,14 @@ function replaceInitialMessagePlaceholders(content, personaName, charName) {
 }
 
 async function buildThreadInitialMessages(character) {
-  const source = Array.isArray(character?.initialMessages)
-    ? character.initialMessages
-    : [];
+  const source = Array.isArray(character?.initialMessages) ? character.initialMessages : [];
   const defaultPersona = await getCharacterDefaultPersona();
   const personaName = defaultPersona?.name || "You";
   const charName = character?.name || "Character";
   const now = Date.now();
   return source.map((m, i) => {
     const role = normalizeInitialMessageRole(m?.role || m?.apiRole) || "user";
-    const content = replaceInitialMessagePlaceholders(
-      String(m?.content || ""),
-      personaName,
-      charName,
-    );
+    const content = replaceInitialMessagePlaceholders(String(m?.content || ""), personaName, charName);
     const payload = {
       role,
       apiRole: role,
@@ -3109,15 +2724,8 @@ function shouldAutoReplyFromInitialMessages(messages) {
 }
 
 function getAllAvailableTags() {
-  const tags = (
-    Array.isArray(state.settings.customTags) ? state.settings.customTags : []
-  )
-    .map((t) => normalizeTagValue(t))
-    .filter(Boolean);
-  const unique = tags.filter(
-    (t, i, arr) =>
-      arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i,
-  );
+  const tags = (Array.isArray(state.settings.customTags) ? state.settings.customTags : []).map((t) => normalizeTagValue(t)).filter(Boolean);
+  const unique = tags.filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
   return unique.sort((a, b) => a.localeCompare(b));
 }
 
@@ -3128,9 +2736,7 @@ async function renameTagAcrossCharacters(oldTag, newTag) {
   const lowerOld = normalizedOld.toLowerCase();
   const newTagValue = normalizedNew;
 
-  state.characterTagFilters = state.characterTagFilters.map((filter) =>
-    String(filter || "").toLowerCase() === lowerOld ? newTagValue : filter,
-  );
+  state.characterTagFilters = state.characterTagFilters.map((filter) => (String(filter || "").toLowerCase() === lowerOld ? newTagValue : filter));
 
   const allCharacters = await db.characters.toArray();
   for (const character of allCharacters) {
@@ -3145,23 +2751,16 @@ async function renameTagAcrossCharacters(oldTag, newTag) {
     });
     if (!replaced) continue;
     await db.characters.update(character.id, { tags: nextTags });
-    if (
-      currentCharacter &&
-      Number(currentCharacter.id) === Number(character.id)
-    ) {
+    if (currentCharacter && Number(currentCharacter.id) === Number(character.id)) {
       currentCharacter.tags = nextTags;
     }
   }
 }
 
 function mergeTagsIntoCatalog(tags) {
-  const incoming = (Array.isArray(tags) ? tags : [])
-    .map((t) => normalizeTagValue(t))
-    .filter(Boolean);
+  const incoming = (Array.isArray(tags) ? tags : []).map((t) => normalizeTagValue(t)).filter(Boolean);
   if (incoming.length === 0) return false;
-  const existing = Array.isArray(state.settings.customTags)
-    ? state.settings.customTags.map((t) => normalizeTagValue(t)).filter(Boolean)
-    : [];
+  const existing = Array.isArray(state.settings.customTags) ? state.settings.customTags.map((t) => normalizeTagValue(t)).filter(Boolean) : [];
   const lowerSet = new Set(existing.map((t) => t.toLowerCase()));
   let changed = false;
   incoming.forEach((tag) => {
@@ -3203,9 +2802,7 @@ function toggleModalTag(tag) {
   const tags = getCharacterTagsFromModal();
   const lower = tag.toLowerCase();
   const exists = tags.some((t) => t.toLowerCase() === lower);
-  const next = exists
-    ? tags.filter((t) => t.toLowerCase() !== lower)
-    : [...tags, tag];
+  const next = exists ? tags.filter((t) => t.toLowerCase() !== lower) : [...tags, tag];
   setCharacterTagsInputValue(next);
   renderCharacterTagPresetButtons();
   setModalDirtyState("character-modal", true);
@@ -3214,9 +2811,7 @@ function toggleModalTag(tag) {
 function renderCharacterTagPresetButtons() {
   const container = document.getElementById("char-tags-presets");
   if (!container) return;
-  const active = new Set(
-    getCharacterTagsFromModal().map((t) => t.toLowerCase()),
-  );
+  const active = new Set(getCharacterTagsFromModal().map((t) => t.toLowerCase()));
   container.innerHTML = "";
   getAllAvailableTags().forEach((tag) => {
     const btn = document.createElement("button");
@@ -3231,9 +2826,7 @@ function renderCharacterTagPresetButtons() {
 
 async function removeCharacterTagFilter(tag) {
   const lower = String(tag || "").toLowerCase();
-  state.characterTagFilters = state.characterTagFilters.filter(
-    (t) => t.toLowerCase() !== lower,
-  );
+  state.characterTagFilters = state.characterTagFilters.filter((t) => t.toLowerCase() !== lower);
   saveUiState();
   renderCharacterTagFilterChips();
   state.characterPage = 1;
@@ -3244,13 +2837,9 @@ async function toggleCharacterTagFilter(tag) {
   const normalized = normalizeTagValue(tag);
   if (!normalized) return;
   const lower = normalized.toLowerCase();
-  const exists = state.characterTagFilters.some(
-    (t) => t.toLowerCase() === lower,
-  );
+  const exists = state.characterTagFilters.some((t) => t.toLowerCase() === lower);
   if (exists) {
-    state.characterTagFilters = state.characterTagFilters.filter(
-      (t) => t.toLowerCase() !== lower,
-    );
+    state.characterTagFilters = state.characterTagFilters.filter((t) => t.toLowerCase() !== lower);
   } else {
     state.characterTagFilters.push(normalized);
   }
@@ -3264,9 +2853,7 @@ async function updateCharacterCardsVisibility() {
   const grid = document.getElementById("character-grid");
   if (!grid) return;
   const characters = await db.characters.toArray();
-  const activeFilters = Array.isArray(state.characterTagFilters)
-    ? state.characterTagFilters.map((t) => t.toLowerCase())
-    : [];
+  const activeFilters = Array.isArray(state.characterTagFilters) ? state.characterTagFilters.map((t) => t.toLowerCase()) : [];
   const cards = grid.querySelectorAll(".character-card");
   cards.forEach((card) => {
     const charId = card.dataset.characterId;
@@ -3275,12 +2862,8 @@ async function updateCharacterCardsVisibility() {
       card.style.display = "none";
       return;
     }
-    const tags = Array.isArray(char.tags)
-      ? char.tags.map((t) => String(t || "").toLowerCase())
-      : [];
-    const shouldShow =
-      activeFilters.length === 0 ||
-      activeFilters.every((f) => tags.includes(f));
+    const tags = Array.isArray(char.tags) ? char.tags.map((t) => String(t || "").toLowerCase()) : [];
+    const shouldShow = activeFilters.length === 0 || activeFilters.every((f) => tags.includes(f));
     card.style.display = shouldShow ? "" : "none";
 
     const tagChips = card.querySelectorAll(".character-tags .tag-chip");
@@ -3294,19 +2877,15 @@ async function updateCharacterCardsVisibility() {
     });
   });
   const empty = grid.querySelector(".muted");
-  const visibleCards = grid.querySelectorAll(
-    ".character-card:not([style*='display: none'])",
-  );
+  const visibleCards = grid.querySelectorAll(".character-card:not([style*='display: none'])");
   if (visibleCards.length === 0) {
     if (!empty) {
       const emptyMsg = document.createElement("p");
       emptyMsg.className = "muted";
-      emptyMsg.textContent =
-        activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+      emptyMsg.textContent = activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
       grid.appendChild(emptyMsg);
     } else {
-      empty.textContent =
-        activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+      empty.textContent = activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
     }
   } else if (empty) {
     empty.remove();
@@ -3329,9 +2908,7 @@ function updateCharacterFiltersToggleUi() {
 }
 
 function getCharacterSortIconUrl(base) {
-  const raw =
-    CHARACTER_SORT_ICON_TEMPLATES[base] ||
-    CHARACTER_SORT_ICON_TEMPLATES.updated;
+  const raw = CHARACTER_SORT_ICON_TEMPLATES[base] || CHARACTER_SORT_ICON_TEMPLATES.updated;
   return `data:image/svg+xml;utf8,${encodeURIComponent(raw)}`;
 }
 
@@ -3363,18 +2940,13 @@ function renderCharacterTagFilterChips() {
   if (sortDirBtn) {
     const isDesc = sortParts.dir === "desc";
     sortDirBtn.innerHTML = isDesc ? "&#8595;" : "&#8593;";
-    sortDirBtn.setAttribute(
-      "title",
-      isDesc ? t("sortDescending") : t("sortAscending"),
-    );
+    sortDirBtn.setAttribute("title", isDesc ? t("sortDescending") : t("sortAscending"));
   }
   updateCharacterSortButton();
   updateCharacterFiltersToggleUi();
   if (!chips || !cue) return;
   chips.innerHTML = "";
-  const selectedFilters = Array.isArray(state.characterTagFilters)
-    ? state.characterTagFilters
-    : [];
+  const selectedFilters = Array.isArray(state.characterTagFilters) ? state.characterTagFilters : [];
   cue.classList.toggle("hidden", selectedFilters.length === 0);
 
   const allTags = getAllAvailableTags();
@@ -3389,9 +2961,7 @@ function renderCharacterTagFilterChips() {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "tag-chip";
-    if (
-      selectedFilters.some((f) => String(f).toLowerCase() === tag.toLowerCase())
-    ) {
+    if (selectedFilters.some((f) => String(f).toLowerCase() === tag.toLowerCase())) {
       chip.classList.add("active-filter");
     }
     chip.textContent = tag;
@@ -3514,20 +3084,10 @@ async function handleImageCommand(prompt, options = {}) {
   const log = document.getElementById("chat-log");
   const displayHistory = getFilteredConversationHistoryForThread();
 
-  const userRow = buildMessageRow(
-    userMsg,
-    conversationHistory.length - 2,
-    false,
-    displayHistory,
-  );
+  const userRow = buildMessageRow(userMsg, conversationHistory.length - 2, false, displayHistory);
   log.appendChild(userRow);
 
-  const placeholderRow = buildMessageRow(
-    placeholderMsg,
-    conversationHistory.length - 1,
-    true,
-    displayHistory,
-  );
+  const placeholderRow = buildMessageRow(placeholderMsg, conversationHistory.length - 1, true, displayHistory);
   log.appendChild(placeholderRow);
 
   scrollChatToBottom();
@@ -3541,12 +3101,7 @@ async function handleImageCommand(prompt, options = {}) {
       const loadingMsg = t("imageLoadingModel") || "Loading AI model...";
       placeholderMsg.content = `${loadingMsg} (${t("imageFirstLoadNote") || "first use: ~500MB download"})`;
       placeholderMsg.generationStatus = "image_loading_model";
-      const progressRow = buildMessageRow(
-        placeholderMsg,
-        conversationHistory.length - 1,
-        true,
-        displayHistory,
-      );
+      const progressRow = buildMessageRow(placeholderMsg, conversationHistory.length - 1, true, displayHistory);
       placeholderRow.replaceWith(progressRow);
       scrollChatToBottom();
     }
@@ -3607,12 +3162,7 @@ async function handleImageCommand(prompt, options = {}) {
     await persistCurrentThread();
 
     const newDisplayHistory = getFilteredConversationHistoryForThread();
-    const newPlaceholderRow = buildMessageRow(
-      assistantMsg,
-      conversationHistory.length - 1,
-      false,
-      newDisplayHistory,
-    );
+    const newPlaceholderRow = buildMessageRow(assistantMsg, conversationHistory.length - 1, false, newDisplayHistory);
 
     placeholderRow.replaceWith(newPlaceholderRow);
 
@@ -3640,12 +3190,7 @@ async function handleImageCommand(prompt, options = {}) {
     await persistCurrentThread();
 
     const newDisplayHistory = getFilteredConversationHistoryForThread();
-    const newPlaceholderRow = buildMessageRow(
-      errorMsg,
-      conversationHistory.length - 1,
-      false,
-      newDisplayHistory,
-    );
+    const newPlaceholderRow = buildMessageRow(errorMsg, conversationHistory.length - 1, false, newDisplayHistory);
 
     placeholderRow.replaceWith(newPlaceholderRow);
 
@@ -3673,12 +3218,7 @@ function onInputKeyDown(e) {
         const selected = input.value.slice(start, end);
         e.preventDefault();
         if (selected) {
-          input.setRangeText(
-            `${e.key}${selected}${closeChar}`,
-            start,
-            end,
-            "end",
-          );
+          input.setRangeText(`${e.key}${selected}${closeChar}`, start, end, "end");
           input.setSelectionRange(start + 1, end + 1);
         } else {
           input.setRangeText(`${e.key}${closeChar}`, start, end, "end");
@@ -3718,21 +3258,12 @@ function onInputPointerUp() {
 function onGlobalClick(e) {
   const popover = document.getElementById("prompt-history-popover");
   const input = document.getElementById("user-input");
-  if (
-    state.promptHistoryOpen &&
-    !popover.contains(e.target) &&
-    e.target !== input
-  ) {
+  if (state.promptHistoryOpen && !popover.contains(e.target) && e.target !== input) {
     closePromptHistory();
   }
   const overlay = document.getElementById("chat-opacity-overlay");
   const overlayButton = document.getElementById("chat-opacity-toggle-btn");
-  if (
-    state.chatOpacityOverlayVisible &&
-    overlay &&
-    !overlay.contains(e.target) &&
-    e.target !== overlayButton
-  ) {
+  if (state.chatOpacityOverlayVisible && overlay && !overlay.contains(e.target) && e.target !== overlayButton) {
     toggleChatOpacityOverlay(false).catch(() => {});
   }
 }
@@ -3794,9 +3325,7 @@ function closeAnyOpenModal() {
     return;
   }
 
-  const visibleModals = Array.from(
-    document.querySelectorAll(".modal:not(.hidden)"),
-  );
+  const visibleModals = Array.from(document.querySelectorAll(".modal:not(.hidden)"));
   if (visibleModals.length > 0) {
     const topMost = visibleModals[visibleModals.length - 1];
     topMost.classList.add("hidden");
@@ -3821,10 +3350,10 @@ async function setupSettingsControls() {
   const uiLanguageSelect = document.getElementById("ui-language-select");
   const aiProviderSelect = document.getElementById("ai-provider-select");
   const openRouterApiKey = document.getElementById("openrouter-api-key");
-  
+
   // Skip if settings modal not loaded (snippets not yet loaded)
   if (!openRouterApiKey) return;
-  
+
   const hordeApiKey = document.getElementById("horde-api-key");
   const hordeApiMethod = document.getElementById("horde-api-method");
   const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
@@ -3842,47 +3371,27 @@ async function setupSettingsControls() {
   const temperatureValue = document.getElementById("temperature-value");
   const topPSlider = document.getElementById("top-p-slider");
   const topPValue = document.getElementById("top-p-value");
-  const frequencyPenaltySlider = document.getElementById(
-    "frequency-penalty-slider",
-  );
-  const frequencyPenaltyValue = document.getElementById(
-    "frequency-penalty-value",
-  );
-  const presencePenaltySlider = document.getElementById(
-    "presence-penalty-slider",
-  );
-  const presencePenaltyValue = document.getElementById(
-    "presence-penalty-value",
-  );
+  const frequencyPenaltySlider = document.getElementById("frequency-penalty-slider");
+  const frequencyPenaltyValue = document.getElementById("frequency-penalty-value");
+  const presencePenaltySlider = document.getElementById("presence-penalty-slider");
+  const presencePenaltyValue = document.getElementById("presence-penalty-value");
   const stopStringsInput = document.getElementById("stop-strings");
   const toastDelaySlider = document.getElementById("toast-delay-slider");
   const toastDelayValue = document.getElementById("toast-delay-value");
-  const marqueeBehaviorSelect = document.getElementById(
-    "marquee-behavior-select",
-  );
+  const marqueeBehaviorSelect = document.getElementById("marquee-behavior-select");
   const lockMemoryMessages = document.getElementById("lock-memory-messages");
   const summaryThresholdInput = document.getElementById("summary-threshold");
-  const memoryMessagesToKeepInput = document.getElementById(
-    "memory-messages-to-keep",
-  );
+  const memoryMessagesToKeepInput = document.getElementById("memory-messages-to-keep");
   const memorySlotsInput = document.getElementById("memory-slots");
   renderOocSystemAvatarPreview(state.settings.oocSystemAvatar);
   if (uiLanguageSelect) {
-    uiLanguageSelect.querySelector('option[value="auto"]').textContent =
-      t("languageAuto");
-    uiLanguageSelect.querySelector('option[value="en"]').textContent =
-      t("languageEnglish");
-    uiLanguageSelect.querySelector('option[value="fr"]').textContent =
-      t("languageFrench");
-    uiLanguageSelect.querySelector('option[value="it"]').textContent =
-      t("languageItalian");
-    uiLanguageSelect.querySelector('option[value="de"]').textContent =
-      t("languageGerman");
-    uiLanguageSelect.querySelector('option[value="es"]').textContent =
-      t("languageSpanish");
-    uiLanguageSelect.querySelector('option[value="pt-BR"]').textContent = t(
-      "languagePortugueseBr",
-    );
+    uiLanguageSelect.querySelector('option[value="auto"]').textContent = t("languageAuto");
+    uiLanguageSelect.querySelector('option[value="en"]').textContent = t("languageEnglish");
+    uiLanguageSelect.querySelector('option[value="fr"]').textContent = t("languageFrench");
+    uiLanguageSelect.querySelector('option[value="it"]').textContent = t("languageItalian");
+    uiLanguageSelect.querySelector('option[value="de"]').textContent = t("languageGerman");
+    uiLanguageSelect.querySelector('option[value="es"]').textContent = t("languageSpanish");
+    uiLanguageSelect.querySelector('option[value="pt-BR"]').textContent = t("languagePortugueseBr");
     uiLanguageSelect.value = state.settings.uiLanguage || "auto";
     if (!uiLanguageSelect.value) uiLanguageSelect.value = "auto";
   }
@@ -3910,26 +3419,14 @@ async function setupSettingsControls() {
   }
 
   if (modelPricingFilter) {
-    modelPricingFilter.value =
-      state.settings.modelPricingFilter === "free" ||
-      state.settings.modelPricingFilter === "paid"
-        ? state.settings.modelPricingFilter
-        : "all";
+    modelPricingFilter.value = state.settings.modelPricingFilter === "free" || state.settings.modelPricingFilter === "paid" ? state.settings.modelPricingFilter : "all";
   }
   if (modelModalityFilter) {
-    modelModalityFilter.value =
-      state.settings.modelModalityFilter === "all" ? "all" : "text-only";
+    modelModalityFilter.value = state.settings.modelModalityFilter === "all" ? "all" : "text-only";
   }
   if (modelSortOrder) {
     const order = String(state.settings.modelSortOrder || "name_asc");
-    modelSortOrder.value = [
-      "name_asc",
-      "name_desc",
-      "created_asc",
-      "created_desc",
-    ].includes(order)
-      ? order
-      : "name_asc";
+    modelSortOrder.value = ["name_asc", "name_desc", "created_asc", "created_desc"].includes(order) ? order : "name_asc";
   }
 
   await populateSettingsModels();
@@ -3973,64 +3470,33 @@ async function setupSettingsControls() {
   const oocModeToggle = document.getElementById("ooc-mode-toggle");
   const cancelShortcut = document.getElementById("cancel-shortcut");
   const homeShortcut = document.getElementById("home-shortcut");
-  const newCharacterShortcut = document.getElementById(
-    "new-character-shortcut",
-  );
+  const newCharacterShortcut = document.getElementById("new-character-shortcut");
   if (summaryThresholdInput) {
-    const threshold =
-      typeof window.getSummaryThresholdValue === "function"
-        ? window.getSummaryThresholdValue(state.settings.summaryThreshold)
-        : Number(state.settings.summaryThreshold || 20);
+    const threshold = typeof window.getSummaryThresholdValue === "function" ? window.getSummaryThresholdValue(state.settings.summaryThreshold) : Number(state.settings.summaryThreshold || 20);
     state.settings.summaryThreshold = threshold;
     summaryThresholdInput.value = String(threshold);
   }
   if (memoryMessagesToKeepInput) {
     const keepValue =
       typeof window.getMemoryMessagesToKeepValue === "function"
-        ? window.getMemoryMessagesToKeepValue(
-            state.settings.memoryMessagesToKeep,
-          )
-        : Math.max(
-            0,
-            Math.min(
-              4,
-              Number.isFinite(Number(state.settings.memoryMessagesToKeep))
-                ? Number(state.settings.memoryMessagesToKeep)
-                : 3,
-            ),
-          );
+        ? window.getMemoryMessagesToKeepValue(state.settings.memoryMessagesToKeep)
+        : Math.max(0, Math.min(4, Number.isFinite(Number(state.settings.memoryMessagesToKeep)) ? Number(state.settings.memoryMessagesToKeep) : 3));
     state.settings.memoryMessagesToKeep = keepValue;
     memoryMessagesToKeepInput.value = String(keepValue);
   }
   if (memorySlotsInput) {
-    const slots =
-      typeof window.getMemorySlotsValue === "function"
-        ? window.getMemorySlotsValue(state.settings.memorySlots)
-        : Math.max(1, Math.min(10, Number(state.settings.memorySlots) || 5));
+    const slots = typeof window.getMemorySlotsValue === "function" ? window.getMemorySlotsValue(state.settings.memorySlots) : Math.max(1, Math.min(10, Number(state.settings.memorySlots) || 5));
     state.settings.memorySlots = slots;
     memorySlotsInput.value = String(slots);
   }
-  const autoUnloadThresholdInput = document.getElementById(
-    "auto-unload-threshold",
-  );
+  const autoUnloadThresholdInput = document.getElementById("auto-unload-threshold");
   if (autoUnloadThresholdInput) {
-    const threshold = Math.max(
-      0,
-      Math.min(
-        1000,
-        Number.isFinite(Number(state.settings.autoUnloadThreshold))
-          ? Number(state.settings.autoUnloadThreshold)
-          : 0,
-      ),
-    );
+    const threshold = Math.max(0, Math.min(1000, Number.isFinite(Number(state.settings.autoUnloadThreshold)) ? Number(state.settings.autoUnloadThreshold) : 0));
     state.settings.autoUnloadThreshold = threshold;
     autoUnloadThresholdInput.value = String(threshold);
     autoUnloadThresholdInput.addEventListener("change", async () => {
       const val = Number(autoUnloadThresholdInput.value);
-      const clamped = Math.max(
-        0,
-        Math.min(1000, Number.isFinite(val) ? val : 0),
-      );
+      const clamped = Math.max(0, Math.min(1000, Number.isFinite(val) ? val : 0));
       state.settings.autoUnloadThreshold = clamped;
       autoUnloadThresholdInput.value = String(clamped);
       saveSettings();
@@ -4048,83 +3514,51 @@ async function setupSettingsControls() {
       }
     });
   }
-  const chatMessageAlignment = document.getElementById(
-    "chat-message-alignment",
-  );
+  const chatMessageAlignment = document.getElementById("chat-message-alignment");
   if (chatMessageAlignment) {
     chatMessageAlignment.value = state.settings.chatMessageAlignment || "left";
     chatMessageAlignment.addEventListener("change", () => {
       const desired = String(chatMessageAlignment.value || "")
         .trim()
         .toLowerCase();
-      state.settings.chatMessageAlignment = ["center"].includes(desired)
-        ? desired
-        : "left";
+      state.settings.chatMessageAlignment = ["center"].includes(desired) ? desired : "left";
       applyChatMessageAlignment();
       saveSettings();
     });
   }
   const loreMatchingMode = document.getElementById("lore-matching-mode");
-  const loreSemanticThresholdContainer = document.getElementById(
-    "lore-semantic-threshold-container",
-  );
-  const loreSemanticThresholdInput = document.getElementById(
-    "lore-semantic-threshold",
-  );
+  const loreSemanticThresholdContainer = document.getElementById("lore-semantic-threshold-container");
+  const loreSemanticThresholdInput = document.getElementById("lore-semantic-threshold");
   if (loreMatchingMode) {
     loreMatchingMode.value = state.settings.loreMatchingMode || "keyword";
     loreMatchingMode.addEventListener("change", () => {
       const mode = String(loreMatchingMode.value || "")
         .trim()
         .toLowerCase();
-      state.settings.loreMatchingMode =
-        mode === "semantic" ? "semantic" : "keyword";
+      state.settings.loreMatchingMode = mode === "semantic" ? "semantic" : "keyword";
       if (loreSemanticThresholdContainer) {
-        loreSemanticThresholdContainer.classList.toggle(
-          "hidden",
-          state.settings.loreMatchingMode !== "semantic",
-        );
+        loreSemanticThresholdContainer.classList.toggle("hidden", state.settings.loreMatchingMode !== "semantic");
       }
       saveSettings();
     });
     if (loreSemanticThresholdContainer) {
-      loreSemanticThresholdContainer.classList.toggle(
-        "hidden",
-        state.settings.loreMatchingMode !== "semantic",
-      );
+      loreSemanticThresholdContainer.classList.toggle("hidden", state.settings.loreMatchingMode !== "semantic");
     }
   }
   if (loreSemanticThresholdInput) {
-    const threshold = Math.max(
-      0,
-      Math.min(
-        1,
-        Number.isFinite(Number(state.settings.loreSemanticThreshold))
-          ? Number(state.settings.loreSemanticThreshold)
-          : 0.5,
-      ),
-    );
+    const threshold = Math.max(0, Math.min(1, Number.isFinite(Number(state.settings.loreSemanticThreshold)) ? Number(state.settings.loreSemanticThreshold) : 0.5));
     state.settings.loreSemanticThreshold = threshold;
     loreSemanticThresholdInput.value = String(threshold);
     loreSemanticThresholdInput.addEventListener("change", () => {
       const val = Number(loreSemanticThresholdInput.value);
-      const clamped = Math.max(
-        0,
-        Math.min(1, Number.isFinite(val) ? val : 0.5),
-      );
+      const clamped = Math.max(0, Math.min(1, Number.isFinite(val) ? val : 0.5));
       state.settings.loreSemanticThreshold = clamped;
       loreSemanticThresholdInput.value = String(clamped);
       saveSettings();
     });
   }
-  autoReplyEnabled?.classList.toggle(
-    "is-active",
-    state.settings.autoReplyEnabled !== false,
-  );
-  enterToSendEnabled?.classList.toggle(
-    "is-active",
-    state.settings.enterToSendEnabled !== false,
-  );
+  autoReplyEnabled?.classList.toggle("is-active", state.settings.autoReplyEnabled !== false);
+  enterToSendEnabled?.classList.toggle("is-active", state.settings.enterToSendEnabled !== false);
   const unreadSoundEnabled = document.getElementById("unread-sound-enabled");
   const markdownCustomCss = document.getElementById("markdown-custom-css");
   const postprocessRulesJson = document.getElementById("postprocess-rules-json");
@@ -4135,11 +3569,7 @@ async function setupSettingsControls() {
     postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
   }
   const initialSliderMax = getSettingsMaxTokensUpperBound(modelSelect.value);
-  state.settings.maxTokens = clampMaxTokens(
-    state.settings.maxTokens,
-    512,
-    initialSliderMax,
-  );
+  state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 512, initialSliderMax);
   if (maxTokensSlider) {
     maxTokensSlider.min = "512";
     maxTokensSlider.max = String(initialSliderMax);
@@ -4147,42 +3577,28 @@ async function setupSettingsControls() {
     maxTokensValue.textContent = maxTokensSlider.value;
   }
   if (temperatureSlider) {
-    temperatureSlider.value = String(
-      clampTemperature(state.settings.temperature),
-    );
-    if (temperatureValue) temperatureValue.textContent = clampTemperature(
-      state.settings.temperature,
-    ).toFixed(2);
+    temperatureSlider.value = String(clampTemperature(state.settings.temperature));
+    if (temperatureValue) temperatureValue.textContent = clampTemperature(state.settings.temperature).toFixed(2);
   }
   if (topPSlider) {
     topPSlider.value = String(Number(state.settings.topP) || 1);
     topPValue.textContent = topPSlider.value;
   }
   if (frequencyPenaltySlider) {
-    frequencyPenaltySlider.value = String(
-      Number(state.settings.frequencyPenalty) || 0,
-    );
+    frequencyPenaltySlider.value = String(Number(state.settings.frequencyPenalty) || 0);
     frequencyPenaltyValue.textContent = frequencyPenaltySlider.value;
   }
   if (presencePenaltySlider) {
-    presencePenaltySlider.value = String(
-      Number(state.settings.presencePenalty) || 0,
-    );
+    presencePenaltySlider.value = String(Number(state.settings.presencePenalty) || 0);
     presencePenaltyValue.textContent = presencePenaltySlider.value;
   }
   if (stopStringsInput) {
     stopStringsInput.value = state.settings.stopStrings || "";
   }
-  const completionCooldownSlider = document.getElementById(
-    "completion-cooldown-slider",
-  );
-  const completionCooldownValue = document.getElementById(
-    "completion-cooldown-value",
-  );
+  const completionCooldownSlider = document.getElementById("completion-cooldown-slider");
+  const completionCooldownValue = document.getElementById("completion-cooldown-value");
   if (completionCooldownSlider) {
-    completionCooldownSlider.value = String(
-      state.settings.completionCooldown ?? 2,
-    );
+    completionCooldownSlider.value = String(state.settings.completionCooldown ?? 2);
     if (completionCooldownValue) {
       completionCooldownValue.textContent = `${completionCooldownSlider.value}s`;
     }
@@ -4214,45 +3630,21 @@ async function setupSettingsControls() {
   }
   const globalPromptTemplate = document.getElementById("global-prompt-template");
   const summarySystemPrompt = document.getElementById("summary-system-prompt");
-  const memorySummarizerUserPrompt = document.getElementById(
-    "memory-summarizer-user-prompt",
-  );
-  const summaryMessagesPreProcessingJson = document.getElementById(
-    "summary-messages-preprocessing-json",
-  );
-  const personaInjectionTemplate = document.getElementById(
-    "persona-injection-template",
-  );
-  const writingInstructionsInjectionWhen = document.getElementById(
-    "writing-instructions-injection-when",
-  );
+  const memorySummarizerUserPrompt = document.getElementById("memory-summarizer-user-prompt");
+  const summaryMessagesPreProcessingJson = document.getElementById("summary-messages-preprocessing-json");
+  const personaInjectionTemplate = document.getElementById("persona-injection-template");
+  const writingInstructionsInjectionWhen = document.getElementById("writing-instructions-injection-when");
   const shortcutsRaw = document.getElementById("shortcuts-raw");
-  const autoTitleSystemPrompt = document.getElementById(
-    "auto-title-system-prompt",
-  );
+  const autoTitleSystemPrompt = document.getElementById("auto-title-system-prompt");
   const autoTitleUserPrompt = document.getElementById("auto-title-user-prompt");
-  const sectionHeaderMemoryContext = document.getElementById(
-    "section-header-memory-context",
-  );
-  const sectionHeaderCharacterPrompt = document.getElementById(
-    "section-header-character-prompt",
-  );
-  const sectionHeaderMessagesSoFar = document.getElementById(
-    "section-header-messages-so-far",
-  );
+  const sectionHeaderMemoryContext = document.getElementById("section-header-memory-context");
+  const sectionHeaderCharacterPrompt = document.getElementById("section-header-character-prompt");
+  const sectionHeaderMessagesSoFar = document.getElementById("section-header-messages-so-far");
   const sectionHeaderMessages = document.getElementById("section-header-messages");
-  const sectionHeaderMemoryLevelContext = document.getElementById(
-    "section-header-memory-level-context",
-  );
-  const sectionHeaderMemoryEntry = document.getElementById(
-    "section-header-memory-entry",
-  );
-  const sectionHeaderLoreContext = document.getElementById(
-    "section-header-lore-context",
-  );
-  const memoryRelevanceFilterToggle = document.getElementById(
-    "memory-relevance-filter-enabled",
-  );
+  const sectionHeaderMemoryLevelContext = document.getElementById("section-header-memory-level-context");
+  const sectionHeaderMemoryEntry = document.getElementById("section-header-memory-entry");
+  const sectionHeaderLoreContext = document.getElementById("section-header-lore-context");
+  const memoryRelevanceFilterToggle = document.getElementById("memory-relevance-filter-enabled");
 
   if (globalPromptTemplate) {
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
@@ -4264,27 +3656,20 @@ async function setupSettingsControls() {
     summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
   }
   if (memorySummarizerUserPrompt) {
-    const userPromptValue =
-      state.settings.memorySummarizerUserPrompt ||
-      DEFAULT_SETTINGS.memorySummarizerUserPrompt;
+    const userPromptValue = state.settings.memorySummarizerUserPrompt || DEFAULT_SETTINGS.memorySummarizerUserPrompt;
     state.settings.memorySummarizerUserPrompt = userPromptValue;
     memorySummarizerUserPrompt.value = userPromptValue;
   }
   if (summaryMessagesPreProcessingJson) {
-    const preProcessingValue =
-      state.settings.summaryMessagesPreProcessingJson || "[]";
+    const preProcessingValue = state.settings.summaryMessagesPreProcessingJson || "[]";
     state.settings.summaryMessagesPreProcessingJson = preProcessingValue;
     summaryMessagesPreProcessingJson.value = preProcessingValue;
   }
   if (personaInjectionTemplate) {
-    personaInjectionTemplate.value =
-      state.settings.personaInjectionTemplate ||
-      DEFAULT_SETTINGS.personaInjectionTemplate;
+    personaInjectionTemplate.value = state.settings.personaInjectionTemplate || DEFAULT_SETTINGS.personaInjectionTemplate;
   }
   if (writingInstructionsInjectionWhen) {
-    const writingWhen = normalizeWritingInstructionsTiming(
-      state.settings.writingInstructionsInjectionWhen,
-    );
+    const writingWhen = normalizeWritingInstructionsTiming(state.settings.writingInstructionsInjectionWhen);
     state.settings.writingInstructionsInjectionWhen = writingWhen;
     writingInstructionsInjectionWhen.value = writingWhen;
   }
@@ -4292,42 +3677,28 @@ async function setupSettingsControls() {
     shortcutsRaw.value = state.settings.shortcutsRaw || "";
   }
   if (autoTitleSystemPrompt) {
-    autoTitleSystemPrompt.value =
-      state.settings.autoTitleSystemPrompt ||
-      DEFAULT_SETTINGS.autoTitleSystemPrompt;
+    autoTitleSystemPrompt.value = state.settings.autoTitleSystemPrompt || DEFAULT_SETTINGS.autoTitleSystemPrompt;
   }
   if (autoTitleUserPrompt) {
-    autoTitleUserPrompt.value =
-      state.settings.autoTitleUserPrompt ||
-      DEFAULT_SETTINGS.autoTitleUserPrompt;
+    autoTitleUserPrompt.value = state.settings.autoTitleUserPrompt || DEFAULT_SETTINGS.autoTitleUserPrompt;
   }
   if (sectionHeaderCharacterPrompt) {
     sectionHeaderCharacterPrompt.value = getSectionHeader("sectionHeaderCharacterPrompt");
   }
   if (sectionHeaderMessagesSoFar) {
-    sectionHeaderMessagesSoFar.value =
-      state.settings.sectionHeaderMessagesSoFar ||
-      DEFAULT_SETTINGS.sectionHeaderMessagesSoFar;
+    sectionHeaderMessagesSoFar.value = state.settings.sectionHeaderMessagesSoFar || DEFAULT_SETTINGS.sectionHeaderMessagesSoFar;
   }
   if (sectionHeaderMessages) {
-    sectionHeaderMessages.value =
-      state.settings.sectionHeaderMessages ||
-      DEFAULT_SETTINGS.sectionHeaderMessages;
+    sectionHeaderMessages.value = state.settings.sectionHeaderMessages || DEFAULT_SETTINGS.sectionHeaderMessages;
   }
   if (sectionHeaderMemoryLevelContext) {
-    sectionHeaderMemoryLevelContext.value =
-      state.settings.sectionHeaderMemoryLevelContext ||
-      DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
+    sectionHeaderMemoryLevelContext.value = state.settings.sectionHeaderMemoryLevelContext || DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
   }
   if (sectionHeaderMemoryEntry) {
-    sectionHeaderMemoryEntry.value =
-      state.settings.sectionHeaderMemoryEntry ||
-      DEFAULT_SETTINGS.sectionHeaderMemoryEntry;
+    sectionHeaderMemoryEntry.value = state.settings.sectionHeaderMemoryEntry || DEFAULT_SETTINGS.sectionHeaderMemoryEntry;
   }
   if (sectionHeaderLoreContext) {
-    sectionHeaderLoreContext.value =
-      state.settings.sectionHeaderLoreContext ||
-      DEFAULT_SETTINGS.sectionHeaderLoreContext;
+    sectionHeaderLoreContext.value = state.settings.sectionHeaderLoreContext || DEFAULT_SETTINGS.sectionHeaderLoreContext;
   }
   const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
   const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
@@ -4337,49 +3708,28 @@ async function setupSettingsControls() {
   if (oocUserMessageFormat) {
     oocUserMessageFormat.value = getSectionHeader("oocUserMessageFormat");
   }
-  cancelShortcut.value =
-    state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
-  homeShortcut.value =
-    state.settings.homeShortcut || DEFAULT_SETTINGS.homeShortcut;
-  newCharacterShortcut.value =
-    state.settings.newCharacterShortcut ||
-    DEFAULT_SETTINGS.newCharacterShortcut;
-  const defaultPersonaInjectionPlacement = document.getElementById(
-    "default-persona-injection-placement",
-  );
+  cancelShortcut.value = state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
+  homeShortcut.value = state.settings.homeShortcut || DEFAULT_SETTINGS.homeShortcut;
+  newCharacterShortcut.value = state.settings.newCharacterShortcut || DEFAULT_SETTINGS.newCharacterShortcut;
+  const defaultPersonaInjectionPlacement = document.getElementById("default-persona-injection-placement");
   const defaultTtsProvider = document.getElementById("default-tts-provider");
   const defaultTtsRate = document.getElementById("default-tts-rate");
   const defaultTtsRateValue = document.getElementById("default-tts-rate-value");
-  defaultPersonaInjectionPlacement.value =
-    state.settings.defaultPersonaInjectionPlacement ||
-    DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
-  defaultTtsProvider.value =
-    state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
-  defaultTtsRate.value = String(
-    state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate,
-  );
-  if (defaultTtsRateValue)
-    defaultTtsRateValue.textContent = String(defaultTtsRate.value);
+  defaultPersonaInjectionPlacement.value = state.settings.defaultPersonaInjectionPlacement || DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+  defaultTtsProvider.value = state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+  defaultTtsRate.value = String(state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate);
+  if (defaultTtsRateValue) defaultTtsRateValue.textContent = String(defaultTtsRate.value);
   const defaultIncludeOoc = document.getElementById("default-include-ooc");
   const defaultAvatarScale = document.getElementById("default-avatar-scale");
   if (defaultIncludeOoc) {
-    defaultIncludeOoc.checked =
-      state.settings.defaultIncludeOocInCompletions ??
-      DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
+    defaultIncludeOoc.checked = state.settings.defaultIncludeOocInCompletions ?? DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
   }
   if (defaultAvatarScale) {
-    defaultAvatarScale.value = String(
-      state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale,
-    );
+    defaultAvatarScale.value = String(state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale);
   }
-  const defaultAutoTitleMinMessagesInput = document.getElementById(
-    "default-auto-title-min-messages",
-  );
+  const defaultAutoTitleMinMessagesInput = document.getElementById("default-auto-title-min-messages");
   if (defaultAutoTitleMinMessagesInput) {
-    defaultAutoTitleMinMessagesInput.value = String(
-      state.settings.defaultAutoTitleMinMessages ??
-        DEFAULT_SETTINGS.defaultAutoTitleMinMessages,
-    );
+    defaultAutoTitleMinMessagesInput.value = String(state.settings.defaultAutoTitleMinMessages ?? DEFAULT_SETTINGS.defaultAutoTitleMinMessages);
   }
   const autoTitleProvider = document.getElementById("default-auto-title-provider");
   const autoTitleModel = document.getElementById("default-auto-title-model");
@@ -4390,38 +3740,28 @@ async function setupSettingsControls() {
   const summaryTemp = document.getElementById("default-summary-temp");
   const summaryTempValue = document.getElementById("default-summary-temp-value");
   if (autoTitleProvider) {
-    autoTitleProvider.value =
-      state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+    autoTitleProvider.value = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
   }
   if (autoTitleModel) {
-    autoTitleModel.value =
-      state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
+    autoTitleModel.value = state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
   }
   if (autoTitleTemp) {
-    autoTitleTemp.value = String(
-      state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature,
-    );
-    if (autoTitleTempValue)
-      autoTitleTempValue.textContent = autoTitleTemp.value;
+    autoTitleTemp.value = String(state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature);
+    if (autoTitleTempValue) autoTitleTempValue.textContent = autoTitleTemp.value;
   }
   const autoTitleStopStrings = document.getElementById("default-auto-title-stop-strings");
   if (autoTitleStopStrings) {
     autoTitleStopStrings.value = state.settings.autoTitleStopStrings || "";
   }
   if (summaryProvider) {
-    summaryProvider.value =
-      state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+    summaryProvider.value = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
   }
   if (summaryModel) {
-    summaryModel.value =
-      state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
+    summaryModel.value = state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
   }
   if (summaryTemp) {
-    summaryTemp.value = String(
-      state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature,
-    );
-    if (summaryTempValue)
-      summaryTempValue.textContent = summaryTemp.value;
+    summaryTemp.value = String(state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature);
+    if (summaryTempValue) summaryTempValue.textContent = summaryTemp.value;
   }
   const summaryStopStrings = document.getElementById("default-summary-stop-strings");
   if (summaryStopStrings) {
@@ -4430,12 +3770,10 @@ async function setupSettingsControls() {
   const autoTitleStream = document.getElementById("default-auto-title-stream");
   const summaryStream = document.getElementById("default-summary-stream");
   if (autoTitleStream) {
-    autoTitleStream.checked =
-      state.settings.defaultAutoTitleStream ?? DEFAULT_SETTINGS.defaultAutoTitleStream;
+    autoTitleStream.checked = state.settings.defaultAutoTitleStream ?? DEFAULT_SETTINGS.defaultAutoTitleStream;
   }
   if (summaryStream) {
-    summaryStream.checked =
-      state.settings.defaultSummaryStream ?? DEFAULT_SETTINGS.defaultSummaryStream;
+    summaryStream.checked = state.settings.defaultSummaryStream ?? DEFAULT_SETTINGS.defaultSummaryStream;
   }
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
@@ -4522,11 +3860,7 @@ async function setupSettingsControls() {
     state.settings.lastModelsPerProvider = lastModels;
     state.settings.model = modelSelect.value;
     const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
-    state.settings.maxTokens = clampMaxTokens(
-      state.settings.maxTokens,
-      512,
-      maxUpper,
-    );
+    state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 512, maxUpper);
     if (maxTokensSlider) {
       maxTokensSlider.min = "512";
       maxTokensSlider.max = String(maxUpper);
@@ -4611,12 +3945,9 @@ async function setupSettingsControls() {
     state.settings.lockMemoryMessages = lockMemoryMessages.checked;
     saveSettings();
   });
-  const crossWindowSyncEnabled = document.getElementById(
-    "cross-window-sync-enabled",
-  );
+  const crossWindowSyncEnabled = document.getElementById("cross-window-sync-enabled");
   if (crossWindowSyncEnabled) {
-    crossWindowSyncEnabled.checked =
-      state.settings.crossWindowSyncEnabled !== false;
+    crossWindowSyncEnabled.checked = state.settings.crossWindowSyncEnabled !== false;
     crossWindowSyncEnabled.addEventListener("change", () => {
       state.settings.crossWindowSyncEnabled = crossWindowSyncEnabled.checked;
       saveSettings();
@@ -4632,24 +3963,18 @@ async function setupSettingsControls() {
       applyShowTokenCountsSetting();
     });
   }
-  const messageBubbleFontSizeSelect = document.getElementById(
-    "message-bubble-font-size",
-  );
+  const messageBubbleFontSizeSelect = document.getElementById("message-bubble-font-size");
   if (messageBubbleFontSizeSelect) {
-    messageBubbleFontSizeSelect.value =
-      state.settings.messageBubbleFontSize || "regular";
+    messageBubbleFontSizeSelect.value = state.settings.messageBubbleFontSize || "regular";
     messageBubbleFontSizeSelect.addEventListener("change", () => {
       state.settings.messageBubbleFontSize = messageBubbleFontSizeSelect.value;
       saveSettings();
       applyMessageBubbleFontSize();
     });
   }
-  const messageButtonSizeSelect = document.getElementById(
-    "message-button-size",
-  );
+  const messageButtonSizeSelect = document.getElementById("message-button-size");
   if (messageButtonSizeSelect) {
-    messageButtonSizeSelect.value =
-      state.settings.messageButtonSize || "small";
+    messageButtonSizeSelect.value = state.settings.messageButtonSize || "small";
     messageButtonSizeSelect.addEventListener("change", () => {
       state.settings.messageButtonSize = messageButtonSizeSelect.value;
       saveSettings();
@@ -4688,33 +4013,24 @@ async function setupSettingsControls() {
       saveSettings();
     });
   }
-  const useLocalSummarization = document.getElementById(
-    "use-local-summarization",
-  );
+  const useLocalSummarization = document.getElementById("use-local-summarization");
   if (useLocalSummarization) {
-    useLocalSummarization.checked =
-      state.settings.useLocalSummarization === true;
+    useLocalSummarization.checked = state.settings.useLocalSummarization === true;
     useLocalSummarization.addEventListener("change", () => {
       state.settings.useLocalSummarization = useLocalSummarization.checked;
       saveSettings();
     });
   }
-  const useLocalAutoTitle = document.getElementById(
-    "use-local-auto-title",
-  );
+  const useLocalAutoTitle = document.getElementById("use-local-auto-title");
   if (useLocalAutoTitle) {
-    useLocalAutoTitle.checked =
-      state.settings.useLocalAutoTitle === true;
+    useLocalAutoTitle.checked = state.settings.useLocalAutoTitle === true;
     useLocalAutoTitle.addEventListener("change", () => {
       state.settings.useLocalAutoTitle = useLocalAutoTitle.checked;
       saveSettings();
     });
   }
   summaryThresholdInput?.addEventListener("change", () => {
-    const threshold =
-      typeof window.getSummaryThresholdValue === "function"
-        ? window.getSummaryThresholdValue(summaryThresholdInput.value)
-        : Number(summaryThresholdInput.value) || 20;
+    const threshold = typeof window.getSummaryThresholdValue === "function" ? window.getSummaryThresholdValue(summaryThresholdInput.value) : Number(summaryThresholdInput.value) || 20;
     summaryThresholdInput.value = String(threshold);
     state.settings.summaryThreshold = threshold;
     saveSettings();
@@ -4723,24 +4039,13 @@ async function setupSettingsControls() {
     const keepValue =
       typeof window.getMemoryMessagesToKeepValue === "function"
         ? window.getMemoryMessagesToKeepValue(memoryMessagesToKeepInput.value)
-        : Math.max(
-            0,
-            Math.min(
-              4,
-              Number.isFinite(Number(memoryMessagesToKeepInput.value))
-                ? Number(memoryMessagesToKeepInput.value)
-                : 3,
-            ),
-          );
+        : Math.max(0, Math.min(4, Number.isFinite(Number(memoryMessagesToKeepInput.value)) ? Number(memoryMessagesToKeepInput.value) : 3));
     memoryMessagesToKeepInput.value = String(keepValue);
     state.settings.memoryMessagesToKeep = keepValue;
     saveSettings();
   });
   memorySlotsInput?.addEventListener("change", () => {
-    const slots =
-      typeof window.getMemorySlotsValue === "function"
-        ? window.getMemorySlotsValue(memorySlotsInput.value)
-        : Math.max(1, Math.min(10, Number(memorySlotsInput.value) || 5));
+    const slots = typeof window.getMemorySlotsValue === "function" ? window.getMemorySlotsValue(memorySlotsInput.value) : Math.max(1, Math.min(10, Number(memorySlotsInput.value) || 5));
     memorySlotsInput.value = String(slots);
     state.settings.memorySlots = slots;
     saveSettings();
@@ -4981,56 +4286,39 @@ async function setupSettingsControls() {
     saveSettings();
   });
   marqueeBehaviorSelect?.addEventListener("change", () => {
-    state.settings.marqueeBehavior = normalizeMarqueeBehavior(
-      marqueeBehaviorSelect.value,
-    );
+    state.settings.marqueeBehavior = normalizeMarqueeBehavior(marqueeBehaviorSelect.value);
     marqueeBehaviorSelect.value = state.settings.marqueeBehavior;
     saveSettings();
     refreshAllHoverMarquees();
   });
 
-  const botCardAvatarEffectSelect = document.getElementById(
-    "bot-card-avatar-effect",
-  );
-  const botCardAvatarTransitionDelaySlider = document.getElementById(
-    "bot-card-avatar-transition-delay-slider",
-  );
-  const botCardAvatarTransitionDelayValue = document.getElementById(
-    "bot-card-avatar-transition-delay-value",
-  );
+  const botCardAvatarEffectSelect = document.getElementById("bot-card-avatar-effect");
+  const botCardAvatarTransitionDelaySlider = document.getElementById("bot-card-avatar-transition-delay-slider");
+  const botCardAvatarTransitionDelayValue = document.getElementById("bot-card-avatar-transition-delay-value");
   if (botCardAvatarEffectSelect) {
-    botCardAvatarEffectSelect.value =
-      state.settings.botCardAvatarEffect || "none";
+    botCardAvatarEffectSelect.value = state.settings.botCardAvatarEffect || "none";
   }
   if (botCardAvatarTransitionDelaySlider) {
-    const delay = Math.max(
-      4,
-      Math.min(30, Number(state.settings.botCardAvatarTransitionDelay) || 4),
-    );
+    const delay = Math.max(4, Math.min(30, Number(state.settings.botCardAvatarTransitionDelay) || 4));
     state.settings.botCardAvatarTransitionDelay = delay;
     botCardAvatarTransitionDelaySlider.value = String(delay);
     if (botCardAvatarTransitionDelayValue) {
       botCardAvatarTransitionDelayValue.textContent = `${delay}s`;
     }
     if (botCardAvatarEffectSelect) {
-      botCardAvatarTransitionDelaySlider.disabled =
-        botCardAvatarEffectSelect.value !== "carousel";
+      botCardAvatarTransitionDelaySlider.disabled = botCardAvatarEffectSelect.value !== "carousel";
     }
   }
   botCardAvatarEffectSelect?.addEventListener("change", () => {
     state.settings.botCardAvatarEffect = botCardAvatarEffectSelect.value;
     saveSettings();
     if (botCardAvatarTransitionDelaySlider) {
-      botCardAvatarTransitionDelaySlider.disabled =
-        botCardAvatarEffectSelect.value !== "carousel";
+      botCardAvatarTransitionDelaySlider.disabled = botCardAvatarEffectSelect.value !== "carousel";
     }
     renderCharacters();
   });
   botCardAvatarTransitionDelaySlider?.addEventListener("input", () => {
-    const value = Math.max(
-      4,
-      Math.min(30, Number(botCardAvatarTransitionDelaySlider.value) || 4),
-    );
+    const value = Math.max(4, Math.min(30, Number(botCardAvatarTransitionDelaySlider.value) || 4));
     state.settings.botCardAvatarTransitionDelay = value;
     botCardAvatarTransitionDelaySlider.value = String(value);
     if (botCardAvatarTransitionDelayValue) {
@@ -5066,8 +4354,7 @@ async function setupSettingsControls() {
   globalPromptTemplate.addEventListener("input", () => {
     state.settings.globalPromptTemplate = globalPromptTemplate.value;
     saveSettings();
-    if (state.activeModalId === "character-modal")
-      updateCharacterPromptPlaceholder();
+    if (state.activeModalId === "character-modal") updateCharacterPromptPlaceholder();
   });
 
   summarySystemPrompt.addEventListener("input", () => {
@@ -5076,8 +4363,7 @@ async function setupSettingsControls() {
   });
 
   memorySummarizerUserPrompt?.addEventListener("input", () => {
-    state.settings.memorySummarizerUserPrompt =
-      memorySummarizerUserPrompt.value;
+    state.settings.memorySummarizerUserPrompt = memorySummarizerUserPrompt.value;
     saveSettings();
   });
 
@@ -5092,20 +4378,17 @@ async function setupSettingsControls() {
   });
 
   sectionHeaderMemoryContext?.addEventListener("input", () => {
-    state.settings.sectionHeaderMemoryContext =
-      sectionHeaderMemoryContext.value;
+    state.settings.sectionHeaderMemoryContext = sectionHeaderMemoryContext.value;
     saveSettings();
   });
 
   sectionHeaderCharacterPrompt?.addEventListener("input", () => {
-    state.settings.sectionHeaderCharacterPrompt =
-      sectionHeaderCharacterPrompt.value;
+    state.settings.sectionHeaderCharacterPrompt = sectionHeaderCharacterPrompt.value;
     saveSettings();
   });
 
   sectionHeaderMessagesSoFar?.addEventListener("input", () => {
-    state.settings.sectionHeaderMessagesSoFar =
-      sectionHeaderMessagesSoFar.value;
+    state.settings.sectionHeaderMessagesSoFar = sectionHeaderMessagesSoFar.value;
     saveSettings();
   });
 
@@ -5115,14 +4398,12 @@ async function setupSettingsControls() {
   });
 
   sectionHeaderMemoryLevelContext?.addEventListener("input", () => {
-    state.settings.sectionHeaderMemoryLevelContext =
-      sectionHeaderMemoryLevelContext.value;
+    state.settings.sectionHeaderMemoryLevelContext = sectionHeaderMemoryLevelContext.value;
     saveSettings();
   });
 
   sectionHeaderMemoryEntry?.addEventListener("input", () => {
-    state.settings.sectionHeaderMemoryEntry =
-      sectionHeaderMemoryEntry.value;
+    state.settings.sectionHeaderMemoryEntry = sectionHeaderMemoryEntry.value;
     saveSettings();
   });
 
@@ -5142,14 +4423,12 @@ async function setupSettingsControls() {
   });
 
   summaryMessagesPreProcessingJson?.addEventListener("input", () => {
-    state.settings.summaryMessagesPreProcessingJson =
-      summaryMessagesPreProcessingJson.value;
+    state.settings.summaryMessagesPreProcessingJson = summaryMessagesPreProcessingJson.value;
     saveSettings();
   });
 
   if (memoryRelevanceFilterToggle) {
-    memoryRelevanceFilterToggle.checked =
-      state.settings.memoryRelevanceFilterEnabled === true;
+    memoryRelevanceFilterToggle.checked = state.settings.memoryRelevanceFilterEnabled === true;
     memoryRelevanceFilterToggle.addEventListener("change", () => {
       const enabled = memoryRelevanceFilterToggle.checked;
       state.settings.memoryRelevanceFilterEnabled = enabled;
@@ -5170,19 +4449,13 @@ async function setupSettingsControls() {
   });
 
   writingInstructionsInjectionWhen?.addEventListener("change", () => {
-    state.settings.writingInstructionsInjectionWhen =
-      normalizeWritingInstructionsTiming(
-        writingInstructionsInjectionWhen.value,
-      );
-    writingInstructionsInjectionWhen.value =
-      state.settings.writingInstructionsInjectionWhen;
+    state.settings.writingInstructionsInjectionWhen = normalizeWritingInstructionsTiming(writingInstructionsInjectionWhen.value);
+    writingInstructionsInjectionWhen.value = state.settings.writingInstructionsInjectionWhen;
     saveSettings();
   });
 
   cancelShortcut.addEventListener("change", () => {
-    state.settings.cancelShortcut = normalizeShortcutString(
-      cancelShortcut.value,
-    );
+    state.settings.cancelShortcut = normalizeShortcutString(cancelShortcut.value);
     cancelShortcut.value = state.settings.cancelShortcut;
     saveSettings();
   });
@@ -5192,16 +4465,13 @@ async function setupSettingsControls() {
     saveSettings();
   });
   newCharacterShortcut.addEventListener("change", () => {
-    state.settings.newCharacterShortcut = normalizeShortcutString(
-      newCharacterShortcut.value,
-    );
+    state.settings.newCharacterShortcut = normalizeShortcutString(newCharacterShortcut.value);
     newCharacterShortcut.value = state.settings.newCharacterShortcut;
     saveSettings();
   });
   if (defaultPersonaInjectionPlacement) {
     defaultPersonaInjectionPlacement.addEventListener("change", () => {
-      state.settings.defaultPersonaInjectionPlacement =
-        defaultPersonaInjectionPlacement.value;
+      state.settings.defaultPersonaInjectionPlacement = defaultPersonaInjectionPlacement.value;
       saveSettings();
     });
   }
@@ -5235,9 +4505,7 @@ async function setupSettingsControls() {
   if (defaultAutoTitleMinMessagesInput) {
     defaultAutoTitleMinMessagesInput.addEventListener("input", () => {
       const entered = Number(defaultAutoTitleMinMessagesInput.value);
-      const normalized = Number.isFinite(entered)
-        ? Math.min(Math.max(entered, 1), 50)
-        : DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
+      const normalized = Number.isFinite(entered) ? Math.min(Math.max(entered, 1), 50) : DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
       defaultAutoTitleMinMessagesInput.value = String(normalized);
       state.settings.defaultAutoTitleMinMessages = normalized;
       saveSettings();
@@ -5367,8 +4635,7 @@ async function setupSettingsControls() {
   if (sttSilenceDuration) {
     sttSilenceDuration.addEventListener("change", () => {
       const val = parseInt(sttSilenceDuration.value, 10);
-      state.settings.sttSilenceDuration =
-        isFinite(val) && val >= 1 && val <= 10 ? val : 2;
+      state.settings.sttSilenceDuration = isFinite(val) && val >= 1 && val <= 10 ? val : 2;
       saveSettings();
     });
   }
@@ -5425,8 +4692,7 @@ function getSettingsGroupForNode(node) {
     has("#temperature-slider")
   )
     return "api";
-  if (has("#model-selected-meta") || has("#model-roleplay-warning"))
-    return "api";
+  if (has("#model-selected-meta") || has("#model-roleplay-warning")) return "api";
   if (
     has("#markdown-enabled") ||
     has("#allow-message-html") ||
@@ -5439,12 +4705,7 @@ function getSettingsGroupForNode(node) {
     has("#chat-message-alignment")
   )
     return "threads";
-  if (
-    has("#cancel-shortcut") ||
-    has("#home-shortcut") ||
-    has("#new-character-shortcut")
-  )
-    return "shortcuts";
+  if (has("#cancel-shortcut") || has("#home-shortcut") || has("#new-character-shortcut")) return "shortcuts";
   if (
     has("#global-prompt-template") ||
     has("#summary-system-prompt") ||
@@ -5453,12 +4714,7 @@ function getSettingsGroupForNode(node) {
     has("#writing-instructions-injection-when")
   )
     return "prompting";
-  if (
-    has("#ui-language-select") ||
-    has("#toast-delay-slider") ||
-    has("#marquee-behavior-select")
-  )
-    return "appearance";
+  if (has("#ui-language-select") || has("#toast-delay-slider") || has("#marquee-behavior-select")) return "appearance";
   const text = `${node.textContent || ""}`.toLowerCase();
   if (
     id === "ai-provider-select" ||
@@ -5496,11 +4752,7 @@ function getSettingsGroupForNode(node) {
   ) {
     return "threads";
   }
-  if (
-    id === "cancel-shortcut" ||
-    id === "home-shortcut" ||
-    id === "new-character-shortcut"
-  ) {
+  if (id === "cancel-shortcut" || id === "home-shortcut" || id === "new-character-shortcut") {
     return "shortcuts";
   }
   if (
@@ -5537,7 +4789,7 @@ function setupSettingsTabsLayout() {
 
   // Initialize: show only first tab, hide others
   const firstGroup = groups[0];
-  body.querySelectorAll("[data-settings-group]").forEach(g => {
+  body.querySelectorAll("[data-settings-group]").forEach((g) => {
     const group = g.getAttribute("data-settings-group");
     if (group === firstGroup) {
       g.classList.remove("hidden");
@@ -5551,16 +4803,16 @@ function setupSettingsTabsLayout() {
       const tab = btn.getAttribute("data-settings-tab-btn") || "appearance";
       localStorage.setItem("rp-settings-last-tab", tab);
       tabs.forEach((b) => b.classList.toggle("active", b === btn));
-      
+
       // Show/hide settings-group elements directly
-      body.querySelectorAll("[data-settings-group]").forEach(g => {
+      body.querySelectorAll("[data-settings-group]").forEach((g) => {
         const group = g.getAttribute("data-settings-group");
         if (group === tab) {
           g.classList.remove("hidden");
           // Set up collapsible textareas for newly visible tab
           setupModalTextareas(g);
           // Restore collapse states for prompting tab
-          if (group === "prompting") {
+          if (group === "prompting" || group === "threads") {
             requestAnimationFrame(() => {
               restoreSettingsPromptingTextareaCollapseStates();
             });
@@ -5608,9 +4860,7 @@ function loadSettings() {
     if (raw) {
       const parsed = JSON.parse(raw);
       state.settings = { ...DEFAULT_SETTINGS, ...parsed };
-      state.settings.marqueeBehavior = normalizeMarqueeBehavior(
-        state.settings.marqueeBehavior,
-      );
+      state.settings.marqueeBehavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
     }
   } catch {
     state.settings = { ...DEFAULT_SETTINGS };
@@ -5626,30 +4876,18 @@ function loadUiState() {
       state.shortcutsVisible = parsed.shortcutsVisible;
     }
     if (Array.isArray(parsed.characterTagFilters)) {
-      state.characterTagFilters = parsed.characterTagFilters
-        .map((t) => normalizeTagValue(t))
-        .filter(Boolean);
+      state.characterTagFilters = parsed.characterTagFilters.map((t) => normalizeTagValue(t)).filter(Boolean);
     }
     if (typeof parsed.characterSearchQuery === "string") {
       state.characterSearchQuery = parsed.characterSearchQuery;
     }
-    if (
-      typeof parsed.characterSortMode === "string" &&
-      parsed.characterSortMode
-    ) {
+    if (typeof parsed.characterSortMode === "string" && parsed.characterSortMode) {
       const parts = getCharacterSortParts(parsed.characterSortMode);
       state.characterSortMode = `${parts.base}_${parts.dir}`;
     }
-    if (
-      parsed.characterPagination &&
-      typeof parsed.characterPagination === "object"
-    ) {
+    if (parsed.characterPagination && typeof parsed.characterPagination === "object") {
       const perPageVal = Number(parsed.characterPagination.perPage);
-      if (
-        Number.isFinite(perPageVal) &&
-        perPageVal >= 0 &&
-        CHARACTER_PAGE_SIZES.includes(perPageVal)
-      ) {
+      if (Number.isFinite(perPageVal) && perPageVal >= 0 && CHARACTER_PAGE_SIZES.includes(perPageVal)) {
         state.characterCardsPerPage = perPageVal;
       }
       const pageVal = Number(parsed.characterPagination.page);
@@ -5659,8 +4897,7 @@ function loadUiState() {
     }
     const filters = document.getElementById("character-filters");
     if (filters) {
-      const isCollapsed =
-        localStorage.getItem("rp-filters-collapsed") === "true";
+      const isCollapsed = localStorage.getItem("rp-filters-collapsed") === "true";
       if (isCollapsed) {
         filters.classList.add("collapsed");
       } else {
@@ -5680,17 +4917,11 @@ function saveUiState() {
     "rp-ui-state",
     JSON.stringify({
       shortcutsVisible: !!state.shortcutsVisible,
-      characterTagFilters: Array.isArray(state.characterTagFilters)
-        ? state.characterTagFilters
-        : [],
+      characterTagFilters: Array.isArray(state.characterTagFilters) ? state.characterTagFilters : [],
       characterSearchQuery: state.characterSearchQuery || "",
       characterPagination: {
         page: Math.max(1, Number(state.characterPage) || 1),
-        perPage: CHARACTER_PAGE_SIZES.includes(
-          Number(state.characterCardsPerPage),
-        )
-          ? Number(state.characterCardsPerPage)
-          : 0,
+        perPage: CHARACTER_PAGE_SIZES.includes(Number(state.characterCardsPerPage)) ? Number(state.characterCardsPerPage) : 0,
       },
       characterSortMode: state.characterSortMode || "updated_desc",
     }),
@@ -5711,18 +4942,13 @@ function exportSettings() {
     exportedAt: new Date().toISOString(),
     settings: { ...state.settings },
     promptHistory: promptHistoryRaw ? JSON.parse(promptHistoryRaw) : [],
-    promptCommandHistory: promptCommandHistoryRaw
-      ? JSON.parse(promptCommandHistoryRaw)
-      : [],
+    promptCommandHistory: promptCommandHistoryRaw ? JSON.parse(promptCommandHistoryRaw) : [],
     theme: theme || "",
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
-  const safeDate = new Date()
-    .toISOString()
-    .replace([":", ".", "T", "Z"], "-")
-    .slice(0, 16);
+  const safeDate = new Date().toISOString().replace([":", ".", "T", "Z"], "-").slice(0, 16);
   downloadBlob(blob, `settings_${safeDate}.json`);
   showToast(t("settingsExported") || "Settings exported.", "success");
 }
@@ -5751,8 +4977,7 @@ function handleSettingsImport(event) {
       }
       const confirmed = await openConfirmDialog(
         t("importSettingsConfirmTitle") || "Import Settings",
-        t("importSettingsConfirmMessage") ||
-          "This will replace all your current settings. Are you sure?",
+        t("importSettingsConfirmMessage") || "This will replace all your current settings. Are you sure?",
       );
       if (!confirmed) return;
       const mergedSettings = { ...DEFAULT_SETTINGS, ...parsed.settings };
@@ -5763,10 +4988,7 @@ function handleSettingsImport(event) {
       }
       if (Array.isArray(parsed.promptHistory)) {
         try {
-          localStorage.setItem(
-            PROMPT_HISTORY_KEY,
-            JSON.stringify(parsed.promptHistory.slice(-PROMPT_HISTORY_MAX)),
-          );
+          localStorage.setItem(PROMPT_HISTORY_KEY, JSON.stringify(parsed.promptHistory.slice(-PROMPT_HISTORY_MAX)));
           state.promptHistory = parsed.promptHistory.slice(-PROMPT_HISTORY_MAX);
         } catch (err) {
           console.warn("Failed to restore prompt history:", err);
@@ -5774,15 +4996,8 @@ function handleSettingsImport(event) {
       }
       if (Array.isArray(parsed.promptCommandHistory)) {
         try {
-          localStorage.setItem(
-            PROMPT_COMMAND_HISTORY_KEY,
-            JSON.stringify(
-              parsed.promptCommandHistory.slice(-PROMPT_COMMAND_HISTORY_MAX),
-            ),
-          );
-          state.promptCommandHistory = parsed.promptCommandHistory.slice(
-            -PROMPT_COMMAND_HISTORY_MAX,
-          );
+          localStorage.setItem(PROMPT_COMMAND_HISTORY_KEY, JSON.stringify(parsed.promptCommandHistory.slice(-PROMPT_COMMAND_HISTORY_MAX)));
+          state.promptCommandHistory = parsed.promptCommandHistory.slice(-PROMPT_COMMAND_HISTORY_MAX);
         } catch (err) {
           console.warn("Failed to restore prompt command history:", err);
         }
@@ -5800,10 +5015,7 @@ function handleSettingsImport(event) {
       showToast(t("settingsImported") || "Settings imported successfully.", "success");
     } catch (err) {
       console.error("Failed to import settings:", err);
-      showToast(
-        t("importSettingsFailed") || "Failed to import settings: " + err.message,
-        "error",
-      );
+      showToast(t("importSettingsFailed") || "Failed to import settings: " + err.message, "error");
     }
   };
   reader.onerror = () => {
@@ -5814,10 +5026,7 @@ function handleSettingsImport(event) {
 
 function savePromptCommandHistory() {
   try {
-    localStorage.setItem(
-      PROMPT_COMMAND_HISTORY_KEY,
-      JSON.stringify(state.promptCommandHistory || []),
-    );
+    localStorage.setItem(PROMPT_COMMAND_HISTORY_KEY, JSON.stringify(state.promptCommandHistory || []));
   } catch (err) {
     console.warn("Failed to persist prompt command history:", err);
   }
@@ -5832,9 +5041,7 @@ function loadPromptCommandHistory() {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      state.promptCommandHistory = parsed
-        .filter((entry) => entry && typeof entry.content === "string")
-        .slice(-PROMPT_COMMAND_HISTORY_MAX);
+      state.promptCommandHistory = parsed.filter((entry) => entry && typeof entry.content === "string").slice(-PROMPT_COMMAND_HISTORY_MAX);
     } else {
       state.promptCommandHistory = [];
     }
@@ -5846,10 +5053,7 @@ function loadPromptCommandHistory() {
 
 function savePromptHistory() {
   try {
-    localStorage.setItem(
-      PROMPT_HISTORY_KEY,
-      JSON.stringify(state.promptHistory || []),
-    );
+    localStorage.setItem(PROMPT_HISTORY_KEY, JSON.stringify(state.promptHistory || []));
   } catch (err) {
     console.warn("Failed to persist prompt history:", err);
   }
@@ -5864,9 +5068,7 @@ function loadPromptHistory() {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      state.promptHistory = parsed
-        .filter((entry) => entry && typeof entry.content === "string")
-        .slice(-PROMPT_HISTORY_MAX);
+      state.promptHistory = parsed.filter((entry) => entry && typeof entry.content === "string").slice(-PROMPT_HISTORY_MAX);
     } else {
       state.promptHistory = [];
     }
@@ -5881,14 +5083,10 @@ function addPromptToHistory(threadId, content, isOoc = false) {
   const trimmed = String(content).trim();
   if (!trimmed) return;
 
-  state.promptHistory = Array.isArray(state.promptHistory)
-    ? state.promptHistory
-    : [];
+  state.promptHistory = Array.isArray(state.promptHistory) ? state.promptHistory : [];
 
   // Check most recent prompt history entry for this thread
-  const threadPromptEntries = state.promptHistory.filter(
-    (e) => e.threadId === threadId,
-  );
+  const threadPromptEntries = state.promptHistory.filter((e) => e.threadId === threadId);
   if (threadPromptEntries.length > 0) {
     threadPromptEntries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     if (threadPromptEntries[0].content === trimmed) {
@@ -5897,9 +5095,7 @@ function addPromptToHistory(threadId, content, isOoc = false) {
   }
 
   // Check most recent command history entry for this thread
-  const commandEntries = (state.promptCommandHistory || []).filter(
-    (e) => e.threadId === threadId,
-  );
+  const commandEntries = (state.promptCommandHistory || []).filter((e) => e.threadId === threadId);
   if (commandEntries.length > 0) {
     commandEntries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     if (commandEntries[0].content === trimmed) {
@@ -5928,12 +5124,8 @@ function addPromptCommandEntry(threadId, content) {
   if (!content) return false;
   const trimmed = String(content).trim();
   if (!trimmed) return false;
-  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
-    ? state.promptCommandHistory
-    : [];
-  const existingIndex = state.promptCommandHistory.findIndex(
-    (entry) => entry.threadId === threadId && entry.content === trimmed,
-  );
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : [];
+  const existingIndex = state.promptCommandHistory.findIndex((entry) => entry.threadId === threadId && entry.content === trimmed);
   if (existingIndex >= 0) {
     state.promptCommandHistory.splice(existingIndex, 1);
   }
@@ -6021,11 +5213,7 @@ function normalizeShortcutString(value) {
   const mods = parts
     .map((m) => m.toLowerCase())
     .filter((m, i, arr) => arr.indexOf(m) === i)
-    .sort(
-      (a, b) =>
-        ["ctrl", "alt", "shift", "meta"].indexOf(a) -
-        ["ctrl", "alt", "shift", "meta"].indexOf(b),
-    )
+    .sort((a, b) => ["ctrl", "alt", "shift", "meta"].indexOf(a) - ["ctrl", "alt", "shift", "meta"].indexOf(b))
     .map((m) => {
       if (m === "ctrl") return "Ctrl";
       if (m === "alt") return "Alt";
@@ -6033,8 +5221,7 @@ function normalizeShortcutString(value) {
       if (m === "meta") return "Meta";
       return m;
     });
-  const normalizedKey =
-    key.length === 1 ? key.toUpperCase() : key[0].toUpperCase() + key.slice(1);
+  const normalizedKey = key.length === 1 ? key.toUpperCase() : key[0].toUpperCase() + key.slice(1);
   return [...mods, normalizedKey].join("+");
 }
 
@@ -6098,10 +5285,7 @@ function updateCooldownPinnedToast(secondsOverride = null) {
   const container = document.getElementById("toast-container");
   if (!container) return;
   const existing = container.querySelector(".toast.cooldown-pinned");
-  const seconds =
-    Number.isFinite(Number(secondsOverride)) && Number(secondsOverride) > 0
-      ? Number(secondsOverride)
-      : getCooldownRemainingSeconds();
+  const seconds = Number.isFinite(Number(secondsOverride)) && Number(secondsOverride) > 0 ? Number(secondsOverride) : getCooldownRemainingSeconds();
   const active = seconds > 0;
   if (!active) {
     existing?.remove();
@@ -6131,8 +5315,7 @@ function openConfirmDialog(title, message) {
     noBtn.classList.remove("hidden");
     cancelBtn.classList.remove("hidden");
     state.confirmMode = "confirm";
-    document.getElementById("confirm-title").textContent =
-      title || t("confirm");
+    document.getElementById("confirm-title").textContent = title || t("confirm");
     const messageContent = document.getElementById("confirm-message-content");
     if (messageContent) {
       messageContent.textContent = message || "";
@@ -6172,8 +5355,7 @@ function openInfoDialog(title, message) {
     noBtn.classList.add("hidden");
     cancelBtn.classList.add("hidden");
     state.confirmMode = "info";
-    document.getElementById("confirm-title").textContent =
-      title || t("message");
+    document.getElementById("confirm-title").textContent = title || t("message");
     const messageContent = document.getElementById("confirm-message-content");
     if (messageContent) {
       messageContent.textContent = message || "";
@@ -6200,14 +5382,7 @@ function resolveConfirmDialog(value) {
   if (typeof resolver === "function") resolver(!!value);
 }
 
-function openTextInputDialog({
-  title = "",
-  label = "",
-  value = "",
-  saveLabel = "",
-  cancelLabel = "",
-  maxLength = 128,
-} = {}) {
+function openTextInputDialog({ title = "", label = "", value = "", saveLabel = "", cancelLabel = "", maxLength = 128 } = {}) {
   return new Promise((resolve) => {
     const modal = document.getElementById("text-input-modal");
     const titleEl = document.getElementById("text-input-title");
@@ -6330,11 +5505,9 @@ function parseShortcutEntries(raw) {
     }
     if (!current) continue;
     if (key === "message") current.message = value;
-    if (key === "insertiontype")
-      current.insertionType = value.trim().toLowerCase();
+    if (key === "insertiontype") current.insertionType = value.trim().toLowerCase();
     if (key === "autosend") current.autoSend = value.trim().toLowerCase();
-    if (key === "clearaftersend")
-      current.clearAfterSend = value.trim().toLowerCase();
+    if (key === "clearaftersend") current.clearAfterSend = value.trim().toLowerCase();
   }
   pushCurrent();
   return entries;
@@ -6342,10 +5515,7 @@ function parseShortcutEntries(raw) {
 
 function serializeShortcutEntries(entries) {
   return entries
-    .map(
-      (s) =>
-        `@name=${s.name}\n@message=${s.message}\n@insertionType=${s.insertionType}\n@autoSend=${s.autoSend ? "yes" : "no"}\n@clearAfterSend=${s.clearAfterSend ? "yes" : "no"}`,
-    )
+    .map((s) => `@name=${s.name}\n@message=${s.message}\n@insertionType=${s.insertionType}\n@autoSend=${s.autoSend ? "yes" : "no"}\n@clearAfterSend=${s.clearAfterSend ? "yes" : "no"}`)
     .join("\n\n");
 }
 
@@ -6368,9 +5538,7 @@ function isValidNewManagerTag(inputValue, editingTag = null) {
   const tag = normalizeTagValue(inputValue);
   if (tag.length < 2) return false;
   const normalizedTag = tag.toLowerCase();
-  const editingLower = editingTag
-    ? String(editingTag || "").toLowerCase()
-    : null;
+  const editingLower = editingTag ? String(editingTag || "").toLowerCase() : null;
   return !getAllAvailableTags().some((t) => {
     const lower = t.toLowerCase();
     if (editingLower && lower === editingLower) {
@@ -6428,13 +5596,9 @@ async function addTagFromManagerInput() {
   if (tag.length < 2) return;
   if (!isValidNewManagerTag(tag, state.tagManagerEditingTag)) return;
   const editingTag = state.tagManagerEditingTag;
-  const existing = Array.isArray(state.settings.customTags)
-    ? [...state.settings.customTags]
-    : [];
+  const existing = Array.isArray(state.settings.customTags) ? [...state.settings.customTags] : [];
   if (editingTag) {
-    const normalizedIndex = existing.findIndex(
-      (t) => t.toLowerCase() === editingTag.toLowerCase(),
-    );
+    const normalizedIndex = existing.findIndex((t) => t.toLowerCase() === editingTag.toLowerCase());
     if (normalizedIndex >= 0) {
       existing[normalizedIndex] = tag;
     } else {
@@ -6465,36 +5629,21 @@ async function removeTagFromCatalog(tag) {
   const lower = normalized.toLowerCase();
   if (!normalized) return;
   const allCharacters = await db.characters.toArray();
-  const affectedCharacters = allCharacters.filter((char) =>
-    (Array.isArray(char.tags) ? char.tags : []).some(
-      (t) => String(t || "").toLowerCase() === lower,
-    ),
-  );
+  const affectedCharacters = allCharacters.filter((char) => (Array.isArray(char.tags) ? char.tags : []).some((t) => String(t || "").toLowerCase() === lower));
   if (affectedCharacters.length > 0) {
     const affectedList = affectedCharacters
       .slice(0, 12)
       .map((c) => `- ${c.name || `Character #${c.id}`} (#${c.id})`)
       .join("\n\n");
-    const extra =
-      affectedCharacters.length > 12
-        ? `\n\n...and ${affectedCharacters.length - 12} more.`
-        : "";
-    const ok = await openConfirmDialog(
-      t("removeTagTitle"),
-      tf("removeTagAffectsChars", { list: affectedList, extra }),
-    );
+    const extra = affectedCharacters.length > 12 ? `\n\n...and ${affectedCharacters.length - 12} more.` : "";
+    const ok = await openConfirmDialog(t("removeTagTitle"), tf("removeTagAffectsChars", { list: affectedList, extra }));
     if (!ok) return;
   } else {
-    const ok = await openConfirmDialog(
-      t("removeTagTitle"),
-      t("removeTagConfirmSimple"),
-    );
+    const ok = await openConfirmDialog(t("removeTagTitle"), t("removeTagConfirmSimple"));
     if (!ok) return;
   }
 
-  const nextTags = (
-    Array.isArray(state.settings.customTags) ? state.settings.customTags : []
-  ).filter((t) => String(t || "").toLowerCase() !== lower);
+  const nextTags = (Array.isArray(state.settings.customTags) ? state.settings.customTags : []).filter((t) => String(t || "").toLowerCase() !== lower);
   state.settings.customTags = nextTags;
   state.settings.tagsInitialized = true;
   saveSettings();
@@ -6502,9 +5651,7 @@ async function removeTagFromCatalog(tag) {
   if (affectedCharacters.length > 0) {
     await db.transaction("rw", db.characters, async () => {
       for (const char of affectedCharacters) {
-        const nextCharTags = (Array.isArray(char.tags) ? char.tags : []).filter(
-          (t) => String(t || "").toLowerCase() !== lower,
-        );
+        const nextCharTags = (Array.isArray(char.tags) ? char.tags : []).filter((t) => String(t || "").toLowerCase() !== lower);
         await db.characters.update(char.id, {
           tags: nextCharTags,
           updatedAt: Date.now(),
@@ -6513,9 +5660,7 @@ async function removeTagFromCatalog(tag) {
     });
   }
 
-  state.characterTagFilters = state.characterTagFilters.filter(
-    (t) => String(t || "").toLowerCase() !== lower,
-  );
+  state.characterTagFilters = state.characterTagFilters.filter((t) => String(t || "").toLowerCase() !== lower);
   saveUiState();
   if (currentCharacter) {
     const refreshed = await db.characters.get(currentCharacter.id);
@@ -6580,17 +5725,13 @@ async function renderShortcutsBar() {
       if (state.settings.markdownEnabled) {
         const md = getMarkdownParser();
         if (md) {
-          const truncated = entry.message.length > 200
-            ? entry.message.slice(0, 200) + "..."
-            : entry.message;
+          const truncated = entry.message.length > 200 ? entry.message.slice(0, 200) + "..." : entry.message;
           shortcutTooltip.innerHTML = md.render(truncated);
         } else {
           shortcutTooltip.textContent = tooltipContent;
         }
       } else {
-        const truncated = entry.message.length > 200
-          ? entry.message.slice(0, 200) + "..."
-          : entry.message;
+        const truncated = entry.message.length > 200 ? entry.message.slice(0, 200) + "..." : entry.message;
         shortcutTooltip.textContent = truncated;
       }
 
@@ -6682,13 +5823,7 @@ async function applyShortcutEntry(entry, forceSend = false) {
 }
 
 async function renderAll() {
-  await Promise.all([
-    renderCharacters(),
-    renderThreads(),
-    renderPersonaSelector(),
-    renderPersonaModalList(),
-    renderShortcutsBar(),
-  ]);
+  await Promise.all([renderCharacters(), renderThreads(), renderPersonaSelector(), renderPersonaModalList(), renderShortcutsBar()]);
   renderCharacterTagFilterChips();
 }
 
@@ -6705,10 +5840,7 @@ function initCharacterCardHoverVideos(card, avatarWrap, videoAvatars) {
     video.playsInline = true;
     video.preload = "auto";
     video.loop = false;
-    const src =
-      avatarData.data instanceof Blob
-        ? getCachedAvatarBlobUrl(avatarData.data)
-        : avatarData.data;
+    const src = avatarData.data instanceof Blob ? getCachedAvatarBlobUrl(avatarData.data) : avatarData.data;
     if (src) {
       video.src = src;
     }
@@ -6798,10 +5930,10 @@ async function renderCharacters() {
     filters.classList.toggle("hidden", characters.length === 0);
   }
 
-  const activeFilters = Array.isArray(state.characterTagFilters)
-    ? state.characterTagFilters.map((t) => t.toLowerCase())
-    : [];
-  const searchQuery = String(state.characterSearchQuery || "").toLowerCase().trim();
+  const activeFilters = Array.isArray(state.characterTagFilters) ? state.characterTagFilters.map((t) => t.toLowerCase()) : [];
+  const searchQuery = String(state.characterSearchQuery || "")
+    .toLowerCase()
+    .trim();
   const filteredCharacters = characters.filter((char) => {
     if (searchQuery) {
       const name = String(char.name || "").toLowerCase();
@@ -6812,9 +5944,7 @@ async function renderCharacters() {
       }
     }
     if (activeFilters.length === 0) return true;
-    const tags = Array.isArray(char.tags)
-      ? char.tags.map((t) => String(t || "").toLowerCase())
-      : [];
+    const tags = Array.isArray(char.tags) ? char.tags.map((t) => String(t || "").toLowerCase()) : [];
     return activeFilters.every((f) => tags.includes(f));
   });
 
@@ -6842,24 +5972,15 @@ async function renderCharacters() {
     if (mode === "created_asc") return createdA - createdB;
     if (mode === "created_desc") return createdB - createdA;
     if (mode === "updated_asc") return updatedA - updatedB;
-    if (mode === "threads_asc")
-      return threadsA - threadsB || updatedB - updatedA;
-    if (mode === "threads_desc")
-      return threadsB - threadsA || updatedB - updatedA;
+    if (mode === "threads_asc") return threadsA - threadsB || updatedB - updatedA;
+    if (mode === "threads_desc") return threadsB - threadsA || updatedB - updatedA;
     return updatedB - updatedA;
   });
 
   const perPageSetting = Number(state.characterCardsPerPage);
-  const perPage = CHARACTER_PAGE_SIZES.includes(perPageSetting)
-    ? perPageSetting
-    : 0;
+  const perPage = CHARACTER_PAGE_SIZES.includes(perPageSetting) ? perPageSetting : 0;
   const totalCharacters = sortedCharacters.length;
-  const totalPages =
-    totalCharacters === 0
-      ? 0
-      : perPage > 0
-        ? Math.max(1, Math.ceil(totalCharacters / perPage))
-        : 1;
+  const totalPages = totalCharacters === 0 ? 0 : perPage > 0 ? Math.max(1, Math.ceil(totalCharacters / perPage)) : 1;
   let currentPage = Number(state.characterPage) || 1;
   if (totalPages === 0) {
     currentPage = 1;
@@ -6867,15 +5988,7 @@ async function renderCharacters() {
     currentPage = Math.max(1, Math.min(currentPage, totalPages));
   }
   state.characterPage = currentPage;
-  const charactersToRender =
-    totalCharacters === 0
-      ? []
-      : perPage > 0
-        ? sortedCharacters.slice(
-            (currentPage - 1) * perPage,
-            (currentPage - 1) * perPage + perPage,
-          )
-        : sortedCharacters;
+  const charactersToRender = totalCharacters === 0 ? [] : perPage > 0 ? sortedCharacters.slice((currentPage - 1) * perPage, (currentPage - 1) * perPage + perPage) : sortedCharacters;
 
   const existingCards = grid.querySelectorAll(".character-card");
   const carouselStates = new Map();
@@ -6892,31 +6005,20 @@ async function renderCharacters() {
   if (totalCharacters === 0) {
     const empty = document.createElement("p");
     empty.className = "muted";
-    empty.textContent =
-      activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
+    empty.textContent = activeFilters.length > 0 ? t("noTagsMatched") : t("noCharactersStart");
     grid.appendChild(empty);
     updateCharacterPaginationControls(0, 0);
     return;
   }
 
   charactersToRender.forEach((char) => {
-    const resolved = resolveCharacterForLanguage(
-      char,
-      char?.selectedCardLanguage,
-    );
+    const resolved = resolveCharacterForLanguage(char, char?.selectedCardLanguage);
     const threadCount = Number(char.threadCount) || 0;
     const card = document.createElement("article");
     card.className = "character-card";
     card.dataset.characterId = String(char.id);
-    if (
-      state.characterCardSlide &&
-      Number(state.characterCardSlide.charId) === Number(char.id)
-    ) {
-      card.classList.add(
-        state.characterCardSlide.direction === "prev"
-          ? "card-slide-prev"
-          : "card-slide-next",
-      );
+    if (state.characterCardSlide && Number(state.characterCardSlide.charId) === Number(char.id)) {
+      card.classList.add(state.characterCardSlide.direction === "prev" ? "card-slide-prev" : "card-slide-next");
     }
 
     const avatarWrap = document.createElement("div");
@@ -6925,14 +6027,10 @@ async function renderCharacters() {
     const avatars = resolved.avatars || [];
     const hasMultipleAvatars = avatars.length > 1;
     const avatarEffect = state.settings.botCardAvatarEffect || "none";
-    const avatarTransitionDelay =
-      Number(state.settings.botCardAvatarTransitionDelay) || 4;
+    const avatarTransitionDelay = Number(state.settings.botCardAvatarTransitionDelay) || 4;
     const transitionDelayMs = avatarTransitionDelay * 1000;
-    const videoAvatars = avatars.filter(
-      (avatar) => avatar?.type === "video" && avatar.data,
-    );
-    const hoverEffectEnabled =
-      avatarEffect === "hover" && videoAvatars.length > 0;
+    const videoAvatars = avatars.filter((avatar) => avatar?.type === "video" && avatar.data);
+    const hoverEffectEnabled = avatarEffect === "hover" && videoAvatars.length > 0;
 
     if (hasMultipleAvatars && avatarEffect === "carousel") {
       let currentAvatarIndex = 0;
@@ -6950,10 +6048,7 @@ async function renderCharacters() {
           el = document.createElement("img");
         }
         el.className = "character-avatar";
-        el.src =
-          avatarData.data instanceof Blob
-            ? getCachedAvatarBlobUrl(avatarData.data)
-            : avatarData.data;
+        el.src = avatarData.data instanceof Blob ? getCachedAvatarBlobUrl(avatarData.data) : avatarData.data;
         el.alt = `${resolved.name || "Character"} avatar`;
         el.style.position = "absolute";
         el.style.top = "0";
@@ -6993,10 +6088,7 @@ async function renderCharacters() {
               advanceCarousel();
             } else {
               const remainingDelay = avatarTransitionDelay - videoDuration;
-              carouselInterval = setTimeout(
-                advanceCarousel,
-                remainingDelay * 1000,
-              );
+              carouselInterval = setTimeout(advanceCarousel, remainingDelay * 1000);
             }
           });
         }
@@ -7028,10 +6120,7 @@ async function renderCharacters() {
 
       const advanceCarousel = () => {
         const currentEl = avatarElements[currentAvatarIndex];
-        if (
-          currentEl.tagName === "VIDEO" &&
-          currentEl.dataset.videoEnded !== "true"
-        ) {
+        if (currentEl.tagName === "VIDEO" && currentEl.dataset.videoEnded !== "true") {
           const videoDuration = Number(currentEl.dataset.duration) || 0;
           if (videoDuration > 0 && videoDuration > avatarTransitionDelay) {
             currentEl.currentTime = 0;
@@ -7129,12 +6218,7 @@ async function renderCharacters() {
       const avatar = document.createElement("img");
       avatar.className = "character-avatar";
       avatar.alt = `${resolved.name || "Character"} avatar`;
-      setCharacterAvatarImage(
-        avatar,
-        resolved,
-        resolved.name || "Character",
-        512,
-      );
+      setCharacterAvatarImage(avatar, resolved, resolved.name || "Character", 512);
       avatar.addEventListener("click", () => {
         const lang = card.dataset.activeCardLanguage;
         openCharacterModal(char, lang);
@@ -7146,13 +6230,8 @@ async function renderCharacters() {
     const pinBtn = document.createElement("button");
     pinBtn.type = "button";
     pinBtn.className = "character-pin-btn";
-    pinBtn.setAttribute(
-      "aria-label",
-      char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle"),
-    );
-    pinBtn.title = char.pinned
-      ? t("unpinCharacterTitle")
-      : t("pinCharacterTitle");
+    pinBtn.setAttribute("aria-label", char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle"));
+    pinBtn.title = char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle");
     pinBtn.innerHTML = char.pinned ? ICONS.pinFilled : ICONS.pin;
     pinBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -7208,8 +6287,7 @@ async function renderCharacters() {
     const langFlagsScrollData = JSON.parse(localStorage.getItem(langFlagsScrollKey) || "null");
     const definitions = resolved.definitions || [];
     const langFlagsCount = definitions.length;
-    const activeLang =
-      resolved.activeLanguage || definitions[0]?.language || "en";
+    const activeLang = resolved.activeLanguage || definitions[0]?.language || "en";
     card.dataset.activeCardLanguage = activeLang;
     definitions.forEach((def) => {
       const flag = createLanguageFlagRibbonElement(def.language);
@@ -7230,8 +6308,7 @@ async function renderCharacters() {
           const flags = card.querySelectorAll(".character-lang-flag");
           flags.forEach((f) => f.classList.remove("active"));
           e.target.classList.add("active");
-          const targetDef =
-            definitions.find((d) => d.language === def.language) || def;
+          const targetDef = definitions.find((d) => d.language === def.language) || def;
           const displayName = targetDef?.name || resolved.name || "Unnamed";
           applyHoverMarquee(name, displayName);
           const displayTagline = targetDef?.tagline || "";
@@ -7242,11 +6319,7 @@ async function renderCharacters() {
       langFlagsWrap.appendChild(flag);
     });
 
-    if (
-      langFlagsScrollData &&
-      langFlagsScrollData.count === langFlagsCount &&
-      langFlagsScrollData.scrollLeft > 0
-    ) {
+    if (langFlagsScrollData && langFlagsScrollData.count === langFlagsCount && langFlagsScrollData.scrollLeft > 0) {
       window.requestAnimationFrame(() => {
         langFlagsWrap.scrollLeft = langFlagsScrollData.scrollLeft;
       });
@@ -7277,13 +6350,9 @@ async function renderCharacters() {
       chip.addEventListener("click", async (e) => {
         e.stopPropagation();
         const lower = tag.toLowerCase();
-        const exists = state.characterTagFilters.some(
-          (t) => t.toLowerCase() === lower,
-        );
+        const exists = state.characterTagFilters.some((t) => t.toLowerCase() === lower);
         if (exists) {
-          state.characterTagFilters = state.characterTagFilters.filter(
-            (t) => t.toLowerCase() !== lower,
-          );
+          state.characterTagFilters = state.characterTagFilters.filter((t) => t.toLowerCase() !== lower);
         } else {
           state.characterTagFilters.push(tag);
         }
@@ -7315,11 +6384,7 @@ async function renderCharacters() {
     const tagsScrollKey = `rp-char-tags-scroll-${charIdStr}`;
     const tagsScrollData = JSON.parse(localStorage.getItem(tagsScrollKey) || "null");
     const tagsCount = tags.length;
-    if (
-      tagsScrollData &&
-      tagsScrollData.count === tagsCount &&
-      tagsScrollData.scrollLeft > 0
-    ) {
+    if (tagsScrollData && tagsScrollData.count === tagsCount && tagsScrollData.scrollLeft > 0) {
       window.requestAnimationFrame(() => {
         tagsWrap.scrollLeft = tagsScrollData.scrollLeft;
       });
@@ -7336,10 +6401,7 @@ async function renderCharacters() {
     const newChatBtn = document.createElement("button");
     newChatBtn.type = "button";
     newChatBtn.className = "secondary-btn new-chat-btn";
-    newChatBtn.setAttribute(
-      "aria-label",
-      tf("newChatAria", { name: resolved.name || "character" }),
-    );
+    newChatBtn.setAttribute("aria-label", tf("newChatAria", { name: resolved.name || "character" }));
 
     const newChatBtnMain = document.createElement("span");
     newChatBtnMain.className = "new-chat-btn-main";
@@ -7383,10 +6445,7 @@ async function renderCharacters() {
 
         if (persona.avatar) {
           const img = document.createElement("img");
-          img.src =
-            persona.avatar instanceof Blob
-              ? getCachedAvatarBlobUrl(persona.avatar)
-              : persona.avatar;
+          img.src = persona.avatar instanceof Blob ? getCachedAvatarBlobUrl(persona.avatar) : persona.avatar;
           item.appendChild(img);
         }
 
@@ -7428,11 +6487,7 @@ async function renderCharacters() {
       document.body.appendChild(personaDropdown);
 
       const closeDropdown = (e) => {
-        if (
-          personaDropdown &&
-          !personaDropdown.contains(e.target) &&
-          e.target !== newChatBtnDropdown
-        ) {
+        if (personaDropdown && !personaDropdown.contains(e.target) && e.target !== newChatBtnDropdown) {
           personaDropdownOpen = false;
           if (personaDropdown && personaDropdown.parentNode) {
             personaDropdown.parentNode.removeChild(personaDropdown);
@@ -7457,14 +6512,10 @@ async function renderCharacters() {
       }
     });
 
-    const deleteCharBtn = iconButton(
-      "delete",
-      t("deleteCharacterAria"),
-      async (e) => {
-        e.stopPropagation();
-        await deleteCharacter(char.id);
-      },
-    );
+    const deleteCharBtn = iconButton("delete", t("deleteCharacterAria"), async (e) => {
+      e.stopPropagation();
+      await deleteCharacter(char.id);
+    });
     deleteCharBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteCharBtn);
 
@@ -7513,9 +6564,7 @@ async function renderCharacters() {
   initPaginationResizeObserver();
 
   carouselStates.forEach((state, charId) => {
-    const card = grid.querySelector(
-      `.character-card[data-character-id="${charId}"]`,
-    );
+    const card = grid.querySelector(`.character-card[data-character-id="${charId}"]`);
     if (card && card._startCarousel) {
       const savedTimes = state.videoTimes || [];
       if (card._restoreVideoTimes) {
@@ -7537,11 +6586,7 @@ async function renderCharacters() {
   updateCarouselForPaneState();
 }
 
-function getCharacterPaginationRange(
-  currentPage,
-  totalPages,
-  windowSize = CHARACTER_PAGE_BUTTON_WINDOW,
-) {
+function getCharacterPaginationRange(currentPage, totalPages, windowSize = CHARACTER_PAGE_BUTTON_WINDOW) {
   const pages = [];
   if (totalPages <= 0) return pages;
   if (totalPages <= windowSize) {
@@ -7585,30 +6630,15 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
   if (lastBtn) lastBtn.disabled = !hasCharacters || totalPages <= 0 || state.characterPage >= totalPages;
 
   if (sizeSelect) {
-    const sanitizedPerPage = CHARACTER_PAGE_SIZES.includes(
-      Number(state.characterCardsPerPage),
-    )
-      ? Number(state.characterCardsPerPage)
-      : 0;
+    const sanitizedPerPage = CHARACTER_PAGE_SIZES.includes(Number(state.characterCardsPerPage)) ? Number(state.characterCardsPerPage) : 0;
     sizeSelect.value = String(sanitizedPerPage);
   }
 
   pagesContainer.innerHTML = "";
   if (!hasCharacters || totalPages <= 0 || isUnlimited) return;
 
-  const windowSize = getDynamicPageWindowSize(
-    pagesContainer,
-    prevBtn,
-    nextBtn,
-    firstBtn,
-    lastBtn,
-    totalPages,
-  );
-  const pageRange = getCharacterPaginationRange(
-    state.characterPage,
-    totalPages,
-    windowSize,
-  );
+  const windowSize = getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn, firstBtn, lastBtn, totalPages);
+  const pageRange = getCharacterPaginationRange(state.characterPage, totalPages, windowSize);
   const fragment = document.createDocumentFragment();
   pageRange.forEach((pageNum) => {
     const btn = document.createElement("button");
@@ -7649,7 +6679,7 @@ function measurePaginationButtonWidth(pagesContainer, labelText) {
   sample.style.top = "0";
   pagesContainer.appendChild(sample);
   const width = sample.getBoundingClientRect().width;
-sample.remove();
+  sample.remove();
   return width || 0;
 }
 
@@ -7686,16 +6716,11 @@ function getDynamicPageWindowSize(pagesContainer, prevBtn, nextBtn, firstBtn, la
   if (!(availableWidth > 0)) return MIN_BUTTONS;
 
   const labelText = String(totalPages || 0);
-  const buttonWidth = Math.max(
-    1,
-    measurePaginationButtonWidth(pagesContainer, labelText),
-  );
+  const buttonWidth = Math.max(1, measurePaginationButtonWidth(pagesContainer, labelText));
 
   // Use a small epsilon so fractional pixels at non-100% zoom don't undercount.
   const epsilon = 0.75;
-  const maxButtons = Math.floor(
-    (availableWidth + gap + epsilon) / (buttonWidth + gap),
-  );
+  const maxButtons = Math.floor((availableWidth + gap + epsilon) / (buttonWidth + gap));
 
   return Math.max(MIN_BUTTONS, maxButtons);
 }
@@ -7709,10 +6734,7 @@ function initPaginationResizeObserver() {
   }
   paginationResizeObserver = new ResizeObserver(() => {
     if (state.characterTotalItems > 0) {
-      updateCharacterPaginationControls(
-        state.characterTotalItems,
-        state.characterTotalPages,
-      );
+      updateCharacterPaginationControls(state.characterTotalItems, state.characterTotalPages);
     }
   });
   paginationResizeObserver.observe(container);
@@ -7756,9 +6778,7 @@ function updateDocumentTitleWithUnread() {
     }
     let title = "Scenara";
     let suffix = "";
-    const chatActive = document
-      .getElementById("chat-view")
-      ?.classList.contains("active");
+    const chatActive = document.getElementById("chat-view")?.classList.contains("active");
     if (state.activeModalId === "character-modal" && currentCharacter?.name) {
       suffix = currentCharacter.name;
     } else if (chatActive && currentThread?.title) {
@@ -7786,15 +6806,10 @@ function updateThreadMessageCount(threadId, messages) {
     const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
     msgCountEl.textContent = `${nonInitialCount + (hasInitialMessages ? 1 : 0)}`;
   }
-  if (
-    currentThread &&
-    Number(currentThread.id) === Number(threadId) &&
-    currentThread.unloadState
-  ) {
+  if (currentThread && Number(currentThread.id) === Number(threadId) && currentThread.unloadState) {
     const hasInitialMessages = (messages || []).some((m) => m.isInitial);
     const nonInitialCount = (messages || []).filter((m) => !m.isInitial).length;
-    currentThread.unloadState.totalMessageCount =
-      nonInitialCount + (hasInitialMessages ? 1 : 0);
+    currentThread.unloadState.totalMessageCount = nonInitialCount + (hasInitialMessages ? 1 : 0);
   }
 }
 
@@ -7813,11 +6828,7 @@ async function renderThreads() {
   });
 
   const existingIds = new Set(threads.map((t) => Number(t.id)));
-  state.selectedThreadIds = new Set(
-    Array.from(state.selectedThreadIds).filter((id) =>
-      existingIds.has(Number(id)),
-    ),
-  );
+  state.selectedThreadIds = new Set(Array.from(state.selectedThreadIds).filter((id) => existingIds.has(Number(id))));
 
   if (threads.length === 0) {
     list.innerHTML = "";
@@ -7828,9 +6839,7 @@ async function renderThreads() {
     return;
   }
 
-  const charIds = [
-    ...new Set(threads.map((t) => t.characterId).filter(Boolean)),
-  ];
+  const charIds = [...new Set(threads.map((t) => t.characterId).filter(Boolean))];
 
   // Use cached characters if available and not stale
   const now = Date.now();
@@ -7865,11 +6874,7 @@ async function renderThreads() {
     cache.timestamp = now;
   }
 
-  const queuePosByThreadId = new Map(
-    state.generationQueue
-      .map((id, i) => [Number(id), i + 1])
-      .filter(([id]) => Number.isInteger(id)),
-  );
+  const queuePosByThreadId = new Map(state.generationQueue.map((id, i) => [Number(id), i + 1]).filter(([id]) => Number.isInteger(id)));
 
   // Clear the list before building new content
   list.innerHTML = "";
@@ -7892,13 +6897,9 @@ async function renderThreads() {
     }
     updateThreadBulkBar();
   });
-  const deleteSelectedBtn = iconButton(
-    "delete",
-    t("deleteSelectedThreads"),
-    async () => {
-      await deleteSelectedThreads();
-    },
-  );
+  const deleteSelectedBtn = iconButton("delete", t("deleteSelectedThreads"), async () => {
+    await deleteSelectedThreads();
+  });
   deleteSelectedBtn.classList.add("danger-icon-btn", "thread-bulk-delete");
   bulkBar.append(selectAll, deleteSelectedBtn);
   fragment.appendChild(bulkBar);
@@ -7908,15 +6909,11 @@ async function renderThreads() {
   selectAll.indeterminate = selectedCount > 0 && selectedCount < threads.length;
   deleteSelectedBtn.disabled = selectedCount === 0;
 
-  const chatViewActive = document
-    .getElementById("chat-view")
-    ?.classList.contains("active");
+  const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
 
   for (const thread of threads) {
     const char = charMap.get(thread.characterId);
-    const resolvedChar = char
-      ? resolveCharacterForLanguage(char, thread.characterLanguage || "")
-      : null;
+    const resolvedChar = char ? resolveCharacterForLanguage(char, thread.characterLanguage || "") : null;
 
     const row = document.createElement("div");
     row.className = "thread-row";
@@ -7926,16 +6923,9 @@ async function renderThreads() {
     row.dataset.threadId = String(thread.id);
     row.addEventListener("click", (e) => {
       if (e.target?.closest(".actions")) return;
-      if (
-        e.target?.closest(".thread-tint-btn") ||
-        e.target?.closest(".thread-tint-input")
-      )
-        return;
-      const chatViewActive = document
-        .getElementById("chat-view")
-        ?.classList.contains("active");
-      if (chatViewActive && Number(currentThread?.id) === Number(thread.id))
-        return;
+      if (e.target?.closest(".thread-tint-btn") || e.target?.closest(".thread-tint-input")) return;
+      const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
+      if (chatViewActive && Number(currentThread?.id) === Number(thread.id)) return;
       openThread(thread.id);
     });
 
@@ -7968,17 +6958,9 @@ async function renderThreads() {
 
     const hasGeneratingMessage = threadHasActiveGeneratingMessage(thread);
     const hasSummarizingMessage = threadHasActiveSummarizingMessage(thread);
-    const isGenerating =
-      hasGeneratingMessage ||
-      (state.sending &&
-        Number(state.activeGenerationThreadId) === Number(thread.id));
-    const isInCooldown =
-      !isGenerating &&
-      String(thread.pendingGenerationReason || "").trim() === "cooldown" &&
-      isInCompletionCooldown();
-    const unreadCount = thread.messages
-      ? getUnreadAssistantCount(thread.messages)
-      : 0;
+    const isGenerating = hasGeneratingMessage || (state.sending && Number(state.activeGenerationThreadId) === Number(thread.id));
+    const isInCooldown = !isGenerating && String(thread.pendingGenerationReason || "").trim() === "cooldown" && isInCompletionCooldown();
+    const unreadCount = thread.messages ? getUnreadAssistantCount(thread.messages) : 0;
     const threadId = Number(thread.id);
     const previousUnreadCount = state.threadUnreadCounts[threadId] || 0;
     if (unreadCount > previousUnreadCount) {
@@ -7986,10 +6968,7 @@ async function renderThreads() {
     }
     state.threadUnreadCounts[threadId] = unreadCount;
     const isProcessingThread = isGenerating || hasSummarizingMessage;
-    const queuePos =
-      isProcessingThread || isInCooldown
-        ? 0
-        : queuePosByThreadId.get(Number(thread.id)) || 0;
+    const queuePos = isProcessingThread || isInCooldown ? 0 : queuePosByThreadId.get(Number(thread.id)) || 0;
     const statusBadges = document.createElement("div");
     statusBadges.className = "thread-status-badges";
     if (unreadCount > 0) {
@@ -8046,16 +7025,12 @@ async function renderThreads() {
     metaRight.className = "thread-meta-right";
     const metaId = document.createElement("span");
     metaId.textContent = `#${thread.id}`;
-    const metaLang = createLanguageFlagIconElement(
-      thread.characterLanguage || resolvedChar?.activeLanguage || "",
-      "thread-language-flag",
-    );
+    const metaLang = createLanguageFlagIconElement(thread.characterLanguage || resolvedChar?.activeLanguage || "", "thread-language-flag");
     metaRight.append(metaId, metaLang);
 
     const titleBtn = document.createElement("button");
     titleBtn.className = "thread-title";
-    const threadTitleText =
-      thread.title || tf("threadTitleDefault", { id: thread.id });
+    const threadTitleText = thread.title || tf("threadTitleDefault", { id: thread.id });
     applyHoverMarquee(titleBtn, threadTitleText);
     titleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -8121,13 +7096,7 @@ async function renderThreads() {
     });
     tintColorInput.addEventListener("input", (e) => {
       e.stopPropagation();
-      persistThreadTintColor(
-        thread,
-        row,
-        tintIndicator,
-        tintColorInput,
-        e.target?.value,
-      );
+      persistThreadTintColor(thread, row, tintIndicator, tintColorInput, e.target?.value);
     });
     tintColorInput.addEventListener("focus", () => {
       tintPickerOpen = true;
@@ -8145,14 +7114,10 @@ async function renderThreads() {
     tintColorInput.addEventListener("pointerdown", (e) => {
       e.stopPropagation();
     });
-    const renameMiniBtn = iconButton(
-      "edit",
-      t("renameThreadAria"),
-      async (e) => {
-        e.stopPropagation();
-        await renameThread(thread.id);
-      },
-    );
+    const renameMiniBtn = iconButton("edit", t("renameThreadAria"), async (e) => {
+      e.stopPropagation();
+      await renameThread(thread.id);
+    });
     renameMiniBtn.classList.add("thread-rename-mini");
     titleRowControls.append(tintBtn, renameMiniBtn);
     titleRow.append(titleBtn, titleRowControls);
@@ -8162,14 +7127,10 @@ async function renderThreads() {
     const actions = document.createElement("div");
     actions.className = "actions";
 
-    const deleteThreadBtn = iconButton(
-      "delete",
-      t("deleteThreadAria"),
-      async (e) => {
-        e.stopPropagation();
-        await deleteThread(thread.id);
-      },
-    );
+    const deleteThreadBtn = iconButton("delete", t("deleteThreadAria"), async (e) => {
+      e.stopPropagation();
+      await deleteThread(thread.id);
+    });
     deleteThreadBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteThreadBtn);
 
@@ -8183,24 +7144,16 @@ async function renderThreads() {
       );
     }
 
-    const duplicateBtn = iconButton(
-      "duplicate",
-      t("duplicateThreadAria"),
-      async (e) => {
-        e.stopPropagation();
-        await duplicateThread(thread.id);
-      },
-    );
+    const duplicateBtn = iconButton("duplicate", t("duplicateThreadAria"), async (e) => {
+      e.stopPropagation();
+      await duplicateThread(thread.id);
+    });
     duplicateBtn.disabled = threadHasPendingBotActivity(thread);
     actions.appendChild(duplicateBtn);
-    const favBtn = iconButton(
-      thread.favorite ? "starFilled" : "star",
-      thread.favorite ? t("unfavoriteThread") : t("favoriteThread"),
-      async (e) => {
-        e.stopPropagation();
-        await toggleThreadFavorite(thread.id);
-      },
-    );
+    const favBtn = iconButton(thread.favorite ? "starFilled" : "star", thread.favorite ? t("unfavoriteThread") : t("favoriteThread"), async (e) => {
+      e.stopPropagation();
+      await toggleThreadFavorite(thread.id);
+    });
     favBtn.classList.add("favorite-btn");
     if (thread.favorite) favBtn.classList.add("is-favorite");
     actions.appendChild(favBtn);
@@ -8248,13 +7201,7 @@ function applyThreadTintToRow(row, color) {
   row.style.removeProperty("--thread-tint-color");
 }
 
-async function persistThreadTintColor(
-  thread,
-  row,
-  tintIndicator,
-  tintColorInput,
-  color,
-) {
+async function persistThreadTintColor(thread, row, tintIndicator, tintColorInput, color) {
   if (!thread) return;
   const trimmed = typeof color === "string" ? color.trim() : "";
   const nextColor = trimmed ? normalizePersonaColor(trimmed) : "";
@@ -8286,29 +7233,17 @@ async function persistThreadTintColor(
 }
 
 async function deleteSelectedThreads() {
-  const ids = Array.from(state.selectedThreadIds)
-    .map(Number)
-    .filter(Number.isInteger);
+  const ids = Array.from(state.selectedThreadIds).map(Number).filter(Number.isInteger);
   if (ids.length === 0) return;
   const suffix = ids.length === 1 ? "" : "s";
-  const ok = await openConfirmDialog(
-    t("deleteThreadsTitle"),
-    tf("deleteSelectedThreadsConfirm", { count: ids.length, suffix }),
-  );
+  const ok = await openConfirmDialog(t("deleteThreadsTitle"), tf("deleteSelectedThreadsConfirm", { count: ids.length, suffix }));
   if (!ok) return;
 
   const activeId = Number(state.activeGenerationThreadId);
-  if (
-    state.sending &&
-    Number.isInteger(activeId) &&
-    ids.includes(activeId) &&
-    state.abortController
-  ) {
+  if (state.sending && Number.isInteger(activeId) && ids.includes(activeId) && state.abortController) {
     cancelOngoingGeneration();
   }
-  state.generationQueue = state.generationQueue.filter(
-    (id) => !ids.includes(Number(id)),
-  );
+  state.generationQueue = state.generationQueue.filter((id) => !ids.includes(Number(id)));
   for (const id of ids) {
     localStorage.removeItem(`rp-thread-scroll-${id}`);
     try {
@@ -8338,10 +7273,7 @@ async function deleteSelectedThreads() {
   state.selectedThreadIds.clear();
   await renderThreads();
   await renderCharacters();
-  showToast(
-    tf("deletedThreadsToast", { count: ids.length, suffix }),
-    "success",
-  );
+  showToast(tf("deletedThreadsToast", { count: ids.length, suffix }), "success");
 }
 
 function iconButton(iconKey, ariaLabel, handler) {
@@ -8355,10 +7287,7 @@ function iconButton(iconKey, ariaLabel, handler) {
   return btn;
 }
 
-const MOBILE_BREAKPOINT = parseInt(
-  getComputedStyle(document.documentElement)
-    .getPropertyValue('--mobile-breakpoint') || '600'
-);
+const MOBILE_BREAKPOINT = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--mobile-breakpoint") || "600");
 
 function detectVirtualKeyboard() {
   const vp = window.visualViewport;
@@ -8512,15 +7441,9 @@ function togglePane() {
   const wasCollapsed = pane.classList.contains("collapsed");
   pane.classList.toggle("collapsed");
   const isCollapsed = pane.classList.contains("collapsed");
-  shell.classList.toggle(
-    "pane-collapsed",
-    isCollapsed,
-  );
+  shell.classList.toggle("pane-collapsed", isCollapsed);
   if (overlayToggle) {
-    overlayToggle.classList.toggle(
-      "collapsed",
-      isCollapsed,
-    );
+    overlayToggle.classList.toggle("collapsed", isCollapsed);
   }
 
   if (wasCollapsed && !isCollapsed) {
@@ -8545,22 +7468,19 @@ function togglePane() {
 }
 
 function adjustModel3DPanelForPaneChange(deltaX) {
-  const panel = document.getElementById('model3d-panel');
-  if (!panel || panel.classList.contains('hidden')) return;
+  const panel = document.getElementById("model3d-panel");
+  if (!panel || panel.classList.contains("hidden")) return;
 
   let currentLeft = parseFloat(panel.style.left) || 0;
   currentLeft += deltaX;
-  panel.style.left = currentLeft + 'px';
+  panel.style.left = currentLeft + "px";
 }
 
 function unloadChatView() {
   if (currentThread) {
     const log = document.getElementById("chat-log");
     if (log) {
-      localStorage.setItem(
-        `rp-thread-scroll-${currentThread.id}`,
-        log.scrollTop,
-      );
+      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
     }
     const input = document.getElementById("user-input");
     const draftValue = input?.value?.trim() || "";
@@ -8585,10 +7505,10 @@ function unloadChatView() {
   state.lastUserMessageId = null;
   clearChatViewBackground();
 
-  const panel = document.getElementById('model3d-panel');
-  if (panel && !panel.classList.contains('hidden')) {
-    panel.classList.add('hidden');
-    panel.dataset.hidden = 'true';
+  const panel = document.getElementById("model3d-panel");
+  if (panel && !panel.classList.contains("hidden")) {
+    panel.classList.add("hidden");
+    panel.dataset.hidden = "true";
     if (window.disposeModel3D) {
       window.disposeModel3D();
     }
@@ -8673,9 +7593,7 @@ function openModal(modalId) {
       setupSettingsTabsLayout();
       populateSettingsTabValues();
       const lastTab = localStorage.getItem("rp-settings-last-tab") || "api";
-      const tabBtn = document.querySelector(
-        `[data-settings-tab-btn="${lastTab}"]`,
-      );
+      const tabBtn = document.querySelector(`[data-settings-tab-btn="${lastTab}"]`);
       if (tabBtn instanceof HTMLButtonElement) tabBtn.click();
       else {
         const firstTab = document.querySelector('[data-settings-tab-btn="api"]');
@@ -8691,7 +7609,7 @@ function openModal(modalId) {
       if (state.settings.showTokenCounts) {
         updateAllTokenCounts();
       }
-        document.querySelectorAll(".info-btn").forEach((btn) => {
+      document.querySelectorAll(".info-btn").forEach((btn) => {
         if (btn.dataset.listenerAttached === "true") return;
         btn.dataset.listenerAttached = "true";
         btn.addEventListener("click", (e) => {
@@ -8844,10 +7762,7 @@ async function closeActiveModal() {
   }
   if (closingId === "character-modal") {
     if (state.editingCharacterId) {
-      localStorage.setItem(
-        `rp-char-modal-last-lang-${state.editingCharacterId}`,
-        state.charModalActiveLanguage,
-      );
+      localStorage.setItem(`rp-char-modal-last-lang-${state.editingCharacterId}`, state.charModalActiveLanguage);
     }
     saveCharModalTextareaCollapseStates();
     state.charModalPendingThreadDeleteIds = [];
@@ -8917,10 +7832,7 @@ function getBotLanguageFlagIconCode(code) {
 }
 
 function getBotLanguageName(code) {
-  return (
-    BOT_LANGUAGE_NAMES[normalizeBotLanguageCode(code)] ||
-    normalizeBotLanguageCode(code)
-  );
+  return BOT_LANGUAGE_NAMES[normalizeBotLanguageCode(code)] || normalizeBotLanguageCode(code);
 }
 
 function createLanguageFlagIconElement(code, className = "") {
@@ -8974,8 +7886,7 @@ function getPrimaryAvatarInfo(character) {
 
 async function ensureVideoAvatarSnapshot(src) {
   if (!src) return null;
-  if (state.avatarSnapshotCache.has(src))
-    return state.avatarSnapshotCache.get(src);
+  if (state.avatarSnapshotCache.has(src)) return state.avatarSnapshotCache.get(src);
   const video = document.createElement("video");
   video.muted = true;
   video.playsInline = true;
@@ -9020,25 +7931,15 @@ async function ensureVideoAvatarSnapshot(src) {
   return null;
 }
 
-function setCharacterAvatarImage(
-  img,
-  character,
-  fallbackName,
-  fallbackSize = 512,
-) {
+function setCharacterAvatarImage(img, character, fallbackName, fallbackSize = 512) {
   const info = getPrimaryAvatarInfo(character);
-  const fallbackUrl = fallbackAvatar(
-    fallbackName || t("threadWord"),
-    fallbackSize,
-    fallbackSize,
-  );
+  const fallbackUrl = fallbackAvatar(fallbackName || t("threadWord"), fallbackSize, fallbackSize);
   img.dataset.avatarVideo = "";
   if (!info?.data) {
     img.src = fallbackUrl;
     return;
   }
-  const dataSrc =
-    info.data instanceof Blob ? getCachedAvatarBlobUrl(info.data) : info.data;
+  const dataSrc = info.data instanceof Blob ? getCachedAvatarBlobUrl(info.data) : info.data;
   if (info.type === "video") {
     img.dataset.avatarVideo = dataSrc;
     // Check snapshot cache synchronously first
@@ -9069,8 +7970,7 @@ function createEmptyCharacterDefinition(language = "en") {
     writingInstructionId: "none",
     initialMessagesRaw: "",
     initialMessages: [],
-    personaInjectionPlacement:
-      state.settings.defaultPersonaInjectionPlacement || "end_system_prompt",
+    personaInjectionPlacement: state.settings.defaultPersonaInjectionPlacement || "end_system_prompt",
     ttsVoice: DEFAULT_TTS_VOICE,
     ttsLanguage: DEFAULT_TTS_LANGUAGE,
     ttsRate: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
@@ -9096,43 +7996,29 @@ function normalizeCharacterDefinitions(character = null) {
   if (!character) {
     return [createEmptyCharacterDefinition(getInitialBotDefinitionLanguage())];
   }
-  const defsRaw = Array.isArray(character?.definitions)
-    ? character.definitions
-    : [];
+  const defsRaw = Array.isArray(character?.definitions) ? character.definitions : [];
   const defs = defsRaw
     .map((d) => {
       const def = {
         ...createEmptyCharacterDefinition(d?.language || "en"),
         ...d,
         language: normalizeBotLanguageCode(d?.language || "en"),
-        ttsProvider:
-          d?.ttsProvider || state.settings.defaultTtsProvider || "kokoro",
+        ttsProvider: d?.ttsProvider || state.settings.defaultTtsProvider || "kokoro",
         kokoroDevice: d?.kokoroDevice || "webgpu",
         kokoroDtype: d?.kokoroDtype || "auto",
         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
-        kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed))
-          ? Number(d.kokoroSpeed)
-          : Number.isFinite(Number(d?.ttsRate))
-            ? Number(d.ttsRate)
-            : state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
-        preferLoreBooksMatchingLanguage:
-          d?.preferLoreBooksMatchingLanguage !== false,
-        lorebookIds: Array.isArray(d?.lorebookIds)
-          ? d.lorebookIds.map(Number).filter(Number.isInteger)
-          : [],
+        kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed)) ? Number(d.kokoroSpeed) : Number.isFinite(Number(d?.ttsRate)) ? Number(d.ttsRate) : state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
+        preferLoreBooksMatchingLanguage: d?.preferLoreBooksMatchingLanguage !== false,
+        lorebookIds: Array.isArray(d?.lorebookIds) ? d.lorebookIds.map(Number).filter(Number.isInteger) : [],
         sfx: Array.isArray(d?.sfx) ? d.sfx : [],
       };
       delete def.avatar;
       delete def.avatars;
       return def;
     })
-    .filter(
-      (d, i, arr) => arr.findIndex((x) => x.language === d.language) === i,
-    );
+    .filter((d, i, arr) => arr.findIndex((x) => x.language === d.language) === i);
   if (defs.length > 0) return defs;
-  const fallbackLanguage = normalizeBotLanguageCode(
-    character?.selectedCardLanguage || character?.language || "en",
-  );
+  const fallbackLanguage = normalizeBotLanguageCode(character?.selectedCardLanguage || character?.language || "en");
   const fallback = createEmptyCharacterDefinition(fallbackLanguage);
   fallback.name = String(character?.name || "");
   fallback.tagline = String(character?.tagline || "");
@@ -9140,26 +8026,14 @@ function normalizeCharacterDefinitions(character = null) {
   fallback.oneTimeExtraPrompt = String(character?.oneTimeExtraPrompt || "");
   fallback.writingInstructions = String(character?.writingInstructions || "");
   fallback.writingInstructionId = String(character?.writingInstructionId || "");
-  fallback.initialMessagesRaw =
-    String(character?.initialMessagesRaw || "") ||
-    formatInitialMessagesForEditor(character?.initialMessages || []);
-  fallback.initialMessages = Array.isArray(character?.initialMessages)
-    ? character.initialMessages
-    : [];
-  fallback.personaInjectionPlacement =
-    character?.personaInjectionPlacement ||
-    state.settings.defaultPersonaInjectionPlacement ||
-    "end_system_prompt";
+  fallback.initialMessagesRaw = String(character?.initialMessagesRaw || "") || formatInitialMessagesForEditor(character?.initialMessages || []);
+  fallback.initialMessages = Array.isArray(character?.initialMessages) ? character.initialMessages : [];
+  fallback.personaInjectionPlacement = character?.personaInjectionPlacement || state.settings.defaultPersonaInjectionPlacement || "end_system_prompt";
   fallback.ttsVoice = String(character?.ttsVoice || DEFAULT_TTS_VOICE);
   fallback.ttsLanguage = String(character?.ttsLanguage || DEFAULT_TTS_LANGUAGE);
-  fallback.ttsRate = Number.isFinite(Number(character?.ttsRate))
-    ? Number(character.ttsRate)
-    : state.settings.defaultTtsRate || DEFAULT_TTS_RATE;
-  fallback.ttsPitch = Number.isFinite(Number(character?.ttsPitch))
-    ? Number(character.ttsPitch)
-    : 1.1;
-  fallback.ttsProvider =
-    character?.ttsProvider || state.settings.defaultTtsProvider || "kokoro";
+  fallback.ttsRate = Number.isFinite(Number(character?.ttsRate)) ? Number(character.ttsRate) : state.settings.defaultTtsRate || DEFAULT_TTS_RATE;
+  fallback.ttsPitch = Number.isFinite(Number(character?.ttsPitch)) ? Number(character.ttsPitch) : 1.1;
+  fallback.ttsProvider = character?.ttsProvider || state.settings.defaultTtsProvider || "kokoro";
   fallback.kokoroDevice = character?.kokoroDevice || "webgpu";
   fallback.kokoroDtype = character?.kokoroDtype || "auto";
   fallback.kokoroVoice = String(character?.kokoroVoice || DEFAULT_KOKORO_VOICE);
@@ -9168,22 +8042,14 @@ function normalizeCharacterDefinitions(character = null) {
     : Number.isFinite(Number(character?.ttsRate))
       ? Number(character.ttsRate)
       : state.settings.defaultTtsRate || DEFAULT_TTS_RATE;
-  fallback.preferLoreBooksMatchingLanguage =
-    character?.preferLoreBooksMatchingLanguage !== false;
-  fallback.lorebookIds = Array.isArray(character?.lorebookIds)
-    ? character.lorebookIds.map(Number).filter(Number.isInteger)
-    : [];
+  fallback.preferLoreBooksMatchingLanguage = character?.preferLoreBooksMatchingLanguage !== false;
+  fallback.lorebookIds = Array.isArray(character?.lorebookIds) ? character.lorebookIds.map(Number).filter(Number.isInteger) : [];
   return [fallback];
 }
 
 function resolveCharacterLanguageDefinition(character, preferredLanguage = "") {
   const defs = normalizeCharacterDefinitions(character);
-  const preferred = normalizeBotLanguageCode(
-    preferredLanguage ||
-      character?.selectedCardLanguage ||
-      defs[0]?.language ||
-      "en",
-  );
+  const preferred = normalizeBotLanguageCode(preferredLanguage || character?.selectedCardLanguage || defs[0]?.language || "en");
   const def = defs.find((d) => d.language === preferred) || defs[0];
   return {
     definitions: defs,
@@ -9204,24 +8070,11 @@ function resolveCharacterForLanguage(character, preferredLanguage = "") {
 }
 
 function getActiveCharacterDefinition() {
-  return state.charModalDefinitions.find(
-    (d) => d.language === state.charModalActiveLanguage,
-  );
+  return state.charModalDefinitions.find((d) => d.language === state.charModalActiveLanguage);
 }
 
 function setCharacterModalTab(tab = "lang") {
-  const normalized =
-    tab === "config"
-      ? "config"
-      : tab === "tags"
-        ? "tags"
-        : tab === "notes"
-          ? "notes"
-          : tab === "sfx"
-            ? "sfx"
-            : tab === "model3d"
-              ? "model3d"
-              : "lang";
+  const normalized = tab === "config" ? "config" : tab === "tags" ? "tags" : tab === "notes" ? "notes" : tab === "sfx" ? "sfx" : tab === "model3d" ? "model3d" : "lang";
   state.charModalActiveTab = normalized;
   const showLang = normalized === "lang";
   const showConfig = normalized === "config";
@@ -9229,24 +8082,12 @@ function setCharacterModalTab(tab = "lang") {
   const showNotes = normalized === "notes";
   const showSfx = normalized === "sfx";
   const showModel3d = normalized === "model3d";
-  document
-    .querySelectorAll(".lang-field")
-    .forEach((el) => el.classList.toggle("hidden", !showLang));
-  document
-    .querySelectorAll(".global-field")
-    .forEach((el) => el.classList.toggle("hidden", !showConfig));
-  document
-    .querySelectorAll(".tags-field")
-    .forEach((el) => el.classList.toggle("hidden", !showTags));
-  document
-    .querySelectorAll(".notes-field")
-    .forEach((el) => el.classList.toggle("hidden", !showNotes));
-  document
-    .querySelectorAll(".sfx-field")
-    .forEach((el) => el.classList.toggle("hidden", !showSfx));
-  document
-    .querySelectorAll(".model3d-field")
-    .forEach((el) => el.classList.toggle("hidden", !showModel3d));
+  document.querySelectorAll(".lang-field").forEach((el) => el.classList.toggle("hidden", !showLang));
+  document.querySelectorAll(".global-field").forEach((el) => el.classList.toggle("hidden", !showConfig));
+  document.querySelectorAll(".tags-field").forEach((el) => el.classList.toggle("hidden", !showTags));
+  document.querySelectorAll(".notes-field").forEach((el) => el.classList.toggle("hidden", !showNotes));
+  document.querySelectorAll(".sfx-field").forEach((el) => el.classList.toggle("hidden", !showSfx));
+  document.querySelectorAll(".model3d-field").forEach((el) => el.classList.toggle("hidden", !showModel3d));
   const configBtn = document.getElementById("char-config-tab-btn");
   if (configBtn) configBtn.classList.toggle("active", showConfig);
   const tagsBtn = document.getElementById("char-tags-tab-btn");
@@ -9257,9 +8098,7 @@ function setCharacterModalTab(tab = "lang") {
   if (sfxBtn) sfxBtn.classList.toggle("active", showSfx);
   const model3dBtn = document.getElementById("char-model3d-tab-btn");
   if (model3dBtn) model3dBtn.classList.toggle("active", showModel3d);
-  document
-    .querySelectorAll(".initial-messages-hint")
-    .forEach((el) => el.classList.toggle("hidden", showLang));
+  document.querySelectorAll(".initial-messages-hint").forEach((el) => el.classList.toggle("hidden", showLang));
 }
 
 function renderCharacterDefinitionTabs() {
@@ -9270,18 +8109,12 @@ function renderCharacterDefinitionTabs() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "settings-tab-btn char-def-tab-btn";
-    if (
-      def.language === state.charModalActiveLanguage &&
-      state.charModalActiveTab === "lang"
-    ) {
+    if (def.language === state.charModalActiveLanguage && state.charModalActiveTab === "lang") {
       btn.classList.add("active");
     }
     const label = document.createElement("span");
     label.className = "char-def-tab-label";
-    const flag = createLanguageFlagIconElement(
-      def.language,
-      "char-def-tab-flag",
-    );
+    const flag = createLanguageFlagIconElement(def.language, "char-def-tab-flag");
     const text = document.createElement("span");
     text.textContent = def.language;
     label.append(flag, text);
@@ -9311,15 +8144,8 @@ function renderCharacterDefinitionTabs() {
       }
       let affectedThreads = [];
       if (Number.isInteger(Number(state.editingCharacterId))) {
-        const threadsForChar = await db.threads
-          .where("characterId")
-          .equals(Number(state.editingCharacterId))
-          .toArray();
-        affectedThreads = threadsForChar.filter(
-          (th) =>
-            normalizeBotLanguageCode(th.characterLanguage || "") ===
-            def.language,
-        );
+        const threadsForChar = await db.threads.where("characterId").equals(Number(state.editingCharacterId)).toArray();
+        affectedThreads = threadsForChar.filter((th) => normalizeBotLanguageCode(th.characterLanguage || "") === def.language);
       }
       const removeMsg =
         affectedThreads.length > 0
@@ -9331,25 +8157,13 @@ function renderCharacterDefinitionTabs() {
       const ok = await openConfirmDialog(t("removeLanguageTitle"), removeMsg);
       if (!ok) return;
       saveActiveCharacterDefinitionFromForm();
-      state.charModalDefinitions = state.charModalDefinitions.filter(
-        (x) => x.language !== def.language,
-      );
+      state.charModalDefinitions = state.charModalDefinitions.filter((x) => x.language !== def.language);
       if (state.charModalActiveLanguage === def.language) {
-        state.charModalActiveLanguage =
-          state.charModalDefinitions[0]?.language || "";
+        state.charModalActiveLanguage = state.charModalDefinitions[0]?.language || "";
       }
       if (affectedThreads.length > 0) {
-        const idsToDelete = affectedThreads
-          .map((th) => Number(th.id))
-          .filter(Number.isInteger);
-        state.charModalPendingThreadDeleteIds = Array.from(
-          new Set([
-            ...(Array.isArray(state.charModalPendingThreadDeleteIds)
-              ? state.charModalPendingThreadDeleteIds
-              : []),
-            ...idsToDelete,
-          ]),
-        );
+        const idsToDelete = affectedThreads.map((th) => Number(th.id)).filter(Number.isInteger);
+        state.charModalPendingThreadDeleteIds = Array.from(new Set([...(Array.isArray(state.charModalPendingThreadDeleteIds) ? state.charModalPendingThreadDeleteIds : []), ...idsToDelete]));
       }
       await loadActiveCharacterDefinitionToForm();
       renderCharacterDefinitionTabs();
@@ -9362,14 +8176,11 @@ function renderCharacterDefinitionTabs() {
     root.appendChild(btn);
   });
   const configBtn = document.getElementById("char-config-tab-btn");
-  if (configBtn)
-    configBtn.classList.toggle("active", state.charModalActiveTab === "config");
+  if (configBtn) configBtn.classList.toggle("active", state.charModalActiveTab === "config");
   const tagsBtn = document.getElementById("char-tags-tab-btn");
-  if (tagsBtn)
-    tagsBtn.classList.toggle("active", state.charModalActiveTab === "tags");
+  if (tagsBtn) tagsBtn.classList.toggle("active", state.charModalActiveTab === "tags");
   const sfxBtn = document.getElementById("char-sfx-tab-btn");
-  if (sfxBtn)
-    sfxBtn.classList.toggle("active", state.charModalActiveTab === "sfx");
+  if (sfxBtn) sfxBtn.classList.toggle("active", state.charModalActiveTab === "sfx");
 }
 
 function saveActiveCharacterDefinitionFromForm() {
@@ -9377,32 +8188,15 @@ function saveActiveCharacterDefinitionFromForm() {
   if (!def) return;
   saveCharModalTextareaCollapseStates();
   def.name = String(document.getElementById("char-name")?.value || "").trim();
-  def.tagline = String(
-    document.getElementById("char-tagline")?.value || "",
-  ).trim();
-  def.creatorNotes = String(
-    document.getElementById("char-notes")?.value || "",
-  ).trim();
-  def.systemPrompt = String(
-    document.getElementById("char-system-prompt")?.value || "",
-  ).trim();
-  def.oneTimeExtraPrompt = String(
-    document.getElementById("char-one-time-extra-prompt")?.value || "",
-  ).trim();
-  const writingInstructionsTextarea = document.getElementById(
-    "char-writing-instructions",
-  );
-  const writingInstructionsSelect = document.getElementById(
-    "char-writing-instructions-select",
-  );
-  const selectedWritingInstructionId = String(
-    writingInstructionsSelect?.value || "",
-  );
+  def.tagline = String(document.getElementById("char-tagline")?.value || "").trim();
+  def.creatorNotes = String(document.getElementById("char-notes")?.value || "").trim();
+  def.systemPrompt = String(document.getElementById("char-system-prompt")?.value || "").trim();
+  def.oneTimeExtraPrompt = String(document.getElementById("char-one-time-extra-prompt")?.value || "").trim();
+  const writingInstructionsTextarea = document.getElementById("char-writing-instructions");
+  const writingInstructionsSelect = document.getElementById("char-writing-instructions-select");
+  const selectedWritingInstructionId = String(writingInstructionsSelect?.value || "");
   def.writingInstructionId = selectedWritingInstructionId;
-  def.writingInstructions =
-    selectedWritingInstructionId === ""
-      ? String(writingInstructionsTextarea?.value || "").trim()
-      : "";
+  def.writingInstructions = selectedWritingInstructionId === "" ? String(writingInstructionsTextarea?.value || "").trim() : "";
   const language = def.language;
   let drafts = getInitialMessageDrafts(language);
   if (drafts.length === 0) {
@@ -9410,26 +8204,16 @@ function saveActiveCharacterDefinitionFromForm() {
     setInitialMessageDrafts(language, drafts);
   }
   def.initialMessageDrafts = [...drafts];
-  def.personaInjectionPlacement = String(
-    document.getElementById("char-persona-injection-placement")?.value ||
-      "end_system_prompt",
-  );
+  def.personaInjectionPlacement = String(document.getElementById("char-persona-injection-placement")?.value || "end_system_prompt");
   const selectedTts = getResolvedCharTtsSelection();
   def.ttsVoice = selectedTts.voice;
   def.ttsLanguage = selectedTts.language;
   def.ttsRate = selectedTts.rate;
   def.ttsPitch = selectedTts.pitch;
   def.ttsProvider = getCharModalTtsProviderSelection();
-  def.kokoroDevice = String(
-    document.getElementById("char-tts-kokoro-device")?.value || "webgpu",
-  );
-  def.kokoroDtype = String(
-    document.getElementById("char-tts-kokoro-dtype")?.value || "auto",
-  );
-  def.kokoroVoice = String(
-    document.getElementById("char-tts-kokoro-voice")?.value ||
-      DEFAULT_KOKORO_VOICE,
-  );
+  def.kokoroDevice = String(document.getElementById("char-tts-kokoro-device")?.value || "webgpu");
+  def.kokoroDtype = String(document.getElementById("char-tts-kokoro-dtype")?.value || "auto");
+  def.kokoroVoice = String(document.getElementById("char-tts-kokoro-voice")?.value || DEFAULT_KOKORO_VOICE);
   def.kokoroSpeed = selectedTts.rate;
   def.lorebookIds = getSelectedLorebookIds();
 }
@@ -9437,11 +8221,8 @@ function saveActiveCharacterDefinitionFromForm() {
 function getInitialMessageDraftKey(language) {
   const normalizedLang = normalizeBotLanguageCode(language || "en");
   const charId = state.editingCharacterId;
-  const hasCharacterId =
-    charId !== null && charId !== undefined && String(charId).trim() !== "";
-  const namespace = hasCharacterId
-    ? `char-${String(charId)}`
-    : state.charModalDraftNamespace || "new-0";
+  const hasCharacterId = charId !== null && charId !== undefined && String(charId).trim() !== "";
+  const namespace = hasCharacterId ? `char-${String(charId)}` : state.charModalDraftNamespace || "new-0";
   return `${namespace}:${normalizedLang}`;
 }
 
@@ -9487,14 +8268,10 @@ function ensureInitialMessageDraftsForLanguage(def) {
     desiredRaw = "";
   }
 
-  const needsReset =
-    !meta || meta.loadedRaw !== desiredRaw || existingDrafts.length === 0;
+  const needsReset = !meta || meta.loadedRaw !== desiredRaw || existingDrafts.length === 0;
   if (!needsReset) return;
 
-  const nextDrafts =
-    parsed.length > 0
-      ? parsed.map((message) => formatInitialMessagesForEditor([message]))
-      : [""];
+  const nextDrafts = parsed.length > 0 ? parsed.map((message) => formatInitialMessagesForEditor([message])) : [""];
   setInitialMessageDrafts(language, nextDrafts, { loadedRaw: desiredRaw });
 }
 
@@ -9525,15 +8302,10 @@ async function refreshOpenThreadInitialMessagesForCharacter(characterId) {
   if (currentThread.initialMessagesRemoved === true) return;
   const characterRecord = await db.characters.get(characterId);
   if (!characterRecord) return;
-  const resolvedCharacter = resolveCharacterForLanguage(
-    characterRecord,
-    currentThread.characterLanguage || "",
-  );
+  const resolvedCharacter = resolveCharacterForLanguage(characterRecord, currentThread.characterLanguage || "");
   const initialMessages = await buildThreadInitialMessages(resolvedCharacter);
   if (!Array.isArray(initialMessages)) return;
-  const remaining = (currentThread.messages || []).filter(
-    (msg) => !msg?.isInitial,
-  );
+  const remaining = (currentThread.messages || []).filter((msg) => !msg?.isInitial);
   const updatedMessages = [...initialMessages, ...remaining];
   currentThread.messages = updatedMessages;
   conversationHistory = updatedMessages.map((msg) => ({
@@ -9640,8 +8412,7 @@ function buildInitialMessageEntry(text, index, language) {
   requestAnimationFrame(() => {
     const hasContent = String(textarea.value || "").trim().length > 0;
     const storedStates = loadInitialMessageCollapseStates(language);
-    const storedExpanded =
-      storedStates[index] !== undefined ? storedStates[index] : hasContent;
+    const storedExpanded = storedStates[index] !== undefined ? storedStates[index] : hasContent;
     entryObj.setExpanded(storedExpanded);
     autoExpandTextarea(textarea);
   });
@@ -9666,11 +8437,7 @@ async function removeInitialMessageDraft(language, index) {
 
   const entryContent = String(drafts[index] || "").trim();
   if (entryContent.length > 0) {
-    const proceed = await openConfirmDialog(
-      t("confirm"),
-      t("confirmDeleteInitialMessage") ||
-        "This initial message has content. Are you sure you want to delete it?"
-    );
+    const proceed = await openConfirmDialog(t("confirm"), t("confirmDeleteInitialMessage") || "This initial message has content. Are you sure you want to delete it?");
     if (!proceed) return;
   }
 
@@ -9698,44 +8465,27 @@ async function loadActiveCharacterDefinitionToForm() {
   document.getElementById("char-tagline").value = def.tagline || "";
   updateNameLengthCounter("char-tagline", "char-tagline-count", 128);
   document.getElementById("char-system-prompt").value = def.systemPrompt || "";
-  document.getElementById("char-one-time-extra-prompt").value =
-    def.oneTimeExtraPrompt || "";
-  document.getElementById("char-writing-instructions").value =
-    def.writingInstructions || "";
-  await populateCharWritingInstructionsSelect(
-    def.writingInstructionId,
-    def.writingInstructions,
-  );
+  document.getElementById("char-one-time-extra-prompt").value = def.oneTimeExtraPrompt || "";
+  document.getElementById("char-writing-instructions").value = def.writingInstructions || "";
+  await populateCharWritingInstructionsSelect(def.writingInstructionId, def.writingInstructions);
   updateCharWritingInstructionsVisibility();
   if (!Array.isArray(def.initialMessages)) {
     def.initialMessages = [];
   }
   ensureInitialMessageDraftsForLanguage(def);
   renderCharacterInitialMessagesList();
-  document.getElementById("char-persona-injection-placement").value =
-    def.personaInjectionPlacement || "end_system_prompt";
+  document.getElementById("char-persona-injection-placement").value = def.personaInjectionPlacement || "end_system_prompt";
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   populateCharTtsVoiceSelect(def.ttsVoice || DEFAULT_TTS_VOICE);
-  document.getElementById("char-tts-rate").value = String(
-    Math.max(0.5, Math.min(2, Number(def.ttsRate) || DEFAULT_TTS_RATE)),
-  );
-  document.getElementById("char-tts-pitch").value = String(
-    Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1)),
-  );
-  document.getElementById("char-tts-provider").value =
-    def.ttsProvider || "kokoro";
+  document.getElementById("char-tts-rate").value = String(Math.max(0.5, Math.min(2, Number(def.ttsRate) || DEFAULT_TTS_RATE)));
+  document.getElementById("char-tts-pitch").value = String(Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1)));
+  document.getElementById("char-tts-provider").value = def.ttsProvider || "kokoro";
   const kokoroDevice = document.getElementById("char-tts-kokoro-device");
   const kokoroDeviceValue = def.kokoroDevice || "webgpu";
   if (kokoroDevice) kokoroDevice.value = kokoroDeviceValue;
-  updateKokoroDtypeOptionsForDevice(
-    kokoroDeviceValue,
-    def.kokoroDtype || "auto",
-  );
+  updateKokoroDtypeOptionsForDevice(kokoroDeviceValue, def.kokoroDtype || "auto");
   const activeModalLanguage = getCharModalActiveLanguage();
-  populateKokoroVoiceSelect(
-    def.kokoroVoice || DEFAULT_KOKORO_VOICE,
-    activeModalLanguage,
-  );
+  populateKokoroVoiceSelect(def.kokoroVoice || DEFAULT_KOKORO_VOICE, activeModalLanguage);
   updateCharTtsRatePitchLabels();
   refreshCharTtsProviderFields();
   renderCharacterLorebookList(def.lorebookIds || []);
@@ -9787,12 +8537,7 @@ function populateCharacterLanguageSelectOptions() {
   });
 }
 
-async function openCharacterModal(
-  character = null,
-  selectedCardLanguage = null,
-  startDirty = false,
-  pendingImport = null,
-) {
+async function openCharacterModal(character = null, selectedCardLanguage = null, startDirty = false, pendingImport = null) {
   state.charModalTtsTestPlaying = false;
   state.charModalPendingThreadDeleteIds = [];
   state.editingCharacterId = character?.id || null;
@@ -9812,84 +8557,50 @@ async function openCharacterModal(
     state.charModalDraftNamespace = `char-${character.id}`;
     state.charModalCache[character.id] = { ...character };
   } else {
-    state.nextCharModalDraftNamespace =
-      Number(state.nextCharModalDraftNamespace || 0) + 1;
+    state.nextCharModalDraftNamespace = Number(state.nextCharModalDraftNamespace || 0) + 1;
     state.charModalDraftNamespace = `new-${state.nextCharModalDraftNamespace}`;
   }
   setupKokoroDownloadCancel();
   state.charModalModel3d = character?.model3d || null;
   renderModel3DPreview();
 
-  const hasAvatars =
-    character?.avatars &&
-    Array.isArray(character.avatars) &&
-    character.avatars.length > 0;
+  const hasAvatars = character?.avatars && Array.isArray(character.avatars) && character.avatars.length > 0;
   state.charModalAvatars = hasAvatars ? [...character.avatars] : [];
   if (state.charModalAvatars.length === 0 && character?.avatar) {
-    state.charModalAvatars = [
-      { type: "image", data: character.avatar, name: "" },
-    ];
+    state.charModalAvatars = [{ type: "image", data: character.avatar, name: "" }];
   }
   renderCharAvatars();
   if (!state.characterModalImportCancelled) {
     state.charModalDefinitions = normalizeCharacterDefinitions(character);
   }
-  const cardLanguage =
-    selectedCardLanguage || character?.selectedCardLanguage || "";
-  const hasCardLanguage =
-    cardLanguage &&
-    state.charModalDefinitions.some((d) => d.language === cardLanguage);
-  let activeLanguage = hasCardLanguage
-    ? cardLanguage
-    : state.charModalDefinitions[0]?.language ||
-      getInitialBotDefinitionLanguage();
+  const cardLanguage = selectedCardLanguage || character?.selectedCardLanguage || "";
+  const hasCardLanguage = cardLanguage && state.charModalDefinitions.some((d) => d.language === cardLanguage);
+  let activeLanguage = hasCardLanguage ? cardLanguage : state.charModalDefinitions[0]?.language || getInitialBotDefinitionLanguage();
   if (character?.id) {
-    const savedLang = localStorage.getItem(
-      `rp-char-modal-last-lang-${character.id}`,
-    );
-    if (
-      savedLang &&
-      state.charModalDefinitions.some((d) => d.language === savedLang)
-    ) {
+    const savedLang = localStorage.getItem(`rp-char-modal-last-lang-${character.id}`);
+    if (savedLang && state.charModalDefinitions.some((d) => d.language === savedLang)) {
       activeLanguage = savedLang;
     }
   }
   state.charModalActiveLanguage = activeLanguage;
   state.charModalActiveTab = "lang";
 
-  document.getElementById("char-use-memory").checked =
-    character?.useMemory !== false;
-  document.getElementById("char-use-postprocess").checked =
-    character?.usePostProcessing !== false;
-  document.getElementById("char-auto-trigger-first-ai").checked =
-    character?.autoTriggerAiFirstMessage !== false;
-  document.getElementById("char-auto-title").checked =
-    character?.autoTitleEnabled !== false;
-  const charAutoTitleMinMessagesInput = document.getElementById(
-    "char-auto-title-min-messages",
-  );
+  document.getElementById("char-use-memory").checked = character?.useMemory !== false;
+  document.getElementById("char-use-postprocess").checked = character?.usePostProcessing !== false;
+  document.getElementById("char-auto-trigger-first-ai").checked = character?.autoTriggerAiFirstMessage !== false;
+  document.getElementById("char-auto-title").checked = character?.autoTitleEnabled !== false;
+  const charAutoTitleMinMessagesInput = document.getElementById("char-auto-title-min-messages");
   if (charAutoTitleMinMessagesInput) {
-    const defaultCharAutoTitleMinMessages =
-      state.settings.defaultAutoTitleMinMessages ??
-      DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
+    const defaultCharAutoTitleMinMessages = state.settings.defaultAutoTitleMinMessages ?? DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
     const storedCharMin = Number(character?.autoTitleMinMessages);
-    const resolvedCharMin = Number.isFinite(storedCharMin)
-      ? storedCharMin
-      : defaultCharAutoTitleMinMessages;
+    const resolvedCharMin = Number.isFinite(storedCharMin) ? storedCharMin : defaultCharAutoTitleMinMessages;
     const normalizedCharMin = Math.max(1, Math.min(50, resolvedCharMin));
     charAutoTitleMinMessagesInput.value = String(normalizedCharMin);
   }
-  document.getElementById("char-persona-prefix").checked =
-    character?.personaPrefixEnabled !== false;
-  document.getElementById("char-include-ooc").checked =
-    character?.includeOocInCompletions ??
-    state.settings.defaultIncludeOocInCompletions ??
-    DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
+  document.getElementById("char-persona-prefix").checked = character?.personaPrefixEnabled !== false;
+  document.getElementById("char-include-ooc").checked = character?.includeOocInCompletions ?? state.settings.defaultIncludeOocInCompletions ?? DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
   document.getElementById("char-avatar-scale").value = String(
-    character?.avatarScale != null
-      ? Number(character.avatarScale)
-      : state.settings.defaultAvatarScale ??
-        DEFAULT_SETTINGS.defaultAvatarScale,
+    character?.avatarScale != null ? Number(character.avatarScale) : (state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale),
   );
   setCharacterTagsInputValue(character?.tags || []);
   renderCharacterTagPresetButtons();
@@ -9904,9 +8615,7 @@ async function openCharacterModal(
 
   const loreCooldownInput = document.getElementById("char-lore-cooldown");
   if (loreCooldownInput) {
-    const storedLoreCooldown = Number.isFinite(Number(character?.loreCooldown))
-      ? Number(character.loreCooldown)
-      : 20;
+    const storedLoreCooldown = Number.isFinite(Number(character?.loreCooldown)) ? Number(character.loreCooldown) : 20;
     loreCooldownInput.value = String(storedLoreCooldown);
   }
 
@@ -9941,32 +8650,17 @@ async function saveCharacterFromModal({ close = true } = {}) {
     def.systemPrompt = String(def.systemPrompt || "").trim();
     def.oneTimeExtraPrompt = String(def.oneTimeExtraPrompt || "").trim();
     def.writingInstructions = String(def.writingInstructions || "").trim();
-    def.personaInjectionPlacement =
-      def.personaInjectionPlacement ||
-      state.settings.defaultPersonaInjectionPlacement ||
-      "end_system_prompt";
+    def.personaInjectionPlacement = def.personaInjectionPlacement || state.settings.defaultPersonaInjectionPlacement || "end_system_prompt";
     def.ttsVoice = String(def.ttsVoice || DEFAULT_TTS_VOICE);
     def.ttsLanguage = String(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
-    def.ttsRate = Math.max(
-      0.5,
-      Math.min(
-        2,
-        Number(def.ttsRate) ||
-          (state.settings.defaultTtsRate ?? DEFAULT_TTS_RATE),
-      ),
-    );
+    def.ttsRate = Math.max(0.5, Math.min(2, Number(def.ttsRate) || (state.settings.defaultTtsRate ?? DEFAULT_TTS_RATE)));
     def.ttsPitch = Math.max(0, Math.min(2, Number(def.ttsPitch) || 1.1));
-    def.preferLoreBooksMatchingLanguage =
-      def.preferLoreBooksMatchingLanguage !== false;
-    def.lorebookIds = Array.isArray(def.lorebookIds)
-      ? def.lorebookIds.map(Number).filter(Number.isInteger)
-      : [];
+    def.preferLoreBooksMatchingLanguage = def.preferLoreBooksMatchingLanguage !== false;
+    def.lorebookIds = Array.isArray(def.lorebookIds) ? def.lorebookIds.map(Number).filter(Number.isInteger) : [];
     delete def.avatar;
     delete def.avatars;
     if (!def.name) missingNameLanguages.push(def.language);
-    const drafts = Array.isArray(def.initialMessageDrafts)
-      ? def.initialMessageDrafts
-      : [];
+    const drafts = Array.isArray(def.initialMessageDrafts) ? def.initialMessageDrafts : [];
     const collectedMessages = [];
     for (const draft of drafts) {
       const trimmed = String(draft || "").trim();
@@ -9975,10 +8669,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
         const parsed = parseInitialMessagesInput(trimmed);
         collectedMessages.push(...parsed.messages);
       } catch (err) {
-        await openInfoDialog(
-          t("invalidInitialMessagesTitle"),
-          String(err?.message || t("invalidInitialMessagesMessage")),
-        );
+        await openInfoDialog(t("invalidInitialMessagesTitle"), String(err?.message || t("invalidInitialMessagesMessage")));
         return;
       }
     }
@@ -9987,8 +8678,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
       def.initialMessages = [];
     } else {
       def.initialMessages = collectedMessages;
-      def.initialMessagesRaw =
-        formatInitialMessagesForEditor(collectedMessages);
+      def.initialMessagesRaw = formatInitialMessagesForEditor(collectedMessages);
     }
     const savedRaw = String(def.initialMessagesRaw || "");
     const filteredDrafts = drafts.filter((draft) => String(draft || "").trim());
@@ -10009,31 +8699,18 @@ async function saveCharacterFromModal({ close = true } = {}) {
   }
 
   const uiLang = normalizeBotLanguageCode(state.settings.uiLanguage || "en");
-  const primaryDef =
-    defs.find((d) => d.language === uiLang) ||
-    defs.find((d) => !!String(d.name || "").trim()) ||
-    defs[0];
+  const primaryDef = defs.find((d) => d.language === uiLang) || defs.find((d) => !!String(d.name || "").trim()) || defs[0];
   let previousSelectedCardLanguage = "";
   if (state.editingCharacterId) {
     const existingChar = await db.characters.get(state.editingCharacterId);
-    previousSelectedCardLanguage = normalizeBotLanguageCode(
-      existingChar?.selectedCardLanguage || "",
-    );
+    previousSelectedCardLanguage = normalizeBotLanguageCode(existingChar?.selectedCardLanguage || "");
   }
-  const selectedCardLanguage =
-    defs.find((d) => d.language === previousSelectedCardLanguage)?.language ||
-    defs[0]?.language ||
-    "en";
-  const selectedLorebookIds = Array.isArray(primaryDef?.lorebookIds)
-    ? primaryDef.lorebookIds
-    : [];
+  const selectedCardLanguage = defs.find((d) => d.language === previousSelectedCardLanguage)?.language || defs[0]?.language || "en";
+  const selectedLorebookIds = Array.isArray(primaryDef?.lorebookIds) ? primaryDef.lorebookIds : [];
   const selectedTts = {
     voice: primaryDef?.ttsVoice || DEFAULT_TTS_VOICE,
     language: primaryDef?.ttsLanguage || DEFAULT_TTS_LANGUAGE,
-    rate: Math.max(
-      0.5,
-      Math.min(2, Number(primaryDef?.ttsRate) || DEFAULT_TTS_RATE),
-    ),
+    rate: Math.max(0.5, Math.min(2, Number(primaryDef?.ttsRate) || DEFAULT_TTS_RATE)),
     pitch: Math.max(0, Math.min(2, Number(primaryDef?.ttsPitch) || 1.1)),
   };
 
@@ -10046,34 +8723,22 @@ async function saveCharacterFromModal({ close = true } = {}) {
     writingInstructions: String(primaryDef?.writingInstructions || "").trim(),
     writingInstructionId: String(primaryDef?.writingInstructionId || ""),
     initialMessagesRaw: String(primaryDef?.initialMessagesRaw || ""),
-    initialMessages: Array.isArray(primaryDef?.initialMessages)
-      ? primaryDef.initialMessages
-      : [],
+    initialMessages: Array.isArray(primaryDef?.initialMessages) ? primaryDef.initialMessages : [],
     useMemory: document.getElementById("char-use-memory").checked,
     usePostProcessing: document.getElementById("char-use-postprocess").checked,
-    autoTriggerAiFirstMessage: document.getElementById(
-      "char-auto-trigger-first-ai",
-    ).checked,
+    autoTriggerAiFirstMessage: document.getElementById("char-auto-trigger-first-ai").checked,
     autoTitleEnabled: document.getElementById("char-auto-title").checked,
-    autoTitleMinMessages:
-      Number(document.getElementById("char-auto-title-min-messages").value) ||
-      10,
-    personaPrefixEnabled: document.getElementById("char-persona-prefix")
-      .checked,
-    includeOocInCompletions:
-      document.getElementById("char-include-ooc").checked,
-    personaInjectionPlacement: String(
-      primaryDef?.personaInjectionPlacement || "end_system_prompt",
-    ),
-    avatarScale:
-      Number(document.getElementById("char-avatar-scale").value) || 1,
+    autoTitleMinMessages: Number(document.getElementById("char-auto-title-min-messages").value) || 10,
+    personaPrefixEnabled: document.getElementById("char-persona-prefix").checked,
+    includeOocInCompletions: document.getElementById("char-include-ooc").checked,
+    personaInjectionPlacement: String(primaryDef?.personaInjectionPlacement || "end_system_prompt"),
+    avatarScale: Number(document.getElementById("char-avatar-scale").value) || 1,
     tags: getCharacterTagsFromModal(),
     ttsVoice: selectedTts.voice,
     ttsLanguage: selectedTts.language,
     ttsRate: selectedTts.rate,
     ttsPitch: selectedTts.pitch,
-    preferLoreBooksMatchingLanguage:
-      primaryDef?.preferLoreBooksMatchingLanguage !== false,
+    preferLoreBooksMatchingLanguage: primaryDef?.preferLoreBooksMatchingLanguage !== false,
     lorebookIds: selectedLorebookIds,
     loreCooldown: (() => {
       const rawValue = document.getElementById("char-lore-cooldown")?.value;
@@ -10083,13 +8748,9 @@ async function saveCharacterFromModal({ close = true } = {}) {
       }
       return Math.max(0, Math.min(100, parsed));
     })(),
-    avatar:
-      state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
-    avatars:
-      state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [],
-    model3d: state.charModalModel3d ||
-      (state.editingCharacterId ? state.charModalCache?.[state.editingCharacterId]?.model3d : null) ||
-      null,
+    avatar: state.charModalAvatars.length > 0 ? state.charModalAvatars[0].data : "",
+    avatars: state.charModalAvatars.length > 0 ? [...state.charModalAvatars] : [],
+    model3d: state.charModalModel3d || (state.editingCharacterId ? state.charModalCache?.[state.editingCharacterId]?.model3d : null) || null,
     updatedAt: Date.now(),
   };
 
@@ -10115,9 +8776,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
     importChar.writingInstructions = String(primaryDef?.writingInstructions || "").trim();
     importChar.writingInstructionId = String(primaryDef?.writingInstructionId || "");
     importChar.initialMessagesRaw = String(primaryDef?.initialMessagesRaw || "");
-    importChar.initialMessages = Array.isArray(primaryDef?.initialMessages)
-      ? primaryDef.initialMessages
-      : [];
+    importChar.initialMessages = Array.isArray(primaryDef?.initialMessages) ? primaryDef.initialMessages : [];
     importChar.useMemory = document.getElementById("char-use-memory").checked;
     importChar.usePostProcessing = document.getElementById("char-use-postprocess").checked;
     importChar.autoTriggerAiFirstMessage = document.getElementById("char-auto-trigger-first-ai").checked;
@@ -10140,15 +8799,9 @@ async function saveCharacterFromModal({ close = true } = {}) {
   } else if (state.editingCharacterId) {
     savedCharacterId = Number(state.editingCharacterId);
     await db.characters.update(state.editingCharacterId, payload);
-    if (
-      currentCharacter &&
-      Number(currentCharacter.id) === Number(state.editingCharacterId)
-    ) {
+    if (currentCharacter && Number(currentCharacter.id) === Number(state.editingCharacterId)) {
       const merged = { ...currentCharacter, ...payload };
-      currentCharacter = resolveCharacterForLanguage(
-        merged,
-        currentThread?.characterLanguage || "",
-      );
+      currentCharacter = resolveCharacterForLanguage(merged, currentThread?.characterLanguage || "");
       state.cachedChatBotAvatar = {
         url: null,
         characterId: null,
@@ -10156,10 +8809,10 @@ async function saveCharacterFromModal({ close = true } = {}) {
       };
       renderChat();
       updateModel3DToggleButton();
-      const panel = document.getElementById('model3d-panel');
+      const panel = document.getElementById("model3d-panel");
       if (!currentCharacter?.model3d?.data) {
         hideModel3DPanel();
-      } else if (panel && !panel.classList.contains('hidden')) {
+      } else if (panel && !panel.classList.contains("hidden")) {
         loadModel3DFromCharacter(currentCharacter);
       }
     }
@@ -10172,25 +8825,12 @@ async function saveCharacterFromModal({ close = true } = {}) {
     showToast(t("characterCreated"), "success");
   }
 
-  const pendingThreadDeleteIds = Array.isArray(
-    state.charModalPendingThreadDeleteIds,
-  )
-    ? state.charModalPendingThreadDeleteIds
-        .map((id) => Number(id))
-        .filter(Number.isInteger)
-    : [];
+  const pendingThreadDeleteIds = Array.isArray(state.charModalPendingThreadDeleteIds) ? state.charModalPendingThreadDeleteIds.map((id) => Number(id)).filter(Number.isInteger) : [];
   if (pendingThreadDeleteIds.length > 0) {
-    state.generationQueue = state.generationQueue.filter(
-      (id) => !pendingThreadDeleteIds.includes(Number(id)),
-    );
+    state.generationQueue = state.generationQueue.filter((id) => !pendingThreadDeleteIds.includes(Number(id)));
     await db.threads.bulkDelete(pendingThreadDeleteIds);
-    pendingThreadDeleteIds.forEach((id) =>
-      state.selectedThreadIds.delete(Number(id)),
-    );
-    if (
-      currentThread &&
-      pendingThreadDeleteIds.includes(Number(currentThread.id))
-    ) {
+    pendingThreadDeleteIds.forEach((id) => state.selectedThreadIds.delete(Number(id)));
+    if (currentThread && pendingThreadDeleteIds.includes(Number(currentThread.id))) {
       currentThread = null;
       currentCharacter = null;
       conversationHistory = [];
@@ -10207,10 +8847,7 @@ async function saveCharacterFromModal({ close = true } = {}) {
   }
   if (close) {
     if (state.editingCharacterId) {
-      localStorage.setItem(
-        `rp-char-modal-last-lang-${state.editingCharacterId}`,
-        state.charModalActiveLanguage,
-      );
+      localStorage.setItem(`rp-char-modal-last-lang-${state.editingCharacterId}`, state.charModalActiveLanguage);
     }
     closeActiveModal();
   }
@@ -10221,20 +8858,12 @@ async function applyCharacterFromModal() {
   return saveCharacterFromModal({ close: false });
 }
 
-function populateCharTtsLanguageSelect(
-  preferredLanguage = DEFAULT_TTS_LANGUAGE,
-) {
+function populateCharTtsLanguageSelect(preferredLanguage = DEFAULT_TTS_LANGUAGE) {
   const languageSelect = document.getElementById("char-tts-language");
   if (!languageSelect) return;
-  const hasBrowserSupport =
-    typeof window.hasBrowserTtsSupport === "function" &&
-    window.hasBrowserTtsSupport();
-  const voices = hasBrowserSupport
-    ? window.speechSynthesis.getVoices?.() || []
-    : [];
-  const langs = Array.from(
-    new Set(voices.map((v) => String(v.lang || "").trim()).filter(Boolean)),
-  ).sort((a, b) => a.localeCompare(b));
+  const hasBrowserSupport = typeof window.hasBrowserTtsSupport === "function" && window.hasBrowserTtsSupport();
+  const voices = hasBrowserSupport ? window.speechSynthesis.getVoices?.() || [] : [];
+  const langs = Array.from(new Set(voices.map((v) => String(v.lang || "").trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
   if (langs.length === 0) {
     langs.push(DEFAULT_TTS_LANGUAGE);
   }
@@ -10254,19 +8883,11 @@ function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
   const voiceSelect = document.getElementById("char-tts-voice");
   if (!languageSelect || !voiceSelect) return;
   const selectedLang = String(languageSelect.value || DEFAULT_TTS_LANGUAGE);
-  const hasBrowserSupport =
-    typeof window.hasBrowserTtsSupport === "function" &&
-    window.hasBrowserTtsSupport();
-  const voices = hasBrowserSupport
-    ? window.speechSynthesis.getVoices?.() || []
-    : [];
-  const filtered = voices.filter(
-    (v) => String(v.lang || "").toLowerCase() === selectedLang.toLowerCase(),
-  );
+  const hasBrowserSupport = typeof window.hasBrowserTtsSupport === "function" && window.hasBrowserTtsSupport();
+  const voices = hasBrowserSupport ? window.speechSynthesis.getVoices?.() || [] : [];
+  const filtered = voices.filter((v) => String(v.lang || "").toLowerCase() === selectedLang.toLowerCase());
   const candidates = filtered.length ? filtered : voices;
-  const names = Array.from(
-    new Set(candidates.map((v) => String(v.name || "").trim()).filter(Boolean)),
-  ).sort((a, b) => a.localeCompare(b));
+  const names = Array.from(new Set(candidates.map((v) => String(v.name || "").trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
   if (names.length === 0) {
     names.push(DEFAULT_TTS_VOICE);
   }
@@ -10281,19 +8902,13 @@ function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
   voiceSelect.value = hasPreferred ? preferredVoice : names[0];
 }
 
-async function populateCharWritingInstructionsSelect(
-  preferredId = "",
-  customInstructions = "",
-) {
+async function populateCharWritingInstructionsSelect(preferredId = "", customInstructions = "") {
   const select = document.getElementById("char-writing-instructions-select");
   const textarea = document.getElementById("char-writing-instructions");
   if (!select || !textarea) return;
-  const currentLang =
-    state.charModalActiveLanguage || state.settings.interfaceLanguage || "en";
+  const currentLang = state.charModalActiveLanguage || state.settings.interfaceLanguage || "en";
   const allWi = await getAllWritingInstructions();
-  const matchingWi = allWi.filter(
-    (wi) => wi.instructions && wi.instructions[currentLang],
-  );
+  const matchingWi = allWi.filter((wi) => wi.instructions && wi.instructions[currentLang]);
   select.innerHTML = "";
   const noneOpt = document.createElement("option");
   noneOpt.value = "none";
@@ -10350,27 +8965,14 @@ function updateCharTtsRatePitchLabels() {
   const pitch = document.getElementById("char-tts-pitch");
   const rateValue = document.getElementById("char-tts-rate-value");
   const pitchValue = document.getElementById("char-tts-pitch-value");
-  if (rate && rateValue)
-    rateValue.textContent = Number(rate.value || 1).toFixed(1);
-  if (pitch && pitchValue)
-    pitchValue.textContent = Number(pitch.value || 1).toFixed(1);
+  if (rate && rateValue) rateValue.textContent = Number(rate.value || 1).toFixed(1);
+  if (pitch && pitchValue) pitchValue.textContent = Number(pitch.value || 1).toFixed(1);
 }
 
-function getResolvedTtsSelection(
-  languageInput,
-  voiceInput,
-  rateInput,
-  pitchInput,
-) {
-  const language =
-    String(languageInput || DEFAULT_TTS_LANGUAGE).trim() ||
-    DEFAULT_TTS_LANGUAGE;
-  const voice =
-    String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
-  const rate = Math.max(
-    0.5,
-    Math.min(2, Number(rateInput) || DEFAULT_TTS_RATE),
-  );
+function getResolvedTtsSelection(languageInput, voiceInput, rateInput, pitchInput) {
+  const language = String(languageInput || DEFAULT_TTS_LANGUAGE).trim() || DEFAULT_TTS_LANGUAGE;
+  const voice = String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
+  const rate = Math.max(0.5, Math.min(2, Number(rateInput) || DEFAULT_TTS_RATE));
   const pitch = Math.max(0, Math.min(2, Number(pitchInput) || 1.1));
   return {
     language,
@@ -10390,10 +8992,7 @@ function getResolvedCharTtsSelection() {
 }
 
 function getCharModalActiveLanguage() {
-  const rawLanguage =
-    state.charModalActiveLanguage ||
-    getActiveCharacterDefinition()?.language ||
-    DEFAULT_TTS_LANGUAGE;
+  const rawLanguage = state.charModalActiveLanguage || getActiveCharacterDefinition()?.language || DEFAULT_TTS_LANGUAGE;
   return normalizeBotLanguageCode(rawLanguage || "") || DEFAULT_TTS_LANGUAGE;
 }
 
@@ -10456,10 +9055,7 @@ function getAvailableKokoroDtypeOptions(device = "webgpu") {
   });
 }
 
-function updateKokoroDtypeOptionsForDevice(
-  device = "webgpu",
-  preferred = null,
-) {
+function updateKokoroDtypeOptionsForDevice(device = "webgpu", preferred = null) {
   const select = document.getElementById("char-tts-kokoro-dtype");
   if (!select) return;
   const allowed = getAvailableKokoroDtypeOptions(device);
@@ -10502,9 +9098,7 @@ async function renderPersonaSelector() {
 
   const defaultPersona = await getCharacterDefaultPersona();
   const requestedId = Number(currentThread?.selectedPersonaId);
-  const existing = requestedId
-    ? personas.find((p) => p.id === requestedId)
-    : null;
+  const existing = requestedId ? personas.find((p) => p.id === requestedId) : null;
   const effective = existing || defaultPersona || personas[0] || null;
 
   currentPersona = effective || null;
@@ -10512,11 +9106,7 @@ async function renderPersonaSelector() {
   select.value = effective ? String(effective.id) : "";
   updatePersonaPickerDisplay();
 
-  if (
-    currentThread &&
-    effective &&
-    Number(currentThread.selectedPersonaId) !== Number(effective.id)
-  ) {
+  if (currentThread && effective && Number(currentThread.selectedPersonaId) !== Number(effective.id)) {
     currentThread.selectedPersonaId = effective.id;
     await db.threads.update(currentThread.id, {
       selectedPersonaId: effective.id,
@@ -10528,14 +9118,11 @@ async function renderPersonaSelector() {
 async function onPersonaSelectChange() {
   const select = document.getElementById("persona-select");
   const personaId = Number(select.value);
-  currentPersona = personaId
-    ? await db.personas.get(personaId)
-    : await getCharacterDefaultPersona();
+  currentPersona = personaId ? await db.personas.get(personaId) : await getCharacterDefaultPersona();
   updatePersonaPickerDisplay();
   if (!currentThread) return;
   const displayHistory = getFilteredConversationHistoryForThread();
-  cachedInitialMessageDisplayIndex =
-    getFirstInitialDisplayIndex(displayHistory);
+  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex(displayHistory);
   const updatedAt = Date.now();
   currentThread.selectedPersonaId = currentPersona?.id || null;
   state.lastSyncSeenUpdatedAt = updatedAt;
@@ -10548,10 +9135,7 @@ async function onPersonaSelectChange() {
     threadId: currentThread.id,
     updatedAt,
   });
-  showToast(
-    tf("personaSwitched", { name: currentPersona?.name || "You" }),
-    "success",
-  );
+  showToast(tf("personaSwitched", { name: currentPersona?.name || "You" }), "success");
 }
 
 let chatPersonaDropdownOpen = false;
@@ -10579,7 +9163,7 @@ function showInfoPanel(infoKey, buttonEl) {
     } else {
       infoPanel.textContent = content;
     }
-} else {
+  } else {
     infoPanel.textContent = "No info available.";
   }
 
@@ -10675,9 +9259,13 @@ function showHoverInfoPanel(infoKey, buttonEl) {
 
   buttonEl.addEventListener("mouseleave", closeHoverInfo, { once: true });
   infoPanel.addEventListener("mouseleave", closeHoverInfo, { once: true });
-  infoPanel.addEventListener("mouseenter", () => {
-    clearTimeout(hoverInfoPanelTimeout);
-  }, { once: true });
+  infoPanel.addEventListener(
+    "mouseenter",
+    () => {
+      clearTimeout(hoverInfoPanelTimeout);
+    },
+    { once: true },
+  );
 }
 
 async function showChatPersonaDropdown() {
@@ -10707,10 +9295,7 @@ async function showChatPersonaDropdown() {
 
     if (persona.avatar) {
       const img = document.createElement("img");
-      img.src =
-        persona.avatar instanceof Blob
-          ? getCachedAvatarBlobUrl(persona.avatar)
-          : persona.avatar;
+      img.src = persona.avatar instanceof Blob ? getCachedAvatarBlobUrl(persona.avatar) : persona.avatar;
       item.appendChild(img);
     }
 
@@ -10754,10 +9339,7 @@ async function showChatPersonaDropdown() {
         threadId: currentThread.id,
         updatedAt,
       });
-      showToast(
-        tf("personaSwitched", { name: currentPersona?.name || "You" }),
-        "success",
-      );
+      showToast(tf("personaSwitched", { name: currentPersona?.name || "You" }), "success");
     });
 
     chatPersonaDropdown.appendChild(item);
@@ -10781,11 +9363,7 @@ async function showChatPersonaDropdown() {
   document.body.appendChild(chatPersonaDropdown);
 
   const closeDropdown = (e) => {
-    if (
-      chatPersonaDropdown &&
-      !chatPersonaDropdown.contains(e.target) &&
-      e.target !== avatarEl
-    ) {
+    if (chatPersonaDropdown && !chatPersonaDropdown.contains(e.target) && e.target !== avatarEl) {
       chatPersonaDropdownOpen = false;
       if (chatPersonaDropdown && chatPersonaDropdown.parentNode) {
         chatPersonaDropdown.parentNode.removeChild(chatPersonaDropdown);
@@ -10849,11 +9427,7 @@ function showChatOptionsDropdown() {
   }
 
   const closeDropdown = (e) => {
-    if (
-      chatOptionsDropdown &&
-      !chatOptionsDropdown.contains(e.target) &&
-      e.target !== btn
-    ) {
+    if (chatOptionsDropdown && !chatOptionsDropdown.contains(e.target) && e.target !== btn) {
       chatOptionsDropdownOpen = false;
       if (chatOptionsDropdown && chatOptionsDropdown.parentNode) {
         chatOptionsDropdown.parentNode.removeChild(chatOptionsDropdown);
@@ -10895,10 +9469,7 @@ function updatePersonaPickerDisplay() {
   const img = document.getElementById("persona-selected-avatar");
   if (!img) return;
   const name = currentPersona?.name || "You";
-  const avatarSrc =
-    currentPersona?.avatar instanceof Blob
-      ? getCachedAvatarBlobUrl(currentPersona.avatar)
-      : currentPersona?.avatar || fallbackAvatar(name, 512, 512);
+  const avatarSrc = currentPersona?.avatar instanceof Blob ? getCachedAvatarBlobUrl(currentPersona.avatar) : currentPersona?.avatar || fallbackAvatar(name, 512, 512);
   img.src = avatarSrc;
   img.alt = `${name} avatar`;
   applyPersonaColorStyles();
@@ -10907,15 +9478,9 @@ function updatePersonaPickerDisplay() {
 async function savePersonaFromModal() {
   const personas = await getOrderedPersonas();
   const name = document.getElementById("persona-name").value.trim();
-  const avatar =
-    state.currentPersonaAvatarBlob ||
-    document.getElementById("persona-avatar").value.trim();
-  const description = document
-    .getElementById("persona-description")
-    .value.trim();
-  const internalDescription = document
-    .getElementById("persona-internal-description")
-    .value.trim();
+  const avatar = state.currentPersonaAvatarBlob || document.getElementById("persona-avatar").value.trim();
+  const description = document.getElementById("persona-description").value.trim();
+  const internalDescription = document.getElementById("persona-internal-description").value.trim();
   const wantsDefault = document.getElementById("persona-is-default").checked;
 
   if (!name) {
@@ -10923,10 +9488,7 @@ async function savePersonaFromModal() {
     return false;
   }
   if (description.length > 100) {
-    await openInfoDialog(
-      t("personaDescriptionTitle"),
-      t("personaDescriptionLimit"),
-    );
+    await openInfoDialog(t("personaDescriptionTitle"), t("personaDescriptionLimit"));
     return false;
   }
 
@@ -10966,11 +9528,7 @@ async function savePersonaFromModal() {
   document.getElementById("persona-avatar-file").value = "";
   document.getElementById("persona-description").value = "";
   document.getElementById("persona-internal-description").value = "";
-  updateNameLengthCounter(
-    "persona-description",
-    "persona-description-count",
-    100,
-  );
+  updateNameLengthCounter("persona-description", "persona-description-count", 100);
   document.getElementById("persona-is-default").checked = false;
   state.editingPersonaId = null;
   state.currentPersonaAvatarBlob = null;
@@ -11012,10 +9570,7 @@ async function renderPersonaModalList() {
 
     const avatar = document.createElement("img");
     avatar.className = "persona-avatar";
-    avatar.src =
-      persona.avatar instanceof Blob
-        ? getCachedAvatarBlobUrl(persona.avatar)
-        : persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
+    avatar.src = persona.avatar instanceof Blob ? getCachedAvatarBlobUrl(persona.avatar) : persona.avatar || fallbackAvatar(persona.name || "P", 512, 512);
     avatar.alt = "persona avatar";
     avatar.classList.add("clickable-avatar");
     avatar.addEventListener("click", (e) => {
@@ -11044,13 +9599,9 @@ async function renderPersonaModalList() {
         await duplicatePersona(persona.id);
       }),
     );
-    const deleteBtn = iconButton(
-      "delete",
-      t("deletePersonaTitle"),
-      async () => {
-        await deletePersona(persona.id);
-      },
-    );
+    const deleteBtn = iconButton("delete", t("deletePersonaTitle"), async () => {
+      await deletePersona(persona.id);
+    });
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
 
@@ -11058,11 +9609,7 @@ async function renderPersonaModalList() {
 
     row.addEventListener("click", (e) => {
       // Exclude clicks on drag handle, avatar, and action buttons
-      if (
-        e.target.closest(".persona-drag") ||
-        e.target.closest(".persona-avatar") ||
-        e.target.closest(".lorebook-actions")
-      ) {
+      if (e.target.closest(".persona-drag") || e.target.closest(".persona-avatar") || e.target.closest(".lorebook-actions")) {
         return;
       }
       openPersonaEditor(persona);
@@ -11073,17 +9620,12 @@ async function renderPersonaModalList() {
 }
 
 async function deletePersona(personaId) {
-  const ok = await openConfirmDialog(
-    t("deletePersonaTitle"),
-    t("deletePersonaConfirm"),
-  );
+  const ok = await openConfirmDialog(t("deletePersonaTitle"), t("deletePersonaConfirm"));
   if (!ok) return;
   const persona = await db.personas.get(personaId);
   await db.personas.delete(personaId);
 
-  const threads = await db.threads
-    .filter((t) => Number(t.selectedPersonaId) === Number(personaId))
-    .toArray();
+  const threads = await db.threads.filter((t) => Number(t.selectedPersonaId) === Number(personaId)).toArray();
   await Promise.all(
     threads.map((t) =>
       db.threads.update(t.id, {
@@ -11116,22 +9658,14 @@ function loadPersonaForEditing(persona) {
   document.getElementById("persona-name").value = persona.name || "";
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
   if (persona.avatar instanceof Blob) {
-    document.getElementById("persona-avatar").value = getCachedAvatarBlobUrl(
-      persona.avatar,
-    );
+    document.getElementById("persona-avatar").value = getCachedAvatarBlobUrl(persona.avatar);
   } else {
     document.getElementById("persona-avatar").value = persona.avatar || "";
   }
   document.getElementById("persona-avatar-file").value = "";
-  document.getElementById("persona-description").value =
-    persona.description || "";
-  document.getElementById("persona-internal-description").value =
-    persona.internalDescription || "";
-  updateNameLengthCounter(
-    "persona-description",
-    "persona-description-count",
-    100,
-  );
+  document.getElementById("persona-description").value = persona.description || "";
+  document.getElementById("persona-internal-description").value = persona.internalDescription || "";
+  updateNameLengthCounter("persona-description", "persona-description-count", 100);
   document.getElementById("persona-is-default").checked = !!persona.isDefault;
   document.getElementById("save-persona-btn").textContent = t("updatePersona");
 }
@@ -11145,38 +9679,23 @@ function openPersonaEditor(persona = null) {
 
   const nameInput = document.getElementById("persona-editor-name");
   nameInput.value = persona?.name || "";
-  updateNameLengthCounter(
-    "persona-editor-name",
-    "persona-editor-name-count",
-    64,
-  );
+  updateNameLengthCounter("persona-editor-name", "persona-editor-name-count", 64);
 
   const descInput = document.getElementById("persona-editor-description");
   descInput.value = persona?.description || "";
-  updateNameLengthCounter(
-    "persona-editor-description",
-    "persona-editor-description-count",
-    100,
-  );
+  updateNameLengthCounter("persona-editor-description", "persona-editor-description-count", 100);
 
-  document.getElementById("persona-editor-internal-description").value =
-    persona?.internalDescription || "";
+  document.getElementById("persona-editor-internal-description").value = persona?.internalDescription || "";
 
-  document.getElementById("persona-editor-color").value = normalizePersonaColor(
-    persona?.color,
-  );
-  document.getElementById("persona-editor-is-default").checked =
-    !!persona?.isDefault;
+  document.getElementById("persona-editor-color").value = normalizePersonaColor(persona?.color);
+  document.getElementById("persona-editor-is-default").checked = !!persona?.isDefault;
 
   const dropzone = document.getElementById("persona-avatar-dropzone");
   const preview = document.getElementById("persona-avatar-preview");
   const removeBtn = document.getElementById("persona-remove-avatar");
 
   if (persona?.avatar) {
-    const avatarSrc =
-      persona.avatar instanceof Blob
-        ? getCachedAvatarBlobUrl(persona.avatar)
-        : persona.avatar;
+    const avatarSrc = persona.avatar instanceof Blob ? getCachedAvatarBlobUrl(persona.avatar) : persona.avatar;
     preview.src = avatarSrc;
     preview.classList.remove("hidden");
     dropzone.classList.add("has-avatar");
@@ -11210,15 +9729,9 @@ async function savePersonaFromEditor() {
     return;
   }
 
-  const description = document
-    .getElementById("persona-editor-description")
-    .value.trim();
-  const internalDescription = document
-    .getElementById("persona-editor-internal-description")
-    .value.trim();
-  const isDefault = document.getElementById(
-    "persona-editor-is-default",
-  ).checked;
+  const description = document.getElementById("persona-editor-description").value.trim();
+  const internalDescription = document.getElementById("persona-editor-internal-description").value.trim();
+  const isDefault = document.getElementById("persona-editor-is-default").checked;
   const colorValue = document.getElementById("persona-editor-color")?.value;
 
   let avatar = null;
@@ -11254,10 +9767,7 @@ async function savePersonaFromEditor() {
     savedId = state_editingPersonaId;
   } else {
     const personas = await getOrderedPersonas();
-    const maxOrder = personas.reduce(
-      (max, p) => Math.max(max, p.order || 0),
-      0,
-    );
+    const maxOrder = personas.reduce((max, p) => Math.max(max, p.order || 0), 0);
     personaData.order = maxOrder + 1;
     savedId = await db.personas.add(personaData);
   }
@@ -11364,9 +9874,7 @@ async function setDefaultPersona(personaId) {
 
 async function normalizePersonaOrder() {
   const personas = await getOrderedPersonas();
-  await Promise.all(
-    personas.map((p, index) => db.personas.update(p.id, { order: index })),
-  );
+  await Promise.all(personas.map((p, index) => db.personas.update(p.id, { order: index })));
 }
 
 function onPersonaDragStart(e) {
@@ -11395,11 +9903,7 @@ async function onPersonaDrop(e) {
   const [moved] = personas.splice(from, 1);
   personas.splice(to, 0, moved);
 
-  await Promise.all(
-    personas.map((p, index) =>
-      db.personas.update(p.id, { order: index, updatedAt: Date.now() }),
-    ),
-  );
+  await Promise.all(personas.map((p, index) => db.personas.update(p.id, { order: index, updatedAt: Date.now() })));
 
   await renderPersonaModalList();
   await renderPersonaSelector();
@@ -11452,49 +9956,31 @@ function parseCsvValues(value) {
     .split(",")
     .map((v) => normalizeTagValue(v))
     .filter(Boolean)
-    .filter(
-      (v, i, arr) =>
-        arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i,
-    );
+    .filter((v, i, arr) => arr.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i);
 }
 
 function normalizeLorebookEntry(entry, fallbackIndex = 0) {
-  const keys = Array.isArray(entry?.keys)
-    ? entry.keys
-    : parseCsvValues(entry?.key || "");
-  const secondaryKeys = Array.isArray(entry?.secondaryKeys)
-    ? entry.secondaryKeys
-    : parseCsvValues(entry?.keysecondary || "");
+  const keys = Array.isArray(entry?.keys) ? entry.keys : parseCsvValues(entry?.key || "");
+  const secondaryKeys = Array.isArray(entry?.secondaryKeys) ? entry.secondaryKeys : parseCsvValues(entry?.keysecondary || "");
   return {
     id: Number(entry?.id) || Date.now() + fallbackIndex,
     keys: keys.map((k) => normalizeTagValue(k)).filter(Boolean),
-    secondaryKeys: secondaryKeys
-      .map((k) => normalizeTagValue(k))
-      .filter(Boolean),
+    secondaryKeys: secondaryKeys.map((k) => normalizeTagValue(k)).filter(Boolean),
     content: String(entry?.content || "").trim(),
   };
 }
 
 function normalizeLorebookRecord(record) {
   if (!record || typeof record !== "object") return null;
-  const entriesRaw = Array.isArray(record.entries)
-    ? record.entries
-    : record.entries && typeof record.entries === "object"
-      ? Object.values(record.entries)
-      : [];
-  const entries = entriesRaw
-    .map((entry, idx) => normalizeLorebookEntry(entry, idx))
-    .filter((entry) => entry && entry.content);
+  const entriesRaw = Array.isArray(record.entries) ? record.entries : record.entries && typeof record.entries === "object" ? Object.values(record.entries) : [];
+  const entries = entriesRaw.map((entry, idx) => normalizeLorebookEntry(entry, idx)).filter((entry) => entry && entry.content);
   return {
     id: record.id,
     name: String(record.name || "").trim(),
     avatar: String(record.avatar || "").trim(),
     description: String(record.description || "").slice(0, 512),
     scanDepth: Math.max(5, Math.min(100, Number(record.scanDepth) || 50)),
-    tokenBudget: Math.max(
-      100,
-      Math.min(1000, Number(record.tokenBudget) || 200),
-    ),
+    tokenBudget: Math.max(100, Math.min(1000, Number(record.tokenBudget) || 200)),
     recursiveScanning: record.recursiveScanning === true,
     entries,
     createdAt: Number(record.createdAt) || Date.now(),
@@ -11537,9 +10023,7 @@ async function closeLoreEditor() {
 async function openLoreEditor(lorebook = null) {
   const normalized = normalizeLorebookRecord(lorebook || {});
   state.lore.editingId = normalized?.id || null;
-  state.lore.entries = Array.isArray(normalized?.entries)
-    ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx))
-    : [];
+  state.lore.entries = Array.isArray(normalized?.entries) ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx)) : [];
 
   let lorebookWithCollapseState = lorebook;
   if (state.lore.editingId) {
@@ -11553,22 +10037,15 @@ async function openLoreEditor(lorebook = null) {
   const descriptionField = document.getElementById("lore-description");
   if (descriptionField) descriptionField.value = normalized?.description || "";
   const scanDepthField = document.getElementById("lore-scan-depth");
-  if (scanDepthField)
-    scanDepthField.value = String(normalized?.scanDepth || 50);
+  if (scanDepthField) scanDepthField.value = String(normalized?.scanDepth || 50);
   const tokenBudgetField = document.getElementById("lore-token-budget");
-  if (tokenBudgetField)
-    tokenBudgetField.value = String(normalized?.tokenBudget || 200);
+  if (tokenBudgetField) tokenBudgetField.value = String(normalized?.tokenBudget || 200);
   const recursiveField = document.getElementById("lore-recursive-scanning");
-  if (recursiveField)
-    recursiveField.checked = normalized?.recursiveScanning === true;
+  if (recursiveField) recursiveField.checked = normalized?.recursiveScanning === true;
   const injectionModeField = document.getElementById("lore-injection-mode");
-  if (injectionModeField)
-    injectionModeField.value = normalized?.injectionMode || "cooldown";
-  const suppressionWindowField = document.getElementById(
-    "lore-suppression-window",
-  );
-  if (suppressionWindowField)
-    suppressionWindowField.value = String(normalized?.suppressionWindow || 10);
+  if (injectionModeField) injectionModeField.value = normalized?.injectionMode || "cooldown";
+  const suppressionWindowField = document.getElementById("lore-suppression-window");
+  if (suppressionWindowField) suppressionWindowField.value = String(normalized?.suppressionWindow || 10);
   toggleSuppressionWindowField();
 
   if (state.lore.entries.length === 0) addLoreEntryEditor();
@@ -11678,15 +10155,7 @@ function renderLoreEntryEditors() {
       saveLoreEditorTextareaCollapseStates();
     });
 
-    cardBody.append(
-      delBtn,
-      keysLabel,
-      keysInput,
-      secondaryLabel,
-      secondaryInput,
-      contentLabel,
-      contentInput,
-    );
+    cardBody.append(delBtn, keysLabel, keysInput, secondaryLabel, secondaryInput, contentLabel, contentInput);
     card.append(head, cardBody);
     root.appendChild(card);
   });
@@ -11695,10 +10164,7 @@ function renderLoreEntryEditors() {
 async function renderLorebookManagementList() {
   const list = document.getElementById("lorebook-list");
   if (!list) return;
-  const [lorebooks, characters] = await Promise.all([
-    getAllLorebooks(),
-    db.characters.toArray(),
-  ]);
+  const [lorebooks, characters] = await Promise.all([getAllLorebooks(), db.characters.toArray()]);
   list.innerHTML = "";
   if (lorebooks.length === 0) {
     const empty = document.createElement("p");
@@ -11709,19 +10175,14 @@ async function renderLorebookManagementList() {
   }
 
   lorebooks.forEach((lorebook) => {
-    const users = characters.filter(
-      (char) =>
-        Array.isArray(char.lorebookIds) &&
-        char.lorebookIds.map(Number).includes(Number(lorebook.id)),
-    );
+    const users = characters.filter((char) => Array.isArray(char.lorebookIds) && char.lorebookIds.map(Number).includes(Number(lorebook.id)));
 
     const row = document.createElement("div");
     row.className = "lorebook-row";
 
     const avatar = document.createElement("img");
     avatar.className = "lorebook-avatar";
-    avatar.src =
-      lorebook.avatar || fallbackAvatar(lorebook.name || "LB", 512, 512);
+    avatar.src = lorebook.avatar || fallbackAvatar(lorebook.name || "LB", 512, 512);
     avatar.alt = `${lorebook.name || "Lorebook"} avatar`;
     avatar.classList.add("clickable-avatar");
     avatar.addEventListener("click", (e) => {
@@ -11753,10 +10214,7 @@ async function renderLorebookManagementList() {
           if (target) {
             target.scrollIntoView({ behavior: "smooth", block: "center" });
             target.classList.add("char-lore-focus");
-            window.setTimeout(
-              () => target.classList.remove("char-lore-focus"),
-              1400,
-            );
+            window.setTimeout(() => target.classList.remove("char-lore-focus"), 1400);
           }
         });
         usage.appendChild(chip);
@@ -11775,23 +10233,15 @@ async function renderLorebookManagementList() {
       await exportLorebook(lorebook.id);
     });
     actions.appendChild(exportBtn);
-    const deleteBtn = iconButton(
-      "delete",
-      t("deleteLoreBookAria"),
-      async () => {
-        await deleteLorebook(lorebook.id);
-      },
-    );
+    const deleteBtn = iconButton("delete", t("deleteLoreBookAria"), async () => {
+      await deleteLorebook(lorebook.id);
+    });
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
 
     row.append(avatar, main, actions);
     row.addEventListener("click", (e) => {
-      if (
-        e.target.closest(".lorebook-actions") ||
-        e.target.closest("button") ||
-        e.target.closest(".icon-btn")
-      ) {
+      if (e.target.closest(".lorebook-actions") || e.target.closest("button") || e.target.closest(".icon-btn")) {
         return;
       }
       openLoreEditor(lorebook);
@@ -11802,45 +10252,18 @@ async function renderLorebookManagementList() {
 
 async function collectLorebookFromEditor() {
   const name = String(document.getElementById("lore-name")?.value || "").trim();
-  const description = String(
-    document.getElementById("lore-description")?.value || "",
-  )
+  const description = String(document.getElementById("lore-description")?.value || "")
     .trim()
     .slice(0, 512);
-  const avatar = String(
-    document.getElementById("lore-avatar")?.value || "",
-  ).trim();
-  const scanDepth = Math.max(
-    5,
-    Math.min(
-      100,
-      Number(document.getElementById("lore-scan-depth")?.value) || 50,
-    ),
-  );
-  const tokenBudget = Math.max(
-    100,
-    Math.min(
-      1000,
-      Number(document.getElementById("lore-token-budget")?.value) || 200,
-    ),
-  );
-  const recursiveScanning =
-    document.getElementById("lore-recursive-scanning")?.checked === true;
-  const injectionMode =
-    document.getElementById("lore-injection-mode")?.value || "cooldown";
-  const suppressionWindow = Math.max(
-    1,
-    Math.min(
-      100,
-      Number(document.getElementById("lore-suppression-window")?.value) || 10,
-    ),
-  );
+  const avatar = String(document.getElementById("lore-avatar")?.value || "").trim();
+  const scanDepth = Math.max(5, Math.min(100, Number(document.getElementById("lore-scan-depth")?.value) || 50));
+  const tokenBudget = Math.max(100, Math.min(1000, Number(document.getElementById("lore-token-budget")?.value) || 200));
+  const recursiveScanning = document.getElementById("lore-recursive-scanning")?.checked === true;
+  const injectionMode = document.getElementById("lore-injection-mode")?.value || "cooldown";
+  const suppressionWindow = Math.max(1, Math.min(100, Number(document.getElementById("lore-suppression-window")?.value) || 10));
 
   if (name.length < 2 || name.length > 128) {
-    await openInfoDialog(
-      "Invalid Lorebook",
-      "Name must have between 2 and 128 characters.",
-    );
+    await openInfoDialog("Invalid Lorebook", "Name must have between 2 and 128 characters.");
     return null;
   }
 
@@ -11860,21 +10283,11 @@ async function collectLorebookFromEditor() {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i];
     if (entry.keys.length === 0) {
-      await openInfoDialog(
-        "Invalid Lore Entry",
-        `Entry ${i + 1} requires at least one key.`,
-      );
+      await openInfoDialog("Invalid Lore Entry", `Entry ${i + 1} requires at least one key.`);
       return null;
     }
-    if (
-      !entry.content ||
-      entry.content.length < 1 ||
-      entry.content.length > 10480
-    ) {
-      await openInfoDialog(
-        "Invalid Lore Entry",
-        `Entry ${i + 1} content must be between 1 and 10480 characters.`,
-      );
+    if (!entry.content || entry.content.length < 1 || entry.content.length > 10480) {
+      await openInfoDialog("Invalid Lore Entry", `Entry ${i + 1} content must be between 1 and 10480 characters.`);
       return null;
     }
   }
@@ -11946,19 +10359,14 @@ async function deleteLorebook(lorebookId) {
   const lorebook = normalizeLorebookRecord(await db.lorebooks.get(lorebookId));
   if (!lorebook) return;
   const allCharacters = await db.characters.toArray();
-  const affected = allCharacters.filter(
-    (char) =>
-      Array.isArray(char.lorebookIds) &&
-      char.lorebookIds.map(Number).includes(Number(lorebookId)),
-  );
+  const affected = allCharacters.filter((char) => Array.isArray(char.lorebookIds) && char.lorebookIds.map(Number).includes(Number(lorebookId)));
   let message = `Delete Lorebook "${lorebook.name}"?`;
   if (affected.length > 0) {
     const lines = affected
       .slice(0, 20)
       .map((char) => `- ${char.name || `Character #${char.id}`}`)
       .join("\n");
-    const extra =
-      affected.length > 20 ? `\n...and ${affected.length - 20} more.` : "";
+    const extra = affected.length > 20 ? `\n...and ${affected.length - 20} more.` : "";
     message += `\n\nUsed by:\n${lines}${extra}`;
   }
   const ok = await openConfirmDialog(t("deleteLoreBookTitle"), message);
@@ -11967,9 +10375,7 @@ async function deleteLorebook(lorebookId) {
   await db.transaction("rw", db.lorebooks, db.characters, async () => {
     await db.lorebooks.delete(lorebookId);
     for (const char of affected) {
-      const next = (char.lorebookIds || []).filter(
-        (id) => Number(id) !== Number(lorebookId),
-      );
+      const next = (char.lorebookIds || []).filter((id) => Number(id) !== Number(lorebookId));
       await db.characters.update(char.id, {
         lorebookIds: next,
         updatedAt: Date.now(),
@@ -11996,33 +10402,22 @@ async function deleteLorebook(lorebookId) {
 function buildLorebookExportPayload(lorebook) {
   if (!lorebook) return null;
   const entries = {};
-  (Array.isArray(lorebook.entries) ? lorebook.entries : []).forEach(
-    (entry, index) => {
-      const keys = (Array.isArray(entry.keys) ? entry.keys : [])
-        .map((value) => String(value || "").trim())
-        .filter(Boolean);
-      if (keys.length === 0) return;
-      const secondaryKeys = (
-        Array.isArray(entry.secondaryKeys) ? entry.secondaryKeys : []
-      )
-        .map((value) => String(value || "").trim())
-        .filter(Boolean);
-      entries[String(index + 1)] = {
-        key: keys,
-        keysecondary: secondaryKeys,
-        content: String(entry.content || "").trim(),
-      };
-    },
-  );
+  (Array.isArray(lorebook.entries) ? lorebook.entries : []).forEach((entry, index) => {
+    const keys = (Array.isArray(entry.keys) ? entry.keys : []).map((value) => String(value || "").trim()).filter(Boolean);
+    if (keys.length === 0) return;
+    const secondaryKeys = (Array.isArray(entry.secondaryKeys) ? entry.secondaryKeys : []).map((value) => String(value || "").trim()).filter(Boolean);
+    entries[String(index + 1)] = {
+      key: keys,
+      keysecondary: secondaryKeys,
+      content: String(entry.content || "").trim(),
+    };
+  });
   if (Object.keys(entries).length === 0) return null;
   return {
     name: String(lorebook.name || "").trim(),
     description: String(lorebook.description || "").trim(),
     scan_depth: Math.max(5, Math.min(100, Number(lorebook.scanDepth) || 50)),
-    token_budget: Math.max(
-      100,
-      Math.min(1000, Number(lorebook.tokenBudget) || 200),
-    ),
+    token_budget: Math.max(100, Math.min(1000, Number(lorebook.tokenBudget) || 200)),
     recursive_scanning: Boolean(lorebook.recursiveScanning),
     entries,
   };
@@ -12075,10 +10470,7 @@ function normalizeWritingInstructionRecord(wi) {
   return {
     id: Number(wi.id) || null,
     name: String(wi.name || "").trim(),
-    instructions:
-      typeof wi.instructions === "object" && wi.instructions !== null
-        ? wi.instructions
-        : {},
+    instructions: typeof wi.instructions === "object" && wi.instructions !== null ? wi.instructions : {},
     createdAt: Number(wi.createdAt) || Date.now(),
     updatedAt: Number(wi.updatedAt) || Date.now(),
   };
@@ -12136,22 +10528,14 @@ async function renderWritingInstructionsList() {
         await exportWritingInstruction(wi.id);
       }),
     );
-    const deleteBtn = iconButton(
-      "delete",
-      t("deleteWritingInstructionAria"),
-      async () => {
-        await deleteWritingInstruction(wi.id);
-      },
-    );
+    const deleteBtn = iconButton("delete", t("deleteWritingInstructionAria"), async () => {
+      await deleteWritingInstruction(wi.id);
+    });
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
     row.append(avatar, main, actions);
     row.addEventListener("click", (e) => {
-      if (
-        e.target.closest(".lorebook-actions") ||
-        e.target.closest("button") ||
-        e.target.closest(".icon-btn")
-      ) {
+      if (e.target.closest(".lorebook-actions") || e.target.closest("button") || e.target.closest(".icon-btn")) {
         return;
       }
       openWritingInstructionEditor(wi);
@@ -12161,42 +10545,27 @@ async function renderWritingInstructionsList() {
 }
 
 async function openWritingInstructionEditor(writingInstruction = null) {
-  const normalized = normalizeWritingInstructionRecord(
-    writingInstruction || {},
-  );
+  const normalized = normalizeWritingInstructionRecord(writingInstruction || {});
   state_writingInstructions.editingId = normalized.id || null;
   const interfaceLang = state.settings.interfaceLanguage || "en";
-  if (
-    !normalized.instructions ||
-    Object.keys(normalized.instructions).length === 0
-  ) {
-    state_writingInstructions.definitions = [
-      { language: interfaceLang, instructions: "" },
-    ];
+  if (!normalized.instructions || Object.keys(normalized.instructions).length === 0) {
+    state_writingInstructions.definitions = [{ language: interfaceLang, instructions: "" }];
   } else {
-    state_writingInstructions.definitions = Object.entries(
-      normalized.instructions,
-    ).map(([language, instructions]) => ({
+    state_writingInstructions.definitions = Object.entries(normalized.instructions).map(([language, instructions]) => ({
       language,
       instructions: instructions || "",
     }));
   }
-  state_writingInstructions.activeLanguage =
-    state_writingInstructions.definitions[0]?.language || interfaceLang;
+  state_writingInstructions.activeLanguage = state_writingInstructions.definitions[0]?.language || interfaceLang;
   state_writingInstructions.originalState = {
     name: normalized.name || "",
-    instructions: Object.fromEntries(
-      state_writingInstructions.definitions.map((d) => [d.language, d.instructions]),
-    ),
+    instructions: Object.fromEntries(state_writingInstructions.definitions.map((d) => [d.language, d.instructions])),
   };
-  document.getElementById("writing-instruction-name").value =
-    normalized.name || "";
+  document.getElementById("writing-instruction-name").value = normalized.name || "";
   updateWritingInstructionNameCount();
   renderWritingInstructionTabs();
   loadActiveWritingInstructionToForm();
-  const editorModal = document.getElementById(
-    "writing-instruction-editor-modal",
-  );
+  const editorModal = document.getElementById("writing-instruction-editor-modal");
   if (editorModal) {
     editorModal.classList.remove("hidden");
     state.activeModalId = "writing-instruction-editor-modal";
@@ -12210,11 +10579,7 @@ function renderWritingInstructionTabs() {
   const root = document.getElementById("writing-instruction-tabs-left");
   if (!root) return;
   root.innerHTML = "";
-  if (
-    !state_writingInstructions.definitions ||
-    state_writingInstructions.definitions.length === 0
-  )
-    return;
+  if (!state_writingInstructions.definitions || state_writingInstructions.definitions.length === 0) return;
   state_writingInstructions.definitions.forEach((def) => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -12224,10 +10589,7 @@ function renderWritingInstructionTabs() {
     }
     const label = document.createElement("span");
     label.className = "char-def-tab-label";
-    const flag = createLanguageFlagIconElement(
-      def.language,
-      "char-def-tab-flag",
-    );
+    const flag = createLanguageFlagIconElement(def.language, "char-def-tab-flag");
     const text = document.createElement("span");
     text.textContent = def.language;
     label.append(flag, text);
@@ -12252,19 +10614,12 @@ function renderWritingInstructionTabs() {
         await openInfoDialog(t("message"), t("languageRequired"));
         return;
       }
-      const ok = await openConfirmDialog(
-        t("removeLanguageTitle"),
-        t("removeLanguageConfirm", { lang: def.language }),
-      );
+      const ok = await openConfirmDialog(t("removeLanguageTitle"), t("removeLanguageConfirm", { lang: def.language }));
       if (!ok) return;
       saveActiveWritingInstructionFromForm();
-      state_writingInstructions.definitions =
-        state_writingInstructions.definitions.filter(
-          (x) => x.language !== def.language,
-        );
+      state_writingInstructions.definitions = state_writingInstructions.definitions.filter((x) => x.language !== def.language);
       if (state_writingInstructions.activeLanguage === def.language) {
-        state_writingInstructions.activeLanguage =
-          state_writingInstructions.definitions[0]?.language || "";
+        state_writingInstructions.activeLanguage = state_writingInstructions.definitions[0]?.language || "";
       }
       loadActiveWritingInstructionToForm();
       renderWritingInstructionTabs();
@@ -12276,17 +10631,13 @@ function renderWritingInstructionTabs() {
 }
 
 function getActiveWritingInstructionDefinition() {
-  return state_writingInstructions.definitions.find(
-    (d) => d.language === state_writingInstructions.activeLanguage,
-  );
+  return state_writingInstructions.definitions.find((d) => d.language === state_writingInstructions.activeLanguage);
 }
 
 function saveActiveWritingInstructionFromForm() {
   const def = getActiveWritingInstructionDefinition();
   if (!def) return;
-  def.instructions = String(
-    document.getElementById("writing-instruction-text")?.value || "",
-  ).trim();
+  def.instructions = String(document.getElementById("writing-instruction-text")?.value || "").trim();
 }
 
 function loadActiveWritingInstructionToForm() {
@@ -12327,9 +10678,7 @@ function updateWritingInstructionTextCount() {
 }
 
 function getWritingInstructionEditorCurrentState() {
-  const name = String(
-    document.getElementById("writing-instruction-name")?.value || "",
-  ).trim();
+  const name = String(document.getElementById("writing-instruction-name")?.value || "").trim();
   const instructions = {};
   state_writingInstructions.definitions.forEach((def) => {
     instructions[def.language] = String(def.instructions || "").trim();
@@ -12375,21 +10724,14 @@ function updateWritingInstructionDirtyState() {
 async function saveWritingInstruction({ close = true } = {}) {
   saveWiEditorTextareaCollapseStates();
   saveActiveWritingInstructionFromForm();
-  const name = String(
-    document.getElementById("writing-instruction-name")?.value || "",
-  ).trim();
+  const name = String(document.getElementById("writing-instruction-name")?.value || "").trim();
   if (!name) {
     await openInfoDialog(t("missingFieldTitle"), t("nameRequired"));
     return false;
   }
-  const hasAllContent = state_writingInstructions.definitions.every(
-    (d) => String(d.instructions || "").trim().length > 0,
-  );
+  const hasAllContent = state_writingInstructions.definitions.every((d) => String(d.instructions || "").trim().length > 0);
   if (!hasAllContent) {
-    await openInfoDialog(
-      t("missingFieldTitle"),
-      t("writingInstructionsRequired"),
-    );
+    await openInfoDialog(t("missingFieldTitle"), t("writingInstructionsRequired"));
     return false;
   }
   const instructions = {};
@@ -12402,10 +10744,7 @@ async function saveWritingInstruction({ close = true } = {}) {
     updatedAt: Date.now(),
   };
   if (state_writingInstructions.editingId) {
-    await db.writingInstructions.update(
-      state_writingInstructions.editingId,
-      payload,
-    );
+    await db.writingInstructions.update(state_writingInstructions.editingId, payload);
     showToast(t("writingInstructionUpdated"), "success");
   } else {
     payload.createdAt = Date.now();
@@ -12444,18 +10783,14 @@ async function duplicateWritingInstruction(writingInstructionId) {
 }
 
 async function deleteWritingInstruction(writingInstructionId) {
-  const wi = normalizeWritingInstructionRecord(
-    await db.writingInstructions.get(writingInstructionId),
-  );
+  const wi = normalizeWritingInstructionRecord(await db.writingInstructions.get(writingInstructionId));
   if (!wi) return;
 
   // Find characters using this writing instruction (check all language definitions)
   const allCharacters = await db.characters.toArray();
   const usingCharacters = allCharacters.filter((char) => {
     if (!char.definitions || !Array.isArray(char.definitions)) return false;
-    return char.definitions.some(
-      (def) => def.writingInstructionId === writingInstructionId,
-    );
+    return char.definitions.some((def) => def.writingInstructionId === writingInstructionId);
   });
 
   let message = tf("deleteWritingInstructionConfirm", { name: wi.name });
@@ -12469,10 +10804,7 @@ async function deleteWritingInstruction(writingInstructionId) {
       });
   }
 
-  const ok = await openConfirmDialog(
-    t("deleteWritingInstructionTitle"),
-    message,
-  );
+  const ok = await openConfirmDialog(t("deleteWritingInstructionTitle"), message);
   if (!ok) return;
   await db.writingInstructions.delete(writingInstructionId);
   await renderWritingInstructionsList();
@@ -12480,13 +10812,10 @@ async function deleteWritingInstruction(writingInstructionId) {
 }
 
 async function exportWritingInstruction(writingInstructionId) {
-  const wi = normalizeWritingInstructionRecord(
-    await db.writingInstructions.get(writingInstructionId),
-  );
+  const wi = normalizeWritingInstructionRecord(await db.writingInstructions.get(writingInstructionId));
   if (!wi) return;
   const interfaceLang = state.settings.interfaceLanguage || "en";
-  const content =
-    wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
+  const content = wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
   const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -12506,9 +10835,7 @@ async function importWritingInstructionFromFile(e) {
   if (!file) return;
   try {
     const text = await file.text();
-    const fallbackName = file.name
-      ? file.name.replace(/\.[^.]+$/, "").replace(/^wi_/, "")
-      : "Imported";
+    const fallbackName = file.name ? file.name.replace(/\.[^.]+$/, "").replace(/^wi_/, "") : "Imported";
     const wi = {
       name: fallbackName,
       instructions: {
@@ -12533,27 +10860,19 @@ async function importWritingInstructionFromFile(e) {
 function openWritingInstructionLanguageModal() {
   const select = document.getElementById("writing-instruction-language-select");
   if (!select) return;
-  const usedLanguages = new Set(
-    state_writingInstructions.definitions.map((d) => d.language),
-  );
+  const usedLanguages = new Set(state_writingInstructions.definitions.map((d) => d.language));
   select.innerHTML = "";
-  BOT_LANGUAGE_OPTIONS.filter((code) => !usedLanguages.has(code)).forEach(
-    (code) => {
-      const opt = document.createElement("option");
-      opt.value = code;
-      opt.textContent = getBotLanguageName(code);
-      select.appendChild(opt);
-    },
-  );
-  document
-    .getElementById("writing-instruction-language-modal")
-    ?.classList.remove("hidden");
+  BOT_LANGUAGE_OPTIONS.filter((code) => !usedLanguages.has(code)).forEach((code) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = getBotLanguageName(code);
+    select.appendChild(opt);
+  });
+  document.getElementById("writing-instruction-language-modal")?.classList.remove("hidden");
 }
 
 function closeWritingInstructionLanguageModal() {
-  document
-    .getElementById("writing-instruction-language-modal")
-    ?.classList.add("hidden");
+  document.getElementById("writing-instruction-language-modal")?.classList.add("hidden");
 }
 
 async function addWritingInstructionLanguage() {
@@ -12572,12 +10891,7 @@ async function addWritingInstructionLanguage() {
   updateWritingInstructionDirtyState();
 }
 
-const PLACEHOLDER_STATUSES = new Set([
-  "queued",
-  "cooling_down",
-  "title_generating",
-  "summarizing",
-]);
+const PLACEHOLDER_STATUSES = new Set(["queued", "cooling_down", "title_generating", "summarizing"]);
 
 function isPlaceholderMessage(message) {
   if (!message) return false;
@@ -12599,14 +10913,8 @@ function isCountedSimulationMessage(message) {
 
 function countSimulationMessages(messages, start = 0, end = Infinity) {
   const list = Array.isArray(messages) ? messages : [];
-  const normalizedStart = Math.max(
-    0,
-    Number.isFinite(Number(start)) ? Number(start) : 0,
-  );
-  const normalizedEnd = Math.min(
-    list.length,
-    Number.isFinite(Number(end)) ? Number(end) : list.length,
-  );
+  const normalizedStart = Math.max(0, Number.isFinite(Number(start)) ? Number(start) : 0);
+  const normalizedEnd = Math.min(list.length, Number.isFinite(Number(end)) ? Number(end) : list.length);
   let count = 0;
   for (let i = normalizedStart; i < normalizedEnd; i += 1) {
     if (isCountedSimulationMessage(list[i])) {
@@ -12659,10 +10967,7 @@ function formatOocContextEntry(message) {
   if (!message) return "";
   if (!isInSimulationMessage(message)) return "";
   const role = normalizeApiRole(message?.apiRole || message?.role) || "user";
-  const fallbackSender =
-    role === "assistant"
-      ? currentCharacter?.name || "Assistant"
-      : message.senderName || "You";
+  const fallbackSender = role === "assistant" ? currentCharacter?.name || "Assistant" : message.senderName || "You";
   const content = removeImageLinksFromContent(message.content);
   if (!content) return "";
   return `${role}: ${fallbackSender}: ${content}`;
@@ -12690,22 +10995,13 @@ function shouldIncludeOneTimeExtraPrompt(history) {
 
 function normalizeWritingInstructionsTiming(value) {
   const v = String(value || "always").toLowerCase();
-  if (
-    v === "always" ||
-    v === "every_other" ||
-    v === "every_second" ||
-    v === "every_third" ||
-    v === "every_fourth"
-  ) {
+  if (v === "always" || v === "every_other" || v === "every_second" || v === "every_third" || v === "every_fourth") {
     return v;
   }
   return "always";
 }
 
-function buildThreadConversationSnapshot(
-  thread,
-  threshold = state.settings.autoUnloadThreshold || 0,
-) {
+function buildThreadConversationSnapshot(thread, threshold = state.settings.autoUnloadThreshold || 0) {
   const allMessages = Array.isArray(thread?.messages) ? thread.messages : [];
   const hasInitialMessages = allMessages.some((m) => m.isInitial);
   const nonInitialCount = allMessages.filter((m) => !m.isInitial).length;
@@ -12716,9 +11012,7 @@ function buildThreadConversationSnapshot(
   if (normalizedThreshold > 0 && totalMessages > normalizedThreshold) {
     const startActive = Math.max(0, totalMessages - normalizedThreshold);
     const storedStart = thread?.unloadState?.loadedStartIndex;
-    let candidate = Number.isFinite(Number(storedStart))
-      ? Number(storedStart)
-      : startActive;
+    let candidate = Number.isFinite(Number(storedStart)) ? Number(storedStart) : startActive;
     candidate = Math.max(0, Math.min(startActive, candidate));
     loadedStartIndex = candidate;
     loadLimit = Math.max(0, startActive - loadedStartIndex);
@@ -12731,11 +11025,7 @@ function buildThreadConversationSnapshot(
         }
       : msg,
   );
-  const displayIndexOffset = countSimulationMessages(
-    allMessages,
-    0,
-    loadedStartIndex,
-  );
+  const displayIndexOffset = countSimulationMessages(allMessages, 0, loadedStartIndex);
   return {
     conversationHistory: subset,
     unloadState: {
@@ -12821,8 +11111,7 @@ function getAssetDataUrl(asset, options = {}) {
   if (!asset) return "";
   const data = asset.data;
   if (!data) return "";
-  const key =
-    options.cacheKey || (asset.id ? `asset-${asset.id}` : null) || null;
+  const key = options.cacheKey || (asset.id ? `asset-${asset.id}` : null) || null;
   return getCachedAssetBlobUrl(key, data);
 }
 
@@ -12963,40 +11252,28 @@ async function renderAssetsList() {
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
 
-    const downloadBtn = iconButton(
-      "export",
-      t("downloadAssetAria") || "Download",
-      () => {
-        downloadAsset(asset);
-      },
-    );
+    const downloadBtn = iconButton("export", t("downloadAssetAria") || "Download", () => {
+      downloadAsset(asset);
+    });
     actions.appendChild(downloadBtn);
 
-    const deleteBtn = iconButton(
-      "delete",
-      t("deleteAssetAria") || "Delete",
-      async () => {
-        const ok = await openConfirmDialog(
-          t("deleteAssetTitle"),
-          tf("deleteAssetConfirm", {
-            name: asset.name || asset.originalName || "Untitled",
-          }),
-        );
-        if (!ok) return;
-        await deleteAsset(asset.id);
-        await renderAssetsList();
-      },
-    );
+    const deleteBtn = iconButton("delete", t("deleteAssetAria") || "Delete", async () => {
+      const ok = await openConfirmDialog(
+        t("deleteAssetTitle"),
+        tf("deleteAssetConfirm", {
+          name: asset.name || asset.originalName || "Untitled",
+        }),
+      );
+      if (!ok) return;
+      await deleteAsset(asset.id);
+      await renderAssetsList();
+    });
     deleteBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteBtn);
 
     row.append(avatar, main, actions);
     row.addEventListener("click", (e) => {
-      if (
-        e.target.closest(".lorebook-actions") ||
-        e.target.closest("button") ||
-        e.target.closest(".icon-btn")
-      ) {
+      if (e.target.closest(".lorebook-actions") || e.target.closest("button") || e.target.closest(".icon-btn")) {
         return;
       }
       openAssetEditor(asset);
@@ -13081,9 +11358,7 @@ async function openAssetEditor(asset = null) {
     state_assets.editingId = null;
     nameInput.value = "";
     originalNameInput.value = state_assets.currentFileName || "";
-    typeInput.value = getAssetTypeLabel(
-      state_assets.currentFileType || "sound",
-    );
+    typeInput.value = getAssetTypeLabel(state_assets.currentFileType || "sound");
   }
 
   if (nameCount) {
@@ -13093,27 +11368,15 @@ async function openAssetEditor(asset = null) {
   previewContainer.innerHTML = "";
   audioControls.classList.add("hidden");
 
-  if (
-    state_assets.currentFileType === "image" &&
-    state_assets.currentFileData
-  ) {
-    const url = getTemporaryBlobUrl(
-      ASSET_EDITOR_CACHE_KEY,
-      state_assets.currentFileData,
-    );
+  if (state_assets.currentFileType === "image" && state_assets.currentFileData) {
+    const url = getTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY, state_assets.currentFileData);
     if (url) {
       const img = document.createElement("img");
       img.src = url;
       previewContainer.appendChild(img);
     }
-  } else if (
-    state_assets.currentFileType === "video" &&
-    state_assets.currentFileData
-  ) {
-    const url = getTemporaryBlobUrl(
-      ASSET_EDITOR_CACHE_KEY,
-      state_assets.currentFileData,
-    );
+  } else if (state_assets.currentFileType === "video" && state_assets.currentFileData) {
+    const url = getTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY, state_assets.currentFileData);
     if (url) {
       const video = document.createElement("video");
       video.src = url;
@@ -13121,15 +11384,9 @@ async function openAssetEditor(asset = null) {
       video.muted = true;
       previewContainer.appendChild(video);
     }
-  } else if (
-    state_assets.currentFileType === "sound" &&
-    state_assets.currentFileData
-  ) {
+  } else if (state_assets.currentFileType === "sound" && state_assets.currentFileData) {
     audioControls.classList.remove("hidden");
-    const url = getTemporaryBlobUrl(
-      ASSET_EDITOR_CACHE_KEY,
-      state_assets.currentFileData,
-    );
+    const url = getTemporaryBlobUrl(ASSET_EDITOR_CACHE_KEY, state_assets.currentFileData);
     const audio = document.createElement("audio");
     if (url) {
       audio.src = url;
@@ -13306,11 +11563,7 @@ async function renderLorebookSelectorList(filter = "") {
   const existingIds = new Set((activeDef?.lorebookIds || []).map(Number));
   const filterLower = filter.toLowerCase();
 
-  const filtered = allLore.filter(
-    (entry) =>
-      !existingIds.has(Number(entry.id)) &&
-      (!filter || (entry.name || "").toLowerCase().includes(filterLower)),
-  );
+  const filtered = allLore.filter((entry) => !existingIds.has(Number(entry.id)) && (!filter || (entry.name || "").toLowerCase().includes(filterLower)));
 
   if (filtered.length === 0) {
     list.innerHTML = `<p class="muted">${t("noLorebooksAvailable")}</p>`;
@@ -13429,35 +11682,34 @@ async function renderAssetSelectorList() {
 }
 
 function renderModel3DPreview() {
-  const preview = document.getElementById('char-model3d-preview');
-  const info = document.getElementById('char-model3d-info');
-  const nameEl = document.getElementById('char-model3d-name');
+  const preview = document.getElementById("char-model3d-preview");
+  const info = document.getElementById("char-model3d-info");
+  const nameEl = document.getElementById("char-model3d-name");
   if (!preview || !info || !nameEl) return;
 
-  const model3d = state.charModalModel3d ||
-    (state.editingCharacterId ? state.charModalCache?.[state.editingCharacterId]?.model3d : null);
+  const model3d = state.charModalModel3d || (state.editingCharacterId ? state.charModalCache?.[state.editingCharacterId]?.model3d : null);
 
   if (!model3d) {
-    preview.classList.remove('hidden');
-    info.classList.add('hidden');
+    preview.classList.remove("hidden");
+    info.classList.add("hidden");
   } else {
-    preview.classList.add('hidden');
-    info.classList.remove('hidden');
-    nameEl.textContent = model3d.name || '3D Model';
+    preview.classList.add("hidden");
+    info.classList.remove("hidden");
+    nameEl.textContent = model3d.name || "3D Model";
   }
 }
 
 function updateModel3DToggleButton() {
-  const btn = document.getElementById('toggle-model3d-panel-btn');
+  const btn = document.getElementById("toggle-model3d-panel-btn");
   if (!btn) return;
 
   const hasModel = currentCharacter?.model3d?.data;
-  btn.classList.toggle('hidden', !hasModel);
+  btn.classList.toggle("hidden", !hasModel);
 }
 
 function isModel3DExpressionPresetSupported(expressionKey, namesSet) {
   if (!expressionKey) return false;
-  if (expressionKey === 'neutral') return true;
+  if (expressionKey === "neutral") return true;
   if (!namesSet) return true;
   if (namesSet.has(expressionKey)) return true;
   const aliasList = MODEL3D_EXPRESSION_ALIAS_MAP[expressionKey] || [];
@@ -13465,18 +11717,16 @@ function isModel3DExpressionPresetSupported(expressionKey, namesSet) {
 }
 
 function renderModel3DExpressionControls() {
-  const container = document.getElementById('model3d-expression-controls');
+  const container = document.getElementById("model3d-expression-controls");
   if (!container) return;
   const hasModel = !!currentCharacter?.model3d?.data;
-  const expressionNamesSet = state.model3dExpressionNamesLoaded
-    ? new Set(state.model3dExpressionNames.map((name) => normalizeExpressionKey(name)))
-    : null;
+  const expressionNamesSet = state.model3dExpressionNamesLoaded ? new Set(state.model3dExpressionNames.map((name) => normalizeExpressionKey(name))) : null;
 
-  container.querySelectorAll('button[data-expression]').forEach((button) => {
+  container.querySelectorAll("button[data-expression]").forEach((button) => {
     const key = normalizeExpressionKey(button.dataset.expression);
     const supported = hasModel && isModel3DExpressionPresetSupported(key, expressionNamesSet);
     button.disabled = !supported;
-    button.classList.toggle('active', state.model3dExpression === key);
+    button.classList.toggle("active", state.model3dExpression === key);
   });
 }
 
@@ -13491,7 +11741,7 @@ function setModel3DExpression(expressionKey, options = {}) {
   if (!currentCharacter?.model3d?.data) return false;
 
   const normalizedInput = normalizeExpressionKey(expressionKey);
-  const normalizedTarget = normalizedInput || 'neutral';
+  const normalizedTarget = normalizedInput || "neutral";
   if (!options.force && state.model3dExpression === normalizedTarget) {
     return false;
   }
@@ -13501,15 +11751,15 @@ function setModel3DExpression(expressionKey, options = {}) {
   const resetFn = window.resetModel3DExpressions;
 
   let applied = false;
-  if (normalizedTarget === 'neutral') {
+  if (normalizedTarget === "neutral") {
     applied = resetFn?.() ?? false;
   } else {
     applied = setFn?.(normalizedTarget) ?? false;
   }
 
-  if (!applied && normalizedTarget !== 'neutral') {
+  if (!applied && normalizedTarget !== "neutral") {
     resetFn?.();
-    state.model3dExpression = 'neutral';
+    state.model3dExpression = "neutral";
   }
 
   renderModel3DExpressionControls();
@@ -13526,13 +11776,10 @@ function setModel3DExpression(expressionKey, options = {}) {
 async function handleModel3DUpload(file) {
   if (!file) return;
 
-  const validTypes = ['.vrm', '.glb', '.gltf'];
-  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  const validTypes = [".vrm", ".glb", ".gltf"];
+  const ext = "." + file.name.split(".").pop().toLowerCase();
   if (!validTypes.includes(ext)) {
-    await openInfoDialog(
-      t('error'),
-      tf('unsupportedFileType', { types: validTypes.join(', ') }),
-    );
+    await openInfoDialog(t("error"), tf("unsupportedFileType", { types: validTypes.join(", ") }));
     return;
   }
 
@@ -13554,7 +11801,7 @@ async function handleModel3DUpload(file) {
       state.charModalCache[state.editingCharacterId].model3d = model3d;
     }
 
-    setModalDirtyState('character-modal', true);
+    setModalDirtyState("character-modal", true);
     renderModel3DPreview();
   };
   reader.readAsDataURL(file);
@@ -13565,21 +11812,21 @@ function removeModel3D() {
   if (state.editingCharacterId && state.charModalCache[state.editingCharacterId]) {
     state.charModalCache[state.editingCharacterId].model3d = null;
   }
-  setModalDirtyState('character-modal', true);
+  setModalDirtyState("character-modal", true);
   renderModel3DPreview();
 }
 
 function toggleModel3DPanel() {
-  const panel = document.getElementById('model3d-panel');
-  const btn = document.getElementById('toggle-model3d-panel-btn');
+  const panel = document.getElementById("model3d-panel");
+  const btn = document.getElementById("toggle-model3d-panel-btn");
   if (!panel) return;
 
-  const isHidden = panel.classList.contains('hidden');
-  panel.classList.toggle('hidden');
-  const nowHidden = panel.classList.contains('hidden');
-  panel.dataset.hidden = nowHidden ? 'true' : 'false';
+  const isHidden = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden");
+  const nowHidden = panel.classList.contains("hidden");
+  panel.dataset.hidden = nowHidden ? "true" : "false";
   updateModel3DVisibilityButtonIcon(nowHidden);
-  btn?.classList.toggle('is-active', isHidden);
+  btn?.classList.toggle("is-active", isHidden);
 
   if (isHidden) {
     if (currentCharacter?.model3d?.data) {
@@ -13595,12 +11842,12 @@ function toggleModel3DPanel() {
 }
 
 function showModel3DPanel() {
-  const panel = document.getElementById('model3d-panel');
-  const btn = document.getElementById('toggle-model3d-panel-btn');
+  const panel = document.getElementById("model3d-panel");
+  const btn = document.getElementById("toggle-model3d-panel-btn");
   if (!panel) return;
-  panel.classList.remove('hidden');
-  btn?.classList.remove('is-active');
-  panel.dataset.hidden = 'false';
+  panel.classList.remove("hidden");
+  btn?.classList.remove("is-active");
+  panel.dataset.hidden = "false";
   updateModel3DVisibilityButtonIcon(false);
   if (currentCharacter?.model3d) {
     scheduleModel3DLoad(currentCharacter);
@@ -13608,12 +11855,12 @@ function showModel3DPanel() {
 }
 
 function hideModel3DPanel() {
-  const panel = document.getElementById('model3d-panel');
-  const btn = document.getElementById('toggle-model3d-panel-btn');
+  const panel = document.getElementById("model3d-panel");
+  const btn = document.getElementById("toggle-model3d-panel-btn");
   if (!panel) return;
-  panel.classList.add('hidden');
-  btn?.classList.add('is-active');
-  panel.dataset.hidden = 'true';
+  panel.classList.add("hidden");
+  btn?.classList.add("is-active");
+  panel.dataset.hidden = "true";
   updateModel3DVisibilityButtonIcon(true);
   if (window.disposeModel3D) {
     window.disposeModel3D();
@@ -13644,8 +11891,7 @@ function waitForNextPaint() {
 }
 
 const MODEL3D_VISIBILITY_ICONS = {
-  visible:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  visible: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
   hidden:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
 };
@@ -13653,9 +11899,7 @@ const MODEL3D_VISIBILITY_ICONS = {
 function updateModel3DVisibilityButtonIcon(isHidden) {
   const btn = document.getElementById("model3d-toggle-visibility-btn");
   if (!btn) return;
-  btn.innerHTML = isHidden
-    ? MODEL3D_VISIBILITY_ICONS.hidden
-    : MODEL3D_VISIBILITY_ICONS.visible;
+  btn.innerHTML = isHidden ? MODEL3D_VISIBILITY_ICONS.hidden : MODEL3D_VISIBILITY_ICONS.visible;
 }
 
 async function persistModel3DPanelState(threadId, updates = {}) {
@@ -13666,14 +11910,14 @@ async function persistModel3DPanelState(threadId, updates = {}) {
     if (!thread) return;
 
     const model3dPanel = thread.model3dPanel || {};
-    const panel = document.getElementById('model3d-panel');
-    const btn = document.getElementById('toggle-model3d-panel-btn');
+    const panel = document.getElementById("model3d-panel");
+    const btn = document.getElementById("toggle-model3d-panel-btn");
 
     if (updates.visible !== undefined) {
       model3dPanel.visible = updates.visible;
     }
 
-    if (panel && !panel.classList.contains('hidden')) {
+    if (panel && !panel.classList.contains("hidden")) {
       model3dPanel.left = parseFloat(panel.style.left) || 0;
       model3dPanel.top = parseFloat(panel.style.top) || 0;
       model3dPanel.width = panel.offsetWidth;
@@ -13704,8 +11948,8 @@ async function restoreModel3DPanelState(threadId) {
     const thread = await db.threads.get(threadId);
     if (!thread?.model3dPanel) return;
 
-    const panel = document.getElementById('model3d-panel');
-    const btn = document.getElementById('toggle-model3d-panel-btn');
+    const panel = document.getElementById("model3d-panel");
+    const btn = document.getElementById("toggle-model3d-panel-btn");
     if (!panel) return;
 
     const panelState = thread.model3dPanel;
@@ -13716,28 +11960,25 @@ async function restoreModel3DPanelState(threadId) {
     const chatViewWidth = panel.parentElement?.clientWidth || 0;
 
     if (panelState.visible && currentCharacter?.model3d?.data) {
-      if (
-        panelState.chatViewWidth &&
-        Math.abs(panelState.chatViewWidth - chatViewWidth) > 100
-      ) {
+      if (panelState.chatViewWidth && Math.abs(panelState.chatViewWidth - chatViewWidth) > 100) {
         return;
       }
 
       if (panelState.width && panelState.height) {
-        panel.style.width = panelState.width + 'px';
-        panel.style.height = panelState.height + 'px';
+        panel.style.width = panelState.width + "px";
+        panel.style.height = panelState.height + "px";
       }
 
       if (panelState.left !== undefined && panelState.top !== undefined) {
         const maxLeft = chatViewWidth - panel.offsetWidth;
         const maxTop = panel.parentElement?.clientHeight - panel.offsetHeight || 0;
-        panel.style.left = Math.max(0, Math.min(maxLeft, panelState.left)) + 'px';
-        panel.style.top = Math.max(0, Math.min(maxTop, panelState.top)) + 'px';
+        panel.style.left = Math.max(0, Math.min(maxLeft, panelState.left)) + "px";
+        panel.style.top = Math.max(0, Math.min(maxTop, panelState.top)) + "px";
       }
 
-      panel.classList.remove('hidden');
-      btn?.classList.remove('is-active');
-      panel.dataset.hidden = 'false';
+      panel.classList.remove("hidden");
+      btn?.classList.remove("is-active");
+      panel.dataset.hidden = "false";
       updateModel3DVisibilityButtonIcon(false);
 
       await waitForNextPaint();
@@ -13761,31 +12002,31 @@ async function loadModel3DFromCharacter(character) {
 
   try {
     const base64 = character.model3d.data;
-    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+    const base64Data = base64.includes(",") ? base64.split(",")[1] : base64;
     const binary = atob(base64Data);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
     }
 
-    let mimeType = 'application/octet-stream';
-    if (character.model3d.type === 'glb') {
-      mimeType = 'model/gltf-binary';
-    } else if (character.model3d.type === 'gltf') {
-      mimeType = 'model/gltf+json';
+    let mimeType = "application/octet-stream";
+    if (character.model3d.type === "glb") {
+      mimeType = "model/gltf-binary";
+    } else if (character.model3d.type === "gltf") {
+      mimeType = "model/gltf+json";
     }
 
     const blob = new Blob([bytes], { type: mimeType });
 
     await window.loadModel3D(blob);
     refreshModel3DExpressionCatalog();
-    setModel3DExpression(state.model3dExpression || 'neutral', {
+    setModel3DExpression(state.model3dExpression || "neutral", {
       persist: false,
       force: true,
     });
   } catch (error) {
-    console.error('Failed to load 3D model:', error);
-    await openInfoDialog(t('error'), t('failedToLoadModel3d'));
+    console.error("Failed to load 3D model:", error);
+    await openInfoDialog(t("error"), t("failedToLoadModel3d"));
   }
 }
 
@@ -13805,18 +12046,18 @@ let model3dPanelState = {
 };
 
 function initModel3DPanelDragResize() {
-  const panel = document.getElementById('model3d-panel');
-  const header = document.getElementById('model3d-panel-header');
+  const panel = document.getElementById("model3d-panel");
+  const header = document.getElementById("model3d-panel-header");
   const resizeHandles = {
-    nw: document.getElementById('model3d-resize-handle-nw'),
-    ne: document.getElementById('model3d-resize-handle-ne'),
-    sw: document.getElementById('model3d-resize-handle-sw'),
-    se: document.getElementById('model3d-resize-handle-se'),
+    nw: document.getElementById("model3d-resize-handle-nw"),
+    ne: document.getElementById("model3d-resize-handle-ne"),
+    sw: document.getElementById("model3d-resize-handle-sw"),
+    se: document.getElementById("model3d-resize-handle-se"),
   };
   if (!panel || !header) return;
 
-  header.addEventListener('mousedown', (e) => {
-    if (e.target.closest('button')) return;
+  header.addEventListener("mousedown", (e) => {
+    if (e.target.closest("button")) return;
     e.preventDefault();
     model3dPanelState.isDragging = true;
     model3dPanelState.startX = e.clientX;
@@ -13828,12 +12069,12 @@ function initModel3DPanelDragResize() {
     model3dPanelState.initialLeft = model3dPanelState.startLeft;
     model3dPanelState.initialTop = model3dPanelState.startTop;
     model3dPanelState.hasMoved = false;
-    document.body.style.cursor = 'move';
+    document.body.style.cursor = "move";
   });
 
   Object.entries(resizeHandles).forEach(([corner, handle]) => {
     if (!handle) return;
-    handle.addEventListener('mousedown', (e) => {
+    handle.addEventListener("mousedown", (e) => {
       e.preventDefault();
       e.stopPropagation();
       model3dPanelState.isResizing = true;
@@ -13846,12 +12087,12 @@ function initModel3DPanelDragResize() {
       model3dPanelState.startHeight = rect.height;
       model3dPanelState.startLeft = rect.left - parentRect.left;
       model3dPanelState.startTop = rect.top - parentRect.top;
-      const cursors = { nw: 'nw-resize', ne: 'ne-resize', sw: 'sw-resize', se: 'se-resize' };
+      const cursors = { nw: "nw-resize", ne: "ne-resize", sw: "sw-resize", se: "se-resize" };
       document.body.style.cursor = cursors[corner];
     });
   });
 
-  document.addEventListener('mousemove', (e) => {
+  document.addEventListener("mousemove", (e) => {
     if (model3dPanelState.isDragging) {
       e.preventDefault();
       const dx = e.clientX - model3dPanelState.startX;
@@ -13859,10 +12100,10 @@ function initModel3DPanelDragResize() {
 
       if (!model3dPanelState.hasMoved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
         model3dPanelState.hasMoved = true;
-        panel.style.left = model3dPanelState.startLeft + 'px';
-        panel.style.top = model3dPanelState.startTop + 'px';
-        panel.style.right = 'auto';
-        panel.style.bottom = 'auto';
+        panel.style.left = model3dPanelState.startLeft + "px";
+        panel.style.top = model3dPanelState.startTop + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
       }
 
       if (model3dPanelState.hasMoved) {
@@ -13877,8 +12118,8 @@ function initModel3DPanelDragResize() {
         newLeft = Math.max(0, Math.min(parentRect.width - panelWidth, newLeft));
         newTop = Math.max(0, Math.min(parentRect.height - panelHeight, newTop));
 
-        panel.style.left = newLeft + 'px';
-        panel.style.top = newTop + 'px';
+        panel.style.left = newLeft + "px";
+        panel.style.top = newTop + "px";
       }
     }
 
@@ -13896,20 +12137,20 @@ function initModel3DPanelDragResize() {
       let newLeft = model3dPanelState.startLeft;
       let newTop = model3dPanelState.startTop;
 
-      if (corner === 'se') {
+      if (corner === "se") {
         newWidth = Math.max(200, model3dPanelState.startWidth + dx);
         newHeight = Math.max(200, model3dPanelState.startHeight + dy);
-      } else if (corner === 'sw') {
+      } else if (corner === "sw") {
         const widthChange = Math.min(dx, model3dPanelState.startWidth - 200) * -1;
         newWidth = model3dPanelState.startWidth + widthChange;
         newLeft = model3dPanelState.startLeft - widthChange;
         newHeight = Math.max(200, model3dPanelState.startHeight + dy);
-      } else if (corner === 'ne') {
+      } else if (corner === "ne") {
         newWidth = Math.max(200, model3dPanelState.startWidth + dx);
         const heightChange = Math.min(dy, model3dPanelState.startHeight - 200) * -1;
         newHeight = model3dPanelState.startHeight + heightChange;
         newTop = model3dPanelState.startTop - heightChange;
-      } else if (corner === 'nw') {
+      } else if (corner === "nw") {
         const widthChange = Math.min(dx, model3dPanelState.startWidth - 200) * -1;
         newWidth = model3dPanelState.startWidth + widthChange;
         newLeft = model3dPanelState.startLeft - widthChange;
@@ -13921,34 +12162,34 @@ function initModel3DPanelDragResize() {
       newLeft = Math.max(0, Math.min(parentWidth - newWidth, newLeft));
       newTop = Math.max(0, Math.min(parentHeight - newHeight, newTop));
 
-      panel.style.width = newWidth + 'px';
-      panel.style.height = newHeight + 'px';
-      panel.style.left = newLeft + 'px';
-      panel.style.top = newTop + 'px';
-      panel.style.right = 'auto';
-      panel.style.bottom = 'auto';
+      panel.style.width = newWidth + "px";
+      panel.style.height = newHeight + "px";
+      panel.style.left = newLeft + "px";
+      panel.style.top = newTop + "px";
+      panel.style.right = "auto";
+      panel.style.bottom = "auto";
 
-      const container = document.getElementById('model3d-canvas-container');
+      const container = document.getElementById("model3d-canvas-container");
       if (container) {
         window.resizeModel3D(container.clientWidth, container.clientHeight);
       }
     }
   });
 
-  document.addEventListener('mouseup', () => {
+  document.addEventListener("mouseup", () => {
     if (model3dPanelState.isDragging || model3dPanelState.isResizing) {
       model3dPanelState.isDragging = false;
       model3dPanelState.isResizing = false;
       model3dPanelState.resizeCorner = null;
-      document.body.style.cursor = '';
+      document.body.style.cursor = "";
       persistModel3DPanelState(currentThread?.id);
     }
   });
 }
 
 function constrainModel3DPanelPosition() {
-  const panel = document.getElementById('model3d-panel');
-  if (!panel || panel.classList.contains('hidden')) return;
+  const panel = document.getElementById("model3d-panel");
+  if (!panel || panel.classList.contains("hidden")) return;
 
   const parent = panel.parentElement;
   if (!parent) return;
@@ -13964,11 +12205,11 @@ function constrainModel3DPanelPosition() {
   left = Math.max(0, Math.min(parentWidth - panelWidth, left));
   top = Math.max(0, Math.min(parentHeight - panelHeight, top));
 
-  panel.style.left = left + 'px';
-  panel.style.top = top + 'px';
+  panel.style.left = left + "px";
+  panel.style.top = top + "px";
 }
 
-window.addEventListener('resize', constrainModel3DPanelPosition);
+window.addEventListener("resize", constrainModel3DPanelPosition);
 
 function getThreadWritingInstructionsTurnCount(thread = currentThread) {
   const raw = Number(thread?.writingInstructionsTurnCount);
@@ -13995,9 +12236,7 @@ function computeWritingInstructionsTurnCountFromMessages(messages = []) {
 }
 
 function shouldInjectWritingInstructionsForTurn(turnIndex) {
-  const mode = normalizeWritingInstructionsTiming(
-    state.settings.writingInstructionsInjectionWhen,
-  );
+  const mode = normalizeWritingInstructionsTiming(state.settings.writingInstructionsInjectionWhen);
   const turn = Math.max(1, Number(turnIndex) || 1);
   if (mode === "always") return true;
   if (mode === "every_other") return turn % 2 === 1;
@@ -14011,23 +12250,14 @@ function isLatestAssistantMessageIndex(index, history = conversationHistory) {
   const list = Array.isArray(history) ? history : [];
   const latest = list
     .map((m, i) => ({ m, i }))
-    .filter(
-      ({ m }) =>
-        isInSimulationMessage(m) &&
-        normalizeApiRole(m?.apiRole || m?.role) === "assistant",
-    )
+    .filter(({ m }) => isInSimulationMessage(m) && normalizeApiRole(m?.apiRole || m?.role) === "assistant")
     .pop();
   return latest ? latest.i === index : false;
 }
 
 function isFirstAssistantMessageIndex(index, history = conversationHistory) {
   const list = Array.isArray(history) ? history : [];
-  const first = list.findIndex(
-    (m) =>
-      normalizeApiRole(m?.apiRole || m?.role) === "assistant" &&
-      isInSimulationMessage(m) &&
-      m.manualMessage !== true,
-  );
+  const first = list.findIndex((m) => normalizeApiRole(m?.apiRole || m?.role) === "assistant" && isInSimulationMessage(m) && m.manualMessage !== true);
   return first === index;
 }
 
@@ -14045,7 +12275,10 @@ async function renderCharacterLorebookList(selectedIds = []) {
     return;
   }
 
-  const allLore = await db.lorebooks.where("id").anyOf([...selected]).toArray();
+  const allLore = await db.lorebooks
+    .where("id")
+    .anyOf([...selected])
+    .toArray();
 
   root.innerHTML = "";
   allLore.forEach((entry) => {
@@ -14088,9 +12321,7 @@ async function renderCharacterLorebookList(selectedIds = []) {
 }
 
 function getSelectedLorebookIds() {
-  return Array.from(
-    document.querySelectorAll("#char-lorebooks-list .char-lorebook-row"),
-  )
+  return Array.from(document.querySelectorAll("#char-lorebooks-list .char-lorebook-row"))
     .map((el) => Number(el.dataset.lorebookId))
     .filter((id) => Number.isInteger(id));
 }
@@ -14117,13 +12348,7 @@ async function onTextAreaFileDrop(e) {
 
 const MAX_AVATAR_SIZE_MB = 10;
 const MAX_AVATAR_SIZE_BYTES = MAX_AVATAR_SIZE_MB * 1024 * 1024;
-const ALLOWED_AVATAR_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "video/mp4",
-];
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "video/mp4"];
 
 function setupCharAvatarDropzone() {
   const dropzone = document.getElementById("char-avatar-dropzone");
@@ -14199,17 +12424,11 @@ window.triggerAvatarFileSelect = triggerAvatarFileSelect;
 async function handleAvatarFiles(files) {
   for (const file of files) {
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-      openInfoDialog(
-        t("invalidFileTitle"),
-        "Please choose an image or MP4 video file.",
-      );
+      openInfoDialog(t("invalidFileTitle"), "Please choose an image or MP4 video file.");
       continue;
     }
     if (file.size > MAX_AVATAR_SIZE_BYTES) {
-      openInfoDialog(
-        t("invalidFileTitle"),
-        `File must be less than ${MAX_AVATAR_SIZE_MB}MB.`,
-      );
+      openInfoDialog(t("invalidFileTitle"), `File must be less than ${MAX_AVATAR_SIZE_MB}MB.`);
       continue;
     }
     await addAvatarFromFile(file);
@@ -14248,10 +12467,7 @@ function renderCharAvatars() {
       e.stopPropagation();
     });
 
-    const avatarSrc =
-      avatar.data instanceof Blob
-        ? getCachedAvatarBlobUrl(avatar.data)
-        : avatar.data;
+    const avatarSrc = avatar.data instanceof Blob ? getCachedAvatarBlobUrl(avatar.data) : avatar.data;
     if (avatar.type === "video") {
       const video = document.createElement("video");
       video.src = avatarSrc;
@@ -14291,10 +12507,7 @@ function renderCharAvatars() {
     removeBtn.onclick = async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const ok = await openConfirmDialog(
-        t("removeAvatarTitle"),
-        t("removeAvatarConfirm"),
-      );
+      const ok = await openConfirmDialog(t("removeAvatarTitle"), t("removeAvatarConfirm"));
       if (!ok) return;
       removeAvatar(index);
     };
@@ -14391,12 +12604,7 @@ function setAvatarAsMain(index) {
 
 function moveAvatar(index, offset) {
   const targetIndex = index + offset;
-  if (
-    !Number.isInteger(index) ||
-    !Number.isInteger(targetIndex) ||
-    targetIndex < 0 ||
-    targetIndex >= state.charModalAvatars.length
-  ) {
+  if (!Number.isInteger(index) || !Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= state.charModalAvatars.length) {
     return;
   }
   const avatar = state.charModalAvatars.splice(index, 1)[0];
@@ -14410,9 +12618,7 @@ async function duplicateCharacter(characterId) {
   if (!source) return;
   const copy = {
     ...source,
-    lorebookIds: Array.isArray(source.lorebookIds)
-      ? [...source.lorebookIds]
-      : [],
+    lorebookIds: Array.isArray(source.lorebookIds) ? [...source.lorebookIds] : [],
     tags: Array.isArray(source.tags) ? [...source.tags] : [],
     avatars: Array.isArray(source.avatars) ? [...source.avatars] : [],
     name: `${source.name} Copy`,
@@ -14451,14 +12657,11 @@ async function exportCharacter(characterId) {
           return { ...avatar, data: base64 };
         }
         return avatar;
-      })
+      }),
     );
   }
 
-  if (
-    processedCharacter.avatar &&
-    processedCharacter.avatar instanceof Blob
-  ) {
+  if (processedCharacter.avatar && processedCharacter.avatar instanceof Blob) {
     processedCharacter.avatar = await blobToBase64(processedCharacter.avatar);
   }
 
@@ -14475,7 +12678,7 @@ async function exportCharacter(characterId) {
               return { ...avatar, data: base64 };
             }
             return avatar;
-          })
+          }),
         );
       }
     }
@@ -14528,14 +12731,11 @@ async function exportCharacter(characterId) {
 
   let exportedWiCount = 0;
   for (const wiId of uniqueWiIds) {
-    const wi = normalizeWritingInstructionRecord(
-      await db.writingInstructions.get(Number(wiId))
-    );
+    const wi = normalizeWritingInstructionRecord(await db.writingInstructions.get(Number(wiId)));
     if (!wi) continue;
 
     const interfaceLang = state.settings.interfaceLanguage || "en";
-    const content =
-      wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
+    const content = wi.instructions[interfaceLang] || Object.values(wi.instructions)[0] || "";
 
     const wiBlob = new Blob([content], { type: "text/markdown;charset=utf-8" });
     const wiSafeName = wi.name.replace(/[^a-z0-9]/gi, "_");
@@ -14577,21 +12777,13 @@ function buildLegacyInitialMessagesFromPayload(source) {
   if (primary) {
     pushText(primary);
   }
-  const alt = Array.isArray(source.alternate_greetings)
-    ? source.alternate_greetings
-    : [];
+  const alt = Array.isArray(source.alternate_greetings) ? source.alternate_greetings : [];
   alt.forEach((entry) => {
     let candidate = "";
     if (typeof entry === "string") {
       candidate = entry;
     } else if (entry && typeof entry === "object") {
-      candidate =
-        entry.message ||
-        entry.text ||
-        entry.greeting ||
-        entry.value ||
-        entry.content ||
-        "";
+      candidate = entry.message || entry.text || entry.greeting || entry.value || entry.content || "";
     }
     pushText(candidate);
   });
@@ -14600,9 +12792,7 @@ function buildLegacyInitialMessagesFromPayload(source) {
 
 function normalizeLoreImportKeyList(raw) {
   if (Array.isArray(raw)) {
-    return raw
-      .map((item) => (typeof item === "string" ? item.trim() : ""))
-      .filter(Boolean);
+    return raw.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
   }
   if (typeof raw === "string") {
     return raw
@@ -14621,18 +12811,12 @@ function normalizeLoreImportKeyList(raw) {
 function mapImportedLorebookPayload(payload, fallbackName = "") {
   if (!payload || typeof payload !== "object") return null;
   const entriesSource = payload.entries;
-  const rawEntries = Array.isArray(entriesSource)
-    ? entriesSource
-    : entriesSource && typeof entriesSource === "object"
-      ? Object.values(entriesSource)
-      : [];
+  const rawEntries = Array.isArray(entriesSource) ? entriesSource : entriesSource && typeof entriesSource === "object" ? Object.values(entriesSource) : [];
   const entries = rawEntries
     .map((entry, idx) => {
       if (!entry || typeof entry !== "object") return null;
       const keys = normalizeLoreImportKeyList(entry.key ?? entry.keys);
-      const secondaryKeys = normalizeLoreImportKeyList(
-        entry.keysecondary ?? entry.secondary_keys,
-      );
+      const secondaryKeys = normalizeLoreImportKeyList(entry.keysecondary ?? entry.secondary_keys);
       const content = String(entry.content || "").trim();
       if (!content || keys.length === 0) return null;
       return {
@@ -14646,20 +12830,11 @@ function mapImportedLorebookPayload(payload, fallbackName = "") {
 
   if (entries.length === 0) return null;
 
-  const nameCandidate = String(
-    payload.name || payload.title || payload.label || "",
-  ).trim();
-  const scanDepth = Math.max(
-    5,
-    Math.min(100, Number(payload.scan_depth ?? payload.scanDepth) || 50),
-  );
-  const tokenBudget = Math.max(
-    100,
-    Math.min(1000, Number(payload.token_budget ?? payload.tokenBudget) || 200),
-  );
+  const nameCandidate = String(payload.name || payload.title || payload.label || "").trim();
+  const scanDepth = Math.max(5, Math.min(100, Number(payload.scan_depth ?? payload.scanDepth) || 50));
+  const tokenBudget = Math.max(100, Math.min(1000, Number(payload.token_budget ?? payload.tokenBudget) || 200));
   const description = String(payload.description || "").trim();
-  const recursiveScanning =
-    payload.recursive_scanning ?? payload.recursiveScanning ?? false;
+  const recursiveScanning = payload.recursive_scanning ?? payload.recursiveScanning ?? false;
 
   return {
     name: nameCandidate || fallbackName || "",
@@ -14699,36 +12874,20 @@ async function importLorebookFromFile(e) {
 function applyCharacterSettingsDefaults(character) {
   if (!character) return;
   if (character.useMemory === undefined) character.useMemory = true;
-  if (character.usePostProcessing === undefined)
-    character.usePostProcessing = true;
-  if (character.autoTriggerAiFirstMessage === undefined)
-    character.autoTriggerAiFirstMessage = true;
-  if (character.autoTitleEnabled === undefined)
-    character.autoTitleEnabled = true;
-  const resolvedAutoTitleMinMessages =
-    state.settings.defaultAutoTitleMinMessages ??
-    DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
-  if (character.autoTitleMinMessages === undefined)
-    character.autoTitleMinMessages = resolvedAutoTitleMinMessages;
-  if (character.personaPrefixEnabled === undefined)
-    character.personaPrefixEnabled = true;
-  if (character.includeOocInCompletions === undefined)
-    character.includeOocInCompletions =
-      state.settings.defaultIncludeOocInCompletions ??
-      DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
-  if (character.avatarScale === undefined)
-    character.avatarScale =
-      state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale;
+  if (character.usePostProcessing === undefined) character.usePostProcessing = true;
+  if (character.autoTriggerAiFirstMessage === undefined) character.autoTriggerAiFirstMessage = true;
+  if (character.autoTitleEnabled === undefined) character.autoTitleEnabled = true;
+  const resolvedAutoTitleMinMessages = state.settings.defaultAutoTitleMinMessages ?? DEFAULT_SETTINGS.defaultAutoTitleMinMessages;
+  if (character.autoTitleMinMessages === undefined) character.autoTitleMinMessages = resolvedAutoTitleMinMessages;
+  if (character.personaPrefixEnabled === undefined) character.personaPrefixEnabled = true;
+  if (character.includeOocInCompletions === undefined) character.includeOocInCompletions = state.settings.defaultIncludeOocInCompletions ?? DEFAULT_SETTINGS.defaultIncludeOocInCompletions;
+  if (character.avatarScale === undefined) character.avatarScale = state.settings.defaultAvatarScale ?? DEFAULT_SETTINGS.defaultAvatarScale;
   if (character.loreCooldown === undefined) character.loreCooldown = 20;
 
   if (Array.isArray(character.definitions)) {
-    const defaultPlacement =
-      state.settings.defaultPersonaInjectionPlacement ||
-      DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
-    const defaultTtsProvider =
-      state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
-    const defaultTtsRate =
-      state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
+    const defaultPlacement = state.settings.defaultPersonaInjectionPlacement || DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+    const defaultTtsProvider = state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+    const defaultTtsRate = state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
 
     character.definitions.forEach((def) => {
       if (def) {
@@ -14770,10 +12929,7 @@ async function importCharacterFromFile(e) {
       const description = String(data.description || "").trim();
       const personality = String(data.personality || "").trim();
       const legacyInitialMessages = buildLegacyInitialMessagesFromPayload(data);
-      const initialMessagesRaw =
-        legacyInitialMessages.length > 0
-          ? formatInitialMessagesForEditor(legacyInitialMessages)
-          : "";
+      const initialMessagesRaw = legacyInitialMessages.length > 0 ? formatInitialMessagesForEditor(legacyInitialMessages) : "";
       const initialMessages = legacyInitialMessages.map((message) => ({
         ...message,
       }));
@@ -14820,14 +12976,9 @@ async function importCharacterFromFile(e) {
       mergeTagsIntoCatalog(tags);
       const prompt = [description, personality].filter(Boolean).join("\n\n");
       const language = "en";
-      const defaultPlacement =
-        state.settings.defaultPersonaInjectionPlacement ||
-        DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
-      const defaultTtsProvider =
-        state.settings.defaultTtsProvider ||
-        DEFAULT_SETTINGS.defaultTtsProvider;
-      const defaultTtsRate =
-        state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
+      const defaultPlacement = state.settings.defaultPersonaInjectionPlacement || DEFAULT_SETTINGS.defaultPersonaInjectionPlacement;
+      const defaultTtsProvider = state.settings.defaultTtsProvider || DEFAULT_SETTINGS.defaultTtsProvider;
+      const defaultTtsRate = state.settings.defaultTtsRate ?? DEFAULT_SETTINGS.defaultTtsRate;
       character = {
         name,
         selectedCardLanguage: language,
@@ -14872,12 +13023,8 @@ async function importCharacterFromFile(e) {
         if (Array.isArray(lorebookData.entries)) {
           lorebookData.entries.forEach((entry) => {
             if (entry && typeof entry === "object") {
-              const keys = Array.isArray(entry.keys)
-                ? entry.keys.map((k) => String(k || "").trim()).filter(Boolean)
-                : [];
-              const secondaryKeys = Array.isArray(entry.secondary_keys)
-                ? entry.secondary_keys.map((k) => String(k || "").trim()).filter(Boolean)
-                : [];
+              const keys = Array.isArray(entry.keys) ? entry.keys.map((k) => String(k || "").trim()).filter(Boolean) : [];
+              const secondaryKeys = Array.isArray(entry.secondary_keys) ? entry.secondary_keys.map((k) => String(k || "").trim()).filter(Boolean) : [];
               if (keys.length > 0) {
                 lorebookEntries.push({
                   name: String(entry.name || "").trim(),
@@ -14910,15 +13057,11 @@ async function importCharacterFromFile(e) {
       if (!imported || typeof imported !== "object") {
         throw new Error("Invalid character file");
       }
-      const rawTags = Array.isArray(imported.tags)
-        ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean)
-        : parseTagList(imported.tags || "");
+      const rawTags = Array.isArray(imported.tags) ? imported.tags.map((t) => normalizeTagValue(t)).filter(Boolean) : parseTagList(imported.tags || "");
       const existingTags = getAllAvailableTags();
       const existingLowerMap = new Map();
       existingTags.forEach((t) => existingLowerMap.set(t.toLowerCase(), t));
-      const normalizedTags = rawTags.map(
-        (t) => existingLowerMap.get(t.toLowerCase()) || t,
-      );
+      const normalizedTags = rawTags.map((t) => existingLowerMap.get(t.toLowerCase()) || t);
       mergeTagsIntoCatalog(rawTags);
       character = {
         ...imported,
@@ -14928,20 +13071,14 @@ async function importCharacterFromFile(e) {
         updatedAt: Date.now(),
         personaInjectionPlacement: "end_system_prompt",
       };
-      const legacyInitialMessagesFromImported =
-        buildLegacyInitialMessagesFromPayload(imported);
+      const legacyInitialMessagesFromImported = buildLegacyInitialMessagesFromPayload(imported);
       if (legacyInitialMessagesFromImported.length > 0) {
-        const formattedLegacyRaw = formatInitialMessagesForEditor(
-          legacyInitialMessagesFromImported,
-        );
+        const formattedLegacyRaw = formatInitialMessagesForEditor(legacyInitialMessagesFromImported);
         if (Array.isArray(character.definitions)) {
           character.definitions = character.definitions.map((def) => {
             const copy = { ...def };
-            const hasExistingMessages =
-              Array.isArray(copy.initialMessages) &&
-              copy.initialMessages.length > 0;
-            const hasRaw =
-              String(copy.initialMessagesRaw || "").trim().length > 0;
+            const hasExistingMessages = Array.isArray(copy.initialMessages) && copy.initialMessages.length > 0;
+            const hasRaw = String(copy.initialMessagesRaw || "").trim().length > 0;
             if (!hasExistingMessages) {
               copy.initialMessages =
                 copy.initialMessages && copy.initialMessages.length > 0
@@ -14961,16 +13098,11 @@ async function importCharacterFromFile(e) {
         character.definitions = character.definitions.map((def) => {
           const updated = {
             ...def,
-            personaInjectionPlacement:
-              def.personaInjectionPlacement || "end_system_prompt",
+            personaInjectionPlacement: def.personaInjectionPlacement || "end_system_prompt",
             kokoroDtype: def.kokoroDtype || "auto",
           };
-          const hasCustomInstructions =
-            typeof def.writingInstructions === "string" &&
-            def.writingInstructions.trim().length > 0;
-          updated.writingInstructionId = hasCustomInstructions
-            ? ""
-            : def.writingInstructionId || "none";
+          const hasCustomInstructions = typeof def.writingInstructions === "string" && def.writingInstructions.trim().length > 0;
+          updated.writingInstructionId = hasCustomInstructions ? "" : def.writingInstructionId || "none";
           return updated;
         });
       }
@@ -14981,12 +13113,8 @@ async function importCharacterFromFile(e) {
         if (Array.isArray(lorebookData.entries)) {
           lorebookData.entries.forEach((entry) => {
             if (entry && typeof entry === "object") {
-              const keys = Array.isArray(entry.keys)
-                ? entry.keys.map((k) => String(k || "").trim()).filter(Boolean)
-                : [];
-              const secondaryKeys = Array.isArray(entry.secondary_keys)
-                ? entry.secondary_keys.map((k) => String(k || "").trim()).filter(Boolean)
-                : [];
+              const keys = Array.isArray(entry.keys) ? entry.keys.map((k) => String(k || "").trim()).filter(Boolean) : [];
+              const secondaryKeys = Array.isArray(entry.secondary_keys) ? entry.secondary_keys.map((k) => String(k || "").trim()).filter(Boolean) : [];
               if (keys.length > 0) {
                 lorebookEntries.push({
                   name: String(entry.name || "").trim(),
@@ -15047,11 +13175,7 @@ async function exportDatabaseBackup() {
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
     });
-    const safeDate = new Date()
-      .toISOString()
-      .replace(/[:.]/g, "-")
-      .replace("T", "_")
-      .replace("Z", "");
+    const safeDate = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").replace("Z", "");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `rp_llm_backend_backup_${safeDate}.json`;
@@ -15061,10 +13185,7 @@ async function exportDatabaseBackup() {
     URL.revokeObjectURL(a.href);
     showToast(t("databaseExported"), "success");
   } catch (err) {
-    showToast(
-      tf("databaseExportFailed", { error: err.message || t("unknownError") }),
-      "error",
-    );
+    showToast(tf("databaseExportFailed", { error: err.message || t("unknownError") }), "error");
   }
 }
 
@@ -15077,28 +13198,19 @@ async function importDatabaseBackupFromFile(e) {
     const parsed = JSON.parse(text);
     validateDatabaseBackupPayload(parsed);
 
-    const ok = await openConfirmDialog(
-      t("importDatabase"),
-      t("databaseImportConfirm"),
-    );
+    const ok = await openConfirmDialog(t("importDatabase"), t("databaseImportConfirm"));
     if (!ok) return;
 
     await restoreDatabaseBackupPayload(parsed);
     showToast(t("databaseImportedReloading"), "success");
     window.setTimeout(() => window.location.reload(), 600);
   } catch (err) {
-    showToast(
-      tf("databaseImportFailed", { error: err.message || t("unknownError") }),
-      "error",
-    );
+    showToast(tf("databaseImportFailed", { error: err.message || t("unknownError") }), "error");
   }
 }
 
 async function resetAppData() {
-  const ok = await openConfirmDialog(
-    t("resetAppData"),
-    t("resetAppDataConfirm"),
-  );
+  const ok = await openConfirmDialog(t("resetAppData"), t("resetAppDataConfirm"));
   if (!ok) return;
 
   try {
@@ -15130,10 +13242,7 @@ async function resetAppData() {
     showToast(t("resetAppDataSuccess"), "success");
     window.setTimeout(() => window.location.reload(), 800);
   } catch (err) {
-    showToast(
-      tf("resetAppDataFailed", { error: err.message || t("unknownError") }),
-      "error",
-    );
+    showToast(tf("resetAppDataFailed", { error: err.message || t("unknownError") }), "error");
   }
 }
 
@@ -15155,7 +13264,7 @@ async function buildDatabaseBackupPayload() {
                 return { ...avatar, data: base64 };
               }
               return avatar;
-            })
+            }),
           );
         }
         if (processed.avatar instanceof Blob) {
@@ -15174,13 +13283,13 @@ async function buildDatabaseBackupPayload() {
                     return { ...avatar, data: base64 };
                   }
                   return avatar;
-                })
+                }),
               );
             }
           }
         }
         return processed;
-      })
+      }),
     );
   }
 
@@ -15196,7 +13305,7 @@ async function buildDatabaseBackupPayload() {
           processed.avatar = await blobToBase64(processed.avatar);
         }
         return processed;
-      })
+      }),
     );
   }
 
@@ -15208,12 +13317,10 @@ async function buildDatabaseBackupPayload() {
           return { ...asset, data: base64 };
         }
         return asset;
-      })
+      }),
     );
     const validAssetTypes = ["image", "video", "sound"];
-    tables.assets = tables.assets.filter(
-      (asset) => asset.type && validAssetTypes.includes(asset.type),
-    );
+    tables.assets = tables.assets.filter((asset) => asset.type && validAssetTypes.includes(asset.type));
   }
 
   const localState = {};
@@ -15252,14 +13359,7 @@ async function openExportSelectModal() {
   if (!exportBody) return;
   exportBody.innerHTML = '<p class="muted">Loading...</p>';
 
-  const [
-    characters,
-    threads,
-    personas,
-    lorebooks,
-    writingInstructions,
-    assets,
-  ] = await Promise.all([
+  const [characters, threads, personas, lorebooks, writingInstructions, assets] = await Promise.all([
     db.characters.toArray(),
     db.threads.toArray(),
     db.personas.toArray(),
@@ -15296,14 +13396,44 @@ function renderExportSelectSections(data) {
 
   const sections = [
     { id: "settings", title: t("exportSectionSettings"), items: [], isSingle: true },
-    { id: "characters", title: t("exportSectionCharacters"), items: characters.map((c) => ({ id: c.id, name: c.name || t("unnamedCharacter"), label: `${escapeHtml(c.name || t("unnamedCharacter"))} <span class="muted">#${c.id}</span>` })) },
-    { id: "threads", title: t("exportSectionThreads"), items: threads.map((t) => ({ id: t.id, charId: t.characterId, name: t.title, charName: charMap.get(t.characterId)?.name, label: `${escapeHtml(t.title || t("untitledThread"))} <span class="muted">(${charMap.get(t.characterId)?.name ? escapeHtml(charMap.get(t.characterId).name) : t("deletedCharacter")})</span>` })) },
-    { id: "personas", title: t("exportSectionPersonas"), items: personas.map((p) => ({ id: p.id, name: p.name, label: `${escapeHtml(p.name || t("unnamedPersona"))} <span class="muted">#${p.id}</span>` })) },
-    { id: "lorebooks", title: t("exportSectionLorebooks"), items: lorebooks.map((l) => ({ id: l.id, name: l.name, label: `${escapeHtml(l.name || t("unnamedLorebook"))} <span class="muted">#${l.id}</span>` })) },
+    {
+      id: "characters",
+      title: t("exportSectionCharacters"),
+      items: characters.map((c) => ({ id: c.id, name: c.name || t("unnamedCharacter"), label: `${escapeHtml(c.name || t("unnamedCharacter"))} <span class="muted">#${c.id}</span>` })),
+    },
+    {
+      id: "threads",
+      title: t("exportSectionThreads"),
+      items: threads.map((t) => ({
+        id: t.id,
+        charId: t.characterId,
+        name: t.title,
+        charName: charMap.get(t.characterId)?.name,
+        label: `${escapeHtml(t.title || t("untitledThread"))} <span class="muted">(${charMap.get(t.characterId)?.name ? escapeHtml(charMap.get(t.characterId).name) : t("deletedCharacter")})</span>`,
+      })),
+    },
+    {
+      id: "personas",
+      title: t("exportSectionPersonas"),
+      items: personas.map((p) => ({ id: p.id, name: p.name, label: `${escapeHtml(p.name || t("unnamedPersona"))} <span class="muted">#${p.id}</span>` })),
+    },
+    {
+      id: "lorebooks",
+      title: t("exportSectionLorebooks"),
+      items: lorebooks.map((l) => ({ id: l.id, name: l.name, label: `${escapeHtml(l.name || t("unnamedLorebook"))} <span class="muted">#${l.id}</span>` })),
+    },
     { id: "shortcuts", title: t("exportSectionShortcuts"), items: [], isSingle: true },
     { id: "tags", title: t("exportSectionTags"), items: allTags.map((tag) => ({ tag, name: tag, label: tag, anyCharHas: characters.some((c) => (c.tags || []).includes(tag)) })) },
-    { id: "writingInstructions", title: t("exportSectionWritingInstructions"), items: writingInstructions.map((w) => ({ id: w.id, name: w.name, label: `${escapeHtml(w.name || t("unnamedWritingInstruction"))} <span class="muted">#${w.id}</span>` })) },
-    { id: "assets", title: t("exportSectionAssets"), items: assets.map((a) => ({ id: a.id, name: a.name, type: a.type, label: `${escapeHtml(a.name || t("unnamedAsset"))} <span class="muted">(${a.type || "unknown"})</span>` })) },
+    {
+      id: "writingInstructions",
+      title: t("exportSectionWritingInstructions"),
+      items: writingInstructions.map((w) => ({ id: w.id, name: w.name, label: `${escapeHtml(w.name || t("unnamedWritingInstruction"))} <span class="muted">#${w.id}</span>` })),
+    },
+    {
+      id: "assets",
+      title: t("exportSectionAssets"),
+      items: assets.map((a) => ({ id: a.id, name: a.name, type: a.type, label: `${escapeHtml(a.name || t("unnamedAsset"))} <span class="muted">(${a.type || "unknown"})</span>` })),
+    },
   ];
 
   let html = "";
@@ -15545,11 +13675,7 @@ async function exportSelectedData() {
       await writable.write(blob);
       await writable.close();
     } else {
-      const safeDate = new Date()
-        .toISOString()
-        .replace(/[:.]/g, "-")
-        .replace("T", "_")
-        .replace("Z", "");
+      const safeDate = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").replace("Z", "");
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `rp_llm_backend_backup_${safeDate}.json`;
@@ -15563,10 +13689,7 @@ async function exportSelectedData() {
     showToast(t("databaseExported"), "success");
   } catch (err) {
     if (err.name !== "AbortError") {
-      showToast(
-        tf("databaseExportFailed", { error: err.message || t("unknownError") }),
-        "error",
-      );
+      showToast(tf("databaseExportFailed", { error: err.message || t("unknownError") }), "error");
     }
   }
 }
@@ -15588,7 +13711,7 @@ async function buildSelectiveExportPayload(selections) {
                 return { ...avatar, data: base64 };
               }
               return avatar;
-            })
+            }),
           );
         }
         if (processed.avatar instanceof Blob) {
@@ -15607,33 +13730,25 @@ async function buildSelectiveExportPayload(selections) {
                     return { ...avatar, data: base64 };
                   }
                   return avatar;
-                })
+                }),
               );
             }
           }
         }
         if (selections.tags.length > 0) {
-          processed.tags = (processed.tags || []).filter((t) =>
-            selections.tags.includes(t)
-          );
+          processed.tags = (processed.tags || []).filter((t) => selections.tags.includes(t));
         }
         return processed;
-      })
+      }),
     );
   }
 
   if (selections.threads.length > 0) {
-    tables.threads = await db.threads
-      .where("id")
-      .anyOf(selections.threads)
-      .toArray();
+    tables.threads = await db.threads.where("id").anyOf(selections.threads).toArray();
   }
 
   if (selections.personas.length > 0) {
-    const personas = await db.personas
-      .where("id")
-      .anyOf(selections.personas)
-      .toArray();
+    const personas = await db.personas.where("id").anyOf(selections.personas).toArray();
     tables.personas = await Promise.all(
       personas.map(async (persona) => {
         const processed = { ...persona };
@@ -15641,29 +13756,20 @@ async function buildSelectiveExportPayload(selections) {
           processed.avatar = await blobToBase64(processed.avatar);
         }
         return processed;
-      })
+      }),
     );
   }
 
   if (selections.lorebooks.length > 0) {
-    tables.lorebooks = await db.lorebooks
-      .where("id")
-      .anyOf(selections.lorebooks)
-      .toArray();
+    tables.lorebooks = await db.lorebooks.where("id").anyOf(selections.lorebooks).toArray();
   }
 
   if (selections.writingInstructions.length > 0) {
-    tables.writingInstructions = await db.writingInstructions
-      .where("id")
-      .anyOf(selections.writingInstructions)
-      .toArray();
+    tables.writingInstructions = await db.writingInstructions.where("id").anyOf(selections.writingInstructions).toArray();
   }
 
   if (selections.assets.length > 0) {
-    const assets = await db.assets
-      .where("id")
-      .anyOf(selections.assets)
-      .toArray();
+    const assets = await db.assets.where("id").anyOf(selections.assets).toArray();
     tables.assets = await Promise.all(
       assets.map(async (asset) => {
         if (asset.data instanceof Blob) {
@@ -15671,7 +13777,7 @@ async function buildSelectiveExportPayload(selections) {
           return { ...asset, data: base64 };
         }
         return asset;
-      })
+      }),
     );
   }
 
@@ -15723,10 +13829,7 @@ async function restoreDatabaseBackupPayload(payload) {
       if (!table || !Array.isArray(rows) || rows.length === 0) continue;
       let rowsToInsert = rows;
       if (tableName === "assets") {
-        rowsToInsert = rows.filter(
-          (asset) =>
-            asset.type && validAssetTypes.includes(asset.type),
-        );
+        rowsToInsert = rows.filter((asset) => asset.type && validAssetTypes.includes(asset.type));
       }
       if (rowsToInsert.length > 0) {
         await table.bulkPut(rowsToInsert);
@@ -15747,25 +13850,15 @@ async function restoreDatabaseBackupPayload(payload) {
 }
 
 async function deleteCharacter(characterId) {
-  const ok = await openConfirmDialog(
-    "Delete Character",
-    "Delete this character and all related threads?",
-  );
+  const ok = await openConfirmDialog("Delete Character", "Delete this character and all related threads?");
   if (!ok) return;
 
-  await db.transaction(
-    "rw",
-    db.characters,
-    db.threads,
-    db.memories,
-    db.sessions,
-    async () => {
-      await db.characters.delete(characterId);
-      await db.threads.where("characterId").equals(characterId).delete();
-      await db.memories.where("characterId").equals(characterId).delete();
-      await db.sessions.where("characterId").equals(characterId).delete();
-    },
-  );
+  await db.transaction("rw", db.characters, db.threads, db.memories, db.sessions, async () => {
+    await db.characters.delete(characterId);
+    await db.threads.where("characterId").equals(characterId).delete();
+    await db.memories.where("characterId").equals(characterId).delete();
+    await db.sessions.where("characterId").equals(characterId).delete();
+  });
 
   // Clean up stored modal scroll and collapse states for this character
   const prefix = `rp-char-collapse-${characterId}-`;
@@ -15793,10 +13886,7 @@ async function deleteCharacter(characterId) {
 async function startNewThread(characterId, forcedPersonaId = null) {
   const character = await db.characters.get(characterId);
   if (!character) return;
-  const resolvedCharacter = resolveCharacterForLanguage(
-    character,
-    character?.selectedCardLanguage || "",
-  );
+  const resolvedCharacter = resolveCharacterForLanguage(character, character?.selectedCardLanguage || "");
   let selectedPersona = null;
   if (forcedPersonaId) {
     selectedPersona = await db.personas.get(forcedPersonaId);
@@ -15840,13 +13930,9 @@ async function startNewThread(characterId, forcedPersonaId = null) {
   await renderThreads();
   await renderCharacters();
   await openThread(threadId);
-  const shouldAutoTriggerFirstAi =
-    (resolvedCharacter?.autoTriggerAiFirstMessage ?? true) !== false;
-  const shouldTriggerFromInitial =
-    state.settings.autoReplyEnabled !== false &&
-    shouldAutoReplyFromInitialMessages(initialMessages);
-  const shouldTriggerWithoutInitial =
-    shouldAutoTriggerFirstAi && initialMessages.length === 0;
+  const shouldAutoTriggerFirstAi = (resolvedCharacter?.autoTriggerAiFirstMessage ?? true) !== false;
+  const shouldTriggerFromInitial = state.settings.autoReplyEnabled !== false && shouldAutoReplyFromInitialMessages(initialMessages);
+  const shouldTriggerWithoutInitial = shouldAutoTriggerFirstAi && initialMessages.length === 0;
   if (shouldTriggerFromInitial || shouldTriggerWithoutInitial) {
     await requestBotReplyForCurrentThread("new_thread_auto_first_reply");
   }
@@ -15866,9 +13952,7 @@ async function forkThreadFromMessage(messageIndex) {
 
   const count = conversationHistory.length;
   if (count === 0) return;
-  const requestedIndex = Number.isInteger(Number(messageIndex))
-    ? Number(messageIndex)
-    : count - 1;
+  const requestedIndex = Number.isInteger(Number(messageIndex)) ? Number(messageIndex) : count - 1;
   const boundedIndex = Math.max(0, Math.min(count - 1, requestedIndex));
   const targetMessage = conversationHistory[boundedIndex];
   if (!targetMessage) return;
@@ -15882,11 +13966,9 @@ async function forkThreadFromMessage(messageIndex) {
     return truncated.map((msg) => JSON.parse(JSON.stringify(msg)));
   })();
 
-  const titleTarget =
-    source.title || tf("threadTitleDefault", { id: source.id });
+  const titleTarget = source.title || tf("threadTitleDefault", { id: source.id });
   const copyTitle = tf("threadTitleForked", { title: titleTarget });
-  const writingCount =
-    computeWritingInstructionsTurnCountFromMessages(cloneMessages);
+  const writingCount = computeWritingInstructionsTurnCountFromMessages(cloneMessages);
   const copy = {
     characterId: source.characterId,
     characterLanguage: source.characterLanguage || "",
@@ -15918,9 +14000,7 @@ async function forkThreadFromMessage(messageIndex) {
   });
 
   const lastMessageTimestamp = Number(targetMessage.createdAt);
-  const cutoffTimestamp = Number.isFinite(lastMessageTimestamp)
-    ? lastMessageTimestamp
-    : Date.now();
+  const cutoffTimestamp = Number.isFinite(lastMessageTimestamp) ? lastMessageTimestamp : Date.now();
 
   // Build a map of memoryId to the indices of messages that have that summaryId
   const memoryIdToIndices = new Map();
@@ -15935,10 +14015,7 @@ async function forkThreadFromMessage(messageIndex) {
   });
 
   // Get all memory entries for the source character and thread
-  const allMemoryEntries = await getMemoryEntries(
-    source.characterId,
-    source.id,
-  );
+  const allMemoryEntries = await getMemoryEntries(source.characterId, source.id);
 
   // Filter entries: only those where all messages with that summaryId are within the truncated set (index <= boundedIndex)
   const safeMemoryEntries = allMemoryEntries.filter((entry) => {
@@ -15993,12 +14070,8 @@ async function forkThreadFromMessage(messageIndex) {
   });
   await db.threads.update(newThreadId, { messages: remappedMessages });
 
-  state.promptHistory = Array.isArray(state.promptHistory)
-    ? state.promptHistory
-    : [];
-  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
-    ? state.promptCommandHistory
-    : [];
+  state.promptHistory = Array.isArray(state.promptHistory) ? state.promptHistory : [];
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : [];
 
   const promptEntriesToCopy = (state.promptHistory || [])
     .filter((entry) => entry.threadId === threadId)
@@ -16047,9 +14120,7 @@ async function forkThreadFromMessage(messageIndex) {
   }
   if (promptCommandHistoryChanged) {
     if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
-      state.promptCommandHistory = state.promptCommandHistory.slice(
-        -PROMPT_COMMAND_HISTORY_MAX,
-      );
+      state.promptCommandHistory = state.promptCommandHistory.slice(-PROMPT_COMMAND_HISTORY_MAX);
     }
     savePromptCommandHistory();
   }
@@ -16069,12 +14140,8 @@ async function duplicateThread(threadId) {
   }
 
   // Ensure arrays exist
-  state.promptHistory = Array.isArray(state.promptHistory)
-    ? state.promptHistory
-    : [];
-  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
-    ? state.promptCommandHistory
-    : [];
+  state.promptHistory = Array.isArray(state.promptHistory) ? state.promptHistory : [];
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : [];
 
   const clonedMessages = (() => {
     const list = Array.isArray(source.messages) ? source.messages : [];
@@ -16095,10 +14162,7 @@ async function duplicateThread(threadId) {
     autoTtsEnabled: source.autoTtsEnabled === true,
     lastPersonaInjectionPersonaId: source.lastPersonaInjectionPersonaId || null,
     personaInjectionOnceUsed: !!source.personaInjectionOnceUsed,
-    writingInstructionsTurnCount:
-      Number(source.writingInstructionsTurnCount) >= 0
-        ? Number(source.writingInstructionsTurnCount)
-        : 0,
+    writingInstructionsTurnCount: Number(source.writingInstructionsTurnCount) >= 0 ? Number(source.writingInstructionsTurnCount) : 0,
     shortcutsVisible: source.shortcutsVisible === true,
     oocModeEnabled: source.oocModeEnabled === true,
     chatOpacity: getThreadChatOpacity(source),
@@ -16110,17 +14174,11 @@ async function duplicateThread(threadId) {
 
   const newThreadId = await db.threads.add(copy);
   await updateCharacterThreadCount(copy.characterId, 1);
-  const memoryMapping = await duplicateThreadMemories(
-    source.characterId,
-    source.id,
-    newThreadId,
-  );
+  const memoryMapping = await duplicateThreadMemories(source.characterId, source.id, newThreadId);
   if (memoryMapping.size > 0) {
     const remapId = (value) => {
       const num = Number(value);
-      return Number.isInteger(num) && memoryMapping.has(num)
-        ? memoryMapping.get(num)
-        : null;
+      return Number.isInteger(num) && memoryMapping.has(num) ? memoryMapping.get(num) : null;
     };
     const remappedMessages = copy.messages.map((msg) => {
       const next = { ...msg };
@@ -16140,9 +14198,7 @@ async function duplicateThread(threadId) {
     });
     await db.threads.update(newThreadId, { messages: remappedMessages });
   } else {
-    const needsCleanup = copy.messages.some(
-      (msg) => msg.summaryId || msg.summaryProtected,
-    );
+    const needsCleanup = copy.messages.some((msg) => msg.summaryId || msg.summaryProtected);
     if (needsCleanup) {
       const cleanedMessages = copy.messages.map((msg) => {
         const next = { ...msg };
@@ -16155,9 +14211,7 @@ async function duplicateThread(threadId) {
   }
 
   // Duplicate prompt history entries for the new thread
-  const originalPromptEntries = (state.promptHistory || []).filter(
-    (e) => e.threadId === threadId,
-  );
+  const originalPromptEntries = (state.promptHistory || []).filter((e) => e.threadId === threadId);
   for (const entry of originalPromptEntries) {
     state.promptHistory.push({
       threadId: newThreadId,
@@ -16176,9 +14230,7 @@ async function duplicateThread(threadId) {
   }
 
   // Duplicate command history entries for the new thread
-  const originalCommandEntries = (state.promptCommandHistory || []).filter(
-    (e) => e.threadId === threadId,
-  );
+  const originalCommandEntries = (state.promptCommandHistory || []).filter((e) => e.threadId === threadId);
   for (const entry of originalCommandEntries) {
     state.promptCommandHistory.push({
       threadId: newThreadId,
@@ -16191,9 +14243,7 @@ async function duplicateThread(threadId) {
   }
   if (originalCommandEntries.length > 0) {
     if (state.promptCommandHistory.length > PROMPT_COMMAND_HISTORY_MAX) {
-      state.promptCommandHistory = state.promptCommandHistory.slice(
-        -PROMPT_COMMAND_HISTORY_MAX,
-      );
+      state.promptCommandHistory = state.promptCommandHistory.slice(-PROMPT_COMMAND_HISTORY_MAX);
     }
     savePromptCommandHistory();
   }
@@ -16209,18 +14259,11 @@ async function duplicateThread(threadId) {
   showToast(t("threadDuplicated"), "success");
 }
 
-async function duplicateThreadMemories(
-  characterId,
-  originalThreadId,
-  newThreadId,
-) {
+async function duplicateThreadMemories(characterId, originalThreadId, newThreadId) {
   const mapping = new Map();
   const charId = Number(characterId || 0);
   const oldThreadId = Number(originalThreadId || 0);
-  const targetThreadId =
-    Number.isInteger(Number(newThreadId)) && Number(newThreadId) > 0
-      ? Number(newThreadId)
-      : null;
+  const targetThreadId = Number.isInteger(Number(newThreadId)) && Number(newThreadId) > 0 ? Number(newThreadId) : null;
   if (charId <= 0 || oldThreadId <= 0 || !targetThreadId) {
     return mapping;
   }
@@ -16259,10 +14302,7 @@ async function toggleThreadFavorite(threadId) {
 }
 
 async function deleteThread(threadId) {
-  const ok = await openConfirmDialog(
-    t("deleteThreadTitle"),
-    t("deleteThreadConfirm"),
-  );
+  const ok = await openConfirmDialog(t("deleteThreadTitle"), t("deleteThreadConfirm"));
   if (!ok) return;
 
   const thread = await db.threads.get(threadId);
@@ -16270,16 +14310,10 @@ async function deleteThread(threadId) {
 
   localStorage.removeItem(`rp-thread-scroll-${threadId}`);
 
-  if (
-    state.sending &&
-    Number(state.activeGenerationThreadId) === Number(threadId) &&
-    state.abortController
-  ) {
+  if (state.sending && Number(state.activeGenerationThreadId) === Number(threadId) && state.abortController) {
     cancelOngoingGeneration();
   }
-  state.generationQueue = state.generationQueue.filter(
-    (id) => Number(id) !== Number(threadId),
-  );
+  state.generationQueue = state.generationQueue.filter((id) => Number(id) !== Number(threadId));
   try {
     await db.threads.update(threadId, {
       pendingGenerationReason: "",
@@ -16323,10 +14357,7 @@ async function openThread(threadId) {
   if (chatViewActive && currentThread) {
     const log = document.getElementById("chat-log");
     if (log) {
-      localStorage.setItem(
-        `rp-thread-scroll-${currentThread.id}`,
-        log.scrollTop,
-      );
+      localStorage.setItem(`rp-thread-scroll-${currentThread.id}`, log.scrollTop);
     }
     const input = document.getElementById("user-input");
     const draftValue = input?.value?.trim() || "";
@@ -16352,20 +14383,14 @@ async function openThread(threadId) {
     }
   }
 
-  if (
-    Number.isInteger(thread.initialMessageIndex) &&
-    thread.initialMessageIndex >= 0
-  ) {
-    state.initialMessageIndexByThread[Number(threadId)] =
-      thread.initialMessageIndex;
+  if (Number.isInteger(thread.initialMessageIndex) && thread.initialMessageIndex >= 0) {
+    state.initialMessageIndexByThread[Number(threadId)] = thread.initialMessageIndex;
   }
 
   window.stopTtsPlayback();
   stopAllSfx();
   const characterBase = await db.characters.get(thread.characterId);
-  const character = characterBase
-    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
-    : null;
+  const character = characterBase ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "") : null;
   currentThread = {
     ...thread,
     writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(thread),
@@ -16373,9 +14398,7 @@ async function openThread(threadId) {
   };
   if (!currentThread.unloadState) {
     const hasInitialMessages = (thread.messages || []).some((m) => m.isInitial);
-    const nonInitialCount = (thread.messages || []).filter(
-      (m) => !m.isInitial,
-    ).length;
+    const nonInitialCount = (thread.messages || []).filter((m) => !m.isInitial).length;
     currentThread.unloadState = {
       loadLimit: 0,
       totalMessageCount: nonInitialCount + (hasInitialMessages ? 1 : 0),
@@ -16394,10 +14417,7 @@ async function openThread(threadId) {
   state.cachedChatBotAvatar = { url: null, characterId: null, personaId: null };
   preloadKokoroForActiveCharacter();
 
-  const snapshot = buildThreadConversationSnapshot(
-    thread,
-    state.settings.autoUnloadThreshold || 0,
-  );
+  const snapshot = buildThreadConversationSnapshot(thread, state.settings.autoUnloadThreshold || 0);
   conversationHistory = snapshot.conversationHistory;
   currentThread.unloadState = snapshot.unloadState;
   await db.threads.update(thread.id, {
@@ -16414,9 +14434,7 @@ async function openThread(threadId) {
 
   await applyChatViewBackgroundFromSfx(currentThread);
   playStartSfxForCharacter(currentCharacter, currentThread).catch(() => {});
-  currentPersona = thread.selectedPersonaId
-    ? await db.personas.get(thread.selectedPersonaId)
-    : null;
+  currentPersona = thread.selectedPersonaId ? await db.personas.get(thread.selectedPersonaId) : null;
   try {
     await renderPersonaSelector();
   } catch (e) {
@@ -16503,12 +14521,7 @@ function threadHasPendingBotActivity(thread) {
   return messages.some((m) => {
     if (!m || m.role !== "assistant") return false;
     const st = String(m.generationStatus || "").trim();
-    return (
-      st === "queued" ||
-      st === "cooling_down" ||
-      st === "generating" ||
-      st === "regenerating"
-    );
+    return st === "queued" || st === "cooling_down" || st === "generating" || st === "regenerating";
   });
 }
 
@@ -16553,14 +14566,8 @@ function updateAutoTtsToggleButton() {
   const enabled = !!(currentThread && currentThread.autoTtsEnabled === true);
   btn.classList.toggle("is-active", enabled);
   btn.disabled = !currentThread;
-  btn.setAttribute(
-    "title",
-    enabled ? t("autoTtsTitleOn") : t("autoTtsTitleOff"),
-  );
-  btn.setAttribute(
-    "aria-label",
-    enabled ? t("disableAutoTtsAria") : t("enableAutoTtsAria"),
-  );
+  btn.setAttribute("title", enabled ? t("autoTtsTitleOn") : t("autoTtsTitleOff"));
+  btn.setAttribute("aria-label", enabled ? t("disableAutoTtsAria") : t("enableAutoTtsAria"));
 }
 
 function updateChatInputToggles() {
@@ -16572,18 +14579,12 @@ function updateChatInputToggles() {
   const globalAutoReply = state.settings.autoReplyEnabled;
   const globalEnterToSend = state.settings.enterToSendEnabled;
   if (autoReplyEnabled) {
-    const isActive =
-      threadAutoReply !== undefined
-        ? threadAutoReply
-        : globalAutoReply !== false;
+    const isActive = threadAutoReply !== undefined ? threadAutoReply : globalAutoReply !== false;
     autoReplyEnabled.classList.toggle("is-active", isActive);
     autoReplyEnabled.disabled = !currentThread;
   }
   if (enterToSendEnabled) {
-    const isActive =
-      threadEnterToSend !== undefined
-        ? threadEnterToSend
-        : globalEnterToSend !== false;
+    const isActive = threadEnterToSend !== undefined ? threadEnterToSend : globalEnterToSend !== false;
     enterToSendEnabled.classList.toggle("is-active", isActive);
     enterToSendEnabled.disabled = !currentThread;
   }
@@ -16600,14 +14601,8 @@ function updateOocModeUi() {
     if (window.ICONS?.ooc) {
       btn.innerHTML = window.ICONS.ooc;
     }
-    btn.setAttribute(
-      "title",
-      isActive ? t("oocModeTitleOn") : t("oocModeTitleOff"),
-    );
-    btn.setAttribute(
-      "aria-label",
-      isActive ? t("disableOocModeAria") : t("enableOocModeAria"),
-    );
+    btn.setAttribute("title", isActive ? t("oocModeTitleOn") : t("oocModeTitleOff"));
+    btn.setAttribute("aria-label", isActive ? t("disableOocModeAria") : t("enableOocModeAria"));
   }
   if (container) {
     container.classList.toggle("ooc-active", isActive);
@@ -16623,10 +14618,7 @@ function applyPersonaColorStyles() {
     document.documentElement.style.removeProperty("--persona-input-bg");
   } else {
     document.documentElement.style.setProperty("--persona-color", color);
-    document.documentElement.style.setProperty(
-      "--persona-input-bg",
-      hexToRgba(color, 0.08),
-    );
+    document.documentElement.style.setProperty("--persona-input-bg", hexToRgba(color, 0.08));
   }
   if (state.promptHistoryOpen) {
     const list = document.getElementById("prompt-history-list");
@@ -16708,9 +14700,7 @@ async function startSttRecording() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     state.stt.stream = stream;
-    state.stt.audioContext = new (
-      window.AudioContext || window.webkitAudioContext
-    )();
+    state.stt.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     state.stt.mediaRecorder = new MediaRecorder(stream);
     state.stt.audioChunks = [];
 
@@ -16760,11 +14750,7 @@ async function startSttRecording() {
 function startSilenceDetection() {
   if (!state.stt.audioContext || !state.stt.stream) return;
 
-  state.stt.silenceDetector = createSilenceDetector(
-    state.stt.audioContext,
-    state.stt.stream,
-    onSilenceDetected,
-  );
+  state.stt.silenceDetector = createSilenceDetector(state.stt.audioContext, state.stt.stream, onSilenceDetected);
 
   checkSilence();
 }
@@ -16779,10 +14765,7 @@ function checkSilence() {
   if (level < silenceThreshold) {
     if (!state.stt.silenceStartTime) {
       state.stt.silenceStartTime = Date.now();
-    } else if (
-      Date.now() - state.stt.silenceStartTime >
-      silenceDuration * 1000
-    ) {
+    } else if (Date.now() - state.stt.silenceStartTime > silenceDuration * 1000) {
       onSilenceDetected();
       return;
     }
@@ -16870,18 +14853,12 @@ function updateSttToggleButton() {
   if (state.stt.isListening) {
     btn.classList.add("is-active", "stt-recording");
     btn.setAttribute("data-i18n-title", "sttTitleOn");
-    btn.title =
-      state.settings.sttMode === "push-to-talk"
-        ? t("sttHoldToTalk")
-        : t("sttListeningAutoStop");
+    btn.title = state.settings.sttMode === "push-to-talk" ? t("sttHoldToTalk") : t("sttListeningAutoStop");
     btn.innerHTML = ICONS.micFilled;
   } else {
     btn.classList.remove("is-active", "stt-recording");
     btn.setAttribute("data-i18n-title", "sttTitleOff");
-    btn.title =
-      state.settings.sttMode === "push-to-talk"
-        ? t("sttPushToTalkHint")
-        : t("sttAutoStopHint");
+    btn.title = state.settings.sttMode === "push-to-talk" ? t("sttPushToTalkHint") : t("sttAutoStopHint");
     btn.innerHTML = ICONS.mic;
   }
 }
@@ -16896,10 +14873,7 @@ function toggleSttAutoSend() {
   state.settings.sttAutoSend = state.stt.autoSend;
   saveSettings();
   updateSttAutoSendButton();
-  showToast(
-    state.stt.autoSend ? t("sttAutoSendEnabled") : t("sttAutoSendDisabled"),
-    "success",
-  );
+  showToast(state.stt.autoSend ? t("sttAutoSendEnabled") : t("sttAutoSendDisabled"), "success");
 }
 
 function updateSttAutoSendButton() {
@@ -16981,8 +14955,7 @@ function updateChatTitle() {
     applyHoverMarquee(titleEl, t("threadWord"));
     return;
   }
-  const displayTitle =
-    currentThread.title || tf("threadTitleDefault", { id: currentThread.id });
+  const displayTitle = currentThread.title || tf("threadTitleDefault", { id: currentThread.id });
   applyHoverMarquee(titleEl, displayTitle);
 }
 
@@ -16991,11 +14964,7 @@ function applyHoverMarquee(element, fullText) {
   const text = String(fullText || "");
   const behavior = normalizeMarqueeBehavior(state.settings.marqueeBehavior);
   if (behavior === "disabled") {
-    element.classList.remove(
-      "hover-marquee",
-      "marquee-overflow",
-      "marquee-always",
-    );
+    element.classList.remove("hover-marquee", "marquee-overflow", "marquee-always");
     element.style.removeProperty("--marquee-shift");
     element.style.removeProperty("--marquee-duration");
     element.textContent = text;
@@ -17050,32 +15019,20 @@ async function maybeGenerateTitleBeforeBotReply() {
     return true;
   }
   if (currentThread.titleManual === true) return true;
-  const minMessages = Math.max(
-    1,
-    Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10),
-  );
+  const minMessages = Math.max(1, Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10));
   const displayHistory = getFilteredConversationHistoryForThread(currentThread);
   const inSimulationHistory = getInSimulationMessages(displayHistory);
   // Generate title if either we have enough messages OR pending flag is set
-  if (inSimulationHistory.length < minMessages && !state.pendingTitleGeneration)
-    return true;
+  if (inSimulationHistory.length < minMessages && !state.pendingTitleGeneration) return true;
 
-  const existingTitleMessage = conversationHistory.find(
-    (m) =>
-      m.ooc !== true &&
-      m.role === "assistant" &&
-      m.generationStatus === "title_generating",
-  );
+  const existingTitleMessage = conversationHistory.find((m) => m.ooc !== true && m.role === "assistant" && m.generationStatus === "title_generating");
   if (existingTitleMessage) return true;
 
   const hasExistingPendingMessage = conversationHistory.some(
     (m) =>
       m.ooc !== true &&
       m.role === "assistant" &&
-      (m.generationStatus === "generating" ||
-        m.generationStatus === "regenerating" ||
-        m.generationStatus === "queued" ||
-        m.generationStatus === "cooling_down"),
+      (m.generationStatus === "generating" || m.generationStatus === "regenerating" || m.generationStatus === "queued" || m.generationStatus === "cooling_down"),
   );
   if (hasExistingPendingMessage) return true;
 
@@ -17112,12 +15069,7 @@ async function maybeGenerateTitleBeforeBotReply() {
 
   const log = document.getElementById("chat-log");
   if (log && isViewingThread(currentThread.id)) {
-    const pendingRow = buildMessageRow(
-      pendingTitleMessage,
-      pendingIndex,
-      true,
-      displayHistory,
-    );
+    const pendingRow = buildMessageRow(pendingTitleMessage, pendingIndex, true, displayHistory);
     log.appendChild(pendingRow);
     const pendingContent = pendingRow?.querySelector(".message-content");
     if (pendingContent) {
@@ -17135,10 +15087,7 @@ async function maybeGenerateTitleBeforeBotReply() {
       const rawContent = String(m.content || "");
       if (!rawContent.trim()) return "";
       const isOoc = m.ooc === true;
-      const processed =
-        m.role === "assistant"
-          ? applySummaryMessagePreProcessing(rawContent)
-          : rawContent;
+      const processed = m.role === "assistant" ? applySummaryMessagePreProcessing(rawContent) : rawContent;
       const trimmed = processed.trim();
       if (!trimmed) return "";
       let labelContent = trimmed;
@@ -17157,22 +15106,13 @@ async function maybeGenerateTitleBeforeBotReply() {
     })
     .filter((entry) => entry !== "")
     .join("\n\n");
-  const languageCode =
-    normalizeBotLanguageCode(
-      currentThread.characterLanguage ||
-        currentCharacter.activeLanguage ||
-        "en",
-    ) || "en";
+  const languageCode = normalizeBotLanguageCode(currentThread.characterLanguage || currentCharacter.activeLanguage || "en") || "en";
 
-  const userPromptTemplate =
-    state.settings.autoTitleUserPrompt ||
-    DEFAULT_SETTINGS.autoTitleUserPrompt;
-  const titlePrompt = userPromptTemplate
-    .replace(/\{\{transcript\}\}/g, transcript)
-    .replace(/\{\{languageCode\}\}/g, languageCode);
+  const userPromptTemplate = state.settings.autoTitleUserPrompt || DEFAULT_SETTINGS.autoTitleUserPrompt;
+  const titlePrompt = userPromptTemplate.replace(/\{\{transcript\}\}/g, transcript).replace(/\{\{languageCode\}\}/g, languageCode);
 
   if (state.settings.useLocalAutoTitle) {
-    console.log('[app] useLocalAutoTitle is TRUE, calling local title...');
+    console.log("[app] useLocalAutoTitle is TRUE, calling local title...");
     if (isViewingThread(currentThread.id)) {
       showToast("Using local auto-title...", "info");
     }
@@ -17208,16 +15148,13 @@ async function maybeGenerateTitleBeforeBotReply() {
 
   try {
     const result = await callOpenRouter(
-      state.settings.autoTitleSystemPrompt ||
-        DEFAULT_SETTINGS.autoTitleSystemPrompt,
+      state.settings.autoTitleSystemPrompt || DEFAULT_SETTINGS.autoTitleSystemPrompt,
       [{ role: "user", content: titlePrompt }],
       state.settings.autoTitleModel,
       null,
       null,
       {
-        forceStream:
-          state.settings.defaultAutoTitleStream ??
-          DEFAULT_SETTINGS.defaultAutoTitleStream,
+        forceStream: state.settings.defaultAutoTitleStream ?? DEFAULT_SETTINGS.defaultAutoTitleStream,
         isTitleGeneration: true,
       },
     );
@@ -17303,19 +15240,11 @@ async function maybeGenerateThreadTitle() {
   if (currentCharacter.autoTitleEnabled === false) return;
   if (currentThread.titleGenerated === true) return true;
   if (currentThread.titleManual === true) return;
-  const minMessages = Math.max(
-    1,
-    Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10),
-  );
+  const minMessages = Math.max(1, Math.min(10, Number(currentCharacter.autoTitleMinMessages) || 10));
   const inSimulationHistory = getInSimulationMessages(conversationHistory);
   if (inSimulationHistory.length < minMessages) return;
 
-  const existingTitleMessage = conversationHistory.find(
-    (m) =>
-      m.ooc !== true &&
-      m.role === "assistant" &&
-      m.generationStatus === "title_generating",
-  );
+  const existingTitleMessage = conversationHistory.find((m) => m.ooc !== true && m.role === "assistant" && m.generationStatus === "title_generating");
   if (existingTitleMessage) return;
 
   const hasExistingPendingMessage = conversationHistory.some(
@@ -17369,15 +15298,11 @@ function computeVisibleMessageIndices() {
   const threshold = state.settings.autoUnloadThreshold || 0;
   const thread = currentThread;
   const unloadState = thread?.unloadState;
-  const totalMessages =
-    unloadState?.totalMessageCount || conversationHistory.length;
+  const totalMessages = unloadState?.totalMessageCount || conversationHistory.length;
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
 
   if (threshold === 0 || totalMessages <= threshold) {
-    console.debug(
-      "[computeVisible] Early return: threshold=0 or total <= threshold",
-      { threshold, totalMessages },
-    );
+    console.debug("[computeVisible] Early return: threshold=0 or total <= threshold", { threshold, totalMessages });
     return {
       indices: Array.from({ length: conversationHistory.length }, (_, i) => i),
       loadLimit: 0,
@@ -17452,10 +15377,7 @@ function updateUnloadButtonVisibility() {
   const btn = document.getElementById("unload-oldest-btn");
   if (!log || !btn || !currentThread) {
     if (btn) btn.classList.add("hidden");
-    console.debug(
-      "[unloadButton] Early return: missing log, btn, or currentThread",
-      { hasLog: !!log, hasBtn: !!btn, hasThread: !!currentThread },
-    );
+    console.debug("[unloadButton] Early return: missing log, btn, or currentThread", { hasLog: !!log, hasBtn: !!btn, hasThread: !!currentThread });
     return;
   }
   const threshold = state.settings.autoUnloadThreshold || 0;
@@ -17490,8 +15412,7 @@ function updateUnloadButtonVisibility() {
     const count = Math.min(threshold, hiddenCount);
     const totalHidden = vis.totalHiddenCount || hiddenCount;
     if (totalHidden > count) {
-      btn.textContent =
-        tf("unloadThresholdLoadButton", { count }) + ` (${totalHidden} hidden)`;
+      btn.textContent = tf("unloadThresholdLoadButton", { count }) + ` (${totalHidden} hidden)`;
     } else {
       btn.textContent = tf("unloadThresholdLoadButton", { count });
     }
@@ -17522,18 +15443,11 @@ async function toggleUnloadBatch() {
   if (vis.hiddenCount > 0) {
     newLoadLimit = Math.min(startActive, newLoadLimit + threshold);
     const loadStart = startActive - newLoadLimit;
-    const loaded = await loadMessagesFromDb(
-      threadId,
-      loadStart,
-      newLoadLimit - (vis.loadLimit || 0),
-    );
+    const loaded = await loadMessagesFromDb(threadId, loadStart, newLoadLimit - (vis.loadLimit || 0));
     const existingStart = conversationHistory.map((m) => ({ ...m }));
     const additionalSimulationCount = countSimulationMessages(loaded);
     const previousOffset = currentThread.unloadState?.displayIndexOffset || 0;
-    const normalizedOffset = Math.max(
-      0,
-      previousOffset - additionalSimulationCount,
-    );
+    const normalizedOffset = Math.max(0, previousOffset - additionalSimulationCount);
     conversationHistory = [...loaded, ...existingStart];
     currentThread.unloadState = {
       ...currentThread.unloadState,
@@ -17604,20 +15518,14 @@ function renderChat(startIdx, endIdx) {
   });
   const previousScrollTop = log.scrollTop;
   const previousScrollHeight = log.scrollHeight;
-  const isAtBottom =
-    previousScrollHeight - previousScrollTop - log.clientHeight <= 50;
-  const savedScroll = currentThread
-    ? localStorage.getItem(`rp-thread-scroll-${currentThread.id}`)
-    : null;
+  const isAtBottom = previousScrollHeight - previousScrollTop - log.clientHeight <= 50;
+  const savedScroll = currentThread ? localStorage.getItem(`rp-thread-scroll-${currentThread.id}`) : null;
   const hasSavedScroll = savedScroll !== null;
   const savedScrollTop = hasSavedScroll ? Number(savedScroll) : null;
 
   // Determine range to render
   const renderStart = startIdx !== undefined ? startIdx : 0;
-  const renderEnd =
-    endIdx !== undefined && endIdx !== null
-      ? endIdx
-      : conversationHistory.length - 1;
+  const renderEnd = endIdx !== undefined && endIdx !== null ? endIdx : conversationHistory.length - 1;
 
   // Always do full render when no explicit range provided
   const isFullRender = arguments.length === 0;
@@ -17632,32 +15540,19 @@ function renderChat(startIdx, endIdx) {
 
   if (!currentThread) return;
   const displayHistory = getFilteredConversationHistoryForThread();
-  cachedInitialMessageDisplayIndex =
-    getFirstInitialDisplayIndex(displayHistory);
+  cachedInitialMessageDisplayIndex = getFirstInitialDisplayIndex(displayHistory);
 
-  if (
-    conversationHistory.length === 0 &&
-    String(currentThread.pendingGenerationReason || "").trim()
-  ) {
+  if (conversationHistory.length === 0 && String(currentThread.pendingGenerationReason || "").trim()) {
     const note = document.createElement("p");
     note.className = "muted";
-    const pos =
-      state.generationQueue.indexOf(Number(currentThread.id)) >= 0
-        ? state.generationQueue.indexOf(Number(currentThread.id)) + 1
-        : null;
-    note.textContent = pos
-      ? tf("generationQueuedNoticeWithPos", { position: pos })
-      : t("generationQueuedNotice");
+    const pos = state.generationQueue.indexOf(Number(currentThread.id)) >= 0 ? state.generationQueue.indexOf(Number(currentThread.id)) + 1 : null;
+    note.textContent = pos ? tf("generationQueuedNoticeWithPos", { position: pos }) : t("generationQueuedNotice");
     log.appendChild(note);
   }
 
   const activeThreadId = Number(state.activeGenerationThreadId);
   const currentId = Number(currentThread.id);
-  const isActiveGenerationThread =
-    state.sending &&
-    Number.isInteger(activeThreadId) &&
-    Number.isInteger(currentId) &&
-    activeThreadId === currentId;
+  const isActiveGenerationThread = state.sending && Number.isInteger(activeThreadId) && Number.isInteger(currentId) && activeThreadId === currentId;
 
   // Determine which indices to render
   let indicesToRender;
@@ -17696,29 +15591,15 @@ function renderChat(startIdx, endIdx) {
     if (!message) continue;
     const originalIndex = getOriginalIndex(i);
     // Check if row already exists (for partial updates)
-    const existingRow = log.querySelector(
-      `.chat-row[data-message-index="${originalIndex}"]`,
-    );
+    const existingRow = log.querySelector(`.chat-row[data-message-index="${originalIndex}"]`);
     const status = String(message?.generationStatus || "").trim();
-    const rowStreaming =
-      message?.role === "assistant" &&
-      (status === "queued" ||
-        status === "cooling_down" ||
-        (isActiveGenerationThread &&
-          (status === "generating" || status === "regenerating")));
+    const rowStreaming = message?.role === "assistant" && (status === "queued" || status === "cooling_down" || (isActiveGenerationThread && (status === "generating" || status === "regenerating")));
     if (existingRow) {
-      const newRow = buildMessageRow(
-        message,
-        originalIndex,
-        rowStreaming,
-        displayHistory,
-      );
+      const newRow = buildMessageRow(message, originalIndex, rowStreaming, displayHistory);
       releaseMessageRowResources(existingRow);
       existingRow.replaceWith(newRow);
     } else {
-      rowsToAppend.push(
-        buildMessageRow(message, originalIndex, rowStreaming, displayHistory),
-      );
+      rowsToAppend.push(buildMessageRow(message, originalIndex, rowStreaming, displayHistory));
       domNodesCreated++;
     }
   }
@@ -17769,10 +15650,7 @@ function getCurrentThreadInitialMessages() {
   return conversationHistory.filter((msg) => msg?.isInitial);
 }
 
-function getSelectedInitialMessageIndexForThread(
-  threadId,
-  history = conversationHistory,
-) {
+function getSelectedInitialMessageIndexForThread(threadId, history = conversationHistory) {
   const id = Number(threadId);
   if (!Number.isInteger(id)) return null;
   const list = Array.isArray(history) ? history : [];
@@ -17788,35 +15666,23 @@ function getSelectedInitialMessageIndexForThread(
   return index;
 }
 
-function filterConversationHistoryForSelectedInitialMessage(
-  threadId,
-  history = conversationHistory,
-) {
-  const selectedIndex = getSelectedInitialMessageIndexForThread(
-    threadId,
-    history,
-  );
+function filterConversationHistoryForSelectedInitialMessage(threadId, history = conversationHistory) {
+  const selectedIndex = getSelectedInitialMessageIndexForThread(threadId, history);
   if (selectedIndex === null) return history;
   const list = Array.isArray(history) ? history : [];
-  return list.filter((msg) => {
-    if (!msg?.isInitial) return true;
-    const msgIndex = Number.isInteger(Number(msg.initialMessageIndex))
-      ? Number(msg.initialMessageIndex)
-      : 0;
-    return msgIndex === selectedIndex;
-  }).filter((msg) => msg?.generationStatus !== "regenerating");
+  return list
+    .filter((msg) => {
+      if (!msg?.isInitial) return true;
+      const msgIndex = Number.isInteger(Number(msg.initialMessageIndex)) ? Number(msg.initialMessageIndex) : 0;
+      return msgIndex === selectedIndex;
+    })
+    .filter((msg) => msg?.generationStatus !== "regenerating");
 }
 
-function getFilteredConversationHistoryForThread(
-  thread = currentThread,
-  history = conversationHistory,
-) {
+function getFilteredConversationHistoryForThread(thread = currentThread, history = conversationHistory) {
   if (!thread) return history;
   const threadId = Number(thread.id);
-  const filtered = filterConversationHistoryForSelectedInitialMessage(
-    threadId,
-    history,
-  );
+  const filtered = filterConversationHistoryForSelectedInitialMessage(threadId, history);
   if (thread.initialMessagesRemoved === true) {
     return filtered.filter((msg) => !msg?.isInitial);
   }
@@ -17912,20 +15778,12 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
 
   for (let i = 0; i < conversationHistory.length; i += 1) {
     const message = conversationHistory[i];
-    if (
-      !message ||
-      message.role !== "assistant" ||
-      Number(message.unreadAt) <= 0
-    )
-      continue;
+    if (!message || message.role !== "assistant" || Number(message.unreadAt) <= 0) continue;
     const originalIndex = loadedStartIndex + i;
-    const row = log.querySelector(
-      `.chat-row[data-message-index="${originalIndex}"]`,
-    );
+    const row = log.querySelector(`.chat-row[data-message-index="${originalIndex}"]`);
     if (!row) continue;
     const rowRect = row.getBoundingClientRect();
-    const isVisible =
-      rowRect.bottom > logRect.top + 6 && rowRect.top < logRect.bottom - 6;
+    const isVisible = rowRect.bottom > logRect.top + 6 && rowRect.top < logRect.bottom - 6;
     if (!isVisible) continue;
     message.unreadAt = 0;
     changed = true;
@@ -17951,10 +15809,7 @@ async function maybeProcessUnreadMessagesSeen(fromUserScroll = false) {
 }
 
 function isMessageLockedByMemory(message) {
-  return (
-    state.settings.lockMemoryMessages === true &&
-    (message?.summarized === true || message?.summaryProtected)
-  );
+  return state.settings.lockMemoryMessages === true && (message?.summarized === true || message?.summaryProtected);
 }
 
 function buildMessageRow(message, index, streaming, displayHistory = null) {
@@ -17965,11 +15820,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
   const isOocMessage = message?.ooc === true;
   if (message?.isInitial) {
     row.dataset.initialMessage = "1";
-    row.dataset.initialMessageIndex = String(
-      Number.isInteger(message.initialMessageIndex)
-        ? message.initialMessageIndex
-        : 0,
-    );
+    row.dataset.initialMessageIndex = String(Number.isInteger(message.initialMessageIndex) ? message.initialMessageIndex : 0);
     row.classList.add("chat-row-initial");
   }
   if (isOocMessage) {
@@ -17984,22 +15835,14 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
 
   const avatar = document.createElement("img");
   avatar.className = "chat-avatar";
-  const fallbackSender =
-    message.role && message.role !== "user" && message.role !== "assistant"
-      ? String(message.role)
-      : "You";
+  const fallbackSender = message.role && message.role !== "user" && message.role !== "assistant" ? String(message.role) : "You";
   const userName = message.senderName || fallbackSender;
   const userAvatar = message.senderAvatar || fallbackAvatar(userName, 512, 512);
   const botName = currentCharacter?.name || "Character";
-  const chatFsName =
-    message.role === "assistant" ? botName : userName || t("message");
+  const chatFsName = message.role === "assistant" ? botName : userName || t("message");
   const systemRoleLabel = t("systemRoleName");
   const isSystemOocMessage = isOocMessage && message.role === "assistant";
-  const senderLabel = isSystemOocMessage
-    ? systemRoleLabel
-    : message.role === "assistant"
-      ? botName
-      : userName;
+  const senderLabel = isSystemOocMessage ? systemRoleLabel : message.role === "assistant" ? botName : userName;
   if (message.role === "assistant") {
     if (isSystemOocMessage) {
       const customAvatar = String(state.settings.oocSystemAvatar || "").trim();
@@ -18009,11 +15852,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       const cache = state.cachedChatBotAvatar;
       const charId = currentCharacter?.id;
       const personaId = currentPersona?.id;
-      if (
-        cache.url &&
-        cache.characterId === charId &&
-        cache.personaId === personaId
-      ) {
+      if (cache.url && cache.characterId === charId && cache.personaId === personaId) {
         avatar.src = cache.url;
         avatar.alt = `${botName} avatar`;
       } else {
@@ -18041,10 +15880,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     }
   });
   if (message.role === "assistant") {
-    const mult = Math.max(
-      1,
-      Math.min(4, Number(currentCharacter?.avatarScale) || 1),
-    );
+    const mult = Math.max(1, Math.min(4, Number(currentCharacter?.avatarScale) || 1));
     const size = 44 * mult;
     avatar.style.width = `${size}px`;
     avatar.style.height = `${size}px`;
@@ -18069,21 +15905,13 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
   controls.className = "message-controls";
   const messageIndex = document.createElement("span");
   messageIndex.className = "message-index";
-  const historyForDisplay = Array.isArray(displayHistory)
-    ? displayHistory
-    : conversationHistory;
+  const historyForDisplay = Array.isArray(displayHistory) ? displayHistory : conversationHistory;
   const resolvedIndex = historyForDisplay.indexOf(message);
-  const effectiveIndex =
-    resolvedIndex >= 0 ? resolvedIndex : historyForDisplay.length;
-  const displayIndex = message?.isInitial
-    ? (cachedInitialMessageDisplayIndex ??
-      getMessageDisplayIndex(effectiveIndex, historyForDisplay))
-    : getMessageDisplayIndex(effectiveIndex, historyForDisplay);
+  const effectiveIndex = resolvedIndex >= 0 ? resolvedIndex : historyForDisplay.length;
+  const displayIndex = message?.isInitial ? (cachedInitialMessageDisplayIndex ?? getMessageDisplayIndex(effectiveIndex, historyForDisplay)) : getMessageDisplayIndex(effectiveIndex, historyForDisplay);
   const offset = getThreadDisplayOffset();
   const numberedIndex = displayIndex + offset;
-  messageIndex.textContent = isOocMessage
-    ? `OOC #${numberedIndex}`
-    : `#${numberedIndex}`;
+  messageIndex.textContent = isOocMessage ? `OOC #${numberedIndex}` : `#${numberedIndex}`;
   const isTruncated = message.truncatedByFilter === true;
   const hasGenerationError = !!String(message.generationError || "").trim();
   const isLockedMemoryMessage = isMessageLockedByMemory(message);
@@ -18102,30 +15930,17 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     delBtn.disabled = disableControlsForRow || isLockedMemoryMessage;
     controls.appendChild(delBtn);
 
-    const regenBtn = iconButton(
-      "regenerate",
-      t("msgRegenerateTitle"),
-      async () => {
-        await regenerateMessage(index);
-      },
-    );
+    const regenBtn = iconButton("regenerate", t("msgRegenerateTitle"), async () => {
+      await regenerateMessage(index);
+    });
     regenBtn.classList.add("msg-regen-btn");
-    regenBtn.disabled =
-      state.sending ||
-      disableControlsForRow ||
-      isLockedMemoryMessage ||
-      message.manualMessage === true;
+    regenBtn.disabled = state.sending || disableControlsForRow || isLockedMemoryMessage || message.manualMessage === true;
     controls.appendChild(regenBtn);
     const editBtn = iconButton("edit", t("msgEditTitle"), async () => {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
-    editBtn.disabled =
-      disableControlsForRow ||
-      isTruncated ||
-      hasGenerationError ||
-      isLockedMemoryMessage ||
-      isOocMessage;
+    editBtn.disabled = disableControlsForRow || isTruncated || hasGenerationError || isLockedMemoryMessage || isOocMessage;
     applyEditButtonEditedStyle(editBtn, message);
     if (state.settings.showAiMsgEditBtn !== false) {
       controls.appendChild(editBtn);
@@ -18146,56 +15961,35 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       controls.appendChild(infoBtn);
     }
     if (state.settings.showAiMsgGenParamsBtn !== false) {
-      const modelInfoBtn = iconButton(
-      "model",
-      t("msgModelInfoTitle"),
-      async () => {
+      const modelInfoBtn = iconButton("model", t("msgModelInfoTitle"), async () => {
         await openMessageModelInfoModal(index);
-      },
-    );
-    modelInfoBtn.classList.add("msg-model-info-btn");
-    const isInitial = message?.isInitial === true;
-    const isUserEdited = message?.userEdited === true;
-    if (disableControlsForRow || isInitial || isUserEdited || !message.model) {
-      modelInfoBtn.disabled = true;
-      if (isUserEdited) {
-        modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableEdited"));
-        modelInfoBtn.setAttribute(
-          "aria-label",
-          t("msgMetadataUnavailableEditedAria"),
-        );
-      } else if (isInitial) {
-        modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableInitial"));
-        modelInfoBtn.setAttribute(
-          "aria-label",
-          t("msgMetadataUnavailableInitialAria"),
-        );
-      } else if (disableControlsForRow) {
-        modelInfoBtn.setAttribute(
-          "title",
-          t("msgMetadataUnavailableGenerating"),
-        );
-        modelInfoBtn.setAttribute(
-          "aria-label",
-          t("msgMetadataUnavailableGeneratingAria"),
-        );
+      });
+      modelInfoBtn.classList.add("msg-model-info-btn");
+      const isInitial = message?.isInitial === true;
+      const isUserEdited = message?.userEdited === true;
+      if (disableControlsForRow || isInitial || isUserEdited || !message.model) {
+        modelInfoBtn.disabled = true;
+        if (isUserEdited) {
+          modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableEdited"));
+          modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
+        } else if (isInitial) {
+          modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableInitial"));
+          modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
+        } else if (disableControlsForRow) {
+          modelInfoBtn.setAttribute("title", t("msgMetadataUnavailableGenerating"));
+          modelInfoBtn.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
+        }
+      } else {
+        modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
+        modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
       }
-    } else {
-      modelInfoBtn.setAttribute("title", t("msgModelInfoTitle"));
-      modelInfoBtn.setAttribute("aria-label", t("msgModelInfoTitle"));
+      controls.appendChild(modelInfoBtn);
     }
-    controls.appendChild(modelInfoBtn);
-    }
-    const systemPromptBtn = iconButton(
-      "badge",
-      t("msgSystemPromptTitle"),
-      async () => {
-        await openMessageSystemPromptModal(index);
-      },
-    );
+    const systemPromptBtn = iconButton("badge", t("msgSystemPromptTitle"), async () => {
+      await openMessageSystemPromptModal(index);
+    });
     systemPromptBtn.classList.add("msg-system-prompt-btn");
-    const hasContent =
-      message && index >= 0 && index < conversationHistory.length;
+    const hasContent = message && index >= 0 && index < conversationHistory.length;
     systemPromptBtn.disabled = !hasContent;
     if (hasContent) {
       systemPromptBtn.setAttribute("title", t("msgSystemPromptTitle"));
@@ -18230,11 +16024,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
-    editBtn.disabled =
-      disableControlsForRow ||
-      isTruncated ||
-      hasGenerationError ||
-      isLockedMemoryMessage;
+    editBtn.disabled = disableControlsForRow || isTruncated || hasGenerationError || isLockedMemoryMessage;
     applyEditButtonEditedStyle(editBtn, message);
     controls.appendChild(editBtn);
     const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
@@ -18268,8 +16058,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     const threadId = currentThread?.id;
     if (threadId) {
       const allInitial = (conversationHistory || []).filter((m) => m.isInitial);
-      const currentIdx =
-        state.initialMessageIndexByThread[Number(threadId)] ?? 0;
+      const currentIdx = state.initialMessageIndexByThread[Number(threadId)] ?? 0;
       counter.textContent = `${currentIdx + 1}/${allInitial.length}`;
     }
     const nextBtn = document.createElement("button");
@@ -18300,9 +16089,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       content.innerHTML = renderMessageHtml(message.content, message.role);
     } else {
       const label = statusInfo.statusLabel || t("generatingLabel");
-      content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
-        label,
-      )}`;
+      content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(label)}`;
     }
   } else {
     renderMessageContent(content, message);
@@ -18328,13 +16115,7 @@ function speakerBtnForRow(row) {
   return row?.querySelector(".msg-tts-btn") || null;
 }
 
-const STREAMING_STATUSES = new Set([
-  "queued",
-  "cooling_down",
-  "generating",
-  "regenerating",
-  "title_generating",
-]);
+const STREAMING_STATUSES = new Set(["queued", "cooling_down", "generating", "regenerating", "title_generating"]);
 
 function getAssistantStreamingStatusInfo(message) {
   const status = String(message?.generationStatus || "").trim();
@@ -18356,14 +16137,11 @@ function getAssistantStreamingStatusInfo(message) {
   } else if (isTitleGenerating) {
     statusLabel = t("generatingTitleLabel") || t("generatingLabel");
   } else if (isCoolingDown) {
-    statusLabel =
-      String(message?.content || "").trim() ||
-      tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() });
+    statusLabel = String(message?.content || "").trim() || tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() });
   } else if (isQueued) {
     statusLabel = String(message?.content || "").trim() || t("generatingLabel");
   }
-  const shouldShowSpinner =
-    isQueued || isCoolingDown || isTitleGenerating || !hasContent;
+  const shouldShowSpinner = isQueued || isCoolingDown || isTitleGenerating || !hasContent;
   return { isStreamingStatus, shouldShowSpinner, statusLabel };
 }
 
@@ -18372,22 +16150,15 @@ function renderMessageContent(contentEl, message) {
   contentEl.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
   const status = String(message?.generationStatus || "").trim();
   if (status === "summarizing") {
-    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
-      t("summarizingMemoryLabel"),
-    )}`;
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("summarizingMemoryLabel"))}`;
     return;
   }
   const statusInfo = getAssistantStreamingStatusInfo(message);
   if (statusInfo.shouldShowSpinner) {
     const label = statusInfo.statusLabel ?? t("generatingLabel");
-    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
-      label,
-    )}`;
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(label)}`;
   } else {
-    contentEl.innerHTML = renderMessageHtml(
-      message.content || "",
-      message.role,
-    );
+    contentEl.innerHTML = renderMessageHtml(message.content || "", message.role);
     decorateMessageCodeBlocks(contentEl);
   }
   if (message.truncatedByFilter === true) {
@@ -18439,15 +16210,11 @@ function decorateMessageCodeBlocks(container) {
     wrapper.className = "message-code-block-wrapper";
     parent.replaceChild(wrapper, pre);
     wrapper.appendChild(pre);
-    const copyBtn = iconButton(
-      "copy",
-      t("codeBlockCopyTitle"),
-      async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        await copyCodeBlockText((codeEl.textContent ?? "").trim());
-      },
-    );
+    const copyBtn = iconButton("copy", t("codeBlockCopyTitle"), async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      await copyCodeBlockText((codeEl.textContent ?? "").trim());
+    });
     copyBtn.classList.add("message-code-block-copy-btn");
     wrapper.appendChild(copyBtn);
   });
@@ -18472,19 +16239,12 @@ function refreshLatestAssistantRowContent() {
     const message = conversationHistory[idx];
     if (!message || message.role !== "assistant") continue;
     const originalIndex = loadedStartIndex + idx;
-    const oldRow = document.querySelector(
-      `#chat-log .chat-row[data-message-index="${originalIndex}"]`,
-    );
+    const oldRow = document.querySelector(`#chat-log .chat-row[data-message-index="${originalIndex}"]`);
     if (!oldRow) continue;
     const status = String(message?.generationStatus || "").trim();
     const isStreamingStatus = STREAMING_STATUSES.has(status);
     const isStreaming = isStreamingStatus;
-    const newRow = buildMessageRow(
-      message,
-      originalIndex,
-      isStreaming,
-      displayHistory,
-    );
+    const newRow = buildMessageRow(message, originalIndex, isStreaming, displayHistory);
     oldRow.replaceWith(newRow);
     refreshMessageControlStates();
     window.refreshAllSpeakerButtons();
@@ -18494,10 +16254,7 @@ function refreshLatestAssistantRowContent() {
 
 function hasSystemMessagesData(message) {
   if (!message) return false;
-  return (
-    Array.isArray(message.systemMessages) &&
-    message.systemMessages.some((entry) => String(entry?.content || "").trim())
-  );
+  return Array.isArray(message.systemMessages) && message.systemMessages.some((entry) => String(entry?.content || "").trim());
 }
 
 function applyInfoButtonAvailability(button, message, isStreaming) {
@@ -18524,10 +16281,7 @@ function applyInfoButtonAvailability(button, message, isStreaming) {
   }
   if (isStreaming) {
     button.setAttribute("title", t("msgMetadataUnavailableGenerating"));
-    button.setAttribute(
-      "aria-label",
-      t("msgMetadataUnavailableGeneratingAria"),
-    );
+    button.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
     return;
   }
   button.setAttribute("title", t("msgMetadataTitle"));
@@ -18575,11 +16329,7 @@ function beginInlineMessageEdit(index, contentEl) {
   if (String(message.generationError || "").trim()) return;
   if (message.ooc === true) return;
 
-  if (
-    state.editingMessageIndex !== null &&
-    state.editingMessageIndex !== index &&
-    document.querySelector(".message-editor")
-  ) {
+  if (state.editingMessageIndex !== null && state.editingMessageIndex !== index && document.querySelector(".message-editor")) {
     const prev = document.querySelector(".message-editor");
     prev?.blur();
   }
@@ -18587,10 +16337,7 @@ function beginInlineMessageEdit(index, contentEl) {
   if (contentEl.querySelector(".message-editor")) return;
   state.editingMessageIndex = index;
 
-  const contentWidth = Math.max(
-    180,
-    Math.ceil(contentEl.getBoundingClientRect().width),
-  );
+  const contentWidth = Math.max(180, Math.ceil(contentEl.getBoundingClientRect().width));
   const editor = document.createElement("textarea");
   editor.className = "message-editor";
   editor.value = String(message.content || "");
@@ -18604,9 +16351,7 @@ function beginInlineMessageEdit(index, contentEl) {
 
   const original = String(message.content || "");
   let cancelled = false;
-  editor.addEventListener("input", () =>
-    autoSizeMessageEditor(editor),
-  );
+  editor.addEventListener("input", () => autoSizeMessageEditor(editor));
   editor.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -18693,19 +16438,13 @@ function resolveMessageIndexFromButton(buttonEl, fallbackIndex) {
 async function sendMessage(options = {}) {
   if (!currentThread || !currentCharacter) return;
   window.stopTtsPlayback();
-  const pendingState = getThreadPendingGenerationState(
-    Number(currentThread.id),
-    conversationHistory,
-  );
+  const pendingState = getThreadPendingGenerationState(Number(currentThread.id), conversationHistory);
   if (pendingState === "queued") {
     showToast(t("generationQueuedNotice"), "warning");
     return;
   }
   if (pendingState === "cooling_down") {
-    showToast(
-      tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() }),
-      "warning",
-    );
+    showToast(tf("cooldownToastActive", { seconds: getCooldownRemainingSeconds() }), "warning");
     return;
   }
   if (state.sending) {
@@ -18718,14 +16457,8 @@ async function sendMessage(options = {}) {
   }
 
   const input = document.getElementById("user-input");
-  const shortcutPreserve =
-    state.activeShortcut &&
-    input.value === state.activeShortcut.initialValue &&
-    state.activeShortcut.clearAfterSend === false;
-  const preserveInput =
-    typeof options.preserveInput === "boolean"
-      ? options.preserveInput
-      : !!shortcutPreserve;
+  const shortcutPreserve = state.activeShortcut && input.value === state.activeShortcut.initialValue && state.activeShortcut.clearAfterSend === false;
+  const preserveInput = typeof options.preserveInput === "boolean" ? options.preserveInput : !!shortcutPreserve;
   const rawInput = input.value;
   const text = rawInput.trim();
   if (handleMemoryCommandFromInput(input, text)) {
@@ -18802,14 +16535,7 @@ async function sendMessage(options = {}) {
 
   const log = document.getElementById("chat-log");
   const displayHistory = getFilteredConversationHistoryForThread();
-  log.appendChild(
-    buildMessageRow(
-      userMsg,
-      conversationHistory.length - 1,
-      false,
-      displayHistory,
-    ),
-  );
+  log.appendChild(buildMessageRow(userMsg, conversationHistory.length - 1, false, displayHistory));
   scrollChatToBottom();
 
   // Evaluate SFX eviction after user message (triggers are for bot messages only)
@@ -18881,8 +16607,7 @@ async function queueThreadForCooldown(threadId, targetMessage = null) {
   }
   let cooldownTarget = targetMessage;
   if (!cooldownTarget) {
-    const existingPendingIdx =
-      findLatestPendingAssistantIndex(conversationHistory);
+    const existingPendingIdx = findLatestPendingAssistantIndex(conversationHistory);
     if (existingPendingIdx >= 0) {
       cooldownTarget = conversationHistory[existingPendingIdx];
     }
@@ -18919,13 +16644,9 @@ async function queueThreadForCooldown(threadId, targetMessage = null) {
   }
   const nowTs = Date.now();
   currentThread.pendingGenerationReason = "cooldown";
-  currentThread.pendingGenerationQueuedAt = Number(
-    currentThread.pendingGenerationQueuedAt || nowTs,
-  );
+  currentThread.pendingGenerationQueuedAt = Number(currentThread.pendingGenerationQueuedAt || nowTs);
   await persistCurrentThread();
-  const allFinished = conversationHistory.every(
-    (m) => !m.generationStatus || m.generationStatus === "",
-  );
+  const allFinished = conversationHistory.every((m) => !m.generationStatus || m.generationStatus === "");
   const updateData = {
     pendingGenerationReason: "cooldown",
     pendingGenerationQueuedAt: currentThread.pendingGenerationQueuedAt,
@@ -18942,10 +16663,7 @@ async function queueThreadForCooldown(threadId, targetMessage = null) {
 }
 
 function findPreviousOocUserMessageIndex(startIndex) {
-  const limit = Math.min(
-    Math.max(Number(startIndex), 0),
-    conversationHistory.length - 1,
-  );
+  const limit = Math.min(Math.max(Number(startIndex), 0), conversationHistory.length - 1);
   for (let i = limit; i >= 0; i -= 1) {
     const msg = conversationHistory[i];
     if (!msg || msg.role !== "user") continue;
@@ -18972,10 +16690,7 @@ function getOocPromptForUserMessage(message) {
     }
   }
   if (raw.startsWith("((OOC: SYSTEM, reply in OOC manner. ")) {
-    return raw
-      .slice("((OOC: SYSTEM, reply in OOC manner. ".length)
-      .replace(/\)\)$/, "")
-      .trim();
+    return raw.slice("((OOC: SYSTEM, reply in OOC manner. ".length).replace(/\)\)$/, "").trim();
   }
   if (raw.endsWith("))")) {
     return raw.slice(0, -2).trim();
@@ -19022,15 +16737,10 @@ function formatOocMessageEntry(message, personaPrefixEnabled = true) {
     labelContent = `((OOC: ${labelContent}))`;
   }
   const labeled = `${message.role}: ${labelContent}`;
-  const normalized = labeled
-    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
-    .replace(/(^|\n)user:/gi, "$1[USER]:");
+  const normalized = labeled.replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:").replace(/(^|\n)user:/gi, "$1[USER]:");
   if (message.role === "user" && !isOoc && personaPrefixEnabled) {
     const personaName = String(message.senderName || "You");
-    return normalized.replace(
-      /^\[USER\]:/,
-      `[USER (as ${personaName})]:`,
-    );
+    return normalized.replace(/^\[USER\]:/, `[USER (as ${personaName})]:`);
   }
   return normalized;
 }
@@ -19047,43 +16757,16 @@ async function buildOocSystemPrompt() {
     .filter((msg) => !msg.summarized)
     .map((msg) => formatOocMessageEntry(msg, personaPrefixEnabled))
     .filter(Boolean);
-  const rawMemory = await getMemorySummary(
-    currentCharacter.id,
-    currentThread.id,
-  );
-  const memoryContext = await filterMemoriesByRelevance(
-    rawMemory,
-    currentCharacter,
-    currentThread.id,
-  );
-  const memorySection = memoryContext
-    ? `${getSectionHeader("sectionHeaderMemoryContext")}\n\n${String(memoryContext || "").trim()}`
-    : "";
-  const charPersonaName =
-    currentThread?.initialUserName || currentPersona?.name || "You";
+  const rawMemory = await getMemorySummary(currentCharacter.id, currentThread.id);
+  const memoryContext = await filterMemoriesByRelevance(rawMemory, currentCharacter, currentThread.id);
+  const memorySection = memoryContext ? `${getSectionHeader("sectionHeaderMemoryContext")}\n\n${String(memoryContext || "").trim()}` : "";
+  const charPersonaName = currentThread?.initialUserName || currentPersona?.name || "You";
   const charName = currentCharacter?.name || "Character";
-  const characterPromptRaw = (
-    currentCharacter?.systemPrompt ||
-    state.settings.globalPromptTemplate ||
-    ""
-  ).trim();
-  const characterPrompt = replaceLorePlaceholders(
-    characterPromptRaw,
-    charPersonaName,
-    charName,
-  ).trim();
-  const characterPromptSection = characterPrompt
-    ? `${getSectionHeader("sectionHeaderCharacterPrompt")}\n\n${characterPrompt}`
-    : "";
-  const messageSection = `${getSectionHeader("sectionHeaderMessagesSoFar")}\n\n${contextMessages.join(
-    "\n\n",
-  )}`;
-  const systemPromptParts = [
-    getSectionHeader("oocSystemPromptIntro"),
-    characterPromptSection,
-    memorySection,
-    messageSection,
-  ].filter(Boolean);
+  const characterPromptRaw = (currentCharacter?.systemPrompt || state.settings.globalPromptTemplate || "").trim();
+  const characterPrompt = replaceLorePlaceholders(characterPromptRaw, charPersonaName, charName).trim();
+  const characterPromptSection = characterPrompt ? `${getSectionHeader("sectionHeaderCharacterPrompt")}\n\n${characterPrompt}` : "";
+  const messageSection = `${getSectionHeader("sectionHeaderMessagesSoFar")}\n\n${contextMessages.join("\n\n")}`;
+  const systemPromptParts = [getSectionHeader("oocSystemPromptIntro"), characterPromptSection, memorySection, messageSection].filter(Boolean);
   const rawSystemPrompt = systemPromptParts.join("\n\n").trim();
   return {
     systemPrompt: formatOocSystemPromptText(rawSystemPrompt) || rawSystemPrompt,
@@ -19122,9 +16805,7 @@ async function sendOocInquiry(text) {
   addPromptToHistory(currentThread.id, text, true);
   const updatedDisplayHistory = getFilteredConversationHistoryForThread();
   if (log && isViewing) {
-    log.appendChild(
-      buildMessageRow(userMsg, userIndex, false, updatedDisplayHistory),
-    );
+    log.appendChild(buildMessageRow(userMsg, userIndex, false, updatedDisplayHistory));
     scrollChatToBottom();
   }
 
@@ -19163,18 +16844,11 @@ async function sendOocInquiry(text) {
   }
   let pendingRow = null;
   if (log && isViewing) {
-    pendingRow = buildMessageRow(
-      pendingAssistant,
-      displayPendingIndex,
-      true,
-      updatedDisplayHistory,
-    );
+    pendingRow = buildMessageRow(pendingAssistant, displayPendingIndex, true, updatedDisplayHistory);
     log.appendChild(pendingRow);
     const pendingContent = pendingRow?.querySelector(".message-content");
     if (pendingContent) {
-      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
-        t("generatingLabel"),
-      )}`;
+      pendingContent.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("generatingLabel"))}`;
     }
     scrollChatToBottom();
   }
@@ -19182,25 +16856,17 @@ async function sendOocInquiry(text) {
   await persistCurrentThread();
 
   try {
-    const result = await callOpenRouter(
-      systemPrompt,
-      [{ role: "user", content: userMsg.content }],
-      state.settings.model,
-      (chunk) => {
-        pendingAssistant.content += chunk;
-        if (state.settings.streamEnabled) {
-          const liveRow = ensureMessageRowExists(displayPendingIndex);
-          const liveContent = liveRow?.querySelector(".message-content");
-          if (liveContent) {
-            liveContent.innerHTML = renderMessageHtml(
-              pendingAssistant.content,
-              pendingAssistant.role,
-            );
-          }
+    const result = await callOpenRouter(systemPrompt, [{ role: "user", content: userMsg.content }], state.settings.model, (chunk) => {
+      pendingAssistant.content += chunk;
+      if (state.settings.streamEnabled) {
+        const liveRow = ensureMessageRowExists(displayPendingIndex);
+        const liveContent = liveRow?.querySelector(".message-content");
+        if (liveContent) {
+          liveContent.innerHTML = renderMessageHtml(pendingAssistant.content, pendingAssistant.role);
         }
-        if (isViewing) scrollChatToBottom();
-      },
-    );
+      }
+      if (isViewing) scrollChatToBottom();
+    });
     state.lastUsedModel = result.model || "";
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
@@ -19216,34 +16882,26 @@ async function sendOocInquiry(text) {
     }
     pendingAssistant.content = wrappedContent;
     pendingAssistant.finishReason = String(result.finishReason || "");
-    pendingAssistant.nativeFinishReason = String(
-      result.nativeFinishReason || "",
-    );
+    pendingAssistant.nativeFinishReason = String(result.nativeFinishReason || "");
     pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
     const finishReasonValue = result.finishReason;
     const isOkFinish = finishReasonValue === "stop";
     const NO_CONTENT = "(No content returned)";
     const isNoContent = String(pendingAssistant.content || "").trim() === NO_CONTENT;
     if (!isOkFinish && !pendingAssistant.truncatedByFilter) {
-      pendingAssistant.generationError = `finish_reason: ${
-        finishReasonValue ?? "null"
-      }`;
+      pendingAssistant.generationError = `finish_reason: ${finishReasonValue ?? "null"}`;
     } else if (isNoContent) {
       pendingAssistant.generationError = "No content returned";
     } else {
       pendingAssistant.generationError = "";
     }
-    pendingAssistant.systemMessages = formatOocSystemMessageEntries(
-      result.systemMessages,
-    );
+    pendingAssistant.systemMessages = formatOocSystemMessageEntries(result.systemMessages);
     pendingAssistant.generationStatus = "";
   } catch (err) {
     pendingAssistant.generationStatus = "";
     const errorMessage = String(err?.message || err || "OOC request failed");
     pendingAssistant.generationError = errorMessage;
-    pendingAssistant.content =
-      pendingAssistant.content ||
-      `((OOC: OOC request failed: ${errorMessage}))`;
+    pendingAssistant.content = pendingAssistant.content || `((OOC: OOC request failed: ${errorMessage}))`;
     showToast(`OOC request failed: ${errorMessage}`, "error");
   }
   await persistCurrentThread();
@@ -19294,16 +16952,12 @@ async function regenerateOocMessage(index) {
   const unloadState = currentThread?.unloadState;
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
   const originalIndex = loadedStartIndex + index;
-  const row = document
-    .getElementById("chat-log")
-    ?.querySelector(`.chat-row[data-message-index="${originalIndex}"]`);
+  const row = document.getElementById("chat-log")?.querySelector(`.chat-row[data-message-index="${originalIndex}"]`);
   const contentEl = row?.querySelector(".message-content");
   if (row) row.dataset.streaming = "1";
   refreshMessageControlStates();
   if (contentEl) {
-    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(
-      t("regeneratingLabel"),
-    )}`;
+    contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
   }
   if (isViewing) scrollChatToBottom();
 
@@ -19326,10 +16980,7 @@ async function regenerateOocMessage(index) {
           const liveRow = ensureMessageRowExists(index);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
-            liveContent.innerHTML = renderMessageHtml(
-              target.content,
-              target.role,
-            );
+            liveContent.innerHTML = renderMessageHtml(target.content, target.role);
           } else {
             renderChat();
           }
@@ -19369,9 +17020,7 @@ async function regenerateOocMessage(index) {
       target.generationError = "";
     }
     target.generationStatus = "";
-    target.systemMessages = formatOocSystemMessageEntries(
-      result.systemMessages,
-    );
+    target.systemMessages = formatOocSystemMessageEntries(result.systemMessages);
     messagesToSave[index] = { ...target };
     if (!isViewing) {
       target.unreadAt = Date.now();
@@ -19394,9 +17043,7 @@ async function regenerateOocMessage(index) {
     }
   } catch (err) {
     target.generationStatus = "";
-    target.generationError = String(
-      err?.message || err || "OOC request failed",
-    );
+    target.generationError = String(err?.message || err || "OOC request failed");
     messagesToSave[index].generationStatus = "";
     messagesToSave[index].generationError = target.generationError;
     if (!isViewing) {
@@ -19444,9 +17091,7 @@ function getActiveSummaryThreshold() {
     return window.getSummaryThresholdValue(state.settings.summaryThreshold);
   }
   const fallback = Number(state.settings.summaryThreshold);
-  return Number.isFinite(fallback)
-    ? fallback
-    : DEFAULT_SETTINGS.summaryThreshold;
+  return Number.isFinite(fallback) ? fallback : DEFAULT_SETTINGS.summaryThreshold;
 }
 
 function getUnsummarizedMessageCount() {
@@ -19486,18 +17131,13 @@ async function generateBotReply() {
   const inSimulationHistory = getInSimulationMessages(displayHistory, {
     includeOoc,
   });
-  const includeOneTimeExtra =
-    shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
+  const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
   const generationCharacter = currentCharacter;
   const generationPersona = currentPersona;
   const generationThreadSnapshot = { ...currentThread };
   const generationHistory = conversationHistory;
-  let writingTurnCountForThread = getThreadWritingInstructionsTurnCount(
-    generationThreadSnapshot,
-  );
-  const writingTurnIndex = getNextWritingInstructionsTurnIndex(
-    generationThreadSnapshot,
-  );
+  let writingTurnCountForThread = getThreadWritingInstructionsTurnCount(generationThreadSnapshot);
+  const writingTurnIndex = getNextWritingInstructionsTurnIndex(generationThreadSnapshot);
   const promptContext = await buildSystemPrompt(generationCharacter, {
     includeOneTimeExtraPrompt: includeOneTimeExtra,
     writingInstructionsTurnIndex: writingTurnIndex,
@@ -19512,23 +17152,13 @@ async function generateBotReply() {
     .map((m) => {
       const role = m.role === "ai" ? "assistant" : m.role;
       let content = removeImageLinksFromContent(m.content);
-      if (
-        role === "user" &&
-        currentCharacter?.personaPrefixEnabled !== false &&
-        m.senderName &&
-        m.senderName !== "You" &&
-        currentThread?.oocModeEnabled !== true &&
-        m.ooc !== true
-      ) {
+      if (role === "user" && currentCharacter?.personaPrefixEnabled !== false && m.senderName && m.senderName !== "You" && currentThread?.oocModeEnabled !== true && m.ooc !== true) {
         content = `(As ${m.senderName}): ${content}`;
       }
       return { role, content };
     });
 
-  const promptMessages = [
-    { role: "system", content: systemPrompt },
-    ...messagesWithoutSystem,
-  ];
+  const promptMessages = [{ role: "system", content: systemPrompt }, ...messagesWithoutSystem];
   if (promptContext.personaInjectionForEndMessages) {
     promptMessages.push({
       role: "system",
@@ -19537,9 +17167,7 @@ async function generateBotReply() {
   }
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
-  const needsContinuePrompt =
-    nonSystemMessages.length === 0 ||
-    (lastMessage && lastMessage.role === "assistant");
+  const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
@@ -19551,8 +17179,7 @@ async function generateBotReply() {
   const loadedStartIndex = unloadState?.loadedStartIndex || 0;
   let pending = null;
   let pendingIndex = existingPendingIdx;
-  let originalPendingIndex =
-    pendingIndex >= 0 ? loadedStartIndex + pendingIndex : -1;
+  let originalPendingIndex = pendingIndex >= 0 ? loadedStartIndex + pendingIndex : -1;
   if (existingPendingIdx >= 0) {
     pending = generationHistory[existingPendingIdx];
     pending.placeholder = false;
@@ -19611,16 +17238,9 @@ async function generateBotReply() {
   }
   let pendingRow = null;
   if (log) {
-    pendingRow = log.querySelector(
-      `.chat-row[data-message-index="${originalPendingIndex}"]`,
-    );
+    pendingRow = log.querySelector(`.chat-row[data-message-index="${originalPendingIndex}"]`);
     if (!pendingRow) {
-      pendingRow = buildMessageRow(
-        pending,
-        originalPendingIndex,
-        true,
-        displayHistory,
-      );
+      pendingRow = buildMessageRow(pending, originalPendingIndex, true, displayHistory);
       log.appendChild(pendingRow);
     }
   }
@@ -19646,17 +17266,12 @@ async function generateBotReply() {
       (chunk) => {
         pending.content += chunk;
         if (state.settings.streamEnabled) {
-          persistThreadMessagesById(threadId, generationHistory).catch(
-            () => {},
-          );
+          persistThreadMessagesById(threadId, generationHistory).catch(() => {});
         }
         const liveRow = ensureMessageRowExists(pendingIndex);
         const liveContent = liveRow?.querySelector(".message-content");
         if (liveContent) {
-          liveContent.innerHTML = renderMessageHtml(
-            pending.content,
-            pending.role,
-          );
+          liveContent.innerHTML = renderMessageHtml(pending.content, pending.role);
         }
         if (isViewingThread(threadId)) scrollChatToBottom();
       },
@@ -19689,10 +17304,7 @@ async function generateBotReply() {
     }
     if (pending.writingInstructionsCounted !== true) {
       pending.writingInstructionsCounted = true;
-      writingTurnCountForThread = Math.max(
-        writingTurnCountForThread,
-        Number(pending.writingInstructionsTurnIndex) || writingTurnIndex,
-      );
+      writingTurnCountForThread = Math.max(writingTurnCountForThread, Number(pending.writingInstructionsTurnIndex) || writingTurnIndex);
     }
     if (isViewingThread(threadId)) {
       refreshLatestAssistantRowContent();
@@ -19711,10 +17323,7 @@ async function generateBotReply() {
       scrollChatToBottom();
     }
 
-    if (
-      shouldTriggerMemorySummaries(generationCharacter) &&
-      isViewingThread(threadId)
-    ) {
+    if (shouldTriggerMemorySummaries(generationCharacter) && isViewingThread(threadId)) {
       await summarizeMemory(generationCharacter);
     }
 
@@ -19777,40 +17386,22 @@ async function deleteMessageAt(index) {
     showToast(t("memoryMessageLockedNotice"), "warning");
     return;
   }
-  const isEmptyInitial =
-    target?.isInitial === true && !String(target?.content || "").trim();
+  const isEmptyInitial = target?.isInitial === true && !String(target?.content || "").trim();
   if (!isEmptyInitial) {
     const previewBase = String(target?.content || "").trim();
-    const truncatedPreview =
-      previewBase.length > 120 ? `${previewBase.slice(0, 120)}…` : previewBase;
-    const previewText = truncatedPreview
-      ? `\n\n"${truncatedPreview}"`
-      : truncatedPreview;
-    const ok = await openConfirmDialog(
-      t("deleteMessageTitle"),
-      tf("deleteMessageConfirm", { preview: previewText }),
-    );
+    const truncatedPreview = previewBase.length > 120 ? `${previewBase.slice(0, 120)}…` : previewBase;
+    const previewText = truncatedPreview ? `\n\n"${truncatedPreview}"` : truncatedPreview;
+    const ok = await openConfirmDialog(t("deleteMessageTitle"), tf("deleteMessageConfirm", { preview: previewText }));
     if (!ok) return;
   }
 
   // Determine if this is an API-generated assistant message (not manual, not OOC) and placement is "once"
-  const isApiAssistant =
-    targetRole === "assistant" &&
-    !target?.ooc &&
-    target.manualMessage !== true &&
-    currentCharacter?.personaInjectionPlacement === "once";
+  const isApiAssistant = targetRole === "assistant" && !target?.ooc && target.manualMessage !== true && currentCharacter?.personaInjectionPlacement === "once";
 
-  const latestCountedTurn =
-    getThreadWritingInstructionsTurnCount(currentThread);
+  const latestCountedTurn = getThreadWritingInstructionsTurnCount(currentThread);
   const targetTurn = Number(target?.writingInstructionsTurnIndex);
-  const isLatestAssistant =
-    targetRole === "assistant" &&
-    isLatestAssistantMessageIndex(index, conversationHistory);
-  const isLatestCountedAssistant =
-    isLatestAssistant &&
-    target?.writingInstructionsCounted === true &&
-    Number.isInteger(targetTurn) &&
-    targetTurn === latestCountedTurn;
+  const isLatestAssistant = targetRole === "assistant" && isLatestAssistantMessageIndex(index, conversationHistory);
+  const isLatestCountedAssistant = isLatestAssistant && target?.writingInstructionsCounted === true && Number.isInteger(targetTurn) && targetTurn === latestCountedTurn;
   conversationHistory.splice(index, 1);
   if (currentThread) {
     currentThread.messages = [...conversationHistory];
@@ -19832,10 +17423,7 @@ async function deleteMessageAt(index) {
     }
   }
   if (isLatestCountedAssistant && currentThread) {
-    currentThread.writingInstructionsTurnCount = Math.max(
-      0,
-      latestCountedTurn - 1,
-    );
+    currentThread.writingInstructionsTurnCount = Math.max(0, latestCountedTurn - 1);
   }
   await persistCurrentThread(false, { skipUpdatedAt: true });
   renderChat();
@@ -19860,10 +17448,7 @@ async function regenerateMessage(index) {
     const headId = Number(state.generationQueue[0]);
     if (headId !== threadId) {
       const queuedIdx = state.generationQueue.indexOf(threadId);
-      const queueNotice =
-        queuedIdx >= 0
-          ? tf("generationQueuedNoticeWithPos", { position: queuedIdx + 1 })
-          : t("generationQueuedNotice");
+      const queueNotice = queuedIdx >= 0 ? tf("generationQueuedNoticeWithPos", { position: queuedIdx + 1 }) : t("generationQueuedNotice");
       showToast(queueNotice, "warning");
       return;
     }
@@ -19872,11 +17457,7 @@ async function regenerateMessage(index) {
 
   const target = conversationHistory[index];
   if (!target || target.role !== "assistant") return;
-  if (
-    target.ooc !== true &&
-    currentCharacter?.personaInjectionPlacement === "once" &&
-    isFirstAssistantMessageIndex(index)
-  ) {
+  if (target.ooc !== true && currentCharacter?.personaInjectionPlacement === "once" && isFirstAssistantMessageIndex(index)) {
     await clearThreadPersonaInjectionOnceApplied();
   }
   if (target.manualMessage === true) return;
@@ -19896,12 +17477,8 @@ async function regenerateMessage(index) {
   const includeOoc = currentCharacter?.includeOocInCompletions === true;
   const regenHistory = getInSimulationMessages(prior, { includeOoc });
   const includeOneTimeExtra = isFirstAssistantMessageIndex(index);
-  const regenWritingTurnIndex =
-    Number(target.writingInstructionsTurnIndex) || 0;
-  const effectiveWritingTurnIndex =
-    regenWritingTurnIndex > 0
-      ? regenWritingTurnIndex
-      : Math.max(1, getThreadWritingInstructionsTurnCount(currentThread));
+  const regenWritingTurnIndex = Number(target.writingInstructionsTurnIndex) || 0;
+  const effectiveWritingTurnIndex = regenWritingTurnIndex > 0 ? regenWritingTurnIndex : Math.max(1, getThreadWritingInstructionsTurnCount(currentThread));
   const originalContent = String(target.content || "");
   const messagesToSave = conversationHistory.map((m) => ({ ...m }));
 
@@ -19925,22 +17502,12 @@ async function regenerateMessage(index) {
       .map((m) => {
         const role = m.role === "ai" ? "assistant" : m.role;
         let content = m.content;
-        if (
-          role === "user" &&
-          currentCharacter?.personaPrefixEnabled !== false &&
-          m.senderName &&
-          m.senderName !== "You" &&
-          currentThread?.oocModeEnabled !== true &&
-          m.ooc !== true
-        ) {
+        if (role === "user" && currentCharacter?.personaPrefixEnabled !== false && m.senderName && m.senderName !== "You" && currentThread?.oocModeEnabled !== true && m.ooc !== true) {
           content = `(As ${m.senderName}): ${content}`;
         }
         return { role, content };
       });
-    const regenMessages = [
-      { role: "system", content: systemPrompt },
-      ...regenMessagesWithoutSystem,
-    ];
+    const regenMessages = [{ role: "system", content: systemPrompt }, ...regenMessagesWithoutSystem];
     if (promptContext.personaInjectionForEndMessages) {
       regenMessages.push({
         role: "system",
@@ -19955,14 +17522,11 @@ async function regenerateMessage(index) {
     await persistThreadMessagesById(threadId, messagesToSave);
     renderChat();
     const log = document.getElementById("chat-log");
-    const row = log?.querySelector(
-      `.chat-row[data-message-index="${originalIndex}"]`,
-    );
+    const row = log?.querySelector(`.chat-row[data-message-index="${originalIndex}"]`);
     const contentEl = row?.querySelector(".message-content");
     if (row) row.dataset.streaming = "1";
     refreshMessageControlStates();
-    if (contentEl)
-      contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
+    if (contentEl) contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
     scrollChatToBottom();
 
     const result = await callOpenRouter(
@@ -19976,10 +17540,7 @@ async function regenerateMessage(index) {
           const liveRow = ensureMessageRowExists(originalIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
-            liveContent.innerHTML = renderMessageHtml(
-              target.content,
-              target.role,
-            );
+            liveContent.innerHTML = renderMessageHtml(target.content, target.role);
           } else {
             renderChat();
           }
@@ -20023,9 +17584,7 @@ async function regenerateMessage(index) {
       target.ooc === true
         ? formatOocSystemMessageEntries(result.systemMessages)
         : Array.isArray(result.systemMessages)
-          ? result.systemMessages.filter(
-              (entry) => entry && String(entry.content || "").trim(),
-            )
+          ? result.systemMessages.filter((entry) => entry && String(entry.content || "").trim())
           : [];
     messagesToSave[index].systemMessages = target.systemMessages;
     const NO_CONTENT = "(No content returned)";
@@ -20037,16 +17596,13 @@ async function regenerateMessage(index) {
     }
     target.generationStatus = "";
     messagesToSave[index] = { ...target };
-    target.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
-      ? promptContext.usedLoreEntries
-      : [];
+    target.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries) ? promptContext.usedLoreEntries : [];
     messagesToSave[index].usedLoreEntries = target.usedLoreEntries;
     target.usedMemorySummary = String(promptContext.memory || "");
     messagesToSave[index].usedMemorySummary = target.usedMemorySummary;
     if (!Number.isInteger(Number(target.writingInstructionsTurnIndex))) {
       target.writingInstructionsTurnIndex = effectiveWritingTurnIndex;
-      messagesToSave[index].writingInstructionsTurnIndex =
-        target.writingInstructionsTurnIndex;
+      messagesToSave[index].writingInstructionsTurnIndex = target.writingInstructionsTurnIndex;
     }
     if (!isViewingThread(threadId)) {
       target.unreadAt = Date.now();
@@ -20099,8 +17655,7 @@ async function regenerateMessage(index) {
 function commitPendingPersonaInjectionMarker() {
   if (!currentThread) return;
   if (!state.pendingPersonaInjectionPersonaId) return;
-  currentThread.lastPersonaInjectionPersonaId =
-    state.pendingPersonaInjectionPersonaId;
+  currentThread.lastPersonaInjectionPersonaId = state.pendingPersonaInjectionPersonaId;
 }
 
 async function copyTextWithToast(text, successKey) {
@@ -20121,15 +17676,8 @@ async function copyCodeBlockText(text) {
 }
 
 function getCurrentCharacterTtsOptions() {
-  const resolved = getResolvedTtsSelection(
-    currentCharacter?.ttsLanguage,
-    currentCharacter?.ttsVoice,
-    currentCharacter?.ttsRate,
-    currentCharacter?.ttsPitch,
-  );
-  const provider = String(
-    currentCharacter?.ttsProvider || "kokoro",
-  ).toLowerCase();
+  const resolved = getResolvedTtsSelection(currentCharacter?.ttsLanguage, currentCharacter?.ttsVoice, currentCharacter?.ttsRate, currentCharacter?.ttsPitch);
+  const provider = String(currentCharacter?.ttsProvider || "kokoro").toLowerCase();
   const options = {
     voice: resolved.voice || DEFAULT_TTS_VOICE,
     language: resolved.language || DEFAULT_TTS_LANGUAGE,
@@ -20181,18 +17729,14 @@ async function playCharacterTtsTestFromModal() {
     return;
   }
   const textInput = document.getElementById("char-tts-test-text");
-  const text =
-    String(textInput?.value || "").trim() || "This is a test voice playback.";
+  const text = String(textInput?.value || "").trim() || "This is a test voice playback.";
   state.charModalTtsTestPlaying = true;
   updateCharTtsTestButtonState();
   try {
     await window.playTtsAudio(text, getTtsOptionsFromCharacterModal());
   } catch (err) {
     if (window.isTtsCancelledError(err)) return;
-    showToast(
-      tf("ttsTestFailed", { error: err.message || t("unknownError") }),
-      "error",
-    );
+    showToast(tf("ttsTestFailed", { error: err.message || t("unknownError") }), "error");
   } finally {
     state.charModalTtsTestPlaying = false;
     updateCharTtsTestButtonState();
@@ -20267,14 +17811,10 @@ function openPromptHistory() {
   const threadId = currentThread?.id ?? null;
 
   // Get prompts from our persistent prompt history (user messages)
-  const historyPrompts = (state.promptHistory || []).filter(
-    (entry) => entry.threadId === threadId,
-  );
+  const historyPrompts = (state.promptHistory || []).filter((entry) => entry.threadId === threadId);
 
   // Get command prompts
-  const commandPrompts = (state.promptCommandHistory || [])
-    .filter((entry) => entry.threadId === threadId)
-    .map((entry) => ({ ...entry, isOoc: true })); // Treat commands as OOC for tint
+  const commandPrompts = (state.promptCommandHistory || []).filter((entry) => entry.threadId === threadId).map((entry) => ({ ...entry, isOoc: true })); // Treat commands as OOC for tint
 
   // Combine and sort by most recent first
   const prompts = [...historyPrompts, ...commandPrompts].sort((a, b) => {
@@ -20328,10 +17868,7 @@ function openPromptHistory() {
         }
         // Check if sending is allowed (same checks as sendMessage)
         if (!currentThread || !currentCharacter) return;
-        const pendingState = getThreadPendingGenerationState(
-          Number(currentThread.id),
-          conversationHistory,
-        );
+        const pendingState = getThreadPendingGenerationState(Number(currentThread.id), conversationHistory);
         if (pendingState) {
           // Block if thread is queued, cooling down, generating, regenerating, or summarizing
           return;
@@ -20397,16 +17934,10 @@ function promotePromptCommandHistoryEntry(entry) {
   const threadId = entry.threadId ?? null;
   const content = String(entry.content || "").trim();
   if (!threadId || !content) return;
-  state.promptCommandHistory = Array.isArray(state.promptCommandHistory)
-    ? state.promptCommandHistory
-    : [];
+  state.promptCommandHistory = Array.isArray(state.promptCommandHistory) ? state.promptCommandHistory : [];
   const normalizedThreadId = String(threadId);
   const normalizedContent = content;
-  const existingIndex = state.promptCommandHistory.findIndex(
-    (item) =>
-      String(item?.threadId ?? "") === normalizedThreadId &&
-      String(item?.content ?? "") === normalizedContent,
-  );
+  const existingIndex = state.promptCommandHistory.findIndex((item) => String(item?.threadId ?? "") === normalizedThreadId && String(item?.content ?? "") === normalizedContent);
   if (existingIndex < 0) {
     return;
   }
@@ -20437,10 +17968,7 @@ async function renderMemoryModalEntries() {
     statusEl.textContent = t("memoryModalDisabled");
     return;
   }
-  const entries = await getMemoryEntries(
-    Number(currentCharacter.id),
-    Number(currentThread.id),
-  );
+  const entries = await getMemoryEntries(Number(currentCharacter.id), Number(currentThread.id));
   if (!entries.length) {
     statusEl.textContent = t("memoryModalNotTriggered");
     return;
@@ -20457,10 +17985,7 @@ async function renderMemoryModalEntries() {
   const editableTextareas = [];
   sorted.forEach((entry, idx) => {
     const entryLevel = getEntryLevel(entry);
-    const slot =
-      Number(entry.slotNumber) && Number(entry.slotNumber) > 0
-        ? Number(entry.slotNumber)
-        : idx + 1;
+    const slot = Number(entry.slotNumber) && Number(entry.slotNumber) > 0 ? Number(entry.slotNumber) : idx + 1;
     const textarea = document.createElement("textarea");
     textarea.id = `memory-entry-${entry.id || idx}`;
     textarea.rows = 4;
@@ -20504,41 +18029,24 @@ async function renderMemoryModalEntries() {
         id: Number(entry.id),
         level: entryLevel,
         slot,
-        summaryUserContent: String(
-          entry.summaryUserContent || entry.summary || "",
-        ),
+        summaryUserContent: String(entry.summaryUserContent || entry.summary || ""),
         characterId: Number(currentCharacter?.id),
         threadId: Number(currentThread?.id),
       };
       const actions = document.createElement("div");
       actions.className = "memory-entry-actions";
-      const regenBtn = iconButton(
-        "regenerate",
-        t("memoryEntryRegenerate"),
-        () => openMemoryRegeneratePromptModal(entryData),
-      );
-      regenBtn.classList.add(
-        "memory-entry-action-btn",
-        "memory-entry-regen-btn",
-      );
-      const deleteBtn = iconButton(
-        "delete",
-        t("memoryEntryDelete"),
-        async () => {
-          if (deleteBtn.disabled) return;
-          deleteBtn.disabled = true;
-          try {
-            await handleMemoryEntryDelete(entryData);
-          } finally {
-            deleteBtn.disabled = false;
-          }
-        },
-      );
-      deleteBtn.classList.add(
-        "memory-entry-action-btn",
-        "memory-entry-delete-btn",
-        "danger-btn",
-      );
+      const regenBtn = iconButton("regenerate", t("memoryEntryRegenerate"), () => openMemoryRegeneratePromptModal(entryData));
+      regenBtn.classList.add("memory-entry-action-btn", "memory-entry-regen-btn");
+      const deleteBtn = iconButton("delete", t("memoryEntryDelete"), async () => {
+        if (deleteBtn.disabled) return;
+        deleteBtn.disabled = true;
+        try {
+          await handleMemoryEntryDelete(entryData);
+        } finally {
+          deleteBtn.disabled = false;
+        }
+      });
+      deleteBtn.classList.add("memory-entry-action-btn", "memory-entry-delete-btn", "danger-btn");
       actions.append(regenBtn, deleteBtn);
       body.appendChild(actions);
     }
@@ -20583,19 +18091,15 @@ async function renderMemoryModalEntries() {
     entriesRoot.appendChild(wrapper);
   });
 
-  
-
   const collapseMemoryEntries = () => {
     const modalBody = modal.querySelector(".modal-body");
     const scrollTop = modalBody ? modalBody.scrollTop : 0;
-    modal
-      .querySelectorAll(".textarea-collapse textarea")
-      .forEach((textarea) => {
-        const entryState = textareaCollapseStates.get(textarea);
-        if (entryState) {
-          entryState.setExpanded(false);
-        }
-      });
+    modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
+      const entryState = textareaCollapseStates.get(textarea);
+      if (entryState) {
+        entryState.setExpanded(false);
+      }
+    });
     if (modalBody) {
       requestAnimationFrame(() => {
         modalBody.scrollTop = scrollTop;
@@ -20609,9 +18113,7 @@ async function renderMemoryModalEntries() {
       header.addEventListener("click", () => {
         headers.forEach((otherHeader) => {
           if (otherHeader === header) return;
-          const textarea = otherHeader
-            .closest(".textarea-collapse")
-            ?.querySelector("textarea");
+          const textarea = otherHeader.closest(".textarea-collapse")?.querySelector("textarea");
           const entryState = textareaCollapseStates.get(textarea);
           if (entryState) {
             entryState.setExpanded(false);
@@ -20626,9 +18128,7 @@ async function renderMemoryModalEntries() {
   requestAnimationFrame(collapseMemoryEntries);
 
   const updateSaveState = () => {
-    const hasChanges = editableTextareas.some(
-      (textarea) => textarea.value !== textarea.dataset.originalValue,
-    );
+    const hasChanges = editableTextareas.some((textarea) => textarea.value !== textarea.dataset.originalValue);
     setModalDirtyState("memory-modal", hasChanges);
     saveBtn.disabled = !hasChanges;
   };
@@ -20669,10 +18169,7 @@ async function deleteMemoryEntryAndRenumber(entryId, characterId, threadId) {
   for (const entry of entries) {
     const targetSlot = slot;
     const targetLevel = level;
-    if (
-      Number(entry.slotNumber) !== targetSlot ||
-      Number(entry.levelNumber) !== targetLevel
-    ) {
+    if (Number(entry.slotNumber) !== targetSlot || Number(entry.levelNumber) !== targetLevel) {
       updates.push({
         id: entry.id,
         slotNumber: targetSlot,
@@ -20702,24 +18199,11 @@ async function handleMemoryEntryDelete(entry) {
   if (!entry || !Number.isInteger(entry.id)) return;
   const level = Number(entry.level) || 1;
   const slot = Number(entry.slot) || 1;
-  const ok = await openConfirmDialog(
-    t("memoryEntryDeleteTitle"),
-    tf("memoryEntryDeleteConfirm", { level, slot }),
-  );
+  const ok = await openConfirmDialog(t("memoryEntryDeleteTitle"), tf("memoryEntryDeleteConfirm", { level, slot }));
   if (!ok) return;
-  const characterId =
-    Number.isInteger(Number(entry.characterId)) && entry.characterId > 0
-      ? Number(entry.characterId)
-      : Number(currentCharacter?.id || 0);
-  const threadId =
-    Number.isInteger(Number(entry.threadId)) && entry.threadId > 0
-      ? Number(entry.threadId)
-      : Number(currentThread?.id || 0);
-  const success = await deleteMemoryEntryAndRenumber(
-    Number(entry.id),
-    characterId,
-    Number.isInteger(threadId) ? threadId : null,
-  );
+  const characterId = Number.isInteger(Number(entry.characterId)) && entry.characterId > 0 ? Number(entry.characterId) : Number(currentCharacter?.id || 0);
+  const threadId = Number.isInteger(Number(entry.threadId)) && entry.threadId > 0 ? Number(entry.threadId) : Number(currentThread?.id || 0);
+  const success = await deleteMemoryEntryAndRenumber(Number(entry.id), characterId, Number.isInteger(threadId) ? threadId : null);
   if (!success) return;
   showToast(t("memoryEntryDeleted"), "success");
   await renderMemoryModalEntries();
@@ -20752,9 +18236,7 @@ async function handleMemoryModalSave() {
   const modal = document.getElementById("memory-modal");
   const saveBtn = document.getElementById("memory-modal-save");
   if (!modal || !saveBtn) return false;
-  const editableTextareas = Array.from(
-    modal.querySelectorAll("#memory-modal-entries textarea"),
-  ).filter((textarea) => !textarea.disabled);
+  const editableTextareas = Array.from(modal.querySelectorAll("#memory-modal-entries textarea")).filter((textarea) => !textarea.disabled);
   if (editableTextareas.length === 0) return false;
   const updates = [];
   for (const textarea of editableTextareas) {
@@ -20794,12 +18276,8 @@ let memoryRegenerationInFlight = false;
 function openMemoryRegeneratePromptModal(entry) {
   const modal = document.getElementById("memory-regenerate-prompt-modal");
   const textarea = document.getElementById("memory-regenerate-prompt-input");
-  const entryLabel = document.getElementById(
-    "memory-regenerate-prompt-entry-label",
-  );
-  const description = document.getElementById(
-    "memory-regenerate-prompt-description",
-  );
+  const entryLabel = document.getElementById("memory-regenerate-prompt-entry-label");
+  const description = document.getElementById("memory-regenerate-prompt-description");
   if (!modal || !textarea) return;
   pendingMemoryRegenerationEntry = entry;
   modal.dataset.memoryEntryId = String(entry.id || "");
@@ -20836,9 +18314,7 @@ function showMemoryRegenerateProgressModal(entryId, level, slot) {
   const modal = document.getElementById("memory-regenerate-progress-modal");
   if (!modal) return;
   modal.dataset.memoryEntryId = String(entryId || "");
-  const entryLabel = document.getElementById(
-    "memory-regenerate-progress-entry-label",
-  );
+  const entryLabel = document.getElementById("memory-regenerate-progress-entry-label");
   if (entryLabel) {
     entryLabel.textContent = tf("memoryModalEntryLabel", {
       level: level || 1,
@@ -20870,9 +18346,7 @@ function hideMemoryRegenerateProgressModal() {
 }
 
 function updateMemoryRegenerateProgressClosers() {
-  const buttons = document.querySelectorAll(
-    "[data-memory-regenerate-progress-close-btn]",
-  );
+  const buttons = document.querySelectorAll("[data-memory-regenerate-progress-close-btn]");
   buttons.forEach((btn) => {
     btn.disabled = memoryRegenerationInFlight;
   });
@@ -20903,44 +18377,25 @@ async function runMemoryRegeneration(entryId, promptText, level, slot) {
   const spinner = modal?.querySelector(".memory-regenerate-progress-spinner");
   const statusEl = document.getElementById("memory-regenerate-progress-status");
   try {
-    const summarySystemPrompt =
-      state.settings.summarySystemPrompt ||
-      "You are a helpful summarization assistant.";
+    const summarySystemPrompt = state.settings.summarySystemPrompt || "You are a helpful summarization assistant.";
     const requestHistory = [{ role: "user", content: promptText }];
-    const result = await callOpenRouter(
-      summarySystemPrompt,
-      requestHistory,
-      state.settings.model,
-      null,
-      null,
-      {
-        forceStream:
-          state.settings.defaultSummaryStream ??
-          DEFAULT_SETTINGS.defaultSummaryStream,
-        isSummarization: true,
-      },
-    );
+    const result = await callOpenRouter(summarySystemPrompt, requestHistory, state.settings.model, null, null, {
+      forceStream: state.settings.defaultSummaryStream ?? DEFAULT_SETTINGS.defaultSummaryStream,
+      isSummarization: true,
+    });
     const summary = String(result.content || "").trim();
     if (!summary) throw new Error(t("unknownError"));
-    const systemMessages = Array.isArray(result.systemMessages)
-      ? result.systemMessages
-      : [];
+    const systemMessages = Array.isArray(result.systemMessages) ? result.systemMessages : [];
     const systemContentPieces = systemMessages
       .filter((msg) => msg.role === "system")
       .map((msg) => String(msg.content || "").trim())
       .filter(Boolean);
-    const summarySystemContent =
-      systemContentPieces.length > 0
-        ? systemContentPieces.join("\n\n")
-        : summarySystemPrompt;
+    const summarySystemContent = systemContentPieces.length > 0 ? systemContentPieces.join("\n\n") : summarySystemPrompt;
     const userContentPieces = requestHistory
       .filter((msg) => msg.role === "user")
       .map((msg) => String(msg.content || "").trim())
       .filter(Boolean);
-    const summaryUserContent =
-      userContentPieces.length > 0
-        ? userContentPieces.join("\n\n")
-        : promptText;
+    const summaryUserContent = userContentPieces.length > 0 ? userContentPieces.join("\n\n") : promptText;
     await db.memories.update(entryId, {
       summary,
       summarySystemContent,
@@ -20979,39 +18434,28 @@ async function runMemoryRegeneration(entryId, promptText, level, slot) {
 }
 
 function setupMemoryRegenerationControls() {
-  document
-    .querySelectorAll("[data-memory-regenerate-prompt-close]")
-    .forEach((btn) => {
-      btn.addEventListener("click", () => {
-        hideMemoryRegeneratePromptModal();
-      });
+  document.querySelectorAll("[data-memory-regenerate-prompt-close]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      hideMemoryRegeneratePromptModal();
     });
-  const promptSubmit = document.getElementById(
-    "memory-regenerate-prompt-submit",
-  );
+  });
+  const promptSubmit = document.getElementById("memory-regenerate-prompt-submit");
   promptSubmit?.addEventListener("click", () => {
     handleMemoryRegeneratePromptSubmit();
   });
-  document
-    .querySelectorAll("[data-memory-regenerate-progress-close-btn]")
-    .forEach((btn) => {
-      btn.addEventListener("click", () => {
-        if (memoryRegenerationInFlight) return;
-        hideMemoryRegenerateProgressModal();
-      });
+  document.querySelectorAll("[data-memory-regenerate-progress-close-btn]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (memoryRegenerationInFlight) return;
+      hideMemoryRegenerateProgressModal();
     });
-  const cancelBtn = document.getElementById(
-    "memory-regenerate-progress-cancel",
-  );
+  });
+  const cancelBtn = document.getElementById("memory-regenerate-progress-cancel");
   cancelBtn?.addEventListener("click", () => {
     if (!memoryRegenerationInFlight) {
       hideMemoryRegenerateProgressModal();
       return;
     }
-    openConfirmDialog(
-      t("confirm"),
-      t("memoryRegenerateProgressCancelConfirm"),
-    ).then((confirmed) => {
+    openConfirmDialog(t("confirm"), t("memoryRegenerateProgressCancelConfirm")).then((confirmed) => {
       if (confirmed) {
         hideMemoryRegenerateProgressModal();
       }
@@ -21023,13 +18467,7 @@ function positionPromptHistoryPopover() {
   const popover = document.getElementById("prompt-history-popover");
   const userInputContainer = document.getElementById("user-input-container");
   const chatView = document.getElementById("chat-view");
-  if (
-    !popover ||
-    !userInputContainer ||
-    !chatView ||
-    popover.classList.contains("hidden")
-  )
-    return;
+  if (!popover || !userInputContainer || !chatView || popover.classList.contains("hidden")) return;
   popover.style.top = "";
   popover.style.bottom = "";
   const inputRect = userInputContainer.getBoundingClientRect();
@@ -21047,12 +18485,7 @@ function setSendingState(sending) {
     ? conversationHistory.some((m) => {
         if (!m || m.role !== "assistant") return false;
         const st = String(m.generationStatus || "").trim();
-        return (
-          st === "generating" ||
-          st === "regenerating" ||
-          st === "title_generating" ||
-          st === "summarizing"
-        );
+        return st === "generating" || st === "regenerating" || st === "title_generating" || st === "summarizing";
       })
     : false;
   const hasTitleGeneratingMarker = Array.isArray(conversationHistory)
@@ -21061,44 +18494,20 @@ function setSendingState(sending) {
         return String(m.generationStatus || "").trim() === "title_generating";
       })
     : false;
-  const isActiveGeneration =
-    Number.isInteger(activeId) &&
-    activeId > 0 &&
-    currentId === activeId &&
-    (hasGeneratingMarker || !!state.abortController);
-  const isSummarizing =
-    Number.isInteger(currentId) &&
-    currentId > 0 &&
-    state.summarizationInProgress?.has(currentId) === true;
+  const isActiveGeneration = Number.isInteger(activeId) && activeId > 0 && currentId === activeId && (hasGeneratingMarker || !!state.abortController);
+  const isSummarizing = Number.isInteger(currentId) && currentId > 0 && state.summarizationInProgress?.has(currentId) === true;
   const currentThreadGenerating = isActiveGeneration || isSummarizing;
-  const pendingState = getThreadPendingGenerationState(
-    currentId,
-    conversationHistory,
-  );
-  const isBlockedByQueueOrCooldown =
-    pendingState === "queued" || pendingState === "cooling_down";
+  const pendingState = getThreadPendingGenerationState(currentId, conversationHistory);
+  const isBlockedByQueueOrCooldown = pendingState === "queued" || pendingState === "cooling_down";
   sendBtn.disabled = isBlockedByQueueOrCooldown;
-  sendBtn.classList.toggle(
-    "is-generating",
-    currentThreadGenerating ||
-      isBlockedByQueueOrCooldown ||
-      hasTitleGeneratingMarker,
-  );
-  sendBtn.classList.toggle(
-    "danger-btn",
-    currentThreadGenerating ||
-      isBlockedByQueueOrCooldown ||
-      hasTitleGeneratingMarker,
-  );
+  sendBtn.classList.toggle("is-generating", currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker);
+  sendBtn.classList.toggle("danger-btn", currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker);
   if (hasTitleGeneratingMarker) {
     sendBtn.textContent = "";
   } else {
     sendBtn.textContent = "";
   }
-  personaSelect.disabled =
-    currentThreadGenerating ||
-    isBlockedByQueueOrCooldown ||
-    hasTitleGeneratingMarker;
+  personaSelect.disabled = currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker;
   refreshMessageControlStates();
   window.refreshAllSpeakerButtons();
   if (currentThreadGenerating) closePromptHistory();
@@ -21127,11 +18536,7 @@ function refreshMessageControlStates() {
       btn.disabled = state.sending || isStreaming || isLockedMemoryMessage;
     });
     row.querySelectorAll(".msg-edit-btn").forEach((btn) => {
-      btn.disabled =
-        isStreaming ||
-        isTruncated ||
-        hasGenerationError ||
-        isLockedMemoryMessage;
+      btn.disabled = isStreaming || isTruncated || hasGenerationError || isLockedMemoryMessage;
       applyEditButtonEditedStyle(btn, message);
     });
     row.querySelectorAll(".msg-info-btn").forEach((btn) => {
@@ -21140,8 +18545,7 @@ function refreshMessageControlStates() {
     row.querySelectorAll(".msg-model-info-btn").forEach((btn) => {
       const isInitial = message?.isInitial === true;
       const isUserEdited = message?.userEdited === true;
-      btn.disabled =
-        isStreaming || isInitial || isUserEdited || !message?.model;
+      btn.disabled = isStreaming || isInitial || isUserEdited || !message?.model;
       if (isUserEdited) {
         btn.setAttribute("title", t("msgMetadataUnavailableEdited"));
         btn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
@@ -21150,10 +18554,7 @@ function refreshMessageControlStates() {
         btn.setAttribute("aria-label", t("msgMetadataUnavailableInitialAria"));
       } else if (isStreaming) {
         btn.setAttribute("title", t("msgMetadataUnavailableGenerating"));
-        btn.setAttribute(
-          "aria-label",
-          t("msgMetadataUnavailableGeneratingAria"),
-        );
+        btn.setAttribute("aria-label", t("msgMetadataUnavailableGeneratingAria"));
       } else if (!message?.model) {
         btn.setAttribute("title", t("msgMetadataUnavailableEdited"));
         btn.setAttribute("aria-label", t("msgMetadataUnavailableEditedAria"));
@@ -21192,18 +18593,9 @@ async function populateSettingsModels(options = {}) {
   const provider = state.settings.aiProvider || "openrouter";
   const now = Date.now();
 
-  if (
-    force &&
-    state.modelLoadCooldown.provider === provider &&
-    now - state.modelLoadCooldown.timestamp < state.modelLoadCooldown.cooldownMs
-  ) {
-    const remaining = Math.ceil(
-      (state.modelLoadCooldown.cooldownMs - (now - state.modelLoadCooldown.timestamp)) / 1000,
-    );
-    showToast(
-      tf("cooldownActive", { seconds: String(remaining) }),
-      "warning",
-    );
+  if (force && state.modelLoadCooldown.provider === provider && now - state.modelLoadCooldown.timestamp < state.modelLoadCooldown.cooldownMs) {
+    const remaining = Math.ceil((state.modelLoadCooldown.cooldownMs - (now - state.modelLoadCooldown.timestamp)) / 1000);
+    showToast(tf("cooldownActive", { seconds: String(remaining) }), "warning");
     return;
   }
 
@@ -21257,9 +18649,7 @@ async function populateSettingsModels(options = {}) {
       }
     } else {
       if (force || state.modelCatalog.length === 0) {
-        const remoteCatalog = await fetchOpenRouterModelCatalog(
-          controller.signal,
-        );
+        const remoteCatalog = await fetchOpenRouterModelCatalog(controller.signal);
         if (requestId !== state.modelLoad.requestId) return;
         state.modelCatalog = remoteCatalog;
       }
@@ -21272,37 +18662,25 @@ async function populateSettingsModels(options = {}) {
         state.hordeModelCatalog = getHordeFallbackModelCatalog();
       }
       renderSettingsModelOptions();
-      showToast(
-        `Failed to load model list from AI Horde: ${err?.message || "using fallback list."}`,
-        "error",
-      );
+      showToast(`Failed to load model list from AI Horde: ${err?.message || "using fallback list."}`, "error");
     } else if (provider === "lmstudio") {
       if (state.lmstudioModelCatalog.length === 0) {
         state.lmstudioModelCatalog = [];
       }
       renderSettingsModelOptions();
-      showToast(
-        `Failed to load model list from LM Studio: ${err?.message || "using empty list."}`,
-        "error",
-      );
+      showToast(`Failed to load model list from LM Studio: ${err?.message || "using empty list."}`, "error");
     } else if (provider === "groq") {
       if (state.groqModelCatalog.length === 0) {
         state.groqModelCatalog = [];
       }
       renderSettingsModelOptions();
-      showToast(
-        `Failed to load model list from Groq: ${err?.message || "using empty list."}`,
-        "error",
-      );
+      showToast(`Failed to load model list from Groq: ${err?.message || "using empty list."}`, "error");
     } else {
       if (state.modelCatalog.length === 0) {
         state.modelCatalog = getFallbackModelCatalog();
       }
       renderSettingsModelOptions();
-      showToast(
-        `Failed to load model list from OpenRouter: ${err?.message || "using fallback list."}`,
-        "error",
-      );
+      showToast(`Failed to load model list from OpenRouter: ${err?.message || "using fallback list."}`, "error");
     }
   } finally {
     const wrapper = document.getElementById("model-select-wrapper");
@@ -21392,50 +18770,25 @@ function renderSettingsModelOptions() {
 
   let catalog;
   if (provider === "aihorde") {
-    catalog =
-      state.hordeModelCatalog.length > 0
-        ? state.hordeModelCatalog
-        : getHordeFallbackModelCatalog();
+    catalog = state.hordeModelCatalog.length > 0 ? state.hordeModelCatalog : getHordeFallbackModelCatalog();
   } else if (provider === "lmstudio") {
     catalog = state.lmstudioModelCatalog || [];
   } else if (provider === "groq") {
     catalog = state.groqModelCatalog || [];
   } else {
-    catalog =
-      state.modelCatalog.length > 0
-        ? state.modelCatalog
-        : getFallbackModelCatalog();
+    catalog = state.modelCatalog.length > 0 ? state.modelCatalog : getFallbackModelCatalog();
   }
 
-  const pricingFilter =
-    state.settings.modelPricingFilter === "free" ||
-    state.settings.modelPricingFilter === "paid"
-      ? state.settings.modelPricingFilter
-      : "all";
-  const modalityFilter =
-    state.settings.modelModalityFilter === "all" ? "all" : "text-only";
-  const sortOrder = [
-    "name_asc",
-    "name_desc",
-    "created_asc",
-    "created_desc",
-    "workers_desc",
-    "workers_asc",
-    "speed_desc",
-    "speed_asc",
-    "eta_asc",
-    "eta_desc",
-  ].includes(state.settings.modelSortOrder)
+  const pricingFilter = state.settings.modelPricingFilter === "free" || state.settings.modelPricingFilter === "paid" ? state.settings.modelPricingFilter : "all";
+  const modalityFilter = state.settings.modelModalityFilter === "all" ? "all" : "text-only";
+  const sortOrder = ["name_asc", "name_desc", "created_asc", "created_desc", "workers_desc", "workers_asc", "speed_desc", "speed_asc", "eta_asc", "eta_desc"].includes(state.settings.modelSortOrder)
     ? state.settings.modelSortOrder
     : "name_asc";
 
   const filtered = catalog.filter((m) => {
     if (pricingFilter === "free" && !isModelFree(m)) return false;
     if (pricingFilter === "paid" && isModelFree(m)) return false;
-    if (
-      modalityFilter === "text-only" &&
-      String(m.modality || "").toLowerCase() !== "text->text"
-    ) {
+    if (modalityFilter === "text-only" && String(m.modality || "").toLowerCase() !== "text->text") {
       return false;
     }
     return true;
@@ -21451,18 +18804,12 @@ function renderSettingsModelOptions() {
     if (sortOrder === "name_desc") return b.name.localeCompare(a.name);
     if (sortOrder === "created_asc") return a.created - b.created;
     if (sortOrder === "created_desc") return b.created - a.created;
-    if (sortOrder === "workers_desc")
-      return (Number(b.hordeStats?.workers) || 0) - (Number(a.hordeStats?.workers) || 0);
-    if (sortOrder === "workers_asc")
-      return (Number(a.hordeStats?.workers) || 0) - (Number(b.hordeStats?.workers) || 0);
-    if (sortOrder === "speed_desc")
-      return (Number(b.hordeStats?.speed) || 0) - (Number(a.hordeStats?.speed) || 0);
-    if (sortOrder === "speed_asc")
-      return (Number(a.hordeStats?.speed) || 0) - (Number(b.hordeStats?.speed) || 0);
-    if (sortOrder === "eta_asc")
-      return (Number(a.hordeStats?.eta) || 0) - (Number(b.hordeStats?.eta) || 0);
-    if (sortOrder === "eta_desc")
-      return (Number(b.hordeStats?.eta) || 0) - (Number(a.hordeStats?.eta) || 0);
+    if (sortOrder === "workers_desc") return (Number(b.hordeStats?.workers) || 0) - (Number(a.hordeStats?.workers) || 0);
+    if (sortOrder === "workers_asc") return (Number(a.hordeStats?.workers) || 0) - (Number(b.hordeStats?.workers) || 0);
+    if (sortOrder === "speed_desc") return (Number(b.hordeStats?.speed) || 0) - (Number(a.hordeStats?.speed) || 0);
+    if (sortOrder === "speed_asc") return (Number(a.hordeStats?.speed) || 0) - (Number(b.hordeStats?.speed) || 0);
+    if (sortOrder === "eta_asc") return (Number(a.hordeStats?.eta) || 0) - (Number(b.hordeStats?.eta) || 0);
+    if (sortOrder === "eta_desc") return (Number(b.hordeStats?.eta) || 0) - (Number(a.hordeStats?.eta) || 0);
     return a.name.localeCompare(b.name);
   });
 
@@ -21476,9 +18823,7 @@ function renderSettingsModelOptions() {
     modelSelect.appendChild(opt);
   });
 
-  const exists = Array.from(modelSelect.options).some(
-    (opt) => String(opt.value || "").trim() === targetModel,
-  );
+  const exists = Array.from(modelSelect.options).some((opt) => String(opt.value || "").trim() === targetModel);
   let finalModel = targetModel;
   if (!exists && targetModel) {
     const fromCatalog = catalog.find((m) => m.id === targetModel);
@@ -21502,11 +18847,7 @@ function renderSettingsModelOptions() {
   const maxTokensValue = document.getElementById("max-tokens-value");
   if (maxTokensSlider && maxTokensValue) {
     const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
-    state.settings.maxTokens = clampMaxTokens(
-      state.settings.maxTokens,
-      512,
-      maxUpper,
-    );
+    state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 512, maxUpper);
     maxTokensSlider.min = "512";
     maxTokensSlider.max = String(maxUpper);
     maxTokensSlider.value = String(state.settings.maxTokens);
@@ -21520,28 +18861,16 @@ async function populateAutoTitleSummaryModels() {
   const summaryModel = document.getElementById("default-summary-model");
   if (!autoTitleModel || !summaryModel) return;
 
-  const autoTitleProvider =
-    state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
-  const summaryProvider =
-    state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+  const autoTitleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
 
   const autoTitleCatalog = await getModelCatalogForProvider(autoTitleProvider, true);
   const summaryCatalog = await getModelCatalogForProvider(summaryProvider, true);
 
   const lastModels = state.settings.lastModelsPerProvider || {};
 
-  const autoTitleSelectedModel = getBestModelForProvider(
-    autoTitleProvider,
-    state.settings.autoTitleModel,
-    autoTitleCatalog,
-    lastModels,
-  );
-  const summarySelectedModel = getBestModelForProvider(
-    summaryProvider,
-    state.settings.summaryModel,
-    summaryCatalog,
-    lastModels,
-  );
+  const autoTitleSelectedModel = getBestModelForProvider(autoTitleProvider, state.settings.autoTitleModel, autoTitleCatalog, lastModels);
+  const summarySelectedModel = getBestModelForProvider(summaryProvider, state.settings.summaryModel, summaryCatalog, lastModels);
 
   renderModelSelectOptions(autoTitleModel, autoTitleCatalog, autoTitleSelectedModel);
   renderModelSelectOptions(summaryModel, summaryCatalog, summarySelectedModel);
@@ -21628,16 +18957,12 @@ function renderModelSelectOptions(selectEl, catalog, selectedModel) {
     opt.textContent = `${m.name} (${m.id})`;
     selectEl.appendChild(opt);
   });
-  const exists = Array.from(selectEl.options).some(
-    (opt) => String(opt.value || "").trim() === targetModel,
-  );
+  const exists = Array.from(selectEl.options).some((opt) => String(opt.value || "").trim() === targetModel);
   if (!exists && targetModel) {
     const fromCatalog = catalog.find((m) => m.id === targetModel);
     const opt = document.createElement("option");
     opt.value = targetModel;
-    opt.textContent = fromCatalog
-      ? `${fromCatalog.name} (${targetModel})`
-      : `${targetModel} (custom)`;
+    opt.textContent = fromCatalog ? `${fromCatalog.name} (${targetModel})` : `${targetModel} (custom)`;
     selectEl.appendChild(opt);
   }
   selectEl.value = targetModel || "";
@@ -21650,9 +18975,7 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
   if (!dropdownOptions || !dropdown || !display) return;
 
   const favoriteModels = state.settings.favoriteModels || [];
-  const favoriteModelsList = models.filter((m) =>
-    favoriteModels.includes(m.id),
-  );
+  const favoriteModelsList = models.filter((m) => favoriteModels.includes(m.id));
   const otherModelsList = models.filter((m) => !favoriteModels.includes(m.id));
 
   dropdownOptions.innerHTML = "";
@@ -21747,15 +19070,10 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
     });
   }
 
-  const selectedModelData =
-    models.find((m) => m.id === selectedModel) ||
-    catalog.find((m) => m.id === selectedModel);
+  const selectedModelData = models.find((m) => m.id === selectedModel) || catalog.find((m) => m.id === selectedModel);
   if (selectedModelData) {
-    const lowContextMark = isLowContextRoleplayModel(selectedModelData)
-      ? " | ! <=16k"
-      : "";
-    const moderationMark =
-      selectedModelData.isModerated === true ? " | Moderated" : "";
+    const lowContextMark = isLowContextRoleplayModel(selectedModelData) ? " | ! <=16k" : "";
+    const moderationMark = selectedModelData.isModerated === true ? " | Moderated" : "";
     display.textContent = `${selectedModelData.name} (${selectedModelData.id})${lowContextMark}${moderationMark}`;
   } else if (selectedModel) {
     display.textContent = `${selectedModel} (custom)`;
@@ -21824,9 +19142,7 @@ async function fetchOpenRouterModelCatalog(signal) {
 
   const payload = await res.json();
   const list = Array.isArray(payload?.data) ? payload.data : [];
-  const normalized = list
-    .map((model) => normalizeModelCatalogItem(model))
-    .filter(Boolean);
+  const normalized = list.map((model) => normalizeModelCatalogItem(model)).filter(Boolean);
 
   const byId = new Map(normalized.map((m) => [m.id, m]));
   if (!byId.has("openrouter/auto")) {
@@ -21864,7 +19180,7 @@ async function fetchLMStudioModelCatalog(signal) {
   const baseUrl = getLMStudioBaseUrl();
   const apiMethod = state.settings.lmstudioApiMethod || "openai";
   const endpoint = apiMethod === "native" ? "/api/v1/models" : "/v1/models";
-  
+
   const res = await fetch(`${baseUrl}${endpoint}`, {
     method: "GET",
     signal,
@@ -21883,16 +19199,14 @@ async function fetchLMStudioModelCatalog(signal) {
 
   const payload = await res.json();
   let models = [];
-  
+
   if (apiMethod === "native") {
     models = Array.isArray(payload.models) ? payload.models : [];
   } else {
     models = Array.isArray(payload.data) ? payload.data : [];
   }
 
-  const normalized = models
-    .map((model) => normalizeLMStudioModelItem(model))
-    .filter(Boolean);
+  const normalized = models.map((model) => normalizeLMStudioModelItem(model)).filter(Boolean);
 
   return normalized;
 }
@@ -21924,16 +19238,13 @@ function getLMStudioBaseUrl() {
 }
 
 async function fetchAIHordeModelCatalog(signal) {
-  const res = await fetch(
-    "https://stablehorde.net/api/v2/status/models?type=text",
-    {
-      method: "GET",
-      headers: {
-        "Client-Agent": "rp-llm-backend:1.0:0",
-      },
-      signal,
+  const res = await fetch("https://stablehorde.net/api/v2/status/models?type=text", {
+    method: "GET",
+    headers: {
+      "Client-Agent": "rp-llm-backend:1.0:0",
     },
-  );
+    signal,
+  });
   if (!res.ok) {
     let errorMessage = `HTTP ${res.status}`;
     try {
@@ -21949,9 +19260,7 @@ async function fetchAIHordeModelCatalog(signal) {
   const payload = await res.json();
   const models = Array.isArray(payload) ? payload : [];
 
-  const normalized = models
-    .map((model) => normalizeHordeModelItem(model))
-    .filter(Boolean);
+  const normalized = models.map((model) => normalizeHordeModelItem(model)).filter(Boolean);
 
   const byId = new Map(normalized.map((m) => [m.id, m]));
 
@@ -22004,7 +19313,7 @@ async function fetchGroqModelCatalog(signal) {
   const models = Array.isArray(payload.data) ? payload.data : [];
 
   const normalized = models
-    .filter(m => m.active)
+    .filter((m) => m.active)
     .map((model) => normalizeGroqModelItem(model))
     .filter(Boolean);
 
@@ -22110,9 +19419,7 @@ function getFallbackModelCatalog() {
       created: idx,
       architecture: { modality: "text->text" },
       top_provider: {},
-      pricing: String(m.value || "").includes(":free")
-        ? { prompt: "0", completion: "0", request: "0", image: "0" }
-        : {},
+      pricing: String(m.value || "").includes(":free") ? { prompt: "0", completion: "0", request: "0", image: "0" } : {},
       context_length: 16384,
     }),
   ).filter(Boolean);
@@ -22121,32 +19428,20 @@ function getFallbackModelCatalog() {
 function isModelFree(model) {
   if (!model) return false;
   if (String(model.id || "").includes(":free")) return true;
-  return (
-    Number(model.promptPrice || 0) <= 0 &&
-    Number(model.completionPrice || 0) <= 0 &&
-    Number(model.requestPrice || 0) <= 0 &&
-    Number(model.imagePrice || 0) <= 0
-  );
+  return Number(model.promptPrice || 0) <= 0 && Number(model.completionPrice || 0) <= 0 && Number(model.requestPrice || 0) <= 0 && Number(model.imagePrice || 0) <= 0;
 }
 
 function getSelectedModelMeta(modelId) {
   const id = String(modelId || state.settings.model || "").trim();
   if (!id) return null;
-  const catalog =
-    state.modelCatalog.length > 0
-      ? state.modelCatalog
-      : getFallbackModelCatalog();
+  const catalog = state.modelCatalog.length > 0 ? state.modelCatalog : getFallbackModelCatalog();
   return catalog.find((m) => String(m.id || "") === id) || null;
 }
 
 function getSelectedModelTokenCompatibility(modelId) {
   const model = getSelectedModelMeta(modelId);
   if (!model) return { min: 512, max: 16384 };
-  const candidates = [
-    Number(model.maxCompletionTokens) || 0,
-    Number(model.topContextLength) || 0,
-    Number(model.contextLength) || 0,
-  ].filter((n) => Number.isFinite(n) && n > 0);
+  const candidates = [Number(model.maxCompletionTokens) || 0, Number(model.topContextLength) || 0, Number(model.contextLength) || 0].filter((n) => Number.isFinite(n) && n > 0);
   const hardMax = candidates.length > 0 ? Math.min(...candidates) : 16384;
   const roundedMax = Math.max(64, Math.floor(hardMax / 64) * 64 || 64);
   const min = Math.min(512, roundedMax);
@@ -22156,10 +19451,7 @@ function getSelectedModelTokenCompatibility(modelId) {
 function getSettingsMaxTokensUpperBound(modelId) {
   const model = getSelectedModelMeta(modelId);
   if (!model) return 8192;
-  const primary =
-    Number(model.maxCompletionTokens) > 0
-      ? Number(model.maxCompletionTokens)
-      : Number(model.topContextLength || model.contextLength || 0);
+  const primary = Number(model.maxCompletionTokens) > 0 ? Number(model.maxCompletionTokens) : Number(model.topContextLength || model.contextLength || 0);
   if (!Number.isFinite(primary) || primary <= 0) return 8192;
   const rounded = Math.floor(primary / 64) * 64;
   const bounded = rounded > 0 ? rounded : primary;
@@ -22177,9 +19469,7 @@ function isLowContextRoleplayModel(model) {
 
 function updateProviderVisibility() {
   const provider = state.settings.aiProvider || "openrouter";
-  const openrouterContainer = document.getElementById(
-    "openrouter-api-key-container",
-  );
+  const openrouterContainer = document.getElementById("openrouter-api-key-container");
   const hordeContainer = document.getElementById("horde-api-key-container");
   const hordeApiMethodContainer = document.getElementById("horde-api-method-container");
   const lmstudioContainer = document.getElementById("lmstudio-base-url-container");
@@ -22258,10 +19548,7 @@ function refreshSelectedModelMeta(element = null) {
   const freeLabel = isModelFree(model) ? "Pricing: Free" : "Pricing: Paid";
   const context = Number(model.topContextLength || model.contextLength || 0);
   const maxCompletion = Number(model.maxCompletionTokens || 0);
-  const createdText =
-    Number(model.created) > 0
-      ? new Date(Number(model.created) * 1000).toLocaleDateString()
-      : "n/a";
+  const createdText = Number(model.created) > 0 ? new Date(Number(model.created) * 1000).toLocaleDateString() : "n/a";
   target.textContent = `${freeLabel} | ${moderated} | Modality: ${modality} | Context: ${context || "n/a"} | Max Completion: ${maxCompletion || "n/a"} | Created: ${createdText}`;
   const lowContext = isLowContextRoleplayModel(model);
   target.classList.toggle("danger", lowContext);
@@ -22285,10 +19572,7 @@ function estimatePromptTokens(messages) {
 function resolveModelContextWindow(modelId) {
   const meta = getSelectedModelMeta(modelId);
   if (!meta) return 0;
-  const candidates = [
-    Number(meta.topContextLength) || 0,
-    Number(meta.contextLength) || 0,
-  ].filter((n) => Number.isFinite(n) && n > 0);
+  const candidates = [Number(meta.topContextLength) || 0, Number(meta.contextLength) || 0].filter((n) => Number.isFinite(n) && n > 0);
   return candidates.length > 0 ? Math.max(...candidates) : 0;
 }
 
@@ -22368,13 +19652,7 @@ function closeImagePreview() {
 function applyImagePreviewZoom() {
   const img = document.getElementById("image-preview-img");
   if (!img) return;
-  const scale = Math.max(
-    state.imagePreview.minScale,
-    Math.min(
-      state.imagePreview.maxScale,
-      Number(state.imagePreview.scale) || 1,
-    ),
-  );
+  const scale = Math.max(state.imagePreview.minScale, Math.min(state.imagePreview.maxScale, Number(state.imagePreview.scale) || 1));
   state.imagePreview.scale = scale;
   img.style.transform = `translate3d(${Number(state.imagePreview.panX) || 0}px, ${Number(state.imagePreview.panY) || 0}px, 0) scale(${scale})`;
 }
@@ -22439,11 +19717,7 @@ function onImagePreviewPointerEnd(e) {
 function endImagePreviewPanning(pointerId = null) {
   if (!state.imagePreview.panning && pointerId === null) return;
   const img = document.getElementById("image-preview-img");
-  if (
-    img &&
-    pointerId != null &&
-    typeof img.releasePointerCapture === "function"
-  ) {
+  if (img && pointerId != null && typeof img.releasePointerCapture === "function") {
     try {
       img.releasePointerCapture(pointerId);
     } catch {
@@ -22497,52 +19771,30 @@ async function openMessageMetadataModal(index) {
     snapshot.index = index + 1;
     snapshot.createdAt = createdAt ? new Date(createdAt).toISOString() : null;
     snapshot.role = message.role || snapshot.role || "";
-    snapshot.requestMessages =
-      message.requestMessages || snapshot.requestMessages || null;
-    snapshot.systemMessages =
-      message.systemMessages || snapshot.systemMessages || null;
-    snapshot.usedLoreEntries =
-      message.usedLoreEntries || snapshot.usedLoreEntries || null;
-    snapshot.usedMemorySummary =
-      message.usedMemorySummary || snapshot.usedMemorySummary || null;
+    snapshot.requestMessages = message.requestMessages || snapshot.requestMessages || null;
+    snapshot.systemMessages = message.systemMessages || snapshot.systemMessages || null;
+    snapshot.usedLoreEntries = message.usedLoreEntries || snapshot.usedLoreEntries || null;
+    snapshot.usedMemorySummary = message.usedMemorySummary || snapshot.usedMemorySummary || null;
     snapshot.senderName = message.senderName || snapshot.senderName || null;
-    snapshot.senderPersonaId =
-      message.senderPersonaId || snapshot.senderPersonaId || null;
-    snapshot.truncatedByFilter =
-      message.truncatedByFilter === true || snapshot.truncatedByFilter === true;
-    snapshot.generationId =
-      message.generationId || snapshot.generationId || null;
-    snapshot.finishReason =
-      message.finishReason || snapshot.finishReason || null;
-    snapshot.nativeFinishReason =
-      message.nativeFinishReason || snapshot.nativeFinishReason || null;
+    snapshot.senderPersonaId = message.senderPersonaId || snapshot.senderPersonaId || null;
+    snapshot.truncatedByFilter = message.truncatedByFilter === true || snapshot.truncatedByFilter === true;
+    snapshot.generationId = message.generationId || snapshot.generationId || null;
+    snapshot.finishReason = message.finishReason || snapshot.finishReason || null;
+    snapshot.nativeFinishReason = message.nativeFinishReason || snapshot.nativeFinishReason || null;
     snapshot.model = message.model || snapshot.model || null;
-    snapshot.temperature =
-      Number(message.temperature) || snapshot.temperature || null;
-    snapshot.writingInstructionsTurnIndex =
-      Number(message.writingInstructionsTurnIndex) ||
-      snapshot.writingInstructionsTurnIndex ||
-      null;
-    snapshot.generationStatus =
-      message.generationStatus || snapshot.generationStatus || null;
-    snapshot.generationError =
-      message.generationError || snapshot.generationError || null;
-    snapshot.completionMeta =
-      message.completionMeta || snapshot.completionMeta || null;
-    snapshot.generationInfo =
-      message.generationInfo || snapshot.generationInfo || null;
-    snapshot.generationFetchDebug =
-      message.generationFetchDebug || snapshot.generationFetchDebug || null;
+    snapshot.temperature = Number(message.temperature) || snapshot.temperature || null;
+    snapshot.writingInstructionsTurnIndex = Number(message.writingInstructionsTurnIndex) || snapshot.writingInstructionsTurnIndex || null;
+    snapshot.generationStatus = message.generationStatus || snapshot.generationStatus || null;
+    snapshot.generationError = message.generationError || snapshot.generationError || null;
+    snapshot.completionMeta = message.completionMeta || snapshot.completionMeta || null;
+    snapshot.generationInfo = message.generationInfo || snapshot.generationInfo || null;
+    snapshot.generationFetchDebug = message.generationFetchDebug || snapshot.generationFetchDebug || null;
     pre.textContent = JSON.stringify(snapshot, null, 2);
   };
 
   renderMetadata();
 
-  if (
-    message.role === "assistant" &&
-    message.generationId &&
-    !message.generationInfo
-  ) {
+  if (message.role === "assistant" && message.generationId && !message.generationInfo) {
     pre.textContent += "\n\nFetching generation info...";
     const fetched = await fetchGenerationDetails(message.generationId);
     message.generationInfo = fetched?.data || null;
@@ -22558,21 +19810,12 @@ function cancelOngoingGeneration() {
 }
 
 function isViewingThread(threadId) {
-  if (
-    !currentThread ||
-    Number(currentThread.id) !== Number(threadId) ||
-    !document.getElementById("chat-view")?.classList.contains("active")
-  ) {
+  if (!currentThread || Number(currentThread.id) !== Number(threadId) || !document.getElementById("chat-view")?.classList.contains("active")) {
     return false;
   }
-  const visibilityState =
-    typeof document !== "undefined" ? document.visibilityState : "visible";
+  const visibilityState = typeof document !== "undefined" ? document.visibilityState : "visible";
   if (visibilityState !== "visible") return false;
-  if (
-    typeof document !== "undefined" &&
-    typeof document.hasFocus === "function" &&
-    !document.hasFocus()
-  ) {
+  if (typeof document !== "undefined" && typeof document.hasFocus === "function" && !document.hasFocus()) {
     return false;
   }
   return true;
@@ -22581,40 +19824,23 @@ function isViewingThread(threadId) {
 async function persistThreadMessagesById(threadId, messages, extra = {}) {
   const msgs = Array.isArray(messages) ? messages : [];
   const payload = { ...extra };
-  if (
-    payload.initialMessagesRemoved === undefined &&
-    currentThread &&
-    Number(currentThread.id) === Number(threadId)
-  ) {
+  if (payload.initialMessagesRemoved === undefined && currentThread && Number(currentThread.id) === Number(threadId)) {
     payload.initialMessagesRemoved = currentThread.initialMessagesRemoved === true;
   }
   const explicitSkipUpdatedAt = payload._skipUpdatedAt === true;
   const explicitRetainFlag = payload._retainConversationHistory;
   delete payload._skipUpdatedAt;
   delete payload._retainConversationHistory;
-  const isActiveThread =
-    currentThread && Number(currentThread.id) === Number(threadId);
-  const activeUnloadState =
-    isActiveThread && currentThread?.unloadState
-      ? currentThread.unloadState
-      : null;
-  const hasActiveUnloadHistory =
-    activeUnloadState && Number(activeUnloadState.loadedStartIndex) > 0;
+  const isActiveThread = currentThread && Number(currentThread.id) === Number(threadId);
+  const activeUnloadState = isActiveThread && currentThread?.unloadState ? currentThread.unloadState : null;
+  const hasActiveUnloadHistory = activeUnloadState && Number(activeUnloadState.loadedStartIndex) > 0;
   const skipUpdatedAt = explicitSkipUpdatedAt;
-  const retainConversationHistory =
-    explicitRetainFlag === true ||
-    (explicitRetainFlag !== false && hasActiveUnloadHistory);
+  const retainConversationHistory = explicitRetainFlag === true || (explicitRetainFlag !== false && hasActiveUnloadHistory);
 
-  const allMessagesFinished = msgs.every(
-    (m) => !m.generationStatus || m.generationStatus === "",
-  );
+  const allMessagesFinished = msgs.every((m) => !m.generationStatus || m.generationStatus === "");
 
   let unloadState = payload.unloadState;
-  if (
-    !unloadState &&
-    currentThread &&
-    Number(currentThread.id) === Number(threadId)
-  ) {
+  if (!unloadState && currentThread && Number(currentThread.id) === Number(threadId)) {
     unloadState = currentThread.unloadState;
   }
   if (unloadState) {
@@ -22624,13 +19850,8 @@ async function persistThreadMessagesById(threadId, messages, extra = {}) {
   let messagesToSave = msgs;
   if (unloadState && unloadState.loadedStartIndex > 0 && isActiveThread) {
     const thread = await db.threads.get(threadId);
-    const existingMessages = Array.isArray(thread?.messages)
-      ? thread.messages
-      : [];
-    const loadedStart = Math.min(
-      existingMessages.length,
-      Math.max(0, Number(unloadState.loadedStartIndex) || 0),
-    );
+    const existingMessages = Array.isArray(thread?.messages) ? thread.messages : [];
+    const loadedStart = Math.min(existingMessages.length, Math.max(0, Number(unloadState.loadedStartIndex) || 0));
     const beforeLoaded = existingMessages.slice(0, loadedStart);
     messagesToSave = [...beforeLoaded, ...msgs];
   }
@@ -22679,9 +19900,7 @@ async function enqueueThreadGeneration(threadId, reason = "busy") {
   const queuePos = state.generationQueue.indexOf(id) + 1;
   const queuedAt = Date.now();
   const thread = await db.threads.get(id);
-  const threadMessages = Array.isArray(thread?.messages)
-    ? thread.messages.map((m) => ({ ...m }))
-    : [];
+  const threadMessages = Array.isArray(thread?.messages) ? thread.messages.map((m) => ({ ...m })) : [];
   if (!wasQueued) {
     const pendingIdx = findLatestPendingAssistantIndex(threadMessages);
     if (pendingIdx >= 0) {
@@ -22736,9 +19955,7 @@ async function clearThreadGenerationQueueFlag(threadId) {
   const queuedIds = [...state.generationQueue];
   const updatedAt = Date.now();
   const thread = await db.threads.get(id);
-  const threadMessages = Array.isArray(thread?.messages)
-    ? thread.messages.map((m) => ({ ...m }))
-    : [];
+  const threadMessages = Array.isArray(thread?.messages) ? thread.messages.map((m) => ({ ...m })) : [];
   updateQueuedPlaceholdersInMessages(id, threadMessages);
   await db.threads.update(id, {
     messages: threadMessages,
@@ -22749,13 +19966,9 @@ async function clearThreadGenerationQueueFlag(threadId) {
   for (const qid of queuedIds) {
     const qThread = await db.threads.get(qid);
     if (!qThread) continue;
-    const qMessages = Array.isArray(qThread.messages)
-      ? qThread.messages.map((m) => ({ ...m }))
-      : [];
+    const qMessages = Array.isArray(qThread.messages) ? qThread.messages.map((m) => ({ ...m })) : [];
     updateQueuedPlaceholdersInMessages(qid, qMessages);
-    const allFinished = qMessages.every(
-      (m) => !m.generationStatus || m.generationStatus === "",
-    );
+    const allFinished = qMessages.every((m) => !m.generationStatus || m.generationStatus === "");
     const qUpdate = { messages: qMessages };
     if (allFinished) {
       qUpdate.updatedAt = Date.now();
@@ -22811,9 +20024,7 @@ async function processNextQueuedThread() {
     return;
   }
   const characterBase = await db.characters.get(thread.characterId);
-  const character = characterBase
-    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
-    : null;
+  const character = characterBase ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "") : null;
   if (!character) {
     await processNextQueuedThread();
     return;
@@ -22826,20 +20037,15 @@ async function processNextQueuedThread() {
     ...m,
     role: m.role === "ai" ? "assistant" : m.role,
   }));
-  const tempPersona = thread.selectedPersonaId
-    ? await db.personas.get(thread.selectedPersonaId)
-    : null;
-  const writingTurnCountForThread =
-    getThreadWritingInstructionsTurnCount(tempThread);
+  const tempPersona = thread.selectedPersonaId ? await db.personas.get(thread.selectedPersonaId) : null;
+  const writingTurnCountForThread = getThreadWritingInstructionsTurnCount(tempThread);
   const writingTurnIndex = getNextWritingInstructionsTurnIndex(tempThread);
   const includeOoc = character?.includeOocInCompletions === true;
   const filteredTempConversation = getInSimulationMessages(tempConversation, {
     includeOoc,
   });
   const promptContext = await buildSystemPrompt(character, {
-    includeOneTimeExtraPrompt: shouldIncludeOneTimeExtraPrompt(
-      filteredTempConversation,
-    ),
+    includeOneTimeExtraPrompt: shouldIncludeOneTimeExtraPrompt(filteredTempConversation),
     writingInstructionsTurnIndex: writingTurnIndex,
     returnTrace: true,
     personaOverride: tempPersona,
@@ -22853,10 +20059,7 @@ async function processNextQueuedThread() {
       role: m.role === "ai" ? "assistant" : m.role,
       content: removeImageLinksFromContent(m.content),
     }));
-  const promptMessages = [
-    { role: "system", content: systemPrompt },
-    ...messagesWithoutSystem,
-  ];
+  const promptMessages = [{ role: "system", content: systemPrompt }, ...messagesWithoutSystem];
   if (promptContext.personaInjectionForEndMessages) {
     promptMessages.push({
       role: "system",
@@ -22906,13 +20109,7 @@ async function processNextQueuedThread() {
   state.abortController = new AbortController();
   setSendingState(true);
   try {
-    const result = await callOpenRouter(
-      systemPrompt,
-      messagesWithoutSystem,
-      state.settings.model,
-      null,
-      state.abortController.signal,
-    );
+    const result = await callOpenRouter(systemPrompt, messagesWithoutSystem, state.settings.model, null, state.abortController.signal);
     pending.content = result.content || "";
     pending.finishReason = result.finishReason || "";
     pending.nativeFinishReason = result.nativeFinishReason || "";
@@ -22924,16 +20121,10 @@ async function processNextQueuedThread() {
     pending.generationInfo = result.generationInfo || null;
     pending.model = result.model || state.settings.model || "";
     pending.temperature = Number(state.settings.temperature) || 0;
-    pending.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries)
-      ? promptContext.usedLoreEntries
-      : [];
+    pending.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries) ? promptContext.usedLoreEntries : [];
     pending.usedMemorySummary = promptContext.usedMemorySummary || "";
-    if (
-      pending.writingInstructionsTurnIndex &&
-      !pending.writingInstructionsCounted
-    ) {
-      tempThread.writingInstructionsTurnCount =
-        (tempThread.writingInstructionsTurnCount || 0) + 1;
+    if (pending.writingInstructionsTurnIndex && !pending.writingInstructionsCounted) {
+      tempThread.writingInstructionsTurnCount = (tempThread.writingInstructionsTurnCount || 0) + 1;
     }
     pending.truncatedByFilter = result.truncatedByFilter === true;
     await db.threads.update(nextThreadId, {
@@ -22983,13 +20174,7 @@ function getThreadPendingGenerationState(threadId, messages = []) {
     if (!m || m.role !== "assistant") continue;
     if (m.ooc === true) continue;
     const status = String(m.generationStatus || "").trim();
-    if (
-      status === "queued" ||
-      status === "cooling_down" ||
-      status === "generating" ||
-      status === "regenerating" ||
-      status === "summarizing"
-    ) {
+    if (status === "queued" || status === "cooling_down" || status === "generating" || status === "regenerating" || status === "summarizing") {
       return status;
     }
   }
@@ -22998,22 +20183,16 @@ function getThreadPendingGenerationState(threadId, messages = []) {
 
 function refreshCurrentThreadCooldownBubble(secondsOverride = null) {
   if (!currentThread || !Array.isArray(conversationHistory)) return;
-  const seconds =
-    Number.isFinite(Number(secondsOverride)) && Number(secondsOverride) > 0
-      ? Number(secondsOverride)
-      : getCooldownRemainingSeconds();
+  const seconds = Number.isFinite(Number(secondsOverride)) && Number(secondsOverride) > 0 ? Number(secondsOverride) : getCooldownRemainingSeconds();
   if (seconds <= 0) return;
   const label = tf("cooldownToastActive", { seconds });
   const idx = findLatestPendingAssistantIndex(conversationHistory);
   if (idx < 0) return;
   const msg = conversationHistory[idx];
-  if (!msg || String(msg.generationStatus || "").trim() !== "cooling_down")
-    return;
+  if (!msg || String(msg.generationStatus || "").trim() !== "cooling_down") return;
   if (String(msg.content || "") === label) return;
   msg.content = label;
-  const row = document.querySelector(
-    `#chat-log .chat-row[data-message-index="${idx}"]`,
-  );
+  const row = document.querySelector(`#chat-log .chat-row[data-message-index="${idx}"]`);
   const content = row?.querySelector(".message-content");
   if (content) {
     content.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(label)}`;
@@ -23025,9 +20204,7 @@ async function ensureQueuedThreadCoolingDown(threadId) {
   if (!Number.isInteger(id)) return;
   const thread = await db.threads.get(id);
   if (!thread) return;
-  const messages = Array.isArray(thread.messages)
-    ? thread.messages.map((m) => ({ ...m }))
-    : [];
+  const messages = Array.isArray(thread.messages) ? thread.messages.map((m) => ({ ...m })) : [];
   const seconds = getCooldownRemainingSeconds();
   const label = tf("cooldownToastActive", { seconds });
   const hadPendingBefore = findLatestPendingAssistantIndex(messages) >= 0;
@@ -23059,28 +20236,19 @@ async function ensureQueuedThreadCoolingDown(threadId) {
     messages[idx].placeholder = true;
   }
 
-  const needsReason =
-    String(thread.pendingGenerationReason || "").trim() !== "cooldown";
-  const hasChanges =
-    !hadPendingBefore ||
-    needsReason ||
-    prevContent !== label ||
-    prevStatus !== "cooling_down";
+  const needsReason = String(thread.pendingGenerationReason || "").trim() !== "cooldown";
+  const hasChanges = !hadPendingBefore || needsReason || prevContent !== label || prevStatus !== "cooling_down";
   if (!hasChanges) return;
 
   await db.threads.update(id, {
     messages,
     pendingGenerationReason: "cooldown",
-    pendingGenerationQueuedAt: Number(
-      thread.pendingGenerationQueuedAt || Date.now(),
-    ),
+    pendingGenerationQueuedAt: Number(thread.pendingGenerationQueuedAt || Date.now()),
   });
   if (currentThread && Number(currentThread.id) === id) {
     conversationHistory = messages;
     currentThread.pendingGenerationReason = "cooldown";
-    currentThread.pendingGenerationQueuedAt = Number(
-      thread.pendingGenerationQueuedAt || Date.now(),
-    );
+    currentThread.pendingGenerationQueuedAt = Number(thread.pendingGenerationQueuedAt || Date.now());
     renderChat();
   }
   broadcastSyncEvent({
@@ -23107,13 +20275,7 @@ function findLatestPendingAssistantIndex(messages) {
     const m = list[i];
     if (!m || m.role !== "assistant") continue;
     const status = String(m.generationStatus || "").trim();
-    if (
-      status === "queued" ||
-      status === "cooling_down" ||
-      status === "generating" ||
-      status === "regenerating" ||
-      status === "title_generating"
-    ) {
+    if (status === "queued" || status === "cooling_down" || status === "generating" || status === "regenerating" || status === "title_generating") {
       return i;
     }
     const emptyContent = !String(m.content || "").trim();
@@ -23151,19 +20313,14 @@ function updateQueuedPlaceholdersInMessages(threadId, messages) {
 async function persistCurrentThread(forceUpdate = false, options = {}) {
   if (!currentThread) return;
 
-  const allMessagesFinished = conversationHistory.every(
-    (m) => !m.generationStatus || m.generationStatus === "",
-  );
+  const allMessagesFinished = conversationHistory.every((m) => !m.generationStatus || m.generationStatus === "");
   const skipTimestampUpdate = options.skipUpdatedAt === true;
-  const shouldUpdateTimestamp =
-    !skipTimestampUpdate && (forceUpdate || allMessagesFinished);
+  const shouldUpdateTimestamp = !skipTimestampUpdate && (forceUpdate || allMessagesFinished);
 
   await persistThreadMessagesById(currentThread.id, conversationHistory, {
     selectedPersonaId: currentThread.selectedPersonaId || null,
-    lastPersonaInjectionPersonaId:
-      currentThread.lastPersonaInjectionPersonaId || null,
-    writingInstructionsTurnCount:
-      getThreadWritingInstructionsTurnCount(currentThread),
+    lastPersonaInjectionPersonaId: currentThread.lastPersonaInjectionPersonaId || null,
+    writingInstructionsTurnCount: getThreadWritingInstructionsTurnCount(currentThread),
     oocModeEnabled: currentThread.oocModeEnabled === true,
     initialMessagesRemoved: currentThread.initialMessagesRemoved === true,
     unloadState: currentThread.unloadState,
@@ -23189,9 +20346,7 @@ function scrollChatToBottom(force = false) {
 
 function updateScrollBottomButtonVisibility() {
   const btn = document.getElementById("scroll-bottom-btn");
-  const chatViewActive = document
-    .getElementById("chat-view")
-    ?.classList.contains("active");
+  const chatViewActive = document.getElementById("chat-view")?.classList.contains("active");
   if (!btn) return;
   positionScrollBottomButton();
   if (!chatViewActive || !currentThread) {
@@ -23316,11 +20471,7 @@ function setupCrossWindowSync() {
       if (!data || data.sourceTabId === state.tabId) return;
       if (data.type === "thread-updated") {
         await renderThreads();
-        if (
-          currentThread &&
-          Number(data.threadId) === Number(currentThread.id) &&
-          !state.sending
-        ) {
+        if (currentThread && Number(data.threadId) === Number(currentThread.id) && !state.sending) {
           await refreshCurrentThreadFromDb();
         }
       }
@@ -23363,14 +20514,10 @@ async function refreshCurrentThreadFromDb() {
   if (!currentThread) return;
   const thread = await db.threads.get(currentThread.id);
   if (!thread) return;
-  const characterBase = thread.characterId
-    ? await db.characters.get(thread.characterId)
-    : null;
+  const characterBase = thread.characterId ? await db.characters.get(thread.characterId) : null;
   currentThread = thread;
   state.lastSyncSeenUpdatedAt = Number(thread.updatedAt || 0);
-  currentCharacter = characterBase
-    ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "")
-    : currentCharacter;
+  currentCharacter = characterBase ? resolveCharacterForLanguage(characterBase, thread.characterLanguage || "") : currentCharacter;
   if (characterBase) {
     state.cachedChatBotAvatar = {
       url: null,
@@ -23378,17 +20525,11 @@ async function refreshCurrentThreadFromDb() {
       personaId: null,
     };
   }
-  const snapshot = buildThreadConversationSnapshot(
-    thread,
-    state.settings.autoUnloadThreshold || 0,
-  );
+  const snapshot = buildThreadConversationSnapshot(thread, state.settings.autoUnloadThreshold || 0);
   conversationHistory = snapshot.conversationHistory;
   currentThread.unloadState = snapshot.unloadState;
-  state.unreadNeedsUserScrollThreadId =
-    getUnreadAssistantCount(conversationHistory) > 0 ? Number(thread.id) : null;
-  currentPersona = thread.selectedPersonaId
-    ? await db.personas.get(thread.selectedPersonaId)
-    : currentPersona;
+  state.unreadNeedsUserScrollThreadId = getUnreadAssistantCount(conversationHistory) > 0 ? Number(thread.id) : null;
+  currentPersona = thread.selectedPersonaId ? await db.personas.get(thread.selectedPersonaId) : currentPersona;
   if (thread.selectedPersonaId) {
     state.cachedChatBotAvatar = {
       url: null,
@@ -23428,58 +20569,28 @@ async function migrateLegacySessions() {
 async function buildSystemPrompt(character, options = {}) {
   const threadOverride = options?.threadOverride || currentThread;
   const defaultPersona = await getCharacterDefaultPersona();
-  const personaForContext =
-    options?.personaOverride || currentPersona || defaultPersona;
+  const personaForContext = options?.personaOverride || currentPersona || defaultPersona;
   const charName = String(character?.name || "Character");
   const initialUserName = threadOverride?.initialUserName;
   const personaName = initialUserName || String(defaultPersona?.name || "You");
-  const basePromptRaw = (
-    character.systemPrompt ||
-    state.settings.globalPromptTemplate ||
-    ""
-  ).trim();
-  const basePrompt = replaceLorePlaceholders(
-    basePromptRaw,
-    personaName,
-    charName,
-  );
+  const basePromptRaw = (character.systemPrompt || state.settings.globalPromptTemplate || "").trim();
+  const basePrompt = replaceLorePlaceholders(basePromptRaw, personaName, charName);
   let writingInstructionsRaw = "";
   const wiId = character?.writingInstructionId;
   if (wiId && wiId !== "none") {
     const wi = await db.writingInstructions.get(Number(wiId));
     if (wi && wi.instructions) {
-      const threadLanguage =
-        character?.activeLanguage || options?.characterLanguage || "en";
-      writingInstructionsRaw = String(
-        wi.instructions[threadLanguage] ||
-          Object.values(wi.instructions)[0] ||
-          "",
-      ).trim();
+      const threadLanguage = character?.activeLanguage || options?.characterLanguage || "en";
+      writingInstructionsRaw = String(wi.instructions[threadLanguage] || Object.values(wi.instructions)[0] || "").trim();
     }
   } else {
-    writingInstructionsRaw = String(
-      character?.writingInstructions || "",
-    ).trim();
+    writingInstructionsRaw = String(character?.writingInstructions || "").trim();
   }
-  const writingTurnIndex = Math.max(
-    1,
-    Number(options?.writingInstructionsTurnIndex) || 1,
-  );
-  const includeWritingInstructions =
-    writingInstructionsRaw.length > 0 &&
-    shouldInjectWritingInstructionsForTurn(writingTurnIndex);
-  const writingInstructions = includeWritingInstructions
-    ? replaceLorePlaceholders(writingInstructionsRaw, personaName, charName)
-    : "";
-  const oneTimeExtraRaw =
-    options?.includeOneTimeExtraPrompt === true
-      ? String(character?.oneTimeExtraPrompt || "").trim()
-      : "";
-  const oneTimeExtra = replaceLorePlaceholders(
-    oneTimeExtraRaw,
-    personaName,
-    charName,
-  );
+  const writingTurnIndex = Math.max(1, Number(options?.writingInstructionsTurnIndex) || 1);
+  const includeWritingInstructions = writingInstructionsRaw.length > 0 && shouldInjectWritingInstructionsForTurn(writingTurnIndex);
+  const writingInstructions = includeWritingInstructions ? replaceLorePlaceholders(writingInstructionsRaw, personaName, charName) : "";
+  const oneTimeExtraRaw = options?.includeOneTimeExtraPrompt === true ? String(character?.oneTimeExtraPrompt || "").trim() : "";
+  const oneTimeExtra = replaceLorePlaceholders(oneTimeExtraRaw, personaName, charName);
   const promptBeforePersona = [basePrompt, writingInstructions, oneTimeExtra]
     .filter((part) => String(part || "").trim())
     .join("\n\n")
@@ -23492,24 +20603,14 @@ async function buildSystemPrompt(character, options = {}) {
   const loreEntries = loreEntriesResult.entries;
   const newLoreState = loreEntriesResult.newLoreState;
   const threadIdForMemory = threadOverride?.id;
-  const memory =
-    character.useMemory === false
-      ? null
-      : await getMemorySummary(character.id, threadIdForMemory);
+  const memory = character.useMemory === false ? null : await getMemorySummary(character.id, threadIdForMemory);
   const contextSections = [];
   state.pendingPersonaInjectionPersonaId = null;
   let systemPromptWithPersona = promptBeforePersona;
   let personaInjectionForEndMessages = null;
   let personaInjectionAppliedOnce = false;
-  if (
-    personaForContext &&
-    shouldInjectPersonaContext(
-      personaForContext,
-      options?.threadOverride || null,
-    )
-  ) {
-    const requestedPlacement =
-      character?.personaInjectionPlacement || "end_system_prompt";
+  if (personaForContext && shouldInjectPersonaContext(personaForContext, options?.threadOverride || null)) {
+    const requestedPlacement = character?.personaInjectionPlacement || "end_system_prompt";
     let actualPlacement = requestedPlacement;
     if (requestedPlacement === "once") {
       if (shouldInjectPersonaOnceForThread(threadOverride)) {
@@ -23521,20 +20622,12 @@ async function buildSystemPrompt(character, options = {}) {
     }
     if (actualPlacement !== "none") {
       const personaInjected = renderPersonaInjectionContent(personaForContext);
-      const templateNotEmpty = String(
-        state.settings.personaInjectionTemplate ||
-          DEFAULT_SETTINGS.personaInjectionTemplate ||
-          "",
-      ).trim();
+      const templateNotEmpty = String(state.settings.personaInjectionTemplate || DEFAULT_SETTINGS.personaInjectionTemplate || "").trim();
       if (templateNotEmpty) {
         if (actualPlacement === "end_messages") {
           personaInjectionForEndMessages = personaInjected;
         } else {
-          systemPromptWithPersona = applyPersonaInjectionPlacement(
-            promptBeforePersona,
-            personaInjected,
-            actualPlacement,
-          );
+          systemPromptWithPersona = applyPersonaInjectionPlacement(promptBeforePersona, personaInjected, actualPlacement);
         }
       }
       state.pendingPersonaInjectionPersonaId = personaForContext.id || null;
@@ -23554,21 +20647,14 @@ async function buildSystemPrompt(character, options = {}) {
       return true;
     });
     if (uniqueEntries.length > 0) {
-      contextSections.push(
-        `${getSectionHeader("sectionHeaderLoreContext")}\n\n${uniqueEntries
-          .map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`)
-          .join("\n\n")}`,
-      );
+      contextSections.push(`${getSectionHeader("sectionHeaderLoreContext")}\n\n${uniqueEntries.map((e) => `- [${e.lorebookName || "Lore"}] ${e.content}`).join("\n\n")}`);
     }
   }
   if (memory) {
     contextSections.push(`${getSectionHeader("sectionHeaderMemoryContext")}\n\n${memory}`);
   }
 
-  const prompt = [systemPromptWithPersona, ...contextSections]
-    .filter(Boolean)
-    .join("\n\n")
-    .trim();
+  const prompt = [systemPromptWithPersona, ...contextSections].filter(Boolean).join("\n\n").trim();
   if (options?.returnTrace === true) {
     return {
       prompt,
@@ -23588,17 +20674,11 @@ async function openMessageModelInfoModal(index) {
   if (!message.model && !message.temperature) return;
   openModal("message-model-info-modal");
   const modelEl = document.getElementById("message-model-info-model");
-  const temperatureEl = document.getElementById(
-    "message-model-info-temperature",
-  );
+  const temperatureEl = document.getElementById("message-model-info-temperature");
   const maxTokensEl = document.getElementById("message-model-info-max-tokens");
   const topPEl = document.getElementById("message-model-info-top-p");
-  const frequencyEl = document.getElementById(
-    "message-model-info-frequency-penalty",
-  );
-  const presenceEl = document.getElementById(
-    "message-model-info-presence-penalty",
-  );
+  const frequencyEl = document.getElementById("message-model-info-frequency-penalty");
+  const presenceEl = document.getElementById("message-model-info-presence-penalty");
   const streamEl = document.getElementById("message-model-info-stream");
   const formatNumericValue = (rawValue, decimals = 2) => {
     const parsed = Number(rawValue);
@@ -23612,8 +20692,7 @@ async function openMessageModelInfoModal(index) {
     modelEl.textContent = message.model || "-";
   }
   if (temperatureEl) {
-    temperatureEl.textContent =
-      message.temperature != null ? message.temperature : "-";
+    temperatureEl.textContent = message.temperature != null ? message.temperature : "-";
   }
   if (maxTokensEl) {
     maxTokensEl.textContent = formatNumericValue(message.maxTokens, 0);
@@ -23628,8 +20707,7 @@ async function openMessageModelInfoModal(index) {
     presenceEl.textContent = formatNumericValue(message.presencePenalty, 2);
   }
   if (streamEl) {
-    const streamLabel =
-      message.streamEnabled === true ? t("enabledLabel") : t("disabledLabel");
+    const streamLabel = message.streamEnabled === true ? t("enabledLabel") : t("disabledLabel");
     streamEl.textContent = streamLabel;
   }
 }
@@ -23714,9 +20792,7 @@ async function openMessageSystemPromptModal(index) {
       header.addEventListener("click", () => {
         headers.forEach((otherHeader) => {
           if (otherHeader === header) return;
-          const textarea = otherHeader
-            .closest(".textarea-collapse")
-            ?.querySelector("textarea");
+          const textarea = otherHeader.closest(".textarea-collapse")?.querySelector("textarea");
           const entryState = textareaCollapseStates.get(textarea);
           if (entryState) {
             entryState.setExpanded(false);
@@ -23762,9 +20838,7 @@ function countWords(text) {
 
 function shouldInjectPersonaContext(persona, threadOverride = null) {
   if (!persona) return false;
-  const template =
-    state.settings.personaInjectionTemplate ||
-    DEFAULT_SETTINGS.personaInjectionTemplate;
+  const template = state.settings.personaInjectionTemplate || DEFAULT_SETTINGS.personaInjectionTemplate;
   if (!String(template || "").trim()) return false;
   return true;
 }
@@ -23793,20 +20867,14 @@ async function clearThreadPersonaInjectionOnceApplied() {
 }
 
 function renderPersonaInjectionContent(persona) {
-  const template =
-    state.settings.personaInjectionTemplate ||
-    DEFAULT_SETTINGS.personaInjectionTemplate;
+  const template = state.settings.personaInjectionTemplate || DEFAULT_SETTINGS.personaInjectionTemplate;
   const name = String(persona?.name || "").trim() || "Anon";
   const description = String(persona?.description || "").trim();
   let result = String(template || "");
   if (description) {
-    result = result
-      .replace(/\{\{\s*name\s*\}\}/gi, name)
-      .replace(/\{\{\s*description\s*\}\}/gi, description);
+    result = result.replace(/\{\{\s*name\s*\}\}/gi, name).replace(/\{\{\s*description\s*\}\}/gi, description);
   } else {
-    result = result
-      .replace(/\{\{\s*name\s*\}\}/gi, name)
-      .replace(/\{\{\s*description\s*\}\}/gi, "");
+    result = result.replace(/\{\{\s*name\s*\}\}/gi, name).replace(/\{\{\s*description\s*\}\}/gi, "");
   }
   return result;
 }
@@ -23825,42 +20893,23 @@ function applyPersonaInjectionPlacement(basePrompt, injection, placement) {
 function replaceUserPlaceholders(text, replacement) {
   const value = String(text || "");
   const name = replacement || "You";
-  return value
-    .replace(/\{\{\s*user\s*\}\}/gi, name)
-    .replace(/\[\[\s*user\s*\]\]/gi, name);
+  return value.replace(/\{\{\s*user\s*\}\}/gi, name).replace(/\[\[\s*user\s*\]\]/gi, name);
 }
 
-async function callOpenRouter(
-  systemPrompt,
-  history,
-  model,
-  onChunk = null,
-  signal = null,
-  options = {},
-) {
+async function callOpenRouter(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
   const provider = state.settings.aiProvider || "openrouter";
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const summaryModel =
-    state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
-  const titleModel =
-    state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
-  const titleProvider =
-    state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
-  const summaryProvider =
-    state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+  const summaryModel = state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
+  const titleModel = state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
+  const titleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
+  const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
 
-  const effectiveProvider = isTitleGeneration || isSummarization
-    ? (isTitleGeneration ? titleProvider : summaryProvider)
-    : provider;
+  const effectiveProvider = isTitleGeneration || isSummarization ? (isTitleGeneration ? titleProvider : summaryProvider) : provider;
 
   if (effectiveProvider === "aihorde") {
-    const effectiveModel = isTitleGeneration
-      ? titleModel
-      : isSummarization
-        ? summaryModel
-        : model;
+    const effectiveModel = isTitleGeneration ? titleModel : isSummarization ? summaryModel : model;
     const apiMethod = state.settings.hordeApiMethod || "native";
     if (apiMethod === "openai") {
       return callAIHordeOpenAI(systemPrompt, history, effectiveModel, onChunk, signal, options);
@@ -23869,20 +20918,12 @@ async function callOpenRouter(
   }
 
   if (effectiveProvider === "lmstudio") {
-    const effectiveModel = isTitleGeneration
-      ? titleModel
-      : isSummarization
-        ? summaryModel
-        : model;
+    const effectiveModel = isTitleGeneration ? titleModel : isSummarization ? summaryModel : model;
     return callLMStudio(systemPrompt, history, effectiveModel, onChunk, signal, options);
   }
 
   if (effectiveProvider === "groq") {
-    const effectiveModel = isTitleGeneration
-      ? titleModel
-      : isSummarization
-        ? summaryModel
-        : model;
+    const effectiveModel = isTitleGeneration ? titleModel : isSummarization ? summaryModel : model;
     return callGroq(systemPrompt, history, effectiveModel, onChunk, signal, options);
   }
 
@@ -23895,18 +20936,11 @@ async function callOpenRouter(
       .filter((m) => {
         // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
-        if (
-          m.role === "assistant" &&
-          String(m.content || "").trim() === NO_CONTENT_RETURNED
-        ) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+        if (m.role === "assistant" && String(m.content || "").trim() === NO_CONTENT_RETURNED) {
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
         return true;
@@ -23918,9 +20952,7 @@ async function callOpenRouter(
   ];
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
-  const needsContinuePrompt =
-    nonSystemMessages.length === 0 ||
-    (lastMessage && lastMessage.role === "assistant");
+  const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
@@ -23930,45 +20962,21 @@ async function callOpenRouter(
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
-    resolvedModel,
-    promptMessages,
-  );
-  const streamForced =
-    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
-      ? Boolean(options.forceStream)
-      : null;
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
+  const streamForced = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : null;
   const body = {
-    model: isTitleGeneration
-      ? titleModel
-      : isSummarization
-        ? summaryModel
-        : resolvedModel,
+    model: isTitleGeneration ? titleModel : isSummarization ? summaryModel : resolvedModel,
     messages: promptMessages,
     max_completion_tokens: effectiveMaxTokens,
     temperature: isTitleGeneration
-      ? (state.settings.autoTitleTemperature ??
-        DEFAULT_SETTINGS.autoTitleTemperature)
+      ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
       : isSummarization
-        ? (state.settings.summaryTemperature ??
-          DEFAULT_SETTINGS.summaryTemperature)
+        ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
         : clampTemperature(state.settings.temperature),
-    top_p: isTitleGeneration
-      ? 0.9
-      : isSummarization
-        ? 0.9
-        : Number(state.settings.topP) || 1,
-    frequency_penalty: isTitleGeneration
-      ? 0
-      : isSummarization
-        ? 0
-        : Number(state.settings.frequencyPenalty) || 0,
-    presence_penalty: isTitleGeneration
-      ? 0
-      : isSummarization
-        ? 0
-        : Number(state.settings.presencePenalty) || 0,
-    ...((() => {
+    top_p: isTitleGeneration ? 0.9 : isSummarization ? 0.9 : Number(state.settings.topP) || 1,
+    frequency_penalty: isTitleGeneration ? 0 : isSummarization ? 0 : Number(state.settings.frequencyPenalty) || 0,
+    presence_penalty: isTitleGeneration ? 0 : isSummarization ? 0 : Number(state.settings.presencePenalty) || 0,
+    ...(() => {
       let stopStrings = null;
       if (isTitleGeneration) {
         stopStrings = getAutoTitleStopStrings();
@@ -23978,49 +20986,26 @@ async function callOpenRouter(
         stopStrings = getStopStrings();
       }
       return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
-    })()),
-    stream: isTitleGeneration
-      ? false
-      : streamForced === null
-        ? !!state.settings.streamEnabled
-        : Boolean(streamForced),
+    })(),
+    stream: isTitleGeneration ? false : streamForced === null ? !!state.settings.streamEnabled : Boolean(streamForced),
   };
 
   state.currentRequestMessages = body.messages;
 
   try {
     const attempts = body.stream ? 1 : 3;
-    const response = await requestCompletionWithRetry(
-      body,
-      attempts,
-      onChunk,
-      signal,
-      options,
-    );
+    const response = await requestCompletionWithRetry(body, attempts, onChunk, signal, options);
     return { ...response, systemMessages };
   } catch (primaryErr) {
     if (!fallbackModel) throw primaryErr;
     const fallbackBody = { ...body, model: fallbackModel };
     const fallbackAttempts = fallbackBody.stream ? 1 : 2;
-    const fallbackResponse = await requestCompletionWithRetry(
-      fallbackBody,
-      fallbackAttempts,
-      onChunk,
-      signal,
-      options,
-    );
+    const fallbackResponse = await requestCompletionWithRetry(fallbackBody, fallbackAttempts, onChunk, signal, options);
     return { ...fallbackResponse, systemMessages };
   }
 }
 
-async function callLMStudio(
-  systemPrompt,
-  history,
-  model,
-  onChunk = null,
-  signal = null,
-  options = {},
-) {
+async function callLMStudio(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
   const resolvedModel = resolveModelForRequest(model);
   const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
@@ -24029,18 +21014,11 @@ async function callLMStudio(
       .filter((m) => {
         // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
-        if (
-          m.role === "assistant" &&
-          String(m.content || "").trim() === NO_CONTENT_RETURNED
-        ) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+        if (m.role === "assistant" && String(m.content || "").trim() === NO_CONTENT_RETURNED) {
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
         return true;
@@ -24052,9 +21030,7 @@ async function callLMStudio(
   ];
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
-  const needsContinuePrompt =
-    nonSystemMessages.length === 0 ||
-    (lastMessage && lastMessage.role === "assistant");
+  const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
@@ -24064,25 +21040,17 @@ async function callLMStudio(
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
-    resolvedModel,
-    promptMessages,
-  );
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const lmstudioModel = resolvedModel.startsWith("lmstudio/")
-    ? resolvedModel.slice(9)
-    : resolvedModel;
+  const lmstudioModel = resolvedModel.startsWith("lmstudio/") ? resolvedModel.slice(9) : resolvedModel;
 
   state.currentRequestMessages = promptMessages;
 
   const baseUrl = getLMStudioBaseUrl();
   const apiMethod = state.settings.lmstudioApiMethod || "openai";
-  const streamEnabled =
-    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
-      ? Boolean(options.forceStream)
-      : !!state.settings.streamEnabled;
+  const streamEnabled = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
 
   let endpoint, body;
 
@@ -24102,20 +21070,15 @@ async function callLMStudio(
     const contextLength = Number(state.settings.contextLength);
     const autoTitleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
     const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
-    const shouldDisableStore =
-      (isTitleGeneration && autoTitleProvider === "lmstudio" && apiMethod === "native") ||
-      (isSummarization && summaryProvider === "lmstudio" && apiMethod === "native");
+    const shouldDisableStore = (isTitleGeneration && autoTitleProvider === "lmstudio" && apiMethod === "native") || (isSummarization && summaryProvider === "lmstudio" && apiMethod === "native");
     body = {
       model: lmstudioModel,
       input,
-      system_prompt:
-        systemMessagesList.length > 0 ? systemMessagesList[0].content : undefined,
+      system_prompt: systemMessagesList.length > 0 ? systemMessagesList[0].content : undefined,
       temperature: isTitleGeneration
-        ? (state.settings.autoTitleTemperature ??
-          DEFAULT_SETTINGS.autoTitleTemperature)
+        ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
         : isSummarization
-          ? (state.settings.summaryTemperature ??
-            DEFAULT_SETTINGS.summaryTemperature)
+          ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
           : clampTemperature(state.settings.temperature),
       top_p: Number(state.settings.topP) || 1,
       top_k: topK > 0 ? topK : undefined,
@@ -24140,11 +21103,9 @@ async function callLMStudio(
       messages: promptMessages,
       max_tokens: effectiveMaxTokens,
       temperature: isTitleGeneration
-        ? (state.settings.autoTitleTemperature ??
-          DEFAULT_SETTINGS.autoTitleTemperature)
+        ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
         : isSummarization
-          ? (state.settings.summaryTemperature ??
-            DEFAULT_SETTINGS.summaryTemperature)
+          ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
           : clampTemperature(state.settings.temperature),
       top_p: Number(state.settings.topP) || 1,
       frequency_penalty: 0,
@@ -24272,7 +21233,9 @@ async function callLMStudio(
               content += delta;
               if (typeof onChunk === "function") onChunk(delta);
             }
-          } catch { /* ignore malformed final line */ }
+          } catch {
+            /* ignore malformed final line */
+          }
         }
       }
 
@@ -24363,29 +21326,18 @@ async function callLMStudio(
     }
   } catch (err) {
     if (err?.name === "AbortError") throw err;
-    throw new Error(
-      `LM Studio request failed: ${err?.message || "Unknown error"}`,
-    );
+    throw new Error(`LM Studio request failed: ${err?.message || "Unknown error"}`);
   }
 }
 
-async function callGroq(
-  systemPrompt,
-  history,
-  model,
-  onChunk = null,
-  signal = null,
-  options = {},
-) {
+async function callGroq(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
   const apiKey = state.settings.groqApiKey;
   if (!apiKey) {
     throw new Error("Missing Groq API key. Set it in Settings.");
   }
 
   const resolvedModel = resolveModelForRequest(model);
-  const groqModel = resolvedModel.startsWith("groq/")
-    ? resolvedModel.slice(5)
-    : resolvedModel;
+  const groqModel = resolvedModel.startsWith("groq/") ? resolvedModel.slice(5) : resolvedModel;
 
   const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
@@ -24394,18 +21346,11 @@ async function callGroq(
       .filter((m) => {
         // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
-        if (
-          m.role === "assistant" &&
-          String(m.content || "").trim() === NO_CONTENT_RETURNED
-        ) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+        if (m.role === "assistant" && String(m.content || "").trim() === NO_CONTENT_RETURNED) {
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
         if (m.role === "user" && !String(m.content || "").trim()) {
@@ -24420,9 +21365,7 @@ async function callGroq(
   ];
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
-  const needsContinuePrompt =
-    nonSystemMessages.length === 0 ||
-    (lastMessage && lastMessage.role === "assistant");
+  const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
@@ -24432,10 +21375,7 @@ async function callGroq(
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
-    resolvedModel,
-    promptMessages,
-  );
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
@@ -24443,10 +21383,7 @@ async function callGroq(
   state.currentRequestMessages = promptMessages;
 
   const baseUrl = "https://api.groq.com/openai/v1";
-  const streamEnabled =
-    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
-      ? Boolean(options.forceStream)
-      : !!state.settings.streamEnabled;
+  const streamEnabled = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
 
   let stopStrings = null;
   if (isTitleGeneration) {
@@ -24461,11 +21398,9 @@ async function callGroq(
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
     temperature: isTitleGeneration
-      ? (state.settings.autoTitleTemperature ??
-        DEFAULT_SETTINGS.autoTitleTemperature)
+      ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
       : isSummarization
-        ? (state.settings.summaryTemperature ??
-          DEFAULT_SETTINGS.summaryTemperature)
+        ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
         : clampTemperature(state.settings.temperature),
     top_p: Number(state.settings.topP) || 1,
     frequency_penalty: 0,
@@ -24549,7 +21484,9 @@ async function callGroq(
               content += delta;
               if (typeof onChunk === "function") onChunk(delta);
             }
-          } catch { /* ignore malformed final line */ }
+          } catch {
+            /* ignore malformed final line */
+          }
         }
       }
 
@@ -24620,20 +21557,11 @@ async function callGroq(
     }
   } catch (err) {
     if (err?.name === "AbortError") throw err;
-    throw new Error(
-      `Groq request failed: ${err?.message || "Unknown error"}`,
-    );
+    throw new Error(`Groq request failed: ${err?.message || "Unknown error"}`);
   }
 }
 
-async function callAIHordeOpenAI(
-  systemPrompt,
-  history,
-  model,
-  onChunk = null,
-  signal = null,
-  options = {},
-) {
+async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
   const resolvedModel = resolveModelForRequest(model);
   const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
@@ -24642,18 +21570,11 @@ async function callAIHordeOpenAI(
       .filter((m) => {
         // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
-        if (
-          m.role === "assistant" &&
-          String(m.content || "").trim() === NO_CONTENT_RETURNED
-        ) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+        if (m.role === "assistant" && String(m.content || "").trim() === NO_CONTENT_RETURNED) {
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
         return true;
@@ -24665,9 +21586,7 @@ async function callAIHordeOpenAI(
   ];
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
-  const needsContinuePrompt =
-    nonSystemMessages.length === 0 ||
-    (lastMessage && lastMessage.role === "assistant");
+  const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
     promptMessages.push({ role: "user", content: "Continue" });
   }
@@ -24677,16 +21596,11 @@ async function callAIHordeOpenAI(
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(
-    resolvedModel,
-    promptMessages,
-  );
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const hordeModel = resolvedModel.startsWith("aihorde/")
-    ? resolvedModel.slice(8)
-    : resolvedModel;
+  const hordeModel = resolvedModel.startsWith("aihorde/") ? resolvedModel.slice(8) : resolvedModel;
 
   state.currentRequestMessages = promptMessages;
 
@@ -24696,10 +21610,7 @@ async function callAIHordeOpenAI(
 
   const hordeApiMethod = String(state.settings.hordeApiMethod || "native").toLowerCase();
   const baseUrl = hordeApiMethod === "openai" ? "https://oai.aihorde.net" : "https://stablehorde.net";
-  const streamEnabled =
-    options && Object.prototype.hasOwnProperty.call(options, "forceStream")
-      ? Boolean(options.forceStream)
-      : !!state.settings.streamEnabled;
+  const streamEnabled = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
 
   const headers = {
     "Content-Type": "application/json",
@@ -24722,11 +21633,9 @@ async function callAIHordeOpenAI(
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
     temperature: isTitleGeneration
-      ? (state.settings.autoTitleTemperature ??
-        DEFAULT_SETTINGS.autoTitleTemperature)
+      ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature)
       : isSummarization
-        ? (state.settings.summaryTemperature ??
-          DEFAULT_SETTINGS.summaryTemperature)
+        ? (state.settings.summaryTemperature ?? DEFAULT_SETTINGS.summaryTemperature)
         : clampTemperature(state.settings.temperature),
     top_p: Number(state.settings.topP) || 1,
     frequency_penalty: 0,
@@ -24833,7 +21742,9 @@ async function callAIHordeOpenAI(
               content += delta;
               if (typeof onChunk === "function") onChunk(delta);
             }
-          } catch { /* ignore malformed final line */ }
+          } catch {
+            /* ignore malformed final line */
+          }
         }
       }
 
@@ -24903,24 +21814,13 @@ async function callAIHordeOpenAI(
     }
   } catch (err) {
     if (err?.name === "AbortError") throw err;
-    throw new Error(
-      `AI Horde OpenAI request failed: ${err?.message || "Unknown error"}`,
-    );
+    throw new Error(`AI Horde OpenAI request failed: ${err?.message || "Unknown error"}`);
   }
 }
 
-async function callAIHorde(
-  systemPrompt,
-  history,
-  model,
-  onChunk = null,
-  signal = null,
-  options = {},
-) {
+async function callAIHorde(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
   const resolvedModel = resolveModelForRequest(model);
-  const hordeModel = resolvedModel.startsWith("aihorde/")
-    ? resolvedModel.slice(8)
-    : resolvedModel;
+  const hordeModel = resolvedModel.startsWith("aihorde/") ? resolvedModel.slice(8) : resolvedModel;
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
@@ -24950,18 +21850,11 @@ async function callAIHorde(
       .filter((m) => {
         // Filter out empty assistant messages (unless no user messages exist)
         if (m.role === "assistant" && !String(m.content || "").trim()) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
-        if (
-          m.role === "assistant" &&
-          String(m.content || "").trim() === NO_CONTENT_RETURNED
-        ) {
-          const hasUserMessage = history.some(
-            (msg) => msg.role === "user" && String(msg.content || "").trim(),
-          );
+        if (m.role === "assistant" && String(m.content || "").trim() === NO_CONTENT_RETURNED) {
+          const hasUserMessage = history.some((msg) => msg.role === "user" && String(msg.content || "").trim());
           return hasUserMessage;
         }
         return true;
@@ -24974,9 +21867,7 @@ async function callAIHorde(
 
   const nonSystemMessages = messages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
-  const needsContinuePrompt =
-    nonSystemMessages.length === 0 ||
-    (lastMessage && lastMessage.role === "assistant");
+  const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
     messages.push({ role: "user", content: "Continue" });
   }
@@ -25018,7 +21909,7 @@ async function callAIHorde(
       headers: {
         "Content-Type": "application/json",
         "Client-Agent": "rp-llm-backend:1.0:0",
-        "apikey": hordeApiKey || "0000000000",
+        apikey: hordeApiKey || "0000000000",
       },
       body: JSON.stringify(hordeRequest),
       signal,
@@ -25046,16 +21937,16 @@ async function callAIHorde(
     const workerName = result.generations?.[0]?.worker_name || "";
 
     let content = generatedText;
-      let stoppedByStopString = false;
-      let stopStrings = null;
-      if (isTitleGeneration) {
-        stopStrings = getAutoTitleStopStrings();
-      } else if (isSummarization) {
-        stopStrings = getSummaryStopStrings();
-      } else {
-        stopStrings = getStopStrings();
-      }
-      if (stopStrings && stopStrings.length > 0) {
+    let stoppedByStopString = false;
+    let stopStrings = null;
+    if (isTitleGeneration) {
+      stopStrings = getAutoTitleStopStrings();
+    } else if (isSummarization) {
+      stopStrings = getSummaryStopStrings();
+    } else {
+      stopStrings = getStopStrings();
+    }
+    if (stopStrings && stopStrings.length > 0) {
       const truncation = truncateAtStopString(content, stopStrings);
       if (truncation.stopped) {
         content = truncation.content;
@@ -25070,9 +21961,7 @@ async function callAIHorde(
       }
     }
 
-    const systemMessages = messages
-      .filter((msg) => msg.role === "system")
-      .map((msg) => ({ role: msg.role, content: msg.content }));
+    const systemMessages = messages.filter((msg) => msg.role === "system").map((msg) => ({ role: msg.role, content: msg.content }));
 
     return {
       content,
@@ -25158,16 +22047,13 @@ async function pollAIHordeResult(requestId, baseUrl, apiKey, signal) {
       throw new DOMException("Aborted", "AbortError");
     }
 
-    const statusRes = await fetch(
-      `${baseUrl}/api/v2/generate/text/status/${requestId}`,
-      {
-        headers: {
-          "Client-Agent": "rp-llm-backend:1.0:0",
-          apikey: apiKey || "0000000000",
-        },
-        signal,
+    const statusRes = await fetch(`${baseUrl}/api/v2/generate/text/status/${requestId}`, {
+      headers: {
+        "Client-Agent": "rp-llm-backend:1.0:0",
+        apikey: apiKey || "0000000000",
       },
-    );
+      signal,
+    });
 
     if (!statusRes.ok) {
       throw new Error(`AI Horde status check failed: ${statusRes.status}`);
@@ -25180,9 +22066,7 @@ async function pollAIHordeResult(requestId, baseUrl, apiKey, signal) {
     }
 
     if (statusData.faulted === true) {
-      throw new Error(
-        `AI Horde request faulted: ${statusData.errors?.join(", ") || "Unknown error"}`,
-      );
+      throw new Error(`AI Horde request faulted: ${statusData.errors?.join(", ") || "Unknown error"}`);
     }
   }
 
@@ -25277,9 +22161,7 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal, optio
 
       const finishReason = data?.choices?.[0]?.finish_reason || "unknown";
       const provider = data?.provider || data?.model || "unknown";
-      throw new Error(
-        `Empty assistant content (finish_reason: ${finishReason}, provider: ${provider})`,
-      );
+      throw new Error(`Empty assistant content (finish_reason: ${finishReason}, provider: ${provider})`);
     } catch (err) {
       lastError = err;
       if (!shouldRetryError(err, attempt, attempts)) throw err;
@@ -25307,9 +22189,7 @@ async function fetchCompletionResponse(body, signal) {
   }
 
   const proxyUrl = "/api/chat-completions";
-  const fallbackOnProxyStatus = new Set([
-    400, 401, 402, 404, 408, 413, 422, 429, 500, 502, 503,
-  ]);
+  const fallbackOnProxyStatus = new Set([400, 401, 402, 404, 408, 413, 422, 429, 500, 502, 503]);
   try {
     const proxyRes = await fetch(proxyUrl, {
       method: "POST",
@@ -25319,11 +22199,7 @@ async function fetchCompletionResponse(body, signal) {
       body: JSON.stringify(body),
       signal,
     });
-    if (
-      proxyRes.status !== 404 &&
-      proxyRes.status !== 405 &&
-      (!fallbackOnProxyStatus.has(proxyRes.status) || !CONFIG.apiKey)
-    ) {
+    if (proxyRes.status !== 404 && proxyRes.status !== 405 && (!fallbackOnProxyStatus.has(proxyRes.status) || !CONFIG.apiKey)) {
       return proxyRes;
     }
   } catch {
@@ -25331,9 +22207,7 @@ async function fetchCompletionResponse(body, signal) {
   }
 
   if (!CONFIG.apiKey) {
-    throw new Error(
-      "Missing OpenRouter API key. Set it in Settings or provide server env OPENROUTER_API_KEY.",
-    );
+    throw new Error("Missing OpenRouter API key. Set it in Settings or provide server env OPENROUTER_API_KEY.");
   }
 
   return fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -25414,10 +22288,7 @@ async function readStreamedCompletion(res, fallbackModel, onChunk, options = {})
         const chunkNativeFinish = String(choice?.native_finish_reason || "");
         if (chunkFinish) finishReason = chunkFinish;
         if (chunkNativeFinish) nativeFinishReason = chunkNativeFinish;
-        if (
-          chunkFinish.toLowerCase() === "content_filter" ||
-          chunkNativeFinish.toLowerCase() === "content_filter"
-        ) {
+        if (chunkFinish.toLowerCase() === "content_filter" || chunkNativeFinish.toLowerCase() === "content_filter") {
           truncatedByFilter = true;
           finishReason = "content_filter";
           nativeFinishReason = chunkNativeFinish || chunkFinish;
@@ -25467,10 +22338,7 @@ async function readStreamedCompletion(res, fallbackModel, onChunk, options = {})
         const chunkNativeFinish = String(choice?.native_finish_reason || "");
         if (chunkFinish) finishReason = chunkFinish;
         if (chunkNativeFinish) nativeFinishReason = chunkNativeFinish;
-        if (
-          chunkFinish.toLowerCase() === "content_filter" ||
-          chunkNativeFinish.toLowerCase() === "content_filter"
-        ) {
+        if (chunkFinish.toLowerCase() === "content_filter" || chunkNativeFinish.toLowerCase() === "content_filter") {
           truncatedByFilter = true;
           finishReason = "content_filter";
           nativeFinishReason = chunkNativeFinish || chunkFinish;
@@ -25530,8 +22398,7 @@ async function fetchGenerationDetails(generationId, signal) {
       });
       if (res.ok) return { data: await res.json(), debug };
       debug.push({ source: "direct", endpoint, attempt, status: res.status });
-      const shouldRetry =
-        res.status === 404 || res.status === 408 || res.status === 409;
+      const shouldRetry = res.status === 404 || res.status === 408 || res.status === 409;
       if (shouldRetry && attempt < 4) {
         await sleep(getRetryDelayMs(attempt));
         continue;
@@ -25559,11 +22426,7 @@ function shouldRetryError(error, attempt, attempts) {
   if (isAbortError(error)) return false;
   const msg = String(error?.message || "").toLowerCase();
   const status = Number(error?.httpStatus || 0);
-  if (
-    msg.includes("failed to fetch") ||
-    msg.includes("network") ||
-    msg.includes("timeout")
-  ) {
+  if (msg.includes("failed to fetch") || msg.includes("network") || msg.includes("timeout")) {
     return true;
   }
   if (status === 408 || status === 409 || status === 429) return true;
@@ -25609,19 +22472,28 @@ function clampTemperature(value) {
 function getStopStrings() {
   const raw = state.settings.stopStrings || "";
   if (!raw.trim()) return null;
-  return raw.split(",").map((s) => s.trimStart()).filter(Boolean);
+  return raw
+    .split(",")
+    .map((s) => s.trimStart())
+    .filter(Boolean);
 }
 
 function getAutoTitleStopStrings() {
   const raw = state.settings.autoTitleStopStrings || "";
   if (!raw.trim()) return null;
-  return raw.split(",").map((s) => s.trimStart()).filter(Boolean);
+  return raw
+    .split(",")
+    .map((s) => s.trimStart())
+    .filter(Boolean);
 }
 
 function getSummaryStopStrings() {
   const raw = state.settings.summaryStopStrings || "";
   if (!raw.trim()) return null;
-  return raw.split(",").map((s) => s.trimStart()).filter(Boolean);
+  return raw
+    .split(",")
+    .map((s) => s.trimStart())
+    .filter(Boolean);
 }
 
 function findStopStringIndex(content, stopStrings) {
@@ -25800,12 +22672,7 @@ function updateModelPill() {
   const homePill = document.getElementById("home-model-pill");
   if (!chatPill && !homePill) return;
   const model = resolveModelForRequest(state.settings.model);
-  const provider =
-    state.lastUsedModel &&
-    state.lastUsedProvider &&
-    String(state.lastUsedModel) === String(model)
-      ? ` (${state.lastUsedProvider})`
-      : "";
+  const provider = state.lastUsedModel && state.lastUsedProvider && String(state.lastUsedModel) === String(model) ? ` (${state.lastUsedProvider})` : "";
   const text = tf("modelPill", { model: `${model}${provider}` });
   if (chatPill) chatPill.textContent = text;
   if (homePill) homePill.textContent = text;
@@ -25825,9 +22692,7 @@ function scheduleThreadBudgetIndicatorUpdate() {
 async function updateThreadBudgetIndicator() {
   const pill = document.getElementById("chat-budget-pill");
   if (!pill) return;
-  const isChatViewActive = document
-    .getElementById("chat-view")
-    ?.classList.contains("active");
+  const isChatViewActive = document.getElementById("chat-view")?.classList.contains("active");
   if (!isChatViewActive || !currentThread || !currentCharacter) {
     pill.textContent = "Max out: -";
     pill.classList.remove("warn", "danger");
@@ -25842,10 +22707,8 @@ async function updateThreadBudgetIndicator() {
   const inSimulationHistory = getInSimulationMessages(conversationHistory, {
     includeOoc,
   });
-  const includeOneTimeExtra =
-    shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
-  const previousPendingPersonaInjection =
-    state.pendingPersonaInjectionPersonaId;
+  const includeOneTimeExtra = shouldIncludeOneTimeExtraPrompt(inSimulationHistory);
+  const previousPendingPersonaInjection = state.pendingPersonaInjectionPersonaId;
   let systemPrompt = "";
   let personaInjectionForEndMessages = null;
   try {
@@ -25866,14 +22729,7 @@ async function updateThreadBudgetIndicator() {
     ...inSimulationHistory.map((m) => {
       const role = normalizeApiRole(m.apiRole || m.role);
       let content = m.content;
-      if (
-        role === "user" &&
-        currentCharacter?.personaPrefixEnabled !== false &&
-        m.senderName &&
-        m.senderName !== "You" &&
-        currentThread?.oocModeEnabled !== true &&
-        m.ooc !== true
-      ) {
+      if (role === "user" && currentCharacter?.personaPrefixEnabled !== false && m.senderName && m.senderName !== "You" && currentThread?.oocModeEnabled !== true && m.ooc !== true) {
         content = `(As ${m.senderName}): ${content}`;
       }
       return { role, content };
@@ -25886,17 +22742,10 @@ async function updateThreadBudgetIndicator() {
     });
   }
 
-  const pendingInput = String(
-    document.getElementById("user-input")?.value || "",
-  ).trim();
+  const pendingInput = String(document.getElementById("user-input")?.value || "").trim();
   if (pendingInput) {
     let pendingContent = pendingInput;
-    if (
-      currentCharacter?.personaPrefixEnabled !== false &&
-      currentPersona?.name &&
-      currentPersona.name !== "You" &&
-      currentThread?.oocModeEnabled !== true
-    ) {
+    if (currentCharacter?.personaPrefixEnabled !== false && currentPersona?.name && currentPersona.name !== "You" && currentThread?.oocModeEnabled !== true) {
       pendingContent = `(As ${currentPersona.name}): ${pendingInput}`;
     }
     messages.push({ role: "user", content: pendingContent });
@@ -25906,10 +22755,7 @@ async function updateThreadBudgetIndicator() {
   const userMax = clampMaxTokens(state.settings.maxTokens);
   const contextWindow = resolveModelContextWindow(resolvedModel);
   const promptTokens = estimatePromptTokens(messages);
-  const effectiveMax = computeEffectiveMaxTokensForRequest(
-    resolvedModel,
-    messages,
-  );
+  const effectiveMax = computeEffectiveMaxTokensForRequest(resolvedModel, messages);
 
   pill.textContent = `Max out: ${effectiveMax}`;
   pill.classList.remove("warn", "danger");
@@ -25948,9 +22794,7 @@ function extractFinishMeta(payload) {
   const choice = payload?.choices?.[0] || {};
   const finishReason = String(choice?.finish_reason || "");
   const nativeFinishReason = String(choice?.native_finish_reason || "");
-  const truncatedByFilter =
-    finishReason.toLowerCase() === "content_filter" ||
-    nativeFinishReason.toLowerCase() === "content_filter";
+  const truncatedByFilter = finishReason.toLowerCase() === "content_filter" || nativeFinishReason.toLowerCase() === "content_filter";
   return { finishReason, nativeFinishReason, truncatedByFilter };
 }
 
@@ -26050,23 +22894,14 @@ function markdownToHtml(input) {
   const allowHtml = state.settings.allowMessageHtml === true;
   let html = allowHtml ? String(input) : escapeHtml(input);
 
-  html = html.replace(
-    /```([\s\S]*?)```/g,
-    (_m, code) => `<pre><code>${code}</code></pre>`,
-  );
+  html = html.replace(/```([\s\S]*?)```/g, (_m, code) => `<pre><code>${code}</code></pre>`);
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-  html = html.replace(
-    /\*\*([^*]+)\*\*/g,
-    '<strong class="md-strong">$1</strong>',
-  );
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="md-strong">$1</strong>');
   html = html.replace(/\*([^*]+)\*/g, '<em class="md-em">$1</em>');
   html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.*)$/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.*)$/gm, "<h1>$1</h1>");
-  html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
-  );
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
   const blocks = html
     .split(/\n\n+/)
@@ -26135,19 +22970,14 @@ function parsePostProcessingRules(rawJson) {
   try {
     const parsed = JSON.parse(rawJson || "[]");
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (r) =>
-        r && typeof r.pattern === "string" && typeof r.replacement === "string",
-    );
+    return parsed.filter((r) => r && typeof r.pattern === "string" && typeof r.replacement === "string");
   } catch {
     return [];
   }
 }
 
 function applySummaryMessagePreProcessing(text) {
-  const rules = parseSummaryPreProcessingRules(
-    state.settings.summaryMessagesPreProcessingJson,
-  );
+  const rules = parseSummaryPreProcessingRules(state.settings.summaryMessagesPreProcessingJson);
   if (rules.length === 0) return text;
   let out = text;
   for (const rule of rules) {
@@ -26165,28 +22995,18 @@ function parseSummaryPreProcessingRules(rawJson) {
   try {
     const parsed = JSON.parse(rawJson || "[]");
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (r) =>
-        r && typeof r.pattern === "string" && typeof r.replacement === "string",
-    );
+    return parsed.filter((r) => r && typeof r.pattern === "string" && typeof r.replacement === "string");
   } catch {
     return [];
   }
 }
 
 function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+  return String(str).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
 
 function fallbackAvatar(seed, width, height) {
-  const initial = escapeHtml(
-    (seed || "?").trim().slice(0, 1).toUpperCase() || "?",
-  );
+  const initial = escapeHtml((seed || "?").trim().slice(0, 1).toUpperCase() || "?");
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'><rect width='100%' height='100%' fill='#253147'/><text x='50%' y='53%' text-anchor='middle' font-size='${Math.floor(width * 0.48)}' fill='#c2cee4' font-family='Segoe UI'>${initial}</text></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
@@ -26209,22 +23029,14 @@ async function resolveThreadBackgroundCharacter(thread) {
   if (!thread?.characterId) return null;
   const base = await db.characters.get(Number(thread.characterId));
   if (!base) return null;
-  return resolveCharacterForLanguage(
-    base,
-    thread.characterLanguage || thread.language || base.activeLanguage || "en",
-  );
+  return resolveCharacterForLanguage(base, thread.characterLanguage || thread.language || base.activeLanguage || "en");
 }
 
 async function getThreadStartImageSfxAsset(character, thread) {
   if (!character || !thread) return null;
   const lang = String(thread.characterLanguage || thread.language || "en");
-  const defs = Array.isArray(character.definitions)
-    ? character.definitions
-    : [character].filter(Boolean);
-  const def =
-    defs.find(
-      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
-    ) || defs[0];
+  const defs = Array.isArray(character.definitions) ? character.definitions : [character].filter(Boolean);
+  const def = defs.find((d) => String(d?.language || "").toLowerCase() === lang.toLowerCase()) || defs[0];
   const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
   for (const entry of sfxList) {
     if (!entry) continue;
@@ -26258,20 +23070,14 @@ async function applyChatViewBackgroundFromSfx(thread) {
       }
       return;
     }
-    const assetInfo = await getThreadStartImageSfxAsset(
-      resolvedCharacter,
-      thread,
-    );
+    const assetInfo = await getThreadStartImageSfxAsset(resolvedCharacter, thread);
     if (!assetInfo) {
       if (state.chatBackgroundAssetId || state.chatBackgroundAssetUrl) {
         clearChatViewBackground();
       }
       return;
     }
-    if (
-      state.chatBackgroundAssetId === assetInfo.assetId &&
-      state.chatBackgroundAssetUrl === assetInfo.url
-    ) {
+    if (state.chatBackgroundAssetId === assetInfo.assetId && state.chatBackgroundAssetUrl === assetInfo.url) {
       return;
     }
     chatView.style.backgroundImage = `url("${assetInfo.url}")`;
@@ -26336,13 +23142,8 @@ async function playStartSfxForCharacter(character, thread) {
 
   const lang = String(thread.characterLanguage || thread.language || "en");
   if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] Thread language:", lang);
-  const defs = Array.isArray(character.definitions)
-    ? character.definitions
-    : [character].filter(Boolean);
-  const def =
-    defs.find(
-      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
-    ) || defs[0];
+  const defs = Array.isArray(character.definitions) ? character.definitions : [character].filter(Boolean);
+  const def = defs.find((d) => String(d?.language || "").toLowerCase() === lang.toLowerCase()) || defs[0];
   const sfxList = Array.isArray(def?.sfx) ? def.sfx : [];
   if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] SFX list:", sfxList);
 
@@ -26355,9 +23156,7 @@ async function playStartSfxForCharacter(character, thread) {
     return;
   }
 
-  const sfx = sfxList.find(
-    (s) => s && String(s.trigger || "").toLowerCase() === "start",
-  );
+  const sfx = sfxList.find((s) => s && String(s.trigger || "").toLowerCase() === "start");
   if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] First SFX with trigger=start:", sfx);
   if (!sfx) {
     if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] No SFX with trigger Start, returning");
@@ -26396,21 +23195,15 @@ function normalizeSfxEntry(entry) {
     name: String(entry.name || ""),
     type: entry.type || "sound",
     trigger: trigger,
-    triggerKeywords: Array.isArray(entry.triggerKeywords)
-      ? entry.triggerKeywords
-      : [],
-    triggerKeywordsSecondary: Array.isArray(entry.triggerKeywordsSecondary)
-      ? entry.triggerKeywordsSecondary
-      : [],
+    triggerKeywords: Array.isArray(entry.triggerKeywords) ? entry.triggerKeywords : [],
+    triggerKeywordsSecondary: Array.isArray(entry.triggerKeywordsSecondary) ? entry.triggerKeywordsSecondary : [],
     triggerActionPattern: String(entry.triggerActionPattern || ""),
     triggerMatchCase: !!entry.triggerMatchCase,
     triggerMatchWholeWord: !!entry.triggerMatchWholeWord,
     triggerTurnInterval: Number(entry.triggerTurnInterval) || 0,
     triggerCooldownMs: Number(entry.triggerCooldownMs) || 0,
     eviction: eviction,
-    evictionKeywords: Array.isArray(entry.evictionKeywords)
-      ? entry.evictionKeywords
-      : [],
+    evictionKeywords: Array.isArray(entry.evictionKeywords) ? entry.evictionKeywords : [],
     evictionMessageCount: Number(entry.evictionMessageCount) || 0,
     loop: !!entry.loop,
     volume: Number(entry.volume) || 1,
@@ -26431,10 +23224,7 @@ function doesTextMatchKeywords(text, keywords, options = {}) {
     if (!keyword) continue;
     const kw = matchCase ? keyword : keyword.toLowerCase();
     if (matchWholeWord) {
-      const regex = new RegExp(
-        `\\b${escapeRegex(kw)}\\b`,
-        matchCase ? "" : "i",
-      );
+      const regex = new RegExp(`\\b${escapeRegex(kw)}\\b`, matchCase ? "" : "i");
       if (regex.test(searchText)) return true;
     } else {
       if (searchText.includes(kw)) return true;
@@ -26522,13 +23312,8 @@ async function evaluateSfxTriggers(botMessage, thread) {
   if (!character) return;
 
   const lang = String(thread.characterLanguage || thread.language || "en");
-  const defs = Array.isArray(character.definitions)
-    ? character.definitions
-    : [character];
-  const def =
-    defs.find(
-      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
-    ) || defs[0];
+  const defs = Array.isArray(character.definitions) ? character.definitions : [character];
+  const def = defs.find((d) => String(d?.language || "").toLowerCase() === lang.toLowerCase()) || defs[0];
   if (!def || !Array.isArray(def.sfx)) return;
 
   const messageText = String(botMessage.content || "");
@@ -26547,14 +23332,10 @@ async function evaluateSfxTriggers(botMessage, thread) {
     if (triggerType === "start") {
       shouldTrigger = conversationHistory.length <= 1;
     } else if (triggerType === "keyword" || triggerType === "keywords") {
-      const primaryMatch = doesTextMatchKeywords(
-        fullText,
-        entry.triggerKeywords,
-        {
-          matchCase: entry.triggerMatchCase,
-          matchWholeWord: entry.triggerMatchWholeWord,
-        },
-      );
+      const primaryMatch = doesTextMatchKeywords(fullText, entry.triggerKeywords, {
+        matchCase: entry.triggerMatchCase,
+        matchWholeWord: entry.triggerMatchWholeWord,
+      });
       const secondaryMatch =
         entry.triggerKeywordsSecondary.length === 0 ||
         doesTextMatchKeywords(fullText, entry.triggerKeywordsSecondary, {
@@ -26566,10 +23347,7 @@ async function evaluateSfxTriggers(botMessage, thread) {
 
     if (triggerType === "action" || triggerType === "action_pattern") {
       if (entry.triggerActionPattern) {
-        shouldTrigger = doesTextMatchActionPattern(
-          actionText,
-          entry.triggerActionPattern,
-        );
+        shouldTrigger = doesTextMatchActionPattern(actionText, entry.triggerActionPattern);
       }
     }
 
@@ -26608,8 +23386,7 @@ async function activateSfxEntry(entry, thread) {
       return;
     }
 
-    const sfxType =
-      entry.type || (asset.type === "sound" ? "sound" : "background");
+    const sfxType = entry.type || (asset.type === "sound" ? "sound" : "background");
 
     if (sfxType === "sound") {
       await playSfxSound(entry, asset);
@@ -26630,8 +23407,7 @@ async function activateSfxEntry(entry, thread) {
 async function playSfxSound(entry, asset) {
   if (!asset.data) return;
 
-  if (ENABLE_SFX_DEBUG_LOGS)
-    console.log("[SFX] playSfxSound called with entry:", entry);
+  if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] playSfxSound called with entry:", entry);
 
   const url = getAssetDataUrl(asset);
   if (!url) return;
@@ -26646,11 +23422,8 @@ async function playSfxSound(entry, asset) {
   const audio = new Audio(url);
   audio.loop = !!entry.loop;
   const volume = Number(entry.volume);
-  audio.volume =
-    Number.isFinite(volume) && volume >= 0 && volume <= 1 ? volume : 1;
-    if (ENABLE_SFX_DEBUG_LOGS)
-    if (ENABLE_SFX_DEBUG_LOGS)
-      console.log("[SFX] Setting audio volume to:", audio.volume);
+  audio.volume = Number.isFinite(volume) && volume >= 0 && volume <= 1 ? volume : 1;
+  if (ENABLE_SFX_DEBUG_LOGS) if (ENABLE_SFX_DEBUG_LOGS) console.log("[SFX] Setting audio volume to:", audio.volume);
 
   if (entry.fadeInMs > 0) {
     audio.volume = 0;
@@ -26749,9 +23522,7 @@ async function showSfxOverlay(entry, asset) {
   const url = asset.data ? getAssetDataUrl(asset) : asset.thumbnail;
   if (!url) return;
 
-  const existingOverlay = overlayContainer.querySelector(
-    `[data-sfx-asset-id="${entry.assetId}"]`,
-  );
+  const existingOverlay = overlayContainer.querySelector(`[data-sfx-asset-id="${entry.assetId}"]`);
   if (existingOverlay) return;
 
   const overlay = document.createElement("div");
@@ -26840,16 +23611,12 @@ async function swapSfxAvatar(entry, asset, thread) {
 
   thread.sfxAvatarUrl = url;
 
-  const messageElements = document.querySelectorAll(
-    `.message[data-character-id="${thread.characterId}"] .message-avatar img`,
-  );
+  const messageElements = document.querySelectorAll(`.message[data-character-id="${thread.characterId}"] .message-avatar img`);
   messageElements.forEach((img) => {
     img.src = url;
   });
 
-  const avatarElements = document.querySelectorAll(
-    `.bot-avatar[data-thread-id="${thread.id}"]`,
-  );
+  const avatarElements = document.querySelectorAll(`.bot-avatar[data-thread-id="${thread.id}"]`);
   avatarElements.forEach((avatar) => {
     avatar.innerHTML = `<img src="${url}" alt="Avatar">`;
   });
@@ -26864,13 +23631,8 @@ async function evaluateSfxEvictions(botMessage, thread) {
   if (!character) return;
 
   const lang = String(thread.characterLanguage || thread.language || "en");
-  const defs = Array.isArray(character.definitions)
-    ? character.definitions
-    : [character];
-  const def =
-    defs.find(
-      (d) => String(d?.language || "").toLowerCase() === lang.toLowerCase(),
-    ) || defs[0];
+  const defs = Array.isArray(character.definitions) ? character.definitions : [character];
+  const def = defs.find((d) => String(d?.language || "").toLowerCase() === lang.toLowerCase()) || defs[0];
   if (!def || !Array.isArray(def.sfx)) return;
 
   const messageText = String(botMessage.content || "");
@@ -26878,9 +23640,7 @@ async function evaluateSfxEvictions(botMessage, thread) {
   const activeAssetIds = state.sfx.activeEntries.map((e) => e.assetId);
 
   for (const activeEntry of [...state.sfx.activeEntries]) {
-    const rawEntry = def.sfx.find(
-      (e) => Number(e.assetId) === activeEntry.assetId,
-    );
+    const rawEntry = def.sfx.find((e) => Number(e.assetId) === activeEntry.assetId);
     if (!rawEntry) {
       await deactivateSfxEntry(activeEntry);
       continue;
@@ -26906,10 +23666,7 @@ async function evaluateSfxEvictions(botMessage, thread) {
     if (evictionType === "message_count" || evictionType === "messagecount") {
       incrementSfxMessageCount(entryKey);
       const count = getSfxMessageCount(entryKey);
-      if (
-        entry.evictionMessageCount > 0 &&
-        count >= entry.evictionMessageCount
-      ) {
+      if (entry.evictionMessageCount > 0 && count >= entry.evictionMessageCount) {
         shouldEvict = true;
         resetSfxMessageCount(entryKey);
       }
@@ -26934,8 +23691,7 @@ async function deactivateSfxEntry(entry) {
 
   try {
     const asset = await db.assets.get(assetId);
-    const sfxType =
-      entry.type || (asset?.type === "sound" ? "sound" : "background");
+    const sfxType = entry.type || (asset?.type === "sound" ? "sound" : "background");
 
     if (sfxType === "sound") {
       if (state.sfx.playingAssetId === assetId && state.sfx.currentAudio) {
@@ -27003,9 +23759,7 @@ function renderActiveSfxPanel() {
   list.querySelectorAll("[data-evict-sfx]").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const assetId = Number(e.target.dataset.evictSfx);
-      const entry = state.sfx.activeEntries.find(
-        (ent) => ent.assetId === assetId,
-      );
+      const entry = state.sfx.activeEntries.find((ent) => ent.assetId === assetId);
       if (entry) {
         await deactivateSfxEntry(entry);
       }
