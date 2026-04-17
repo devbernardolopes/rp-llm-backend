@@ -2095,14 +2095,10 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.2em;
-  height: 1.2em;
+  width: 1.2rem;
+  height: 1.2rem;
   margin-left: 2px;
-  font-size: inherit;
-  font-style: italic;
-  font-weight: 600;
-  color: #1a73e8;
-  background: #e8f0fe;
+  font-size: 0.8rem;
   border: 1px solid #d4e4fc;
   border-radius: 50%;
   cursor: pointer;
