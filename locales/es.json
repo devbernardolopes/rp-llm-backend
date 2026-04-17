@@ -814,5 +814,7 @@
   "resetAppDataConfirm": "Esto eliminará TODOS los personajes, hilos, lorebooks, personas, instrucciones de escritura, activos y configuraciones. Esta acción no se puede deshacer. ¿Está seguro?",
   "resetAppDataSuccess": "Los datos de la aplicación se han restablecido.",
   "resetAppDataFailed": "Error al restablecer los datos de la aplicación: {error}",
-  "apply": "Aplicar"
+  "apply": "Aplicar",
+  "collapseAll": "Contraer todo",
+  "expandAll": "Expandir todo"
 }

@@ -819,5 +819,7 @@
   "resetAppDataConfirm": "This will delete ALL characters, threads, lorebooks, personas, writing instructions, assets, and settings. This action cannot be undone. Are you sure?",
   "resetAppDataSuccess": "App data has been reset.",
   "resetAppDataFailed": "Failed to reset app data: {error}",
-  "apply": "Apply"
+  "apply": "Apply",
+  "collapseAll": "Collapse All",
+  "expandAll": "Expand All"
 }

@@ -2,6 +2,28 @@
 let currentThread = null;
 let conversationHistory = [];
 let currentPersona = null;
+let loreEntriesExpanded = true;
+
+function toggleAllLoreEntries() {
+  loreEntriesExpanded = !loreEntriesExpanded;
+  const btn = document.getElementById("toggle-all-lore-entries-btn");
+  const root = document.getElementById("lore-entries-list");
+  if (btn && root) {
+    btn.textContent = loreEntriesExpanded
+      ? t("collapseAll") || "Collapse All"
+      : t("expandAll") || "Expand All";
+    root.querySelectorAll(".lore-entry-card").forEach((card) => {
+      const head = card.querySelector(".lore-entry-title");
+      const body = card.querySelector(".lore-entry-body");
+      const icon = head?.querySelector(".lore-entry-icon");
+      if (head && body && icon) {
+        head.setAttribute("aria-expanded", loreEntriesExpanded ? "true" : "false");
+        body.classList.toggle("collapsed", !loreEntriesExpanded);
+        icon.textContent = loreEntriesExpanded ? "▾" : "▴";
+      }
+    });
+  }
+}
 
 // Expose to window for TTS module access (using getters for live values)
 Object.defineProperty(window, "currentCharacter", {
@@ -1743,6 +1765,9 @@ function setupEvents() {
       addLoreEntryEditor();
       renderLoreEntryEditors();
     });
+  document
+    .getElementById("toggle-all-lore-entries-btn")
+    ?.addEventListener("click", toggleAllLoreEntries);
   document
     .getElementById("save-lore-editor-btn")
     .addEventListener("click", () => saveLorebookFromEditor({ close: true }));

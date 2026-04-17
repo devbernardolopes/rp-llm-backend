@@ -814,5 +814,7 @@
   "resetAppDataConfirm": "Questo eliminera TUTTI i personaggi, thread, lorebook, persone, istruzioni di scrittura, asset e impostazioni. Questa azione non puo essere annullata. Sei sicuro?",
   "resetAppDataSuccess": "I dati dell'app sono stati ripristinati.",
   "resetAppDataFailed": "Errore nel ripristino dei dati dell'app: {error}",
-  "apply": "Applica"
+  "apply": "Applica",
+  "collapseAll": "Comprimi tutto",
+  "expandAll": "Espandi tutto"
 }
