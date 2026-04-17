@@ -99,18 +99,18 @@ body {
     flex-direction: row;
     --left-pane-width: 0;
   }
-  
+
   #app-shell.pane-mobile-open {
     flex-direction: row;
   }
-  
+
   #left-pane {
     width: 0 !important;
     min-width: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
   }
-  
+
   #left-pane.mobile-open {
     width: min(85vw, 320px) !important;
     min-width: min(85vw, 320px) !important;
@@ -174,7 +174,6 @@ body {
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
-
   .chat-input-wrapper {
     position: fixed;
     bottom: 0;
@@ -209,7 +208,9 @@ body {
   min-width: 74px;
   min-height: 0;
   overflow: visible;
-  transition: width 0.2s ease, transform 0.2s ease;
+  transition:
+    width 0.2s ease,
+    transform 0.2s ease;
   position: relative;
   z-index: 30;
 }
@@ -225,7 +226,9 @@ body {
   min-width: 74px;
   min-height: 0;
   overflow: visible;
-  transition: width 0.2s ease, transform 0.2s ease;
+  transition:
+    width 0.2s ease,
+    transform 0.2s ease;
   position: relative;
   z-index: 30;
 }
@@ -318,7 +321,9 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 100;
-  transition: background 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.2s;
 }
 
 .pane-overlay-toggle:hover {
@@ -377,7 +382,7 @@ body {
 
 .pane-scenara-title {
   margin: 0;
-  font-family: 'Cinzel', serif;
+  font-family: "Cinzel", serif;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0.2em;
@@ -504,7 +509,9 @@ body {
   min-width: 0;
   max-width: 100%;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .thread-row > * {
@@ -877,8 +884,15 @@ body {
 }
 
 @keyframes stt-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); }
-  50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); }
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 8px rgba(255, 68, 68, 0);
+  }
 }
 
 .icon-btn:disabled,
@@ -913,7 +927,6 @@ body {
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-  
 }
 
 #settings-import-btn {
@@ -1011,7 +1024,6 @@ textarea {
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-  
 }
 
 .primary-btn {
@@ -1089,57 +1101,57 @@ textarea {
     flex-direction: row;
     --left-pane-width: 0;
   }
-  
+
   #app-shell.pane-mobile-open {
     flex-direction: row;
   }
-  
+
   #left-pane {
     width: 0 !important;
     min-width: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
   }
-  
+
   #left-pane.mobile-open {
     width: min(85vw, 320px) !important;
     min-width: min(85vw, 320px) !important;
     padding: 12px !important;
     overflow: auto !important;
   }
-  
+
   .mobile-pane-toggle:not(.mobile-pane-toggle-chat) {
     display: flex !important;
   }
-  
+
   .mobile-pane-toggle.mobile-pane-toggle-chat {
     display: flex !important;
   }
-  
+
   #mobile-pane-toggle.hidden {
     display: flex !important;
     opacity: 0.5;
     pointer-events: none;
   }
-  
+
   .mobile-pane-toggle-chat.hidden {
     display: flex !important;
     opacity: 0.5;
     pointer-events: none;
   }
-  
-#main-view {
+
+  #main-view {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
   }
-  
+
   .view.active {
     overflow-y: auto;
     flex: 1;
     min-height: 0;
   }
-  
+
   .character-grid {
     overflow-y: auto;
     flex: 1;
@@ -1227,7 +1239,7 @@ textarea {
 .main-header h1 {
   margin: 0;
   margin-right: auto;
-  font-family: 'Cinzel', serif;
+  font-family: "Cinzel", serif;
   font-size: clamp(2.2rem, 6vw, 3.8rem);
   font-weight: 400;
   letter-spacing: 0.35em;
@@ -1454,7 +1466,9 @@ textarea {
   padding: 4px 10px;
   min-width: 36px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .pagination-pages .pagination-page-btn {
@@ -1510,7 +1524,10 @@ textarea {
   position: relative;
   overflow: visible;
   contain: paint;
-  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    background 0.15s ease;
 }
 
 .character-card:hover {
@@ -1615,7 +1632,9 @@ textarea {
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .character-pin-btn:hover {
@@ -1836,7 +1855,10 @@ textarea {
   font-size: 18px;
   cursor: pointer;
   opacity: 0.4;
-  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -1861,7 +1883,6 @@ textarea {
   background-repeat: no-repeat;
   background-position: center center;
   background-color: transparent;
-  
 }
 
 .character-id {
@@ -2086,8 +2107,11 @@ textarea {
   border-radius: 50%;
   cursor: pointer;
   opacity: 0.8;
-  transition: opacity 0.2s, color 0.2s, background 0.2s;
-  
+  transition:
+    opacity 0.2s,
+    color 0.2s,
+    background 0.2s;
+
   flex-shrink: 0;
 }
 
@@ -2187,7 +2211,8 @@ textarea {
 }
 
 @keyframes new-chat-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(45, 90, 61, 0.9);
   }
@@ -2474,7 +2499,9 @@ textarea {
   padding: 4px;
   font-size: 14px;
   color: #666;
-  transition: color 0.15s, transform 0.15s;
+  transition:
+    color 0.15s,
+    transform 0.15s;
 }
 
 .model-dropdown-option .model-star:hover {
@@ -2558,7 +2585,7 @@ textarea {
 .chat-log.chat-messages-centered .chat-row {
   justify-content: center;
   width: 100%;
- }
+}
 
 @keyframes shimmer {
   0% {
@@ -2570,7 +2597,8 @@ textarea {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
   }
   50% {
@@ -2829,7 +2857,6 @@ textarea {
   height: 12px;
   display: block;
   margin: 0 auto;
-  
 }
 
 .message-controls .msg-tts-btn.tts-loading {
@@ -3156,7 +3183,9 @@ textarea {
   border: 1px solid transparent;
   border-radius: 8px;
   color: var(--text);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 #user-input-container:focus-within {
@@ -4202,7 +4231,9 @@ textarea {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border 0.2s, background 0.2s;
+  transition:
+    border 0.2s,
+    background 0.2s;
   padding: 0;
 }
 
@@ -4572,7 +4603,9 @@ textarea {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
   gap: 4px;
   background: transparent;
   color: inherit;
@@ -4730,7 +4763,9 @@ textarea {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
   gap: 8px;
   background: transparent;
   color: inherit;
@@ -5789,7 +5824,9 @@ textarea {
   padding: 3px 10px;
   font-size: 11px;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .model3d-expression-btn.active {
