@@ -4039,6 +4039,10 @@ textarea {
   display: none;
 }
 
+.settings-group {
+  display: block;
+}
+
 .settings-group.hidden {
   display: none;
 }
