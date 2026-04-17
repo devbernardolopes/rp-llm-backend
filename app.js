@@ -1747,6 +1747,9 @@ function setupEvents() {
     .getElementById("save-lorebook-btn")
     .addEventListener("click", () => saveLorebookFromEditor({ close: true }));
   document
+    .getElementById("apply-lore-editor-btn")
+    ?.addEventListener("click", () => saveLorebookFromEditor({ close: false }));
+  document
     .getElementById("lore-injection-mode")
     ?.addEventListener("change", toggleSuppressionWindowField);
 

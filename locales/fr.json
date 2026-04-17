@@ -813,5 +813,6 @@
   "none": "Aucun",
   "resetAppDataConfirm": "Cela supprimera TOUS les personnages, fils, lorebooks, personas, instructions d'ecriture, actifs et parametres. Cette action est irreversible. Etes-vous sur?",
   "resetAppDataSuccess": "Les donnees de l'application ont ete reinitialisees.",
-  "resetAppDataFailed": "Echec de la reinitialisation des donnees de l'application: {error}"
+  "resetAppDataFailed": "Echec de la reinitialisation des donnees de l'application: {error}",
+  "apply": "Appliquer"
 }

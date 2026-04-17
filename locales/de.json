@@ -813,5 +813,6 @@
   "none": "Keine",
   "resetAppDataConfirm": "Dies löscht ALLE Charaktere, Threads, Lorebooks, Personas, Schreib-Anweisungen, Assets und Einstellungen. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?",
   "resetAppDataSuccess": "App-Daten wurden zurückgesetzt.",
-  "resetAppDataFailed": "App-Daten konnten nicht zurückgesetzt werden: {error}"
+  "resetAppDataFailed": "App-Daten konnten nicht zurückgesetzt werden: {error}",
+  "apply": "Anwenden"
 }

@@ -813,5 +813,6 @@
   "none": "Nenhum",
   "resetAppDataConfirm": "Isso excluira TODOS os personagens, conversas, lorebooks, personas, instrucoes de escrita, ativos e configuracoes. Esta acao nao pode ser desfeita. Tem certeza?",
   "resetAppDataSuccess": "Os dados do aplicativo foram redefinidos.",
-  "resetAppDataFailed": "Falha ao redefinir os dados do aplicativo: {error}"
+  "resetAppDataFailed": "Falha ao redefinir os dados do aplicativo: {error}",
+  "apply": "Aplicar"
 }
