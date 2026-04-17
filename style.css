@@ -913,7 +913,7 @@ body {
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-  vertical-align: middle;
+  
 }
 
 #settings-import-btn {
@@ -1011,7 +1011,7 @@ textarea {
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-  vertical-align: middle;
+  
 }
 
 .primary-btn {
@@ -1601,11 +1601,11 @@ textarea {
 
 .character-pin-btn {
   position: absolute;
-  left: 6px;
-  top: 6px;
+  left: 8px;
+  top: 8px;
   z-index: 2;
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   background: rgba(12, 18, 30, 0.86);
   border: 1px solid var(--line);
@@ -1624,8 +1624,8 @@ textarea {
 }
 
 .character-pin-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
 }
 
 .character-avatar-ribbon-wrap {
@@ -1861,7 +1861,7 @@ textarea {
   background-repeat: no-repeat;
   background-position: center center;
   background-color: transparent;
-  vertical-align: middle;
+  
 }
 
 .character-id {
@@ -2087,7 +2087,7 @@ textarea {
   cursor: pointer;
   opacity: 0.8;
   transition: opacity 0.2s, color 0.2s, background 0.2s;
-  vertical-align: middle;
+  
   flex-shrink: 0;
 }
 
@@ -2829,7 +2829,7 @@ textarea {
   height: 12px;
   display: block;
   margin: 0 auto;
-  vertical-align: middle;
+  
 }
 
 .message-controls .msg-tts-btn.tts-loading {
