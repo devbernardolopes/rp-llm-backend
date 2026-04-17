@@ -5012,6 +5012,15 @@ textarea {
   padding-bottom: 8px;
 }
 
+#lore-modal .modal-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#lore-modal .modal-body::-webkit-scrollbar {
+  display: none;
+}
+
 .lorebook-list {
   display: flex;
   flex-direction: column;
@@ -5115,6 +5124,10 @@ textarea {
   .lorebook-usage:hover::-webkit-scrollbar-thumb:hover {
     background: var(--muted);
   }
+}
+
+.lorebook-usage-label {
+  font-size: 11px;
 }
 
 .lorebook-usage-btn {
