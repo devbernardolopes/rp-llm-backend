@@ -5063,22 +5063,12 @@ textarea {
   gap: 4px;
 }
 
-.lorebook-title-row {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 8px;
-  align-items: center;
-  min-width: 0;
-}
-
 .lorebook-title {
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .lorebook-meta {
