@@ -11703,6 +11703,8 @@ async function renderLorebookManagementList() {
 
     const main = document.createElement("div");
     main.className = "lorebook-main";
+    const titleRow = document.createElement("div");
+    titleRow.className = "lorebook-title-row";
     const title = document.createElement("div");
     title.className = "lorebook-title";
     title.textContent = lorebook.name || "Untitled Lorebook";
@@ -11738,7 +11740,8 @@ async function renderLorebookManagementList() {
         usage.appendChild(chip);
       });
     }
-    main.append(title, usage);
+    titleRow.append(title, usage);
+    main.append(titleRow);
 
     const actions = document.createElement("div");
     actions.className = "lorebook-actions";
