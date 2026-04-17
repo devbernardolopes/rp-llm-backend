@@ -4039,6 +4039,10 @@ textarea {
   display: none;
 }
 
+.settings-group.hidden {
+  display: none;
+}
+
 .settings-tab-panel {
   display: flex;
   flex-direction: column;
