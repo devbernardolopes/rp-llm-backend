@@ -956,46 +956,47 @@
           </div>
 
           <div data-settings-group="defaults" class="settings-group">
-          <div class="form-field">
-            <span data-i18n="defaultAvatarScale">Default Avatar Scale (In Chat)</span>
-            <select id="default-avatar-scale">
-              <option value="1">1x</option>
-              <option value="2">2x</option>
-              <option value="3">3x</option>
-              <option value="4">4x</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <span data-i18n="defaultPersonaInjectionPlacement">Default Persona Injection Placement</span>
-            <select id="default-persona-injection-placement">
-              <option value="none" data-i18n="personaInjectionNone">None</option>
-              <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
-              <option value="once" data-i18n="personaInjectionOnce">Once</option>
-              <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
-            <select id="default-tts-provider">
-              <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
-              <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <div class="label-inline">
-              <span data-i18n="defaultTtsRate">Default TTS Rate</span>
-              <span id="default-tts-rate-value" class="muted"></span>
+            <div class="form-field">
+              <span data-i18n="defaultAvatarScale">Default Avatar Scale (In Chat)</span>
+              <select id="default-avatar-scale">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+              </select>
             </div>
-            <input id="default-tts-rate" type="range" min="0.5" max="2" step="0.1" value="1" />
+            <div class="form-field">
+              <span data-i18n="defaultPersonaInjectionPlacement">Default Persona Injection Placement</span>
+              <select id="default-persona-injection-placement">
+                <option value="none" data-i18n="personaInjectionNone">None</option>
+                <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
+                <option value="once" data-i18n="personaInjectionOnce">Once</option>
+                <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
+              <select id="default-tts-provider">
+                <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
+                <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="defaultTtsRate">Default TTS Rate</span>
+                <span id="default-tts-rate-value" class="muted"></span>
+              </div>
+              <input id="default-tts-rate" type="range" min="0.5" max="2" step="0.1" value="1" />
+            </div>
+            <div class="form-field">
+              <span data-i18n="defaultAutoTitleMinMessages"> Default min. messages for auto-title </span>
+              <input id="default-auto-title-min-messages" type="number" min="1" max="50" value="10" />
+            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="default-include-ooc" />
+              <span data-i18n="defaultIncludeOocInCompletions">Include OOC messages in completions</span>
+            </span>
           </div>
-          <div class="form-field">
-            <span data-i18n="defaultAutoTitleMinMessages"> Default min. messages for auto-title </span>
-            <input id="default-auto-title-min-messages" type="number" min="1" max="50" value="10" />
-          </div>
-          <span class="checkbox-line">
-            <input type="checkbox" id="default-include-ooc" />
-            <span data-i18n="defaultIncludeOocInCompletions">Include OOC messages in completions</span>
-          </span>
         </div>
       </div>
     </div>
@@ -1172,7 +1173,7 @@
       <div class="modal-card wide">
         <div class="modal-header">
           <h3 id="lore-editor-title" data-i18n="loreBookEditor">Lorebook Editor</h3>
-          <button class="icon-btn modal-close" data-close-modal>&times;</button>
+          <button id="lore-editor-back-btn" class="icon-btn modal-close" data-close-modal>&times;</button>
         </div>
         <div class="modal-body">
           <div class="two-col lore-editor-grid">
