@@ -403,600 +403,599 @@
               </div>
             </div>
             <div id="model-selected-meta" class="muted"></div>
-            <div id="model-roleplay-warning" class="model-warning">
-              <div class="form-field">
-                <div class="label-inline">
-                  <span class="label-with-info"><span data-i18n="maxTokensLabel">Max Completion Tokens</span><button type="button" class="info-btn" data-info="maxTokens">i</button></span>
-                  <span id="max-tokens-value" class="muted"></span>
-                </div>
-                <input id="max-tokens-slider" type="range" min="512" max="8192" step="64" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span class="label-with-info"><span data-i18n="temperatureLabel">Temperature</span><button type="button" class="info-btn" data-info="temperature">i</button></span>
-                  <span id="temperature-value" class="muted"></span>
-                </div>
-                <input id="temperature-slider" type="range" min="0" max="2" step="0.05" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span class="label-with-info"><span data-i18n="topPLabel">Top P</span><button type="button" class="info-btn" data-info="topP">i</button></span>
-                  <span id="top-p-value" class="muted"></span>
-                </div>
-                <input id="top-p-slider" type="range" min="0" max="1" step="0.05" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span class="label-with-info"><span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span><button type="button" class="info-btn" data-info="frequencyPenalty">i</button></span>
-                  <span id="frequency-penalty-value" class="muted"></span>
-                </div>
-                <input id="frequency-penalty-slider" type="range" min="-2" max="2" step="0.1" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span class="label-with-info"><span data-i18n="presencePenaltyLabel">Presence Penalty</span><button type="button" class="info-btn" data-info="presencePenalty">i</button></span>
-                  <span id="presence-penalty-value" class="muted"></span>
-                </div>
-                <input id="presence-penalty-slider" type="range" min="-2" max="2" step="0.1" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span class="label-with-info"
-                    ><span data-i18n="completionCooldownLabel">Completion Cooldown</span><button type="button" class="info-btn" data-info="completionCooldown">i</button></span
-                  >
-                  <span id="completion-cooldown-value" class="muted"></span>
-                </div>
-                <input id="completion-cooldown-slider" type="range" min="0" max="15" step="1" />
-              </div>
-              <span class="checkbox-line">
-                <input type="checkbox" id="stream-enabled" checked />
-                <span class="label-with-info"><span data-i18n="stream">Stream</span><button type="button" class="info-btn" data-info="stream">i</button></span>
-              </span>
-              <div class="form-field">
-                <span class="label-with-info"><span data-i18n="stopStringsLabel">Stop Strings</span><button type="button" class="info-btn" data-info="stopStrings">i</button></span>
-                <input id="stop-strings" type="text" data-i18n-placeholder="placeholderStopStrings" autocomplete="off" spellcheck="false" />
-              </div>
-              <fieldset class="settings-collapsible">
-                <legend class="settings-collapsible-header">
-                  <span class="settings-collapsible-toggle">&#9656;</span>
-                  <span data-i18n="autoTitleSettings">Auto-Title</span>
-                </legend>
-                <div class="settings-collapsible-content collapsed">
-                  <div class="form-field">
-                    <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
-                    <select id="default-auto-title-provider">
-                      <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
-                      <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
-                      <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
-                      <option value="groq" data-i18n="providerGroq">Groq</option>
-                    </select>
-                  </div>
-                  <div class="form-field">
-                    <span data-i18n="autoTitleModel">Auto-Title Model</span>
-                    <select id="default-auto-title-model"></select>
-                  </div>
-                  <div class="form-field">
-                    <div class="label-inline">
-                      <span data-i18n="autoTitleTemperature">Auto-Title Temperature</span>
-                      <span id="default-auto-title-temp-value" class="muted"></span>
-                    </div>
-                    <input id="default-auto-title-temp" type="range" min="0" max="2" step="0.05" value="0.25" />
-                  </div>
-                  <div class="form-field">
-                    <span data-i18n="autoTitleStopStrings">Auto-Title Stop Strings</span>
-                    <input id="default-auto-title-stop-strings" type="text" placeholder="e.g. | stop1, stop2" />
-                  </div>
-                  <span class="checkbox-line">
-                    <input type="checkbox" id="default-auto-title-stream" />
-                    <span data-i18n="autoTitleStream">Auto-Title Stream</span>
-                  </span>
-                </div>
-              </fieldset>
-              <fieldset class="settings-collapsible">
-                <legend class="settings-collapsible-header">
-                  <span class="settings-collapsible-toggle">&#9656;</span>
-                  <span data-i18n="summarySettings">Summary</span>
-                </legend>
-                <div class="settings-collapsible-content collapsed">
-                  <div class="form-field">
-                    <span data-i18n="summaryProvider">Summary Provider</span>
-                    <select id="default-summary-provider">
-                      <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
-                      <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
-                      <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
-                      <option value="groq" data-i18n="providerGroq">Groq</option>
-                    </select>
-                  </div>
-                  <div class="form-field">
-                    <span data-i18n="summaryModel">Summary Model</span>
-                    <select id="default-summary-model"></select>
-                  </div>
-                  <div class="form-field">
-                    <div class="label-inline">
-                      <span data-i18n="summaryTemperature">Summary Temperature</span>
-                      <span id="default-summary-temp-value" class="muted"></span>
-                    </div>
-                    <input id="default-summary-temp" type="range" min="0" max="2" step="0.05" value="0.25" />
-                  </div>
-                  <div class="form-field">
-                    <span data-i18n="summaryStopStrings">Summary Stop Strings</span>
-                    <input id="default-summary-stop-strings" type="text" placeholder="e.g. | stop1, stop2" />
-                  </div>
-                  <span class="checkbox-line">
-                    <input type="checkbox" id="default-summary-stream" />
-                    <span data-i18n="summaryStream">Summary Stream</span>
-                  </span>
-                </div>
-              </fieldset>
-
-              <div class="form-field">
-                <span class="label-with-info"><span data-i18n="modelProfileLabel">Model Profile</span></span>
-                <div class="flex-row gap-2">
-                  <select id="model-profile-select" class="flex-grow">
-                    <option value="">-- Select Profile --</option>
-                  </select>
-                  <button id="new-model-profile-btn" class="secondary-btn" data-i18n="newProfileBtn">New Profile</button>
-                </div>
-              </div>
-            </div>
-            <div id="model-profile-fields" class="hidden">
-              <div class="form-field">
-                <span data-i18n="profileNameLabel">Profile Name</span>
-                <input id="model-profile-name" type="text" autocomplete="off" />
-              </div>
-              <div class="form-field">
-                <label class="checkbox-line">
-                  <input type="checkbox" id="model-profile-load-auto" />
-                  <span data-i18n="autoLoadProfileLabel">Auto-load when model selected</span>
-                </label>
-              </div>
-              <div class="form-field">
-                <span class="label-with-info"><span data-i18n="profileStopStringsLabel">Profile Stop Strings</span></span>
-                <input id="model-profile-stop-strings" type="text" autocomplete="off" spellcheck="false" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span data-i18n="profileTemperatureLabel">Profile Temperature</span>
-                  <span id="profile-temperature-value" class="muted"></span>
-                </div>
-                <input id="profile-temperature-slider" type="range" min="0" max="2" step="0.05" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span data-i18n="profileTopPLabel">Profile Top P</span>
-                  <span id="profile-top-p-value" class="muted"></span>
-                </div>
-                <input id="profile-top-p-slider" type="range" min="0" max="1" step="0.05" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span data-i18n="profileFrequencyPenaltyLabel">Profile Frequency Penalty</span>
-                  <span id="profile-frequency-penalty-value" class="muted"></span>
-                </div>
-                <input id="profile-frequency-penalty-slider" type="range" min="-2" max="2" step="0.1" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span data-i18n="profilePresencePenaltyLabel">Profile Presence Penalty</span>
-                  <span id="profile-presence-penalty-value" class="muted"></span>
-                </div>
-                <input id="profile-presence-penalty-slider" type="range" min="-2" max="2" step="0.1" />
-              </div>
-              <div class="form-field">
-                <div class="label-inline">
-                  <span data-i18n="profileMaxTokensLabel">Profile Max Tokens</span>
-                  <span id="profile-max-tokens-value" class="muted"></span>
-                </div>
-                <input id="profile-max-tokens-slider" type="range" min="512" max="8192" step="64" />
-              </div>
-              <div class="button-row">
-                <button id="save-model-profile-btn" class="secondary-btn" data-i18n="saveProfileBtn">Save Profile</button>
-                <button id="delete-model-profile-btn" class="secondary-btn danger-btn" data-i18n="deleteProfileBtn">Delete Profile</button>
-              </div>
-            </div>
-          </div>
-          <div data-settings-group="appearance" class="settings-group">
+            <div id="model-roleplay-warning" class="model-warning hidden"></div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="languageLabel">Interface Language</span><button type="button" class="info-btn" data-info="language">i</button></span>
-              <select id="ui-language-select">
-                <option value="auto">Auto (browser)</option>
-                <option value="en">English</option>
-                <option value="fr">Francais</option>
-                <option value="it">Italiano</option>
-                <option value="de">Deutsch</option>
-                <option value="es">Espanol</option>
-                <option value="pt-BR">Portugues (Brasil)</option>
-              </select>
+              <div class="label-inline">
+                <span class="label-with-info"><span data-i18n="maxTokensLabel">Max Completion Tokens</span><button type="button" class="info-btn" data-info="maxTokens">i</button></span>
+                <span id="max-tokens-value" class="muted"></span>
+              </div>
+              <input id="max-tokens-slider" type="range" min="512" max="8192" step="64" />
             </div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="sttLanguageLabel">Speech-to-Text Language</span><button type="button" class="info-btn" data-info="sttLanguage">i</button></span>
-              <select id="stt-language-select">
-                <option value="en">English</option>
-                <option value="fr">Francais</option>
-                <option value="it">Italiano</option>
-                <option value="de">Deutsch</option>
-                <option value="es">Espanol</option>
-                <option value="pt-BR">Portugues (Brasil)</option>
-              </select>
+              <div class="label-inline">
+                <span class="label-with-info"><span data-i18n="temperatureLabel">Temperature</span><button type="button" class="info-btn" data-info="temperature">i</button></span>
+                <span id="temperature-value" class="muted"></span>
+              </div>
+              <input id="temperature-slider" type="range" min="0" max="2" step="0.05" />
             </div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="sttModeLabel">STT Mode</span><button type="button" class="info-btn" data-info="sttMode">i</button></span>
-              <select id="stt-mode-select">
-                <option value="push-to-talk" data-i18n="sttModePushToTalk">Push-to-Talk</option>
-                <option value="auto-stop" data-i18n="sttModeAutoStop">Auto-Stop on Silence</option>
-              </select>
+              <div class="label-inline">
+                <span class="label-with-info"><span data-i18n="topPLabel">Top P</span><button type="button" class="info-btn" data-info="topP">i</button></span>
+                <span id="top-p-value" class="muted"></span>
+              </div>
+              <input id="top-p-slider" type="range" min="0" max="1" step="0.05" />
             </div>
             <div class="form-field">
-              <span class="label-with-info"
-                ><span data-i18n="sttSilenceDurationLabel">Silence Duration (seconds)</span><button type="button" class="info-btn" data-info="sttSilenceDuration">i</button></span
-              >
-              <input type="number" id="stt-silence-duration" min="1" max="10" value="2" />
+              <div class="label-inline">
+                <span class="label-with-info"><span data-i18n="frequencyPenaltyLabel">Frequency Penalty</span><button type="button" class="info-btn" data-info="frequencyPenalty">i</button></span>
+                <span id="frequency-penalty-value" class="muted"></span>
+              </div>
+              <input id="frequency-penalty-slider" type="range" min="-2" max="2" step="0.1" />
             </div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="themeLabel">Theme</span><button type="button" class="info-btn" data-info="theme">i</button></span>
-              <select id="theme-select"></select>
-            </div>
-            <div class="form-field">
-              <span class="label-with-info"><span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span><button type="button" class="info-btn" data-info="marqueeBehavior">i</button></span>
-              <select id="marquee-behavior-select">
-                <option value="disabled" data-i18n="marqueeBehaviorDisabled">Disabled</option>
-                <option value="hover" data-i18n="marqueeBehaviorOnHover">On Hover</option>
-                <option value="always" data-i18n="marqueeBehaviorAlways">Always</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span class="label-with-info"><span data-i18n="paginationResultsPerPage">Cards per page</span><button type="button" class="info-btn" data-info="characterCardsPerPage">i</button></span>
-              <select id="character-cards-per-page">
-                <option value="0" data-i18n="paginationUnlimited">Unlimited</option>
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span class="label-with-info"
-                ><span data-i18n="botCardAvatarEffectLabel">BOT Card Avatar Effect</span><button type="button" class="info-btn" data-info="botCardAvatarEffect">i</button></span
-              >
-              <select id="bot-card-avatar-effect">
-                <option value="none" data-i18n="botCardAvatarEffectNone">None</option>
-                <option value="carousel" data-i18n="botCardAvatarEffectCarousel">Carousel</option>
-                <option value="hover" data-i18n="botCardAvatarEffectHover">On Hover</option>
-              </select>
+              <div class="label-inline">
+                <span class="label-with-info"><span data-i18n="presencePenaltyLabel">Presence Penalty</span><button type="button" class="info-btn" data-info="presencePenalty">i</button></span>
+                <span id="presence-penalty-value" class="muted"></span>
+              </div>
+              <input id="presence-penalty-slider" type="range" min="-2" max="2" step="0.1" />
             </div>
             <div class="form-field">
               <div class="label-inline">
                 <span class="label-with-info"
-                  ><span data-i18n="botCardAvatarTransitionDelayLabel">Transition Delay</span><button type="button" class="info-btn" data-info="botCardAvatarTransitionDelay">i</button></span
+                  ><span data-i18n="completionCooldownLabel">Completion Cooldown</span><button type="button" class="info-btn" data-info="completionCooldown">i</button></span
                 >
-                <span id="bot-card-avatar-transition-delay-value" class="muted"></span>
+                <span id="completion-cooldown-value" class="muted"></span>
               </div>
-              <input id="bot-card-avatar-transition-delay-slider" type="range" min="4" max="30" step="1" disabled />
+              <input id="completion-cooldown-slider" type="range" min="0" max="15" step="1" />
+            </div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="stream-enabled" checked />
+              <span class="label-with-info"><span data-i18n="stream">Stream</span><button type="button" class="info-btn" data-info="stream">i</button></span>
+            </span>
+            <div class="form-field">
+              <span class="label-with-info"><span data-i18n="stopStringsLabel">Stop Strings</span><button type="button" class="info-btn" data-info="stopStrings">i</button></span>
+              <input id="stop-strings" type="text" data-i18n-placeholder="placeholderStopStrings" autocomplete="off" spellcheck="false" />
+            </div>
+            <fieldset class="settings-collapsible">
+              <legend class="settings-collapsible-header">
+                <span class="settings-collapsible-toggle">&#9656;</span>
+                <span data-i18n="autoTitleSettings">Auto-Title</span>
+              </legend>
+              <div class="settings-collapsible-content collapsed">
+                <div class="form-field">
+                  <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
+                  <select id="default-auto-title-provider">
+                    <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
+                    <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
+                    <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
+                    <option value="groq" data-i18n="providerGroq">Groq</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <span data-i18n="autoTitleModel">Auto-Title Model</span>
+                  <select id="default-auto-title-model"></select>
+                </div>
+                <div class="form-field">
+                  <div class="label-inline">
+                    <span data-i18n="autoTitleTemperature">Auto-Title Temperature</span>
+                    <span id="default-auto-title-temp-value" class="muted"></span>
+                  </div>
+                  <input id="default-auto-title-temp" type="range" min="0" max="2" step="0.05" value="0.25" />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="autoTitleStopStrings">Auto-Title Stop Strings</span>
+                  <input id="default-auto-title-stop-strings" type="text" placeholder="e.g. | stop1, stop2" />
+                </div>
+                <span class="checkbox-line">
+                  <input type="checkbox" id="default-auto-title-stream" />
+                  <span data-i18n="autoTitleStream">Auto-Title Stream</span>
+                </span>
+              </div>
+            </fieldset>
+            <fieldset class="settings-collapsible">
+              <legend class="settings-collapsible-header">
+                <span class="settings-collapsible-toggle">&#9656;</span>
+                <span data-i18n="summarySettings">Summary</span>
+              </legend>
+              <div class="settings-collapsible-content collapsed">
+                <div class="form-field">
+                  <span data-i18n="summaryProvider">Summary Provider</span>
+                  <select id="default-summary-provider">
+                    <option value="openrouter" data-i18n="providerOpenRouter">OpenRouter</option>
+                    <option value="aihorde" data-i18n="providerAIHorde">AI Horde</option>
+                    <option value="lmstudio" data-i18n="providerLMStudio">LM Studio</option>
+                    <option value="groq" data-i18n="providerGroq">Groq</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <span data-i18n="summaryModel">Summary Model</span>
+                  <select id="default-summary-model"></select>
+                </div>
+                <div class="form-field">
+                  <div class="label-inline">
+                    <span data-i18n="summaryTemperature">Summary Temperature</span>
+                    <span id="default-summary-temp-value" class="muted"></span>
+                  </div>
+                  <input id="default-summary-temp" type="range" min="0" max="2" step="0.05" value="0.25" />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="summaryStopStrings">Summary Stop Strings</span>
+                  <input id="default-summary-stop-strings" type="text" placeholder="e.g. | stop1, stop2" />
+                </div>
+                <span class="checkbox-line">
+                  <input type="checkbox" id="default-summary-stream" />
+                  <span data-i18n="summaryStream">Summary Stream</span>
+                </span>
+              </div>
+            </fieldset>
+
+            <div class="form-field">
+              <span class="label-with-info"><span data-i18n="modelProfileLabel">Model Profile</span></span>
+              <div class="flex-row gap-2">
+                <select id="model-profile-select" class="flex-grow">
+                  <option value="">-- Select Profile --</option>
+                </select>
+                <button id="new-model-profile-btn" class="secondary-btn" data-i18n="newProfileBtn">New Profile</button>
+              </div>
+            </div>
+          </div>
+          <div id="model-profile-fields" class="hidden">
+            <div class="form-field">
+              <span data-i18n="profileNameLabel">Profile Name</span>
+              <input id="model-profile-name" type="text" autocomplete="off" />
             </div>
             <div class="form-field">
-              <span data-i18n="chatInputButtonSizeLabel">Chat Input Button Size</span>
-              <select id="chat-input-button-size-select">
-                <option value="regular" data-i18n="chatInputButtonSizeRegular">Regular</option>
-                <option value="big" data-i18n="chatInputButtonSizeBig">Big</option>
-                <option value="extra" data-i18n="chatInputButtonSizeExtra">Extra</option>
-              </select>
+              <label class="checkbox-line">
+                <input type="checkbox" id="model-profile-load-auto" />
+                <span data-i18n="autoLoadProfileLabel">Auto-load when model selected</span>
+              </label>
             </div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="botCardSizeLabel">BOT Card Size</span><button type="button" class="info-btn" data-info="botCardSize">i</button></span>
-              <select id="bot-card-size-select">
-                <option value="small" data-i18n="botCardSizeSmall">Small</option>
-                <option value="regular" data-i18n="botCardSizeRegular">Regular</option>
-                <option value="big" data-i18n="botCardSizeBig">Big</option>
-              </select>
+              <span class="label-with-info"><span data-i18n="profileStopStringsLabel">Profile Stop Strings</span></span>
+              <input id="model-profile-stop-strings" type="text" autocomplete="off" spellcheck="false" />
             </div>
             <div class="form-field">
               <div class="label-inline">
-                <span data-i18n="toastDelayLabel">Toast Delay</span>
-                <span id="toast-delay-value" class="muted"></span>
+                <span data-i18n="profileTemperatureLabel">Profile Temperature</span>
+                <span id="profile-temperature-value" class="muted"></span>
               </div>
-              <input id="toast-delay-slider" type="range" min="1000" max="10000" step="200" />
+              <input id="profile-temperature-slider" type="range" min="0" max="2" step="0.05" />
             </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="unread-sound-enabled" />
-              <span data-i18n="unreadSoundEnabled">Play sound for unread messages</span>
-            </span>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="profileTopPLabel">Profile Top P</span>
+                <span id="profile-top-p-value" class="muted"></span>
+              </div>
+              <input id="profile-top-p-slider" type="range" min="0" max="1" step="0.05" />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="profileFrequencyPenaltyLabel">Profile Frequency Penalty</span>
+                <span id="profile-frequency-penalty-value" class="muted"></span>
+              </div>
+              <input id="profile-frequency-penalty-slider" type="range" min="-2" max="2" step="0.1" />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="profilePresencePenaltyLabel">Profile Presence Penalty</span>
+                <span id="profile-presence-penalty-value" class="muted"></span>
+              </div>
+              <input id="profile-presence-penalty-slider" type="range" min="-2" max="2" step="0.1" />
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="profileMaxTokensLabel">Profile Max Tokens</span>
+                <span id="profile-max-tokens-value" class="muted"></span>
+              </div>
+              <input id="profile-max-tokens-slider" type="range" min="512" max="8192" step="64" />
+            </div>
+            <div class="button-row">
+              <button id="save-model-profile-btn" class="secondary-btn" data-i18n="saveProfileBtn">Save Profile</button>
+              <button id="delete-model-profile-btn" class="secondary-btn danger-btn" data-i18n="deleteProfileBtn">Delete Profile</button>
+            </div>
           </div>
-          <div data-settings-group="threads" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="oocSystemAvatarLabel">OOC System Avatar</span>
-              <div id="ooc-system-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload OOC avatar">
-                <img id="ooc-system-avatar-preview" class="hidden" />
-                <span class="dropzone-plus">+</span>
-                <span class="dropzone-hint">Drag & drop or click</span>
-                <button type="button" id="ooc-system-avatar-remove" class="avatar-remove-btn hidden" data-i18n-title="removeTitle">&times;</button>
-              </div>
-              <input type="file" id="ooc-system-avatar-file-input" accept="image/*" class="hidden" />
+        </div>
+        <div data-settings-group="appearance" class="settings-group">
+          <div class="form-field">
+            <span class="label-with-info"><span data-i18n="languageLabel">Interface Language</span><button type="button" class="info-btn" data-info="language">i</button></span>
+            <select id="ui-language-select">
+              <option value="auto">Auto (browser)</option>
+              <option value="en">English</option>
+              <option value="fr">Francais</option>
+              <option value="it">Italiano</option>
+              <option value="de">Deutsch</option>
+              <option value="es">Espanol</option>
+              <option value="pt-BR">Portugues (Brasil)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"><span data-i18n="sttLanguageLabel">Speech-to-Text Language</span><button type="button" class="info-btn" data-info="sttLanguage">i</button></span>
+            <select id="stt-language-select">
+              <option value="en">English</option>
+              <option value="fr">Francais</option>
+              <option value="it">Italiano</option>
+              <option value="de">Deutsch</option>
+              <option value="es">Espanol</option>
+              <option value="pt-BR">Portugues (Brasil)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"><span data-i18n="sttModeLabel">STT Mode</span><button type="button" class="info-btn" data-info="sttMode">i</button></span>
+            <select id="stt-mode-select">
+              <option value="push-to-talk" data-i18n="sttModePushToTalk">Push-to-Talk</option>
+              <option value="auto-stop" data-i18n="sttModeAutoStop">Auto-Stop on Silence</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"
+              ><span data-i18n="sttSilenceDurationLabel">Silence Duration (seconds)</span><button type="button" class="info-btn" data-info="sttSilenceDuration">i</button></span
+            >
+            <input type="number" id="stt-silence-duration" min="1" max="10" value="2" />
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"><span data-i18n="themeLabel">Theme</span><button type="button" class="info-btn" data-info="theme">i</button></span>
+            <select id="theme-select"></select>
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"><span data-i18n="marqueeBehaviorLabel">Marquee Behavior</span><button type="button" class="info-btn" data-info="marqueeBehavior">i</button></span>
+            <select id="marquee-behavior-select">
+              <option value="disabled" data-i18n="marqueeBehaviorDisabled">Disabled</option>
+              <option value="hover" data-i18n="marqueeBehaviorOnHover">On Hover</option>
+              <option value="always" data-i18n="marqueeBehaviorAlways">Always</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"><span data-i18n="paginationResultsPerPage">Cards per page</span><button type="button" class="info-btn" data-info="characterCardsPerPage">i</button></span>
+            <select id="character-cards-per-page">
+              <option value="0" data-i18n="paginationUnlimited">Unlimited</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"
+              ><span data-i18n="botCardAvatarEffectLabel">BOT Card Avatar Effect</span><button type="button" class="info-btn" data-info="botCardAvatarEffect">i</button></span
+            >
+            <select id="bot-card-avatar-effect">
+              <option value="none" data-i18n="botCardAvatarEffectNone">None</option>
+              <option value="carousel" data-i18n="botCardAvatarEffectCarousel">Carousel</option>
+              <option value="hover" data-i18n="botCardAvatarEffectHover">On Hover</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span class="label-with-info"
+                ><span data-i18n="botCardAvatarTransitionDelayLabel">Transition Delay</span><button type="button" class="info-btn" data-info="botCardAvatarTransitionDelay">i</button></span
+              >
+              <span id="bot-card-avatar-transition-delay-value" class="muted"></span>
             </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="autopair-enabled" checked />
-              <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="markdown-enabled" />
-              <span data-i18n="renderMarkdown">Render Markdown in messages</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="allow-message-html" />
-              <span data-i18n="allowRawHtml">Allow raw HTML in messages</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="trim-messages" checked />
-              <span data-i18n="trimMessagesLabel">Trim messages</span>
-            </span>
+            <input id="bot-card-avatar-transition-delay-slider" type="range" min="4" max="30" step="1" disabled />
+          </div>
+          <div class="form-field">
+            <span data-i18n="chatInputButtonSizeLabel">Chat Input Button Size</span>
+            <select id="chat-input-button-size-select">
+              <option value="regular" data-i18n="chatInputButtonSizeRegular">Regular</option>
+              <option value="big" data-i18n="chatInputButtonSizeBig">Big</option>
+              <option value="extra" data-i18n="chatInputButtonSizeExtra">Extra</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"><span data-i18n="botCardSizeLabel">BOT Card Size</span><button type="button" class="info-btn" data-info="botCardSize">i</button></span>
+            <select id="bot-card-size-select">
+              <option value="small" data-i18n="botCardSizeSmall">Small</option>
+              <option value="regular" data-i18n="botCardSizeRegular">Regular</option>
+              <option value="big" data-i18n="botCardSizeBig">Big</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="toastDelayLabel">Toast Delay</span>
+              <span id="toast-delay-value" class="muted"></span>
+            </div>
+            <input id="toast-delay-slider" type="range" min="1000" max="10000" step="200" />
+          </div>
+          <span class="checkbox-line">
+            <input type="checkbox" id="unread-sound-enabled" />
+            <span data-i18n="unreadSoundEnabled">Play sound for unread messages</span>
+          </span>
+        </div>
+        <div data-settings-group="threads" class="settings-group">
+          <div class="form-field">
+            <span data-i18n="oocSystemAvatarLabel">OOC System Avatar</span>
+            <div id="ooc-system-avatar-dropzone" class="char-avatar-dropzone" tabindex="0" aria-label="Upload OOC avatar">
+              <img id="ooc-system-avatar-preview" class="hidden" />
+              <span class="dropzone-plus">+</span>
+              <span class="dropzone-hint">Drag & drop or click</span>
+              <button type="button" id="ooc-system-avatar-remove" class="avatar-remove-btn hidden" data-i18n-title="removeTitle">&times;</button>
+            </div>
+            <input type="file" id="ooc-system-avatar-file-input" accept="image/*" class="hidden" />
+          </div>
+          <span class="checkbox-line">
+            <input type="checkbox" id="autopair-enabled" checked />
+            <span data-i18n="autoPairSymbols">Auto-pair editor symbols</span>
+          </span>
+          <span class="checkbox-line">
+            <input type="checkbox" id="markdown-enabled" />
+            <span data-i18n="renderMarkdown">Render Markdown in messages</span>
+          </span>
+          <span class="checkbox-line">
+            <input type="checkbox" id="allow-message-html" />
+            <span data-i18n="allowRawHtml">Allow raw HTML in messages</span>
+          </span>
+          <span class="checkbox-line">
+            <input type="checkbox" id="trim-messages" checked />
+            <span data-i18n="trimMessagesLabel">Trim messages</span>
+          </span>
 
-            <span class="checkbox-line">
-              <input type="checkbox" id="lock-memory-messages" />
-              <span data-i18n="lockMemoryMessages">Lock Memory Messages</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="cross-window-sync-enabled" />
-              <span data-i18n="crossWindowSync">Sync threads across tabs</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="show-token-counts" />
-              <span data-i18n="showTokenCounts">Show token counts</span>
-            </span>
-            <div class="form-field">
-              <span data-i18n="messageBubbleFontSize">Message Bubble Font Size</span>
-              <select id="message-bubble-font-size">
-                <option value="small">Small</option>
-                <option value="regular" selected>Regular</option>
-                <option value="big">Big</option>
-              </select>
+          <span class="checkbox-line">
+            <input type="checkbox" id="lock-memory-messages" />
+            <span data-i18n="lockMemoryMessages">Lock Memory Messages</span>
+          </span>
+          <span class="checkbox-line">
+            <input type="checkbox" id="cross-window-sync-enabled" />
+            <span data-i18n="crossWindowSync">Sync threads across tabs</span>
+          </span>
+          <span class="checkbox-line">
+            <input type="checkbox" id="show-token-counts" />
+            <span data-i18n="showTokenCounts">Show token counts</span>
+          </span>
+          <div class="form-field">
+            <span data-i18n="messageBubbleFontSize">Message Bubble Font Size</span>
+            <select id="message-bubble-font-size">
+              <option value="small">Small</option>
+              <option value="regular" selected>Regular</option>
+              <option value="big">Big</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span class="label-with-info"><span data-i18n="messageButtonSize">Message Button Size</span><button type="button" class="info-btn" data-info="messageButtonSize">i</button></span>
+            <select id="message-button-size">
+              <option value="small" selected>Small</option>
+              <option value="regular">Regular</option>
+              <option value="big">Big</option>
+            </select>
+          </div>
+          <details class="settings-collapse">
+            <summary data-i18n="aiMessageButtonsTitle">AI Message Buttons</summary>
+            <div class="settings-collapse-body">
+              <span class="checkbox-line">
+                <input type="checkbox" id="show-ai-msg-edit-btn" checked />
+                <span data-i18n="showAiMsgEditBtn">Edit message</span>
+              </span>
+              <span class="checkbox-line">
+                <input type="checkbox" id="show-ai-msg-metadata-btn" checked />
+                <span data-i18n="showAiMsgMetadataBtn">Message metadata</span>
+              </span>
+              <span class="checkbox-line">
+                <input type="checkbox" id="show-ai-msg-gen-params-btn" checked />
+                <span data-i18n="showAiMsgGenParamsBtn">Generation parameters</span>
+              </span>
+              <span class="checkbox-line">
+                <input type="checkbox" id="show-ai-msg-fork-btn" checked />
+                <span data-i18n="showAiMsgForkBtn">Fork chat from here</span>
+              </span>
             </div>
-            <div class="form-field">
-              <span class="label-with-info"><span data-i18n="messageButtonSize">Message Button Size</span><button type="button" class="info-btn" data-info="messageButtonSize">i</button></span>
-              <select id="message-button-size">
-                <option value="small" selected>Small</option>
-                <option value="regular">Regular</option>
-                <option value="big">Big</option>
-              </select>
-            </div>
-            <details class="settings-collapse">
-              <summary data-i18n="aiMessageButtonsTitle">AI Message Buttons</summary>
-              <div class="settings-collapse-body">
-                <span class="checkbox-line">
-                  <input type="checkbox" id="show-ai-msg-edit-btn" checked />
-                  <span data-i18n="showAiMsgEditBtn">Edit message</span>
-                </span>
-                <span class="checkbox-line">
-                  <input type="checkbox" id="show-ai-msg-metadata-btn" checked />
-                  <span data-i18n="showAiMsgMetadataBtn">Message metadata</span>
-                </span>
-                <span class="checkbox-line">
-                  <input type="checkbox" id="show-ai-msg-gen-params-btn" checked />
-                  <span data-i18n="showAiMsgGenParamsBtn">Generation parameters</span>
-                </span>
-                <span class="checkbox-line">
-                  <input type="checkbox" id="show-ai-msg-fork-btn" checked />
-                  <span data-i18n="showAiMsgForkBtn">Fork chat from here</span>
-                </span>
-              </div>
-            </details>
-            <div class="form-field">
-              <span data-i18n="summaryThresholdLabel">Summary Threshold</span>
-              <input id="summary-threshold" type="number" min="5" max="100" step="1" />
-            </div>
-            <div class="form-field">
-              <span data-i18n="memoryMessagesToKeepLabel">Amount of Messages to Keep</span>
-              <input id="memory-messages-to-keep" type="number" min="0" max="30" step="1" value="3" />
-            </div>
-            <div class="form-field">
-              <span data-i18n="memorySlotsLabel">Memory Slots</span>
-              <input id="memory-slots" type="number" min="1" max="10" step="1" value="5" />
-            </div>
-            <div class="form-field">
-              <span data-i18n="unloadThresholdLabel">Message to Keep (0 = all)</span>
-              <input id="auto-unload-threshold" type="number" min="0" max="1000" step="1" title="" />
-            </div>
-            <div class="form-field">
-              <span data-i18n="loreMatchingMode">Lore Matching Mode</span>
-              <select id="lore-matching-mode">
-                <option value="keyword" data-i18n="loreMatchingModeKeyword">Keyword (Word Boundary + Negative Keys + Proximity)</option>
-                <option value="semantic" data-i18n="loreMatchingModeSemantic">Semantic (Uses Embeddings)</option>
-              </select>
-            </div>
-            <div class="form-field hidden" id="lore-semantic-threshold-container">
-              <span data-i18n="loreSemanticThreshold">Semantic Threshold</span>
-              <input id="lore-semantic-threshold" type="number" min="0" max="1" step="0.05" value="0.5" />
-              <span class="settings-hint" data-i18n="loreSemanticThresholdHint">Higher = stricter matching (0.5-0.7 recommended)</span>
-            </div>
-            <div class="form-field">
-              <span data-i18n="chatMessageAlignment">Message Alignment</span>
-              <select id="chat-message-alignment">
-                <option value="left" data-i18n="messageAlignmentLeft">Left (Default)</option>
-                <option value="center" data-i18n="messageAlignmentCenter">Center</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="postprocessRules">Post-processing Rules (JSON)</span>
-              <!-- prettier-ignore -->
-              <textarea
+          </details>
+          <div class="form-field">
+            <span data-i18n="summaryThresholdLabel">Summary Threshold</span>
+            <input id="summary-threshold" type="number" min="5" max="100" step="1" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="memoryMessagesToKeepLabel">Amount of Messages to Keep</span>
+            <input id="memory-messages-to-keep" type="number" min="0" max="30" step="1" value="3" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="memorySlotsLabel">Memory Slots</span>
+            <input id="memory-slots" type="number" min="1" max="10" step="1" value="5" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="unloadThresholdLabel">Message to Keep (0 = all)</span>
+            <input id="auto-unload-threshold" type="number" min="0" max="1000" step="1" title="" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="loreMatchingMode">Lore Matching Mode</span>
+            <select id="lore-matching-mode">
+              <option value="keyword" data-i18n="loreMatchingModeKeyword">Keyword (Word Boundary + Negative Keys + Proximity)</option>
+              <option value="semantic" data-i18n="loreMatchingModeSemantic">Semantic (Uses Embeddings)</option>
+            </select>
+          </div>
+          <div class="form-field hidden" id="lore-semantic-threshold-container">
+            <span data-i18n="loreSemanticThreshold">Semantic Threshold</span>
+            <input id="lore-semantic-threshold" type="number" min="0" max="1" step="0.05" value="0.5" />
+            <span class="settings-hint" data-i18n="loreSemanticThresholdHint">Higher = stricter matching (0.5-0.7 recommended)</span>
+          </div>
+          <div class="form-field">
+            <span data-i18n="chatMessageAlignment">Message Alignment</span>
+            <select id="chat-message-alignment">
+              <option value="left" data-i18n="messageAlignmentLeft">Left (Default)</option>
+              <option value="center" data-i18n="messageAlignmentCenter">Center</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span data-i18n="postprocessRules">Post-processing Rules (JSON)</span>
+            <!-- prettier-ignore -->
+            <textarea
                   id="postprocess-rules-json"
                   rows="8"
                   placeholder="[{&quot;pattern&quot;:&quot;^«([\\s\\S]*)»$&quot;,&quot;flags&quot;:&quot;gm&quot;,&quot;replacement&quot;:&quot;<span style=&quot;color:#E6D97A&quot;>«$1»</span>&quot;}]"
                 ></textarea>
-            </div>
           </div>
-          <div data-settings-group="prompting" class="settings-group">
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="defaultCharacterPrompt">Default Character Prompt</span>
-                <span id="global-prompt-template-count" class="token-count muted hidden">0 tokens</span>
-              </div>
-              <textarea id="global-prompt-template" rows="7" data-i18n-placeholder="placeholderDefaultCharacterPrompt"></textarea>
+        </div>
+        <div data-settings-group="prompting" class="settings-group">
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="defaultCharacterPrompt">Default Character Prompt</span>
+              <span id="global-prompt-template-count" class="token-count muted hidden">0 tokens</span>
             </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="memorySummarizerPrompt">Memory Summarizer System Prompt</span>
-                <span id="summary-system-prompt-count" class="token-count muted hidden">0 tokens</span>
-              </div>
-              <textarea id="summary-system-prompt" rows="3" data-i18n-placeholder="placeholderMemorySummarizerSystem"></textarea>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="memorySummarizerUserPrompt">User Prompt for Memory Summarization</span>
-                <span id="memory-summarizer-user-prompt-count" class="token-count muted hidden">0 tokens</span>
-              </div>
-              <textarea id="memory-summarizer-user-prompt" rows="3" data-i18n-placeholder="placeholderMemorySummarizerUser" placeholder="User prompt for memory summarization"></textarea>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="oocSystemPromptIntro">OOC System Prompt Intro</span>
-                <span id="ooc-system-prompt-intro-count" class="token-count muted hidden">0 tokens</span>
-              </div>
-              <textarea id="ooc-system-prompt-intro" rows="2"></textarea>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="oocUserMessageFormat">OOC User Message Format</span>
-                <span id="ooc-user-message-format-count" class="token-count muted hidden">0 tokens</span>
-              </div>
-              <textarea id="ooc-user-message-format" rows="2"></textarea>
-            </div>
-            <div class="form-field">
-              <span data-i18n="summaryMessagesPreProcessingJson">Summary Messages Pre-processing (JSON)</span>
-              <textarea id="summary-messages-preprocessing" rows="2" data-i18n-placeholder="placeholderSummaryMessagesPreProcessing"></textarea>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="personaInjectionTemplate">Persona Injection Template</span>
-                <span id="persona-injection-template-count" class="token-count muted hidden">0 tokens</span>
-              </div>
-              <textarea id="persona-injection-template" rows="5" data-i18n-placeholder="placeholderPersonaInjectionTemplate"></textarea>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="autoTitleSystemPrompt">Auto-title System Prompt</span>
-                <span id="auto-title-system-prompt-count" class="token-count muted hidden">0 tokens</span>
-              </div>
-              <textarea id="auto-title-system-prompt" rows="3"></textarea>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="autoTitleUserPrompt">Auto-title User Prompt</span>
-                <span id="auto-title-user-prompt-count" class="token-count muted hidden">0 tokens</span>
-              </div>
-              <textarea id="auto-title-user-prompt" rows="3"></textarea>
-            </div>
-            <details class="settings-collapse">
-              <summary data-i18n="sectionHeadersTitle">Section Headers</summary>
-              <div class="settings-collapse-body">
-                <div class="form-field">
-                  <span data-i18n="sectionHeaderMemoryContext">Memory Context Header</span>
-                  <input id="section-header-memory-context" type="text" data-i18n-placeholder="placeholderSectionHeaderMemory" />
-                </div>
-                <div class="form-field">
-                  <span data-i18n="sectionHeaderCharacterPrompt">Character Prompt Header</span>
-                  <input id="section-header-character-prompt" type="text" data-i18n-placeholder="placeholderSectionHeaderCharacter" />
-                </div>
-                <div class="form-field">
-                  <span data-i18n="sectionHeaderMessagesSoFar">Messages So Far Header</span>
-                  <input id="section-header-messages-so-far" type="text" data-i18n-placeholder="placeholderSectionHeaderMessagesSoFar" />
-                </div>
-                <div class="form-field">
-                  <span data-i18n="sectionHeaderMessages">Messages Header</span>
-                  <input id="section-header-messages" type="text" data-i18n-placeholder="placeholderSectionHeaderMessages" />
-                </div>
-                <div class="form-field">
-                  <span data-i18n="sectionHeaderMemoryLevelContext">Memory Level Context Header</span>
-                  <input id="section-header-memory-level-context" type="text" data-i18n-placeholder="placeholderSectionHeaderMemoryLevel" />
-                </div>
-                <div class="form-field">
-                  <span data-i18n="sectionHeaderMemoryEntry">Memory Entry Header</span>
-                  <input id="section-header-memory-entry" type="text" data-i18n-placeholder="placeholderSectionHeaderMemoryEntry" />
-                </div>
-                <div class="form-field">
-                  <span data-i18n="sectionHeaderLoreContext">Lore Context Header</span>
-                  <input id="section-header-lore-context" type="text" data-i18n-placeholder="placeholderSectionHeaderLore" />
-                </div>
-              </div>
-            </details>
-            <span class="checkbox-line">
-              <input type="checkbox" id="memory-relevance-filter-enabled" />
-              <span data-i18n="memoryRelevanceFilterToggle">Use memory relevance filter</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="use-local-summarization" />
-              <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
-            </span>
-            <span class="checkbox-line">
-              <input type="checkbox" id="use-local-auto-title" />
-              <span data-i18n="useLocalAutoTitle">Use Local Auto-Title (faster, no API cost)</span>
-            </span>
-            <div class="form-field">
-              <span data-i18n="writingInstructionsInjectionTiming">Writing Instructions Injection Timing</span>
-              <select id="writing-instructions-injection-when">
-                <option value="always" data-i18n="always">Always</option>
-                <option value="every_other" data-i18n="everyOther">Every Other</option>
-                <option value="every_second" data-i18n="everySecond">Every Second</option>
-                <option value="every_third" data-i18n="everyThird">Every Third</option>
-                <option value="every_fourth" data-i18n="everyFourth">Every Fourth</option>
-              </select>
-            </div>
+            <textarea id="global-prompt-template" rows="7" data-i18n-placeholder="placeholderDefaultCharacterPrompt"></textarea>
           </div>
-          <div data-settings-group="shortcuts" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="cancelGenerationShortcut">Cancel Generation Shortcut</span>
-              <input id="cancel-shortcut" type="text" data-i18n-placeholder="placeholderShortcutCancel" />
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="memorySummarizerPrompt">Memory Summarizer System Prompt</span>
+              <span id="summary-system-prompt-count" class="token-count muted hidden">0 tokens</span>
             </div>
-            <div class="form-field">
-              <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
-              <input id="home-shortcut" type="text" data-i18n-placeholder="placeholderShortcutHome" />
-            </div>
-            <div class="form-field">
-              <span data-i18n="newCharacterShortcut">New Character Shortcut</span>
-              <input id="new-character-shortcut" type="text" data-i18n-placeholder="placeholderShortcutNewChar" />
-            </div>
+            <textarea id="summary-system-prompt" rows="3" data-i18n-placeholder="placeholderMemorySummarizerSystem"></textarea>
           </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="memorySummarizerUserPrompt">User Prompt for Memory Summarization</span>
+              <span id="memory-summarizer-user-prompt-count" class="token-count muted hidden">0 tokens</span>
+            </div>
+            <textarea id="memory-summarizer-user-prompt" rows="3" data-i18n-placeholder="placeholderMemorySummarizerUser" placeholder="User prompt for memory summarization"></textarea>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="oocSystemPromptIntro">OOC System Prompt Intro</span>
+              <span id="ooc-system-prompt-intro-count" class="token-count muted hidden">0 tokens</span>
+            </div>
+            <textarea id="ooc-system-prompt-intro" rows="2"></textarea>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="oocUserMessageFormat">OOC User Message Format</span>
+              <span id="ooc-user-message-format-count" class="token-count muted hidden">0 tokens</span>
+            </div>
+            <textarea id="ooc-user-message-format" rows="2"></textarea>
+          </div>
+          <div class="form-field">
+            <span data-i18n="summaryMessagesPreProcessingJson">Summary Messages Pre-processing (JSON)</span>
+            <textarea id="summary-messages-preprocessing" rows="2" data-i18n-placeholder="placeholderSummaryMessagesPreProcessing"></textarea>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="personaInjectionTemplate">Persona Injection Template</span>
+              <span id="persona-injection-template-count" class="token-count muted hidden">0 tokens</span>
+            </div>
+            <textarea id="persona-injection-template" rows="5" data-i18n-placeholder="placeholderPersonaInjectionTemplate"></textarea>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="autoTitleSystemPrompt">Auto-title System Prompt</span>
+              <span id="auto-title-system-prompt-count" class="token-count muted hidden">0 tokens</span>
+            </div>
+            <textarea id="auto-title-system-prompt" rows="3"></textarea>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="autoTitleUserPrompt">Auto-title User Prompt</span>
+              <span id="auto-title-user-prompt-count" class="token-count muted hidden">0 tokens</span>
+            </div>
+            <textarea id="auto-title-user-prompt" rows="3"></textarea>
+          </div>
+          <details class="settings-collapse">
+            <summary data-i18n="sectionHeadersTitle">Section Headers</summary>
+            <div class="settings-collapse-body">
+              <div class="form-field">
+                <span data-i18n="sectionHeaderMemoryContext">Memory Context Header</span>
+                <input id="section-header-memory-context" type="text" data-i18n-placeholder="placeholderSectionHeaderMemory" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="sectionHeaderCharacterPrompt">Character Prompt Header</span>
+                <input id="section-header-character-prompt" type="text" data-i18n-placeholder="placeholderSectionHeaderCharacter" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="sectionHeaderMessagesSoFar">Messages So Far Header</span>
+                <input id="section-header-messages-so-far" type="text" data-i18n-placeholder="placeholderSectionHeaderMessagesSoFar" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="sectionHeaderMessages">Messages Header</span>
+                <input id="section-header-messages" type="text" data-i18n-placeholder="placeholderSectionHeaderMessages" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="sectionHeaderMemoryLevelContext">Memory Level Context Header</span>
+                <input id="section-header-memory-level-context" type="text" data-i18n-placeholder="placeholderSectionHeaderMemoryLevel" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="sectionHeaderMemoryEntry">Memory Entry Header</span>
+                <input id="section-header-memory-entry" type="text" data-i18n-placeholder="placeholderSectionHeaderMemoryEntry" />
+              </div>
+              <div class="form-field">
+                <span data-i18n="sectionHeaderLoreContext">Lore Context Header</span>
+                <input id="section-header-lore-context" type="text" data-i18n-placeholder="placeholderSectionHeaderLore" />
+              </div>
+            </div>
+          </details>
+          <span class="checkbox-line">
+            <input type="checkbox" id="memory-relevance-filter-enabled" />
+            <span data-i18n="memoryRelevanceFilterToggle">Use memory relevance filter</span>
+          </span>
+          <span class="checkbox-line">
+            <input type="checkbox" id="use-local-summarization" />
+            <span data-i18n="useLocalSummarization">Use Local Summarization (faster, no API cost)</span>
+          </span>
+          <span class="checkbox-line">
+            <input type="checkbox" id="use-local-auto-title" />
+            <span data-i18n="useLocalAutoTitle">Use Local Auto-Title (faster, no API cost)</span>
+          </span>
+          <div class="form-field">
+            <span data-i18n="writingInstructionsInjectionTiming">Writing Instructions Injection Timing</span>
+            <select id="writing-instructions-injection-when">
+              <option value="always" data-i18n="always">Always</option>
+              <option value="every_other" data-i18n="everyOther">Every Other</option>
+              <option value="every_second" data-i18n="everySecond">Every Second</option>
+              <option value="every_third" data-i18n="everyThird">Every Third</option>
+              <option value="every_fourth" data-i18n="everyFourth">Every Fourth</option>
+            </select>
+          </div>
+        </div>
+        <div data-settings-group="shortcuts" class="settings-group">
+          <div class="form-field">
+            <span data-i18n="cancelGenerationShortcut">Cancel Generation Shortcut</span>
+            <input id="cancel-shortcut" type="text" data-i18n-placeholder="placeholderShortcutCancel" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="goHomeShortcut">Go Home Shortcut</span>
+            <input id="home-shortcut" type="text" data-i18n-placeholder="placeholderShortcutHome" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="newCharacterShortcut">New Character Shortcut</span>
+            <input id="new-character-shortcut" type="text" data-i18n-placeholder="placeholderShortcutNewChar" />
+          </div>
+        </div>
 
-          <div data-settings-group="defaults" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="defaultAvatarScale">Default Avatar Scale (In Chat)</span>
-              <select id="default-avatar-scale">
-                <option value="1">1x</option>
-                <option value="2">2x</option>
-                <option value="3">3x</option>
-                <option value="4">4x</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="defaultPersonaInjectionPlacement">Default Persona Injection Placement</span>
-              <select id="default-persona-injection-placement">
-                <option value="none" data-i18n="personaInjectionNone">None</option>
-                <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
-                <option value="once" data-i18n="personaInjectionOnce">Once</option>
-                <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
-              <select id="default-tts-provider">
-                <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
-                <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="defaultTtsRate">Default TTS Rate</span>
-                <span id="default-tts-rate-value" class="muted"></span>
-              </div>
-              <input id="default-tts-rate" type="range" min="0.5" max="2" step="0.1" value="1" />
-            </div>
-            <div class="form-field">
-              <span data-i18n="defaultAutoTitleMinMessages"> Default min. messages for auto-title </span>
-              <input id="default-auto-title-min-messages" type="number" min="1" max="50" value="10" />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="default-include-ooc" />
-              <span data-i18n="defaultIncludeOocInCompletions">Include OOC messages in completions</span>
-            </span>
+        <div data-settings-group="defaults" class="settings-group">
+          <div class="form-field">
+            <span data-i18n="defaultAvatarScale">Default Avatar Scale (In Chat)</span>
+            <select id="default-avatar-scale">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+            </select>
           </div>
+          <div class="form-field">
+            <span data-i18n="defaultPersonaInjectionPlacement">Default Persona Injection Placement</span>
+            <select id="default-persona-injection-placement">
+              <option value="none" data-i18n="personaInjectionNone">None</option>
+              <option value="end_system_prompt" data-i18n="atEndCharacterPrompt">At End of Character Prompt</option>
+              <option value="once" data-i18n="personaInjectionOnce">Once</option>
+              <option value="end_messages" data-i18n="atEndOfMessages">At End of Messages</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <span data-i18n="defaultTtsProvider">Default TTS Provider</span>
+            <select id="default-tts-provider">
+              <option value="kokoro" data-i18n="ttsProviderKokoro">Kokoro.js (local)</option>
+              <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <div class="label-inline">
+              <span data-i18n="defaultTtsRate">Default TTS Rate</span>
+              <span id="default-tts-rate-value" class="muted"></span>
+            </div>
+            <input id="default-tts-rate" type="range" min="0.5" max="2" step="0.1" value="1" />
+          </div>
+          <div class="form-field">
+            <span data-i18n="defaultAutoTitleMinMessages"> Default min. messages for auto-title </span>
+            <input id="default-auto-title-min-messages" type="number" min="1" max="50" value="10" />
+          </div>
+          <span class="checkbox-line">
+            <input type="checkbox" id="default-include-ooc" />
+            <span data-i18n="defaultIncludeOocInCompletions">Include OOC messages in completions</span>
+          </span>
         </div>
       </div>
     </div>
