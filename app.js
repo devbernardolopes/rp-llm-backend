@@ -11708,10 +11708,6 @@ async function renderLorebookManagementList() {
     title.textContent = lorebook.name || "Untitled Lorebook";
     const usage = document.createElement("div");
     usage.className = "lorebook-usage";
-    const usageLabel = document.createElement("span");
-    usageLabel.className = "muted lorebook-usage-label";
-    usageLabel.textContent = "Used by:";
-    usage.appendChild(usageLabel);
     if (users.length === 0) {
       const none = document.createElement("span");
       none.className = "muted";

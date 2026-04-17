@@ -5126,10 +5126,6 @@ textarea {
   }
 }
 
-.lorebook-usage-label {
-  font-size: 11px;
-}
-
 .lorebook-usage-btn {
   border: 1px solid var(--line);
   background: #1f2c44;
