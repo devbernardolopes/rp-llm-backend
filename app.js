@@ -1744,7 +1744,7 @@ function setupEvents() {
       renderLoreEntryEditors();
     });
   document
-    .getElementById("save-lorebook-btn")
+    .getElementById("save-lore-editor-btn")
     .addEventListener("click", () => saveLorebookFromEditor({ close: true }));
   document
     .getElementById("apply-lore-editor-btn")
