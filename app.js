@@ -5541,6 +5541,11 @@ function setupSettingsTabsLayout() {
           if (group === "defaults") {
             populateAutoTitleSummaryModels().catch(() => {});
           }
+          // Initialize collapsible sections for API tab
+          if (group === "api") {
+            initSettingsCollapsibles();
+            populateAutoTitleSummaryModels().catch(() => {});
+          }
         } else {
           g.classList.add("hidden");
         }
@@ -5548,6 +5553,25 @@ function setupSettingsTabsLayout() {
     });
   });
   body.dataset.tabsReady = "1";
+}
+
+function initSettingsCollapsibles() {
+  document.querySelectorAll(".settings-collapsible-header").forEach((header) => {
+    if (header.dataset.collapsibleInitialized === "true") return;
+    header.dataset.collapsibleInitialized = "true";
+    header.addEventListener("click", (e) => {
+      const fieldset = header.closest(".settings-collapsible");
+      const content = fieldset?.querySelector(".settings-collapsible-content");
+      const toggle = header.querySelector(".settings-collapsible-toggle");
+      if (content?.classList.contains("collapsed")) {
+        content.classList.remove("collapsed");
+        if (toggle) toggle.innerHTML = "&#9660;";
+      } else {
+        content?.classList.add("collapsed");
+        if (toggle) toggle.innerHTML = "&#9656;";
+      }
+    });
+  });
 }
 
 function loadSettings() {

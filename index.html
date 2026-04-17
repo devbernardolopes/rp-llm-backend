@@ -1142,16 +1142,6 @@
               />
             </div>
             <div class="form-field">
-              <span class="label-with-info"><span data-i18n="stopStringsLabel">Stop Strings</span><button type="button" class="info-btn" data-info="stopStrings">i</button></span>
-              <input
-                id="stop-strings"
-                type="text"
-                data-i18n-placeholder="placeholderStopStrings"
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </div>
-            <div class="form-field">
               <div class="label-inline">
                 <span class="label-with-info"><span data-i18n="completionCooldownLabel"
                   >Completion Cooldown</span><button type="button" class="info-btn" data-info="completionCooldown">i</button></span>
@@ -1165,7 +1155,133 @@
                 step="1"
               />
             </div>
-            <div class="settings-divider"></div>
+            <span class="checkbox-line">
+              <input type="checkbox" id="stream-enabled" checked />
+              <span class="label-with-info"><span data-i18n="stream">Stream</span><button type="button" class="info-btn" data-info="stream">i</button></span>
+            </span>
+            <div class="form-field">
+              <span class="label-with-info"><span data-i18n="stopStringsLabel">Stop Strings</span><button type="button" class="info-btn" data-info="stopStrings">i</button></span>
+              <input
+                id="stop-strings"
+                type="text"
+                data-i18n-placeholder="placeholderStopStrings"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <fieldset class="settings-collapsible">
+              <legend class="settings-collapsible-header">
+                <span class="settings-collapsible-toggle">&#9656;</span>
+                <span data-i18n="autoTitleSettings">Auto-Title</span>
+              </legend>
+              <div class="settings-collapsible-content collapsed">
+                <div class="form-field">
+                  <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
+                  <select id="default-auto-title-provider">
+                    <option value="openrouter" data-i18n="providerOpenRouter">
+                      OpenRouter
+                    </option>
+                    <option value="aihorde" data-i18n="providerAIHorde">
+                      AI Horde
+                    </option>
+                    <option value="lmstudio" data-i18n="providerLMStudio">
+                      LM Studio
+                    </option>
+                    <option value="groq" data-i18n="providerGroq">
+                      Groq
+                    </option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <span data-i18n="autoTitleModel">Auto-Title Model</span>
+                  <select id="default-auto-title-model"></select>
+                </div>
+                <div class="form-field">
+                  <div class="label-inline">
+                    <span data-i18n="autoTitleTemperature"
+                      >Auto-Title Temperature</span
+                    >
+                    <span id="default-auto-title-temp-value" class="muted"></span>
+                  </div>
+                  <input
+                    id="default-auto-title-temp"
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.05"
+                    value="0.25"
+                  />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="autoTitleStopStrings">Auto-Title Stop Strings</span>
+                  <input
+                    id="default-auto-title-stop-strings"
+                    type="text"
+                    placeholder="e.g. | stop1, stop2"
+                  />
+                </div>
+                <span class="checkbox-line">
+                  <input type="checkbox" id="default-auto-title-stream" />
+                  <span data-i18n="autoTitleStream">Auto-Title Stream</span>
+                </span>
+              </div>
+            </fieldset>
+            <fieldset class="settings-collapsible">
+              <legend class="settings-collapsible-header">
+                <span class="settings-collapsible-toggle">&#9656;</span>
+                <span data-i18n="summarySettings">Summary</span>
+              </legend>
+              <div class="settings-collapsible-content collapsed">
+                <div class="form-field">
+                  <span data-i18n="summaryProvider">Summary Provider</span>
+                  <select id="default-summary-provider">
+                    <option value="openrouter" data-i18n="providerOpenRouter">
+                      OpenRouter
+                    </option>
+                    <option value="aihorde" data-i18n="providerAIHorde">
+                      AI Horde
+                    </option>
+                    <option value="lmstudio" data-i18n="providerLMStudio">
+                      LM Studio
+                    </option>
+                    <option value="groq" data-i18n="providerGroq">
+                      Groq
+                    </option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <span data-i18n="summaryModel">Summary Model</span>
+                  <select id="default-summary-model"></select>
+                </div>
+                <div class="form-field">
+                  <div class="label-inline">
+                    <span data-i18n="summaryTemperature">Summary Temperature</span>
+                    <span id="default-summary-temp-value" class="muted"></span>
+                  </div>
+                  <input
+                    id="default-summary-temp"
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.05"
+                    value="0.25"
+                  />
+                </div>
+                <div class="form-field">
+                  <span data-i18n="summaryStopStrings">Summary Stop Strings</span>
+                  <input
+                    id="default-summary-stop-strings"
+                    type="text"
+                    placeholder="e.g. | stop1, stop2"
+                  />
+                </div>
+                <span class="checkbox-line">
+                  <input type="checkbox" id="default-summary-stream" />
+                  <span data-i18n="summaryStream">Summary Stream</span>
+                </span>
+              </div>
+            </fieldset>
+            
             <div class="form-field">
               <span class="label-with-info"><span data-i18n="modelProfileLabel">Model Profile</span></span>
               <div class="flex-row gap-2">
@@ -1232,7 +1348,7 @@
             </div>
             <span class="checkbox-line">
               <input type="checkbox" id="stream-enabled" checked />
-              <span class="label-with-info"><span data-i18n="streamMessages">Stream Messages</span><button type="button" class="info-btn" data-info="streamMessages">i</button></span>
+              <span class="label-with-info"><span data-i18n="stream">Stream</span><button type="button" class="info-btn" data-info="stream">i</button></span>
             </span>
           </div>
           <div data-settings-group="appearance" class="settings-group">
@@ -1818,104 +1934,7 @@
                 />
               </div>
             </div>
-          <div data-settings-group="defaults" class="settings-group">
-            <div class="form-field">
-              <span data-i18n="autoTitleProvider">Auto-Title Provider</span>
-              <select id="default-auto-title-provider">
-                <option value="openrouter" data-i18n="providerOpenRouter">
-                  OpenRouter
-                </option>
-                <option value="aihorde" data-i18n="providerAIHorde">
-                  AI Horde
-                </option>
-                <option value="lmstudio" data-i18n="providerLMStudio">
-                  LM Studio
-                </option>
-                <option value="groq" data-i18n="providerGroq">
-                  Groq
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="autoTitleModel">Auto-Title Model</span>
-              <select id="default-auto-title-model"></select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="autoTitleTemperature"
-                  >Auto-Title Temperature</span
-                >
-                <span id="default-auto-title-temp-value" class="muted"></span>
-              </div>
-              <input
-                id="default-auto-title-temp"
-                type="range"
-                min="0"
-                max="2"
-                step="0.05"
-                value="0.25"
-              />
-            </div>
-            <div class="form-field">
-              <span data-i18n="autoTitleStopStrings">Auto-Title Stop Strings</span>
-              <input
-                id="default-auto-title-stop-strings"
-                type="text"
-                placeholder="e.g. | stop1, stop2"
-              />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="default-auto-title-stream" />
-              <span data-i18n="autoTitleStream">Auto-Title Stream</span>
-            </span>
-            <div class="form-field">
-              <span data-i18n="summaryProvider">Summary Provider</span>
-              <select id="default-summary-provider">
-                <option value="openrouter" data-i18n="providerOpenRouter">
-                  OpenRouter
-                </option>
-                <option value="aihorde" data-i18n="providerAIHorde">
-                  AI Horde
-                </option>
-                <option value="lmstudio" data-i18n="providerLMStudio">
-                  LM Studio
-                </option>
-                <option value="groq" data-i18n="providerGroq">
-                  Groq
-                </option>
-              </select>
-            </div>
-            <div class="form-field">
-              <span data-i18n="summaryModel">Summary Model</span>
-              <select id="default-summary-model"></select>
-            </div>
-            <div class="form-field">
-              <div class="label-inline">
-                <span data-i18n="summaryTemperature">Summary Temperature</span>
-                <span id="default-summary-temp-value" class="muted"></span>
-              </div>
-              <input
-                id="default-summary-temp"
-                type="range"
-                min="0"
-                max="2"
-                step="0.05"
-                value="0.25"
-              />
-            </div>
-            <div class="form-field">
-              <span data-i18n="summaryStopStrings">Summary Stop Strings</span>
-              <input
-                id="default-summary-stop-strings"
-                type="text"
-                placeholder="e.g. | stop1, stop2"
-              />
-            </div>
-            <span class="checkbox-line">
-              <input type="checkbox" id="default-summary-stream" />
-              <span data-i18n="summaryStream">Summary Stream</span>
-            </span>
-            <div class="form-field">
+          
               <span data-i18n="defaultAvatarScale"
                 >Default Avatar Scale (In Chat)</span
               >

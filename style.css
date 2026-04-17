@@ -3667,6 +3667,46 @@ textarea {
   display: none;
 }
 
+.settings-collapsible {
+  border: none;
+  margin: 8px 0;
+  padding: 0;
+}
+
+.settings-collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.settings-collapsible-header:hover {
+  background: var(--hover);
+}
+
+.settings-collapsible-toggle {
+  font-size: 10px;
+  width: 16px;
+  display: inline-block;
+}
+
+.settings-collapsible-content {
+  padding: 8px 0 8px 24px;
+}
+
+.settings-collapsible-content.collapsed {
+  display: none;
+}
+
+#model-selected-meta {
+  font-size: 12px;
+}
+
 .export-checkbox {
   display: flex;
   align-items: center;
