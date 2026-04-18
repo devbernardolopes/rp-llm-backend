@@ -4097,7 +4097,6 @@ async function setupSettingsControls() {
       threadId: currentThread.id,
       updatedAt,
     });
-    await renderThreads();
   });
 
   /*
