@@ -4645,10 +4645,17 @@ async function setupSettingsControls() {
       saveSettings();
     });
   }
-  if (defaultOocProvider) {
-    defaultOocProvider.addEventListener("change", async () => {
+  const defaultOocProviderEl = document.getElementById("default-ooc-provider");
+  const defaultOocModelEl = document.getElementById("default-ooc-model");
+  const defaultOocTempEl = document.getElementById("default-ooc-temp");
+  const enableOocSettingsEl = document.getElementById("enable-ooc-settings");
+  const defaultOocStreamEl = document.getElementById("default-ooc-stream");
+  const oocStopStringsEl = document.getElementById("default-ooc-stop-strings");
+
+  if (defaultOocProviderEl) {
+    defaultOocProviderEl.addEventListener("change", async () => {
       const oldProvider = state.settings.oocProvider || DEFAULT_SETTINGS.oocProvider;
-      const newProvider = defaultOocProvider.value;
+      const newProvider = defaultOocProviderEl.value;
       if (oldProvider !== newProvider) {
         const lastModels = state.settings.lastModelsPerProvider || {};
         if (state.settings.oocModel) {
@@ -4665,39 +4672,36 @@ async function setupSettingsControls() {
       } catch {}
     });
   }
-  if (defaultOocModel) {
-    defaultOocModel.addEventListener("change", () => {
-      state.settings.oocModel = defaultOocModel.value;
+  if (defaultOocModelEl) {
+    defaultOocModelEl.addEventListener("change", () => {
+      state.settings.oocModel = defaultOocModelEl.value;
       saveSettings();
     });
   }
-  if (defaultOocTemp) {
-    defaultOocTemp.addEventListener("input", () => {
-      const value = Number(defaultOocTemp.value);
+  if (defaultOocTempEl) {
+    defaultOocTempEl.addEventListener("input", () => {
+      const value = Number(defaultOocTempEl.value);
       state.settings.oocTemperature = value;
       const oocTempValue = document.getElementById("default-ooc-temp-value");
       if (oocTempValue) oocTempValue.textContent = String(value);
       saveSettings();
     });
   }
-  const defaultOocStream = document.getElementById("default-ooc-stream");
-  const oocStopStringsInput = document.getElementById("default-ooc-stop-strings");
-  const enableOocSettingsToggle = document.getElementById("enable-ooc-settings");
-  if (oocStopStringsInput) {
-    oocStopStringsInput.addEventListener("input", () => {
-      state.settings.oocStopStrings = oocStopStringsInput.value.trim();
+  if (oocStopStringsEl) {
+    oocStopStringsEl.addEventListener("input", () => {
+      state.settings.oocStopStrings = oocStopStringsEl.value.trim();
       saveSettings();
     });
   }
-  if (enableOocSettingsToggle) {
-    enableOocSettingsToggle.addEventListener("change", () => {
-      state.settings.enableOocSettings = enableOocSettingsToggle.checked;
+  if (enableOocSettingsEl) {
+    enableOocSettingsEl.addEventListener("change", () => {
+      state.settings.enableOocSettings = enableOocSettingsEl.checked;
       saveSettings();
     });
   }
-  if (defaultOocStream) {
-    defaultOocStream.addEventListener("change", () => {
-      state.settings.oocStream = defaultOocStream.checked;
+  if (defaultOocStreamEl) {
+    defaultOocStreamEl.addEventListener("change", () => {
+      state.settings.oocStream = defaultOocStreamEl.checked;
       saveSettings();
     });
   }
