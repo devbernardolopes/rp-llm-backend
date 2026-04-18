@@ -10184,7 +10184,9 @@ async function openLoreEditor(lorebook = null) {
 function renderLoreEntryEditors() {
   const root = document.getElementById("lore-entries-list");
   if (!root) return;
+  console.log("DEBUG renderLoreEntryEditors: entries before =", state.lore.entries);
   root.innerHTML = "";
+  console.log("DEBUG renderLoreEntryEditors: entries after clear =", state.lore.entries);
   state.lore.entries.forEach((entry, index) => {
     const card = document.createElement("div");
     card.className = "lore-entry-card";
