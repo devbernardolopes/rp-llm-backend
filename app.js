@@ -10135,6 +10135,7 @@ async function closeLoreEditor() {
 }
 
 async function openLoreEditor(lorebook = null) {
+  console.log("DEBUG openLoreEditor: START, lorebook =", lorebook?.id, "current entries =", state.lore.entries);
   const normalized = normalizeLorebookRecord(lorebook || {});
   state.lore.editingId = normalized?.id || null;
   const entries = Array.isArray(normalized?.entries) ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx)) : [];
@@ -10434,6 +10435,7 @@ async function collectLorebookFromEditor() {
 }
 
 async function saveLorebookFromEditor({ close = true } = {}) {
+  console.log("DEBUG saveLorebookFromEditor: state.lore.entries before collect =", state.lore.entries);
   const payload = await collectLorebookFromEditor();
   if (!payload) return false;
   if (state.lore.editingId) {
