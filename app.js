@@ -10394,6 +10394,9 @@ async function collectLorebookFromEditor() {
     }))
     .filter((entry) => entry.keys.length > 0 || entry.content.length > 0);
 
+  console.log("DEBUG collectLorebook: state.lore.entries =", state.lore.entries);
+  console.log("DEBUG collectLorebook: entries after filter =", entries);
+
   if (entries.length === 0) {
     await openInfoDialog(t("invalidLoreBookTitle"), t("loreAtLeastOneEntry"));
     return null;
