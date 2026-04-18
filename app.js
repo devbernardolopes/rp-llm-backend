@@ -15203,9 +15203,15 @@ async function maybeGenerateTitleBeforeBotReply() {
       if (!trimmed) return "";
       let labelContent = trimmed;
       if (isOoc) {
-        labelContent = `((OOC: ${labelContent}))`;
+        if (trimmed.startsWith("((OOC:") && trimmed.endsWith("))")) {
+          labelContent = trimmed;
+        } else {
+          labelContent = `((OOC: ${trimmed}))`;
+        }
       }
-      if (m.role === "assistant") {
+      if (isOoc && m.role === "assistant") {
+        return `[SYSTEM]: ${labelContent}`;
+      } else if (m.role === "assistant") {
         return `[ASSISTANT]: ${labelContent}`;
       } else {
         if (personaPrefixEnabled && m.senderName && m.senderName !== "You") {
@@ -16846,10 +16852,15 @@ function formatOocMessageEntry(message, personaPrefixEnabled = true) {
   const isOoc = message.ooc === true;
   let labelContent = rawContent.trim();
   if (isOoc) {
-    labelContent = `((OOC: ${labelContent}))`;
+    if (labelContent.startsWith("((OOC:") && labelContent.endsWith("))")) {
+      labelContent = rawContent.trim();
+    } else {
+      labelContent = `((OOC: ${labelContent}))`;
+    }
   }
-  const labeled = `${message.role}: ${labelContent}`;
-  const normalized = labeled.replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:").replace(/(^|\n)user:/gi, "$1[USER]:");
+  const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
+  const labeled = `${roleLabel}: ${labelContent}`;
+  const normalized = labeled.replace(/(^|\n)system:/gi, "$1[SYSTEM]:").replace(/(^|\n)assistant:/gi, "$1[SYSTEM]:").replace(/(^|\n)user:/gi, "$1[USER]:");
   if (message.role === "user" && !isOoc && personaPrefixEnabled) {
     const personaName = String(message.senderName || "You");
     return normalized.replace(/^\[USER\]:/, `[USER (as ${personaName})]:`);

@@ -654,9 +654,14 @@ function buildMessageEntryForSummary(message, personaPrefixEnabled = true) {
   const isOoc = message.ooc === true;
   let labelContent = trimmed;
   if (isOoc) {
-    labelContent = `((OOC: ${trimmed}))`;
+    if (trimmed.startsWith("((OOC:") && trimmed.endsWith("))")) {
+      labelContent = trimmed;
+    } else {
+      labelContent = `((OOC: ${trimmed}))`;
+    }
   }
-  const labeled = `${message.role}: ${labelContent}`;
+  const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
+  const labeled = `${roleLabel}: ${labelContent}`;
   const normalized = normalizeSummaryRoleLabels(labeled);
   if (message.role === "user" && !isOoc && personaPrefixEnabled) {
     const personaName = String(message.senderName || "You");
@@ -683,7 +688,8 @@ function normalizeSummaryRoleLabels(text) {
   if (!text) return "";
   const normalized = text.replace(/\r\n/g, "\n");
   return normalized
-    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
+    .replace(/(^|\n)system:/gi, "$1[SYSTEM]:")
+    .replace(/(^|\n)assistant:/gi, "$1[SYSTEM]:")
     .replace(/(^|\n)user:/gi, "$1[USER]:");
 }
 
