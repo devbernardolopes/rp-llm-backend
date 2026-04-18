@@ -7722,6 +7722,10 @@ function openModal(modalId) {
             closeInfoPanel();
             return;
           }
+          const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+          if (isMobile && btn.id === "character-sort-btn") {
+            return;
+          }
           closeInfoPanel();
           const infoKey = btn.getAttribute("data-info");
           if (infoKey) showInfoPanel(infoKey, btn);
