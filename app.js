@@ -21035,6 +21035,7 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
   const isOoc = options?.isOoc === true;
+  console.log("DEBUG callOpenRouter options:", options, "isOoc:", isOoc);
   const summaryModel = state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
   const titleModel = state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
   const oocModel = state.settings.oocModel || DEFAULT_SETTINGS.oocModel;
@@ -21117,7 +21118,7 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
       const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc);
       return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
     })(),
-    stream: getEffectiveRequestStream(requestOptions, isTitleGeneration, isSummarization, isOoc),
+    stream: (console.log("DEBUG stream call: options", requestOptions, "isOoc", isOoc), getEffectiveRequestStream(requestOptions, isTitleGeneration, isSummarization, isOoc)),
   };
 
   state.currentRequestMessages = body.messages;
@@ -22269,6 +22270,7 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal, optio
 }
 
 async function fetchCompletionResponse(body, signal) {
+  console.log("DEBUG fetchCompletionResponse body.stream:", body.stream);
   const localKey = String(state.settings.openRouterApiKey || "").trim();
   if (localKey) {
     return fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -22625,6 +22627,7 @@ function getOocTemperature() {
 }
 
 function getOocStream() {
+  console.log("DEBUG getOocStream: oocSettingsEnabled =", isOocSettingsEnabled(), "state.settings.oocStream =", state.settings.oocStream);
   return isOocSettingsEnabled() ? Boolean(state.settings.oocStream) : !!state.settings.streamEnabled;
 }
 
@@ -22694,10 +22697,14 @@ function getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOo
 }
 
 function getEffectiveRequestStream(options, isTitleGeneration, isSummarization, isOoc = undefined) {
+  console.log("DEBUG getEffectiveRequestStream: isOoc =", isOoc, "options =", options, "options.forceStream =", options?.forceStream);
   if (isOoc === true) {
-    return getOocStream();
+    const result = getOocStream();
+    console.log("DEBUG getEffectiveRequestStream: OOC result =", result);
+    return result;
   }
   if (options && Object.prototype.hasOwnProperty.call(options, "forceStream")) {
+    console.log("DEBUG: forceStream path", isTitleGeneration, isSummarization);
     if (isTitleGeneration) {
       return isAutoTitleSettingsEnabled() ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
     }
@@ -22706,7 +22713,9 @@ function getEffectiveRequestStream(options, isTitleGeneration, isSummarization, 
     }
     return Boolean(options.forceStream);
   }
-  return !!state.settings.streamEnabled;
+  const result = !!state.settings.streamEnabled;
+  console.log("DEBUG: default path result =", result);
+  return result;
 }
 
 function findStopStringIndex(content, stopStrings) {
