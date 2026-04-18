@@ -1554,10 +1554,7 @@ function setupEvents() {
     renderLoreEntryEditors();
   });
   document.getElementById("toggle-all-lore-entries-btn")?.addEventListener("click", toggleAllLoreEntries);
-  document.getElementById("save-lore-editor-btn").addEventListener("click", () => {
-    console.log("DEBUG save button clicked, entries =", state.lore.entries);
-    saveLorebookFromEditor({ close: true });
-  });
+  document.getElementById("save-lore-editor-btn").addEventListener("click", () => saveLorebookFromEditor({ close: true }));
   document.getElementById("apply-lore-editor-btn")?.addEventListener("click", () => saveLorebookFromEditor({ close: false }));
   document.getElementById("lore-injection-mode")?.addEventListener("change", toggleSuppressionWindowField);
 
@@ -7861,13 +7858,13 @@ async function closeActiveModal() {
   }
   if (closingId === "lore-editor-modal") {
     setModalDirtyState(closingId, false);
-    resetLoreEditorState();
     const parentModal = document.getElementById("lore-modal");
     if (parentModal) {
       renderLorebookManagementList().catch(() => {});
       parentModal.classList.remove("hidden");
       state.activeModalId = "lore-modal";
       updateDocumentTitleWithUnread();
+      // Don't reset entries here - keep them for lore-modal use
       return;
     }
   }
@@ -10129,7 +10126,6 @@ function addLoreEntryEditor(entry = null) {
 }
 
 function resetLoreEditorState() {
-  console.log("DEBUG resetLoreEditorState called");
   state.lore.editingId = null;
   state.lore.entries = [];
 }
@@ -10139,14 +10135,12 @@ async function closeLoreEditor() {
 }
 
 async function openLoreEditor(lorebook = null) {
-  console.log("DEBUG openLoreEditor: START, lorebook =", lorebook?.id, "current entries =", state.lore.entries);
   const normalized = normalizeLorebookRecord(lorebook || {});
   state.lore.editingId = normalized?.id || null;
   const entries = Array.isArray(normalized?.entries) ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx)) : [];
   if (entries.length === 0) {
     entries.push(normalizeLorebookEntry({ id: Date.now(), keys: [], secondaryKeys: [], content: "" }, 0));
   }
-  console.log("DEBUG openLoreEditor: loading entries =", entries);
   state.lore.entries = entries;
 
   let lorebookWithCollapseState = lorebook;
@@ -10189,9 +10183,7 @@ async function openLoreEditor(lorebook = null) {
 function renderLoreEntryEditors() {
   const root = document.getElementById("lore-entries-list");
   if (!root) return;
-  console.log("DEBUG renderLoreEntryEditors: entries before =", state.lore.entries);
   root.innerHTML = "";
-  console.log("DEBUG renderLoreEntryEditors: entries after clear =", state.lore.entries);
   state.lore.entries.forEach((entry, index) => {
     const card = document.createElement("div");
     card.className = "lore-entry-card";
@@ -10402,9 +10394,6 @@ async function collectLorebookFromEditor() {
     }))
     .filter((entry) => entry.keys.length > 0 || entry.content.length > 0);
 
-  console.log("DEBUG collectLorebook: state.lore.entries =", state.lore.entries);
-  console.log("DEBUG collectLorebook: entries after filter =", entries);
-
   if (entries.length === 0) {
     await openInfoDialog(t("invalidLoreBookTitle"), t("loreAtLeastOneEntry"));
     return null;
@@ -10445,7 +10434,6 @@ async function collectLorebookFromEditor() {
 }
 
 async function saveLorebookFromEditor({ close = true } = {}) {
-  console.log("DEBUG saveLorebookFromEditor: state.lore.entries before collect =", state.lore.entries);
   const payload = await collectLorebookFromEditor();
   if (!payload) return false;
   if (state.lore.editingId) {
