@@ -7873,7 +7873,7 @@ async function closeActiveModal() {
   }
   if (closingId === "lore-modal") {
     setModalDirtyState(closingId, false);
-    resetLoreEditorState();
+    // Don't reset entries here - they might be needed for lore-editor-modal
     state.activeModalId = null;
     updateDocumentTitleWithUnread();
   }
