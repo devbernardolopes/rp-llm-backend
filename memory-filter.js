@@ -25,7 +25,8 @@ async function filterMemoriesByRelevance(rawMemoryContext, character, threadId) 
   const recent = [];
   for (let i = conversationHistory.length - 1; i >= 0 && recent.length < 12; i--) {
     const m = conversationHistory[i];
-    if (!m || m.ooc === true || isPlaceholderMessage(m) || m.summarized === true) continue;
+    const hasGenerationError = !!String(m?.generationError || "").trim();
+    if (!m || m.ooc === true || isPlaceholderMessage(m) || m.summarized === true || hasGenerationError) continue;
     if (m.role === 'user' || m.role === 'assistant') recent.unshift(m);
   }
   const queryText = recent.map(m => `${m.role}: ${m.content}`).join('\n');

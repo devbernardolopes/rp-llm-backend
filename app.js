@@ -11048,10 +11048,12 @@ function getInSimulationMessages(history = conversationHistory, options = {}) {
 }
 
 function isInSimulationMessage(message, includeOoc = false) {
+  if (!message || isPlaceholderMessage(message)) return false;
+  const hasGenerationError = !!String(message.generationError || "").trim();
   if (includeOoc) {
-    return !!message && !isPlaceholderMessage(message);
+    return !hasGenerationError;
   }
-  return !!message && message.ooc !== true && !isPlaceholderMessage(message);
+  return message.ooc !== true && !hasGenerationError;
 }
 
 function getMessageDisplayIndex(index, history = conversationHistory) {

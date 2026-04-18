@@ -362,11 +362,13 @@ async function summarizeMemory(character) {
     .map((message, idx) => ({ message, idx }))
     .filter((entry) => {
       const msg = entry.message;
+      const hasGenerationError = !!String(msg?.generationError || "").trim();
       if (
         !msg ||
         (!includeOoc && msg.ooc === true) ||
         memoryIsPlaceholderMessage(msg) ||
-        msg.summarized === true
+        msg.summarized === true ||
+        hasGenerationError
       ) {
         return false;
       }
