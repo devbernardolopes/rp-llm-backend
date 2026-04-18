@@ -22624,8 +22624,8 @@ function getOocStream() {
   return isOocSettingsEnabled() ? Boolean(state.settings.oocStream) : !!state.settings.streamEnabled;
 }
 
-function getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc) {
-  if (isOoc) {
+function getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc = undefined) {
+  if (isOoc === true) {
     return getOocTemperature();
   }
   if (isTitleGeneration) {
@@ -22637,8 +22637,8 @@ function getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOo
   return clampTemperature(state.settings.temperature);
 }
 
-function getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) {
-  if (isOoc) {
+function getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc = undefined) {
+  if (isOoc === true) {
     return 0.9;
   }
   if (isTitleGeneration) {
@@ -22650,8 +22650,8 @@ function getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) {
   return Number(state.settings.topP) || 1;
 }
 
-function getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc) {
-  if (isOoc) {
+function getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc = undefined) {
+  if (isOoc === true) {
     return 0;
   }
   if (isTitleGeneration) {
@@ -22663,8 +22663,8 @@ function getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization,
   return Number(state.settings.frequencyPenalty) || 0;
 }
 
-function getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc) {
-  if (isOoc) {
+function getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc = undefined) {
+  if (isOoc === true) {
     return 0;
   }
   if (isTitleGeneration) {
@@ -22676,8 +22676,8 @@ function getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, 
   return Number(state.settings.presencePenalty) || 0;
 }
 
-function getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc) {
-  if (isOoc) {
+function getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc = undefined) {
+  if (isOoc === true) {
     return getOocStopStrings();
   }
   if (isTitleGeneration) {
@@ -22689,8 +22689,8 @@ function getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOo
   return getStopStrings();
 }
 
-function getEffectiveRequestStream(options, isTitleGeneration, isSummarization, isOoc) {
-  if (isOoc) {
+function getEffectiveRequestStream(options, isTitleGeneration, isSummarization, isOoc = undefined) {
+  if (isOoc === true) {
     return getOocStream();
   }
   if (options && Object.prototype.hasOwnProperty.call(options, "forceStream")) {
