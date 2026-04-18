@@ -1554,7 +1554,10 @@ function setupEvents() {
     renderLoreEntryEditors();
   });
   document.getElementById("toggle-all-lore-entries-btn")?.addEventListener("click", toggleAllLoreEntries);
-  document.getElementById("save-lore-editor-btn").addEventListener("click", () => saveLorebookFromEditor({ close: true }));
+  document.getElementById("save-lore-editor-btn").addEventListener("click", () => {
+    console.log("DEBUG save button clicked, entries =", state.lore.entries);
+    saveLorebookFromEditor({ close: true });
+  });
   document.getElementById("apply-lore-editor-btn")?.addEventListener("click", () => saveLorebookFromEditor({ close: false }));
   document.getElementById("lore-injection-mode")?.addEventListener("change", toggleSuppressionWindowField);
 
