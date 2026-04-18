@@ -3030,10 +3030,8 @@ function handleMemoryCommandFromInput(input, raw = "") {
   openMemoryModal().catch(() => {});
   if (!raw) {
     input.value = "";
+    resetUserInputElementHeight(input);
   }
-  requestAnimationFrame(() => {
-    adjustUserInputElementHeight(input);
-  });
   return true;
 }
 
@@ -3077,7 +3075,7 @@ async function handleImageCommand(prompt, options = {}) {
 
   if (input) {
     input.value = "";
-    adjustUserInputElementHeight(input);
+    resetUserInputElementHeight(input);
   }
 
   const entryPersonaColor = normalizePersonaColor(currentPersona?.color);
@@ -16604,6 +16602,7 @@ async function sendMessage(options = {}) {
   const clearDraftInput = () => {
     if (preserveInput) return;
     input.value = "";
+    resetUserInputElementHeight(input);
     state.activeShortcut = null;
     if (currentThread) {
       currentThread.draftInput = null;
