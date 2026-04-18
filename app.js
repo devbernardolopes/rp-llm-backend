@@ -15401,7 +15401,7 @@ async function getFullHistoryFromDb(threadId) {
   if (!thread?.messages) return [];
   return thread.messages.map((m) => ({
     ...m,
-    role: m.role === "ai" ? "assistant" : m.role,
+    role: m.role === "ai" ? "assistant" : m.ooc === true ? "system" : m.role,
   }));
 }
 
@@ -17266,7 +17266,7 @@ async function generateBotReply() {
   const messagesWithoutSystem = inSimulationHistory
     .filter((m) => !m.summarized)
     .map((m) => {
-      const role = m.role === "ai" ? "assistant" : m.role;
+      const role = m.role === "ai" ? "assistant" : m.ooc === true ? "system" : m.role;
       let content = removeImageLinksFromContent(m.content);
       if (role === "user" && currentCharacter?.personaPrefixEnabled !== false && m.senderName && m.senderName !== "You" && currentThread?.oocModeEnabled !== true && m.ooc !== true) {
         content = `(As ${m.senderName}): ${content}`;
@@ -17616,7 +17616,7 @@ async function regenerateMessage(index) {
     const regenMessagesWithoutSystem = regenHistory
       .filter((m) => !m.summarized)
       .map((m) => {
-        const role = m.role === "ai" ? "assistant" : m.role;
+        const role = m.role === "ai" ? "assistant" : m.ooc === true ? "system" : m.role;
         let content = m.content;
         if (role === "user" && currentCharacter?.personaPrefixEnabled !== false && m.senderName && m.senderName !== "You" && currentThread?.oocModeEnabled !== true && m.ooc !== true) {
           content = `(As ${m.senderName}): ${content}`;
@@ -20168,7 +20168,7 @@ async function processNextQueuedThread() {
   };
   const tempConversation = (thread.messages || []).map((m) => ({
     ...m,
-    role: m.role === "ai" ? "assistant" : m.role,
+    role: m.role === "ai" ? "assistant" : m.ooc === true ? "system" : m.role,
   }));
   const tempPersona = thread.selectedPersonaId ? await db.personas.get(thread.selectedPersonaId) : null;
   const writingTurnCountForThread = getThreadWritingInstructionsTurnCount(tempThread);
@@ -20189,7 +20189,7 @@ async function processNextQueuedThread() {
   const messagesWithoutSystem = filteredTempConversation
     .filter((m) => !m.summarized)
     .map((m) => ({
-      role: m.role === "ai" ? "assistant" : m.role,
+role: m.role === "ai" ? "assistant" : m.ooc === true ? "system" : m.role,
       content: removeImageLinksFromContent(m.content),
     }));
   const promptMessages = [{ role: "system", content: systemPrompt }, ...messagesWithoutSystem];
