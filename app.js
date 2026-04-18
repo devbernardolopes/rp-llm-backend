@@ -10137,7 +10137,11 @@ async function closeLoreEditor() {
 async function openLoreEditor(lorebook = null) {
   const normalized = normalizeLorebookRecord(lorebook || {});
   state.lore.editingId = normalized?.id || null;
-  state.lore.entries = Array.isArray(normalized?.entries) ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx)) : [];
+  const entries = Array.isArray(normalized?.entries) ? normalized.entries.map((e, idx) => normalizeLorebookEntry(e, idx)) : [];
+  if (entries.length === 0) {
+    entries.push(normalizeLorebookEntry({ id: Date.now(), keys: [], secondaryKeys: [], content: "" }, 0));
+  }
+  state.lore.entries = entries;
 
   let lorebookWithCollapseState = lorebook;
   if (state.lore.editingId) {
