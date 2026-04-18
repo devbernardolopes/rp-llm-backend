@@ -10129,7 +10129,7 @@ function addLoreEntryEditor(entry = null) {
 }
 
 function resetLoreEditorState() {
-  console.log("DEBUG resetLoreEditorState called");
+  console.log("DEBUG resetLoreEditorState called, stack =", new Error().stack);
   state.lore.editingId = null;
   state.lore.entries = [];
 }
