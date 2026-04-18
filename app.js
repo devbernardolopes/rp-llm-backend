@@ -20929,7 +20929,7 @@ async function openMessageSystemPromptModal(index) {
     if (state.settings.showTokenCounts === true) {
       if (window.estimateTokens) {
         window.estimateTokens(textarea.value).then((tokens) => {
-          countEl.textContent = String(tokens);
+          countEl.textContent = `${tokens} token${tokens === 1 ? "" : "s"}`;
         });
       }
     } else {
