@@ -38,6 +38,7 @@
   --avatar-bg: #253147;
   --avatar-border-radius: 8px;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --browser-chrome-bottom: 70px;
 }
 
 body {
@@ -181,7 +182,7 @@ body {
   .character-pagination {
     position: relative;
     bottom: auto;
-    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--browser-chrome-bottom) + var(--safe-area-bottom));
   }
 }
 
