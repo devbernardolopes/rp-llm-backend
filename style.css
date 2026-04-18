@@ -549,7 +549,7 @@ body {
   column-gap: 8px;
   row-gap: 2px;
   align-items: start;
-  min-height: 74px;
+  min-height: 84px;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -869,14 +869,14 @@ body {
 }
 
 .thread-row .actions .icon-btn {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border-radius: 7px;
 }
 
 .thread-row .actions .icon-btn svg {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
 }
 
 .thread-row .actions .thread-select {
