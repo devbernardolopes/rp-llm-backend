@@ -45,8 +45,8 @@ body {
   font-family: "Segoe UI", Tahoma, sans-serif;
   background: radial-gradient(circle at top, #1a2538, var(--bg) 45%);
   color: var(--text);
-  height: 100dvh;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -54,8 +54,8 @@ body {
   --left-pane-width: var(--pane-width);
   display: flex;
   flex-direction: row;
-  height: 100dvh;
   height: 100vh;
+  height: 100dvh;
   min-height: 0;
   position: relative;
   align-items: stretch;
