@@ -1257,7 +1257,7 @@ textarea {
   gap: 8px;
 }
 
-.character-filters.collapsed .character-filters-row,
+.character-filters.collapsed .filter-chips,
 .character-filters.collapsed .character-filters-body {
   display: none;
 }
@@ -1340,31 +1340,53 @@ textarea {
 }
 
 .filter-chips {
-  display: inline-flex;
-  flex-direction: column;
+  display: flex;
+  flex-wrap: nowrap;
   gap: 6px;
-  align-items: flex-start;
+  align-items: center;
   min-height: 28px;
   min-width: 0;
   flex: 1 1 auto;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none;
+  height: 0;
+}
+
+.filter-chips:hover {
+  scrollbar-width: auto;
+  -ms-overflow-style: auto;
+}
+
+.filter-chips:hover::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+}
+
+.filter-chips:hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.filter-chips:hover::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+.filter-chips:hover::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
 }
 
 .filter-chips-overflow {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
-  max-height: 80px;
-  overflow-y: auto;
   width: 100%;
-}
-
-.filter-chips-overflow.expanded {
-  max-height: 150px;
-}
-
-.filter-tag-more-btn {
-  align-self: flex-start;
 }
 
 .filter-active-cue {

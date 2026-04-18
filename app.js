@@ -2981,10 +2981,8 @@ function renderCharacterTagFilterChips() {
   const allTags = getAllAvailableTags();
   if (allTags.length === 0) return;
 
-  const isExpanded = state.expandedCharacterTagFilters === true;
   const chipsWrap = document.createElement("div");
   chipsWrap.className = "filter-chips-overflow";
-  if (isExpanded) chipsWrap.classList.add("expanded");
 
   allTags.forEach((tag) => {
     const chip = document.createElement("button");
@@ -2998,25 +2996,6 @@ function renderCharacterTagFilterChips() {
     chipsWrap.appendChild(chip);
   });
   chips.appendChild(chipsWrap);
-  const moreBtn = document.createElement("button");
-  moreBtn.type = "button";
-  moreBtn.className = "tag-more-btn filter-tag-more-btn hidden";
-  chips.appendChild(moreBtn);
-  const refreshMore = () => {
-    const overflow = chipsWrap.scrollHeight > chipsWrap.clientHeight + 1;
-    if (!overflow && !isExpanded) {
-      moreBtn.classList.add("hidden");
-      return;
-    }
-    moreBtn.classList.remove("hidden");
-    moreBtn.textContent = isExpanded ? t("less") : t("more");
-  };
-  moreBtn.addEventListener("click", () => {
-    state.expandedCharacterTagFilters = !isExpanded;
-    saveUiState();
-    renderCharacterTagFilterChips();
-  });
-  requestAnimationFrame(refreshMore);
 }
 
 function handleMemoryCommandFromInput(input, raw = "") {

@@ -77,21 +77,19 @@
         </header>
         <section id="character-filters" class="character-filters">
           <div class="character-filters-head">
-            <div class="character-filters-row">
-              <div id="character-tag-filter-chips" class="filter-chips"></div>
-              <div class="character-filters-controls">
-                <input id="character-search-input" type="text" class="filter-search-input" placeholder="Search..." data-i18n-placeholder="searchPlaceholder" />
-                <div class="character-sort-field">
-                  <button id="character-sort-btn" class="icon-btn character-sort-btn sort-info" type="button">
-                    <img id="character-sort-icon" alt="" />
-                  </button>
-                </div>
-                <button id="character-sort-dir-btn" class="icon-btn sort-dir-btn" type="button" aria-label="Toggle sort direction">&#8593;</button>
-                <button id="character-tag-filter-clear" class="icon-btn" type="button" aria-label="Clear filters" data-i18n-title="clearFiltersTitle">&times;</button>
+            <div class="character-filters-controls">
+              <input id="character-search-input" type="text" class="filter-search-input" placeholder="Search..." data-i18n-placeholder="searchPlaceholder" />
+              <div class="character-sort-field">
+                <button id="character-sort-btn" class="icon-btn character-sort-btn sort-info" type="button">
+                  <img id="character-sort-icon" alt="" />
+                </button>
               </div>
+              <button id="character-sort-dir-btn" class="icon-btn sort-dir-btn" type="button" aria-label="Toggle sort direction">&#8593;</button>
+              <button id="character-tag-filter-clear" class="icon-btn" type="button" aria-label="Clear filters" data-i18n-title="clearFiltersTitle">&times;</button>
             </div>
             <button id="character-filters-toggle" class="icon-btn filters-toggle-btn" type="button" data-i18n-title="toggleFilters" aria-label="Toggle filters">&#9650;</button>
           </div>
+          <div id="character-tag-filter-chips" class="filter-chips"></div>
           <div class="character-filters-body">
             <div id="character-filter-active-cue" class="filter-active-cue hidden" data-i18n="tagFiltersActive">Tag filters active.</div>
           </div>
