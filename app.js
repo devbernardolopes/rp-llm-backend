@@ -20926,7 +20926,16 @@ async function openMessageSystemPromptModal(index) {
     const countEl = document.createElement("span");
     countEl.id = `${textarea.id}-count`;
     countEl.className = "textarea-collapse-count system-prompt-word-count";
-    countEl.textContent = String(countWords(textarea.value));
+    if (state.settings.showTokenCounts === true) {
+      if (window.estimateTokens) {
+        window.estimateTokens(textarea.value).then((tokens) => {
+          countEl.textContent = String(tokens);
+        });
+      }
+    } else {
+      const words = countWords(textarea.value);
+      countEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
+    }
 
     entryWrapper.append(label, textarea, countEl);
     container.appendChild(entryWrapper);
