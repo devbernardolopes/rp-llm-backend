@@ -16936,7 +16936,7 @@ async function sendOocInquiry(text) {
     generationInfo: null,
     usedLoreEntries: [],
     usedMemorySummary: "",
-    model: oocSettingsEnabled ? (state.settings.oocModel || DEFAULT_SETTINGS.oocModel) : state.settings.model || "",
+    model: oocSettingsEnabled ? state.settings.oocModel || DEFAULT_SETTINGS.oocModel : state.settings.model || "",
     temperature: oocSettingsEnabled ? (state.settings.oocTemperature ?? DEFAULT_SETTINGS.oocTemperature) : Number(state.settings.temperature) || 0,
     requestMessages: [
       { role: "system", content: systemPrompt },
@@ -16969,18 +16969,25 @@ async function sendOocInquiry(text) {
   await persistCurrentThread();
 
   try {
-    const effectiveModel = isOocSettingsEnabled() ? (state.settings.oocModel || DEFAULT_SETTINGS.oocModel) : state.settings.model;
-    const result = await callOpenRouter(systemPrompt, [{ role: "user", content: userMsg.content }], effectiveModel, (chunk) => {
-      pendingAssistant.content += chunk;
-      if (state.settings.streamEnabled) {
-        const liveRow = ensureMessageRowExists(displayPendingIndex);
-        const liveContent = liveRow?.querySelector(".message-content");
-        if (liveContent) {
-          liveContent.innerHTML = renderMessageHtml(pendingAssistant.content, pendingAssistant.role);
+    const effectiveModel = isOocSettingsEnabled() ? state.settings.oocModel || DEFAULT_SETTINGS.oocModel : state.settings.model;
+    const result = await callOpenRouter(
+      systemPrompt,
+      [{ role: "user", content: userMsg.content }],
+      effectiveModel,
+      (chunk) => {
+        pendingAssistant.content += chunk;
+        if (state.settings.streamEnabled) {
+          const liveRow = ensureMessageRowExists(displayPendingIndex);
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(pendingAssistant.content, pendingAssistant.role);
+          }
         }
-      }
-      if (isViewing) scrollChatToBottom();
-    }, null, { isOoc: true });
+        if (isViewing) scrollChatToBottom();
+      },
+      null,
+      { isOoc: true },
+    );
     state.lastUsedModel = result.model || "";
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
@@ -17083,7 +17090,7 @@ async function regenerateOocMessage(index) {
     ];
     target.requestMessages = oocRequestMessages;
     messagesToSave[index].requestMessages = oocRequestMessages;
-    const effectiveModel = isOocSettingsEnabled() ? (state.settings.oocModel || DEFAULT_SETTINGS.oocModel) : state.settings.model;
+    const effectiveModel = isOocSettingsEnabled() ? state.settings.oocModel || DEFAULT_SETTINGS.oocModel : state.settings.model;
     const result = await callOpenRouter(
       systemPrompt,
       [{ role: "user", content: userMessage.content }],
@@ -17785,8 +17792,11 @@ async function copyTextWithToast(text, successKey) {
 
 async function copyMessage(text, message) {
   let content = String(text ?? "");
-  if (message?.ooc === true && message?.role === "system") {
-    content = content.replace(/^\(\(OOC:\s*/gi, "").replace(/\)\)$/gi, "").trim();
+  if (message?.ooc === true) {
+    content = content
+      .replace(/^\(\(OOC:\s*/gi, "")
+      .replace(/\)\)$/gi, "")
+      .trim();
   }
   return copyTextWithToast(content, "messageCopied");
 }
@@ -20193,7 +20203,7 @@ async function processNextQueuedThread() {
   const messagesWithoutSystem = filteredTempConversation
     .filter((m) => !m.summarized)
     .map((m) => ({
-role: m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? "system" : m.role,
+      role: m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? "system" : m.role,
       content: removeImageLinksFromContent(m.content),
     }));
   const promptMessages = [{ role: "system", content: systemPrompt }, ...messagesWithoutSystem];
@@ -21050,8 +21060,32 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
   const autoTitleSettingsEnabled = isAutoTitleSettingsEnabled();
   const summarySettingsEnabled = isSummarySettingsEnabled();
   const oocSettingsEnabled = isOocSettingsEnabled();
-  const effectiveProvider = isTitleGeneration ? (autoTitleSettingsEnabled ? titleProvider : provider) : isSummarization ? (summarySettingsEnabled ? summaryProvider : provider) : isOoc ? (oocSettingsEnabled ? oocProvider : provider) : provider;
-  const effectiveModel = isTitleGeneration ? (autoTitleSettingsEnabled ? titleModel : mainChatModel) : isSummarization ? (summarySettingsEnabled ? summaryModel : mainChatModel) : isOoc ? (oocSettingsEnabled ? oocModel : mainChatModel) : model;
+  const effectiveProvider = isTitleGeneration
+    ? autoTitleSettingsEnabled
+      ? titleProvider
+      : provider
+    : isSummarization
+      ? summarySettingsEnabled
+        ? summaryProvider
+        : provider
+      : isOoc
+        ? oocSettingsEnabled
+          ? oocProvider
+          : provider
+        : provider;
+  const effectiveModel = isTitleGeneration
+    ? autoTitleSettingsEnabled
+      ? titleModel
+      : mainChatModel
+    : isSummarization
+      ? summarySettingsEnabled
+        ? summaryModel
+        : mainChatModel
+      : isOoc
+        ? oocSettingsEnabled
+          ? oocModel
+          : mainChatModel
+        : model;
 
   const requestOptions = {
     ...options,
@@ -22612,11 +22646,11 @@ function isOocSettingsEnabled() {
 }
 
 function getOocProvider() {
-  return isOocSettingsEnabled() ? (state.settings.oocProvider || DEFAULT_SETTINGS.oocProvider) : state.settings.aiProvider || DEFAULT_SETTINGS.aiProvider;
+  return isOocSettingsEnabled() ? state.settings.oocProvider || DEFAULT_SETTINGS.oocProvider : state.settings.aiProvider || DEFAULT_SETTINGS.aiProvider;
 }
 
 function getOocModel() {
-  return isOocSettingsEnabled() ? (state.settings.oocModel || DEFAULT_SETTINGS.oocModel) : state.settings.model || DEFAULT_SETTINGS.model;
+  return isOocSettingsEnabled() ? state.settings.oocModel || DEFAULT_SETTINGS.oocModel : state.settings.model || DEFAULT_SETTINGS.model;
 }
 
 function getOocStopStrings() {
