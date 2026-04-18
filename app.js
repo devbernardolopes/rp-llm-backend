@@ -1475,7 +1475,8 @@ function setupEvents() {
   });
   const sortBtn = document.getElementById("character-sort-btn");
   if (sortBtn) {
-    sortBtn.addEventListener("click", async () => {
+    sortBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
       const parts = getCharacterSortParts(state.characterSortMode);
       const nextBase = getNextCharacterSortBase(parts.base);
       state.characterSortMode = `${nextBase}_${parts.dir}`;
@@ -1484,7 +1485,6 @@ function setupEvents() {
       state.characterPage = 1;
       await renderCharacters();
     });
-    sortBtn.classList.add("sort-info");
     const parts = getCharacterSortParts(state.characterSortMode);
     const infoKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
     sortBtn.setAttribute("data-info", infoKey);
@@ -7723,7 +7723,7 @@ function openModal(modalId) {
             return;
           }
           const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
-          if (isMobile && btn.id === "character-sort-btn") {
+          if (isMobile && (btn.id === "character-sort-btn" || btn.dataset.noInfoPanelOnMobile === "true")) {
             return;
           }
           closeInfoPanel();
@@ -9324,6 +9324,10 @@ function closeInfoPanel() {
 
 let hoverInfoPanelTimeout = null;
 function showHoverInfoPanel(infoKey, buttonEl) {
+  const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+  if (isMobile && buttonEl.id === "character-sort-btn") {
+    return;
+  }
   clearTimeout(hoverInfoPanelTimeout);
   closeInfoPanel();
 
