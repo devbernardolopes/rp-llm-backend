@@ -117,28 +117,6 @@ body {
     padding: 12px !important;
     overflow: auto !important;
   }
-
-  #left-pane.mobile-open .pane-middle {
-    overflow: visible !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-  }
-
-  #left-pane.mobile-open .thread-list {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    flex: 1;
-    min-height: 0;
-  }
-
-  #left-pane.mobile-open .thread-row {
-    min-height: 74px !important;
-    flex-shrink: 0;
-  }
-
-  .mobile-pane-toggle {
-    display: flex !important;
-  }
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
@@ -1120,6 +1098,28 @@ textarea {
     overflow: auto !important;
   }
 
+  #left-pane.mobile-open .pane-middle {
+    overflow: visible !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+  }
+
+  #left-pane.mobile-open .thread-list {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    flex: 1;
+    min-height: 0;
+  }
+
+  #left-pane.mobile-open .thread-row {
+    min-height: 74px !important;
+    flex-shrink: 0;
+  }
+
+  .mobile-pane-toggle {
+    display: flex !important;
+  }
+
   .mobile-pane-toggle:not(.mobile-pane-toggle-chat) {
     display: flex !important;
   }
@@ -1161,6 +1161,7 @@ textarea {
   .character-pagination {
     position: relative;
     bottom: auto;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   }
 }
 
