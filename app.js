@@ -146,6 +146,12 @@ Requirements:
   summaryTemperature: 0.25,
   summaryStopStrings: "",
   autoTitleMaxTokens: 64,
+  enableOocSettings: true,
+  oocProvider: "openrouter",
+  oocModel: "arcee-ai/trinity-large-preview:free",
+  oocTemperature: 0.8,
+  oocStopStrings: "",
+  oocStream: false,
   sectionHeaderMemoryContext: "***MEMORY CONTEXT***",
   sectionHeaderCharacterPrompt: "***CHARACTER PROMPT***",
   sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
@@ -442,6 +448,10 @@ function populateSettingsTabValues() {
   const defaultSummaryTemp = document.getElementById("default-summary-temp");
   const defaultSummaryStream = document.getElementById("default-summary-stream");
   const enableSummarySettings = document.getElementById("enable-summary-settings");
+  const defaultOocProvider = document.getElementById("default-ooc-provider");
+  const defaultOocModel = document.getElementById("default-ooc-model");
+  const defaultOocTemp = document.getElementById("default-ooc-temp");
+  const enableOocSettings = document.getElementById("enable-ooc-settings");
   const defaultAvatarScale = document.getElementById("default-avatar-scale");
   const defaultPersonaInjectionPlacement = document.getElementById("default-persona-injection-placement");
   const defaultTtsProvider = document.getElementById("default-tts-provider");
@@ -465,6 +475,14 @@ function populateSettingsTabValues() {
   if (enableAutoTitleSettings) enableAutoTitleSettings.checked = state.settings.enableAutoTitleSettings ?? DEFAULT_SETTINGS.enableAutoTitleSettings;
   if (defaultSummaryStream) defaultSummaryStream.checked = state.settings.defaultSummaryStream;
   if (enableSummarySettings) enableSummarySettings.checked = state.settings.enableSummarySettings ?? DEFAULT_SETTINGS.enableSummarySettings;
+  if (defaultOocProvider) defaultOocProvider.value = state.settings.oocProvider || DEFAULT_SETTINGS.oocProvider;
+  if (defaultOocTemp) {
+    defaultOocTemp.value = state.settings.oocTemperature ?? DEFAULT_SETTINGS.oocTemperature;
+    const val = document.getElementById("default-ooc-temp-value");
+    if (val) val.textContent = defaultOocTemp.value;
+  }
+  if (defaultOocModel) defaultOocModel.value = state.settings.oocModel || DEFAULT_SETTINGS.oocModel;
+  if (enableOocSettings) enableOocSettings.checked = state.settings.enableOocSettings ?? DEFAULT_SETTINGS.enableOocSettings;
   if (defaultAvatarScale) defaultAvatarScale.value = state.settings.defaultAvatarScale || 1;
   if (defaultPersonaInjectionPlacement) defaultPersonaInjectionPlacement.value = state.settings.defaultPersonaInjectionPlacement || "none";
   if (defaultTtsProvider) defaultTtsProvider.value = state.settings.defaultTtsProvider || "kokoro";
@@ -4534,6 +4552,7 @@ async function setupSettingsControls() {
 
       try {
         await populateAutoTitleSummaryModels();
+        await populateOocModels();
       } catch {}
     });
   }
@@ -4582,6 +4601,7 @@ async function setupSettingsControls() {
 
       try {
         await populateAutoTitleSummaryModels();
+        await populateOocModels();
       } catch {}
     });
   }
@@ -4622,6 +4642,62 @@ async function setupSettingsControls() {
   if (summaryStream) {
     summaryStream.addEventListener("change", () => {
       state.settings.defaultSummaryStream = summaryStream.checked;
+      saveSettings();
+    });
+  }
+  if (defaultOocProvider) {
+    defaultOocProvider.addEventListener("change", async () => {
+      const oldProvider = state.settings.oocProvider || DEFAULT_SETTINGS.oocProvider;
+      const newProvider = defaultOocProvider.value;
+      if (oldProvider !== newProvider) {
+        const lastModels = state.settings.lastModelsPerProvider || {};
+        if (state.settings.oocModel) {
+          lastModels[oldProvider] = state.settings.oocModel;
+        }
+        state.settings.lastModelsPerProvider = lastModels;
+        state.settings.oocModel = "";
+      }
+      state.settings.oocProvider = newProvider;
+      saveSettings();
+
+      try {
+        await populateOocModels();
+      } catch {}
+    });
+  }
+  if (defaultOocModel) {
+    defaultOocModel.addEventListener("change", () => {
+      state.settings.oocModel = defaultOocModel.value;
+      saveSettings();
+    });
+  }
+  if (defaultOocTemp) {
+    defaultOocTemp.addEventListener("input", () => {
+      const value = Number(defaultOocTemp.value);
+      state.settings.oocTemperature = value;
+      const oocTempValue = document.getElementById("default-ooc-temp-value");
+      if (oocTempValue) oocTempValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  const defaultOocStream = document.getElementById("default-ooc-stream");
+  const oocStopStringsInput = document.getElementById("default-ooc-stop-strings");
+  const enableOocSettingsToggle = document.getElementById("enable-ooc-settings");
+  if (oocStopStringsInput) {
+    oocStopStringsInput.addEventListener("input", () => {
+      state.settings.oocStopStrings = oocStopStringsInput.value.trim();
+      saveSettings();
+    });
+  }
+  if (enableOocSettingsToggle) {
+    enableOocSettingsToggle.addEventListener("change", () => {
+      state.settings.enableOocSettings = enableOocSettingsToggle.checked;
+      saveSettings();
+    });
+  }
+  if (defaultOocStream) {
+    defaultOocStream.addEventListener("change", () => {
+      state.settings.oocStream = defaultOocStream.checked;
       saveSettings();
     });
   }
@@ -4845,6 +4921,7 @@ function setupSettingsTabsLayout() {
           if (group === "api") {
             initSettingsCollapsibles();
             populateAutoTitleSummaryModels().catch(() => {});
+            populateOocModels().catch(() => {});
           }
         } else {
           g.classList.add("hidden");
@@ -16840,6 +16917,7 @@ async function sendOocInquiry(text) {
     scrollChatToBottom();
   }
 
+  const oocSettingsEnabled = isOocSettingsEnabled();
   const pendingAssistant = {
     role: "assistant",
     ooc: true,
@@ -16854,8 +16932,8 @@ async function sendOocInquiry(text) {
     generationInfo: null,
     usedLoreEntries: [],
     usedMemorySummary: "",
-    model: state.settings.model || "",
-    temperature: Number(state.settings.temperature) || 0,
+    model: oocSettingsEnabled ? (state.settings.oocModel || DEFAULT_SETTINGS.oocModel) : state.settings.model || "",
+    temperature: oocSettingsEnabled ? (state.settings.oocTemperature ?? DEFAULT_SETTINGS.oocTemperature) : Number(state.settings.temperature) || 0,
     requestMessages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userMsg.content },
@@ -16887,7 +16965,8 @@ async function sendOocInquiry(text) {
   await persistCurrentThread();
 
   try {
-    const result = await callOpenRouter(systemPrompt, [{ role: "user", content: userMsg.content }], state.settings.model, (chunk) => {
+    const effectiveModel = isOocSettingsEnabled() ? (state.settings.oocModel || DEFAULT_SETTINGS.oocModel) : state.settings.model;
+    const result = await callOpenRouter(systemPrompt, [{ role: "user", content: userMsg.content }], effectiveModel, (chunk) => {
       pendingAssistant.content += chunk;
       if (state.settings.streamEnabled) {
         const liveRow = ensureMessageRowExists(displayPendingIndex);
@@ -16897,7 +16976,7 @@ async function sendOocInquiry(text) {
         }
       }
       if (isViewing) scrollChatToBottom();
-    });
+    }, null, { isOoc: true });
     state.lastUsedModel = result.model || "";
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
@@ -17000,10 +17079,11 @@ async function regenerateOocMessage(index) {
     ];
     target.requestMessages = oocRequestMessages;
     messagesToSave[index].requestMessages = oocRequestMessages;
+    const effectiveModel = isOocSettingsEnabled() ? (state.settings.oocModel || DEFAULT_SETTINGS.oocModel) : state.settings.model;
     const result = await callOpenRouter(
       systemPrompt,
       [{ role: "user", content: userMessage.content }],
-      state.settings.model,
+      effectiveModel,
       (chunk) => {
         target.content += chunk;
         messagesToSave[index].content = target.content;
@@ -17019,6 +17099,7 @@ async function regenerateOocMessage(index) {
         }
       },
       state.abortController.signal,
+      { isOoc: true },
     );
     state.lastUsedModel = result.model || "";
     state.lastUsedProvider = result.provider || "";
@@ -18912,6 +18993,23 @@ async function populateAutoTitleSummaryModels() {
   }
   if (summarySelectedModel && state.settings.summaryModel !== summarySelectedModel) {
     state.settings.summaryModel = summarySelectedModel;
+    saveSettings();
+  }
+}
+
+async function populateOocModels() {
+  const oocModel = document.getElementById("default-ooc-model");
+  if (!oocModel) return;
+
+  const oocProvider = state.settings.oocProvider || DEFAULT_SETTINGS.oocProvider;
+  const oocCatalog = await getModelCatalogForProvider(oocProvider, true);
+  const lastModels = state.settings.lastModelsPerProvider || {};
+  const oocSelectedModel = getBestModelForProvider(oocProvider, state.settings.oocModel, oocCatalog, lastModels);
+
+  renderModelSelectOptions(oocModel, oocCatalog, oocSelectedModel);
+
+  if (oocSelectedModel && state.settings.oocModel !== oocSelectedModel) {
+    state.settings.oocModel = oocSelectedModel;
     saveSettings();
   }
 }
@@ -20932,21 +21030,26 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
 
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
+  const isOoc = options?.isOoc === true;
   const summaryModel = state.settings.summaryModel || DEFAULT_SETTINGS.summaryModel;
   const titleModel = state.settings.autoTitleModel || DEFAULT_SETTINGS.autoTitleModel;
+  const oocModel = state.settings.oocModel || DEFAULT_SETTINGS.oocModel;
   const titleProvider = state.settings.autoTitleProvider || DEFAULT_SETTINGS.autoTitleProvider;
   const summaryProvider = state.settings.summaryProvider || DEFAULT_SETTINGS.summaryProvider;
+  const oocProvider = state.settings.oocProvider || DEFAULT_SETTINGS.oocProvider;
   const mainChatModel = state.settings.model || DEFAULT_SETTINGS.model;
 
   const autoTitleSettingsEnabled = isAutoTitleSettingsEnabled();
   const summarySettingsEnabled = isSummarySettingsEnabled();
-  const effectiveProvider = isTitleGeneration ? (autoTitleSettingsEnabled ? titleProvider : provider) : isSummarization ? (summarySettingsEnabled ? summaryProvider : provider) : provider;
-  const effectiveModel = isTitleGeneration ? (autoTitleSettingsEnabled ? titleModel : mainChatModel) : isSummarization ? (summarySettingsEnabled ? summaryModel : mainChatModel) : model;
+  const oocSettingsEnabled = isOocSettingsEnabled();
+  const effectiveProvider = isTitleGeneration ? (autoTitleSettingsEnabled ? titleProvider : provider) : isSummarization ? (summarySettingsEnabled ? summaryProvider : provider) : isOoc ? (oocSettingsEnabled ? oocProvider : provider) : provider;
+  const effectiveModel = isTitleGeneration ? (autoTitleSettingsEnabled ? titleModel : mainChatModel) : isSummarization ? (summarySettingsEnabled ? summaryModel : mainChatModel) : isOoc ? (oocSettingsEnabled ? oocModel : mainChatModel) : model;
 
   const requestOptions = {
     ...options,
     useSeparateAutoTitleSettings: autoTitleSettingsEnabled,
     useSeparateSummarySettings: summarySettingsEnabled,
+    useSeparateOocSettings: oocSettingsEnabled,
   };
 
   if (effectiveProvider === "aihorde") {
@@ -21002,15 +21105,15 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
     model: resolvedModel,
     messages: promptMessages,
     max_completion_tokens: effectiveMaxTokens,
-    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
-    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
+    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
+    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
     frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
-    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization),
+    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
     ...(() => {
-      const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
+      const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc);
       return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
     })(),
-    stream: getEffectiveRequestStream(requestOptions, isTitleGeneration, isSummarization),
+    stream: getEffectiveRequestStream(requestOptions, isTitleGeneration, isSummarization, isOoc),
   };
 
   state.currentRequestMessages = body.messages;
@@ -21075,7 +21178,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
 
   const baseUrl = getLMStudioBaseUrl();
   const apiMethod = state.settings.lmstudioApiMethod || "openai";
-  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization);
+  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization, isOoc);
 
   let endpoint, body;
 
@@ -21098,8 +21201,8 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
       model: lmstudioModel,
       input,
       system_prompt: systemMessagesList.length > 0 ? systemMessagesList[0].content : undefined,
-      temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
-      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
+      temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
+      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
       top_k: topK > 0 ? topK : undefined,
       repeat_penalty: repeatPenalty !== 1 ? repeatPenalty : undefined,
       max_output_tokens: effectiveMaxTokens,
@@ -21109,15 +21212,15 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
     };
   } else {
     endpoint = "/v1/chat/completions";
-    const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
+    const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc);
     body = {
       model: lmstudioModel,
       messages: promptMessages,
       max_tokens: effectiveMaxTokens,
-      temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
-      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
-      frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
-      presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization),
+      temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
+      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
+      frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc),
+      presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
       ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
       stream: streamEnabled,
     };
@@ -21391,17 +21494,17 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
   state.currentRequestMessages = promptMessages;
 
   const baseUrl = "https://api.groq.com/openai/v1";
-  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization);
+  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization, isOoc);
 
-  const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
+  const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc);
   const body = {
     model: groqModel,
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
-    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
-    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
-    frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
-    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization),
+    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
+    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
+    frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc),
+    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
   };
@@ -21607,7 +21710,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
 
   const hordeApiMethod = String(state.settings.hordeApiMethod || "native").toLowerCase();
   const baseUrl = hordeApiMethod === "openai" ? "https://oai.aihorde.net" : "https://stablehorde.net";
-  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization);
+  const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization, isOoc);
 
   const headers = {
     "Content-Type": "application/json",
@@ -21616,16 +21719,16 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
     headers["Authorization"] = `Bearer ${hordeApiKey}`;
   }
 
-  const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
+  const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc);
 
   const body = {
     model: hordeModel,
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
-    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization),
-    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
+    temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
+    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
     frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
-    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization),
+    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
   };
@@ -21875,7 +21978,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
       n: 1,
       max_length: effectiveMaxTokens,
       temperature,
-      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization),
+      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
       top_k: 0,
       top_a: 0,
       typical: 0,
@@ -21930,7 +22033,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
 
     let content = generatedText;
     let stoppedByStopString = false;
-    const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization);
+    const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc);
     if (stopStrings && stopStrings.length > 0) {
       const truncation = truncateAtStopString(content, stopStrings);
       if (truncation.stopped) {
@@ -22489,7 +22592,38 @@ function isSummarySettingsEnabled() {
   return state.settings.enableSummarySettings ?? DEFAULT_SETTINGS.enableSummarySettings;
 }
 
-function getEffectiveRequestTemperature(isTitleGeneration, isSummarization) {
+function isOocSettingsEnabled() {
+  return state.settings.enableOocSettings ?? DEFAULT_SETTINGS.enableOocSettings;
+}
+
+function getOocProvider() {
+  return isOocSettingsEnabled() ? (state.settings.oocProvider || DEFAULT_SETTINGS.oocProvider) : state.settings.aiProvider || DEFAULT_SETTINGS.aiProvider;
+}
+
+function getOocModel() {
+  return isOocSettingsEnabled() ? (state.settings.oocModel || DEFAULT_SETTINGS.oocModel) : state.settings.model || DEFAULT_SETTINGS.model;
+}
+
+function getOocStopStrings() {
+  if (!isOocSettingsEnabled()) return getStopStrings();
+  return String(state.settings.oocStopStrings || "")
+    .split(",")
+    .map((s) => s.trimStart())
+    .filter(Boolean);
+}
+
+function getOocTemperature() {
+  return isOocSettingsEnabled() ? (state.settings.oocTemperature ?? DEFAULT_SETTINGS.oocTemperature) : clampTemperature(state.settings.temperature);
+}
+
+function getOocStream() {
+  return isOocSettingsEnabled() ? Boolean(state.settings.oocStream) : !!state.settings.streamEnabled;
+}
+
+function getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc) {
+  if (isOoc) {
+    return getOocTemperature();
+  }
   if (isTitleGeneration) {
     return isAutoTitleSettingsEnabled() ? (state.settings.autoTitleTemperature ?? DEFAULT_SETTINGS.autoTitleTemperature) : clampTemperature(state.settings.temperature);
   }
@@ -22499,7 +22633,10 @@ function getEffectiveRequestTemperature(isTitleGeneration, isSummarization) {
   return clampTemperature(state.settings.temperature);
 }
 
-function getEffectiveRequestTopP(isTitleGeneration, isSummarization) {
+function getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) {
+  if (isOoc) {
+    return 0.9;
+  }
   if (isTitleGeneration) {
     return isAutoTitleSettingsEnabled() ? 0.9 : Number(state.settings.topP) || 1;
   }
@@ -22509,7 +22646,10 @@ function getEffectiveRequestTopP(isTitleGeneration, isSummarization) {
   return Number(state.settings.topP) || 1;
 }
 
-function getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization) {
+function getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc) {
+  if (isOoc) {
+    return 0;
+  }
   if (isTitleGeneration) {
     return isAutoTitleSettingsEnabled() ? 0 : Number(state.settings.frequencyPenalty) || 0;
   }
@@ -22519,7 +22659,10 @@ function getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization)
   return Number(state.settings.frequencyPenalty) || 0;
 }
 
-function getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization) {
+function getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc) {
+  if (isOoc) {
+    return 0;
+  }
   if (isTitleGeneration) {
     return isAutoTitleSettingsEnabled() ? 0 : Number(state.settings.presencePenalty) || 0;
   }
@@ -22529,7 +22672,10 @@ function getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization) 
   return Number(state.settings.presencePenalty) || 0;
 }
 
-function getEffectiveRequestStopStrings(isTitleGeneration, isSummarization) {
+function getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc) {
+  if (isOoc) {
+    return getOocStopStrings();
+  }
   if (isTitleGeneration) {
     return isAutoTitleSettingsEnabled() ? getAutoTitleStopStrings() : getStopStrings();
   }
@@ -22539,7 +22685,10 @@ function getEffectiveRequestStopStrings(isTitleGeneration, isSummarization) {
   return getStopStrings();
 }
 
-function getEffectiveRequestStream(options, isTitleGeneration, isSummarization) {
+function getEffectiveRequestStream(options, isTitleGeneration, isSummarization, isOoc) {
+  if (isOoc) {
+    return getOocStream();
+  }
   if (options && Object.prototype.hasOwnProperty.call(options, "forceStream")) {
     if (isTitleGeneration) {
       return isAutoTitleSettingsEnabled() ? Boolean(options.forceStream) : !!state.settings.streamEnabled;
