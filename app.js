@@ -21136,6 +21136,7 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
 }
 
 async function callLMStudio(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
+  const isOoc = options?.isOoc === true;
   const resolvedModel = resolveModelForRequest(model);
   const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
@@ -21446,6 +21447,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
 }
 
 async function callGroq(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
+  const isOoc = options?.isOoc === true;
   const apiKey = state.settings.groqApiKey;
   if (!apiKey) {
     throw new Error("Missing Groq API key. Set it in Settings.");
@@ -21666,6 +21668,7 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
 }
 
 async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
+  const isOoc = options?.isOoc === true;
   const resolvedModel = resolveModelForRequest(model);
   const NO_CONTENT_RETURNED = "(No content returned)";
   const promptMessages = [
@@ -21912,6 +21915,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
 }
 
 async function callAIHorde(systemPrompt, history, model, onChunk = null, signal = null, options = {}) {
+  const isOoc = options?.isOoc === true;
   const resolvedModel = resolveModelForRequest(model);
   const hordeModel = resolvedModel.startsWith("aihorde/") ? resolvedModel.slice(8) : resolvedModel;
 
