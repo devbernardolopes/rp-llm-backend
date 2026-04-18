@@ -7745,12 +7745,17 @@ async function closeActiveModal() {
     }
   }
   if (closingId === "select-lorebook-modal") {
+    setModalDirtyState(closingId, false);
+    const searchInput = document.getElementById("select-lorebook-search");
+    if (searchInput) searchInput.value = "";
     const parentModal = document.getElementById("character-modal");
     if (parentModal) {
       parentModal.classList.remove("hidden");
       state.activeModalId = "character-modal";
       return;
     }
+    state.activeModalId = null;
+    updateDocumentTitleWithUnread();
   }
   if (closingId === "sfx-editor-modal") {
     const parentModal = document.getElementById("character-modal");
@@ -7779,6 +7784,12 @@ async function closeActiveModal() {
       updateDocumentTitleWithUnread();
       return;
     }
+  }
+  if (closingId === "lore-modal") {
+    setModalDirtyState(closingId, false);
+    resetLoreEditorState();
+    state.activeModalId = null;
+    updateDocumentTitleWithUnread();
   }
   if (closingId === "character-modal") {
     if (state.editingCharacterId) {
