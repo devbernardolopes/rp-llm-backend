@@ -16058,7 +16058,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     }
 
     const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
-      await copyMessage(message.content || "");
+      await copyMessage(message.content || "", message);
     });
     copyBtn.classList.add("msg-copy-btn");
     copyBtn.disabled = disableControlsForRow;
@@ -16139,7 +16139,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     applyEditButtonEditedStyle(editBtn, message);
     controls.appendChild(editBtn);
     const copyBtn = iconButton("copy", t("msgCopyTitle"), async () => {
-      await copyMessage(message.content || "");
+      await copyMessage(message.content || "", message);
     });
     copyBtn.classList.add("msg-copy-btn");
     copyBtn.disabled = disableControlsForRow;
@@ -17783,8 +17783,12 @@ async function copyTextWithToast(text, successKey) {
   }
 }
 
-async function copyMessage(text) {
-  return copyTextWithToast(text, "messageCopied");
+async function copyMessage(text, message) {
+  let content = String(text ?? "");
+  if (message?.ooc === true && message?.role === "system") {
+    content = content.replace(/^\(\(OOC:\s*/gi, "").replace(/\)\)$/gi, "").trim();
+  }
+  return copyTextWithToast(content, "messageCopied");
 }
 
 async function copyCodeBlockText(text) {
