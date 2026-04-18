@@ -10039,7 +10039,7 @@ function addLoreEntryEditor(entry = null) {
       state.lore.entries.length,
     ),
   );
-  state.modalDirty["lore-editor-modal"] = true;
+  setModalDirtyState("lore-editor-modal", true);
 }
 
 function resetLoreEditorState() {
@@ -10119,7 +10119,7 @@ function renderLoreEntryEditors() {
     const delBtn = iconButton("delete", "Delete entry", async () => {
       state.lore.entries.splice(index, 1);
       if (state.lore.entries.length === 0) addLoreEntryEditor();
-      state.modalDirty["lore-editor-modal"] = true;
+      setModalDirtyState("lore-editor-modal", true);
       renderLoreEntryEditors();
       const modal = document.getElementById("lore-editor-modal");
       if (modal) {
@@ -10144,7 +10144,7 @@ function renderLoreEntryEditors() {
     keysInput.value = (entry.keys || []).join(", ");
     keysInput.addEventListener("input", () => {
       entry.keys = parseCsvValues(keysInput.value);
-      state.modalDirty["lore-editor-modal"] = true;
+      setModalDirtyState("lore-editor-modal", true);
     });
 
     const secondaryLabel = document.createElement("span");
@@ -10159,7 +10159,7 @@ function renderLoreEntryEditors() {
     secondaryInput.value = (entry.secondaryKeys || []).join(", ");
     secondaryInput.addEventListener("input", () => {
       entry.secondaryKeys = parseCsvValues(secondaryInput.value);
-      state.modalDirty["lore-editor-modal"] = true;
+      setModalDirtyState("lore-editor-modal", true);
     });
 
     const contentLabel = document.createElement("span");
@@ -10175,7 +10175,7 @@ function renderLoreEntryEditors() {
     contentInput.value = entry.content || "";
     contentInput.addEventListener("input", () => {
       entry.content = String(contentInput.value || "");
-      state.modalDirty["lore-editor-modal"] = true;
+      setModalDirtyState("lore-editor-modal", true);
     });
 
     head.addEventListener("click", () => {
