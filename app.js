@@ -10141,6 +10141,7 @@ async function openLoreEditor(lorebook = null) {
   if (entries.length === 0) {
     entries.push(normalizeLorebookEntry({ id: Date.now(), keys: [], secondaryKeys: [], content: "" }, 0));
   }
+  console.log("DEBUG openLoreEditor: loading entries =", entries);
   state.lore.entries = entries;
 
   let lorebookWithCollapseState = lorebook;
