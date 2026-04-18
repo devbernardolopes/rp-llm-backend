@@ -21112,9 +21112,12 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
     messages: promptMessages,
     max_completion_tokens: effectiveMaxTokens,
     temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
-    frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
-    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
+    ...(() => {
+      const topP = getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc);
+      return topP !== null ? { top_p: topP } : {};
+    })(),
+    ...(isOoc !== true ? { frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization) } : {}),
+    ...(isOoc !== true ? { presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc) } : {}),
     ...(() => {
       const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc);
       return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
@@ -21209,7 +21212,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
       input,
       system_prompt: systemMessagesList.length > 0 ? systemMessagesList[0].content : undefined,
       temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
+      ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
       top_k: topK > 0 ? topK : undefined,
       repeat_penalty: repeatPenalty !== 1 ? repeatPenalty : undefined,
       max_output_tokens: effectiveMaxTokens,
@@ -21225,7 +21228,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
       messages: promptMessages,
       max_tokens: effectiveMaxTokens,
       temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
+      ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
       frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc),
       presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
       ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
@@ -21510,8 +21513,8 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
     temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
-    frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc),
+    ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
+    ...(isOoc !== true ? { frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc) } : {}),
     presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
@@ -21735,8 +21738,8 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
     temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-    top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
-    frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization),
+    ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
+    ...(isOoc !== true ? { frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization) } : {}),
     presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
@@ -21988,7 +21991,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
       n: 1,
       max_length: effectiveMaxTokens,
       temperature,
-      top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc),
+      ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
       top_k: 0,
       top_a: 0,
       typical: 0,
@@ -22645,7 +22648,7 @@ function getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOo
 
 function getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc = undefined) {
   if (isOoc === true) {
-    return 0.9;
+    return null; // Don't set top_p for OOC requests
   }
   if (isTitleGeneration) {
     return isAutoTitleSettingsEnabled() ? 0.9 : Number(state.settings.topP) || 1;
