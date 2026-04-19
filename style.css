@@ -182,13 +182,17 @@ body {
   .character-pagination {
     position: relative;
     bottom: auto;
-    padding-bottom: calc(var(--browser-chrome-bottom) + var(--safe-area-bottom));
+padding-bottom: calc(var(--browser-chrome-bottom) + var(--safe-area-bottom));
   }
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
   #left-pane.mobile-open ~ #chat-view .chat-input-wrapper,
   #left-pane.mobile-open ~ #chat-view .input-footer {
+    display: none;
+  }
+  body.modal-open ~ #chat-view .chat-input-wrapper,
+  body.modal-open ~ #chat-view .input-footer {
     display: none;
   }
 }
@@ -198,8 +202,13 @@ body {
   #left-pane.mobile-open ~ #chat-view .input-footer {
     display: none;
   }
+  body.modal-open ~ #chat-view .chat-input-wrapper,
+  body.modal-open ~ #chat-view .input-footer {
+    display: none;
+  }
+}
 
-  .chat-input-wrapper {
+.chat-input-wrapper {
     position: fixed;
     bottom: 0;
     padding-bottom: env(safe-area-inset-bottom, 34px);
@@ -207,18 +216,29 @@ body {
     left: 0;
     right: 0;
     z-index: 300;
-  }
-
-  .input-footer {
-    padding-bottom: calc(6px + env(safe-area-inset-bottom, 34px));
-  }
-
-  #chat-view {
-    padding-bottom: 50svh;
-  }
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
+  #left-pane.mobile-open ~ #chat-view .chat-input-wrapper,
+  #left-pane.mobile-open ~ #chat-view .input-footer {
+    display: none;
+  }
+  body.modal-open ~ #chat-view .chat-input-wrapper,
+  body.modal-open ~ #chat-view .input-footer {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) and (orientation: landscape) {
+  #left-pane.mobile-open ~ #chat-view .chat-input-wrapper,
+  #left-pane.mobile-open ~ #chat-view .input-footer {
+    display: none;
+  }
+  body.modal-open ~ #chat-view .chat-input-wrapper,
+  body.modal-open ~ #chat-view .input-footer {
+    display: none;
+  }
+
   .chat-input-wrapper {
     position: fixed;
     bottom: 0;

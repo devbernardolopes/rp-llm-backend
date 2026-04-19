@@ -7672,6 +7672,7 @@ function openModal(modalId) {
   if (!modal) return;
   state.activeModalId = modalId;
   modal.classList.remove("hidden");
+  document.body.classList.add("modal-open");
   window.requestAnimationFrame(() => {
     resetModalTextareaCollapseStates(modal);
   });
@@ -7883,6 +7884,7 @@ async function closeActiveModal() {
   }
   closeInfoPanel();
   state.activeModalId = null;
+  document.body.classList.remove("modal-open");
   setModalDirtyState(closingId, false);
   updateDocumentTitleWithUnread();
 }
