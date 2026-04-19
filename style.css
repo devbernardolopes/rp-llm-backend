@@ -3540,7 +3540,7 @@ textarea {
 }
 
 #confirm-modal {
-  z-index: 250;
+  z-index: 375;
 }
 
 .confirm-message-content {
