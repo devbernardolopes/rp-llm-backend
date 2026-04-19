@@ -1340,6 +1340,38 @@ function setupEvents() {
       updateKokoroDtypeOptionsForDevice(kokoroDeviceSelect.value || "webgpu");
     });
   }
+
+  async function detectWebGpuSupport() {
+    if (typeof navigator === "undefined" || !navigator.gpu) {
+      console.log("[TTS] WebGPU not available in navigator");
+      return false;
+    }
+    try {
+      const adapter = await navigator.gpu.requestAdapter();
+      console.log("[TTS] WebGPU adapter:", adapter);
+      return !!adapter;
+    } catch (err) {
+      console.log("[TTS] WebGPU detection error:", err);
+      return false;
+    }
+  }
+
+  async function initKokoroDeviceSelection() {
+    if (!kokoroDeviceSelect) return;
+    try {
+      const hasWebGpu = await detectWebGpuSupport();
+      console.log("[TTS] initKokoroDeviceSelection: hasWebGpu =", hasWebGpu);
+      kokoroDeviceSelect.value = hasWebGpu ? "webgpu" : "wasm";
+      console.log("[TTS] initKokoroDeviceSelection: device set to", kokoroDeviceSelect.value);
+      updateKokoroDtypeOptionsForDevice(kokoroDeviceSelect.value, "auto");
+      refreshCharTtsProviderFields();
+    } catch (err) {
+      console.log("[TTS] initKokoroDeviceSelection error:", err);
+      kokoroDeviceSelect.value = "wasm";
+      updateKokoroDtypeOptionsForDevice("wasm", "auto");
+    }
+  }
+  initKokoroDeviceSelection();
   const kokoroVoiceSelect = document.getElementById("char-tts-kokoro-voice");
   if (kokoroVoiceSelect) {
     kokoroVoiceSelect.addEventListener("change", (event) => {
