@@ -2625,11 +2625,6 @@ textarea {
   -ms-overflow-style: none;
 }
 
-/* #memory-modal .modal-body::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-} */
-
 .memory-modal-status {
   margin-bottom: 14px;
 }
@@ -3581,12 +3576,6 @@ textarea {
   background: #151d2a;
 }
 
-#persona-editor-modal .modal-body {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-}
-
 .modal-card {
   background: #151d2a;
   border: 1px solid var(--line);
@@ -3636,11 +3625,6 @@ textarea {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-
-/* #character-modal .modal-body::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-} */
 
 #database-modal .modal-body button {
   width: 100%;
@@ -5050,11 +5034,6 @@ textarea {
   -ms-overflow-style: none;
 }
 
-/* #message-system-prompt-modal .modal-body::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-} */
-
 .model-info-row {
   display: flex;
   gap: 12px;
@@ -5098,15 +5077,6 @@ textarea {
   padding-top: 8px;
   padding-bottom: 8px;
 }
-
-/* #lore-modal .modal-body {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-#lore-modal .modal-body::-webkit-scrollbar {
-  display: none;
-} */
 
 .lorebook-list {
   display: flex;
