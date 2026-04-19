@@ -149,7 +149,7 @@ function chunkForTTS(text, maxLen = 180) {
   const normalized = String(text || "").trim();
   if (!normalized) return [];
   const withParagraphBreaks = normalized.replace(/\n\n+/g, '\u0000');
-  const sentences = withParagraphBreaks.match(/[^.!?:;\-—\n)+]+[.!?:;\-—\n)+]+|[^.!?:;\-—\n)+]+$/g) || [withParagraphBreaks];
+  const sentences = withParagraphBreaks.match(/[^.!?:;\-—\n\u0000)+]+[.!?:;\-—\n\u0000)+]+|[^.!?:;\-—\n\u0000)+]+$/g) || [withParagraphBreaks];
   const chunks = [];
   let buffer = "";
 
