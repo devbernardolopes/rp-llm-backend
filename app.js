@@ -20926,17 +20926,21 @@ async function openMessageSystemPromptModal(index) {
     textarea.value = String(msg?.content || "");
     textarea.dataset.forceCollapsed = "1";
 
+    const msgContent = String(msg?.content || "");
+    textarea.value = msgContent;
+
     const countEl = document.createElement("span");
     countEl.id = `${textarea.id}-count`;
     countEl.className = "textarea-collapse-count system-prompt-word-count";
     if (state.settings.showTokenCounts === true) {
-      if (window.estimateTokens) {
-        window.estimateTokens(textarea.value).then((tokens) => {
-          countEl.textContent = `${tokens} token${tokens === 1 ? "" : "s"}`;
+      if (typeof window.estimateTokens === "function") {
+        window.estimateTokens(msgContent).then((tokens) => {
+          const tok = typeof tokens === "number" ? tokens : 0;
+          countEl.textContent = `${tok} token${tok === 1 ? "" : "s"}`;
         });
       }
     } else {
-      const words = countWords(textarea.value);
+      const words = typeof countWords === "function" ? countWords(msgContent) : 0;
       countEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
     }
 
@@ -20985,7 +20989,16 @@ function refreshTextareaWordCount(textarea) {
   if (!textarea || !textarea.id) return;
   const countEl = document.getElementById(`${textarea.id}-count`);
   if (!countEl) return;
-  countEl.textContent = String(countWords(textarea.value));
+  if (state.settings.showTokenCounts === true) {
+    if (typeof window.estimateTokens === "function") {
+      window.estimateTokens(textarea.value).then((tokens) => {
+        countEl.textContent = `${tokens} token${tokens === 1 ? "" : "s"}`;
+      });
+    }
+  } else {
+    const words = countWords(textarea.value);
+    countEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
+  }
 }
 
 function refreshTextareaTokenCount(textarea) {
@@ -20995,7 +21008,8 @@ function refreshTextareaTokenCount(textarea) {
   const text = String(textarea.value || "").trim();
   if (text) {
     estimateTokens(text).then((count) => {
-      countEl.textContent = `${count} tokens`;
+      const c = typeof count === "number" ? count : 0;
+      countEl.textContent = `${c} token${c === 1 ? "" : "s"}`;
     });
   } else {
     countEl.textContent = "0 tokens";
