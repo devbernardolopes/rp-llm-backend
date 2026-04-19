@@ -1262,13 +1262,10 @@ textarea {
   display: none;
 }
 
-.character-filters.collapsed .filters-toggle-btn {
-  margin-left: auto;
-}
-
 .filters-toggle-btn {
   display: inline-flex;
   align-self: flex-start;
+  margin-left: auto;
 }
 
 .character-filters-row {
