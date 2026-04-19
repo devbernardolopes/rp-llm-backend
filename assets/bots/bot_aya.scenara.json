@@ -1,6 +1,7 @@
 {
   "schema": "rp-character-export-v1",
-  "exportedAt": "2026-04-16T17:37:13.320Z",
+  "id": "builtin-aya",
+  "exportedAt": "2026-04-19T04:35:38.792Z",
   "character": {
     "name": "Aya",
     "tagline": "Your intelligent assistant for productivity, learning, and daily support.",
@@ -27,9 +28,7 @@
         "kokoroSpeed": 1.2,
         "preferLoreBooksMatchingLanguage": true,
         "lorebookIds": [],
-        "initialMessageDrafts": [
-          ""
-        ]
+        "initialMessageDrafts": [""]
       },
       {
         "language": "pt-BR",
@@ -53,9 +52,7 @@
         "kokoroSpeed": 1.2,
         "preferLoreBooksMatchingLanguage": true,
         "lorebookIds": [],
-        "initialMessageDrafts": [
-          ""
-        ]
+        "initialMessageDrafts": [""]
       }
     ],
     "selectedCardLanguage": "en",
@@ -69,11 +66,7 @@
     "autoTriggerAiFirstMessage": true,
     "personaInjectionPlacement": "end_system_prompt",
     "avatarScale": 2,
-    "tags": [
-      "Ai",
-      "Assistant",
-      "Future"
-    ],
+    "tags": ["Ai", "Assistant", "Future"],
     "ttsVoice": "Microsoft Zira - English (United States)",
     "ttsLanguage": "en-US",
     "ttsRate": 1.2,

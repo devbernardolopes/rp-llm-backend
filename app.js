@@ -39,10 +39,10 @@ Object.defineProperty(window, "conversationHistory", {
 
 const DEFAULT_SETTINGS = {
   uiLanguage: "auto",
-  aiProvider: "openrouter",
+  aiProvider: "horde",
   openRouterApiKey: "",
-  hordeApiKey: "",
-  hordeApiMethod: "native",
+  hordeApiKey: CONFIG.hordeApiKey || "",
+  hordeApiMethod: CONFIG.hordeApiMethod || "native",
   groqApiKey: "",
   lmstudioBaseUrl: "http://localhost:1234",
   lmstudioApiMethod: "openai",
@@ -3350,6 +3350,9 @@ async function setupSettingsControls() {
   }
   // Seed additional built-in themes
   await seedAdditionalThemes();
+
+  // Seed built-in characters from assets/bots/
+  await seedBuiltInCharacters();
 
   const settingsVersionEl = document.getElementById("settings-version");
   if (settingsVersionEl && typeof CONFIG.version === "string") {
@@ -13027,6 +13030,77 @@ function applyCharacterSettingsDefaults(character) {
         }
       }
     });
+  }
+}
+
+async function seedBuiltInCharacters() {
+  const BOT_DIR = "assets/bots/";
+
+  const allCharacters = await db.characters.toArray();
+  const existingBuiltinIds = new Set(
+    allCharacters
+      .filter((c) => c.builtinId)
+      .map((c) => c.builtinId)
+      .filter(Boolean)
+  );
+
+  const botFiles = [
+    "bot_abraham-lincoln.scenara.json",
+    "bot_aya.scenara.json",
+  ];
+
+  for (const botFile of botFiles) {
+    const builtinId = botFile.replace(/^bot_/, "").replace(/\.scenara\.json$/, "");
+
+    if (existingBuiltinIds.has(builtinId)) {
+      continue;
+    }
+
+    try {
+      const response = await fetch(BOT_DIR + botFile);
+      if (!response.ok) {
+        console.warn(`Failed to fetch ${botFile}: ${response.status}`);
+        continue;
+      }
+      const text = await response.text();
+      const parsed = JSON.parse(text);
+
+      const charData = parsed?.character;
+      if (!charData || typeof charData !== "object") {
+        console.warn(`Invalid character data in ${botFile}`);
+        continue;
+      }
+
+      const fileBuiltinId = String(parsed?.id || builtinId);
+
+      if (existingBuiltinIds.has(fileBuiltinId)) {
+        continue;
+      }
+
+      const character = {
+        ...charData,
+        name: String(charData.name || "").trim(),
+        isBuiltIn: true,
+        builtinId: fileBuiltinId,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      delete character.id;
+
+      if (character.definitions && Array.isArray(character.definitions)) {
+        character.definitions = character.definitions.map((def) => ({
+          ...def,
+          personaInjectionPlacement: def.personaInjectionPlacement || "end_system_prompt",
+          kokoroDtype: def.kokoroDtype || "auto",
+        }));
+      }
+
+      await db.characters.add(character);
+      existingBuiltinIds.add(fileBuiltinId);
+    } catch (err) {
+      console.warn(`Error seeding built-in character from ${botFile}:`, err);
+    }
   }
 }
 
