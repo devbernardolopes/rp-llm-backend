@@ -4,15 +4,5 @@ dist/
 test/
 _old-src
 assets/openrouter
-session-ses_35fa.md
-session-ses_3594.md
-structure.txt
-wf.json
-session-ses_2f23.md
-assets/lm-studio/chat.md
-assets/cards-specs/
-nul
 rp-llm-backend.code-workspace
-UI_UX_REVIEW_REPORT.md
-IMPLEMENTATION_PLAN.md
-IMPLEMENTATION_PLAN_EXPORT.md
+docs/
