@@ -7,7 +7,7 @@
  * - Kokoro TTS integration (delegates to kokoro.js)
  */
 
-import { chunkForTTS, normalizeForTTS } from '../tts-preprocess.js';
+import { chunkForTTS } from '../tts-preprocess.js';
 
 const TTS_DEBUG = true;
 
