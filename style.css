@@ -3558,7 +3558,7 @@ textarea {
 }
 
 #writing-instruction-editor-modal {
-  z-index: 220;
+  z-index: 400;
 }
 
 #writing-instruction-language-modal {
@@ -3566,7 +3566,7 @@ textarea {
 }
 
 #persona-editor-modal {
-  z-index: 220;
+  z-index: 400;
 }
 
 #writing-instruction-editor-modal .modal-footer {

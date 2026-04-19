@@ -7330,6 +7330,15 @@ async function deleteSelectedThreads() {
   const ok = await openConfirmDialog(t("deleteThreadsTitle"), tf("deleteSelectedThreadsConfirm", { count: ids.length, suffix }));
   if (!ok) return;
 
+  const threadsToDelete = await db.threads.where("id").anyOf(ids).toArray();
+  const characterThreadDeltas = new Map();
+  for (const thread of threadsToDelete) {
+    const charId = Number(thread.characterId);
+    if (Number.isInteger(charId)) {
+      characterThreadDeltas.set(charId, (characterThreadDeltas.get(charId) || 0) + 1);
+    }
+  }
+
   const activeId = Number(state.activeGenerationThreadId);
   if (state.sending && Number.isInteger(activeId) && ids.includes(activeId) && state.abortController) {
     cancelOngoingGeneration();
@@ -7352,6 +7361,10 @@ async function deleteSelectedThreads() {
       threadId: id,
       updatedAt: Date.now(),
     });
+  }
+
+  for (const [charId, delta] of characterThreadDeltas) {
+    await updateCharacterThreadCount(charId, -delta);
   }
 
   if (currentThread && ids.includes(Number(currentThread.id))) {
