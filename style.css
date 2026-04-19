@@ -3607,6 +3607,16 @@ textarea {
   min-height: 0;
 }
 
+#character-modal .modal-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#character-modal .modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 #database-modal .modal-body button {
   width: 100%;
   margin-bottom: 8px;
@@ -5004,6 +5014,13 @@ textarea {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#message-system-prompt-modal .modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .model-info-row {
