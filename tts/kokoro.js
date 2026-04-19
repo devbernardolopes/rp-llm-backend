@@ -549,17 +549,27 @@ async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
     : "webgpu";
   const normalizedDtype = KOKORO_DTYPE_OPTIONS.includes(dtype) ? dtype : "auto";
 
+  const startMem = performance.memory?.usedJSHeapSize ? (performance.memory.usedJSHeapSize / 1048576).toFixed(0) + "MB" : "N/A";
+  console.log("[TTS] kokoro:instance-start", { device: normalizedDevice, dtype: normalizedDtype, reuse: !!window.ttsState.kokoro.instance });
+
   // Return existing instance if same config
   if (
     window.ttsState.kokoro.instance &&
     window.ttsState.kokoro.config.device === normalizedDevice &&
     window.ttsState.kokoro.config.dtype === normalizedDtype
   ) {
+    console.log("[TTS] ensureKokoroInstance:reusing-existing");
     return window.ttsState.kokoro.instance;
   }
 
   // Clean up old instance if different config
   if (window.ttsState.kokoro.instance) {
+    console.log("[TTS] ensureKokoroInstance:cleaning-old", { oldDevice: window.ttsState.kokoro.config.device });
+    try {
+      if (window.ttsState.kokoro.instance?.dispose) {
+        window.ttsState.kokoro.instance.dispose();
+      }
+    } catch (e) { console.warn("[TTS] dispose-error", e); }
     if (window.ttsState.kokoro.config.device === 'wasm') {
       terminateKokoroWorker();
     }
@@ -591,17 +601,21 @@ async function ensureKokoroInstance(device = "webgpu", dtype = "auto") {
 
     // WebGPU: direct instance
     patchKokoroVoiceFetch();
+    console.log("[TTS] kokoro:loading-module");
     const module = await loadKokoroModule();
+    console.log("[TTS] kokoro:module-loaded");
     const KokoroTTS = module?.KokoroTTS;
     if (!KokoroTTS) {
       throw new Error("Kokoro.js module is missing KokoroTTS.");
     }
 
+    console.log("[TTS] kokoro:creating-instance", { device: normalizedDevice, dtype: normalizedDtype });
     const instance = await KokoroTTS.from_pretrained(KOKORO_MODEL_ID, {
       device: normalizedDevice,
       dtype: normalizedDtype,
-      progress_callback: (info) => ttsDebug("kokoro:progress", info),
+      progress_callback: (info) => console.log("[TTS] kokoro:progress", info),
     });
+    console.log("[TTS] kokoro:instance-created");
 
     // Patch _validate_voice to allow all voices
     const originalValidate = instance._validate_voice?.bind(instance);
