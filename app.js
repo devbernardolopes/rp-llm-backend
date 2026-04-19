@@ -712,7 +712,7 @@ const handleVisibilityChange = debounce(() => {
     });
   }
 
-  if (!document.hidden && currentThread && document.getElementById("chat-view")?.classList.contains("active")) {
+  if (!document.hidden && currentThread) {
     let changed = false;
     let lastUnreadAssistantIndex = -1;
     for (let i = 0; i < conversationHistory.length; i++) {
@@ -753,7 +753,7 @@ const handleFocus = debounce(() => {
   const now = Date.now();
   if (now - lastFocusTime < 200) return;
   lastFocusTime = now;
-  if (!currentThread || !document.getElementById("chat-view")?.classList.contains("active")) {
+  if (!currentThread) {
     return;
   }
   let changed = false;
