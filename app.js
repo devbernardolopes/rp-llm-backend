@@ -13080,6 +13080,7 @@ async function seedBuiltInCharacters() {
       const character = {
         ...charData,
         name: String(charData.name || "").trim(),
+        creatorNotes: String(charData.creatorNotes || "").trim(),
         isBuiltIn: true,
         builtinId: fileBuiltinId,
         createdAt: Date.now(),
