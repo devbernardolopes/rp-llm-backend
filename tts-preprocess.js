@@ -148,7 +148,7 @@ function normalizeNumbersForTTS(text) {
 function chunkForTTS(text, maxLen = 180) {
   const normalized = String(text || "").trim();
   if (!normalized) return [];
-  const sentences = normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [normalized];
+  const sentences = normalized.match(/[^.!?:;\-—\n)+]+[.!?:;\-—\n)+]+|[^.!?:;\-—\n)+]+$/g) || [normalized];
   const chunks = [];
   let buffer = "";
 
@@ -176,3 +176,5 @@ function chunkForTTS(text, maxLen = 180) {
 
   return chunks.filter(Boolean);
 }
+
+export { chunkForTTS, normalizeForTTS };
