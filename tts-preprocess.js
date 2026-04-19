@@ -148,26 +148,49 @@ function normalizeNumbersForTTS(text) {
 function chunkForTTS(text, maxLen = 180) {
   const normalized = String(text || "").trim();
   if (!normalized) return [];
-  const withParagraphBreaks = normalized.replace(/\n\n+/g, '\u0000');
-  const sentences = withParagraphBreaks.match(/[^.!?:;\-—\n\u0000)+]+[.!?:;\-—\n\u0000)+]+|[^.!?:;\-—\n\u0000)+]+$/g) || [withParagraphBreaks];
+
+  const paragraphs = normalized.split(/\n\n+/);
   const chunks = [];
   let buffer = "";
 
-  for (const sentence of sentences) {
-    const cleanSentence = sentence.replace(/\u0000/g, '\n');
-    if ((buffer + cleanSentence).length <= maxLen) {
-      buffer += cleanSentence;
-    } else {
-      if (buffer) {
-        chunks.push(buffer.trim());
-      }
-      if (cleanSentence.length > maxLen) {
-        for (let i = 0; i < cleanSentence.length; i += maxLen) {
-          chunks.push(cleanSentence.slice(i, i + maxLen).trim());
+  for (const paragraph of paragraphs) {
+    const lines = paragraph.split(/\n/);
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) continue;
+
+      const endsWithPunctuation = /[.!?:;\-—)\]+]$/.test(trimmedLine);
+
+      if (!endsWithPunctuation) {
+        if (buffer) {
+          chunks.push(buffer.trim());
+          buffer = "";
         }
-        buffer = "";
+        if (trimmedLine.length <= maxLen) {
+          chunks.push(trimmedLine + '.');
+        } else {
+          for (let i = 0; i < trimmedLine.length; i += maxLen) {
+            chunks.push(trimmedLine.slice(i, i + maxLen).trim() + '.');
+          }
+        }
+        continue;
+      }
+
+      if ((buffer + trimmedLine).length <= maxLen) {
+        buffer += trimmedLine;
       } else {
-        buffer = cleanSentence;
+        if (buffer) {
+          chunks.push(buffer.trim());
+        }
+        if (trimmedLine.length > maxLen) {
+          for (let i = 0; i < trimmedLine.length; i += maxLen) {
+            chunks.push(trimmedLine.slice(i, i + maxLen).trim());
+          }
+          buffer = "";
+        } else {
+          buffer = trimmedLine;
+        }
       }
     }
   }
