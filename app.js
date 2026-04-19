@@ -485,6 +485,8 @@ function populateSettingsTabValues() {
   if (enableOocSettings) enableOocSettings.checked = state.settings.enableOocSettings ?? DEFAULT_SETTINGS.enableOocSettings;
   const defaultOocStream = document.getElementById("default-ooc-stream");
   if (defaultOocStream) defaultOocStream.checked = state.settings.oocStream ?? DEFAULT_SETTINGS.oocStream;
+  const defaultOocStopStrings = document.getElementById("default-ooc-stop-strings");
+  if (defaultOocStopStrings) defaultOocStopStrings.value = state.settings.oocStopStrings || "";
   if (defaultAvatarScale) defaultAvatarScale.value = state.settings.defaultAvatarScale || 1;
   if (defaultPersonaInjectionPlacement) defaultPersonaInjectionPlacement.value = state.settings.defaultPersonaInjectionPlacement || "none";
   if (defaultTtsProvider) defaultTtsProvider.value = state.settings.defaultTtsProvider || "kokoro";
