@@ -888,7 +888,12 @@ async function initKokoroWorker(device, dtype) {
   }
 
   kokoroWorkerInitializing = true;
-  ttsDebug("kokoro:worker:starting-init", { device, dtype });
+  console.log("[TTS] kokoro:worker:starting-init", { device, dtype });
+  if (typeof ttsDebug === "function") {
+    ttsDebug("kokoro:worker:starting-init", { device, dtype });
+  } else {
+    console.log("[TTS] ttsDebug not available");
+  }
 
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {

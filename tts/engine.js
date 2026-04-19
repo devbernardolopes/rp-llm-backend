@@ -317,13 +317,30 @@ async function playKokoroTts(normalizedText, options, playback = {}) {
 
   try {
     const ensureKokoroInstance = window.ensureKokoroInstance;
+    console.log("[TTS] playKokoroTts:start", {
+      provider: options.provider,
+      device: options.kokoro.device,
+      dtype: options.kokoro.dtype,
+      voice: options.kokoro.voice,
+      speed: options.kokoro.speed,
+      hasCurrentCharacter: !!window.currentCharacter,
+      currentCharTtsProvider: window.currentCharacter?.ttsProvider,
+    });
     if (typeof ensureKokoroInstance !== 'function') {
       throw new Error("Kokoro TTS not available. Please ensure kokoro.js is loaded.");
     }
+    console.log("[TTS] playKokoroTts:ensuring-instance", {
+      device: options.kokoro.device,
+      dtype: options.kokoro.dtype,
+      stateKokoroConfig: window.ttsState?.kokoro?.config,
+      stateInstance: !!window.ttsState?.kokoro?.instance,
+      stateLoading: window.ttsState?.kokoro?.loading
+    });
     const kokoro = await ensureKokoroInstance(
       options.kokoro.device,
       options.kokoro.dtype,
     );
+    console.log("[TTS] playKokoroTts:instance-ready", { hasInstance: !!kokoro, device: options.kokoro.device });
 
     const chunks = chunkForTTS(normalizedText);
     if (chunks.length === 0) {
