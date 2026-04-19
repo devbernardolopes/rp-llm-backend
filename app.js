@@ -15599,7 +15599,6 @@ function updateUnloadButtonVisibility() {
   const threshold = state.settings.autoUnloadThreshold || 0;
   if (threshold === 0) {
     btn.classList.add("hidden");
-    console.debug("[unloadButton] Hidden: threshold is 0");
     return;
   }
   const vis = computeVisibleMessageIndices();
