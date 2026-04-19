@@ -148,24 +148,26 @@ function normalizeNumbersForTTS(text) {
 function chunkForTTS(text, maxLen = 180) {
   const normalized = String(text || "").trim();
   if (!normalized) return [];
-  const sentences = normalized.match(/[^.!?:;\-—\n)+]+[.!?:;\-—\n)+]+|[^.!?:;\-—\n)+]+$/g) || [normalized];
+  const withParagraphBreaks = normalized.replace(/\n\n+/g, '\u0000');
+  const sentences = withParagraphBreaks.match(/[^.!?:;\-—\n)+]+[.!?:;\-—\n)+]+|[^.!?:;\-—\n)+]+$/g) || [withParagraphBreaks];
   const chunks = [];
   let buffer = "";
 
   for (const sentence of sentences) {
-    if ((buffer + sentence).length <= maxLen) {
-      buffer += sentence;
+    const cleanSentence = sentence.replace(/\u0000/g, '\n');
+    if ((buffer + cleanSentence).length <= maxLen) {
+      buffer += cleanSentence;
     } else {
       if (buffer) {
         chunks.push(buffer.trim());
       }
-      if (sentence.length > maxLen) {
-        for (let i = 0; i < sentence.length; i += maxLen) {
-          chunks.push(sentence.slice(i, i + maxLen).trim());
+      if (cleanSentence.length > maxLen) {
+        for (let i = 0; i < cleanSentence.length; i += maxLen) {
+          chunks.push(cleanSentence.slice(i, i + maxLen).trim());
         }
         buffer = "";
       } else {
-        buffer = sentence;
+        buffer = cleanSentence;
       }
     }
   }
