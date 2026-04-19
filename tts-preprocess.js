@@ -178,3 +178,5 @@ function chunkForTTS(text, maxLen = 180) {
 }
 
 export { chunkForTTS };
+
+window.preprocessForTTS = preprocessForTTS;
