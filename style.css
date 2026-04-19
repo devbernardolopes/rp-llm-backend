@@ -3550,11 +3550,11 @@ textarea {
 }
 
 #text-input-modal {
-  z-index: 210;
+  z-index: 360;
 }
 
 #unsaved-modal {
-  z-index: 230;
+  z-index: 380;
 }
 
 #writing-instruction-editor-modal {
