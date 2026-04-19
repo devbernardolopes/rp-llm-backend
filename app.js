@@ -22698,18 +22698,21 @@ function updateApiSettingsGroupStates() {
   const summaryGroup = document.querySelector("#enable-summary-settings")?.closest(".settings-collapsible-content");
   const oocGroup = document.querySelector("#enable-ooc-settings")?.closest(".settings-collapsible-content");
 
-  const setDisabled = (container, enabled) => {
+  const setDisabled = (container, enabled, toggleId) => {
     if (!container) return;
-    container.querySelectorAll("select, input[type='text'], input[type='range'], input[type='checkbox']").forEach((el) => {
-      if (el.type !== "checkbox") {
+    container.querySelectorAll("select, input[type='text'], input[type='range']").forEach((el) => {
+      el.disabled = !enabled;
+    });
+    container.querySelectorAll("input[type='checkbox']").forEach((el) => {
+      if (el.id !== toggleId) {
         el.disabled = !enabled;
       }
     });
   };
 
-  setDisabled(autoTitleGroup, enableAutoTitle);
-  setDisabled(summaryGroup, enableSummary);
-  setDisabled(oocGroup, enableOoc);
+  setDisabled(autoTitleGroup, enableAutoTitle, "enable-auto-title-settings");
+  setDisabled(summaryGroup, enableSummary, "enable-summary-settings");
+  setDisabled(oocGroup, enableOoc, "enable-ooc-settings");
 }
 
 function getOocProvider() {
