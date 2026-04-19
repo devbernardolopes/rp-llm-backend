@@ -9566,7 +9566,7 @@ function showChatOptionsDropdown() {
 
   const rect = btn.getBoundingClientRect();
   chatOptionsDropdown.style.position = "fixed";
-  chatOptionsDropdown.style.zIndex = "200";
+  chatOptionsDropdown.style.zIndex = "400";
 
   const spaceBelow = window.innerHeight - rect.bottom;
   if (spaceBelow < 300) {
