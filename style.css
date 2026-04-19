@@ -182,7 +182,7 @@ body {
   .character-pagination {
     position: relative;
     bottom: auto;
-padding-bottom: calc(var(--browser-chrome-bottom) + var(--safe-area-bottom));
+    padding-bottom: calc(var(--browser-chrome-bottom) + var(--safe-area-bottom));
   }
 }
 
@@ -209,13 +209,13 @@ padding-bottom: calc(var(--browser-chrome-bottom) + var(--safe-area-bottom));
 }
 
 .chat-input-wrapper {
-    position: fixed;
-    bottom: 0;
-    padding-bottom: env(safe-area-inset-bottom, 34px);
-    width: 100%;
-    left: 0;
-    right: 0;
-    z-index: 300;
+  position: fixed;
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 34px);
+  width: 100%;
+  left: 0;
+  right: 0;
+  z-index: 300;
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
@@ -3609,7 +3609,7 @@ textarea {
 #persona-editor-modal .modal-card,
 #message-system-prompt-modal .modal-card,
 #database-modal .modal-card {
-  height: min(90vh, 720px);
+  height: min(75vh, 600px);
   max-height: min(90vh, 720px);
 }
 
