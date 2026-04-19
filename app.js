@@ -804,6 +804,7 @@ async function init() {
   loadPromptCommandHistory();
   renderTagPresetsDataList();
   await setupSettingsControls();
+  updateApiSettingsGroupStates();
   setupEvents();
   setupMemoryRegenerationControls();
   initModel3DPanelDragResize();
@@ -4563,6 +4564,7 @@ async function setupSettingsControls() {
     enableAutoTitleSettingsToggle.addEventListener("change", () => {
       state.settings.enableAutoTitleSettings = enableAutoTitleSettingsToggle.checked;
       saveSettings();
+      updateApiSettingsGroupStates();
     });
   }
   if (summaryProvider) {
@@ -4612,6 +4614,7 @@ async function setupSettingsControls() {
     enableSummarySettingsToggle.addEventListener("change", () => {
       state.settings.enableSummarySettings = enableSummarySettingsToggle.checked;
       saveSettings();
+      updateApiSettingsGroupStates();
     });
   }
   if (autoTitleStream) {
@@ -4678,6 +4681,7 @@ async function setupSettingsControls() {
     enableOocSettingsEl.addEventListener("change", () => {
       state.settings.enableOocSettings = enableOocSettingsEl.checked;
       saveSettings();
+      updateApiSettingsGroupStates();
     });
   }
   if (defaultOocStreamEl) {
@@ -7673,6 +7677,7 @@ function openModal(modalId) {
   loadSnippetsForModal(modalId).then(() => {
     if (modalId === "settings-modal") {
       setupSettingsTabsLayout();
+      updateApiSettingsGroupStates();
       populateSettingsTabValues();
       const lastTab = localStorage.getItem("rp-settings-last-tab") || "api";
       const tabBtn = document.querySelector(`[data-settings-tab-btn="${lastTab}"]`);
@@ -22682,6 +22687,29 @@ function isSummarySettingsEnabled() {
 
 function isOocSettingsEnabled() {
   return state.settings.enableOocSettings ?? DEFAULT_SETTINGS.enableOocSettings;
+}
+
+function updateApiSettingsGroupStates() {
+  const enableAutoTitle = state.settings.enableAutoTitleSettings ?? DEFAULT_SETTINGS.enableAutoTitleSettings;
+  const enableSummary = state.settings.enableSummarySettings ?? DEFAULT_SETTINGS.enableSummarySettings;
+  const enableOoc = state.settings.enableOocSettings ?? DEFAULT_SETTINGS.enableOocSettings;
+
+  const autoTitleGroup = document.querySelector("#enable-auto-title-settings")?.closest(".settings-collapsible-content");
+  const summaryGroup = document.querySelector("#enable-summary-settings")?.closest(".settings-collapsible-content");
+  const oocGroup = document.querySelector("#enable-ooc-settings")?.closest(".settings-collapsible-content");
+
+  const setDisabled = (container, enabled) => {
+    if (!container) return;
+    container.querySelectorAll("select, input[type='text'], input[type='range'], input[type='checkbox']").forEach((el) => {
+      if (el.type !== "checkbox") {
+        el.disabled = !enabled;
+      }
+    });
+  };
+
+  setDisabled(autoTitleGroup, enableAutoTitle);
+  setDisabled(summaryGroup, enableSummary);
+  setDisabled(oocGroup, enableOoc);
 }
 
 function getOocProvider() {
