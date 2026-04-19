@@ -17583,6 +17583,19 @@ async function generateBotReply() {
       await persistThreadMessagesById(threadId, generationHistory);
       await renderThreads();
       showToast(t("generationCancelled"), "success");
+    } else if (e?.isStreamError) {
+      pending.generationError = String(e?.message || "Stream error");
+      pending.generationStatus = "";
+      if (isViewingThread(threadId)) {
+        refreshLatestAssistantRowContent();
+      }
+      if (isViewingThread(threadId)) {
+        window.refreshAllSpeakerButtons();
+        refreshMessageControlStates();
+      }
+      await persistThreadMessagesById(threadId, generationHistory);
+      await renderThreads();
+      showToast(t("streamError") + ": " + e.message, "error");
     } else {
       pending.generationError = String(e?.message || "Unknown error");
       pending.generationStatus = "";
@@ -20067,6 +20080,12 @@ async function openMessageMetadataModal(index) {
 function cancelOngoingGeneration() {
   if (!state.sending || !state.abortController) return;
   state.abortController.abort();
+  if (state.settings.aiProvider === "openrouter") {
+    console.info(
+      "Stream cancellation sent to OpenRouter. Note: Not all providers support immediate stopping. " +
+      "See: assets/openrouter/streaming.txt"
+    );
+  }
 }
 
 function isViewingThread(threadId) {
@@ -22387,7 +22406,15 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal, optio
       }
 
       if (body.stream) {
-        const streamed = await readStreamedCompletion(res, body.model, onChunk, options);
+        const streamed = await readStreamedCompletion(res, body.model, onChunk, {
+          ...options,
+          generationIdHeader: res.headers.get("X-Generation-Id"),
+        });
+        if (streamed.streamError) {
+          const err = new Error(streamed.streamError);
+          err.isStreamError = true;
+          throw err;
+        }
         if (streamed.content) {
           return {
             ...streamed,
@@ -22524,6 +22551,7 @@ async function readStreamedCompletion(res, fallbackModel, onChunk, options = {})
   let nativeFinishReason = "";
   let truncatedByFilter = false;
   let stoppedByStopString = false;
+  const generationIdHeader = options?.generationIdHeader || "";
   const isTitleGeneration = options?.isTitleGeneration === true;
   const isSummarization = options?.isSummarization === true;
   let stopStrings = null;
@@ -22545,12 +22573,15 @@ async function readStreamedCompletion(res, fallbackModel, onChunk, options = {})
     for (const rawLine of lines) {
       if (stoppedByStopString) break;
       const line = rawLine.trim();
+      if (line.startsWith(":")) {
+        continue;
+      }
       if (!line.startsWith("data:")) continue;
       const data = line.slice(5).trim();
       if (!data || data === "[DONE]") continue;
       try {
         const json = JSON.parse(data);
-        generationId = json?.id || generationId;
+        generationId = json?.id || generationId || generationIdHeader;
         model = json?.model || model;
         provider = json?.provider || provider;
         created = json?.created ?? created;
@@ -22565,6 +22596,26 @@ async function readStreamedCompletion(res, fallbackModel, onChunk, options = {})
           truncatedByFilter = true;
           finishReason = "content_filter";
           nativeFinishReason = chunkNativeFinish || chunkFinish;
+        }
+        if (json.error) {
+          const errorMessage = String(json.error?.message || "Stream error");
+          const isErrorChunk = chunkFinish?.toLowerCase() === "error";
+          if (isErrorChunk) {
+            finishReason = "error";
+            nativeFinishReason = "error";
+            return {
+              content,
+              model,
+              provider,
+              generationId,
+              completionMeta: { id: generationId, created, object, usage },
+              finishReason,
+              nativeFinishReason,
+              truncatedByFilter,
+              stoppedByStopString,
+              streamError: errorMessage,
+            };
+          }
         }
         const piece = normalizeContentParts(json?.choices?.[0]?.delta?.content);
         if (piece) {
@@ -22600,7 +22651,7 @@ async function readStreamedCompletion(res, fallbackModel, onChunk, options = {})
     if (data && data !== "[DONE]") {
       try {
         const json = JSON.parse(data);
-        generationId = json?.id || generationId;
+        generationId = json?.id || generationId || generationIdHeader;
         model = json?.model || model;
         provider = json?.provider || provider;
         created = json?.created ?? created;
@@ -22642,6 +22693,7 @@ async function readStreamedCompletion(res, fallbackModel, onChunk, options = {})
     nativeFinishReason,
     truncatedByFilter,
     stoppedByStopString,
+    streamError: null,
   };
 }
 

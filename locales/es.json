@@ -81,6 +81,7 @@
   "threadDeleted": "Chat eliminado.",
   "threadRenamed": "Chat renombrado.",
   "generationCancelled": "Generación cancelada.",
+  "streamError": "Error de stream",
   "generationFailed": "Generación fallida.",
   "regenerationCancelled": "Regeneración cancelada.",
   "messageCopied": "Mensaje copiado.",

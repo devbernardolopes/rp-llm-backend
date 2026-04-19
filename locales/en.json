@@ -81,6 +81,7 @@
   "threadDeleted": "Thread deleted.",
   "threadRenamed": "Thread renamed.",
   "generationCancelled": "Generation cancelled.",
+  "streamError": "Stream error",
   "generationFailed": "Generation failed.",
   "regenerationCancelled": "Regeneration cancelled.",
   "messageCopied": "Message copied.",
