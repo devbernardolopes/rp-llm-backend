@@ -3447,7 +3447,7 @@ textarea {
   width: 100%;
   position: sticky;
   bottom: 0;
-  background: var(--panel);
+  /* background: var(--panel); */
   padding-bottom: env(safe-area-inset-bottom, 12px);
 }
 
