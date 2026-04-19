@@ -11,7 +11,7 @@ function preprocessForTTS(text) {
     .replace(/([\p{Emoji}\uFE0F\u200D]|[\uD800-\uDBFF][\uDC00-\uDFFF])/gu, "")
     .replace(/(^|\n)[A-Z][\w\s'-]{1,32}:\s*/gu, "$1")
     .replace(/\b[Mm]{2,}([.,!?…]*)/g, "mmm$1")
-    .replace(/\s+/g, " ")
+    .replace(/[ \t]+/g, " ")
     .trim();
 
   const normalized = normalizeForTTS(sanitized);
