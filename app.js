@@ -9312,9 +9312,23 @@ function showInfoPanel(infoKey, buttonEl) {
     if (infoPanel && !infoPanel.contains(e.target) && e.target !== buttonEl && !buttonEl.contains(e.target)) {
       closeInfoPanel();
       document.removeEventListener("click", closeOnOutsideClick);
+      document.removeEventListener("scroll", closeOnScroll);
+      document.removeEventListener("touchmove", closeOnScroll);
     }
   };
-  setTimeout(() => document.addEventListener("click", closeOnOutsideClick), 0);
+
+  const closeOnScroll = () => {
+    closeInfoPanel();
+    document.removeEventListener("click", closeOnOutsideClick);
+    document.removeEventListener("scroll", closeOnScroll);
+    document.removeEventListener("touchmove", closeOnScroll);
+  };
+
+  setTimeout(() => {
+    document.addEventListener("click", closeOnOutsideClick);
+    document.addEventListener("scroll", closeOnScroll, { once: true });
+    document.addEventListener("touchmove", closeOnScroll, { once: true });
+  }, 0);
 }
 
 function closeInfoPanel() {
