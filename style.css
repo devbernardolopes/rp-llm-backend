@@ -4992,6 +4992,13 @@ textarea {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.system-prompt-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 .system-prompt-entry {
   display: flex;
