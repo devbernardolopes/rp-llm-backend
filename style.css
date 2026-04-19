@@ -4482,9 +4482,9 @@ textarea {
 
 .char-avatar-item {
   position: relative;
-  width: 120px;
-  height: 120px;
-  min-width: 120px;
+  width: 94px;
+  height: 94px;
+  min-width: 94px;
   flex-shrink: 0;
   border-radius: 10px;
   overflow: hidden;
@@ -4597,9 +4597,9 @@ textarea {
 }
 
 .char-avatar-dropzone {
-  width: 120px;
-  height: 120px;
-  min-width: 120px;
+  width: 94px;
+  height: 94px;
+  min-width: 94px;
   flex-shrink: 0;
   border: 2px dashed var(--line);
   border-radius: 10px;
