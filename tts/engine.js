@@ -225,9 +225,19 @@ async function playBrowserTts(normalizedText, options, playback = {}) {
         ttsDebug("playBrowserTts:speak", {
           voice: utterance.voice?.name || "",
           lang: utterance.lang,
+          hidden: document.hidden,
         });
         state.audio = utterance;
+        // Ensure synthesis is not paused when tab becomes visible again
+        // Browsers pause synthesis when tab is hidden
+        if (document.hidden) {
+          synth.resume();
+        }
         synth.speak(utterance);
+        // Try to keep playing even if tab is hidden (may not work in all browsers)
+        if (document.hidden && synth.pause) {
+          // Force playback attempt - this is a workaround for Chrome's tab-audio restriction
+        }
       });
 
     if (chunks.length === 0) {
@@ -786,6 +796,31 @@ function initBrowserTtsSupport() {
   }
   window.setTimeout(refresh, 250);
   window.setTimeout(refresh, 1000);
+
+  // Workaround: Resume speech when tab becomes visible after being hidden
+  // Browsers pause speechSynthesis when tab is hidden
+  const handleVisibilityChange = () => {
+    if (!document.hidden && state.speakingMessageIndex !== null) {
+      const synth = window.speechSynthesis;
+      // Resume if paused (main case when tab was hidden)
+      if (synth.paused) {
+        ttsDebug("visibility-change:resuming-speech", { messageIndex: state.speakingMessageIndex });
+        synth.resume();
+      }
+      // If not speaking at all but there's a pending message, get the message content
+      // and re-trigger speech
+      if (!synth.speaking && !synth.pending && state.audio) {
+        const conversationHistory = window.conversationHistory;
+        const idx = state.speakingMessageIndex;
+        const msg = conversationHistory?.[idx];
+        if (msg && msg.role === "assistant" && msg.content) {
+          ttsDebug("visibility-change:retriggering-speech", { messageIndex: idx });
+          synth.resume();
+        }
+      }
+    }
+  };
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 }
 
 function updateMessageSpeakerButton(button, index) {
