@@ -2625,10 +2625,10 @@ textarea {
   -ms-overflow-style: none;
 }
 
-#memory-modal .modal-body::-webkit-scrollbar {
+/* #memory-modal .modal-body::-webkit-scrollbar {
   width: 0;
   height: 0;
-}
+} */
 
 .memory-modal-status {
   margin-bottom: 14px;
@@ -3622,6 +3622,14 @@ textarea {
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 #character-modal .modal-body {
@@ -3629,10 +3637,10 @@ textarea {
   -ms-overflow-style: none;
 }
 
-#character-modal .modal-body::-webkit-scrollbar {
+/* #character-modal .modal-body::-webkit-scrollbar {
   width: 0;
   height: 0;
-}
+} */
 
 #database-modal .modal-body button {
   width: 100%;
@@ -5042,10 +5050,10 @@ textarea {
   -ms-overflow-style: none;
 }
 
-#message-system-prompt-modal .modal-body::-webkit-scrollbar {
+/* #message-system-prompt-modal .modal-body::-webkit-scrollbar {
   width: 0;
   height: 0;
-}
+} */
 
 .model-info-row {
   display: flex;
@@ -5091,14 +5099,14 @@ textarea {
   padding-bottom: 8px;
 }
 
-#lore-modal .modal-body {
+/* #lore-modal .modal-body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 #lore-modal .modal-body::-webkit-scrollbar {
   display: none;
-}
+} */
 
 .lorebook-list {
   display: flex;
