@@ -8,7 +8,7 @@ const CONFIG = {
     "",
   hordeApiKey:
     (typeof window !== "undefined" && window.ENV && window.ENV.HORDE_API_KEY) ||
-    "617e08d4-2ac6-46b7-a469-e2f67d79512b",
+    "41e85e5f-e62d-42a4-ae89-3ac5a1c72d6a",
   hordeApiMethod: "native",
   lmstudioBaseUrl: "http://localhost:1234",
   lmstudioApiMethod: "openai",
