@@ -827,5 +827,6 @@
   "apply": "Anwenden",
   "collapseAll": "Alle zuklappen",
   "expandAll": "Alle aufklappen",
-  "ttsSettings": "TTS-Einstellungen"
+  "ttsSettings": "TTS-Einstellungen",
+  "personas": "Personas"
 }

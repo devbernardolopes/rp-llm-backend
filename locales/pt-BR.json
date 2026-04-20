@@ -827,5 +827,6 @@
   "apply": "Aplicar",
   "collapseAll": "Recolher tudo",
   "expandAll": "Expandir tudo",
-  "ttsSettings": "Configuracoes TTS"
+  "ttsSettings": "Configuracoes TTS",
+  "personas": "Personas"
 }

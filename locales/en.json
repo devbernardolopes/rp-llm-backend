@@ -832,5 +832,6 @@
   "apply": "Apply",
   "collapseAll": "Collapse All",
   "expandAll": "Expand All",
-  "ttsSettings": "TTS Settings"
+  "ttsSettings": "TTS Settings",
+  "personas": "Personas"
 }
