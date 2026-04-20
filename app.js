@@ -5867,6 +5867,9 @@ async function renderShortcutsBar() {
       clearTimeout(shortcutTooltipTimeout);
       if (shortcutTooltip) return;
 
+      const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+      if (isMobile) return;
+
       shortcutTooltip = document.createElement("div");
       shortcutTooltip.className = "info-panel";
 
