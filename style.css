@@ -1115,8 +1115,9 @@ textarea {
 }
 
 #character-sort-icon {
-  width: 18px;
-  height: 18px;
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
 }
 
 .danger-btn {
@@ -1356,9 +1357,10 @@ textarea {
 }
 
 .character-sort-btn img {
-  width: 18px;
-  height: 18px;
-  display: block;
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+  object-fit: contain;
 }
 
 .character-filters-row select {
