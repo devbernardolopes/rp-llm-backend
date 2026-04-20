@@ -3017,8 +3017,8 @@ function updateCharacterSortButton() {
   const parts = getCharacterSortParts(state.characterSortMode);
   const labelKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
   const label = t(labelKey);
-  icon.src = getCharacterSortIconUrl(parts.base);
-  icon.alt = label;
+  const raw = CHARACTER_SORT_ICON_TEMPLATES[parts.base] || CHARACTER_SORT_ICON_TEMPLATES.updated;
+  icon.innerHTML = raw;
   btn.setAttribute("aria-label", label);
   btn.setAttribute("data-info", labelKey);
 }
