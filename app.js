@@ -13596,14 +13596,14 @@ async function importCharacterFromFile(e) {
         ...imported,
         name: String(imported.name || "").trim(),
         tags: normalizedTags,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
         pinned: false,
         personaInjectionPlacement: "end_system_prompt",
       };
       delete character.pinned;
       delete character.updatedAt;
       delete character.createdAt;
+      character.createdAt = Date.now();
+      character.updatedAt = Date.now();
 
       const legacyInitialMessagesFromImported = buildLegacyInitialMessagesFromPayload(imported);
       if (legacyInitialMessagesFromImported.length > 0) {
