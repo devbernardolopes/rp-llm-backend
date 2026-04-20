@@ -828,5 +828,6 @@
   "collapseAll": "Tout reduire",
   "expandAll": "Tout developper",
   "ttsSettings": "Parametres TTS",
+  "ttsSettingsNarrator": "Parametres TTS - Narrateur",
   "personas": "Personas"
 }

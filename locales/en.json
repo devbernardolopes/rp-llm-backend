@@ -833,5 +833,6 @@
   "collapseAll": "Collapse All",
   "expandAll": "Expand All",
   "ttsSettings": "TTS Settings",
+  "ttsSettingsNarrator": "TTS Settings - Narrator",
   "personas": "Personas"
 }

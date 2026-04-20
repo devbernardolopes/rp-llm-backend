@@ -500,3 +500,50 @@ db.version(27)
       }
     });
   });
+
+db.version(28)
+  .stores({
+    characters: "++id, name, pinned, builtinId",
+    lorebooks: "++id, name, createdAt, updatedAt",
+    memories: "++id, characterId, summary, createdAt, slotNumber, levelNumber, summarySystemContent, summaryUserContent, embedding",
+    sessions: "++id, characterId, messages, updatedAt",
+    threads: "++id, characterId, title, updatedAt, createdAt, initialUserName",
+    personas: "++id, name, isDefault, order, updatedAt",
+    writingInstructions: "++id, name, createdAt, updatedAt",
+    assets: "++id, name, type, createdAt, updatedAt",
+    themes: "id, name, isBuiltIn, createdAt",
+  })
+  .upgrade(async (tx) => {
+    // Add narratorTts fields to existing character definitions
+    const chars = tx.table("characters");
+    await chars.toCollection().modify((char) => {
+      if (Array.isArray(char.definitions)) {
+        char.definitions.forEach((def) => {
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorTtsProvider")) {
+            def.narratorTtsProvider = def.ttsProvider || "kokoro";
+          }
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorTtsVoice")) {
+            def.narratorTtsVoice = def.ttsVoice || "";
+          }
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorTtsLanguage")) {
+            def.narratorTtsLanguage = def.ttsLanguage || "";
+          }
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorTtsRate")) {
+            def.narratorTtsRate = def.ttsRate || 1;
+          }
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorTtsPitch")) {
+            def.narratorTtsPitch = def.ttsPitch || 1.1;
+          }
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorKokoroDevice")) {
+            def.narratorKokoroDevice = def.kokoroDevice || "webgpu";
+          }
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorKokoroDtype")) {
+            def.narratorKokoroDtype = def.kokoroDtype || "auto";
+          }
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorKokoroVoice")) {
+            def.narratorKokoroVoice = def.kokoroVoice || "";
+          }
+        });
+      }
+    });
+  });

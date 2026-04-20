@@ -1327,6 +1327,9 @@ function setupEvents() {
   document.getElementById("char-tts-language").addEventListener("change", () => populateCharTtsVoiceSelect());
   document.getElementById("char-tts-rate").addEventListener("input", updateCharTtsRatePitchLabels);
   document.getElementById("char-tts-pitch").addEventListener("input", updateCharTtsRatePitchLabels);
+  document.getElementById("char-narrator-tts-language").addEventListener("change", () => populateCharNarratorTtsVoiceSelect());
+  document.getElementById("char-narrator-tts-rate").addEventListener("input", updateCharNarratorTtsRatePitchLabels);
+  document.getElementById("char-narrator-tts-pitch").addEventListener("input", updateCharNarratorTtsRatePitchLabels);
   const ttsProviderSelect = document.getElementById("char-tts-provider");
   if (ttsProviderSelect) {
     ttsProviderSelect.addEventListener("change", () => {
@@ -1334,10 +1337,23 @@ function setupEvents() {
       if (window.updateTtsSupportUi) window.updateTtsSupportUi();
     });
   }
+  const narratorTtsProviderSelect = document.getElementById("char-narrator-tts-provider");
+  if (narratorTtsProviderSelect) {
+    narratorTtsProviderSelect.addEventListener("change", () => {
+      refreshCharNarratorTtsProviderFields();
+      if (window.updateTtsSupportUi) window.updateTtsSupportUi();
+    });
+  }
   const kokoroDeviceSelect = document.getElementById("char-tts-kokoro-device");
   if (kokoroDeviceSelect) {
     kokoroDeviceSelect.addEventListener("change", () => {
       updateKokoroDtypeOptionsForDevice(kokoroDeviceSelect.value || "webgpu");
+    });
+  }
+  const narratorKokoroDeviceSelect = document.getElementById("char-narrator-tts-kokoro-device");
+  if (narratorKokoroDeviceSelect) {
+    narratorKokoroDeviceSelect.addEventListener("change", () => {
+      updateKokoroDtypeOptionsForDevice(narratorKokoroDeviceSelect.value || "webgpu");
     });
   }
 
@@ -1952,6 +1968,14 @@ function setupEvents() {
     "#char-tts-kokoro-device",
     "#char-tts-kokoro-dtype",
     "#char-tts-kokoro-voice",
+    "#char-narrator-tts-provider",
+    "#char-narrator-tts-kokoro-device",
+    "#char-narrator-tts-kokoro-dtype",
+    "#char-narrator-tts-kokoro-voice",
+    "#char-narrator-tts-language",
+    "#char-narrator-tts-voice",
+    "#char-narrator-tts-rate",
+    "#char-narrator-tts-pitch",
   ]);
   markModalDirtyOnInput("personas-modal", ["#persona-name", "#persona-avatar", "#persona-description", "#persona-internal-description", "#persona-is-default"]);
   markModalDirtyOnInput("persona-editor-modal", ["#persona-editor-name", "#persona-editor-description", "#persona-editor-internal-description", "#persona-editor-is-default", "#persona-editor-color"]);
@@ -8134,6 +8158,14 @@ function createEmptyCharacterDefinition(language = "en") {
     kokoroDtype: "auto",
     kokoroVoice: DEFAULT_KOKORO_VOICE,
     kokoroSpeed: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
+    narratorTtsProvider: state.settings.defaultTtsProvider || "kokoro",
+    narratorKokoroDevice: "webgpu",
+    narratorKokoroDtype: "auto",
+    narratorKokoroVoice: DEFAULT_KOKORO_VOICE,
+    narratorTtsVoice: "",
+    narratorTtsLanguage: "",
+    narratorTtsRate: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
+    narratorTtsPitch: 1.1,
     preferLoreBooksMatchingLanguage: true,
     lorebookIds: [],
     sfx: [],
@@ -8162,6 +8194,14 @@ function normalizeCharacterDefinitions(character = null) {
         kokoroDtype: d?.kokoroDtype || "auto",
         kokoroVoice: String(d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
         kokoroSpeed: Number.isFinite(Number(d?.kokoroSpeed)) ? Number(d.kokoroSpeed) : Number.isFinite(Number(d?.ttsRate)) ? Number(d.ttsRate) : state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
+        narratorTtsProvider: d?.narratorTtsProvider || d?.ttsProvider || state.settings.defaultTtsProvider || "kokoro",
+        narratorKokoroDevice: d?.narratorKokoroDevice || d?.kokoroDevice || "webgpu",
+        narratorKokoroDtype: d?.narratorKokoroDtype || d?.kokoroDtype || "auto",
+        narratorKokoroVoice: String(d?.narratorKokoroVoice || d?.kokoroVoice || DEFAULT_KOKORO_VOICE),
+        narratorTtsVoice: d?.narratorTtsVoice || d?.ttsVoice || "",
+        narratorTtsLanguage: d?.narratorTtsLanguage || d?.ttsLanguage || "",
+        narratorTtsRate: Number.isFinite(Number(d?.narratorTtsRate)) ? Number(d.narratorTtsRate) : Number.isFinite(Number(d?.ttsRate)) ? Number(d.ttsRate) : state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
+        narratorTtsPitch: Number.isFinite(Number(d?.narratorTtsPitch)) ? Number(d.narratorTtsPitch) : Number.isFinite(Number(d?.ttsPitch)) ? Number(d.ttsPitch) : 1.1,
         preferLoreBooksMatchingLanguage: d?.preferLoreBooksMatchingLanguage !== false,
         lorebookIds: Array.isArray(d?.lorebookIds) ? d.lorebookIds.map(Number).filter(Number.isInteger) : [],
         sfx: Array.isArray(d?.sfx) ? d.sfx : [],
@@ -8369,6 +8409,15 @@ function saveActiveCharacterDefinitionFromForm() {
   def.kokoroDtype = String(document.getElementById("char-tts-kokoro-dtype")?.value || "auto");
   def.kokoroVoice = String(document.getElementById("char-tts-kokoro-voice")?.value || DEFAULT_KOKORO_VOICE);
   def.kokoroSpeed = selectedTts.rate;
+  const selectedNarratorTts = getResolvedCharNarratorTtsSelection();
+  def.narratorTtsProvider = getCharModalNarratorTtsProviderSelection();
+  def.narratorKokoroDevice = String(document.getElementById("char-narrator-tts-kokoro-device")?.value || "webgpu");
+  def.narratorKokoroDtype = String(document.getElementById("char-narrator-tts-kokoro-dtype")?.value || "auto");
+  def.narratorKokoroVoice = String(document.getElementById("char-narrator-tts-kokoro-voice")?.value || DEFAULT_KOKORO_VOICE);
+  def.narratorTtsLanguage = selectedNarratorTts.language;
+  def.narratorTtsVoice = selectedNarratorTts.voice;
+  def.narratorTtsRate = selectedNarratorTts.rate;
+  def.narratorTtsPitch = selectedNarratorTts.pitch;
   def.lorebookIds = getSelectedLorebookIds();
 }
 
@@ -8642,6 +8691,18 @@ async function loadActiveCharacterDefinitionToForm() {
   populateKokoroVoiceSelect(def.kokoroVoice || DEFAULT_KOKORO_VOICE, activeModalLanguage);
   updateCharTtsRatePitchLabels();
   refreshCharTtsProviderFields();
+  populateCharNarratorTtsLanguageSelect(def.narratorTtsLanguage || DEFAULT_TTS_LANGUAGE);
+  populateCharNarratorTtsVoiceSelect(def.narratorTtsVoice || DEFAULT_TTS_VOICE);
+  document.getElementById("char-narrator-tts-rate").value = String(Math.max(0.5, Math.min(2, Number(def.narratorTtsRate) || DEFAULT_TTS_RATE)));
+  document.getElementById("char-narrator-tts-pitch").value = String(Math.max(0, Math.min(2, Number(def.narratorTtsPitch) || 1.1)));
+  document.getElementById("char-narrator-tts-provider").value = def.narratorTtsProvider || "kokoro";
+  const narratorKokoroDevice = document.getElementById("char-narrator-tts-kokoro-device");
+  const narratorKokoroDeviceValue = def.narratorKokoroDevice || "webgpu";
+  if (narratorKokoroDevice) narratorKokoroDevice.value = narratorKokoroDeviceValue;
+  updateKokoroDtypeOptionsForDevice(narratorKokoroDeviceValue, def.narratorKokoroDtype || "auto");
+  populateKokoroNarratorVoiceSelect(def.narratorKokoroVoice || DEFAULT_KOKORO_VOICE, activeModalLanguage);
+  updateCharNarratorTtsRatePitchLabels();
+  refreshCharNarratorTtsProviderFields();
   renderCharacterLorebookList(def.lorebookIds || []);
 }
 
@@ -9056,6 +9117,50 @@ function populateCharTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
   voiceSelect.value = hasPreferred ? preferredVoice : names[0];
 }
 
+function populateCharNarratorTtsLanguageSelect(preferredLanguage = DEFAULT_TTS_LANGUAGE) {
+  const languageSelect = document.getElementById("char-narrator-tts-language");
+  if (!languageSelect) return;
+  const hasBrowserSupport = typeof window.hasBrowserTtsSupport === "function" && window.hasBrowserTtsSupport();
+  const voices = hasBrowserSupport ? window.speechSynthesis.getVoices?.() || [] : [];
+  const langs = Array.from(new Set(voices.map((v) => String(v.lang || "").trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  if (langs.length === 0) {
+    langs.push(DEFAULT_TTS_LANGUAGE);
+  }
+  languageSelect.innerHTML = "";
+  langs.forEach((code) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = code;
+    languageSelect.appendChild(opt);
+  });
+  const hasPreferred = langs.includes(preferredLanguage);
+  languageSelect.value = hasPreferred ? preferredLanguage : langs[0];
+}
+
+function populateCharNarratorTtsVoiceSelect(preferredVoice = DEFAULT_TTS_VOICE) {
+  const languageSelect = document.getElementById("char-narrator-tts-language");
+  const voiceSelect = document.getElementById("char-narrator-tts-voice");
+  if (!languageSelect || !voiceSelect) return;
+  const selectedLang = String(languageSelect.value || DEFAULT_TTS_LANGUAGE);
+  const hasBrowserSupport = typeof window.hasBrowserTtsSupport === "function" && window.hasBrowserTtsSupport();
+  const voices = hasBrowserSupport ? window.speechSynthesis.getVoices?.() || [] : [];
+  const filtered = voices.filter((v) => String(v.lang || "").toLowerCase() === selectedLang.toLowerCase());
+  const candidates = filtered.length ? filtered : voices;
+  const names = Array.from(new Set(candidates.map((v) => String(v.name || "").trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  if (names.length === 0) {
+    names.push(DEFAULT_TTS_VOICE);
+  }
+  voiceSelect.innerHTML = "";
+  names.forEach((voice) => {
+    const opt = document.createElement("option");
+    opt.value = voice;
+    opt.textContent = voice;
+    voiceSelect.appendChild(opt);
+  });
+  const hasPreferred = names.includes(preferredVoice);
+  voiceSelect.value = hasPreferred ? preferredVoice : names[0];
+}
+
 async function populateCharWritingInstructionsSelect(preferredId = "", customInstructions = "") {
   const select = document.getElementById("char-writing-instructions-select");
   const textarea = document.getElementById("char-writing-instructions");
@@ -9123,6 +9228,15 @@ function updateCharTtsRatePitchLabels() {
   if (pitch && pitchValue) pitchValue.textContent = Number(pitch.value || 1).toFixed(1);
 }
 
+function updateCharNarratorTtsRatePitchLabels() {
+  const rate = document.getElementById("char-narrator-tts-rate");
+  const pitch = document.getElementById("char-narrator-tts-pitch");
+  const rateValue = document.getElementById("char-narrator-tts-rate-value");
+  const pitchValue = document.getElementById("char-narrator-tts-pitch-value");
+  if (rate && rateValue) rateValue.textContent = Number(rate.value || 1).toFixed(1);
+  if (pitch && pitchValue) pitchValue.textContent = Number(pitch.value || 1).toFixed(1);
+}
+
 function getResolvedTtsSelection(languageInput, voiceInput, rateInput, pitchInput) {
   const language = String(languageInput || DEFAULT_TTS_LANGUAGE).trim() || DEFAULT_TTS_LANGUAGE;
   const voice = String(voiceInput || DEFAULT_TTS_VOICE).trim() || DEFAULT_TTS_VOICE;
@@ -9143,6 +9257,19 @@ function getResolvedCharTtsSelection() {
     document.getElementById("char-tts-rate")?.value,
     document.getElementById("char-tts-pitch")?.value,
   );
+}
+
+function getResolvedCharNarratorTtsSelection() {
+  return getResolvedTtsSelection(
+    document.getElementById("char-narrator-tts-language")?.value,
+    document.getElementById("char-narrator-tts-voice")?.value,
+    document.getElementById("char-narrator-tts-rate")?.value,
+    document.getElementById("char-narrator-tts-pitch")?.value,
+  );
+}
+
+function getCharModalNarratorTtsProviderSelection() {
+  return document.getElementById("char-narrator-tts-provider")?.value || "kokoro";
 }
 
 function getCharModalActiveLanguage() {
@@ -9199,6 +9326,55 @@ function refreshCharTtsProviderFields() {
   moveCharModalTtsTestButton(isKokoro ? "kokoro" : "tts");
 }
 
+function refreshCharNarratorTtsProviderFields() {
+  const providerSelect = document.getElementById("char-narrator-tts-provider");
+  const kokoroConfig = document.getElementById("char-narrator-tts-kokoro-config");
+  const modalLanguage = getCharModalActiveLanguage();
+  const kokoroSupport = isKokoroSupportedForLanguage(modalLanguage);
+  const kokoroOption = providerSelect?.querySelector('option[value="kokoro"]');
+  if (kokoroOption) kokoroOption.disabled = !kokoroSupport;
+  const kokoroDevice = document.getElementById("char-narrator-tts-kokoro-device");
+  const kokoroDeviceValue = kokoroDevice?.value || "webgpu";
+  updateKokoroDtypeOptionsForDevice(kokoroDeviceValue);
+  let isKokoro = providerSelect?.value === "kokoro";
+  if (!kokoroSupport && providerSelect) {
+    providerSelect.value = "browser";
+    isKokoro = false;
+  }
+  kokoroConfig?.classList.toggle("hidden", !isKokoro);
+  ["char-narrator-tts-language", "char-narrator-tts-voice"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = isKokoro;
+  });
+  const pitch = document.getElementById("char-narrator-tts-pitch");
+  if (pitch) pitch.disabled = isKokoro;
+  document.querySelectorAll("#char-narrator-tts-language-field, #char-narrator-tts-voice-field, #char-narrator-tts-pitch-field").forEach((field) => {
+    field.classList.toggle("hidden", isKokoro);
+    field.style.display = isKokoro ? "none" : "";
+  });
+  const kokoroVoice = document.getElementById("char-narrator-tts-kokoro-voice");
+  if (isKokoro) {
+    if (!kokoroSupport) {
+      setKokoroNarratorVoiceLoadingPlaceholder();
+      if (providerSelect) providerSelect.value = "browser";
+      return;
+    }
+    const preferred = kokoroVoice?.value || DEFAULT_KOKORO_VOICE;
+    if (window.ttsState.kokoro.voiceListLoaded) {
+      populateKokoroNarratorVoiceSelect(preferred, modalLanguage);
+    } else {
+      setKokoroNarratorVoiceLoadingPlaceholder();
+      populateKokoroNarratorVoiceSelect(preferred, modalLanguage);
+    }
+    if (kokoroVoice) {
+      kokoroVoice.disabled = state.charModalTtsTestPlaying === true;
+    }
+  } else if (kokoroVoice) {
+    kokoroVoice.disabled = true;
+  }
+  moveCharModalNarratorTtsTestButton(isKokoro ? "narrator-kokoro" : "narrator-tts");
+}
+
 function getAvailableKokoroDtypeOptions(device = "webgpu") {
   const normalized = String(device || "webgpu")
     .trim()
@@ -9235,6 +9411,47 @@ function moveCharModalTtsTestButton(target = "tts") {
   if (!btn) return;
   const slot = document.querySelector(`.tts-test-slot[data-slot="${target}"]`);
   if (slot) slot.appendChild(btn);
+}
+
+function moveCharModalNarratorTtsTestButton(target = "narrator-tts") {
+  const btn = document.getElementById("char-narrator-tts-test-btn");
+  if (!btn) return;
+  const slot = document.querySelector(`.tts-test-slot[data-slot="${target}"]`);
+  if (slot) slot.appendChild(btn);
+}
+
+function setKokoroNarratorVoiceLoadingPlaceholder() {
+  const select = document.getElementById("char-narrator-tts-kokoro-voice");
+  if (!select) return;
+  select.innerHTML = "";
+  const opt = document.createElement("option");
+  opt.value = "";
+  opt.textContent = t("kokoroVoicesLoading") || "Loading Kokoro voices...";
+  select.appendChild(opt);
+  select.disabled = true;
+}
+
+async function populateKokoroNarratorVoiceSelect(preferredVoice = DEFAULT_KOKORO_VOICE, language = "en") {
+  const select = document.getElementById("char-narrator-tts-kokoro-voice");
+  if (!select) return;
+  const voices = window.ttsState.kokoro?.voices || [];
+  const normalizedLang = normalizeBotLanguageCode(language || "en") || "en";
+  const filtered = voices.filter((v) => v.lang?.toLowerCase() === normalizedLang.toLowerCase());
+  const candidates = filtered.length ? filtered : voices;
+  const names = Array.from(new Set(candidates.map((v) => v.name || "").filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  select.innerHTML = "";
+  if (names.length === 0) {
+    names.push(DEFAULT_KOKORO_VOICE);
+  }
+  names.forEach((name) => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  select.disabled = false;
+  const hasPreferred = names.includes(preferredVoice);
+  select.value = hasPreferred ? preferredVoice : names[0];
 }
 
 async function renderPersonaSelector() {

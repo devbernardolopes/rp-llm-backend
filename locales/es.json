@@ -828,5 +828,6 @@
   "collapseAll": "Contraer todo",
   "expandAll": "Expandir todo",
   "ttsSettings": "Configuracion TTS",
+  "ttsSettingsNarrator": "Configuracion TTS - Narrador",
   "personas": "Personas"
 }

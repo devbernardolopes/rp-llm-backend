@@ -828,5 +828,6 @@
   "collapseAll": "Alle zuklappen",
   "expandAll": "Alle aufklappen",
   "ttsSettings": "TTS-Einstellungen",
+  "ttsSettingsNarrator": "TTS-Einstellungen - Erzaehler",
   "personas": "Personas"
 }
