@@ -4139,6 +4139,16 @@ textarea {
   cursor: pointer;
 }
 
+.settings-tab-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .settings-tab-btn.active {
   border-color: #5a85c6;
   background: #233553;
