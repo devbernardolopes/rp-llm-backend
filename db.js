@@ -543,6 +543,12 @@ db.version(28)
           if (!Object.prototype.hasOwnProperty.call(def, "narratorKokoroVoice")) {
             def.narratorKokoroVoice = def.kokoroVoice || "";
           }
+          if (!Object.prototype.hasOwnProperty.call(def, "ttsCollapseState")) {
+            def.ttsCollapseState = true;
+          }
+          if (!Object.prototype.hasOwnProperty.call(def, "narratorTtsCollapseState")) {
+            def.narratorTtsCollapseState = true;
+          }
         });
       }
     });

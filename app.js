@@ -594,6 +594,7 @@ const state = {
     "text-input-modal": false,
   },
   charModalTtsTestPlaying: false,
+  charModalNarratorTtsTestPlaying: false,
   charModalCache: {},
   charModalModel3d: null,
   imagePreview: {
@@ -1016,6 +1017,7 @@ function setupEvents() {
   document.getElementById("save-character-btn").addEventListener("click", () => saveCharacterFromModal());
   document.getElementById("apply-character-btn")?.addEventListener("click", () => applyCharacterFromModal());
   document.getElementById("char-tts-test-btn").addEventListener("click", playCharacterTtsTestFromModal);
+  document.getElementById("char-narrator-tts-test-btn").addEventListener("click", playCharacterNarratorTtsTestFromModal);
   updateCharTtsTestButtonState();
   document.getElementById("send-btn").addEventListener("click", sendMessage);
   document.getElementById("shortcuts-toggle-btn").addEventListener("click", toggleShortcutsVisibility);
@@ -8166,6 +8168,8 @@ function createEmptyCharacterDefinition(language = "en") {
     narratorTtsLanguage: "",
     narratorTtsRate: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
     narratorTtsPitch: 1.1,
+    ttsCollapseState: true,
+    narratorTtsCollapseState: true,
     preferLoreBooksMatchingLanguage: true,
     lorebookIds: [],
     sfx: [],
@@ -8202,6 +8206,8 @@ function normalizeCharacterDefinitions(character = null) {
         narratorTtsLanguage: d?.narratorTtsLanguage || d?.ttsLanguage || "",
         narratorTtsRate: Number.isFinite(Number(d?.narratorTtsRate)) ? Number(d.narratorTtsRate) : Number.isFinite(Number(d?.ttsRate)) ? Number(d.ttsRate) : state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
         narratorTtsPitch: Number.isFinite(Number(d?.narratorTtsPitch)) ? Number(d.narratorTtsPitch) : Number.isFinite(Number(d?.ttsPitch)) ? Number(d.ttsPitch) : 1.1,
+        ttsCollapseState: d?.ttsCollapseState !== false,
+        narratorTtsCollapseState: d?.narratorTtsCollapseState !== false,
         preferLoreBooksMatchingLanguage: d?.preferLoreBooksMatchingLanguage !== false,
         lorebookIds: Array.isArray(d?.lorebookIds) ? d.lorebookIds.map(Number).filter(Number.isInteger) : [],
         sfx: Array.isArray(d?.sfx) ? d.sfx : [],
@@ -8418,6 +8424,14 @@ function saveActiveCharacterDefinitionFromForm() {
   def.narratorTtsVoice = selectedNarratorTts.voice;
   def.narratorTtsRate = selectedNarratorTts.rate;
   def.narratorTtsPitch = selectedNarratorTts.pitch;
+  const ttsDetails = document.querySelector('details[data-collapsed-state-key="tts"]');
+  if (ttsDetails) {
+    def.ttsCollapseState = ttsDetails.hasAttribute("open");
+  }
+  const narratorTtsDetails = document.querySelector('details[data-collapsed-state-key="tts-narrator"]');
+  if (narratorTtsDetails) {
+    def.narratorTtsCollapseState = narratorTtsDetails.hasAttribute("open");
+  }
   def.lorebookIds = getSelectedLorebookIds();
 }
 
@@ -8703,6 +8717,22 @@ async function loadActiveCharacterDefinitionToForm() {
   populateKokoroNarratorVoiceSelect(def.narratorKokoroVoice || DEFAULT_KOKORO_VOICE, activeModalLanguage);
   updateCharNarratorTtsRatePitchLabels();
   refreshCharNarratorTtsProviderFields();
+  const ttsDetails = document.querySelector('details[data-collapsed-state-key="tts"]');
+  if (ttsDetails) {
+    if (def.ttsCollapseState === false) {
+      ttsDetails.removeAttribute("open");
+    } else {
+      ttsDetails.setAttribute("open", "");
+    }
+  }
+  const narratorTtsDetails = document.querySelector('details[data-collapsed-state-key="tts-narrator"]');
+  if (narratorTtsDetails) {
+    if (def.narratorTtsCollapseState === false) {
+      narratorTtsDetails.removeAttribute("open");
+    } else {
+      narratorTtsDetails.setAttribute("open", "");
+    }
+  }
   renderCharacterLorebookList(def.lorebookIds || []);
 }
 
@@ -18291,6 +18321,40 @@ async function playCharacterTtsTestFromModal() {
   } finally {
     state.charModalTtsTestPlaying = false;
     updateCharTtsTestButtonState();
+  }
+}
+
+function updateCharNarratorTtsTestButtonState() {
+  const btn = document.getElementById("char-narrator-tts-test-btn");
+  if (!btn) return;
+  const active = state.charModalNarratorTtsTestPlaying === true;
+  const idleLabel = t("testCharacterVoice");
+  const stopLabel = t("stopCharacterVoiceTest");
+  btn.innerHTML = active ? ICONS.stop : ICONS.speaker;
+  const label = active ? stopLabel : idleLabel;
+  btn.setAttribute("aria-label", label);
+  btn.setAttribute("title", label);
+}
+
+async function playCharacterNarratorTtsTestFromModal() {
+  if (state.charModalNarratorTtsTestPlaying) {
+    window.stopTtsPlayback({ silent: true });
+    state.charModalNarratorTtsTestPlaying = false;
+    updateCharNarratorTtsTestButtonState();
+    return;
+  }
+  const textInput = document.getElementById("char-tts-test-text");
+  const text = String(textInput?.value || "").trim() || "This is a test voice playback.";
+  state.charModalNarratorTtsTestPlaying = true;
+  updateCharNarratorTtsTestButtonState();
+  try {
+    await window.playTtsAudio(text, getTtsOptionsFromNarratorCharacterModal());
+  } catch (err) {
+    if (window.isTtsCancelledError(err)) return;
+    showToast(tf("ttsTestFailed", { error: err.message || t("unknownError") }), "error");
+  } finally {
+    state.charModalNarratorTtsTestPlaying = false;
+    updateCharNarratorTtsTestButtonState();
   }
 }
 

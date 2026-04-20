@@ -766,6 +766,41 @@ function getCharModalTtsProviderSelection() {
   return select?.value === "kokoro" ? "kokoro" : "browser";
 }
 
+function getCharModalNarratorTtsProviderSelection() {
+  const select = document.getElementById("char-narrator-tts-provider");
+  return select?.value === "kokoro" ? "kokoro" : "browser";
+}
+
+function getResolvedCharNarratorTtsSelection() {
+  return getResolvedTtsSelection(
+    document.getElementById("char-narrator-tts-language")?.value,
+    document.getElementById("char-narrator-tts-voice")?.value,
+    document.getElementById("char-narrator-tts-rate")?.value,
+    document.getElementById("char-narrator-tts-pitch")?.value,
+  );
+}
+
+function getTtsOptionsFromNarratorCharacterModal() {
+  const state = window.ttsState;
+  const resolved = getResolvedCharNarratorTtsSelection();
+  const provider = getCharModalNarratorTtsProviderSelection();
+  const kokoroSource = {
+    kokoroDevice: document.getElementById("char-narrator-tts-kokoro-device")?.value,
+    kokoroDtype: document.getElementById("char-narrator-tts-kokoro-dtype")?.value,
+    kokoroVoice: document.getElementById("char-narrator-tts-kokoro-voice")?.value,
+    kokoroSpeed: resolved.rate,
+  };
+  const options = {
+    voice: resolved.voice || DEFAULT_TTS_VOICE,
+    language: resolved.language || DEFAULT_TTS_LANGUAGE,
+    rate: resolved.rate,
+    pitch: resolved.pitch,
+    provider,
+    kokoro: buildKokoroOptions(kokoroSource, resolved.rate),
+  };
+  return options;
+}
+
 function updateTtsSupportUi() {
   const state = window.ttsState;
   const provider = getActiveCharacterTtsProvider();
@@ -897,6 +932,7 @@ function initTtsEngine() {
   window.getCurrentCharacterTtsOptions = getCurrentCharacterTtsOptions;
   window.getTtsOptionsFromCharacterModal = getTtsOptionsFromCharacterModal;
   window.refreshAllSpeakerButtons = refreshAllSpeakerButtonsFromEngine;
+  window.getTtsOptionsFromNarratorCharacterModal = getTtsOptionsFromNarratorCharacterModal;
   window.updateMessageSpeakerButton = updateMessageSpeakerButton;
   window.ttsDebug = ttsDebug;
 }
