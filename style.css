@@ -5524,7 +5524,7 @@ textarea {
   position: fixed;
   right: 16px;
   top: 16px;
-  z-index: 300;
+  z-index: 500;
   display: flex;
   flex-direction: column;
   gap: 8px;
