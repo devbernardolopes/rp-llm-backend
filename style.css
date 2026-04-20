@@ -4222,6 +4222,10 @@ textarea {
   flex: 1;
 }
 
+.modal-body select.full {
+  width: 100%;
+}
+
 .tts-test-slot {
   display: flex;
   align-items: center;
