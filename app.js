@@ -7564,15 +7564,16 @@ function populatePaneBottomIcons() {
     "new-model-profile-btn": "plus",
   };
   const icons = window.ICONS || ICONS;
+  if (!icons) return;
   for (const [id, iconKey] of Object.entries(mapping)) {
     const btn = document.getElementById(id);
-    if (btn && icons && icons[iconKey]) {
+    if (btn && icons[iconKey]) {
       btn.innerHTML = icons[iconKey];
     }
   }
   for (const [id, iconKey] of Object.entries(addCreateMapping)) {
     const btn = document.getElementById(id);
-    if (btn && icons && icons[iconKey]) {
+    if (btn && icons[iconKey]) {
       btn.innerHTML = icons[iconKey];
     }
   }
