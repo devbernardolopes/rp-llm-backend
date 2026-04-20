@@ -4303,6 +4303,13 @@ textarea {
 .settings-collapse-body {
   padding: 12px;
   background: var(--panel-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-body .settings-collapse-body .full.lang-field {
+  margin: 0;
 }
 
 .settings-collapse-body textarea {

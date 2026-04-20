@@ -1487,16 +1487,16 @@
               <option value="4">4x</option>
             </select>
           </div>
-          <div class="full lang-field">
-            <span data-i18n="ttsProvider">TTS Provider</span>
-            <select id="char-tts-provider">
-              <option value="kokoro" data-i18n="ttsProviderKokoro" selected>Kokoro.js (local)</option>
-              <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
-            </select>
-          </div>
-          <details class="settings-collapse">
+          <details class="settings-collapse tts-settings-collapse">
             <summary data-i18n="ttsSettings">TTS Settings</summary>
             <div class="settings-collapse-body">
+              <div class="full lang-field">
+                <span data-i18n="ttsProvider">TTS Provider</span>
+                <select id="char-tts-provider">
+                  <option value="kokoro" data-i18n="ttsProviderKokoro" selected>Kokoro.js (local)</option>
+                  <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
+                </select>
+              </div>
               <div id="char-tts-kokoro-config" class="kokoro-config hidden">
                 <div class="full lang-field">
                   <span data-i18n="kokoroDevice">Kokoro Device</span>
