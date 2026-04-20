@@ -830,6 +830,7 @@ async function init() {
   updateDocumentTitleWithUnread();
   handleMobilePaneAutoHide();
   updateLeftPaneWidthVariable();
+  populatePaneBottomIcons();
   window.addEventListener("resize", handleMobilePaneAutoHide);
   window.addEventListener("resize", updateLeftPaneWidthVariable);
   if (window.visualViewport) {
@@ -7522,6 +7523,26 @@ function handleMobilePaneAutoHide() {
 function updateLeftPaneWidthVariable() {
   // This function is now a no-op - CSS handles the width variable
   // Inline style setting was conflicting with CSS class-based rules
+}
+
+function populatePaneBottomIcons() {
+  const mapping = {
+    "pane-bottom-settings": "settings",
+    "pane-bottom-personas": "user",
+    "pane-bottom-lore": "book",
+    "pane-bottom-shortcuts": "keyboard",
+    "pane-bottom-tags": "tag",
+    "pane-bottom-writing-instructions": "brain",
+    "pane-bottom-database": "database",
+    "pane-bottom-assets": "folder",
+    "guide-btn": "help",
+  };
+  for (const [id, iconKey] of Object.entries(mapping)) {
+    const btn = document.getElementById(id);
+    if (btn && ICONS[iconKey]) {
+      btn.innerHTML = ICONS[iconKey];
+    }
+  }
 }
 
 function toggleMobilePane() {
