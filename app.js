@@ -14319,15 +14319,15 @@ async function buildSelectiveExportPayload(selections) {
 
   const localState = {};
   if (selections.settings) {
+    const includeShortcuts = selections.shortcuts;
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
       if (!key || !key.startsWith("rp-")) continue;
-      if (!selections.shortcuts && key === "rp-shortcuts") continue;
+      if (!includeShortcuts && key === "rp-shortcuts") continue;
       localState[key] = localStorage.getItem(key);
     }
   } else if (selections.shortcuts) {
-    const shortcutsKey = "rp-shortcuts";
-    localState[shortcutsKey] = localStorage.getItem(shortcutsKey);
+    localState["rp-shortcuts"] = localStorage.getItem("rp-shortcuts");
   }
 
   return {
@@ -14381,7 +14381,8 @@ async function restoreDatabaseBackupPayload(payload) {
   keysToRemove.forEach((k) => localStorage.removeItem(k));
   Object.entries(payload.localStorage || {}).forEach(([key, value]) => {
     if (!key.startsWith("rp-")) return;
-    localStorage.setItem(key, String(value ?? ""));
+    if (value === null || value === undefined) return;
+    localStorage.setItem(key, String(value));
   });
 }
 
