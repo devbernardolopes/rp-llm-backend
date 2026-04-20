@@ -826,5 +826,6 @@
   "resetAppDataFailed": "App-Daten konnten nicht zurückgesetzt werden: {error}",
   "apply": "Anwenden",
   "collapseAll": "Alle zuklappen",
-  "expandAll": "Alle aufklappen"
+  "expandAll": "Alle aufklappen",
+  "ttsSettings": "TTS-Einstellungen"
 }

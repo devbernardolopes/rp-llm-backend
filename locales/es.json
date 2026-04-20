@@ -826,5 +826,6 @@
   "resetAppDataFailed": "Error al restablecer los datos de la aplicación: {error}",
   "apply": "Aplicar",
   "collapseAll": "Contraer todo",
-  "expandAll": "Expandir todo"
+  "expandAll": "Expandir todo",
+  "ttsSettings": "Configuracion TTS"
 }

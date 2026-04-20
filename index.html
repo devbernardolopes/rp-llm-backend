@@ -1494,71 +1494,76 @@
               <option value="browser" data-i18n="ttsProviderBrowser">Browser (speechSynthesis)</option>
             </select>
           </div>
-          <div id="char-tts-kokoro-config" class="kokoro-config hidden">
-            <div class="full lang-field">
-              <span data-i18n="kokoroDevice">Kokoro Device</span>
-              <select id="char-tts-kokoro-device" class="full">
-                <option value="webgpu" data-i18n="kokoroDeviceWebgpu">WebGPU</option>
-                <option value="wasm" data-i18n="kokoroDeviceWasm">WASM</option>
-              </select>
-            </div>
-            <div class="full lang-field">
-              <span data-i18n="kokoroDtype">Kokoro Quantization</span>
-              <select id="char-tts-kokoro-dtype" class="full">
-                <option value="fp16">FP16</option>
-                <option value="q8">Q8</option>
-                <option value="q4">Q4</option>
-                <option value="q4f16">Q4f16</option>
-                <option value="q8f16">Q8f16</option>
-                <option value="auto">AUTO</option>
-                <option value="uint8">UINT8</option>
-                <option value="uint8f16">UINT8F16</option>
-              </select>
-            </div>
-            <div class="full lang-field">
-              <span data-i18n="kokoroVoice">Kokoro Voice</span>
-              <div class="tts-control-row">
-                <select id="char-tts-kokoro-voice" class="full">
-                  <option data-i18n="kokoroVoicesLoading">Loading Kokoro voices...</option>
-                </select>
-                <div class="tts-test-slot" data-slot="kokoro"></div>
+          <details class="settings-collapse">
+            <summary data-i18n="ttsSettings">TTS Settings</summary>
+            <div class="settings-collapse-body">
+              <div id="char-tts-kokoro-config" class="kokoro-config hidden">
+                <div class="full lang-field">
+                  <span data-i18n="kokoroDevice">Kokoro Device</span>
+                  <select id="char-tts-kokoro-device" class="full">
+                    <option value="webgpu" data-i18n="kokoroDeviceWebgpu">WebGPU</option>
+                    <option value="wasm" data-i18n="kokoroDeviceWasm">WASM</option>
+                  </select>
+                </div>
+                <div class="full lang-field">
+                  <span data-i18n="kokoroDtype">Kokoro Quantization</span>
+                  <select id="char-tts-kokoro-dtype" class="full">
+                    <option value="fp16">FP16</option>
+                    <option value="q8">Q8</option>
+                    <option value="q4">Q4</option>
+                    <option value="q4f16">Q4f16</option>
+                    <option value="q8f16">Q8f16</option>
+                    <option value="auto">AUTO</option>
+                    <option value="uint8">UINT8</option>
+                    <option value="uint8f16">UINT8F16</option>
+                  </select>
+                </div>
+                <div class="full lang-field">
+                  <span data-i18n="kokoroVoice">Kokoro Voice</span>
+                  <div class="tts-control-row">
+                    <select id="char-tts-kokoro-voice" class="full">
+                      <option data-i18n="kokoroVoicesLoading">Loading Kokoro voices...</option>
+                    </select>
+                    <div class="tts-test-slot" data-slot="kokoro"></div>
+                  </div>
+                </div>
+                <div class="full lang-field hidden" id="char-tts-kokoro-download">
+                  <div class="kokoro-download-row">
+                    <span id="kokoro-download-label" data-i18n="kokoroDownloadingVoice">Downloading voice...</span>
+                    <span id="kokoro-download-percent">0%</span>
+                    <button id="kokoro-download-cancel" class="icon-btn" type="button" data-i18n-title="cancelDownloadTitle">&#10005;</button>
+                  </div>
+                </div>
+              </div>
+              <div class="full lang-field tts-extra-field" id="char-tts-language-field">
+                <span data-i18n="ttsLanguage">TTS Language</span>
+                <select id="char-tts-language"></select>
+              </div>
+              <div class="full lang-field tts-extra-field" id="char-tts-voice-field">
+                <span data-i18n="ttsVoice">TTS Voice</span>
+                <div class="tts-control-row">
+                  <select id="char-tts-voice"></select>
+                  <div class="tts-test-slot" data-slot="tts">
+                    <button id="char-tts-test-btn" class="icon-btn tts-test-btn" type="button" data-i18n-title="testCharacterVoice"></button>
+                  </div>
+                </div>
+              </div>
+              <div class="full lang-field">
+                <div class="label-inline">
+                  <span data-i18n="ttsRate">TTS Rate</span>
+                  <span id="char-tts-rate-value" class="muted"></span>
+                </div>
+                <input id="char-tts-rate" type="range" min="0.5" max="2" step="0.1" value="1" />
+              </div>
+              <div class="full lang-field tts-extra-field" id="char-tts-pitch-field">
+                <div class="label-inline">
+                  <span data-i18n="ttsPitch">TTS Pitch</span>
+                  <span id="char-tts-pitch-value" class="muted"></span>
+                </div>
+                <input id="char-tts-pitch" type="range" min="0" max="2" step="0.1" />
               </div>
             </div>
-            <div class="full lang-field hidden" id="char-tts-kokoro-download">
-              <div class="kokoro-download-row">
-                <span id="kokoro-download-label" data-i18n="kokoroDownloadingVoice">Downloading voice...</span>
-                <span id="kokoro-download-percent">0%</span>
-                <button id="kokoro-download-cancel" class="icon-btn" type="button" data-i18n-title="cancelDownloadTitle">&#10005;</button>
-              </div>
-            </div>
-          </div>
-          <div class="full lang-field tts-extra-field" id="char-tts-language-field">
-            <span data-i18n="ttsLanguage">TTS Language</span>
-            <select id="char-tts-language"></select>
-          </div>
-          <div class="full lang-field tts-extra-field" id="char-tts-voice-field">
-            <span data-i18n="ttsVoice">TTS Voice</span>
-            <div class="tts-control-row">
-              <select id="char-tts-voice"></select>
-              <div class="tts-test-slot" data-slot="tts">
-                <button id="char-tts-test-btn" class="icon-btn tts-test-btn" type="button" data-i18n-title="testCharacterVoice"></button>
-              </div>
-            </div>
-          </div>
-          <div class="full lang-field">
-            <div class="label-inline">
-              <span data-i18n="ttsRate">TTS Rate</span>
-              <span id="char-tts-rate-value" class="muted"></span>
-            </div>
-            <input id="char-tts-rate" type="range" min="0.5" max="2" step="0.1" value="1" />
-          </div>
-          <div class="full lang-field tts-extra-field" id="char-tts-pitch-field">
-            <div class="label-inline">
-              <span data-i18n="ttsPitch">TTS Pitch</span>
-              <span id="char-tts-pitch-value" class="muted"></span>
-            </div>
-            <input id="char-tts-pitch" type="range" min="0" max="2" step="0.1" />
-          </div>
+          </details>
           <div class="full lang-field">
             <span data-i18n="loreBooksForCharacter">Lorebooks for this character</span>
             <div class="lorebook-toolbar">

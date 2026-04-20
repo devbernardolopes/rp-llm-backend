@@ -826,5 +826,6 @@
   "resetAppDataFailed": "Echec de la reinitialisation des donnees de l'application: {error}",
   "apply": "Appliquer",
   "collapseAll": "Tout reduire",
-  "expandAll": "Tout developper"
+  "expandAll": "Tout developper",
+  "ttsSettings": "Parametres TTS"
 }

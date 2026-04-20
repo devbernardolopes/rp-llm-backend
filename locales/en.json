@@ -831,5 +831,6 @@
   "resetAppDataFailed": "Failed to reset app data: {error}",
   "apply": "Apply",
   "collapseAll": "Collapse All",
-  "expandAll": "Expand All"
+  "expandAll": "Expand All",
+  "ttsSettings": "TTS Settings"
 }
