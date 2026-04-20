@@ -1096,12 +1096,29 @@ textarea {
   border-color: transparent;
 }
 
+.primary-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .primary-btn:hover {
   background: var(--primary-hover);
 }
 
 .secondary-btn {
   background: #1e2736;
+}
+
+.secondary-btn,
+.primary-btn.icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .secondary-btn svg {
