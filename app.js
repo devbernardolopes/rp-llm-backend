@@ -13094,6 +13094,7 @@ function applyCharacterSettingsDefaults(character) {
 
 async function seedBuiltInCharacters() {
   const BOT_DIR = "assets/bots/";
+  const MANIFEST_FILE = "assets/bots/manifest.json";
 
   const allCharacters = await db.characters.toArray();
   const existingBuiltinIds = new Set(
@@ -13103,10 +13104,23 @@ async function seedBuiltInCharacters() {
       .filter(Boolean)
   );
 
-  const botFiles = [
-    "bot_abraham-lincoln.scenara.json",
-    "bot_aya.scenara.json",
-  ];
+  let botFiles = [];
+  try {
+    const manifestResponse = await fetch(MANIFEST_FILE);
+    if (manifestResponse.ok) {
+      const manifestText = await manifestResponse.text();
+      const manifest = JSON.parse(manifestText);
+      if (manifest?.schema === "rp-bots-manifest-v1" && Array.isArray(manifest.bots)) {
+        botFiles = manifest.bots.filter((f) => typeof f === "string" && f.endsWith(".scenara.json"));
+      }
+    }
+  } catch {
+    console.warn("Failed to load bots manifest, falling back to empty list");
+  }
+
+  if (botFiles.length === 0) {
+    return;
+  }
 
   for (const botFile of botFiles) {
     const builtinId = botFile.replace(/^bot_/, "").replace(/\.scenara\.json$/, "");

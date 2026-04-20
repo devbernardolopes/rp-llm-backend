@@ -1,0 +1,7 @@
+{
+  "schema": "rp-bots-manifest-v1",
+  "bots": [
+    "bot_abraham-lincoln.scenara.json",
+    "bot_aya.scenara.json"
+  ]
+}
