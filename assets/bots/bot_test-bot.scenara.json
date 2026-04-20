@@ -62,14 +62,13 @@
     ],
     "updatedAt": 1776643497726,
     "createdAt": 1772476557196,
-    "pinned": true,
     "loreCooldown": 20,
     "autoTitleEnabled": false,
     "autoTitleMinMessages": 3,
     "includeOocInCompletions": false,
     "personaPrefixEnabled": false,
     "model3d": null,
-    "isBuiltIn": false,
+    "isBuiltIn": true,
     "sfx": [],
     "creatorNotes": ""
   }

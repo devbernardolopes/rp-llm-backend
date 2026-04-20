@@ -83,7 +83,7 @@
     ],
     "updatedAt": 1776293425111,
     "createdAt": 1772325711957,
-    "pinned": false,
+    "isBuiltIn": true,
     "loreCooldown": 20,
     "autoTitleEnabled": true,
     "autoTitleMinMessages": 7,

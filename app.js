@@ -12869,6 +12869,9 @@ async function exportCharacter(characterId) {
   }
 
   delete processedCharacter.threadCount;
+  delete processedCharacter.pinned;
+  delete processedCharacter.updatedAt;
+  delete processedCharacter.createdAt;
 
   const globalSfx = [];
   const globalCreatorNotes = [];
@@ -13158,16 +13161,25 @@ async function seedBuiltInCharacters() {
         builtinId: fileBuiltinId,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        pinned: false,
       };
 
       delete character.id;
+      delete character.createdAt;
+      delete character.updatedAt;
+      delete character.pinned;
 
       if (character.definitions && Array.isArray(character.definitions)) {
-        character.definitions = character.definitions.map((def) => ({
-          ...def,
-          personaInjectionPlacement: def.personaInjectionPlacement || "end_system_prompt",
-          kokoroDtype: def.kokoroDtype || "auto",
-        }));
+        character.definitions = character.definitions.map((def) => {
+          const cleaned = { ...def };
+          delete cleaned.createdAt;
+          delete cleaned.updatedAt;
+          return {
+            ...cleaned,
+            personaInjectionPlacement: def.personaInjectionPlacement || "end_system_prompt",
+            kokoroDtype: def.kokoroDtype || "auto",
+          };
+        });
       }
 
       await db.characters.add(character);
@@ -13339,8 +13351,13 @@ async function importCharacterFromFile(e) {
         tags: normalizedTags,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        pinned: false,
         personaInjectionPlacement: "end_system_prompt",
       };
+      delete character.pinned;
+      delete character.updatedAt;
+      delete character.createdAt;
+
       const legacyInitialMessagesFromImported = buildLegacyInitialMessagesFromPayload(imported);
       if (legacyInitialMessagesFromImported.length > 0) {
         const formattedLegacyRaw = formatInitialMessagesForEditor(legacyInitialMessagesFromImported);
@@ -13371,6 +13388,8 @@ async function importCharacterFromFile(e) {
             personaInjectionPlacement: def.personaInjectionPlacement || "end_system_prompt",
             kokoroDtype: def.kokoroDtype || "auto",
           };
+          delete updated.createdAt;
+          delete updated.updatedAt;
           const hasCustomInstructions = typeof def.writingInstructions === "string" && def.writingInstructions.trim().length > 0;
           updated.writingInstructionId = hasCustomInstructions ? "" : def.writingInstructionId || "none";
           return updated;
