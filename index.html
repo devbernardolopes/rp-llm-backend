@@ -42,7 +42,7 @@
             <button id="home-btn" class="option-btn pane-top-option-btn" type="button" data-i18n-title="homeTitle" aria-label="Home">
               <img src="assets/favicon/favicon-32x32.png" alt="" aria-hidden="true" />
             </button>
-            <button id="create-character-btn" class="option-btn pane-top-option-btn" type="button" data-i18n-title="createCharacter">+</button>
+            <button id="create-character-btn" class="option-btn pane-top-option-btn" type="button" data-i18n-title="createCharacter"></button>
             <button id="import-character-btn" class="option-btn pane-top-option-btn import-btn" type="button" data-i18n-title="importCharacter" aria-label="Import Character">⇩</button>
             <input id="import-character-input" type="file" accept=".json,application/json" class="hidden" />
           </div>
@@ -189,7 +189,7 @@
                 <div class="input-footer-right">
                   <div id="chat-model-pill" class="model-pill small" data-i18n="modelPill">Model: -</div>
                   <div id="chat-budget-pill" class="model-pill small">Max out: -</div>
-                  <button id="attach-btn" class="icon-btn small hidden" disabled data-i18n-title="attachFileTitle" aria-label="Attach file">+</button>
+                  <button id="attach-btn" class="icon-btn small hidden" disabled data-i18n-title="attachFileTitle" aria-label="Attach file"></button>
                   <button id="memory-command-btn" class="option-btn send-toggle-btn small" type="button" data-i18n-title="memoryCommandTitle" aria-label="Memory command">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                       <ellipse cx="8" cy="10" rx="2" ry="3"></ellipse>
@@ -1178,7 +1178,7 @@
         </div>
         <div class="modal-body">
           <div class="lore-toolbar">
-            <button id="create-persona-btn" class="primary-btn" type="button" data-i18n="newPersona"></button>
+            <button id="create-persona-btn" class="primary-btn" type="button" data-i18n-title="newPersona"></button>
             <button id="import-persona-btn" class="secondary-btn import-btn" type="button" data-i18n-title="importPersona" aria-label="Import Persona">⇩</button>
           </div>
           <div id="persona-list" class="lorebook-list"></div>
@@ -1204,7 +1204,7 @@
         <div class="modal-body">
           <div id="lore-list-view">
             <div class="lore-toolbar">
-              <button id="create-lorebook-btn" class="primary-btn" type="button" data-i18n="createLoreBook"></button>
+              <button id="create-lorebook-btn" class="primary-btn" type="button" data-i18n-title="createLoreBook"></button>
               <button id="import-lorebook-btn" class="secondary-btn import-btn" type="button" data-i18n-title="importLoreBook" aria-label="Import Lorebook">⇩</button>
             </div>
             <div id="lorebook-list" class="lorebook-list"></div>
@@ -1260,7 +1260,7 @@
           <div class="lore-entry-head">
             <h4 id="lore-entries-title">Entries</h4>
             <button id="toggle-all-lore-entries-btn" class="secondary-btn" type="button" data-i18n="collapseAll">Collapse All</button>
-            <button id="add-lore-entry-btn" class="secondary-btn" type="button" data-i18n="addEntry">+ Add Entry</button>
+            <button id="add-lore-entry-btn" class="secondary-btn" type="button" data-i18n-title="addEntry"></button>
           </div>
           <div id="lore-entries-list" class="lore-entries-list"></div>
         </div>
@@ -1332,7 +1332,7 @@
         <div class="modal-body">
           <div class="tag-manager-input-row">
             <input id="tag-manager-input" type="text" data-i18n-placeholder="tagInputPlaceholder" />
-            <button id="add-tag-btn" class="primary-btn" type="button" disabled>+</button>
+            <button id="add-tag-btn" class="primary-btn" type="button" disabled></button>
           </div>
           <div id="tag-manager-list" class="tag-manager-list"></div>
         </div>
@@ -1363,7 +1363,7 @@
             <button id="char-model3d-tab-btn" class="settings-tab-btn" type="button" data-i18n="model3dTab">3D</button>
             <span class="char-def-tabs-divider"></span>
             <div id="char-def-tabs-left" class="char-def-tabs-left"></div>
-            <button id="char-add-lang-btn" class="settings-tab-btn" type="button">+</button>
+            <button id="char-add-lang-btn" class="settings-tab-btn" type="button"></button>
           </div>
         </div>
         <div class="modal-body">
@@ -1644,23 +1644,9 @@
           <div class="full lang-field">
             <span data-i18n="loreBooksForCharacter">Lorebooks for this character</span>
             <div class="lorebook-toolbar">
-              <button id="add-lorebook-btn" class="primary-btn" type="button" data-i18n="addLorebook">+ Add Lorebook</button>
-            </div>
-            <div id="char-lorebooks-list" class="lorebook-list"></div>
-          </div>
-          <div class="full global-field">
-            <span data-i18n="loreCooldown">Lore re-injection cooldown (messages)</span>
-            <input id="char-lore-cooldown" type="number" min="0" max="100" value="20" />
-          </div>
-          <div class="full sfx-field hidden">
-            <div class="sfx-toolbar">
-              <button id="add-sfx-btn" class="primary-btn" type="button" data-i18n="addSfx">+ Add SFX</button>
-            </div>
-            <div id="char-sfx-list" class="asset-list"></div>
-          </div>
-          <div class="full model3d-field hidden">
-            <div class="model3d-toolbar">
-              <button id="add-model3d-btn" class="primary-btn" type="button" data-i18n="addModel3d">+ Add 3D Model</button>
+<button id="add-lorebook-btn" class="primary-btn" type="button" data-i18n-title="addLorebook"></button>
+              <button id="add-sfx-btn" class="primary-btn" type="button" data-i18n-title="addSfx"></button>
+              <button id="add-model3d-btn" class="primary-btn" type="button" data-i18n-title="addModel3d"></button>
             </div>
             <div id="char-model3d-preview" class="model3d-preview">
               <span class="muted" data-i18n="noModel3dSelected">No 3D model selected</span>
@@ -1692,7 +1678,7 @@
         </div>
         <div class="modal-footer">
           <button id="char-language-cancel" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
-          <button id="char-language-add" class="primary-btn" type="button" data-i18n="add">Add</button>
+          <button id="char-language-add" class="primary-btn" type="button" data-i18n-title="add"></button>
         </div>
       </div>
     </div>
@@ -1881,7 +1867,7 @@
         </div>
         <div class="modal-body">
           <div class="lore-toolbar">
-            <button id="create-writing-instruction-btn" class="primary-btn" type="button" data-i18n="addWritingInstruction"></button>
+            <button id="create-writing-instruction-btn" class="primary-btn" type="button" data-i18n-title="addWritingInstruction"></button>
             <button id="import-writing-instruction-btn" class="secondary-btn import-btn" type="button" data-i18n-title="importWritingInstruction" aria-label="Import Writing Instruction">⇩</button>
           </div>
           <div id="writing-instructions-list" class="lorebook-list"></div>
@@ -1908,7 +1894,7 @@
           <div id="writing-instruction-tabs" class="settings-tabs">
             <div class="char-def-tabs-row">
               <div id="writing-instruction-tabs-left" class="char-def-tabs-left"></div>
-              <button id="writing-instruction-add-lang-btn" class="settings-tab-btn" type="button" onclick="openWritingInstructionLanguageModal()">+</button>
+              <button id="writing-instruction-add-lang-btn" class="settings-tab-btn" type="button" onclick="openWritingInstructionLanguageModal()"></button>
             </div>
           </div>
           <div id="writing-instruction-content-area" class="full lang-field">
@@ -1992,7 +1978,7 @@
         </div>
         <div class="modal-footer">
           <button id="writing-instruction-language-cancel" class="secondary-btn" type="button" data-i18n="cancel">Cancel</button>
-          <button id="writing-instruction-language-add" class="primary-btn" type="button" data-i18n="add">Add</button>
+          <button id="writing-instruction-language-add" class="primary-btn" type="button" data-i18n-title="add"></button>
         </div>
       </div>
     </div>

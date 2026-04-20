@@ -7544,8 +7544,33 @@ function populatePaneBottomIcons() {
     "guide-btn": "help",
     "model-refresh-btn": "reload",
   };
+  const addCreateMapping = {
+    "create-character-btn": "plus",
+    "create-persona-btn": "plus",
+    "create-lorebook-btn": "plus",
+    "add-lore-entry-btn": "plus",
+    "add-initial-message-btn": "plus",
+    "adding-btn": "plus",
+    "char-add-lang-btn": "plus",
+    "add-tag-btn": "plus",
+    "attach-btn": "plus",
+    "add-lorebook-btn": "plus",
+    "add-sfx-btn": "plus",
+    "add-model3d-btn": "plus",
+    "writing-instruction-add-lang-btn": "plus",
+    "char-language-add": "plus",
+    "create-writing-instruction-btn": "plus",
+    "writing-instruction-language-add": "plus",
+    "new-model-profile-btn": "plus",
+  };
   const icons = window.ICONS || ICONS;
   for (const [id, iconKey] of Object.entries(mapping)) {
+    const btn = document.getElementById(id);
+    if (btn && icons && icons[iconKey]) {
+      btn.innerHTML = icons[iconKey];
+    }
+  }
+  for (const [id, iconKey] of Object.entries(addCreateMapping)) {
     const btn = document.getElementById(id);
     if (btn && icons && icons[iconKey]) {
       btn.innerHTML = icons[iconKey];
