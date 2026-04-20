@@ -1104,6 +1104,21 @@ textarea {
   background: #1e2736;
 }
 
+.secondary-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#character-sort-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .danger-btn {
   border-color: #7a3434;
   color: #ffb8b8;

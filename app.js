@@ -3013,15 +3013,11 @@ function getNextCharacterSortBase(current = "updated") {
 function updateCharacterSortButton() {
   const btn = document.getElementById("character-sort-btn");
   const icon = document.getElementById("character-sort-icon");
-  console.log("updateCharacterSortButton: btn=", btn ? "found" : "NOT FOUND", "icon=", icon ? "found" : "NOT FOUND");
   if (!btn || !icon) return;
   const parts = getCharacterSortParts(state.characterSortMode);
-  console.log("updateCharacterSortButton: parts.base=", parts.base, "CHARACTER_SORT_ICON_TEMPLATES[parts.base]=", CHARACTER_SORT_ICON_TEMPLATES[parts.base] ? "exists" : "NOT FOUND");
   const labelKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
   const label = t(labelKey);
-  const iconUrl = getCharacterSortIconUrl(parts.base);
-  console.log("updateCharacterSortButton: iconUrl=", iconUrl ? iconUrl.slice(0, 80) : "empty");
-  icon.src = iconUrl;
+  icon.src = getCharacterSortIconUrl(parts.base);
   icon.alt = label;
   btn.setAttribute("aria-label", label);
   btn.setAttribute("data-info", labelKey);
