@@ -3027,11 +3027,15 @@ function renderCharacterTagFilterChips() {
   const cue = document.getElementById("character-filter-active-cue");
   const sortBtn = document.getElementById("character-sort-btn");
   const sortDirBtn = document.getElementById("character-sort-dir-btn");
+  const filterClearBtn = document.getElementById("character-tag-filter-clear");
   const sortParts = getCharacterSortParts(state.characterSortMode);
   if (sortDirBtn) {
     const isDesc = sortParts.dir === "desc";
-    sortDirBtn.innerHTML = isDesc ? "&#8595;" : "&#8593;";
+    sortDirBtn.innerHTML = ICONS[isDesc ? "arrowDown" : "arrowUp"];
     sortDirBtn.setAttribute("title", isDesc ? t("sortDescending") : t("sortAscending"));
+  }
+  if (filterClearBtn) {
+    filterClearBtn.innerHTML = ICONS.x;
   }
   updateCharacterSortButton();
   updateCharacterFiltersToggleUi();
@@ -7532,10 +7536,11 @@ function populatePaneBottomIcons() {
     "pane-bottom-lore": "book",
     "pane-bottom-shortcuts": "keyboard",
     "pane-bottom-tags": "tag",
-    "pane-bottom-writing-instructions": "brain",
+    "pane-bottom-writing-instructions": "writing",
     "pane-bottom-database": "database",
     "pane-bottom-assets": "folder",
     "guide-btn": "help",
+    "model-refresh-btn": "reload",
   };
   for (const [id, iconKey] of Object.entries(mapping)) {
     const btn = document.getElementById(id);
