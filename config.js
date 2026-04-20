@@ -1,6 +1,6 @@
 // config.js
 const CONFIG = {
-  version: "25.2.14",
+  version: "25.2.15",
   apiKey:
     (typeof window !== "undefined" &&
       window.ENV &&
