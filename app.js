@@ -7531,7 +7531,36 @@ function updateLeftPaneWidthVariable() {
   // Inline style setting was conflicting with CSS class-based rules
 }
 
+function clearAddCreateButtonLabels() {
+  const buttons = [
+    "add-model3d-btn",
+    "add-sfx-btn", 
+    "add-lorebook-btn",
+    "create-character-btn",
+    "create-persona-btn",
+    "create-lorebook-btn",
+    "create-writing-instruction-btn",
+    "new-model-profile-btn",
+    "char-language-add",
+    "writing-instruction-language-add",
+    "add-tag-btn",
+    "add-lore-entry-btn",
+    "add-initial-message-btn",
+    "attach-btn",
+  ];
+  buttons.forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.removeAttribute("title");
+      btn.removeAttribute("aria-label");
+    }
+  });
+}
+
 function populatePaneBottomIcons() {
+  const icons = window.ICONS || ICONS;
+  if (!icons) return;
+  clearAddCreateButtonLabels();
   const mapping = {
     "pane-bottom-settings": "settings",
     "pane-bottom-personas": "user",
@@ -7563,8 +7592,6 @@ function populatePaneBottomIcons() {
     "writing-instruction-language-add": "plus",
     "new-model-profile-btn": "plus",
   };
-  const icons = window.ICONS || ICONS;
-  if (!icons) return;
   for (const [id, iconKey] of Object.entries(mapping)) {
     const btn = document.getElementById(id);
     if (btn && icons[iconKey]) {
