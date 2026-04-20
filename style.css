@@ -3606,6 +3606,26 @@ textarea {
   overflow: hidden;
 }
 
+.modal-card.manager {
+  width: min(760px, 100%);
+  height: min(75vh, 600px);
+  max-height: min(90vh, 720px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-card.manager .modal-body {
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-card.manager .modal-body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+}
+
 .modal-body {
   overflow-y: auto;
   flex: 1;
