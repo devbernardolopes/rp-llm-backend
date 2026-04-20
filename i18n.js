@@ -158,7 +158,7 @@ async function applyInterfaceLanguage() {
   const settingsTitle = document.getElementById("settings-title");
   if (settingsTitle) settingsTitle.textContent = t("settingsTitle");
   const dbTitle = document.getElementById("database-title");
-  if (dbTitle) dbTitle.textContent = t("databaseManagement");
+  if (dbTitle) dbTitle.textContent = t("database");
   const dbExport = document.getElementById("export-db-btn");
   if (dbExport) dbExport.textContent = t("exportDatabase");
   const dbImport = document.getElementById("import-db-btn");
