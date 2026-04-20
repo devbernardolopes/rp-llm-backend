@@ -4271,6 +4271,13 @@ textarea {
   overflow: hidden;
 }
 
+.settings-collapse.hidden,
+.global-field.hidden .settings-collapse,
+.global-field.hidden .settings-collapse-body,
+.global-field.hidden .settings-collapse-body .full.lang-field {
+  display: none;
+}
+
 .settings-collapse summary {
   padding: 10px 14px;
   background: var(--panel-2);
