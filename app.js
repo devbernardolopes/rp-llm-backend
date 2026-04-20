@@ -3013,11 +3013,15 @@ function getNextCharacterSortBase(current = "updated") {
 function updateCharacterSortButton() {
   const btn = document.getElementById("character-sort-btn");
   const icon = document.getElementById("character-sort-icon");
+  console.log("updateCharacterSortButton: btn=", btn ? "found" : "NOT FOUND", "icon=", icon ? "found" : "NOT FOUND");
   if (!btn || !icon) return;
   const parts = getCharacterSortParts(state.characterSortMode);
+  console.log("updateCharacterSortButton: parts.base=", parts.base, "CHARACTER_SORT_ICON_TEMPLATES[parts.base]=", CHARACTER_SORT_ICON_TEMPLATES[parts.base] ? "exists" : "NOT FOUND");
   const labelKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
   const label = t(labelKey);
-  icon.src = getCharacterSortIconUrl(parts.base);
+  const iconUrl = getCharacterSortIconUrl(parts.base);
+  console.log("updateCharacterSortButton: iconUrl=", iconUrl ? iconUrl.slice(0, 80) : "empty");
+  icon.src = iconUrl;
   icon.alt = label;
   btn.setAttribute("aria-label", label);
   btn.setAttribute("data-info", labelKey);
@@ -3030,13 +3034,14 @@ function renderCharacterTagFilterChips() {
   const sortDirBtn = document.getElementById("character-sort-dir-btn");
   const filterClearBtn = document.getElementById("character-tag-filter-clear");
   const sortParts = getCharacterSortParts(state.characterSortMode);
-  if (sortDirBtn) {
+  const icons = window.ICONS || ICONS;
+  if (sortDirBtn && icons) {
     const isDesc = sortParts.dir === "desc";
-    sortDirBtn.innerHTML = ICONS[isDesc ? "arrowDown" : "arrowUp"];
+    sortDirBtn.innerHTML = icons[isDesc ? "arrowDown" : "arrowUp"];
     sortDirBtn.setAttribute("title", isDesc ? t("sortDescending") : t("sortAscending"));
   }
-  if (filterClearBtn) {
-    filterClearBtn.innerHTML = ICONS.x;
+  if (filterClearBtn && icons) {
+    filterClearBtn.innerHTML = icons.x;
   }
   updateCharacterSortButton();
   updateCharacterFiltersToggleUi();
@@ -7543,23 +7548,25 @@ function populatePaneBottomIcons() {
     "guide-btn": "help",
     "model-refresh-btn": "reload",
   };
+  const icons = window.ICONS || ICONS;
   for (const [id, iconKey] of Object.entries(mapping)) {
     const btn = document.getElementById(id);
-    if (btn && ICONS[iconKey]) {
-      btn.innerHTML = ICONS[iconKey];
+    if (btn && icons && icons[iconKey]) {
+      btn.innerHTML = icons[iconKey];
     }
   }
 }
 
 function populateModalCloseIcons() {
+  const icons = window.ICONS || ICONS;
   document.querySelectorAll("[data-close-modal]").forEach((btn) => {
-    btn.innerHTML = ICONS.x;
+    if (icons && icons.x) btn.innerHTML = icons.x;
   });
   const specialIds = ["confirm-cancel-btn", "text-input-cancel-x"];
   specialIds.forEach((id) => {
     const btn = document.getElementById(id);
-    if (btn) {
-      btn.innerHTML = ICONS.x;
+    if (btn && icons && icons.x) {
+      btn.innerHTML = icons.x;
     }
   });
 }
