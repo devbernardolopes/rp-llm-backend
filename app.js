@@ -831,6 +831,7 @@ async function init() {
   handleMobilePaneAutoHide();
   updateLeftPaneWidthVariable();
   populatePaneBottomIcons();
+  populateModalCloseIcons();
   window.addEventListener("resize", handleMobilePaneAutoHide);
   window.addEventListener("resize", updateLeftPaneWidthVariable);
   if (window.visualViewport) {
@@ -7548,6 +7549,19 @@ function populatePaneBottomIcons() {
       btn.innerHTML = ICONS[iconKey];
     }
   }
+}
+
+function populateModalCloseIcons() {
+  document.querySelectorAll("[data-close-modal]").forEach((btn) => {
+    btn.innerHTML = ICONS.x;
+  });
+  const specialIds = ["confirm-cancel-btn", "text-input-cancel-x"];
+  specialIds.forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.innerHTML = ICONS.x;
+    }
+  });
 }
 
 function toggleMobilePane() {
