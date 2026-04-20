@@ -3628,7 +3628,15 @@ textarea {
 
 .modal-card.manager #persona-list,
 .modal-card.manager #assets-list {
-  overflow-y: hidden !important;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-card.manager #persona-list::-webkit-scrollbar,
+.modal-card.manager #assets-list::-webkit-scrollbar {
+  display: none;
+  width: 0;
 }
 
 .modal-body {
