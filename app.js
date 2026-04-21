@@ -21524,7 +21524,6 @@ async function openMessageSystemPromptModal(index) {
   messagesToShow.forEach((msg, idx) => {
     const entryDiv = document.createElement("div");
     entryDiv.className = "system-prompt-entry";
-    entryDiv.style.marginBottom = "8px";
 
     const originalIndex = messageIndices[idx] ?? idx;
     const displayIndex = getMessageDisplayIndex(originalIndex, conversationHistory);
@@ -21546,7 +21545,8 @@ async function openMessageSystemPromptModal(index) {
     textarea.readOnly = true;
     textarea.value = msgContent;
     textarea.dataset.forceCollapsed = "1";
-    textarea.dataset.collapseLabel = `${displayIndex} | ${roleLabelText}`;
+    textarea.dataset.msgNum = displayIndex;
+    textarea.dataset.roleLabel = roleLabelText;
 
     const countEl = document.createElement("span");
     countEl.id = `${textarea.id}-count`;
@@ -21587,6 +21587,17 @@ async function openMessageSystemPromptModal(index) {
   }
 
   setupModalTextareas(modal);
+
+  modal.querySelectorAll(".textarea-collapse-header").forEach((header) => {
+    const textarea = header.closest(".textarea-collapse")?.querySelector("textarea");
+    if (!textarea) return;
+    const msgNum = textarea.dataset.msgNum || "";
+    const roleLabel = textarea.dataset.roleLabel || "";
+    const titleSpan = header.querySelector("span:first-child");
+    if (titleSpan) {
+      titleSpan.textContent = `${msgNum} | ${roleLabel}`;
+    }
+  });
 
   const collapseSystemPromptEntries = () => {
     const textareas = modal.querySelectorAll(".textarea-collapse textarea");
