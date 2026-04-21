@@ -6388,24 +6388,6 @@ async function renderCharacters() {
       avatarWrap.appendChild(avatar);
     }
 
-    // Pin button - positioned top-left
-    const pinBtn = document.createElement("button");
-    pinBtn.type = "button";
-    pinBtn.className = "character-pin-btn";
-    pinBtn.setAttribute("aria-label", char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle"));
-    pinBtn.title = char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle");
-    pinBtn.innerHTML = char.pinned ? ICONS.pinFilled : ICONS.pin;
-    pinBtn.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      const newPinnedState = !char.pinned;
-      await db.characters.update(char.id, { pinned: newPinnedState });
-      // Update local char object
-      char.pinned = newPinnedState;
-      // Re-render characters to update order and button icons
-      await renderCharacters();
-    });
-    avatarWrap.appendChild(pinBtn);
-
     const idOverlay = document.createElement("span");
     idOverlay.className = "character-avatar-id";
     idOverlay.textContent = `#${char.id}`;
@@ -6680,6 +6662,17 @@ async function renderCharacters() {
     });
     deleteCharBtn.classList.add("danger-icon-btn");
     actions.appendChild(deleteCharBtn);
+
+    const favCharBtn = iconButton(char.pinned ? "starFilled" : "star", char.pinned ? t("unpinCharacterTitle") : t("pinCharacterTitle"), async (e) => {
+      e.stopPropagation();
+      const newPinnedState = !char.pinned;
+      await db.characters.update(char.id, { pinned: newPinnedState });
+      char.pinned = newPinnedState;
+      await renderCharacters();
+    });
+    favCharBtn.classList.add("favorite-btn");
+    if (char.pinned) favCharBtn.classList.add("is-favorite");
+    actions.appendChild(favCharBtn);
 
     actions.appendChild(
       iconButton("duplicate", t("duplicateCharacterAria"), async (e) => {
