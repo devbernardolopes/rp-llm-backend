@@ -6774,11 +6774,11 @@ function updateCharacterPaginationControls(totalItems, totalPages) {
 
   const isUnlimited = Number(state.characterCardsPerPage) === 0;
   const hasCharacters = totalItems > 0;
-  container.classList.toggle("hidden", isUnlimited || !hasCharacters);
+  const hasMultiplePages = totalPages > 1;
+  container.classList.toggle("hidden", isUnlimited || !hasCharacters || !hasMultiplePages);
   state.characterTotalPages = totalPages;
   state.characterTotalItems = totalItems;
 
-  const hasMultiplePages = totalPages > 1;
   if (firstBtn) firstBtn.disabled = !hasCharacters || !hasMultiplePages || state.characterPage <= 1;
   prevBtn.disabled = !hasCharacters || state.characterPage <= 1;
   nextBtn.disabled = !hasCharacters || totalPages <= 0 || state.characterPage >= totalPages;
