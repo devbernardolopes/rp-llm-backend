@@ -889,14 +889,14 @@ body {
 }
 
 .thread-row .actions .icon-btn {
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   border-radius: 7px;
 }
 
 .thread-row .actions .icon-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 22px;
+  height: 22px;
 }
 
 .thread-row .actions .thread-select {
@@ -910,8 +910,8 @@ body {
   background: #202a3a;
   color: var(--text);
   border-radius: 8px;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -985,8 +985,8 @@ body {
 }
 
 .icon-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 22px;
+  height: 22px;
   stroke: currentColor;
   fill: none;
   stroke-width: 1.8;
@@ -1072,8 +1072,8 @@ textarea {
 }
 
 .option-btn {
-  width: 38px;
-  min-width: 38px;
+  width: 44px;
+  min-width: 44px;
   padding: 0;
   font-size: 17px;
   display: inline-flex;
@@ -1082,8 +1082,8 @@ textarea {
 }
 
 .option-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   stroke: currentColor;
   fill: none;
   stroke-width: 1.8;
@@ -2874,8 +2874,8 @@ textarea {
 }
 
 .msg-btn-size-big .message-controls .icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   font-size: 16px;
 }
@@ -2891,8 +2891,8 @@ textarea {
 }
 
 .msg-btn-size-big .message-controls .icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .message-controls .msg-tts-btn:not(:disabled) {
