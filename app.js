@@ -7564,6 +7564,7 @@ function populatePaneBottomIcons() {
     "pane-bottom-shortcuts": "keyboard",
     "pane-bottom-tags": "tag",
     "pane-bottom-writing-instructions": "writing",
+    "char-writing-instructions-btn": "writing",
     "pane-bottom-database": "database",
     "pane-bottom-assets": "folder",
     "guide-btn": "help",
