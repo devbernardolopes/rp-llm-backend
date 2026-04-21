@@ -21558,12 +21558,14 @@ async function openMessageSystemPromptModal(index) {
     countEl.id = `${textarea.id}-count`;
     countEl.className = "textarea-collapse-count system-prompt-word-count";
     if (state.settings.showTokenCounts === true) {
+      countEl.textContent = "...";
       if (typeof window.estimateTokens === "function") {
         const tokenPromise = window.estimateTokens(msgContent);
         pendingTokenCounts.push(
           tokenPromise.then((tokens) => {
             const tok = typeof tokens === "number" ? tokens : 0;
             totalTokens += tok;
+            countEl.textContent = `${tok} token${tok === 1 ? "" : "s"}`;
             return tok;
           })
         );
@@ -21574,7 +21576,7 @@ async function openMessageSystemPromptModal(index) {
       countEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
     }
 
-    entryDiv.appendChild(textarea);
+    entryDiv.append(textarea, countEl);
     container.appendChild(entryDiv);
   });
 
