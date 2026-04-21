@@ -19538,7 +19538,7 @@ function renderSettingsModelOptions() {
     opt.value = m.id;
     const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
     const moderationMark = m.isModerated === true ? " | Moderated" : "";
-    opt.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+    opt.textContent = `${m.name}${lowContextMark}${moderationMark}`;
     modelSelect.appendChild(opt);
   });
 
@@ -19549,7 +19549,7 @@ function renderSettingsModelOptions() {
     if (fromCatalog) {
       const opt = document.createElement("option");
       opt.value = targetModel;
-      opt.textContent = `${fromCatalog.name} (${targetModel})`;
+      opt.textContent = fromCatalog.name;
       modelSelect.appendChild(opt);
     } else {
       finalModel = catalog.length > 0 ? catalog[0].id : DEFAULT_SETTINGS.model;
@@ -19690,7 +19690,7 @@ function renderModelSelectOptions(selectEl, catalog, selectedModel) {
   catalog.forEach((m) => {
     const opt = document.createElement("option");
     opt.value = m.id;
-    opt.textContent = `${m.name} (${m.id})`;
+    opt.textContent = m.name;
     selectEl.appendChild(opt);
   });
   const exists = Array.from(selectEl.options).some((opt) => String(opt.value || "").trim() === targetModel);
@@ -19698,7 +19698,7 @@ function renderModelSelectOptions(selectEl, catalog, selectedModel) {
     const fromCatalog = catalog.find((m) => m.id === targetModel);
     const opt = document.createElement("option");
     opt.value = targetModel;
-    opt.textContent = fromCatalog ? `${fromCatalog.name} (${targetModel})` : `${targetModel} (custom)`;
+    opt.textContent = fromCatalog ? fromCatalog.name : targetModel;
     selectEl.appendChild(opt);
   }
   selectEl.value = targetModel || "";
@@ -19742,8 +19742,8 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
       const nameSpan = document.createElement("span");
       nameSpan.className = "model-name";
-      nameSpan.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
-      nameSpan.title = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+      nameSpan.textContent = `${m.name}${lowContextMark}${moderationMark}`;
+      nameSpan.title = `${m.name}${lowContextMark}${moderationMark}`;
       nameSpan.style.color = "#ffd700";
 
       const starSpan = document.createElement("span");
@@ -19784,8 +19784,8 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
       const nameSpan = document.createElement("span");
       nameSpan.className = "model-name";
-      nameSpan.textContent = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
-      nameSpan.title = `${m.name} (${m.id})${lowContextMark}${moderationMark}`;
+      nameSpan.textContent = `${m.name}${lowContextMark}${moderationMark}`;
+      nameSpan.title = `${m.name}${lowContextMark}${moderationMark}`;
 
       const starSpan = document.createElement("span");
       starSpan.className = "model-star";
