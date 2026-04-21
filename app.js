@@ -17407,11 +17407,12 @@ function formatOocMessageEntry(message, personaPrefixEnabled = true) {
       labelContent = `((OOC: ${labelContent}))`;
     }
   }
-  const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
+  const roleLabel = isOoc && message.role === "assistant" ? "assistant" : message.role;
+  // const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
   const labeled = `${roleLabel}: ${labelContent}`;
   const normalized = labeled
     .replace(/(^|\n)system:/gi, "$1[SYSTEM]:")
-    .replace(/(^|\n)assistant:/gi, "$1[SYSTEM]:")
+    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
     .replace(/(^|\n)user:/gi, "$1[USER]:");
   if (message.role === "user" && !isOoc && personaPrefixEnabled) {
     const personaName = String(message.senderName || "You");
