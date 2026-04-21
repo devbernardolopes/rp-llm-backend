@@ -691,7 +691,7 @@ function normalizeSummaryRoleLabels(text) {
   const normalized = text.replace(/\r\n/g, "\n");
   return normalized
     .replace(/(^|\n)system:/gi, "$1[SYSTEM]:")
-    .replace(/(^|\n)assistant:/gi, "$1[SYSTEM]:")
+    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
     .replace(/(^|\n)user:/gi, "$1[USER]:");
 }
 
