@@ -2714,7 +2714,7 @@ textarea {
 }
 
 #memory-regenerate-progress-modal {
-  z-index: 225;
+  z-index: 370;
 }
 
 .memory-regenerate-prompt-info {
