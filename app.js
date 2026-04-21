@@ -19807,11 +19807,9 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
   const selectedModelData = models.find((m) => m.id === selectedModel) || catalog.find((m) => m.id === selectedModel);
   if (selectedModelData) {
-    const lowContextMark = isLowContextRoleplayModel(selectedModelData) ? " | ! <=16k" : "";
-    const moderationMark = selectedModelData.isModerated === true ? " | Moderated" : "";
-    display.textContent = `${selectedModelData.name} (${selectedModelData.id})${lowContextMark}${moderationMark}`;
+    display.textContent = selectedModelData.name;
   } else if (selectedModel) {
-    display.textContent = `${selectedModel} (custom)`;
+    display.textContent = selectedModel;
   } else {
     display.textContent = "Select a model...";
   }
