@@ -21496,6 +21496,15 @@ async function openMessageSystemPromptModal(index) {
     messagesToShow = conversationHistory.slice(0, index + 1);
   }
 
+  const getOriginalConversationIndex = (msgContent, startIndex) => {
+    for (let i = startIndex; i >= 0; i -= 1) {
+      if (conversationHistory[i]?.content === msgContent) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
   if (messagesToShow.length === 0) {
     showUnavailable();
     return;
