@@ -21490,26 +21490,10 @@ async function openMessageSystemPromptModal(index) {
   }
 
   let messagesToShow = [];
-  let messageIndices = [];
   if (message.requestMessages && Array.isArray(message.requestMessages)) {
     messagesToShow = message.requestMessages;
-    for (let i = 0; i < messagesToShow.length; i++) {
-      const content = messagesToShow[i]?.content || "";
-      const role = messagesToShow[i]?.role || "";
-      let originalIndex = -1;
-      if (role === "system") {
-        originalIndex = 0;
-      } else {
-        originalIndex = conversationHistory.findIndex((m, idx) => idx <= index && m && m.content === content);
-        if (originalIndex === -1) originalIndex = i;
-      }
-      messageIndices.push(originalIndex);
-    }
   } else if (index >= 0 && index < conversationHistory.length) {
     messagesToShow = conversationHistory.slice(0, index + 1);
-    for (let i = 0; i < messagesToShow.length; i++) {
-      messageIndices.push(i);
-    }
   }
 
   if (messagesToShow.length === 0) {
@@ -21530,8 +21514,7 @@ async function openMessageSystemPromptModal(index) {
     if (msgRole === "system" && idx === 0) {
       displayIndex = 0;
     } else {
-      const originalIndex = messageIndices[idx] ?? idx;
-      displayIndex = getMessageDisplayIndex(originalIndex, conversationHistory);
+      displayIndex = idx;
     }
 
     const role = String(msg?.role || "unknown").trim().toLowerCase();
