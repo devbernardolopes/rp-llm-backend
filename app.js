@@ -8730,8 +8730,9 @@ function buildInitialMessageEntry(text, index, language) {
 
   requestAnimationFrame(() => {
     const hasContent = String(textarea.value || "").trim().length > 0;
+    const isImportedChar = state.characterModalImportCancelled;
     const storedStates = loadInitialMessageCollapseStates(language);
-    const storedExpanded = storedStates[index] !== undefined ? storedStates[index] : hasContent;
+    const storedExpanded = storedStates[index] !== undefined ? storedStates[index] : isImportedChar ? false : hasContent;
     entryObj.setExpanded(storedExpanded);
     autoExpandTextarea(textarea);
   });
@@ -8819,9 +8820,10 @@ async function loadActiveCharacterDefinitionToForm() {
   populateKokoroNarratorVoiceSelect(def.narratorKokoroVoice || DEFAULT_KOKORO_VOICE, activeModalLanguage);
   updateCharNarratorTtsRatePitchLabels();
   refreshCharNarratorTtsProviderFields();
+  const isImportedChar = state.characterModalImportCancelled;
   const ttsDetails = document.querySelector('details[data-collapsed-state-key="tts"]');
   if (ttsDetails) {
-    if (def.ttsCollapseState === false) {
+    if (def.ttsCollapseState === false || isImportedChar) {
       ttsDetails.removeAttribute("open");
     } else {
       ttsDetails.setAttribute("open", "");
@@ -8829,7 +8831,7 @@ async function loadActiveCharacterDefinitionToForm() {
   }
   const narratorTtsDetails = document.querySelector('details[data-collapsed-state-key="tts-narrator"]');
   if (narratorTtsDetails) {
-    if (def.narratorTtsCollapseState === false) {
+    if (def.narratorTtsCollapseState === false || isImportedChar) {
       narratorTtsDetails.removeAttribute("open");
     } else {
       narratorTtsDetails.setAttribute("open", "");
