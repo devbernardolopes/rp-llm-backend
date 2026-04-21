@@ -14807,6 +14807,7 @@ async function duplicateThread(threadId) {
     chatOpacity: getThreadChatOpacity(source),
     favorite: false,
     initialMessagesRemoved: source.initialMessagesRemoved === true,
+    initialMessageIndex: source.initialMessageIndex,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
