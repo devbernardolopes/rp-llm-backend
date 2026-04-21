@@ -2710,7 +2710,7 @@ textarea {
 }
 
 #memory-regenerate-prompt-modal {
-  z-index: 215;
+  z-index: 360;
 }
 
 #memory-regenerate-progress-modal {
