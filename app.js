@@ -21490,10 +21490,26 @@ async function openMessageSystemPromptModal(index) {
   }
 
   let messagesToShow = [];
+  let messageIndices = [];
   if (message.requestMessages && Array.isArray(message.requestMessages)) {
     messagesToShow = message.requestMessages;
+    for (let i = 0; i < messagesToShow.length; i++) {
+      const content = messagesToShow[i]?.content || "";
+      const role = messagesToShow[i]?.role || "";
+      let originalIndex = -1;
+      if (role === "system") {
+        originalIndex = 0;
+      } else {
+        originalIndex = conversationHistory.findIndex((m, idx) => idx <= index && m && m.content === content);
+        if (originalIndex === -1) originalIndex = i;
+      }
+      messageIndices.push(originalIndex);
+    }
   } else if (index >= 0 && index < conversationHistory.length) {
     messagesToShow = conversationHistory.slice(0, index + 1);
+    for (let i = 0; i < messagesToShow.length; i++) {
+      messageIndices.push(i);
+    }
   }
 
   if (messagesToShow.length === 0) {
@@ -21506,12 +21522,12 @@ async function openMessageSystemPromptModal(index) {
   const pendingTokenCounts = [];
 
   messagesToShow.forEach((msg, idx) => {
-    const entryWrapper = document.createElement("div");
-    entryWrapper.className = "system-prompt-entry";
+    const entryDiv = document.createElement("div");
+    entryDiv.className = "system-prompt-entry";
+    entryDiv.style.marginBottom = "8px";
 
-    const msgNumSpan = document.createElement("span");
-    msgNumSpan.className = "system-prompt-entry-num muted";
-    msgNumSpan.textContent = idx === 0 ? "0" : String(idx);
+    const originalIndex = messageIndices[idx] ?? idx;
+    const displayIndex = getMessageDisplayIndex(originalIndex, conversationHistory);
 
     const role = String(msg?.role || "unknown").trim().toLowerCase();
     const msgContent = String(msg?.content || "");
@@ -21524,17 +21540,13 @@ async function openMessageSystemPromptModal(index) {
       }
     }
 
-    const label = document.createElement("span");
-    label.className = "system-prompt-entry-label";
-    label.textContent = roleLabelText;
-    label.style.display = "none";
-
     const textarea = document.createElement("textarea");
     textarea.id = `system-prompt-entry-${idx}`;
     textarea.rows = 4;
     textarea.readOnly = true;
     textarea.value = msgContent;
     textarea.dataset.forceCollapsed = "1";
+    textarea.dataset.collapseLabel = `${displayIndex} | ${roleLabelText}`;
 
     const countEl = document.createElement("span");
     countEl.id = `${textarea.id}-count`;
@@ -21556,8 +21568,8 @@ async function openMessageSystemPromptModal(index) {
       countEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
     }
 
-    entryWrapper.append(msgNumSpan, label, textarea, countEl);
-    container.appendChild(entryWrapper);
+    entryDiv.appendChild(textarea);
+    container.appendChild(entryDiv);
   });
 
   if (state.settings.showTokenCounts === true) {
