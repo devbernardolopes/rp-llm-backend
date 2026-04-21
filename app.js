@@ -7568,6 +7568,10 @@ function populatePaneBottomIcons() {
     "pane-bottom-assets": "folder",
     "guide-btn": "help",
     "model-refresh-btn": "reload",
+    "import-character-btn": "import",
+    "import-persona-btn": "import",
+    "import-lorebook-btn": "import",
+    "import-writing-instruction-btn": "import",
   };
   const addCreateMapping = {
     "create-character-btn": "plus",
