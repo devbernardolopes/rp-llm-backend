@@ -7572,6 +7572,8 @@ function populatePaneBottomIcons() {
     "import-persona-btn": "import",
     "import-lorebook-btn": "import",
     "import-writing-instruction-btn": "import",
+    "settings-export-btn": "export",
+    "export-db-btn": "export",
   };
   const addCreateMapping = {
     "create-character-btn": "plus",
