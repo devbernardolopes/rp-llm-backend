@@ -11513,6 +11513,25 @@ function removeImageLinksFromContent(content) {
     .trim();
 }
 
+function sanitizeContentForOoc(content) {
+  if (!content) return "";
+  const lines = String(content).split("\n");
+  const result = [];
+  let inCodeBlock = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("```")) {
+      result.push(line);
+      inCodeBlock = !inCodeBlock;
+    } else if (!inCodeBlock) {
+      result.push(line.replace(/!\[([^\]]*)\]\([^)]+\)/g, ""));
+    } else {
+      result.push(line);
+    }
+  }
+  return result.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 function hasMeaningfulAssistantMessage(history) {
   return (Array.isArray(history) ? history : []).some((m) => {
     if (!isInSimulationMessage(m)) return false;
@@ -17375,7 +17394,7 @@ function formatOocSystemMessageEntries(entries) {
 
 function formatOocMessageEntry(message, personaPrefixEnabled = true) {
   if (!message) return "";
-  const rawContent = String(message.content || "");
+  const rawContent = sanitizeContentForOoc(message.content || "");
   if (!rawContent.trim()) return "";
   const isOoc = message.ooc === true;
   let labelContent = rawContent.trim();
@@ -17514,7 +17533,7 @@ async function sendOocInquiry(text) {
     const effectiveModel = isOocSettingsEnabled() ? state.settings.oocModel || DEFAULT_SETTINGS.oocModel : state.settings.model;
     const result = await callOpenRouter(
       systemPrompt,
-      [{ role: "user", content: userMsg.content }],
+      [{ role: "user", content: sanitizeContentForOoc(userMsg.content) }],
       effectiveModel,
       (chunk) => {
         pendingAssistant.content += chunk;
