@@ -21510,15 +21510,19 @@ async function openMessageSystemPromptModal(index) {
     entryDiv.className = "system-prompt-entry";
 
     const msgRole = (msg?.role || "").toLowerCase().trim();
+    const msgContent = String(msg?.content || "");
     let displayIndex;
     if (msgRole === "system" && idx === 0) {
       displayIndex = 0;
     } else {
-      displayIndex = idx;
+      const originalIndex = getOriginalConversationIndex(msgContent, index);
+      const effectiveIndex = originalIndex >= 0 ? originalIndex : idx;
+      const computedDisplayIndex = getMessageDisplayIndex(effectiveIndex, conversationHistory);
+      const offset = getThreadDisplayOffset();
+      displayIndex = computedDisplayIndex + offset;
     }
 
-    const role = String(msg?.role || "unknown").trim().toLowerCase();
-    const msgContent = String(msg?.content || "");
+    const role = msgRole;
     let roleLabelText = role.toUpperCase();
 
     if (role === "user") {
