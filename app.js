@@ -19535,9 +19535,7 @@ function renderSettingsModelOptions() {
   filtered.forEach((m) => {
     const opt = document.createElement("option");
     opt.value = m.id;
-    const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
-    const moderationMark = m.isModerated === true ? " | Moderated" : "";
-    opt.textContent = `${m.name}${lowContextMark}${moderationMark}`;
+    opt.textContent = m.name;
     modelSelect.appendChild(opt);
   });
 
@@ -19732,8 +19730,6 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
     favoriteModelsList.forEach((m) => {
       const isSelected = m.id === selectedModel;
-      const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
-      const moderationMark = m.isModerated === true ? " | Moderated" : "";
 
       const option = document.createElement("div");
       option.className = `model-dropdown-option${isSelected ? " selected" : ""} favorite`;
@@ -19741,8 +19737,8 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
       const nameSpan = document.createElement("span");
       nameSpan.className = "model-name";
-      nameSpan.textContent = `${m.name}${lowContextMark}${moderationMark}`;
-      nameSpan.title = `${m.name}${lowContextMark}${moderationMark}`;
+      nameSpan.textContent = m.name;
+      nameSpan.title = m.name;
       nameSpan.style.color = "#ffd700";
 
       const starSpan = document.createElement("span");
@@ -19774,8 +19770,6 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
     otherModelsList.forEach((m) => {
       const isSelected = m.id === selectedModel;
-      const lowContextMark = isLowContextRoleplayModel(m) ? " | ! <=16k" : "";
-      const moderationMark = m.isModerated === true ? " | Moderated" : "";
 
       const option = document.createElement("div");
       option.className = `model-dropdown-option${isSelected ? " selected" : ""}`;
@@ -19783,8 +19777,8 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
       const nameSpan = document.createElement("span");
       nameSpan.className = "model-name";
-      nameSpan.textContent = `${m.name}${lowContextMark}${moderationMark}`;
-      nameSpan.title = `${m.name}${lowContextMark}${moderationMark}`;
+      nameSpan.textContent = m.name;
+      nameSpan.title = m.name;
 
       const starSpan = document.createElement("span");
       starSpan.className = "model-star";
