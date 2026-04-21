@@ -1066,7 +1066,7 @@ textarea {
 .option-btn,
 .primary-btn,
 .secondary-btn {
-  height: 38px;
+  height: 44px;
   padding: 0 14px;
   cursor: pointer;
 }
@@ -3425,9 +3425,9 @@ textarea {
 }
 
 .send-toggle-btn {
-  width: 38px;
-  min-width: 38px;
-  height: 38px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
   padding: 0;
 }
 
@@ -4321,8 +4321,8 @@ textarea {
 }
 
 .tts-test-btn {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--line);
   background: #1d283b;
@@ -5388,8 +5388,8 @@ textarea {
 }
 
 .tag-manager-input-row .primary-btn {
-  width: 38px;
-  min-width: 38px;
+  width: 44px;
+  min-width: 44px;
   padding: 0;
 }
 
