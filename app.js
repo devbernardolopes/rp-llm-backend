@@ -1588,6 +1588,10 @@ function setupEvents() {
       });
     }
   });
+  document.querySelectorAll("#character-filters-controls, #character-filters-controls *").forEach((el) => {
+    el.addEventListener("click", (e) => e.stopPropagation());
+    el.addEventListener("touchend", (e) => e.stopPropagation());
+  });
   document.getElementById("save-shortcuts-btn").addEventListener("click", saveShortcutsFromModal);
   document.getElementById("apply-shortcuts-btn")?.addEventListener("click", () => saveShortcutsFromModal({ close: false }));
   document.getElementById("add-tag-btn").addEventListener("click", addTagFromManagerInput);
