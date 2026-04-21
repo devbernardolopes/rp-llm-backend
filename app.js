@@ -21496,9 +21496,22 @@ async function openMessageSystemPromptModal(index) {
     messagesToShow = conversationHistory.slice(0, index + 1);
   }
 
-  const getOriginalConversationIndex = (msgContent, startIndex) => {
-    for (let i = startIndex; i >= 0; i -= 1) {
-      if (conversationHistory[i]?.content === msgContent) {
+  const buildConversationMessageMap = (upToIndex) => {
+    const result = [];
+    for (let i = 0; i <= upToIndex; i++) {
+      const msg = conversationHistory[i];
+      if (!msg) continue;
+      const role = msg.role;
+      if (role === "user" || role === "assistant") {
+        result.push({ index: i, role, content: msg.content });
+      }
+    }
+    return result;
+  };
+
+  const findMessageEntryIndex = (msgContent, targetRole, conversationMap) => {
+    for (let i = 0; i < conversationMap.length; i++) {
+      if (conversationMap[i].content === msgContent && conversationMap[i].role === targetRole) {
         return i;
       }
     }
@@ -21524,11 +21537,11 @@ async function openMessageSystemPromptModal(index) {
     if (msgRole === "system" && idx === 0) {
       displayIndex = 0;
     } else {
-      const originalIndex = getOriginalConversationIndex(msgContent, index);
-      const effectiveIndex = originalIndex >= 0 ? originalIndex : idx;
-      const computedDisplayIndex = getMessageDisplayIndex(effectiveIndex, conversationHistory);
+      const conversationMap = buildConversationMessageMap(index);
+      const entryIndex = findMessageEntryIndex(msgContent, msgRole, conversationMap);
+      const baseDisplayIndex = entryIndex >= 0 ? entryIndex : idx;
       const offset = getThreadDisplayOffset();
-      displayIndex = computedDisplayIndex + offset;
+      displayIndex = baseDisplayIndex + offset;
     }
 
     const role = msgRole;
