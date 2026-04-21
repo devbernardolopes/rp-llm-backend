@@ -21525,8 +21525,14 @@ async function openMessageSystemPromptModal(index) {
     const entryDiv = document.createElement("div");
     entryDiv.className = "system-prompt-entry";
 
-    const originalIndex = messageIndices[idx] ?? idx;
-    const displayIndex = getMessageDisplayIndex(originalIndex, conversationHistory);
+    const msgRole = (msg?.role || "").toLowerCase().trim();
+    let displayIndex;
+    if (msgRole === "system" && idx === 0) {
+      displayIndex = 0;
+    } else {
+      const originalIndex = messageIndices[idx] ?? idx;
+      displayIndex = getMessageDisplayIndex(originalIndex, conversationHistory);
+    }
 
     const role = String(msg?.role || "unknown").trim().toLowerCase();
     const msgContent = String(msg?.content || "");
