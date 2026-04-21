@@ -3637,10 +3637,46 @@ textarea {
 #writing-instruction-editor-modal .modal-card,
 #persona-editor-modal .modal-card,
 #message-system-prompt-modal .modal-card,
-#database-modal .modal-card {
-  height: min(75vh, 600px);
-  max-height: min(90vh, 720px);
-}
+  #database-modal .modal-card {
+    height: min(75vh, 600px);
+    max-height: min(90vh, 720px);
+  }
+
+  .modal-header-summary {
+    margin-left: auto;
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
+
+  .system-prompt-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .system-prompt-entry-num {
+    min-width: 28px;
+    text-align: right;
+    font-size: 0.85em;
+    padding-top: 6px;
+    user-select: none;
+  }
+
+  .system-prompt-entry .system-prompt-entry-label {
+    display: none;
+  }
+
+  .system-prompt-entry .textarea-collapse {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .system-prompt-entry .system-prompt-word-count {
+    padding-top: 6px;
+    min-width: 70px;
+    text-align: right;
+  }
 
 .modal-card.wide {
   width: min(760px, 100%);

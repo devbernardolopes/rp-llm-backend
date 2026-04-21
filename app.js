@@ -21471,6 +21471,7 @@ async function openMessageModelInfoModal(index) {
 async function openMessageSystemPromptModal(index) {
   const container = document.getElementById("message-system-prompt-list");
   const modal = document.getElementById("message-system-prompt-modal");
+  const summaryEl = document.getElementById("message-system-prompt-summary");
   if (!container || !modal) return;
   container.innerHTML = "";
 
@@ -21500,13 +21501,29 @@ async function openMessageSystemPromptModal(index) {
     return;
   }
 
+  let totalTokens = 0;
+  let totalWords = 0;
+  const pendingTokenCounts = [];
+
   messagesToShow.forEach((msg, idx) => {
     const entryWrapper = document.createElement("div");
     entryWrapper.className = "system-prompt-entry";
 
-    const roleLabelText = String(msg?.role || "unknown")
-      .trim()
-      .toUpperCase();
+    const msgNumSpan = document.createElement("span");
+    msgNumSpan.className = "system-prompt-entry-num muted";
+    msgNumSpan.textContent = idx === 0 ? "0" : String(idx);
+
+    const role = String(msg?.role || "unknown").trim().toLowerCase();
+    const msgContent = String(msg?.content || "");
+    let roleLabelText = role.toUpperCase();
+
+    if (role === "user") {
+      const asMatch = msgContent.match(/^\(As\s+([^)]+)\):\s*/);
+      if (asMatch && asMatch[1] && asMatch[1] !== "You") {
+        roleLabelText = `USER (${asMatch[1]})`;
+      }
+    }
+
     const label = document.createElement("span");
     label.className = "system-prompt-entry-label";
     label.textContent = roleLabelText;
@@ -21516,30 +21533,46 @@ async function openMessageSystemPromptModal(index) {
     textarea.id = `system-prompt-entry-${idx}`;
     textarea.rows = 4;
     textarea.readOnly = true;
-    textarea.value = String(msg?.content || "");
-    textarea.dataset.forceCollapsed = "1";
-
-    const msgContent = String(msg?.content || "");
     textarea.value = msgContent;
+    textarea.dataset.forceCollapsed = "1";
 
     const countEl = document.createElement("span");
     countEl.id = `${textarea.id}-count`;
     countEl.className = "textarea-collapse-count system-prompt-word-count";
     if (state.settings.showTokenCounts === true) {
       if (typeof window.estimateTokens === "function") {
-        window.estimateTokens(msgContent).then((tokens) => {
-          const tok = typeof tokens === "number" ? tokens : 0;
-          countEl.textContent = `${tok} token${tok === 1 ? "" : "s"}`;
-        });
+        const tokenPromise = window.estimateTokens(msgContent);
+        pendingTokenCounts.push(
+          tokenPromise.then((tokens) => {
+            const tok = typeof tokens === "number" ? tokens : 0;
+            totalTokens += tok;
+            return tok;
+          })
+        );
       }
     } else {
       const words = typeof countWords === "function" ? countWords(msgContent) : 0;
+      totalWords += words;
       countEl.textContent = `${words} word${words === 1 ? "" : "s"}`;
     }
 
-    entryWrapper.append(label, textarea, countEl);
+    entryWrapper.append(msgNumSpan, label, textarea, countEl);
     container.appendChild(entryWrapper);
   });
+
+  if (state.settings.showTokenCounts === true) {
+    Promise.all(pendingTokenCounts).then(() => {
+      const countLabel = totalTokens === 1 ? "token" : "tokens";
+      if (summaryEl) {
+        summaryEl.textContent = `${messagesToShow.length} message${messagesToShow.length === 1 ? "" : "s"}, ${totalTokens} ${countLabel}`;
+      }
+    });
+  } else {
+    const countLabel = totalWords === 1 ? "word" : "words";
+    if (summaryEl) {
+      summaryEl.textContent = `${messagesToShow.length} message${messagesToShow.length === 1 ? "" : "s"}, ${totalWords} ${countLabel}`;
+    }
+  }
 
   setupModalTextareas(modal);
 
