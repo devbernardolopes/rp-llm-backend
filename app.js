@@ -1012,8 +1012,7 @@ function setupEvents() {
   document.getElementById("settings-import-btn").addEventListener("click", importSettings);
   document.getElementById("settings-import-input").addEventListener("change", handleSettingsImport);
   document.getElementById("settings-export-btn").innerHTML = ICONS.export;
-  document.getElementById("settings-import-btn").innerHTML =
-    '<svg viewBox="0 0 24 24" aria-hidden="true" transform="scale(1,1)"><path d="M12 3v12"></path><path d="M8 7l4-4 4 4"></path><path d="M4 14v5h16v-5"></path></svg>';
+  document.getElementById("settings-import-btn").innerHTML = ICONS.import;
   document.getElementById("reset-db-btn")?.addEventListener("click", resetAppData);
   document.getElementById("guide-btn")?.addEventListener("click", () => showToast(t("guideComingSoon"), "success"));
   document.getElementById("save-character-btn").addEventListener("click", () => saveCharacterFromModal());
