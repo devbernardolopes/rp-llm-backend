@@ -2698,14 +2698,14 @@ textarea {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 6px;
-  margin: 0;
+  gap: 4px;
+  margin-left: 12px;
 }
 
 .memory-entry-action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   padding: 0;
 }
 
@@ -3926,6 +3926,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 .textarea-collapse-count,
 .field-count,

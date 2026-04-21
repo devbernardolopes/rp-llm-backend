@@ -18789,7 +18789,7 @@ async function renderMemoryModalEntries() {
       });
       deleteBtn.classList.add("memory-entry-action-btn", "memory-entry-delete-btn", "danger-btn");
       actions.append(regenBtn, deleteBtn);
-      body.appendChild(actions);
+      rightGroup.appendChild(actions);
     }
     const entryObj = { header, body, icon };
     entryObj.refresh = () => {
