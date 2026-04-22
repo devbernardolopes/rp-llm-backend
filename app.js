@@ -6393,6 +6393,13 @@ async function renderCharacters() {
     idOverlay.textContent = `#${char.id}`;
     avatarWrap.appendChild(idOverlay);
 
+    if (state.characters[char.id]?.enableMemory) {
+      const memoryOverlay = document.createElement("span");
+      memoryOverlay.className = "character-avatar-memory";
+      memoryOverlay.textContent = "MEM";
+      avatarWrap.appendChild(memoryOverlay);
+    }
+
     const threadOverlay = document.createElement("span");
     threadOverlay.className = "character-avatar-threads";
     threadOverlay.textContent = String(threadCount);
