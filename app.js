@@ -6393,7 +6393,7 @@ async function renderCharacters() {
     idOverlay.textContent = `#${char.id}`;
     avatarWrap.appendChild(idOverlay);
 
-    if (char.enableMemory) {
+    if (char.useMemory) {
       const memoryOverlay = document.createElement("span");
       memoryOverlay.className = "character-avatar-memory";
       memoryOverlay.textContent = "MEM";
