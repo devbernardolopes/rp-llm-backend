@@ -3024,7 +3024,7 @@ function updateCharacterFiltersToggleUi() {
   const btn = document.getElementById("character-filters-toggle");
   if (!filters || !btn) return;
   const collapsed = filters.classList.contains("collapsed");
-  btn.innerHTML = collapsed ? "&#9660;" : "&#9650;";
+  btn.innerHTML = collapsed ? ICONS.chevronDown : ICONS.chevronUp;
 }
 
 function getCharacterSortIconUrl(base) {
@@ -5059,16 +5059,22 @@ function initSettingsCollapsibles() {
   document.querySelectorAll(".settings-collapsible-header").forEach((header) => {
     if (header.dataset.collapsibleInitialized === "true") return;
     header.dataset.collapsibleInitialized = "true";
+    const fieldset = header.closest(".settings-collapsible");
+    const content = fieldset?.querySelector(".settings-collapsible-content");
+    const toggle = header.querySelector(".settings-collapsible-toggle");
+    if (toggle && content?.classList.contains("collapsed")) {
+      toggle.innerHTML = ICONS.chevronRight;
+    }
     header.addEventListener("click", (e) => {
       const fieldset = header.closest(".settings-collapsible");
       const content = fieldset?.querySelector(".settings-collapsible-content");
       const toggle = header.querySelector(".settings-collapsible-toggle");
       if (content?.classList.contains("collapsed")) {
         content.classList.remove("collapsed");
-        if (toggle) toggle.innerHTML = "&#9660;";
+        if (toggle) toggle.innerHTML = ICONS.chevronDown;
       } else {
         content?.classList.add("collapsed");
-        if (toggle) toggle.innerHTML = "&#9656;";
+        if (toggle) toggle.innerHTML = ICONS.chevronRight;
       }
     });
   });
@@ -6636,7 +6642,7 @@ async function renderCharacters() {
 
     const newChatBtnDropdown = document.createElement("span");
     newChatBtnDropdown.className = "new-chat-btn-dropdown";
-    newChatBtnDropdown.innerHTML = "&#9660;";
+    newChatBtnDropdown.innerHTML = ICONS.chevronDown;
     newChatBtn.appendChild(newChatBtnDropdown);
 
     applyHoverMarquee(newChatBtnMain, t("newChat"));
@@ -14184,7 +14190,7 @@ function renderExportSelectSections(data) {
     html += `<fieldset class="export-section" data-section="${section.id}">`;
     html += `<legend class="export-section-header${collapsible ? " collapsible" : ""}">`;
     if (collapsible) {
-      html += `<span class="export-section-toggle">${defaultCollapsed ? "&#9656;" : "&#9660;"}</span>`;
+      html += `<span class="export-section-toggle">${defaultCollapsed ? ICONS.chevronRight : ICONS.chevronDown}</span>`;
     }
     html += `<span class="export-section-title">${section.title}</span>`;
     if (collapsible) {
@@ -14257,10 +14263,10 @@ function renderExportSelectSections(data) {
       const toggle = legend.querySelector(".export-section-toggle");
       if (content.classList.contains("collapsed")) {
         content.classList.remove("collapsed");
-        if (toggle) toggle.innerHTML = "&#9660;";
+        if (toggle) toggle.innerHTML = ICONS.chevronDown;
       } else {
         content.classList.add("collapsed");
-        if (toggle) toggle.innerHTML = "&#9656;";
+        if (toggle) toggle.innerHTML = ICONS.chevronRight;
       }
     });
   });
