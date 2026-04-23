@@ -838,5 +838,6 @@
   "botCardOverlaysTitle": "BOT Card Overlays",
   "showBotCardIdOverlay": "Character ID",
   "showBotCardMemoryOverlay": "Memory indicator",
-  "showBotCardThreadsOverlay": "Thread count"
+  "showBotCardThreadsOverlay": "Thread count",
+  "showBotCardFirstMsgOverlay": "Auto-trigger first message"
 }

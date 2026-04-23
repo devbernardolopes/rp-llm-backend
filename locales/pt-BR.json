@@ -833,5 +833,6 @@
   "botCardOverlaysTitle": "Sobreposicoes do Cartao BOT",
   "showBotCardIdOverlay": "ID do personagem",
   "showBotCardMemoryOverlay": "Indicador de memoria",
-  "showBotCardThreadsOverlay": "Contagem de threads"
+  "showBotCardThreadsOverlay": "Contagem de threads",
+  "showBotCardFirstMsgOverlay": "Gatilho automatico da primeira mensagem"
 }

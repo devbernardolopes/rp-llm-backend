@@ -833,5 +833,6 @@
   "botCardOverlaysTitle": "BOT-Karten-Overlays",
   "showBotCardIdOverlay": "Charakter-ID",
   "showBotCardMemoryOverlay": "Speicherindikator",
-  "showBotCardThreadsOverlay": "Thread-Anzahl"
+  "showBotCardThreadsOverlay": "Thread-Anzahl",
+  "showBotCardFirstMsgOverlay": "Automatischer Erste-Nachricht-Ausloeser"
 }

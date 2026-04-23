@@ -833,5 +833,6 @@
   "botCardOverlaysTitle": "Badges de Carte BOT",
   "showBotCardIdOverlay": "ID du personnage",
   "showBotCardMemoryOverlay": "Indicateur de memoire",
-  "showBotCardThreadsOverlay": "Nombre de fils"
+  "showBotCardThreadsOverlay": "Nombre de fils",
+  "showBotCardFirstMsgOverlay": "Declenchement automatique du premier message"
 }

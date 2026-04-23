@@ -112,6 +112,7 @@ const DEFAULT_SETTINGS = {
   showBotCardIdOverlay: true,
   showBotCardMemoryOverlay: true,
   showBotCardThreadsOverlay: true,
+  showBotCardFirstMsgOverlay: true,
   autoUnloadThreshold: 0,
   loreMatchingMode: "keyword",
   loreSemanticThreshold: 0.5,
@@ -970,9 +971,11 @@ function applyBotCardOverlayVisibility() {
     const idOverlay = card.querySelector(".character-avatar-id");
     const memoryOverlay = card.querySelector(".character-avatar-memory");
     const threadsOverlay = card.querySelector(".character-avatar-threads");
+    const firstMsgOverlay = card.querySelector(".character-avatar-first-msg");
     if (idOverlay) idOverlay.style.display = state.settings.showBotCardIdOverlay !== false ? "" : "none";
     if (memoryOverlay) memoryOverlay.style.display = state.settings.showBotCardMemoryOverlay !== false ? "" : "none";
     if (threadsOverlay) threadsOverlay.style.display = state.settings.showBotCardThreadsOverlay !== false ? "" : "none";
+    if (firstMsgOverlay) firstMsgOverlay.style.display = state.settings.showBotCardFirstMsgOverlay !== false ? "" : "none";
   });
 }
 
@@ -4142,6 +4145,15 @@ async function setupSettingsControls() {
       applyBotCardOverlayVisibility();
     });
   }
+  const showBotCardFirstMsgOverlay = document.getElementById("show-bot-card-first-msg-overlay");
+  if (showBotCardFirstMsgOverlay) {
+    showBotCardFirstMsgOverlay.checked = state.settings.showBotCardFirstMsgOverlay !== false;
+    showBotCardFirstMsgOverlay.addEventListener("change", () => {
+      state.settings.showBotCardFirstMsgOverlay = showBotCardFirstMsgOverlay.checked;
+      saveSettings();
+      applyBotCardOverlayVisibility();
+    });
+  }
   const useLocalSummarization = document.getElementById("use-local-summarization");
   if (useLocalSummarization) {
     useLocalSummarization.checked = state.settings.useLocalSummarization === true;
@@ -6450,6 +6462,14 @@ async function renderCharacters() {
       memoryOverlay.textContent = "MEM";
       if (state.settings.showBotCardMemoryOverlay !== false) {
         avatarWrap.appendChild(memoryOverlay);
+      }
+      if (char.autoTriggerAiFirstMessage) {
+        const firstMsgOverlay = document.createElement("span");
+        firstMsgOverlay.className = "character-avatar-first-msg";
+        firstMsgOverlay.textContent = "1st";
+        if (state.settings.showBotCardFirstMsgOverlay !== false) {
+          avatarWrap.appendChild(firstMsgOverlay);
+        }
       }
     }
 

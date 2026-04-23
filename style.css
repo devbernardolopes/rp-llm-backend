@@ -1649,7 +1649,8 @@ textarea {
 .character-avatar-flag,
 .character-avatar-id,
 .character-avatar-threads,
-.character-avatar-memory {
+.character-avatar-memory,
+.character-avatar-first-msg {
   position: absolute;
   z-index: 2;
   border-radius: 999px;
@@ -1758,6 +1759,11 @@ textarea {
 
 .character-avatar-memory {
   left: 6px;
+  bottom: 6px;
+}
+
+.character-avatar-first-msg {
+  left: 52px;
   bottom: 6px;
 }
 

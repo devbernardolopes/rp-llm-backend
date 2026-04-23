@@ -833,5 +833,6 @@
   "botCardOverlaysTitle": "Superposiciones de Tarjeta BOT",
   "showBotCardIdOverlay": "ID del personaje",
   "showBotCardMemoryOverlay": "Indicador de memoria",
-  "showBotCardThreadsOverlay": "Cantidad de hilos"
+  "showBotCardThreadsOverlay": "Cantidad de hilos",
+  "showBotCardFirstMsgOverlay": "Disparador automatico del primer mensaje"
 }

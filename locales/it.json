@@ -833,5 +833,6 @@
   "botCardOverlaysTitle": "Overlay Scheda BOT",
   "showBotCardIdOverlay": "ID personaggio",
   "showBotCardMemoryOverlay": "Indicatore memoria",
-  "showBotCardThreadsOverlay": "Conteggio thread"
+  "showBotCardThreadsOverlay": "Conteggio thread",
+  "showBotCardFirstMsgOverlay": "Attivatore automatico del primo messaggio"
 }
