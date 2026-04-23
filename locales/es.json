@@ -829,5 +829,9 @@
   "expandAll": "Expandir todo",
   "ttsSettings": "Configuracion TTS",
   "ttsSettingsNarrator": "Configuracion TTS - Narrador",
-  "personas": "Personas"
+  "personas": "Personas",
+  "botCardOverlaysTitle": "Superposiciones de Tarjeta BOT",
+  "showBotCardIdOverlay": "ID del personaje",
+  "showBotCardMemoryOverlay": "Indicador de memoria",
+  "showBotCardThreadsOverlay": "Cantidad de hilos"
 }

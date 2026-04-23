@@ -109,6 +109,9 @@ const DEFAULT_SETTINGS = {
   showAiMsgMetadataBtn: true,
   showAiMsgGenParamsBtn: true,
   showAiMsgForkBtn: true,
+  showBotCardIdOverlay: true,
+  showBotCardMemoryOverlay: true,
+  showBotCardThreadsOverlay: true,
   autoUnloadThreshold: 0,
   loreMatchingMode: "keyword",
   loreSemanticThreshold: 0.5,
@@ -4097,6 +4100,30 @@ async function setupSettingsControls() {
       saveSettings();
     });
   }
+  const showBotCardIdOverlay = document.getElementById("show-bot-card-id-overlay");
+  if (showBotCardIdOverlay) {
+    showBotCardIdOverlay.checked = state.settings.showBotCardIdOverlay !== false;
+    showBotCardIdOverlay.addEventListener("change", () => {
+      state.settings.showBotCardIdOverlay = showBotCardIdOverlay.checked;
+      saveSettings();
+    });
+  }
+  const showBotCardMemoryOverlay = document.getElementById("show-bot-card-memory-overlay");
+  if (showBotCardMemoryOverlay) {
+    showBotCardMemoryOverlay.checked = state.settings.showBotCardMemoryOverlay !== false;
+    showBotCardMemoryOverlay.addEventListener("change", () => {
+      state.settings.showBotCardMemoryOverlay = showBotCardMemoryOverlay.checked;
+      saveSettings();
+    });
+  }
+  const showBotCardThreadsOverlay = document.getElementById("show-bot-card-threads-overlay");
+  if (showBotCardThreadsOverlay) {
+    showBotCardThreadsOverlay.checked = state.settings.showBotCardThreadsOverlay !== false;
+    showBotCardThreadsOverlay.addEventListener("change", () => {
+      state.settings.showBotCardThreadsOverlay = showBotCardThreadsOverlay.checked;
+      saveSettings();
+    });
+  }
   const useLocalSummarization = document.getElementById("use-local-summarization");
   if (useLocalSummarization) {
     useLocalSummarization.checked = state.settings.useLocalSummarization === true;
@@ -6395,13 +6422,17 @@ async function renderCharacters() {
     const idOverlay = document.createElement("span");
     idOverlay.className = "character-avatar-id";
     idOverlay.textContent = `#${char.id}`;
-    avatarWrap.appendChild(idOverlay);
+    if (state.settings.showBotCardIdOverlay !== false) {
+      avatarWrap.appendChild(idOverlay);
+    }
 
     if (char.useMemory) {
       const memoryOverlay = document.createElement("span");
       memoryOverlay.className = "character-avatar-memory";
       memoryOverlay.textContent = "MEM";
-      avatarWrap.appendChild(memoryOverlay);
+      if (state.settings.showBotCardMemoryOverlay !== false) {
+        avatarWrap.appendChild(memoryOverlay);
+      }
     }
 
     const threadOverlay = document.createElement("span");
@@ -6410,7 +6441,9 @@ async function renderCharacters() {
     if (threadCount === 0) {
       threadOverlay.style.display = "none";
     }
-    avatarWrap.appendChild(threadOverlay);
+    if (state.settings.showBotCardThreadsOverlay !== false) {
+      avatarWrap.appendChild(threadOverlay);
+    }
 
     if (hoverEffectEnabled) {
       initCharacterCardHoverVideos(card, avatarWrap, videoAvatars);

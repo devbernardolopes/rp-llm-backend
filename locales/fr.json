@@ -829,5 +829,9 @@
   "expandAll": "Tout developper",
   "ttsSettings": "Parametres TTS",
   "ttsSettingsNarrator": "Parametres TTS - Narrateur",
-  "personas": "Personas"
+  "personas": "Personas",
+  "botCardOverlaysTitle": "Badges de Carte BOT",
+  "showBotCardIdOverlay": "ID du personnage",
+  "showBotCardMemoryOverlay": "Indicateur de memoire",
+  "showBotCardThreadsOverlay": "Nombre de fils"
 }

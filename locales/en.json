@@ -834,5 +834,9 @@
   "expandAll": "Expand All",
   "ttsSettings": "TTS Settings",
   "ttsSettingsNarrator": "TTS Settings - Narrator",
-  "personas": "Personas"
+  "personas": "Personas",
+  "botCardOverlaysTitle": "BOT Card Overlays",
+  "showBotCardIdOverlay": "Character ID",
+  "showBotCardMemoryOverlay": "Memory indicator",
+  "showBotCardThreadsOverlay": "Thread count"
 }

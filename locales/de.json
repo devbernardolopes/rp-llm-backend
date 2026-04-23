@@ -829,5 +829,9 @@
   "expandAll": "Alle aufklappen",
   "ttsSettings": "TTS-Einstellungen",
   "ttsSettingsNarrator": "TTS-Einstellungen - Erzaehler",
-  "personas": "Personas"
+  "personas": "Personas",
+  "botCardOverlaysTitle": "BOT-Karten-Overlays",
+  "showBotCardIdOverlay": "Charakter-ID",
+  "showBotCardMemoryOverlay": "Speicherindikator",
+  "showBotCardThreadsOverlay": "Thread-Anzahl"
 }
