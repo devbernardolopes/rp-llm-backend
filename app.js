@@ -17,7 +17,7 @@ function toggleAllLoreEntries() {
       if (head && body && icon) {
         head.setAttribute("aria-expanded", loreEntriesExpanded ? "true" : "false");
         body.classList.toggle("collapsed", !loreEntriesExpanded);
-        icon.textContent = loreEntriesExpanded ? "▾" : "▴";
+        icon.innerHTML = loreEntriesExpanded ? ICONS.chevronUp : ICONS.chevronDown;
       }
     });
   }
@@ -2099,7 +2099,7 @@ function setupModalTextareas(root = document) {
       const hasContent = String(textarea.value || "").trim().length > 0;
       header.classList.toggle("has-content", hasContent);
       const expanded = header.getAttribute("aria-expanded") === "true";
-      icon.textContent = expanded ? "▾" : "▴";
+      icon.innerHTML = expanded ? ICONS.chevronUp : ICONS.chevronDown;
     };
     const scrollContainer = textarea.closest(".system-prompt-list") || textarea.closest(".modal-body");
     entry.setExpanded = (next) => {
@@ -2554,7 +2554,7 @@ function restoreLoreEditorTextareaCollapseStates(lorebook) {
       const shouldExpand = cardExpanded[entryId] !== undefined ? cardExpanded[entryId] : true;
       head.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
       body.classList.toggle("collapsed", !shouldExpand);
-      icon.textContent = shouldExpand ? "▾" : "▴";
+      icon.innerHTML = shouldExpand ? ICONS.chevronUp : ICONS.chevronDown;
     }
   });
   modal.querySelectorAll(".textarea-collapse textarea").forEach((textarea) => {
@@ -8775,7 +8775,7 @@ function buildInitialMessageEntry(text, index, language) {
     const hasContent = String(textarea.value || "").trim().length > 0;
     header.classList.toggle("has-content", hasContent);
     const expanded = header.getAttribute("aria-expanded") === "true";
-    icon.textContent = expanded ? "▾" : "▴";
+    icon.innerHTML = expanded ? ICONS.chevronUp : ICONS.chevronDown;
   };
   entryObj.setExpanded = (next) => {
     const current = header.getAttribute("aria-expanded") === "true";
@@ -9425,7 +9425,7 @@ function updateCharWritingInstructionsVisibility() {
     if (header) {
       header.setAttribute("aria-expanded", isCustom ? "true" : "false");
       const icon = header.querySelector(".textarea-collapse-icon");
-      if (icon) icon.textContent = isCustom ? "▴" : "▾";
+      if (icon) icon.innerHTML = isCustom ? ICONS.chevronUp : ICONS.chevronDown;
     }
     if (body) {
       body.classList.toggle("collapsed", !isCustom);
@@ -10693,7 +10693,7 @@ function renderLoreEntryEditors() {
     label.textContent = `Entry ${String(index + 1).padStart(2, "0")}`;
     const icon = document.createElement("span");
     icon.className = "lore-entry-icon";
-    icon.textContent = "▾";
+    icon.innerHTML = ICONS.chevronUp;
     head.append(label, icon);
 
     const cardBody = document.createElement("div");
@@ -10765,7 +10765,7 @@ function renderLoreEntryEditors() {
       const expanded = head.getAttribute("aria-expanded") === "true";
       head.setAttribute("aria-expanded", expanded ? "false" : "true");
       cardBody.classList.toggle("collapsed", expanded);
-      icon.textContent = expanded ? "▴" : "▾";
+      icon.innerHTML = expanded ? ICONS.chevronDown : ICONS.chevronUp;
       saveLoreEditorTextareaCollapseStates();
     });
 
@@ -18878,7 +18878,7 @@ async function renderMemoryModalEntries() {
       const hasContent = String(textarea.value || "").trim().length > 0;
       header.classList.toggle("has-content", hasContent);
       const expanded = header.getAttribute("aria-expanded") === "true";
-      icon.textContent = expanded ? "▾" : "▴";
+      icon.innerHTML = expanded ? ICONS.chevronUp : ICONS.chevronDown;
     };
     const setExpanded = (next) => {
       const current = header.getAttribute("aria-expanded") === "true";
