@@ -803,6 +803,7 @@ async function init() {
   applyMessageBubbleFontSize();
   applyMessageButtonSize();
   applyBotCardSize();
+  applyBotCardOverlayVisibility();
   ensureTagCatalogInitialized();
   await applyInterfaceLanguage();
   loadUiState();
@@ -959,6 +960,20 @@ function applyBotCardSize() {
   state.marqueeRefreshTimer = setTimeout(() => {
     refreshAllHoverMarquees();
   }, 100);
+}
+
+function applyBotCardOverlayVisibility() {
+  const grid = document.getElementById("character-grid");
+  if (!grid) return;
+  const cards = grid.querySelectorAll(".character-card:not([style*='display: none'])");
+  cards.forEach((card) => {
+    const idOverlay = card.querySelector(".character-avatar-id");
+    const memoryOverlay = card.querySelector(".character-avatar-memory");
+    const threadsOverlay = card.querySelector(".character-avatar-threads");
+    if (idOverlay) idOverlay.style.display = state.settings.showBotCardIdOverlay !== false ? "" : "none";
+    if (memoryOverlay) memoryOverlay.style.display = state.settings.showBotCardMemoryOverlay !== false ? "" : "none";
+    if (threadsOverlay) threadsOverlay.style.display = state.settings.showBotCardThreadsOverlay !== false ? "" : "none";
+  });
 }
 
 function setChatOpacityFromPercent(percent) {
@@ -4106,6 +4121,7 @@ async function setupSettingsControls() {
     showBotCardIdOverlay.addEventListener("change", () => {
       state.settings.showBotCardIdOverlay = showBotCardIdOverlay.checked;
       saveSettings();
+      applyBotCardOverlayVisibility();
     });
   }
   const showBotCardMemoryOverlay = document.getElementById("show-bot-card-memory-overlay");
@@ -4114,6 +4130,7 @@ async function setupSettingsControls() {
     showBotCardMemoryOverlay.addEventListener("change", () => {
       state.settings.showBotCardMemoryOverlay = showBotCardMemoryOverlay.checked;
       saveSettings();
+      applyBotCardOverlayVisibility();
     });
   }
   const showBotCardThreadsOverlay = document.getElementById("show-bot-card-threads-overlay");
@@ -4122,6 +4139,7 @@ async function setupSettingsControls() {
     showBotCardThreadsOverlay.addEventListener("change", () => {
       state.settings.showBotCardThreadsOverlay = showBotCardThreadsOverlay.checked;
       saveSettings();
+      applyBotCardOverlayVisibility();
     });
   }
   const useLocalSummarization = document.getElementById("use-local-summarization");
