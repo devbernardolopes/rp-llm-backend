@@ -2109,7 +2109,13 @@ textarea {
   min-width: 200px;
   max-width: 300px;
   max-height: 300px;
-  overflow-y: auto;
+  overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.new-chat-persona-dropdown::-webkit-scrollbar {
+  display: none;
 }
 
 .new-chat-persona-dropdown-item {
