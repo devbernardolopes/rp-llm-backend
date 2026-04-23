@@ -132,8 +132,6 @@ async function applyInterfaceLanguage() {
 
   const popTitle = document.querySelector(".popover-title");
   if (popTitle) popTitle.textContent = t("previousPrompts");
-  const sendBtn = document.getElementById("send-btn");
-  if (sendBtn && !state.sending) sendBtn.textContent = t("send");
   const shortcutsToggle = document.getElementById("shortcuts-toggle-btn");
   if (shortcutsToggle)
     shortcutsToggle.title = state.shortcutsVisible

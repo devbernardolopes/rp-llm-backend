@@ -817,6 +817,10 @@ async function init() {
   await hydrateGenerationQueue(null, false);
   await ensurePersonasInitialized();
   await renderAll();
+
+  const icons = window.ICONS || ICONS;
+  const sendBtn = document.getElementById("send-btn");
+  if (sendBtn) sendBtn.innerHTML = icons.arrowUp || "";
   applyCrossWindowSyncSetting();
   applyShowTokenCountsSetting();
   setupTokenCountListeners();
@@ -19247,13 +19251,15 @@ function setSendingState(sending) {
   const currentThreadGenerating = isActiveGeneration || isSummarizing;
   const pendingState = getThreadPendingGenerationState(currentId, conversationHistory);
   const isBlockedByQueueOrCooldown = pendingState === "queued" || pendingState === "cooling_down";
+  const icons = window.ICONS || ICONS;
+  const sendBtn = document.getElementById("send-btn");
   sendBtn.disabled = isBlockedByQueueOrCooldown;
   sendBtn.classList.toggle("is-generating", currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker);
   sendBtn.classList.toggle("danger-btn", currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker);
-  if (hasTitleGeneratingMarker) {
-    sendBtn.textContent = "";
-  } else {
-    sendBtn.textContent = "";
+  if (sendBtn) {
+    sendBtn.innerHTML = (currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker)
+      ? (icons.x || "✕")
+      : (icons.arrowUp || "");
   }
   personaSelect.disabled = currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker;
   refreshMessageControlStates();

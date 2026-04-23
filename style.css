@@ -22,6 +22,17 @@
   --mobile-breakpoint: 600px;
   --tablet-breakpoint: 900px;
 
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+  /* Bot card sizes */
+  --bot-card-min-width: 230px;
+  --bot-card-min-width-small: 200px;
+  --bot-card-min-width-regular: 220px;
+  --bot-card-min-width-big: 280px;
+
   /* Pane widths */
   --pane-width: 360px;
   --pane-collapsed-width: 84px;
@@ -3338,10 +3349,6 @@ textarea {
   min-width: 28px;
   height: 28px;
   padding: 0;
-}
-
-#send-btn::before {
-  content: "↑";
 }
 
 #send-btn.is-generating {
