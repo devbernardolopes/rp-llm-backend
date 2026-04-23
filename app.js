@@ -7703,7 +7703,19 @@ function populateModalCloseIcons() {
   document.querySelectorAll("[data-close-modal]").forEach((btn) => {
     if (icons && icons.x) btn.innerHTML = icons.x;
   });
-  const specialIds = ["confirm-cancel-btn", "text-input-cancel-x"];
+  const specialIds = [
+    "confirm-cancel-btn",
+    "text-input-cancel-x",
+    "evict-all-sfx-btn",
+    "model3d-close-btn",
+    "ooc-system-avatar-remove",
+    "kokoro-download-cancel",
+    "narrator-kokoro-download-cancel",
+    "remove-model3d-btn",
+    "persona-remove-avatar",
+    "char-language-cancel-x",
+    "writing-instruction-language-cancel-x",
+  ];
   specialIds.forEach((id) => {
     const btn = document.getElementById(id);
     if (btn && icons && icons.x) {
