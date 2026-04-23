@@ -11,12 +11,14 @@
   --muted: #8e9ab3;
   --primary: #2c7df0;
   --primary-hover: #3a8bff;
+  --accent: var(--primary);
   --danger: #a64b4b;
   --text-bright: #ffffff;
   --hover: #2a3a52;
   --chat-opacity: 1;
 
   /* Breakpoints */
+  /* NOTE: CSS does not support var() in media queries - use 600px/601px directly */
   --mobile-breakpoint: 600px;
   --tablet-breakpoint: 900px;
 
@@ -1334,7 +1336,7 @@ textarea {
 }
 
 .filter-search-input:focus {
-  border-color: var(--accent);
+  border-color: var(--primary);
 }
 
 .character-sort-field {
