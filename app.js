@@ -2087,6 +2087,7 @@ function setupModalTextareas(root = document) {
     }
     const icon = document.createElement("span");
     icon.className = "textarea-collapse-icon";
+    icon.innerHTML = ICONS.chevronUp;
     rightGroup.appendChild(icon);
     header.append(title, rightGroup);
     const body = document.createElement("div");
@@ -8764,10 +8765,11 @@ function buildInitialMessageEntry(text, index, language) {
     removeInitialMessageDraft(language, index);
   });
 
-  const icon = document.createElement("span");
-  icon.className = "textarea-collapse-icon";
+const icon = document.createElement("span");
+    icon.className = "textarea-collapse-icon";
+    icon.innerHTML = ICONS.chevronUp;
 
-  rightGroup.append(removeBtn, icon);
+    rightGroup.append(removeBtn, icon);
   header.append(title, rightGroup);
 
   const body = document.createElement("div");

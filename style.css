@@ -3914,9 +3914,13 @@ textarea {
   display: none;
 }
 .textarea-collapse-icon {
+  display: inline-flex;
   opacity: 0.7;
-  font-size: 14px;
   transition: transform 0.2s ease;
+}
+.textarea-collapse-icon svg {
+  width: 14px;
+  height: 14px;
 }
 .textarea-collapse-header-right {
   display: inline-flex;
