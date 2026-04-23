@@ -19252,15 +19252,12 @@ function setSendingState(sending) {
   const pendingState = getThreadPendingGenerationState(currentId, conversationHistory);
   const isBlockedByQueueOrCooldown = pendingState === "queued" || pendingState === "cooling_down";
   const icons = window.ICONS || ICONS;
-  const sendBtn = document.getElementById("send-btn");
   sendBtn.disabled = isBlockedByQueueOrCooldown;
   sendBtn.classList.toggle("is-generating", currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker);
   sendBtn.classList.toggle("danger-btn", currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker);
-  if (sendBtn) {
-    sendBtn.innerHTML = (currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker)
-      ? (icons.x || "✕")
-      : (icons.arrowUp || "");
-  }
+  sendBtn.innerHTML = (currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker)
+    ? (icons.x || "✕")
+    : (icons.arrowUp || "");
   personaSelect.disabled = currentThreadGenerating || isBlockedByQueueOrCooldown || hasTitleGeneratingMarker;
   refreshMessageControlStates();
   window.refreshAllSpeakerButtons();
