@@ -1172,10 +1172,10 @@ textarea {
   top: 12px;
   left: 12px;
   z-index: 40;
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
   display: none;
   align-items: center;
   justify-content: center;
