@@ -3380,6 +3380,8 @@ textarea {
   min-width: 28px;
   height: 28px;
   padding: 0;
+  align-items: center;
+  justify-content: center;
 }
 
 #send-btn.is-generating {
