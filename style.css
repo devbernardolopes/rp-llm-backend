@@ -2951,9 +2951,9 @@ textarea {
   border-color: #8b3a42;
 }
 
-.message-controls .msg-model-info-btn:not(:disabled) {
+/* .message-controls .msg-model-info-btn:not(:disabled) {
   color: inherit;
-}
+} */
 
 .message-controls .msg-edit-btn.msg-edit-btn-edited:not(:disabled) {
   color: #c8f5d0;
