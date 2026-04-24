@@ -1200,10 +1200,10 @@ textarea {
 .mobile-pane-toggle-chat {
   position: static;
   display: none;
-  width: 32px;
-  min-width: 32px;
-  height: 32px;
-  min-height: 32px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
 }
 
 .mobile-pane-toggle svg {
