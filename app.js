@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS = {
   lmstudioBaseUrl: "http://localhost:1234",
   lmstudioApiMethod: "openai",
   lastModelsPerProvider: {},
+  modelFilterSettingsPerProvider: {},
   model: "arcee-ai/trinity-large-preview:free",
   markdownEnabled: true,
   allowMessageHtml: false,
@@ -3534,14 +3535,32 @@ async function setupSettingsControls() {
     await populateThemeDropdown();
   }
 
+  if (modelPricingFilter || modelModalityFilter || modelSortOrder) {
+    const provider = state.settings.aiProvider || "openrouter";
+    const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+    const providerFilters = filterSettings[provider] || {};
+  }
+
   if (modelPricingFilter) {
-    modelPricingFilter.value = state.settings.modelPricingFilter === "free" || state.settings.modelPricingFilter === "paid" ? state.settings.modelPricingFilter : "all";
+    const provider = state.settings.aiProvider || "openrouter";
+    const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+    const providerFilters = filterSettings[provider] || {};
+    const savedPricing = providerFilters.modelPricingFilter;
+    modelPricingFilter.value = savedPricing === "free" || savedPricing === "paid" ? savedPricing : "all";
   }
   if (modelModalityFilter) {
-    modelModalityFilter.value = state.settings.modelModalityFilter === "all" ? "all" : "text-only";
+    const provider = state.settings.aiProvider || "openrouter";
+    const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+    const providerFilters = filterSettings[provider] || {};
+    const savedModality = providerFilters.modelModalityFilter;
+    modelModalityFilter.value = savedModality === "all" ? "all" : "text-only";
   }
   if (modelSortOrder) {
-    const order = String(state.settings.modelSortOrder || "name_asc");
+    const provider = state.settings.aiProvider || "openrouter";
+    const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+    const providerFilters = filterSettings[provider] || {};
+    const savedOrder = providerFilters.modelSortOrder;
+    const order = String(savedOrder || "name_asc");
     modelSortOrder.value = ["name_asc", "name_desc", "created_asc", "created_desc"].includes(order) ? order : "name_asc";
   }
 
@@ -3992,19 +4011,31 @@ async function setupSettingsControls() {
   });
 
   modelPricingFilter?.addEventListener("change", () => {
-    state.settings.modelPricingFilter = modelPricingFilter.value;
+    const provider = state.settings.aiProvider || "openrouter";
+    const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+    filterSettings[provider] = filterSettings[provider] || {};
+    filterSettings[provider].modelPricingFilter = modelPricingFilter.value;
+    state.settings.modelFilterSettingsPerProvider = filterSettings;
     saveSettings();
     renderSettingsModelOptions();
   });
 
   modelModalityFilter?.addEventListener("change", () => {
-    state.settings.modelModalityFilter = modelModalityFilter.value;
+    const provider = state.settings.aiProvider || "openrouter";
+    const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+    filterSettings[provider] = filterSettings[provider] || {};
+    filterSettings[provider].modelModalityFilter = modelModalityFilter.value;
+    state.settings.modelFilterSettingsPerProvider = filterSettings;
     saveSettings();
     renderSettingsModelOptions();
   });
 
   modelSortOrder?.addEventListener("change", () => {
-    state.settings.modelSortOrder = modelSortOrder.value;
+    const provider = state.settings.aiProvider || "openrouter";
+    const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+    filterSettings[provider] = filterSettings[provider] || {};
+    filterSettings[provider].modelSortOrder = modelSortOrder.value;
+    state.settings.modelFilterSettingsPerProvider = filterSettings;
     saveSettings();
     renderSettingsModelOptions();
   });
@@ -19631,10 +19662,14 @@ function renderSettingsModelOptions() {
     catalog = state.modelCatalog.length > 0 ? state.modelCatalog : getFallbackModelCatalog();
   }
 
-  const pricingFilter = state.settings.modelPricingFilter === "free" || state.settings.modelPricingFilter === "paid" ? state.settings.modelPricingFilter : "all";
-  const modalityFilter = state.settings.modelModalityFilter === "all" ? "all" : "text-only";
-  const sortOrder = ["name_asc", "name_desc", "created_asc", "created_desc", "workers_desc", "workers_asc", "speed_desc", "speed_asc", "eta_asc", "eta_desc"].includes(state.settings.modelSortOrder)
-    ? state.settings.modelSortOrder
+  const provider = state.settings.aiProvider || "openrouter";
+  const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+  const providerFilters = filterSettings[provider] || {};
+
+  const pricingFilter = providerFilters.modelPricingFilter === "free" || providerFilters.modelPricingFilter === "paid" ? providerFilters.modelPricingFilter : "all";
+  const modalityFilter = providerFilters.modelModalityFilter === "all" ? "all" : "text-only";
+  const sortOrder = ["name_asc", "name_desc", "created_asc", "created_desc", "workers_desc", "workers_asc", "speed_desc", "speed_asc", "eta_asc", "eta_desc"].includes(providerFilters.modelSortOrder)
+    ? providerFilters.modelSortOrder
     : "name_asc";
 
   const filtered = catalog.filter((m) => {
