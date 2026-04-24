@@ -114,10 +114,24 @@ body::-webkit-scrollbar {
   overflow: auto;
 }
 
-@media (max-width: 600px) {
+@media only screen and (max-width: 600px) {
   #app-shell {
     flex-direction: row;
     --left-pane-width: 0;
+  }
+
+  .character-sort-btn {
+    min-width: 48px !important;
+    min-height: 48px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    background: #ff0000 !important;
+  }
+
+  .sort-dir-btn,
+  #character-tag-filter-clear,
+  .filters-toggle-btn {
+    touch-action: manipulation;
   }
 
   #app-shell.pane-mobile-open {
@@ -1369,6 +1383,10 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .character-sort-btn img,

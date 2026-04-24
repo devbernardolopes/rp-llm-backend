@@ -1556,8 +1556,7 @@ function setupEvents() {
   });
   const sortBtn = document.getElementById("character-sort-btn");
   if (sortBtn) {
-    const handleSortClick = async (e) => {
-      e.stopPropagation();
+    const handleSortClick = async () => {
       const parts = getCharacterSortParts(state.characterSortMode);
       const nextBase = getNextCharacterSortBase(parts.base);
       state.characterSortMode = `${nextBase}_${parts.dir}`;
@@ -1566,13 +1565,14 @@ function setupEvents() {
       state.characterPage = 1;
       await renderCharacters();
     };
-    sortBtn.addEventListener("click", handleSortClick);
-    sortBtn.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-    }, { passive: false });
+    sortBtn.addEventListener("touchstart", () => {}, { passive: true });
     sortBtn.addEventListener("touchend", (e) => {
       e.preventDefault();
-      handleSortClick(e);
+      setTimeout(() => handleSortClick(), 0);
+    }, { passive: false });
+    sortBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await handleSortClick();
     });
     const parts = getCharacterSortParts(state.characterSortMode);
     const infoKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
