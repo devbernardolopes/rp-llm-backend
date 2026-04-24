@@ -19662,7 +19662,6 @@ function renderSettingsModelOptions() {
     catalog = state.modelCatalog.length > 0 ? state.modelCatalog : getFallbackModelCatalog();
   }
 
-  const provider = state.settings.aiProvider || "openrouter";
   const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
   const providerFilters = filterSettings[provider] || {};
 
