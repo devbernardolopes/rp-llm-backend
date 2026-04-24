@@ -1554,7 +1554,7 @@ function setupEvents() {
   });
   const sortBtn = document.getElementById("character-sort-btn");
   if (sortBtn) {
-    sortBtn.addEventListener("click", async (e) => {
+    const handleSortClick = async (e) => {
       e.stopPropagation();
       const parts = getCharacterSortParts(state.characterSortMode);
       const nextBase = getNextCharacterSortBase(parts.base);
@@ -1563,6 +1563,14 @@ function setupEvents() {
       renderCharacterTagFilterChips();
       state.characterPage = 1;
       await renderCharacters();
+    };
+    sortBtn.addEventListener("click", handleSortClick);
+    sortBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+    }, { passive: false });
+    sortBtn.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      handleSortClick(e);
     });
     const parts = getCharacterSortParts(state.characterSortMode);
     const infoKey = CHARACTER_SORT_LABEL_KEYS[parts.base] || "characterOrdering";
