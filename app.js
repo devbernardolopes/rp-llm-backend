@@ -19891,6 +19891,8 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
     return;
   }
 
+  const isAIHorde = models.some((m) => m.hordeStats);
+
   if (favoriteModelsList.length > 0) {
     const header = document.createElement("div");
     header.className = "model-dropdown-header";
@@ -19899,32 +19901,7 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
     favoriteModelsList.forEach((m) => {
       const isSelected = m.id === selectedModel;
-
-      const option = document.createElement("div");
-      option.className = `model-dropdown-option${isSelected ? " selected" : ""} favorite`;
-      option.dataset.modelId = m.id;
-
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "model-name";
-      nameSpan.textContent = m.name;
-      nameSpan.title = m.name;
-      nameSpan.style.color = "#ffd700";
-
-      const starSpan = document.createElement("span");
-      starSpan.className = "model-star favorited";
-      starSpan.innerHTML = "&#9733;";
-      starSpan.title = t("modelUnfavorite");
-      starSpan.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleModelFavorite(m.id);
-      });
-
-      option.appendChild(nameSpan);
-      option.appendChild(starSpan);
-      option.addEventListener("click", () => {
-        selectModelFromDropdown(m.id);
-      });
-
+      const option = createModelDropdownOption(m, isSelected, isAIHorde, true);
       dropdownOptions.appendChild(option);
     });
   }
@@ -19939,31 +19916,7 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
 
     otherModelsList.forEach((m) => {
       const isSelected = m.id === selectedModel;
-
-      const option = document.createElement("div");
-      option.className = `model-dropdown-option${isSelected ? " selected" : ""}`;
-      option.dataset.modelId = m.id;
-
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "model-name";
-      nameSpan.textContent = m.name;
-      nameSpan.title = m.name;
-
-      const starSpan = document.createElement("span");
-      starSpan.className = "model-star";
-      starSpan.innerHTML = "&#9734;";
-      starSpan.title = t("modelFavorite");
-      starSpan.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleModelFavorite(m.id);
-      });
-
-      option.appendChild(nameSpan);
-      option.appendChild(starSpan);
-      option.addEventListener("click", () => {
-        selectModelFromDropdown(m.id);
-      });
-
+      const option = createModelDropdownOption(m, isSelected, isAIHorde, false);
       dropdownOptions.appendChild(option);
     });
   }
@@ -19976,6 +19929,97 @@ function renderModelCustomDropdown(models, catalog, selectedModel) {
   } else {
     display.textContent = "Select a model...";
   }
+}
+
+function createModelDropdownOption(model, isSelected, showHordeStats, isFavorite) {
+  const option = document.createElement("div");
+  option.className = `model-dropdown-option${isSelected ? " selected" : ""}${isFavorite ? " favorite" : ""}`;
+  option.dataset.modelId = model.id;
+
+  const nameSpan = document.createElement("span");
+  nameSpan.className = "model-name";
+  nameSpan.textContent = model.name;
+  nameSpan.title = model.name;
+  if (isFavorite) nameSpan.style.color = "#ffd700";
+
+  const starSpan = document.createElement("span");
+  starSpan.className = `model-star${isFavorite ? " favorited" : ""}`;
+  starSpan.innerHTML = isFavorite ? "&#9733;" : "&#9734;";
+  starSpan.title = isFavorite ? t("modelUnfavorite") : t("modelFavorite");
+  starSpan.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleModelFavorite(model.id);
+  });
+
+  const contents = document.createElement("div");
+  contents.className = "model-option-contents";
+
+  const leftSection = document.createElement("div");
+  leftSection.className = "model-option-left";
+  leftSection.appendChild(nameSpan);
+
+  const rightSection = document.createElement("div");
+  rightSection.className = "model-option-right";
+  rightSection.appendChild(starSpan);
+
+  if (showHordeStats && model.hordeStats) {
+    const statsDiv = document.createElement("div");
+    statsDiv.className = "model-option-stats";
+
+    const workers = Number(model.hordeStats.workers) || 0;
+    const queued = Number(model.hordeStats.queued) || 0;
+    const eta = Number(model.hordeStats.eta) || 0;
+    const speed = Number(model.hordeStats.speed) || 0;
+
+    const workersBadge = document.createElement("span");
+    workersBadge.className = "horde-stat-badge workers";
+    workersBadge.title = t("hordeWorkers");
+    workersBadge.textContent = workers;
+    statsDiv.appendChild(workersBadge);
+
+    if (queued > 0) {
+      const queuedBadge = document.createElement("span");
+      queuedBadge.className = "horde-stat-badge queued";
+      queuedBadge.title = t("hordeQueued");
+      queuedBadge.textContent = queued;
+      statsDiv.appendChild(queuedBadge);
+    }
+
+    if (eta > 0) {
+      const etaBadge = document.createElement("span");
+      etaBadge.className = "horde-stat-badge eta";
+      etaBadge.title = t("hordeEta");
+      etaBadge.textContent = formatHordeEta(eta);
+      statsDiv.appendChild(etaBadge);
+    }
+
+    if (speed > 0) {
+      const speedBadge = document.createElement("span");
+      speedBadge.className = "horde-stat-badge speed";
+      speedBadge.title = t("hordeSpeed");
+      speedBadge.textContent = `${speed.toFixed(1)} tok/s`;
+      statsDiv.appendChild(speedBadge);
+    }
+
+    rightSection.insertBefore(statsDiv, starSpan);
+  }
+
+  contents.appendChild(leftSection);
+  contents.appendChild(rightSection);
+  option.appendChild(contents);
+
+  option.addEventListener("click", () => {
+    selectModelFromDropdown(model.id);
+  });
+
+  return option;
+}
+
+function formatHordeEta(seconds) {
+  if (!seconds || seconds <= 0) return "";
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+  return `${Math.round(seconds / 3600)}h`;
 }
 
 function toggleModelFavorite(modelId) {

@@ -834,5 +834,9 @@
   "showBotCardIdOverlay": "ID del personaje",
   "showBotCardMemoryOverlay": "Indicador de memoria",
   "showBotCardThreadsOverlay": "Cantidad de hilos",
-  "showBotCardFirstMsgOverlay": "Disparador automatico del primer mensaje"
+  "showBotCardFirstMsgOverlay": "Disparador automatico del primer mensaje",
+  "hordeWorkers": "Trabajadores disponibles",
+  "hordeQueued": "Solicitudes en cola",
+  "hordeEta": "Tiempo estimado (segundos)",
+  "hordeSpeed": "Tokens por segundo"
 }

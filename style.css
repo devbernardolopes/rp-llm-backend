@@ -2547,7 +2547,6 @@ textarea {
 .model-dropdown-option {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 10px 12px;
   cursor: pointer;
   border-bottom: 1px solid var(--line);
@@ -2570,15 +2569,12 @@ textarea {
   color: #ffd700;
 }
 
-.model-dropdown-option.favorite .model-name {
-  color: #ffd700;
-}
-
 .model-dropdown-option .model-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-right: 8px;
 }
 
 .model-dropdown-option .model-star {
@@ -2593,6 +2589,62 @@ textarea {
 
 .model-dropdown-option .model-star:hover {
   transform: scale(1.2);
+}
+
+.model-option-contents {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.model-option-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.model-option-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.model-option-stats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.horde-stat-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.horde-stat-badge.workers {
+  background: rgba(64, 156, 255, 0.2);
+  color: #409cff;
+}
+
+.horde-stat-badge.queued {
+  background: rgba(255, 165, 0, 0.2);
+  color: #ffa500;
+}
+
+.horde-stat-badge.eta {
+  background: rgba(50, 205, 50, 0.2);
+  color: #32cd32;
+}
+
+.horde-stat-badge.speed {
+  background: rgba(147, 112, 219, 0.2);
+  color: #9370db;
 }
 
 .model-dropdown-option .model-star.favorited {

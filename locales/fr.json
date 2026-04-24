@@ -834,5 +834,9 @@
   "showBotCardIdOverlay": "ID du personnage",
   "showBotCardMemoryOverlay": "Indicateur de memoire",
   "showBotCardThreadsOverlay": "Nombre de fils",
-  "showBotCardFirstMsgOverlay": "Declenchement automatique du premier message"
+  "showBotCardFirstMsgOverlay": "Declenchement automatique du premier message",
+  "hordeWorkers": "Travailleurs disponibles",
+  "hordeQueued": "Demandes en file d'attente",
+  "hordeEta": "Temps estime (secondes)",
+  "hordeSpeed": "Tokens par seconde"
 }

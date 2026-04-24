@@ -839,5 +839,9 @@
   "showBotCardIdOverlay": "Character ID",
   "showBotCardMemoryOverlay": "Memory indicator",
   "showBotCardThreadsOverlay": "Thread count",
-  "showBotCardFirstMsgOverlay": "Auto-trigger first message"
+  "showBotCardFirstMsgOverlay": "Auto-trigger first message",
+  "hordeWorkers": "Workers available",
+  "hordeQueued": "Requests queued",
+  "hordeEta": "Estimated time (seconds)",
+  "hordeSpeed": "Tokens per second"
 }

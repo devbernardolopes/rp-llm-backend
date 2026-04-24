@@ -834,5 +834,9 @@
   "showBotCardIdOverlay": "Charakter-ID",
   "showBotCardMemoryOverlay": "Speicherindikator",
   "showBotCardThreadsOverlay": "Thread-Anzahl",
-  "showBotCardFirstMsgOverlay": "Automatischer Erste-Nachricht-Ausloeser"
+  "showBotCardFirstMsgOverlay": "Automatischer Erste-Nachricht-Ausloeser",
+  "hordeWorkers": "Verfugbare Arbeiter",
+  "hordeQueued": "Anfragen in Warteschlange",
+  "hordeEta": "Geschatzte Zeit (Sekunden)",
+  "hordeSpeed": "Tokens pro Sekunde"
 }
