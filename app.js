@@ -715,6 +715,8 @@ const handleVisibilityChange = debounce(() => {
       if (card._restoreVideoTimes) card._restoreVideoTimes();
       if (card._startCarousel) card._startCarousel();
     });
+    // Close mobile pane and backdrop when returning to tab
+    closeMobilePane();
   }
 
   if (!document.hidden && currentThread) {
