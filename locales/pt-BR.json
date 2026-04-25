@@ -838,5 +838,12 @@
   "hordeWorkers": "Trabalhadores disponiveis",
   "hordeQueued": "Requisicoes na fila",
   "hordeEta": "Tempo estimado (segundos)",
-  "hordeSpeed": "Tokens por segundo"
+  "hordeSpeed": "Tokens por segundo",
+  "directorSettings": "Diretor",
+  "enableDirectorSettings": "Usar configura\u00e7\u00f5es do diretor",
+  "directorProvider": "Provedor do diretor",
+  "directorModel": "Modelo do diretor",
+  "directorTemperature": "Temperatura do diretor",
+  "directorStopStrings": "Strings de parada do diretor",
+  "directorStream": "Stream do diretor"
 }

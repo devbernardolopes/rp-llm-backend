@@ -166,6 +166,12 @@ Requirements:
   sectionHeaderLoreContext: "***LORE CONTEXT***",
   oocSystemPromptIntro: "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
   oocUserMessageFormat: "((OOC: SYSTEM, reply in OOC manner. {content}))",
+  enableDirectorSettings: true,
+  directorProvider: "openrouter",
+  directorModel: "",
+  directorTemperature: 0.8,
+  directorStopStrings: "",
+  directorStream: false,
 };
 
 function getSectionHeader(key) {
@@ -492,6 +498,22 @@ function populateSettingsTabValues() {
   if (defaultOocStream) defaultOocStream.checked = state.settings.oocStream ?? DEFAULT_SETTINGS.oocStream;
   const defaultOocStopStrings = document.getElementById("default-ooc-stop-strings");
   if (defaultOocStopStrings) defaultOocStopStrings.value = state.settings.oocStopStrings || "";
+  const defaultDirectorProvider = document.getElementById("default-director-provider");
+  const defaultDirectorModel = document.getElementById("default-director-model");
+  const defaultDirectorTemp = document.getElementById("default-director-temp");
+  const enableDirectorSettings = document.getElementById("enable-director-settings");
+  if (defaultDirectorProvider) defaultDirectorProvider.value = state.settings.directorProvider || DEFAULT_SETTINGS.directorProvider;
+  if (defaultDirectorTemp) {
+    defaultDirectorTemp.value = state.settings.directorTemperature ?? DEFAULT_SETTINGS.directorTemperature;
+    const val = document.getElementById("default-director-temp-value");
+    if (val) val.textContent = defaultDirectorTemp.value;
+  }
+  if (defaultDirectorModel) defaultDirectorModel.value = state.settings.directorModel || DEFAULT_SETTINGS.directorModel;
+  if (enableDirectorSettings) enableDirectorSettings.checked = state.settings.enableDirectorSettings ?? DEFAULT_SETTINGS.enableDirectorSettings;
+  const defaultDirectorStream = document.getElementById("default-director-stream");
+  if (defaultDirectorStream) defaultDirectorStream.checked = state.settings.directorStream ?? DEFAULT_SETTINGS.directorStream;
+  const defaultDirectorStopStrings = document.getElementById("default-director-stop-strings");
+  if (defaultDirectorStopStrings) defaultDirectorStopStrings.value = state.settings.directorStopStrings || "";
   if (defaultAvatarScale) defaultAvatarScale.value = state.settings.defaultAvatarScale || 1;
   if (defaultPersonaInjectionPlacement) defaultPersonaInjectionPlacement.value = state.settings.defaultPersonaInjectionPlacement || "none";
   if (defaultTtsProvider) defaultTtsProvider.value = state.settings.defaultTtsProvider || "kokoro";
@@ -4711,6 +4733,7 @@ async function setupSettingsControls() {
       try {
         await populateAutoTitleSummaryModels();
         await populateOocModels();
+        await populateDirectorModels();
       } catch {}
     });
   }
@@ -4761,6 +4784,7 @@ async function setupSettingsControls() {
       try {
         await populateAutoTitleSummaryModels();
         await populateOocModels();
+        await populateDirectorModels();
       } catch {}
     });
   }
@@ -4863,6 +4887,67 @@ async function setupSettingsControls() {
   if (defaultOocStreamEl) {
     defaultOocStreamEl.addEventListener("change", () => {
       state.settings.oocStream = defaultOocStreamEl.checked;
+      saveSettings();
+    });
+  }
+  const defaultDirectorProviderEl = document.getElementById("default-director-provider");
+  const defaultDirectorModelEl = document.getElementById("default-director-model");
+  const defaultDirectorTempEl = document.getElementById("default-director-temp");
+  const enableDirectorSettingsEl = document.getElementById("enable-director-settings");
+  const defaultDirectorStreamEl = document.getElementById("default-director-stream");
+  const directorStopStringsEl = document.getElementById("default-director-stop-strings");
+
+  if (defaultDirectorProviderEl) {
+    defaultDirectorProviderEl.addEventListener("change", async () => {
+      const oldProvider = state.settings.directorProvider || DEFAULT_SETTINGS.directorProvider;
+      const newProvider = defaultDirectorProviderEl.value;
+      if (oldProvider !== newProvider) {
+        const lastModels = state.settings.lastModelsPerProvider || {};
+        if (state.settings.directorModel) {
+          lastModels[oldProvider] = state.settings.directorModel;
+        }
+        state.settings.lastModelsPerProvider = lastModels;
+        state.settings.directorModel = "";
+      }
+      state.settings.directorProvider = newProvider;
+      saveSettings();
+
+      try {
+        await populateDirectorModels();
+      } catch {}
+    });
+  }
+  if (defaultDirectorModelEl) {
+    defaultDirectorModelEl.addEventListener("change", () => {
+      state.settings.directorModel = defaultDirectorModelEl.value;
+      saveSettings();
+    });
+  }
+  if (defaultDirectorTempEl) {
+    defaultDirectorTempEl.addEventListener("input", () => {
+      const value = Number(defaultDirectorTempEl.value);
+      state.settings.directorTemperature = value;
+      const directorTempValue = document.getElementById("default-director-temp-value");
+      if (directorTempValue) directorTempValue.textContent = String(value);
+      saveSettings();
+    });
+  }
+  if (directorStopStringsEl) {
+    directorStopStringsEl.addEventListener("input", () => {
+      state.settings.directorStopStrings = directorStopStringsEl.value.trim();
+      saveSettings();
+    });
+  }
+  if (enableDirectorSettingsEl) {
+    enableDirectorSettingsEl.addEventListener("change", () => {
+      state.settings.enableDirectorSettings = enableDirectorSettingsEl.checked;
+      saveSettings();
+      updateApiSettingsGroupStates();
+    });
+  }
+  if (defaultDirectorStreamEl) {
+    defaultDirectorStreamEl.addEventListener("change", () => {
+      state.settings.directorStream = defaultDirectorStreamEl.checked;
       saveSettings();
     });
   }
@@ -5087,6 +5172,7 @@ function setupSettingsTabsLayout() {
             initSettingsCollapsibles();
             populateAutoTitleSummaryModels().catch(() => {});
             populateOocModels().catch(() => {});
+            populateDirectorModels().catch(() => {});
           }
         } else {
           g.classList.add("hidden");
@@ -19786,6 +19872,23 @@ async function populateOocModels() {
   }
 }
 
+async function populateDirectorModels() {
+  const directorModel = document.getElementById("default-director-model");
+  if (!directorModel) return;
+
+  const directorProvider = state.settings.directorProvider || DEFAULT_SETTINGS.directorProvider;
+  const directorCatalog = await getModelCatalogForProvider(directorProvider, true);
+  const lastModels = state.settings.lastModelsPerProvider || {};
+  const directorSelectedModel = getBestModelForProvider(directorProvider, state.settings.directorModel, directorCatalog, lastModels);
+
+  renderModelSelectOptions(directorModel, directorCatalog, directorSelectedModel);
+
+  if (directorSelectedModel && state.settings.directorModel !== directorSelectedModel) {
+    state.settings.directorModel = directorSelectedModel;
+    saveSettings();
+  }
+}
+
 function getBestModelForProvider(provider, currentModel, catalog, lastModels) {
   if (!currentModel && lastModels[provider]) {
     const lastModel = lastModels[provider];
@@ -23576,10 +23679,12 @@ function updateApiSettingsGroupStates() {
   const enableAutoTitle = state.settings.enableAutoTitleSettings ?? DEFAULT_SETTINGS.enableAutoTitleSettings;
   const enableSummary = state.settings.enableSummarySettings ?? DEFAULT_SETTINGS.enableSummarySettings;
   const enableOoc = state.settings.enableOocSettings ?? DEFAULT_SETTINGS.enableOocSettings;
+  const enableDirector = state.settings.enableDirectorSettings ?? DEFAULT_SETTINGS.enableDirectorSettings;
 
   const autoTitleGroup = document.querySelector("#enable-auto-title-settings")?.closest(".settings-collapsible-content");
   const summaryGroup = document.querySelector("#enable-summary-settings")?.closest(".settings-collapsible-content");
   const oocGroup = document.querySelector("#enable-ooc-settings")?.closest(".settings-collapsible-content");
+  const directorGroup = document.querySelector("#enable-director-settings")?.closest(".settings-collapsible-content");
 
   const setDisabled = (container, enabled, toggleId) => {
     if (!container) return;
@@ -23596,6 +23701,7 @@ function updateApiSettingsGroupStates() {
   setDisabled(autoTitleGroup, enableAutoTitle, "enable-auto-title-settings");
   setDisabled(summaryGroup, enableSummary, "enable-summary-settings");
   setDisabled(oocGroup, enableOoc, "enable-ooc-settings");
+  setDisabled(directorGroup, enableDirector, "enable-director-settings");
 }
 
 function getOocProvider() {

@@ -843,5 +843,12 @@
   "hordeWorkers": "Workers available",
   "hordeQueued": "Requests queued",
   "hordeEta": "Estimated time (seconds)",
-  "hordeSpeed": "Tokens per second"
+  "hordeSpeed": "Tokens per second",
+  "directorSettings": "Director",
+  "enableDirectorSettings": "Use Director Settings",
+  "directorProvider": "Director Provider",
+  "directorModel": "Director Model",
+  "directorTemperature": "Director Temperature",
+  "directorStopStrings": "Director Stop Strings",
+  "directorStream": "Director Stream"
 }
