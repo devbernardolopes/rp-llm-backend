@@ -2898,6 +2898,17 @@ textarea {
   color: var(--bot-message-header-color);
 }
 
+.chat-row-avatar-in-header .message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.chat-row-avatar-in-header .message-controls {
+  margin-left: auto;
+}
+
 .message-controls {
   display: flex;
   gap: 4px;

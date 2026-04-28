@@ -16774,11 +16774,18 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       openImagePreview(avatar.src);
     }
   });
+  const avatarScale = Number(currentCharacter?.avatarScale) || 1;
+  const isAvatarInHeader = message.role === "assistant" && avatarScale === 1;
   if (message.role === "assistant") {
-    const mult = Math.max(1, Math.min(4, Number(currentCharacter?.avatarScale) || 1));
-    const size = 44 * mult;
-    avatar.style.width = `${size}px`;
-    avatar.style.height = `${size}px`;
+    if (isAvatarInHeader) {
+      avatar.style.width = "24px";
+      avatar.style.height = "24px";
+    } else {
+      const mult = Math.max(1, Math.min(4, avatarScale));
+      const size = 44 * mult;
+      avatar.style.width = `${size}px`;
+      avatar.style.height = `${size}px`;
+    }
   }
   const avatarRoleLabel = isSystemOocMessage ? systemRoleLabel : message.role;
   avatar.alt = `${avatarRoleLabel} avatar`;
@@ -16995,9 +17002,16 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     content.dataset.imagePrompt = message.imagePrompt || "";
   }
 
-  block.append(header, content);
-  applyPersonaColorToUserMessageBlock(block, message);
+block.append(header, content);
+applyPersonaColorToUserMessageBlock(block, message);
+
+if (isAvatarInHeader) {
+  header.prepend(avatar);
+  row.classList.add("chat-row-avatar-in-header");
+  row.append(block);
+} else {
   row.append(avatar, block);
+}
   if (message.role === "assistant") {
     if (typeof window.updateMessageSpeakerButton === "function") {
       window.updateMessageSpeakerButton(speakerBtnForRow(row), index);
