@@ -1640,7 +1640,7 @@ textarea {
 .character-avatar-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 2 / 1;
+  /* aspect-ratio: 2 / 1; */
   overflow: hidden;
   border-radius: 10px;
 }
