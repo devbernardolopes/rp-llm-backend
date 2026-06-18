@@ -845,5 +845,7 @@
   "directorModel": "Modelo do diretor",
   "directorTemperature": "Temperatura do diretor",
   "directorStopStrings": "Strings de parada do diretor",
-  "directorStream": "Stream do diretor"
+  "directorStream": "Stream do diretor",
+  "customMemorySummarizerPrompt": "Prompt de Sistema do Sumarizador de Mem\u00f3ria Personalizado",
+  "placeholderCustomMemorySummarizerSystem": "Prompt de sistema personalizado para sumariza\u00e7\u00e3o de mem\u00f3ria para este personagem."
 }

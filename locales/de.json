@@ -845,5 +845,7 @@
   "directorModel": "Regisseur-Modell",
   "directorTemperature": "Regisseur-Temperatur",
   "directorStopStrings": "Regisseur-Stoppzeichen",
-  "directorStream": "Regisseur-Stream"
+  "directorStream": "Regisseur-Stream",
+  "customMemorySummarizerPrompt": "Benutzerdefinierter System-Prompt des Ged\u00e4chtnis-Summarizers",
+  "placeholderCustomMemorySummarizerSystem": "Benutzerdefinierter System-Prompt f\u00fcr die Ged\u00e4chtnis-Zusammenfassung f\u00fcr diesen Charakter."
 }

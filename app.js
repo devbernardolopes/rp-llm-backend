@@ -2022,6 +2022,7 @@ function setupEvents() {
     "#char-auto-title-min-messages",
     "#char-persona-prefix",
     "#char-include-ooc",
+    "#char-memory-summarizer-prompt",
     "#char-avatar-scale",
     "#char-lore-cooldown",
     "#char-tags-input",
@@ -8498,6 +8499,7 @@ function createEmptyCharacterDefinition(language = "en") {
     narratorTtsLanguage: "",
     narratorTtsRate: state.settings.defaultTtsRate || DEFAULT_TTS_RATE,
     narratorTtsPitch: 1.1,
+    memorySummarizerSystemPrompt: "",
     ttsCollapseState: true,
     narratorTtsCollapseState: true,
     preferLoreBooksMatchingLanguage: true,
@@ -8762,6 +8764,7 @@ function saveActiveCharacterDefinitionFromForm() {
   if (narratorTtsDetails) {
     def.narratorTtsCollapseState = narratorTtsDetails.hasAttribute("open");
   }
+  def.memorySummarizerSystemPrompt = String(document.getElementById("char-memory-summarizer-prompt")?.value || "").trim();
   def.lorebookIds = getSelectedLorebookIds();
 }
 
@@ -9024,6 +9027,7 @@ async function loadActiveCharacterDefinitionToForm() {
   ensureInitialMessageDraftsForLanguage(def);
   renderCharacterInitialMessagesList();
   document.getElementById("char-persona-injection-placement").value = def.personaInjectionPlacement || "end_system_prompt";
+  document.getElementById("char-memory-summarizer-prompt").value = def.memorySummarizerSystemPrompt || "";
   populateCharTtsLanguageSelect(def.ttsLanguage || DEFAULT_TTS_LANGUAGE);
   populateCharTtsVoiceSelect(def.ttsVoice || DEFAULT_TTS_VOICE);
   document.getElementById("char-tts-rate").value = String(Math.max(0.5, Math.min(2, Number(def.ttsRate) || DEFAULT_TTS_RATE)));
@@ -21486,6 +21490,7 @@ function setupTokenCountListeners() {
     { id: "global-prompt-template", countId: "global-prompt-template-count" },
     { id: "summary-system-prompt", countId: "summary-system-prompt-count" },
     { id: "memory-summarizer-user-prompt", countId: "memory-summarizer-user-prompt-count" },
+    { id: "char-memory-summarizer-prompt", countId: "char-memory-summarizer-prompt-count" },
     { id: "persona-injection-template", countId: "persona-injection-template-count" },
     { id: "auto-title-system-prompt", countId: "auto-title-system-prompt-count" },
     { id: "auto-title-user-prompt", countId: "auto-title-user-prompt-count" },
@@ -21513,6 +21518,7 @@ function updateAllTokenCounts() {
     { id: "global-prompt-template", countId: "global-prompt-template-count" },
     { id: "summary-system-prompt", countId: "summary-system-prompt-count" },
     { id: "memory-summarizer-user-prompt", countId: "memory-summarizer-user-prompt-count" },
+    { id: "char-memory-summarizer-prompt", countId: "char-memory-summarizer-prompt-count" },
     { id: "persona-injection-template", countId: "persona-injection-template-count" },
     { id: "auto-title-system-prompt", countId: "auto-title-system-prompt-count" },
     { id: "auto-title-user-prompt", countId: "auto-title-user-prompt-count" },

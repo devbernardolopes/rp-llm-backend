@@ -845,5 +845,7 @@
   "directorModel": "Modello regista",
   "directorTemperature": "Temperatura regista",
   "directorStopStrings": "Stringhe di arresto regista",
-  "directorStream": "Stream regista"
+  "directorStream": "Stream regista",
+  "customMemorySummarizerPrompt": "Prompt di sistema del riepilogatore di memoria personalizzato",
+  "placeholderCustomMemorySummarizerSystem": "Prompt di sistema personalizzato per la sintesi della memoria per questo personaggio."
 }

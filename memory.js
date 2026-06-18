@@ -487,7 +487,9 @@ async function summarizeMemory(character) {
     }
   }
 
+  const customPrompt = String(character?.memorySummarizerSystemPrompt || "").trim();
   const summarySystemPrompt =
+    customPrompt ||
     state.settings.summarySystemPrompt ||
     "You are a helpful summarization assistant.";
 

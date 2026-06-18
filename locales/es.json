@@ -845,5 +845,7 @@
   "directorModel": "Modelo del director",
   "directorTemperature": "Temperatura del director",
   "directorStopStrings": "Cadenas de parada del director",
-  "directorStream": "Flujo del director"
+  "directorStream": "Flujo del director",
+  "customMemorySummarizerPrompt": "Prompt de sistema del resumidor de memoria personalizado",
+  "placeholderCustomMemorySummarizerSystem": "Prompt de sistema personalizado para la sumarización de memoria para este personaje."
 }
