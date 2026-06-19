@@ -19354,18 +19354,31 @@ async function handleMemoryRegeneratePromptSubmit() {
   const entryId = Number(entryMeta.id);
   const level = entryMeta.level || 1;
   const slot = entryMeta.slot || 1;
+  const characterId = Number.isFinite(Number(entryMeta.characterId)) ? Number(entryMeta.characterId) : null;
   hideMemoryRegeneratePromptModal();
-  await runMemoryRegeneration(entryId, promptText, level, slot);
+  await runMemoryRegeneration(entryId, promptText, level, slot, characterId);
 }
 
-async function runMemoryRegeneration(entryId, promptText, level, slot) {
+async function runMemoryRegeneration(entryId, promptText, level, slot, characterId = null) {
   if (!Number.isInteger(entryId) || entryId <= 0) return;
   showMemoryRegenerateProgressModal(entryId, level, slot);
   const modal = document.getElementById("memory-regenerate-progress-modal");
   const spinner = modal?.querySelector(".memory-regenerate-progress-spinner");
   const statusEl = document.getElementById("memory-regenerate-progress-status");
   try {
-    const summarySystemPrompt = state.settings.summarySystemPrompt || "You are a helpful summarization assistant.";
+    let customPrompt = "";
+    if (characterId) {
+      try {
+        const char = await db.characters.get(characterId);
+        if (char) {
+          const def = (Array.isArray(char.definitions) ? char.definitions : []).find(
+            (d) => d.language === normalizeBotLanguageCode(char.selectedCardLanguage)
+          ) || (Array.isArray(char.definitions) ? char.definitions[0] : null);
+          customPrompt = String(def?.memorySummarizerSystemPrompt || "").trim();
+        }
+      } catch { /* ignore */ }
+    }
+    const summarySystemPrompt = customPrompt || state.settings.summarySystemPrompt || "You are a helpful summarization assistant.";
     const requestHistory = [{ role: "user", content: promptText }];
     const result = await callOpenRouter(summarySystemPrompt, requestHistory, state.settings.model, null, null, {
       forceStream: state.settings.defaultSummaryStream ?? DEFAULT_SETTINGS.defaultSummaryStream,
