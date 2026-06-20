@@ -3727,9 +3727,9 @@ async function setupSettingsControls() {
     postprocessRulesJson.value = state.settings.postprocessRulesJson || "[]";
   }
   const initialSliderMax = getSettingsMaxTokensUpperBound(modelSelect.value);
-  state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 512, initialSliderMax);
+  state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 256, initialSliderMax);
   if (maxTokensSlider) {
-    maxTokensSlider.min = "512";
+    maxTokensSlider.min = "256";
     maxTokensSlider.max = String(initialSliderMax);
     maxTokensSlider.value = String(state.settings.maxTokens);
     maxTokensValue.textContent = maxTokensSlider.value;
@@ -4018,9 +4018,9 @@ async function setupSettingsControls() {
     state.settings.lastModelsPerProvider = lastModels;
     state.settings.model = modelSelect.value;
     const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
-    state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 512, maxUpper);
+    state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 256, maxUpper);
     if (maxTokensSlider) {
-      maxTokensSlider.min = "512";
+      maxTokensSlider.min = "256";
       maxTokensSlider.max = String(maxUpper);
       maxTokensSlider.value = String(state.settings.maxTokens);
     }
@@ -4316,7 +4316,7 @@ async function setupSettingsControls() {
 
   maxTokensSlider?.addEventListener("input", () => {
     const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
-    const value = clampMaxTokens(Number(maxTokensSlider.value), 512, maxUpper);
+    const value = clampMaxTokens(Number(maxTokensSlider.value), 256, maxUpper);
     state.settings.maxTokens = value;
     maxTokensSlider.max = String(maxUpper);
     maxTokensSlider.value = String(value);
@@ -19848,8 +19848,8 @@ function renderSettingsModelOptions() {
   const maxTokensValue = document.getElementById("max-tokens-value");
   if (maxTokensSlider && maxTokensValue) {
     const maxUpper = getSettingsMaxTokensUpperBound(modelSelect.value);
-    state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 512, maxUpper);
-    maxTokensSlider.min = "512";
+    state.settings.maxTokens = clampMaxTokens(state.settings.maxTokens, 256, maxUpper);
+    maxTokensSlider.min = "256";
     maxTokensSlider.max = String(maxUpper);
     maxTokensSlider.value = String(state.settings.maxTokens);
     maxTokensValue.textContent = String(state.settings.maxTokens);
@@ -20513,11 +20513,11 @@ function getSelectedModelMeta(modelId) {
 
 function getSelectedModelTokenCompatibility(modelId) {
   const model = getSelectedModelMeta(modelId);
-  if (!model) return { min: 512, max: 16384 };
+  if (!model) return { min: 256, max: 16384 };
   const candidates = [Number(model.maxCompletionTokens) || 0, Number(model.topContextLength) || 0, Number(model.contextLength) || 0].filter((n) => Number.isFinite(n) && n > 0);
   const hardMax = candidates.length > 0 ? Math.min(...candidates) : 16384;
   const roundedMax = Math.max(64, Math.floor(hardMax / 64) * 64 || 64);
-  const min = Math.min(512, roundedMax);
+  const min = Math.min(256, roundedMax);
   return { min, max: roundedMax };
 }
 
@@ -20528,7 +20528,7 @@ function getSettingsMaxTokensUpperBound(modelId) {
   if (!Number.isFinite(primary) || primary <= 0) return 8192;
   const rounded = Math.floor(primary / 64) * 64;
   const bounded = rounded > 0 ? rounded : primary;
-  return Math.max(512, Math.min(8192, bounded));
+  return Math.max(256, Math.min(8192, bounded));
 }
 
 function isLowContextRoleplayModel(model) {
@@ -23652,9 +23652,9 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function clampMaxTokens(value, min = 512, max = 8192) {
+function clampMaxTokens(value, min = 256, max = 8192) {
   const n = Number(value);
-  const minSafe = Math.max(1, Number(min) || 512);
+  const minSafe = Math.max(1, Number(min) || 256);
   const maxSafe = Math.max(minSafe, Number(max) || 16384);
   if (!Number.isFinite(n)) {
     return Math.max(minSafe, Math.min(maxSafe, DEFAULT_SETTINGS.maxTokens));
