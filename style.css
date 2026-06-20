@@ -3724,7 +3724,7 @@ textarea {
 #persona-editor-modal .modal-card,
 #message-system-prompt-modal .modal-card,
   #database-modal .modal-card {
-    height: min(75vh, 600px);
+    /* height: min(75vh, 600px); */
     max-height: min(90vh, 720px);
   }
 
