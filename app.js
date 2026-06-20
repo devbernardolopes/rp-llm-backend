@@ -16061,7 +16061,6 @@ async function maybeGenerateTitleBeforeBotReply() {
       },
     );
     const raw = String(result?.content || "").trim();
-    console.debug("[auto-title] RAW response:", JSON.stringify(raw), "finishReason:", result?.finishReason, "model:", result?.model);
     if (!raw) {
       conversationHistory.pop();
       await persistCurrentThread();
