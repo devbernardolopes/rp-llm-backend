@@ -150,7 +150,7 @@ Requirements:
   summaryMaxTokens: 1024,
   summaryTemperature: 0.25,
   summaryStopStrings: "",
-  autoTitleMaxTokens: 64,
+  autoTitleMaxTokens: 256,
   enableOocSettings: true,
   oocProvider: "openrouter",
   oocModel: "arcee-ai/trinity-large-preview:free",
@@ -22174,7 +22174,9 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
+  const effectiveMaxTokens = isTitleGeneration
+    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
+    : computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
   const streamForced = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : null;
   const body = {
     model: resolvedModel,
@@ -22245,10 +22247,12 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
-
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
+  const effectiveMaxTokens = isTitleGeneration
+    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
+    : computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
+
   const useSeparateAutoTitleSettings = options?.useSeparateAutoTitleSettings ?? isAutoTitleSettingsEnabled();
   const useSeparateSummarySettings = options?.useSeparateSummarySettings ?? isSummarySettingsEnabled();
   const lmstudioModel = resolvedModel.startsWith("lmstudio/") ? resolvedModel.slice(9) : resolvedModel;
@@ -22566,10 +22570,11 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
-
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
+  const effectiveMaxTokens = isTitleGeneration
+    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
+    : computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
 
   state.currentRequestMessages = promptMessages;
 
@@ -22777,10 +22782,12 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
-
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
+  const effectiveMaxTokens = isTitleGeneration
+    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
+    : computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
+
   const hordeModel = resolvedModel.startsWith("aihorde/") ? resolvedModel.slice(8) : resolvedModel;
 
   state.currentRequestMessages = promptMessages;
@@ -23307,7 +23314,7 @@ async function requestCompletionWithRetry(body, attempts, onChunk, signal, optio
       let content = extractAssistantText(data);
       const finishMeta = extractFinishMeta(data);
       let stoppedByStopString = false;
-      const stopStrings = getStopStrings();
+      const stopStrings = getEffectiveRequestStopStrings(options?.isTitleGeneration, options?.isSummarization, options?.isOoc);
       if (stopStrings && stopStrings.length > 0) {
         const truncation = truncateAtStopString(content, stopStrings);
         if (truncation.stopped) {
