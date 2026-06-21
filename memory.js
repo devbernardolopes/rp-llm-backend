@@ -404,9 +404,7 @@ async function summarizeMemory(character) {
     ? `${getSectionHeader("sectionHeaderMemoryContext")}\n\n${storedMemorySummary}`
     : "";
 
-  const userPromptText =
-    (state?.settings?.memorySummarizerUserPrompt || "").trim() ||
-    DEFAULT_MEMORY_SUMMARIZER_USER_PROMPT;
+  const userPromptText = (state?.settings?.memorySummarizerUserPrompt ?? "").trim();
   const summarySections = [];
   if (memoryContextSection) {
     summarySections.push(memoryContextSection);
