@@ -150,7 +150,7 @@ Requirements:
   summaryMaxTokens: 1024,
   summaryTemperature: 0.25,
   summaryStopStrings: "",
-  autoTitleMaxTokens: 256,
+  autoTitleMaxTokens: 64,
   enableOocSettings: true,
   oocProvider: "openrouter",
   oocModel: "arcee-ai/trinity-large-preview:free",
@@ -22173,9 +22173,7 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
       role: msg.role,
       content: msg.content,
     }));
-  const effectiveMaxTokens = isTitleGeneration
-    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
-    : computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
   const streamForced = options && Object.prototype.hasOwnProperty.call(options, "forceStream") ? Boolean(options.forceStream) : null;
   const body = {
     model: resolvedModel,
@@ -22186,8 +22184,14 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
       const topP = getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc);
       return topP !== null ? { top_p: topP } : {};
     })(),
-    ...(isOoc !== true ? { frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization) } : {}),
-    ...(isOoc !== true ? { presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc) } : {}),
+    ...(() => {
+      const fp = getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc);
+      return fp !== null ? { frequency_penalty: fp } : {};
+    })(),
+    ...(() => {
+      const pp = getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc);
+      return pp !== null ? { presence_penalty: pp } : {};
+    })(),
     ...(() => {
       const stopStrings = getEffectiveRequestStopStrings(isTitleGeneration, isSummarization, isOoc);
       return stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {};
@@ -22248,9 +22252,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
     }));
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const effectiveMaxTokens = isTitleGeneration
-    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
-    : computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
 
   const useSeparateAutoTitleSettings = options?.useSeparateAutoTitleSettings ?? isAutoTitleSettingsEnabled();
   const useSeparateSummarySettings = options?.useSeparateSummarySettings ?? isSummarySettingsEnabled();
@@ -22284,7 +22286,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
       input,
       system_prompt: systemMessagesList.length > 0 ? systemMessagesList[0].content : undefined,
       temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-      ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
+      ...(() => { const tp = getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc); return tp !== null ? { top_p: tp } : {}; })(),
       top_k: topK > 0 ? topK : undefined,
       repeat_penalty: repeatPenalty !== 1 ? repeatPenalty : undefined,
       max_output_tokens: effectiveMaxTokens,
@@ -22300,9 +22302,9 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
       messages: promptMessages,
       max_tokens: effectiveMaxTokens,
       temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-      ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
-      frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc),
-      presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
+      ...(() => { const tp = getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc); return tp !== null ? { top_p: tp } : {}; })(),
+      ...(() => { const fp = getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc); return fp !== null ? { frequency_penalty: fp } : {}; })(),
+      ...(() => { const pp = getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc); return pp !== null ? { presence_penalty: pp } : {}; })(),
       ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
       stream: streamEnabled,
     };
@@ -22571,9 +22573,7 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
     }));
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const effectiveMaxTokens = isTitleGeneration
-    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
-    : computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
 
   state.currentRequestMessages = promptMessages;
 
@@ -22586,9 +22586,9 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
     temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-    ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
-    ...(isOoc !== true ? { frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc) } : {}),
-    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
+    ...(() => { const tp = getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc); return tp !== null ? { top_p: tp } : {}; })(),
+    ...(() => { const fp = getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc); return fp !== null ? { frequency_penalty: fp } : {}; })(),
+    ...(() => { const pp = getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc); return pp !== null ? { presence_penalty: pp } : {}; })(),
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
   };
@@ -22783,9 +22783,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
     }));
   const isSummarization = options?.isSummarization === true;
   const isTitleGeneration = options?.isTitleGeneration === true;
-  const effectiveMaxTokens = isTitleGeneration
-    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
-    : computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, promptMessages);
 
   const hordeModel = resolvedModel.startsWith("aihorde/") ? resolvedModel.slice(8) : resolvedModel;
 
@@ -22813,9 +22811,9 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
     messages: promptMessages,
     max_tokens: effectiveMaxTokens,
     temperature: getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc),
-    ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
-    ...(isOoc !== true ? { frequency_penalty: getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization) } : {}),
-    presence_penalty: getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc),
+    ...(() => { const tp = getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc); return tp !== null ? { top_p: tp } : {}; })(),
+    ...(() => { const fp = getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc); return fp !== null ? { frequency_penalty: fp } : {}; })(),
+    ...(() => { const pp = getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc); return pp !== null ? { presence_penalty: pp } : {}; })(),
     ...(stopStrings && stopStrings.length > 0 ? { stop: stopStrings } : {}),
     stream: streamEnabled,
   };
@@ -23014,12 +23012,6 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
         : clampTemperature(state.settings.temperature)
       : clampTemperature(state.settings.temperature);
 
-  const effectiveMaxTokens = isTitleGeneration
-    ? (state.settings.autoTitleMaxTokens ?? DEFAULT_SETTINGS.autoTitleMaxTokens)
-    : isSummarization
-      ? (state.settings.summaryMaxTokens ?? DEFAULT_SETTINGS.summaryMaxTokens)
-      : (state.settings.maxTokens ?? DEFAULT_SETTINGS.maxTokens);
-
   const localKey = String(state.settings.hordeApiKey || "").trim();
   const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
   const hordeApiKey = localKey || fallbackKey;
@@ -23055,6 +23047,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
     messages.push({ role: "user", content: "Continue" });
   }
 
+  const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, messages);
   const prompt = messagesToHordePrompt(messages);
   const models = hordeModel && hordeModel !== "auto" ? [hordeModel] : [];
 
@@ -23066,7 +23059,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
       n: 1,
       max_length: effectiveMaxTokens,
       temperature,
-      ...(isOoc !== true ? { top_p: getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc) } : {}),
+      ...(() => { const tp = getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc); return tp !== null ? { top_p: tp } : {}; })(),
       top_k: 0,
       top_a: 0,
       typical: 0,
@@ -23784,40 +23777,22 @@ function getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOo
 }
 
 function getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc = undefined) {
-  if (isOoc === true) {
-    return null; // Don't set top_p for OOC requests
-  }
-  if (isTitleGeneration) {
-    return isAutoTitleSettingsEnabled() ? 0.9 : Number(state.settings.topP) || 1;
-  }
-  if (isSummarization) {
-    return isSummarySettingsEnabled() ? 0.9 : Number(state.settings.topP) || 1;
+  if (isOoc === true || isTitleGeneration || isSummarization) {
+    return null;
   }
   return Number(state.settings.topP) || 1;
 }
 
 function getEffectiveRequestFrequencyPenalty(isTitleGeneration, isSummarization, isOoc = undefined) {
-  if (isOoc === true) {
-    return 0;
-  }
-  if (isTitleGeneration) {
-    return isAutoTitleSettingsEnabled() ? 0 : Number(state.settings.frequencyPenalty) || 0;
-  }
-  if (isSummarization) {
-    return isSummarySettingsEnabled() ? 0 : Number(state.settings.frequencyPenalty) || 0;
+  if (isOoc === true || isTitleGeneration || isSummarization) {
+    return null;
   }
   return Number(state.settings.frequencyPenalty) || 0;
 }
 
 function getEffectiveRequestPresencePenalty(isTitleGeneration, isSummarization, isOoc = undefined) {
-  if (isOoc === true) {
-    return 0;
-  }
-  if (isTitleGeneration) {
-    return isAutoTitleSettingsEnabled() ? 0 : Number(state.settings.presencePenalty) || 0;
-  }
-  if (isSummarization) {
-    return isSummarySettingsEnabled() ? 0 : Number(state.settings.presencePenalty) || 0;
+  if (isOoc === true || isTitleGeneration || isSummarization) {
+    return null;
   }
   return Number(state.settings.presencePenalty) || 0;
 }
