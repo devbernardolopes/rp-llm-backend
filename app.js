@@ -175,7 +175,7 @@ Requirements:
 };
 
 function getSectionHeader(key) {
-  return state.settings[key] || DEFAULT_SETTINGS[key] || "";
+  return state.settings[key] ?? DEFAULT_SETTINGS[key] ?? "";
 }
 
 window.getSectionHeader = getSectionHeader;
