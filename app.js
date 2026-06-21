@@ -2088,6 +2088,12 @@ function setupEvents() {
   updateNameLengthCounter("char-name", "char-name-count", 128);
   updateNameLengthCounter("persona-name", "persona-name-count", 64);
   updateNameLengthCounter("persona-description", "persona-description-count", 100);
+  document.getElementById("persona-editor-name")?.addEventListener("input", () => {
+    updateNameLengthCounter("persona-editor-name", "persona-editor-name-count", 64);
+  });
+  document.getElementById("persona-editor-description")?.addEventListener("input", () => {
+    updateNameLengthCounter("persona-editor-description", "persona-editor-description-count", 100);
+  });
   updateToastDelayDisplay();
   setupSettingsTabsLayout();
 }
