@@ -440,6 +440,22 @@ function populateSettingsTabValues() {
   if (useLocalAutoTitle) useLocalAutoTitle.checked = state.settings.useLocalAutoTitle;
   if (writingInstructionsInjectionWhen) writingInstructionsInjectionWhen.value = state.settings.writingInstructionsInjectionWhen;
 
+  // Section headers (Prompting tab)
+  const sectionHeaderMemoryContext = document.getElementById("section-header-memory-context");
+  const sectionHeaderCharacterPrompt = document.getElementById("section-header-character-prompt");
+  const sectionHeaderMessagesSoFar = document.getElementById("section-header-messages-so-far");
+  const sectionHeaderMessages = document.getElementById("section-header-messages");
+  const sectionHeaderMemoryLevelContext = document.getElementById("section-header-memory-level-context");
+  const sectionHeaderMemoryEntry = document.getElementById("section-header-memory-entry");
+  const sectionHeaderLoreContext = document.getElementById("section-header-lore-context");
+  if (sectionHeaderMemoryContext) sectionHeaderMemoryContext.value = state.settings.sectionHeaderMemoryContext ?? DEFAULT_SETTINGS.sectionHeaderMemoryContext;
+  if (sectionHeaderCharacterPrompt) sectionHeaderCharacterPrompt.value = state.settings.sectionHeaderCharacterPrompt ?? DEFAULT_SETTINGS.sectionHeaderCharacterPrompt;
+  if (sectionHeaderMessagesSoFar) sectionHeaderMessagesSoFar.value = state.settings.sectionHeaderMessagesSoFar ?? DEFAULT_SETTINGS.sectionHeaderMessagesSoFar;
+  if (sectionHeaderMessages) sectionHeaderMessages.value = state.settings.sectionHeaderMessages ?? DEFAULT_SETTINGS.sectionHeaderMessages;
+  if (sectionHeaderMemoryLevelContext) sectionHeaderMemoryLevelContext.value = state.settings.sectionHeaderMemoryLevelContext ?? DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
+  if (sectionHeaderMemoryEntry) sectionHeaderMemoryEntry.value = state.settings.sectionHeaderMemoryEntry ?? DEFAULT_SETTINGS.sectionHeaderMemoryEntry;
+  if (sectionHeaderLoreContext) sectionHeaderLoreContext.value = state.settings.sectionHeaderLoreContext ?? DEFAULT_SETTINGS.sectionHeaderLoreContext;
+
   // Shortcuts tab settings
   const cancelShortcut = document.getElementById("cancel-shortcut");
   const homeShortcut = document.getElementById("home-shortcut");
@@ -3844,19 +3860,19 @@ async function setupSettingsControls() {
     sectionHeaderCharacterPrompt.value = getSectionHeader("sectionHeaderCharacterPrompt");
   }
   if (sectionHeaderMessagesSoFar) {
-    sectionHeaderMessagesSoFar.value = state.settings.sectionHeaderMessagesSoFar || DEFAULT_SETTINGS.sectionHeaderMessagesSoFar;
+    sectionHeaderMessagesSoFar.value = state.settings.sectionHeaderMessagesSoFar ?? DEFAULT_SETTINGS.sectionHeaderMessagesSoFar;
   }
   if (sectionHeaderMessages) {
-    sectionHeaderMessages.value = state.settings.sectionHeaderMessages || DEFAULT_SETTINGS.sectionHeaderMessages;
+    sectionHeaderMessages.value = state.settings.sectionHeaderMessages ?? DEFAULT_SETTINGS.sectionHeaderMessages;
   }
   if (sectionHeaderMemoryLevelContext) {
-    sectionHeaderMemoryLevelContext.value = state.settings.sectionHeaderMemoryLevelContext || DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
+    sectionHeaderMemoryLevelContext.value = state.settings.sectionHeaderMemoryLevelContext ?? DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
   }
   if (sectionHeaderMemoryEntry) {
-    sectionHeaderMemoryEntry.value = state.settings.sectionHeaderMemoryEntry || DEFAULT_SETTINGS.sectionHeaderMemoryEntry;
+    sectionHeaderMemoryEntry.value = state.settings.sectionHeaderMemoryEntry ?? DEFAULT_SETTINGS.sectionHeaderMemoryEntry;
   }
   if (sectionHeaderLoreContext) {
-    sectionHeaderLoreContext.value = state.settings.sectionHeaderLoreContext || DEFAULT_SETTINGS.sectionHeaderLoreContext;
+    sectionHeaderLoreContext.value = state.settings.sectionHeaderLoreContext ?? DEFAULT_SETTINGS.sectionHeaderLoreContext;
   }
   const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
   const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
