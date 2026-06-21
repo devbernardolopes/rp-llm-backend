@@ -428,7 +428,7 @@ function populateSettingsTabValues() {
 
   if (globalPromptTemplate) globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   if (summarySystemPrompt) summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
-  if (memorySummarizerUserPrompt) memorySummarizerUserPrompt.value = state.settings.memorySummarizerUserPrompt || "";
+  if (memorySummarizerUserPrompt) memorySummarizerUserPrompt.value = state.settings.memorySummarizerUserPrompt ?? "";
   if (oocSystemPromptIntro) oocSystemPromptIntro.value = state.settings.oocSystemPromptIntro || "";
   if (oocUserMessageFormat) oocUserMessageFormat.value = state.settings.oocUserMessageFormat || "";
   if (summaryMessagesPreprocessingJson) summaryMessagesPreprocessingJson.value = state.settings.summaryMessagesPreprocessingJson || "";
@@ -3814,7 +3814,7 @@ async function setupSettingsControls() {
     summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
   }
   if (memorySummarizerUserPrompt) {
-    const userPromptValue = state.settings.memorySummarizerUserPrompt || DEFAULT_SETTINGS.memorySummarizerUserPrompt;
+    const userPromptValue = state.settings.memorySummarizerUserPrompt ?? DEFAULT_SETTINGS.memorySummarizerUserPrompt;
     state.settings.memorySummarizerUserPrompt = userPromptValue;
     memorySummarizerUserPrompt.value = userPromptValue;
   }
