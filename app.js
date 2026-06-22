@@ -18998,6 +18998,7 @@ async function renderMemoryModalEntries() {
     const slotB = Number(b?.slotNumber) || 0;
     return slotA - slotB;
   });
+  sorted.reverse();
   const editableTextareas = [];
   sorted.forEach((entry, idx) => {
     const entryLevel = getEntryLevel(entry);
