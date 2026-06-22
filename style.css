@@ -2582,8 +2582,8 @@ textarea {
 
 .model-dropdown-option .model-star {
   cursor: pointer;
-  padding: 4px;
-  font-size: 14px;
+  /* padding: 4px; */
+  font-size: 32px;
   color: #666;
   transition:
     color 0.15s,
