@@ -2490,7 +2490,8 @@ textarea {
   position: relative;
   padding: 10px 12px;
   padding-right: 30px;
-  background: #151a23;
+  background: #1e2736;
+  /* background: #151a23; */
   border: 1px solid var(--line);
   border-radius: 10px;
   cursor: pointer;
