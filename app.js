@@ -4093,6 +4093,42 @@ async function setupSettingsControls() {
     populateSettingsModels({ force: true }).catch(() => {});
   });
 
+  const applyModelToAllBtn = document.getElementById("apply-model-to-all-btn");
+  if (applyModelToAllBtn) {
+    applyModelToAllBtn.innerHTML = ICONS.arrowDown;
+    applyModelToAllBtn.addEventListener("click", async () => {
+      const provider = state.settings.aiProvider || "openrouter";
+      const model = state.settings.model || "";
+
+      state.settings.autoTitleProvider = provider;
+      state.settings.summaryProvider = provider;
+      state.settings.oocProvider = provider;
+      state.settings.directorProvider = provider;
+      state.settings.autoTitleModel = model;
+      state.settings.summaryModel = model;
+      state.settings.oocModel = model;
+      state.settings.directorModel = model;
+
+      const autoTitleProviderEl = document.getElementById("default-auto-title-provider");
+      const summaryProviderEl = document.getElementById("default-summary-provider");
+      const defaultOocProviderEl = document.getElementById("default-ooc-provider");
+      const defaultDirectorProviderEl = document.getElementById("default-director-provider");
+      if (autoTitleProviderEl) autoTitleProviderEl.value = provider;
+      if (summaryProviderEl) summaryProviderEl.value = provider;
+      if (defaultOocProviderEl) defaultOocProviderEl.value = provider;
+      if (defaultDirectorProviderEl) defaultDirectorProviderEl.value = provider;
+
+      try {
+        await populateAutoTitleSummaryModels();
+        await populateOocModels();
+        await populateDirectorModels();
+      } catch {}
+
+      saveSettings();
+      showToast(t("applyModelToAllDone") || "Applied current model & provider to all secondary settings.");
+    });
+  }
+
   markdownCheck?.addEventListener("change", () => {
     state.settings.markdownEnabled = markdownCheck.checked;
     saveSettings();

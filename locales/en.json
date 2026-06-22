@@ -852,5 +852,7 @@
   "directorStopStrings": "Director Stop Strings",
   "directorStream": "Director Stream",
   "customMemorySummarizerPrompt": "Custom Memory Summarizer System Prompt",
-  "placeholderCustomMemorySummarizerSystem": "Custom system prompt for memory summarization for this character."
+  "placeholderCustomMemorySummarizerSystem": "Custom system prompt for memory summarization for this character.",
+  "applyModelToAllTitle": "Apply model & provider to all secondary settings",
+  "applyModelToAllDone": "Applied current model & provider to all secondary settings."
 }

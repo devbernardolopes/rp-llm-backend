@@ -847,5 +847,7 @@
   "directorStopStrings": "Strings de parada do diretor",
   "directorStream": "Stream do diretor",
   "customMemorySummarizerPrompt": "Prompt de Sistema do Sumarizador de Mem\u00f3ria Personalizado",
-  "placeholderCustomMemorySummarizerSystem": "Prompt de sistema personalizado para sumariza\u00e7\u00e3o de mem\u00f3ria para este personagem."
+  "placeholderCustomMemorySummarizerSystem": "Prompt de sistema personalizado para sumariza\u00e7\u00e3o de mem\u00f3ria para este personagem.",
+  "applyModelToAllTitle": "Aplicar modelo e provedor a todas as configura\u00e7\u00f5es secund\u00e1rias",
+  "applyModelToAllDone": "Modelo e provedor atuais aplicados a todas as configura\u00e7\u00f5es secund\u00e1rias."
 }

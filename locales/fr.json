@@ -847,5 +847,7 @@
   "directorStopStrings": "Cha\u00eenes d'arr\u00eat du directeur",
   "directorStream": "Flux du directeur",
   "customMemorySummarizerPrompt": "Prompt syst\u00e8me du r\u00e9sumeur de m\u00e9moire personnalis\u00e9",
-  "placeholderCustomMemorySummarizerSystem": "Prompt syst\u00e8me personnalis\u00e9 pour la summarisation de m\u00e9moire pour ce personnage."
+  "placeholderCustomMemorySummarizerSystem": "Prompt syst\u00e8me personnalis\u00e9 pour la summarisation de m\u00e9moire pour ce personnage.",
+  "applyModelToAllTitle": "Appliquer le mod\u00e8le et le fournisseur \u00e0 tous les param\u00e8tres secondaires",
+  "applyModelToAllDone": "Mod\u00e8le et fournisseur actuels appliqu\u00e9s \u00e0 tous les param\u00e8tres secondaires."
 }

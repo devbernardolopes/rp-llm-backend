@@ -847,5 +847,7 @@
   "directorStopStrings": "Regisseur-Stoppzeichen",
   "directorStream": "Regisseur-Stream",
   "customMemorySummarizerPrompt": "Benutzerdefinierter System-Prompt des Ged\u00e4chtnis-Summarizers",
-  "placeholderCustomMemorySummarizerSystem": "Benutzerdefinierter System-Prompt f\u00fcr die Ged\u00e4chtnis-Zusammenfassung f\u00fcr diesen Charakter."
+  "placeholderCustomMemorySummarizerSystem": "Benutzerdefinierter System-Prompt f\u00fcr die Ged\u00e4chtnis-Zusammenfassung f\u00fcr diesen Charakter.",
+  "applyModelToAllTitle": "Modell & Anbieter auf alle sekund\u00e4ren Einstellungen anwenden",
+  "applyModelToAllDone": "Aktuelles Modell & Anbieter auf alle sekund\u00e4ren Einstellungen angewendet."
 }
