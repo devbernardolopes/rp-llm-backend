@@ -849,5 +849,7 @@
   "customMemorySummarizerPrompt": "Prompt de sistema del resumidor de memoria personalizado",
   "placeholderCustomMemorySummarizerSystem": "Prompt de sistema personalizado para la sumarización de memoria para este personaje.",
   "applyModelToAllTitle": "Aplicar modelo y proveedor a todos los ajustes secundarios",
-  "applyModelToAllDone": "Modelo y proveedor actuales aplicados a todos los ajustes secundarios."
+  "applyModelToAllDone": "Modelo y proveedor actuales aplicados a todos los ajustes secundarios.",
+  "showAiMsgSpeakBtn": "Leer mensaje",
+  "showAiMsgSystemPromptBtn": "Prompt del sistema"
 }

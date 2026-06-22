@@ -110,6 +110,8 @@ const DEFAULT_SETTINGS = {
   showAiMsgMetadataBtn: true,
   showAiMsgGenParamsBtn: true,
   showAiMsgForkBtn: true,
+  showAiMsgSpeakBtn: true,
+  showAiMsgSystemPromptBtn: true,
   showBotCardIdOverlay: true,
   showBotCardMemoryOverlay: true,
   showBotCardThreadsOverlay: true,
@@ -4242,6 +4244,22 @@ async function setupSettingsControls() {
     showAiMsgForkBtn.checked = state.settings.showAiMsgForkBtn !== false;
     showAiMsgForkBtn.addEventListener("change", () => {
       state.settings.showAiMsgForkBtn = showAiMsgForkBtn.checked;
+      saveSettings();
+    });
+  }
+  const showAiMsgSpeakBtn = document.getElementById("show-ai-msg-speak-btn");
+  if (showAiMsgSpeakBtn) {
+    showAiMsgSpeakBtn.checked = state.settings.showAiMsgSpeakBtn !== false;
+    showAiMsgSpeakBtn.addEventListener("change", () => {
+      state.settings.showAiMsgSpeakBtn = showAiMsgSpeakBtn.checked;
+      saveSettings();
+    });
+  }
+  const showAiMsgSystemPromptBtn = document.getElementById("show-ai-msg-system-prompt-btn");
+  if (showAiMsgSystemPromptBtn) {
+    showAiMsgSystemPromptBtn.checked = state.settings.showAiMsgSystemPromptBtn !== false;
+    showAiMsgSystemPromptBtn.addEventListener("change", () => {
+      state.settings.showAiMsgSystemPromptBtn = showAiMsgSystemPromptBtn.checked;
       saveSettings();
     });
   }
@@ -16965,7 +16983,9 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       systemPromptBtn.setAttribute("title", t("msgSystemPromptTitle"));
       systemPromptBtn.setAttribute("aria-label", t("msgSystemPromptTitle"));
     }
-    controls.appendChild(systemPromptBtn);
+    if (state.settings.showAiMsgSystemPromptBtn !== false) {
+      controls.appendChild(systemPromptBtn);
+    }
     const speakerBtn = iconButton("speaker", t("msgSpeakTitle"), async (e) => {
       const clickedBtn = e?.currentTarget;
       const resolvedIndex = resolveMessageIndexFromButton(clickedBtn, index);
@@ -16980,7 +17000,9 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
     speakerBtn.classList.add("msg-tts-btn");
     speakerBtn.dataset.messageIndex = String(index);
     if (disableControlsForRow) speakerBtn.disabled = true;
-    controls.appendChild(speakerBtn);
+    if (state.settings.showAiMsgSpeakBtn !== false) {
+      controls.appendChild(speakerBtn);
+    }
   } else {
     controls.appendChild(messageIndex);
     const delBtn = iconButton("delete", t("msgDeleteTitle"), async () => {

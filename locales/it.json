@@ -849,5 +849,7 @@
   "customMemorySummarizerPrompt": "Prompt di sistema del riepilogatore di memoria personalizzato",
   "placeholderCustomMemorySummarizerSystem": "Prompt di sistema personalizzato per la sintesi della memoria per questo personaggio.",
   "applyModelToAllTitle": "Applica modello e provider a tutte le impostazioni secondarie",
-  "applyModelToAllDone": "Modello e provider correnti applicati a tutte le impostazioni secondarie."
+  "applyModelToAllDone": "Modello e provider correnti applicati a tutte le impostazioni secondarie.",
+  "showAiMsgSpeakBtn": "Leggi messaggio",
+  "showAiMsgSystemPromptBtn": "Prompt di sistema"
 }
