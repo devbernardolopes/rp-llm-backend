@@ -3605,8 +3605,12 @@ async function setupSettingsControls() {
     const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
     const providerFilters = filterSettings[provider] || {};
     const savedOrder = providerFilters.modelSortOrder;
-    const order = String(savedOrder || "name_asc");
-    modelSortOrder.value = ["name_asc", "name_desc", "created_asc", "created_desc"].includes(order) ? order : "name_asc";
+    if (savedOrder) {
+      const validOptions = Array.from(modelSortOrder.options).map(o => o.value);
+      modelSortOrder.value = validOptions.includes(savedOrder) ? savedOrder : "name_asc";
+    } else {
+      modelSortOrder.value = "name_asc";
+    }
   }
 
   await populateSettingsModels();
@@ -19781,7 +19785,12 @@ function updateModelSortOrderOptions() {
     }
   }
 
-  if (!allowedValues.includes(currentValue)) {
+  const filterSettings = state.settings.modelFilterSettingsPerProvider || {};
+  const providerFilters = filterSettings[provider] || {};
+  const savedOrder = providerFilters.modelSortOrder;
+  if (savedOrder && allowedValues.includes(savedOrder)) {
+    sortOrderSelect.value = savedOrder;
+  } else if (!allowedValues.includes(currentValue)) {
     sortOrderSelect.value = "name_asc";
   }
 }
