@@ -17509,6 +17509,13 @@ async function sendMessage(options = {}) {
       addPromptCommandEntry(currentThread.id, "/ai");
     }
     clearDraftInput();
+    if (shouldTriggerMemorySummaries(currentCharacter)) {
+      const summaryResult = await summarizeMemory(currentCharacter);
+      if (summaryResult === false) {
+        await renderThreads();
+        return;
+      }
+    }
     await requestBotReplyForCurrentThread("manual_send_ai_only");
     return;
   }
