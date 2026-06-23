@@ -11403,10 +11403,12 @@ async function openWritingInstructionEditor(writingInstruction = null) {
     }));
   }
   state_writingInstructions.activeLanguage = state_writingInstructions.definitions[0]?.language || interfaceLang;
-  state_writingInstructions.originalState = {
-    name: normalized.name || "",
-    instructions: Object.fromEntries(state_writingInstructions.definitions.map((d) => [d.language, d.instructions])),
-  };
+  state_writingInstructions.originalState = state_writingInstructions.editingId
+    ? {
+        name: normalized.name || "",
+        instructions: Object.fromEntries(state_writingInstructions.definitions.map((d) => [d.language, d.instructions])),
+      }
+    : { name: "", instructions: {} };
   document.getElementById("writing-instruction-name").value = normalized.name || "";
   updateWritingInstructionNameCount();
   renderWritingInstructionTabs();
