@@ -17785,7 +17785,8 @@ function formatOocSystemPromptText(text) {
   }
   const prefixRemoved = normalized.replace(/^\s*SYSTEM,?\s*/i, "").trim();
   const inner = prefixRemoved || normalized;
-  return `((OOC: SYSTEM, ${inner}))`;
+  // return `((OOC: SYSTEM, ${inner}))`;
+  return `${inner}`;
 }
 
 function formatOocSystemMessageEntries(entries) {
