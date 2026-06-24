@@ -852,5 +852,6 @@
   "applyModelToAllTitle": "Aplicar modelo e provedor a todas as configura\u00e7\u00f5es secund\u00e1rias",
   "applyModelToAllDone": "Modelo e provedor atuais aplicados a todas as configura\u00e7\u00f5es secund\u00e1rias.",
   "showAiMsgSpeakBtn": "Falar mensagem",
-  "showAiMsgSystemPromptBtn": "Prompt do sistema"
+  "showAiMsgSystemPromptBtn": "Prompt do sistema",
+  "summarySystemPrompt": "Prompt do Sistema do Sumarizador de Mem\u00f3ria"
 }

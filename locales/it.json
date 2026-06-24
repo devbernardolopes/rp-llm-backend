@@ -852,5 +852,6 @@
   "applyModelToAllTitle": "Applica modello e provider a tutte le impostazioni secondarie",
   "applyModelToAllDone": "Modello e provider correnti applicati a tutte le impostazioni secondarie.",
   "showAiMsgSpeakBtn": "Leggi messaggio",
-  "showAiMsgSystemPromptBtn": "Prompt di sistema"
+  "showAiMsgSystemPromptBtn": "Prompt di sistema",
+  "summarySystemPrompt": "Prompt di sistema del riepilogatore di memoria"
 }

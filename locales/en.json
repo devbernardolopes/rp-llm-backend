@@ -857,5 +857,6 @@
   "applyModelToAllTitle": "Apply model & provider to all secondary settings",
   "applyModelToAllDone": "Applied current model & provider to all secondary settings.",
   "showAiMsgSpeakBtn": "Speak message",
-  "showAiMsgSystemPromptBtn": "System prompt"
+  "showAiMsgSystemPromptBtn": "System prompt",
+  "summarySystemPrompt": "Memory Summarizer System Prompt"
 }

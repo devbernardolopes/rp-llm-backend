@@ -852,5 +852,6 @@
   "applyModelToAllTitle": "Appliquer le mod\u00e8le et le fournisseur \u00e0 tous les param\u00e8tres secondaires",
   "applyModelToAllDone": "Mod\u00e8le et fournisseur actuels appliqu\u00e9s \u00e0 tous les param\u00e8tres secondaires.",
   "showAiMsgSpeakBtn": "Lire le message",
-  "showAiMsgSystemPromptBtn": "Prompt syst\u00e8me"
+  "showAiMsgSystemPromptBtn": "Prompt syst\u00e8me",
+  "summarySystemPrompt": "Prompt syst\u00e8me du r\u00e9sumeur de m\u00e9moire"
 }

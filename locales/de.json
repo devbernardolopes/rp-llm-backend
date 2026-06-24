@@ -852,5 +852,6 @@
   "applyModelToAllTitle": "Modell & Anbieter auf alle sekund\u00e4ren Einstellungen anwenden",
   "applyModelToAllDone": "Aktuelles Modell & Anbieter auf alle sekund\u00e4ren Einstellungen angewendet.",
   "showAiMsgSpeakBtn": "Nachricht sprechen",
-  "showAiMsgSystemPromptBtn": "System-Prompt"
+  "showAiMsgSystemPromptBtn": "System-Prompt",
+  "summarySystemPrompt": "System-Prompt des Ged\u00e4chtnis-Summarizers"
 }
