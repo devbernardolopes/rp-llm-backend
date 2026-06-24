@@ -2335,6 +2335,25 @@ textarea {
     align-items: flex-start;
     gap: 4px;
   }
+
+  .model-dropdown-option .model-name {
+    white-space: normal;
+    word-break: break-word;
+    text-overflow: clip;
+  }
+
+  .model-dropdown-option .model-star {
+    font-size: 18px;
+  }
+
+  .model-dropdown-option {
+    padding: 6px 8px;
+  }
+
+  .horde-stat-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
 }
 #chat-view {
   padding: 18px 22px calc(18px + var(--safe-area-bottom));
