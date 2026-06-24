@@ -17761,7 +17761,7 @@ function formatOocMessageEntry(message, personaPrefixEnabled = true) {
   return normalized;
 }
 
-async function buildOocSystemPrompt() {
+async function buildOocSystemPrompt(excludeMessages = []) {
   const displayHistory = getFilteredConversationHistoryForThread();
   const personaPrefixEnabled = currentCharacter?.personaPrefixEnabled !== false;
   const includeOoc = currentCharacter?.includeOocInCompletions === true;
@@ -17771,6 +17771,7 @@ async function buildOocSystemPrompt() {
   const contextMessages = inSimulationHistory
     .filter((msg) => !isMessageLockedByMemory(msg))
     .filter((msg) => !msg.summarized)
+    .filter((msg) => !excludeMessages.includes(msg))
     .map((msg) => formatOocMessageEntry(msg, personaPrefixEnabled))
     .filter(Boolean);
   const rawMemory = await getMemorySummary(currentCharacter.id, currentThread.id);
@@ -17987,7 +17988,7 @@ async function regenerateOocMessage(index) {
   if (isViewing) scrollChatToBottom();
 
   try {
-    const { systemPrompt } = await buildOocSystemPrompt();
+    const { systemPrompt } = await buildOocSystemPrompt([userMessage]);
     const oocRequestMessages = [
       { role: "system", content: systemPrompt },
       { role: "user", content: userMessage.content },
