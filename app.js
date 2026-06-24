@@ -16930,7 +16930,7 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
       beginInlineMessageEdit(index, content);
     });
     editBtn.classList.add("msg-edit-btn");
-    editBtn.disabled = disableControlsForRow || isTruncated || hasGenerationError || isLockedMemoryMessage || isOocMessage;
+    editBtn.disabled = disableControlsForRow || isTruncated || hasGenerationError || isLockedMemoryMessage;
     applyEditButtonEditedStyle(editBtn, message);
     if (state.settings.showAiMsgEditBtn !== false) {
       controls.appendChild(editBtn);
@@ -17070,7 +17070,6 @@ function buildMessageRow(message, index, streaming, displayHistory = null) {
   content.className = "message-content";
   content.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
   content.addEventListener("dblclick", () => {
-    if (isOocMessage) return;
     const rowEl = content.closest(".chat-row");
     if (rowEl?.dataset?.streaming === "1") return;
     if (String(message?.generationError || "").trim()) return;
@@ -17328,7 +17327,6 @@ function beginInlineMessageEdit(index, contentEl) {
   if (isMessageLockedByMemory(message)) return;
   if (message.truncatedByFilter === true) return;
   if (String(message.generationError || "").trim()) return;
-  if (message.ooc === true) return;
 
   if (state.editingMessageIndex !== null && state.editingMessageIndex !== index && document.querySelector(".message-editor")) {
     const prev = document.querySelector(".message-editor");
