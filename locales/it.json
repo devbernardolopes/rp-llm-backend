@@ -853,5 +853,15 @@
   "applyModelToAllDone": "Modello e provider correnti applicati a tutte le impostazioni secondarie.",
   "showAiMsgSpeakBtn": "Leggi messaggio",
   "showAiMsgSystemPromptBtn": "Prompt di sistema",
-  "summarySystemPrompt": "Prompt di sistema del riepilogatore di memoria"
+  "summarySystemPrompt": "Prompt di sistema del riepilogatore di memoria",
+  "rolePrefixesTitle": "Prefissi dei ruoli",
+  "systemRolePrefixLabel": "Prefisso ruolo sistema",
+  "assistantRolePrefixLabel": "Prefisso ruolo assistente",
+  "userRolePrefixLabel": "Prefisso ruolo utente",
+  "userRolePrefixWithPersonaLabel": "Prefisso ruolo utente (con persona)",
+  "rolePrefixPersonaHint": "Usa {personaName} come segnaposto per il nome della persona",
+  "placeholderSystemRolePrefix": "[SYSTEM]:",
+  "placeholderAssistantRolePrefix": "[ASSISTANT]:",
+  "placeholderUserRolePrefix": "[USER]:",
+  "placeholderUserRolePrefixWithPersona": "[USER (as {personaName})]:"
 }

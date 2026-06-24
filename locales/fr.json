@@ -853,5 +853,15 @@
   "applyModelToAllDone": "Mod\u00e8le et fournisseur actuels appliqu\u00e9s \u00e0 tous les param\u00e8tres secondaires.",
   "showAiMsgSpeakBtn": "Lire le message",
   "showAiMsgSystemPromptBtn": "Prompt syst\u00e8me",
-  "summarySystemPrompt": "Prompt syst\u00e8me du r\u00e9sumeur de m\u00e9moire"
+  "summarySystemPrompt": "Prompt syst\u00e8me du r\u00e9sumeur de m\u00e9moire",
+  "rolePrefixesTitle": "Pr\u00e9fixes de r\u00f4le",
+  "systemRolePrefixLabel": "Pr\u00e9fixe de r\u00f4le syst\u00e8me",
+  "assistantRolePrefixLabel": "Pr\u00e9fixe de r\u00f4le assistant",
+  "userRolePrefixLabel": "Pr\u00e9fixe de r\u00f4le utilisateur",
+  "userRolePrefixWithPersonaLabel": "Pr\u00e9fixe de r\u00f4le utilisateur (avec persona)",
+  "rolePrefixPersonaHint": "Utilisez {personaName} comme espace r\u00e9serv\u00e9 pour le nom de la persona",
+  "placeholderSystemRolePrefix": "[SYSTEM]:",
+  "placeholderAssistantRolePrefix": "[ASSISTANT]:",
+  "placeholderUserRolePrefix": "[USER]:",
+  "placeholderUserRolePrefixWithPersona": "[USER (as {personaName})]:"
 }

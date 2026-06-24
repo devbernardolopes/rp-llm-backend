@@ -853,5 +853,15 @@
   "applyModelToAllDone": "Modelo e provedor atuais aplicados a todas as configura\u00e7\u00f5es secund\u00e1rias.",
   "showAiMsgSpeakBtn": "Falar mensagem",
   "showAiMsgSystemPromptBtn": "Prompt do sistema",
-  "summarySystemPrompt": "Prompt do Sistema do Sumarizador de Mem\u00f3ria"
+  "summarySystemPrompt": "Prompt do Sistema do Sumarizador de Mem\u00f3ria",
+  "rolePrefixesTitle": "Prefixos de pap\u00e9is",
+  "systemRolePrefixLabel": "Prefixo do papel do sistema",
+  "assistantRolePrefixLabel": "Prefixo do papel do assistente",
+  "userRolePrefixLabel": "Prefixo do papel do usu\u00e1rio",
+  "userRolePrefixWithPersonaLabel": "Prefixo do papel do usu\u00e1rio (com persona)",
+  "rolePrefixPersonaHint": "Use {personaName} como marcador para o nome da persona",
+  "placeholderSystemRolePrefix": "[SYSTEM]:",
+  "placeholderAssistantRolePrefix": "[ASSISTANT]:",
+  "placeholderUserRolePrefix": "[USER]:",
+  "placeholderUserRolePrefixWithPersona": "[USER (as {personaName})]:"
 }

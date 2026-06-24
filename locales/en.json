@@ -858,5 +858,15 @@
   "applyModelToAllDone": "Applied current model & provider to all secondary settings.",
   "showAiMsgSpeakBtn": "Speak message",
   "showAiMsgSystemPromptBtn": "System prompt",
-  "summarySystemPrompt": "Memory Summarizer System Prompt"
+  "summarySystemPrompt": "Memory Summarizer System Prompt",
+  "rolePrefixesTitle": "Role Prefixes",
+  "systemRolePrefixLabel": "System Role Prefix",
+  "assistantRolePrefixLabel": "Assistant Role Prefix",
+  "userRolePrefixLabel": "User Role Prefix",
+  "userRolePrefixWithPersonaLabel": "User Role Prefix (with persona)",
+  "rolePrefixPersonaHint": "Use {personaName} as placeholder for the persona name",
+  "placeholderSystemRolePrefix": "[SYSTEM]:",
+  "placeholderAssistantRolePrefix": "[ASSISTANT]:",
+  "placeholderUserRolePrefix": "[USER]:",
+  "placeholderUserRolePrefixWithPersona": "[USER (as {personaName})]:"
 }

@@ -175,6 +175,10 @@ Requirements:
   directorTemperature: 0.8,
   directorStopStrings: "",
   directorStream: false,
+  systemRolePrefix: "[SYSTEM]:",
+  assistantRolePrefix: "[ASSISTANT]:",
+  userRolePrefix: "[USER]:",
+  userRolePrefixWithPersona: "[USER (as {personaName})]:",
 };
 
 function getSectionHeader(key) {
@@ -182,6 +186,21 @@ function getSectionHeader(key) {
 }
 
 window.getSectionHeader = getSectionHeader;
+
+function getRolePrefix(role, { personaName = null, personaPrefixEnabled = true } = {}) {
+  if (role === "system") return state.settings.systemRolePrefix ?? DEFAULT_SETTINGS.systemRolePrefix;
+  if (role === "assistant") return state.settings.assistantRolePrefix ?? DEFAULT_SETTINGS.assistantRolePrefix;
+  if (role === "user") {
+    if (personaPrefixEnabled && personaName) {
+      const template = state.settings.userRolePrefixWithPersona ?? DEFAULT_SETTINGS.userRolePrefixWithPersona;
+      return template.replace(/\{personaName\}/g, personaName);
+    }
+    return state.settings.userRolePrefix ?? DEFAULT_SETTINGS.userRolePrefix;
+  }
+  return `[${role.toUpperCase()}]:`;
+}
+
+window.getRolePrefix = getRolePrefix;
 window.DEFAULT_SETTINGS = DEFAULT_SETTINGS;
 
 const MODEL3D_EXPRESSION_ALIAS_MAP = {
@@ -460,6 +479,14 @@ function populateSettingsTabValues() {
   if (sectionHeaderMemoryLevelContext) sectionHeaderMemoryLevelContext.value = state.settings.sectionHeaderMemoryLevelContext ?? DEFAULT_SETTINGS.sectionHeaderMemoryLevelContext;
   if (sectionHeaderMemoryEntry) sectionHeaderMemoryEntry.value = state.settings.sectionHeaderMemoryEntry ?? DEFAULT_SETTINGS.sectionHeaderMemoryEntry;
   if (sectionHeaderLoreContext) sectionHeaderLoreContext.value = state.settings.sectionHeaderLoreContext ?? DEFAULT_SETTINGS.sectionHeaderLoreContext;
+  const systemRolePrefix = document.getElementById("system-role-prefix");
+  const assistantRolePrefix = document.getElementById("assistant-role-prefix");
+  const userRolePrefix = document.getElementById("user-role-prefix");
+  const userRolePrefixWithPersona = document.getElementById("user-role-prefix-with-persona");
+  if (systemRolePrefix) systemRolePrefix.value = state.settings.systemRolePrefix ?? DEFAULT_SETTINGS.systemRolePrefix;
+  if (assistantRolePrefix) assistantRolePrefix.value = state.settings.assistantRolePrefix ?? DEFAULT_SETTINGS.assistantRolePrefix;
+  if (userRolePrefix) userRolePrefix.value = state.settings.userRolePrefix ?? DEFAULT_SETTINGS.userRolePrefix;
+  if (userRolePrefixWithPersona) userRolePrefixWithPersona.value = state.settings.userRolePrefixWithPersona ?? DEFAULT_SETTINGS.userRolePrefixWithPersona;
 
   // Shortcuts tab settings
   const cancelShortcut = document.getElementById("cancel-shortcut");
@@ -3834,6 +3861,10 @@ async function setupSettingsControls() {
   const sectionHeaderMemoryEntry = document.getElementById("section-header-memory-entry");
   const sectionHeaderLoreContext = document.getElementById("section-header-lore-context");
   const memoryRelevanceFilterToggle = document.getElementById("memory-relevance-filter-enabled");
+  const systemRolePrefix = document.getElementById("system-role-prefix");
+  const assistantRolePrefix = document.getElementById("assistant-role-prefix");
+  const userRolePrefix = document.getElementById("user-role-prefix");
+  const userRolePrefixWithPersona = document.getElementById("user-role-prefix-with-persona");
 
   if (globalPromptTemplate) {
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
@@ -3888,6 +3919,18 @@ async function setupSettingsControls() {
   }
   if (sectionHeaderLoreContext) {
     sectionHeaderLoreContext.value = state.settings.sectionHeaderLoreContext ?? DEFAULT_SETTINGS.sectionHeaderLoreContext;
+  }
+  if (systemRolePrefix) {
+    systemRolePrefix.value = state.settings.systemRolePrefix ?? DEFAULT_SETTINGS.systemRolePrefix;
+  }
+  if (assistantRolePrefix) {
+    assistantRolePrefix.value = state.settings.assistantRolePrefix ?? DEFAULT_SETTINGS.assistantRolePrefix;
+  }
+  if (userRolePrefix) {
+    userRolePrefix.value = state.settings.userRolePrefix ?? DEFAULT_SETTINGS.userRolePrefix;
+  }
+  if (userRolePrefixWithPersona) {
+    userRolePrefixWithPersona.value = state.settings.userRolePrefixWithPersona ?? DEFAULT_SETTINGS.userRolePrefixWithPersona;
   }
   const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
   const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
@@ -4701,6 +4744,26 @@ async function setupSettingsControls() {
 
   sectionHeaderLoreContext?.addEventListener("input", () => {
     state.settings.sectionHeaderLoreContext = sectionHeaderLoreContext.value;
+    saveSettings();
+  });
+
+  systemRolePrefix?.addEventListener("input", () => {
+    state.settings.systemRolePrefix = systemRolePrefix.value;
+    saveSettings();
+  });
+
+  assistantRolePrefix?.addEventListener("input", () => {
+    state.settings.assistantRolePrefix = assistantRolePrefix.value;
+    saveSettings();
+  });
+
+  userRolePrefix?.addEventListener("input", () => {
+    state.settings.userRolePrefix = userRolePrefix.value;
+    saveSettings();
+  });
+
+  userRolePrefixWithPersona?.addEventListener("input", () => {
+    state.settings.userRolePrefixWithPersona = userRolePrefixWithPersona.value;
     saveSettings();
   });
 
@@ -16089,15 +16152,12 @@ async function maybeGenerateTitleBeforeBotReply() {
         }
       }
       if (isOoc && m.role === "assistant") {
-        return `[SYSTEM]: ${labelContent}`;
+        return `${getRolePrefix("system")} ${labelContent}`;
       } else if (m.role === "assistant") {
-        return `[ASSISTANT]: ${labelContent}`;
+        return `${getRolePrefix("assistant")} ${labelContent}`;
       } else {
-        if (personaPrefixEnabled && m.senderName && m.senderName !== "You") {
-          const personaName = String(m.senderName);
-          return `[USER (as ${personaName})]: ${labelContent}`;
-        }
-        return `[USER]: ${labelContent}`;
+        const userPersonaName = (personaPrefixEnabled && m.senderName && m.senderName !== "You") ? String(m.senderName) : null;
+        return `${getRolePrefix("user", { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName })} ${labelContent}`;
       }
     })
     .filter((entry) => entry !== "")
@@ -17759,18 +17819,17 @@ function formatOocMessageEntry(message, personaPrefixEnabled = true) {
       labelContent = `((OOC: ${labelContent}))`;
     }
   }
-  const roleLabel = isOoc && message.role === "assistant" ? "assistant" : message.role;
-  // const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
-  const labeled = `${roleLabel}: ${labelContent}`;
-  const normalized = labeled
-    .replace(/(^|\n)system:/gi, "$1[SYSTEM]:")
-    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
-    .replace(/(^|\n)user:/gi, "$1[USER]:");
-  if (message.role === "user" && !isOoc && personaPrefixEnabled) {
-    const personaName = String(message.senderName || "You");
-    return normalized.replace(/^\[USER\]:/, `[USER (as ${personaName})]:`);
-  }
-  return normalized;
+  const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
+  const userPersonaName = (message.role === "user" && !isOoc && personaPrefixEnabled) ? String(message.senderName || "You") : null;
+  const prefix = getRolePrefix(roleLabel, { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName });
+  const labeled = `${prefix} ${labelContent}`;
+  const systemPrefix = getRolePrefix("system");
+  const assistantPrefix = getRolePrefix("assistant");
+  const userPrefix = getRolePrefix("user");
+  return labeled
+    .replace(/(^|\n)system:/gi, `$1${systemPrefix}`)
+    .replace(/(^|\n)assistant:/gi, `$1${assistantPrefix}`)
+    .replace(/(^|\n)user:/gi, `$1${userPrefix}`);
 }
 
 function wrapOocAssistantResponse(content) {

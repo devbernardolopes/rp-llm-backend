@@ -853,5 +853,15 @@
   "applyModelToAllDone": "Aktuelles Modell & Anbieter auf alle sekund\u00e4ren Einstellungen angewendet.",
   "showAiMsgSpeakBtn": "Nachricht sprechen",
   "showAiMsgSystemPromptBtn": "System-Prompt",
-  "summarySystemPrompt": "System-Prompt des Ged\u00e4chtnis-Summarizers"
+  "summarySystemPrompt": "System-Prompt des Ged\u00e4chtnis-Summarizers",
+  "rolePrefixesTitle": "Rollenpr\u00e4fixe",
+  "systemRolePrefixLabel": "System-Rollenpr\u00e4fix",
+  "assistantRolePrefixLabel": "Assistent-Rollenpr\u00e4fix",
+  "userRolePrefixLabel": "Benutzer-Rollenpr\u00e4fix",
+  "userRolePrefixWithPersonaLabel": "Benutzer-Rollenpr\u00e4fix (mit Persona)",
+  "rolePrefixPersonaHint": "Verwende {personaName} als Platzhalter f\u00fcr den Persona-Namen",
+  "placeholderSystemRolePrefix": "[SYSTEM]:",
+  "placeholderAssistantRolePrefix": "[ASSISTANT]:",
+  "placeholderUserRolePrefix": "[USER]:",
+  "placeholderUserRolePrefixWithPersona": "[USER (as {personaName})]:"
 }

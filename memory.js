@@ -642,6 +642,22 @@ async function summarizeMemory(character) {
 }
 }
 
+function getRolePrefix(role, options = {}) {
+  if (typeof window.getRolePrefix === "function") {
+    return window.getRolePrefix(role, options);
+  }
+  const { personaName = null, personaPrefixEnabled = true } = options;
+  if (role === "user" && personaPrefixEnabled && personaName) {
+    return `[USER (as ${personaName})]:`;
+  }
+  const defaults = {
+    system: "[SYSTEM]:",
+    assistant: "[ASSISTANT]:",
+    user: "[USER]:",
+  };
+  return defaults[role] || `[${role.toUpperCase()}]:`;
+}
+
 function buildMessageEntryForSummary(message, personaPrefixEnabled = true) {
   if (!message) return "";
   const rawContent = String(message.content || "");
@@ -663,16 +679,16 @@ function buildMessageEntryForSummary(message, personaPrefixEnabled = true) {
     }
   }
   const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
-  const labeled = `${roleLabel}: ${labelContent}`;
-  const normalized = normalizeSummaryRoleLabels(labeled);
-  if (message.role === "user" && !isOoc && personaPrefixEnabled) {
-    const personaName = String(message.senderName || "You");
-    return normalized.replace(
-      /^\[USER\]:/,
-      `[USER (as ${personaName})]:`,
-    );
-  }
-  return normalized;
+  const userPersonaName = (message.role === "user" && !isOoc && personaPrefixEnabled) ? String(message.senderName || "You") : null;
+  const prefix = getRolePrefix(roleLabel, { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName });
+  const labeled = `${prefix} ${labelContent}`;
+  const systemPrefix = getRolePrefix("system");
+  const assistantPrefix = getRolePrefix("assistant");
+  const userPrefix = getRolePrefix("user");
+  return labeled
+    .replace(/(^|\n)system:/gi, `$1${systemPrefix}`)
+    .replace(/(^|\n)assistant:/gi, `$1${assistantPrefix}`)
+    .replace(/(^|\n)user:/gi, `$1${userPrefix}`);
 }
 
 function removeSummaryParagraphs(text, prefix = "> || ") {
@@ -689,10 +705,13 @@ function removeSummaryParagraphs(text, prefix = "> || ") {
 function normalizeSummaryRoleLabels(text) {
   if (!text) return "";
   const normalized = text.replace(/\r\n/g, "\n");
+  const systemPrefix = getRolePrefix("system");
+  const assistantPrefix = getRolePrefix("assistant");
+  const userPrefix = getRolePrefix("user");
   return normalized
-    .replace(/(^|\n)system:/gi, "$1[SYSTEM]:")
-    .replace(/(^|\n)assistant:/gi, "$1[ASSISTANT]:")
-    .replace(/(^|\n)user:/gi, "$1[USER]:");
+    .replace(/(^|\n)system:/gi, `$1${systemPrefix}`)
+    .replace(/(^|\n)assistant:/gi, `$1${assistantPrefix}`)
+    .replace(/(^|\n)user:/gi, `$1${userPrefix}`);
 }
 
 function getSectionHeader(key) {

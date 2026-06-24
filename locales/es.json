@@ -853,5 +853,15 @@
   "applyModelToAllDone": "Modelo y proveedor actuales aplicados a todos los ajustes secundarios.",
   "showAiMsgSpeakBtn": "Leer mensaje",
   "showAiMsgSystemPromptBtn": "Prompt del sistema",
-  "summarySystemPrompt": "Prompt del sistema del resumidor de memoria"
+  "summarySystemPrompt": "Prompt del sistema del resumidor de memoria",
+  "rolePrefixesTitle": "Prefijos de rol",
+  "systemRolePrefixLabel": "Prefijo de rol del sistema",
+  "assistantRolePrefixLabel": "Prefijo de rol del asistente",
+  "userRolePrefixLabel": "Prefijo de rol del usuario",
+  "userRolePrefixWithPersonaLabel": "Prefijo de rol del usuario (con persona)",
+  "rolePrefixPersonaHint": "Usa {personaName} como marcador de posici\u00f3n para el nombre de la persona",
+  "placeholderSystemRolePrefix": "[SYSTEM]:",
+  "placeholderAssistantRolePrefix": "[ASSISTANT]:",
+  "placeholderUserRolePrefix": "[USER]:",
+  "placeholderUserRolePrefixWithPersona": "[USER (as {personaName})]:"
 }
