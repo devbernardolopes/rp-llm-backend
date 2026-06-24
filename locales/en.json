@@ -688,6 +688,7 @@
   "trimMessagesLabel": "Trim messages",
   "oocSystemPromptIntro": "OOC System Prompt Intro",
   "oocUserMessageFormat": "OOC User Message Format",
+  "oocAssistantResponseFormat": "OOC Assistant Response Format",
   "providerGroq": "Groq",
   "groqApiKey": "Groq API Key",
   "togglePanelTitle": "Toggle panel",

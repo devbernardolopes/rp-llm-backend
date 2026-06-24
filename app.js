@@ -168,6 +168,7 @@ Requirements:
   sectionHeaderLoreContext: "***LORE CONTEXT***",
   oocSystemPromptIntro: "SYSTEM, consider the following information and reply the next USER inquiry in an OOC manner:",
   oocUserMessageFormat: "((OOC: SYSTEM, reply in OOC manner. {content}))",
+  oocAssistantResponseFormat: "((OOC: {content}))",
   enableDirectorSettings: true,
   directorProvider: "openrouter",
   directorModel: "",
@@ -419,6 +420,7 @@ function populateSettingsTabValues() {
   const memorySummarizerUserPrompt = document.getElementById("memory-summarizer-user-prompt");
   const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
   const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
+  const oocAssistantResponseFormat = document.getElementById("ooc-assistant-response-format");
   const summaryMessagesPreprocessingJson = document.getElementById("summary-messages-preprocessing-json");
   const personaInjectionTemplate = document.getElementById("persona-injection-template");
   const autoTitleSystemPrompt = document.getElementById("auto-title-system-prompt");
@@ -433,6 +435,7 @@ function populateSettingsTabValues() {
   if (memorySummarizerUserPrompt) memorySummarizerUserPrompt.value = state.settings.memorySummarizerUserPrompt ?? "";
   if (oocSystemPromptIntro) oocSystemPromptIntro.value = state.settings.oocSystemPromptIntro || "";
   if (oocUserMessageFormat) oocUserMessageFormat.value = state.settings.oocUserMessageFormat || "";
+  if (oocAssistantResponseFormat) oocAssistantResponseFormat.value = state.settings.oocAssistantResponseFormat || "";
   if (summaryMessagesPreprocessingJson) summaryMessagesPreprocessingJson.value = state.settings.summaryMessagesPreprocessingJson || "";
   if (personaInjectionTemplate) personaInjectionTemplate.value = state.settings.personaInjectionTemplate || "";
   if (autoTitleSystemPrompt) autoTitleSystemPrompt.value = state.settings.autoTitleSystemPrompt || "";
@@ -3888,11 +3891,15 @@ async function setupSettingsControls() {
   }
   const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
   const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
+  const oocAssistantResponseFormat = document.getElementById("ooc-assistant-response-format");
   if (oocSystemPromptIntro) {
     oocSystemPromptIntro.value = getSectionHeader("oocSystemPromptIntro");
   }
   if (oocUserMessageFormat) {
     oocUserMessageFormat.value = getSectionHeader("oocUserMessageFormat");
+  }
+  if (oocAssistantResponseFormat) {
+    oocAssistantResponseFormat.value = getSectionHeader("oocAssistantResponseFormat");
   }
   cancelShortcut.value = state.settings.cancelShortcut || DEFAULT_SETTINGS.cancelShortcut;
   homeShortcut.value = state.settings.homeShortcut || DEFAULT_SETTINGS.homeShortcut;
@@ -4704,6 +4711,11 @@ async function setupSettingsControls() {
 
   oocUserMessageFormat?.addEventListener("input", () => {
     state.settings.oocUserMessageFormat = oocUserMessageFormat.value;
+    saveSettings();
+  });
+
+  oocAssistantResponseFormat?.addEventListener("input", () => {
+    state.settings.oocAssistantResponseFormat = oocAssistantResponseFormat.value;
     saveSettings();
   });
 
@@ -17761,6 +17773,20 @@ function formatOocMessageEntry(message, personaPrefixEnabled = true) {
   return normalized;
 }
 
+function wrapOocAssistantResponse(content) {
+  const trimmed = String(content || "").trim();
+  if (!trimmed) return "(No content returned)";
+  const format = getSectionHeader("oocAssistantResponseFormat");
+  const placeholder = "{content}";
+  const contentIndex = format.indexOf(placeholder);
+  if (contentIndex < 0) return format;
+  const prefix = format.slice(0, contentIndex);
+  const suffix = format.slice(contentIndex + placeholder.length);
+  const isAlreadyWrapped = (prefix && trimmed.startsWith(prefix) && trimmed.endsWith(suffix))
+    || (trimmed.startsWith("((OOC:") && trimmed.endsWith("))"));
+  return isAlreadyWrapped ? trimmed : format.replace(placeholder, trimmed);
+}
+
 async function buildOocSystemPrompt(excludeMessages = []) {
   const displayHistory = getFilteredConversationHistoryForThread();
   const personaPrefixEnabled = currentCharacter?.personaPrefixEnabled !== false;
@@ -17897,16 +17923,7 @@ async function sendOocInquiry(text) {
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
     const assistantText = result.content || pendingAssistant.content || "";
-    const trimmedText = assistantText.trim();
-    let wrappedContent = "(No content returned)";
-    if (trimmedText) {
-      if (trimmedText.startsWith("((OOC:") && trimmedText.endsWith("))")) {
-        wrappedContent = trimmedText;
-      } else {
-        wrappedContent = `((OOC: ${trimmedText}))`;
-      }
-    }
-    pendingAssistant.content = wrappedContent;
+    pendingAssistant.content = wrapOocAssistantResponse(assistantText);
     pendingAssistant.finishReason = String(result.finishReason || "");
     pendingAssistant.nativeFinishReason = String(result.nativeFinishReason || "");
     pendingAssistant.truncatedByFilter = result.truncatedByFilter === true;
@@ -17931,7 +17948,9 @@ async function sendOocInquiry(text) {
     pendingAssistant.generationStatus = "";
     const errorMessage = String(err?.message || err || "OOC request failed");
     pendingAssistant.generationError = errorMessage;
-    pendingAssistant.content = pendingAssistant.content || `((OOC: OOC request failed: ${errorMessage}))`;
+    if (!pendingAssistant.content) {
+      pendingAssistant.content = wrapOocAssistantResponse(`OOC request failed: ${errorMessage}`);
+    }
     if (!isViewing) {
       pendingAssistant.unreadAt = Date.now();
       playUnreadMessageSound();
@@ -18029,16 +18048,7 @@ async function regenerateOocMessage(index) {
     state.lastUsedProvider = result.provider || "";
     updateModelPill();
     const assistantText = result.content || target.content || "";
-    const trimmedText = assistantText.trim();
-    let wrappedContent = "(No content returned)";
-    if (trimmedText) {
-      if (trimmedText.startsWith("((OOC:") && trimmedText.endsWith("))")) {
-        wrappedContent = trimmedText;
-      } else {
-        wrappedContent = `((OOC: ${trimmedText}))`;
-      }
-    }
-    target.content = wrappedContent;
+    target.content = wrapOocAssistantResponse(assistantText);
     target.finishReason = String(result.finishReason || "");
     target.nativeFinishReason = String(result.nativeFinishReason || "");
     target.truncatedByFilter = result.truncatedByFilter === true;
@@ -21608,6 +21618,7 @@ function setupTokenCountListeners() {
     { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-count" },
     { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-count" },
     { id: "ooc-user-message-format", countId: "ooc-user-message-format-count" },
+    { id: "ooc-assistant-response-format", countId: "ooc-assistant-response-format-count" },
     { id: "global-prompt-template", countId: "global-prompt-template-count" },
     { id: "summary-system-prompt", countId: "summary-system-prompt-count" },
     { id: "memory-summarizer-user-prompt", countId: "memory-summarizer-user-prompt-count" },
@@ -21636,6 +21647,7 @@ function updateAllTokenCounts() {
     { id: "char-one-time-extra-prompt", countId: "char-one-time-extra-prompt-count" },
     { id: "ooc-system-prompt-intro", countId: "ooc-system-prompt-intro-count" },
     { id: "ooc-user-message-format", countId: "ooc-user-message-format-count" },
+    { id: "ooc-assistant-response-format", countId: "ooc-assistant-response-format-count" },
     { id: "global-prompt-template", countId: "global-prompt-template-count" },
     { id: "summary-system-prompt", countId: "summary-system-prompt-count" },
     { id: "memory-summarizer-user-prompt", countId: "memory-summarizer-user-prompt-count" },

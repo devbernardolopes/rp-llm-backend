@@ -678,6 +678,7 @@
   "trimMessagesLabel": "Tronquer les messages",
   "oocSystemPromptIntro": "Introduction du prompt systeme OOC",
   "oocUserMessageFormat": "Format du message utilisateur OOC",
+  "oocAssistantResponseFormat": "Format de réponse de l'assistant OOC",
   "providerGroq": "Groq",
   "groqApiKey": "Cle API Groq",
   "togglePanelTitle": "Afficher/masquer le panneau",
