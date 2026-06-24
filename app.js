@@ -17923,11 +17923,19 @@ async function sendOocInquiry(text) {
     }
     pendingAssistant.systemMessages = formatOocSystemMessageEntries(result.systemMessages);
     pendingAssistant.generationStatus = "";
+    if (!isViewing) {
+      pendingAssistant.unreadAt = Date.now();
+      playUnreadMessageSound();
+    }
   } catch (err) {
     pendingAssistant.generationStatus = "";
     const errorMessage = String(err?.message || err || "OOC request failed");
     pendingAssistant.generationError = errorMessage;
     pendingAssistant.content = pendingAssistant.content || `((OOC: OOC request failed: ${errorMessage}))`;
+    if (!isViewing) {
+      pendingAssistant.unreadAt = Date.now();
+      playUnreadMessageSound();
+    }
     showToast(`OOC request failed: ${errorMessage}`, "error");
   }
   await persistCurrentThread();
