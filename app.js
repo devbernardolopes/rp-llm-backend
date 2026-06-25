@@ -985,6 +985,7 @@ async function loadThreadsMetadataOnly() {
         totalMessageCount: nonInitialCount + (hasInitialMessages ? 1 : 0),
       };
     }
+    meta.unreadAssistantCount = getUnreadAssistantCount(messages);
     return meta;
   });
 }
@@ -7515,7 +7516,7 @@ async function renderThreads() {
     const hasSummarizingMessage = threadHasActiveSummarizingMessage(thread);
     const isGenerating = hasGeneratingMessage || (state.sending && Number(state.activeGenerationThreadId) === Number(thread.id));
     const isInCooldown = !isGenerating && String(thread.pendingGenerationReason || "").trim() === "cooldown" && isInCompletionCooldown();
-    const unreadCount = thread.messages ? getUnreadAssistantCount(thread.messages) : 0;
+    const unreadCount = Number(thread.unreadAssistantCount || 0);
     const threadId = Number(thread.id);
     const previousUnreadCount = state.threadUnreadCounts[threadId] || 0;
     if (unreadCount > previousUnreadCount) {
