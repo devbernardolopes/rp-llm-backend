@@ -23069,6 +23069,111 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
   };
 
   try {
+    if (hordeApiMethod === "native") {
+      const prompt = messagesToHordePrompt(promptMessages);
+      const models = hordeModel && hordeModel !== "auto" ? [hordeModel] : [];
+      const temperature = getEffectiveRequestTemperature(isTitleGeneration, isSummarization, isOoc);
+      const topP = getEffectiveRequestTopP(isTitleGeneration, isSummarization, isOoc);
+      const hordeRequest = {
+        prompt,
+        models,
+        params: {
+          n: 1,
+          max_length: effectiveMaxTokens,
+          temperature,
+          ...(topP !== null ? { top_p: topP } : {}),
+          top_k: 0,
+          top_a: 0,
+          typical: 0,
+          tfs: 0.9,
+          rep_pen: 1.1,
+          rep_pen_range: 256,
+          rep_pen_slope: 0,
+          samp_pen: [],
+          pi_id: "",
+          genmd: true,
+          quiet: false,
+          filter_nsfw: false,
+          r2: false,
+          cache_prompt: true,
+          name: "rp-llm-backend",
+        },
+      };
+      const asyncRes = await fetch(`${baseUrl}/api/v2/generate/text/async`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Client-Agent": "rp-llm-backend:1.0:0",
+          apikey: hordeApiKey || "0000000000",
+        },
+        body: JSON.stringify(hordeRequest),
+        signal,
+      });
+      if (!asyncRes.ok) {
+        let errorMessage = `HTTP ${asyncRes.status}`;
+        try {
+          const payload = await asyncRes.json();
+          const msg = String(payload?.error?.message || payload?.message || "").trim();
+          if (msg) errorMessage = `${errorMessage}: ${msg}`;
+        } catch {}
+        throw new Error(errorMessage);
+      }
+      const asyncData = await asyncRes.json();
+      const requestId = asyncData.id;
+      if (!requestId) {
+        throw new Error("AI Horde: No request ID returned");
+      }
+      const result = await pollAIHordeResult(requestId, baseUrl, hordeApiKey, signal);
+      const generatedText = result.generations?.[0]?.text || "";
+      const usedModel = result.generations?.[0]?.model || hordeModel || "unknown";
+      const workerId = result.generations?.[0]?.worker_id || "";
+      const workerName = result.generations?.[0]?.worker_name || "";
+      let content = generatedText;
+      let stoppedByStopString = false;
+      if (stopStrings && stopStrings.length > 0) {
+        const truncation = truncateAtStopString(content, stopStrings);
+        if (truncation.stopped) {
+          content = truncation.content;
+          stoppedByStopString = true;
+        }
+      }
+      if (typeof onChunk === "function") {
+        for (const char of content) {
+          onChunk(char);
+          await new Promise(r => setTimeout(r, 5));
+        }
+      }
+      return {
+        content,
+        model: usedModel,
+        provider: "AI Horde",
+        completionMeta: {
+          id: `horde-${requestId}-${Date.now()}`,
+          created: Math.floor(Date.now() / 1000),
+          object: "chat.completion",
+          usage: {
+            prompt_tokens: estimateTokens(prompt),
+            completion_tokens: estimateTokens(content),
+            total_tokens: estimateTokens(prompt) + estimateTokens(content),
+          },
+        },
+        generationFetchDebug: [
+          {
+            type: "ai_horde_native",
+            request_id: requestId,
+            worker_id: workerId,
+            worker_name: workerName,
+            kudos: result.kudos || 0,
+          },
+        ],
+        finishReason: "stop",
+        nativeFinishReason: "stop",
+        truncatedByFilter: false,
+        stoppedByStopString,
+        generationInfo: null,
+        systemMessages,
+      };
+    }
     const response = await fetch(`${baseUrl}/v1/chat/completions`, {
       method: "POST",
       headers,
@@ -23238,7 +23343,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
     }
   } catch (err) {
     if (err?.name === "AbortError") throw err;
-    throw new Error(`AI Horde OpenAI request failed: ${err?.message || "Unknown error"}`);
+    throw new Error(`AI Horde request failed: ${err?.message || "Unknown error"}`);
   }
 }
 
