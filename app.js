@@ -23069,7 +23069,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
   };
 
   try {
-    const response = await fetch(`${baseUrl}/v2/chat/completions`, {
+    const response = await fetch(`${baseUrl}/api/v2/chat/completions`, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
