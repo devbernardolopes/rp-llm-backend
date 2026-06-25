@@ -863,5 +863,9 @@
   "placeholderSystemRolePrefix": "[SYSTEM]:",
   "placeholderAssistantRolePrefix": "[ASSISTANT]:",
   "placeholderUserRolePrefix": "[USER]:",
-  "placeholderUserRolePrefixWithPersona": "[USER (as {personaName})]:"
+  "placeholderUserRolePrefixWithPersona": "[USER (as {personaName})]:",
+  "systemOocRolePrefixLabel": "Pr\u00e9fixe de r\u00f4le syst\u00e8me (OOC)",
+  "userOocRolePrefixLabel": "Pr\u00e9fixe de r\u00f4le utilisateur (OOC)",
+  "placeholderSystemOocRolePrefix": "[SYSTEM]:",
+  "placeholderUserOocRolePrefix": "[USER]:"
 }

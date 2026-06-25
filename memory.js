@@ -646,8 +646,8 @@ function getRolePrefix(role, options = {}) {
   if (typeof window.getRolePrefix === "function") {
     return window.getRolePrefix(role, options);
   }
-  const { personaName = null, personaPrefixEnabled = true } = options;
-  if (role === "user" && personaPrefixEnabled && personaName) {
+  const { personaName = null, personaPrefixEnabled = true, ooc = false } = options;
+  if (role === "user" && personaPrefixEnabled && personaName && !ooc) {
     return `[USER (as ${personaName})]:`;
   }
   const defaults = {
@@ -680,7 +680,7 @@ function buildMessageEntryForSummary(message, personaPrefixEnabled = true) {
   }
   const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
   const userPersonaName = (message.role === "user" && !isOoc && personaPrefixEnabled) ? String(message.senderName || "You") : null;
-  const prefix = getRolePrefix(roleLabel, { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName });
+  const prefix = getRolePrefix(roleLabel, { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName, ooc: isOoc });
   const labeled = `${prefix} ${labelContent}`;
   const systemPrefix = getRolePrefix("system");
   const assistantPrefix = getRolePrefix("assistant");

@@ -179,6 +179,8 @@ Requirements:
   assistantRolePrefix: "[ASSISTANT]:",
   userRolePrefix: "[USER]:",
   userRolePrefixWithPersona: "[USER (as {personaName})]:",
+  systemOocRolePrefix: "[SYSTEM]:",
+  userOocRolePrefix: "[USER]:",
 };
 
 function getSectionHeader(key) {
@@ -187,10 +189,14 @@ function getSectionHeader(key) {
 
 window.getSectionHeader = getSectionHeader;
 
-function getRolePrefix(role, { personaName = null, personaPrefixEnabled = true } = {}) {
-  if (role === "system") return state.settings.systemRolePrefix ?? DEFAULT_SETTINGS.systemRolePrefix;
+function getRolePrefix(role, { personaName = null, personaPrefixEnabled = true, ooc = false } = {}) {
+  if (role === "system") {
+    if (ooc) return state.settings.systemOocRolePrefix ?? DEFAULT_SETTINGS.systemOocRolePrefix;
+    return state.settings.systemRolePrefix ?? DEFAULT_SETTINGS.systemRolePrefix;
+  }
   if (role === "assistant") return state.settings.assistantRolePrefix ?? DEFAULT_SETTINGS.assistantRolePrefix;
   if (role === "user") {
+    if (ooc) return state.settings.userOocRolePrefix ?? DEFAULT_SETTINGS.userOocRolePrefix;
     if (personaPrefixEnabled && personaName) {
       const template = state.settings.userRolePrefixWithPersona ?? DEFAULT_SETTINGS.userRolePrefixWithPersona;
       return template.replace(/\{personaName\}/g, personaName);
@@ -483,10 +489,14 @@ function populateSettingsTabValues() {
   const assistantRolePrefix = document.getElementById("assistant-role-prefix");
   const userRolePrefix = document.getElementById("user-role-prefix");
   const userRolePrefixWithPersona = document.getElementById("user-role-prefix-with-persona");
+  const systemOocRolePrefix = document.getElementById("system-ooc-role-prefix");
+  const userOocRolePrefix = document.getElementById("user-ooc-role-prefix");
   if (systemRolePrefix) systemRolePrefix.value = state.settings.systemRolePrefix ?? DEFAULT_SETTINGS.systemRolePrefix;
   if (assistantRolePrefix) assistantRolePrefix.value = state.settings.assistantRolePrefix ?? DEFAULT_SETTINGS.assistantRolePrefix;
   if (userRolePrefix) userRolePrefix.value = state.settings.userRolePrefix ?? DEFAULT_SETTINGS.userRolePrefix;
   if (userRolePrefixWithPersona) userRolePrefixWithPersona.value = state.settings.userRolePrefixWithPersona ?? DEFAULT_SETTINGS.userRolePrefixWithPersona;
+  if (systemOocRolePrefix) systemOocRolePrefix.value = state.settings.systemOocRolePrefix ?? DEFAULT_SETTINGS.systemOocRolePrefix;
+  if (userOocRolePrefix) userOocRolePrefix.value = state.settings.userOocRolePrefix ?? DEFAULT_SETTINGS.userOocRolePrefix;
 
   // Shortcuts tab settings
   const cancelShortcut = document.getElementById("cancel-shortcut");
@@ -3865,6 +3875,8 @@ async function setupSettingsControls() {
   const assistantRolePrefix = document.getElementById("assistant-role-prefix");
   const userRolePrefix = document.getElementById("user-role-prefix");
   const userRolePrefixWithPersona = document.getElementById("user-role-prefix-with-persona");
+  const systemOocRolePrefix = document.getElementById("system-ooc-role-prefix");
+  const userOocRolePrefix = document.getElementById("user-ooc-role-prefix");
 
   if (globalPromptTemplate) {
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
@@ -3931,6 +3943,12 @@ async function setupSettingsControls() {
   }
   if (userRolePrefixWithPersona) {
     userRolePrefixWithPersona.value = state.settings.userRolePrefixWithPersona ?? DEFAULT_SETTINGS.userRolePrefixWithPersona;
+  }
+  if (systemOocRolePrefix) {
+    systemOocRolePrefix.value = state.settings.systemOocRolePrefix ?? DEFAULT_SETTINGS.systemOocRolePrefix;
+  }
+  if (userOocRolePrefix) {
+    userOocRolePrefix.value = state.settings.userOocRolePrefix ?? DEFAULT_SETTINGS.userOocRolePrefix;
   }
   const oocSystemPromptIntro = document.getElementById("ooc-system-prompt-intro");
   const oocUserMessageFormat = document.getElementById("ooc-user-message-format");
@@ -4764,6 +4782,16 @@ async function setupSettingsControls() {
 
   userRolePrefixWithPersona?.addEventListener("input", () => {
     state.settings.userRolePrefixWithPersona = userRolePrefixWithPersona.value;
+    saveSettings();
+  });
+
+  systemOocRolePrefix?.addEventListener("input", () => {
+    state.settings.systemOocRolePrefix = systemOocRolePrefix.value;
+    saveSettings();
+  });
+
+  userOocRolePrefix?.addEventListener("input", () => {
+    state.settings.userOocRolePrefix = userOocRolePrefix.value;
     saveSettings();
   });
 
@@ -16152,12 +16180,12 @@ async function maybeGenerateTitleBeforeBotReply() {
         }
       }
       if (isOoc && m.role === "assistant") {
-        return `${getRolePrefix("system")} ${labelContent}`;
+        return `${getRolePrefix("system", { ooc: true })} ${labelContent}`;
       } else if (m.role === "assistant") {
         return `${getRolePrefix("assistant")} ${labelContent}`;
       } else {
         const userPersonaName = (personaPrefixEnabled && m.senderName && m.senderName !== "You") ? String(m.senderName) : null;
-        return `${getRolePrefix("user", { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName })} ${labelContent}`;
+        return `${getRolePrefix("user", { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName, ooc: isOoc })} ${labelContent}`;
       }
     })
     .filter((entry) => entry !== "")
@@ -17822,7 +17850,7 @@ function formatOocMessageEntry(message, personaPrefixEnabled = true) {
   }
   const roleLabel = isOoc && message.role === "assistant" ? "system" : message.role;
   const userPersonaName = (message.role === "user" && !isOoc && personaPrefixEnabled) ? String(message.senderName || "You") : null;
-  const prefix = getRolePrefix(roleLabel, { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName });
+  const prefix = getRolePrefix(roleLabel, { personaName: userPersonaName, personaPrefixEnabled: !!userPersonaName, ooc: isOoc });
   const labeled = `${prefix} ${labelContent}`;
   const systemPrefix = getRolePrefix("system");
   const assistantPrefix = getRolePrefix("assistant");
