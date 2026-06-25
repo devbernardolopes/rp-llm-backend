@@ -43,6 +43,7 @@ const DEFAULT_SETTINGS = {
   openRouterApiKey: "",
   hordeApiKey: CONFIG.hordeApiKey || "",
   hordeApiMethod: CONFIG.hordeApiMethod || "native",
+  hordeBaseUrl: CONFIG.hordeBaseUrl || "https://stablehorde.net",
   groqApiKey: "",
   lmstudioBaseUrl: "http://localhost:1234",
   lmstudioApiMethod: "openai",
@@ -273,6 +274,7 @@ function populateSettingsTabValues() {
   if (!openRouterApiKey) return;
   const hordeApiKey = document.getElementById("horde-api-key");
   const hordeApiMethod = document.getElementById("horde-api-method");
+  const hordeBaseUrl = document.getElementById("horde-base-url");
   const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
   const lmstudioApiMethod = document.getElementById("lmstudio-api-method");
   const groqApiKey = document.getElementById("groq-api-key");
@@ -281,6 +283,7 @@ function populateSettingsTabValues() {
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   if (hordeApiKey) hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
   if (hordeApiMethod) hordeApiMethod.value = state.settings.hordeApiMethod || "native";
+  if (hordeBaseUrl) hordeBaseUrl.value = state.settings.hordeBaseUrl || "https://stablehorde.net";
   if (lmstudioBaseUrl) lmstudioBaseUrl.value = state.settings.lmstudioBaseUrl || "http://localhost:1234";
   if (lmstudioApiMethod) lmstudioApiMethod.value = state.settings.lmstudioApiMethod || "openai";
   if (groqApiKey) groqApiKey.value = state.settings.groqApiKey || "";
@@ -3561,6 +3564,7 @@ async function setupSettingsControls() {
 
   const hordeApiKey = document.getElementById("horde-api-key");
   const hordeApiMethod = document.getElementById("horde-api-method");
+  const hordeBaseUrl = document.getElementById("horde-base-url");
   const lmstudioBaseUrl = document.getElementById("lmstudio-base-url");
   const lmstudioApiMethod = document.getElementById("lmstudio-api-method");
   const groqApiKey = document.getElementById("groq-api-key");
@@ -4033,6 +4037,7 @@ async function setupSettingsControls() {
   openRouterApiKey.value = state.settings.openRouterApiKey || "";
   hordeApiKey.value = state.settings.hordeApiKey || CONFIG.hordeApiKey || "";
   hordeApiMethod.value = state.settings.hordeApiMethod || "native";
+  if (hordeBaseUrl) hordeBaseUrl.value = state.settings.hordeBaseUrl || "https://stablehorde.net";
   lmstudioBaseUrl.value = state.settings.lmstudioBaseUrl || "http://localhost:1234";
   lmstudioApiMethod.value = state.settings.lmstudioApiMethod || "openai";
   groqApiKey.value = state.settings.groqApiKey || "";
@@ -4075,8 +4080,28 @@ async function setupSettingsControls() {
 
   hordeApiMethod.addEventListener("change", () => {
     state.settings.hordeApiMethod = hordeApiMethod.value;
+    updateHordeBaseUrlVisibility();
     saveSettings();
   });
+
+  if (hordeBaseUrl) {
+    let hordeBaseUrlInitialValue = hordeBaseUrl.value.trim();
+    hordeBaseUrl.addEventListener("focus", () => {
+      hordeBaseUrlInitialValue = hordeBaseUrl.value.trim();
+    });
+    hordeBaseUrl.addEventListener("blur", () => {
+      const currentValue = hordeBaseUrl.value.trim();
+      if (currentValue !== hordeBaseUrlInitialValue) {
+        state.settings.hordeBaseUrl = currentValue;
+        saveSettings();
+        populateSettingsModels({ force: true }).catch(() => {});
+      }
+    });
+    hordeBaseUrl.addEventListener("input", () => {
+      state.settings.hordeBaseUrl = hordeBaseUrl.value.trim();
+      saveSettings();
+    });
+  }
 
   let lmstudioBaseUrlInitialValue = lmstudioBaseUrl.value.trim();
   lmstudioBaseUrl.addEventListener("focus", () => {
@@ -20521,7 +20546,8 @@ function getLMStudioBaseUrl() {
 }
 
 async function fetchAIHordeModelCatalog(signal) {
-  const res = await fetch("https://stablehorde.net/api/v2/status/models?type=text", {
+  const baseUrl = state.settings.hordeBaseUrl || "https://stablehorde.net";
+  const res = await fetch(`${baseUrl}/api/v2/status/models?type=text`, {
     method: "GET",
     headers: {
       "Client-Agent": "rp-llm-backend:1.0:0",
@@ -20780,6 +20806,7 @@ function updateProviderVisibility() {
       hordeApiMethodContainer.classList.add("hidden");
     }
   }
+  updateHordeBaseUrlVisibility();
   if (lmstudioContainer) {
     if (provider === "lmstudio") {
       lmstudioContainer.classList.remove("hidden");
@@ -20812,6 +20839,19 @@ function updateProviderVisibility() {
       modalityField.classList.toggle("hidden", provider !== "openrouter");
     }
     updateModelSortOrderOptions();
+  }
+}
+
+function updateHordeBaseUrlVisibility() {
+  const provider = state.settings.aiProvider || "openrouter";
+  const hordeApiMethod = String(state.settings.hordeApiMethod || "native").toLowerCase();
+  const container = document.getElementById("horde-base-url-container");
+  if (container) {
+    if (provider === "aihorde" && hordeApiMethod === "native") {
+      container.classList.remove("hidden");
+    } else {
+      container.classList.add("hidden");
+    }
   }
 }
 
@@ -23004,7 +23044,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
   const hordeApiKey = localKey || fallbackKey;
 
   const hordeApiMethod = String(state.settings.hordeApiMethod || "native").toLowerCase();
-  const baseUrl = hordeApiMethod === "openai" ? "https://oai.aihorde.net" : "https://stablehorde.net";
+  const baseUrl = hordeApiMethod === "openai" ? "https://oai.aihorde.net" : (state.settings.hordeBaseUrl || "https://stablehorde.net");
   const streamEnabled = getEffectiveRequestStream(options, isTitleGeneration, isSummarization, isOoc);
 
   const headers = {
@@ -23226,7 +23266,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
   const fallbackKey = String(CONFIG.hordeApiKey || "").trim();
   const hordeApiKey = localKey || fallbackKey;
 
-  const baseUrl = "https://stablehorde.net";
+  const baseUrl = state.settings.hordeBaseUrl || "https://stablehorde.net";
   const NO_CONTENT_RETURNED = "(No content returned)";
 
   const messages = [

@@ -867,5 +867,8 @@
   "systemOocRolePrefixLabel": "Prefixo de papel do sistema (OOC)",
   "userOocRolePrefixLabel": "Prefixo de papel do usu\u00e1rio (OOC)",
   "placeholderSystemOocRolePrefix": "[SYSTEM]:",
-  "placeholderUserOocRolePrefix": "[USER]:"
+  "placeholderUserOocRolePrefix": "[USER]:",
+  "aiHordeBaseUrl": "URL base da AI Horde",
+  "placeholderHordeBaseUrl": "https://stablehorde.net",
+  "infoAiHordeBaseUrl": "A URL base para a API REST nativa da AI Horde. Padr\u00e3o: `https://stablehorde.net`"
 }

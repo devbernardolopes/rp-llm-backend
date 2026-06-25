@@ -6,10 +6,9 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const baseUrl = "https://stablehorde.net";
-
   try {
     const body = req.body || {};
+    const baseUrl = body.hordeBaseUrl || "https://stablehorde.net";
     const apiKey = body.hordeApiKey || process.env.HORDE_API_KEY || "0000000000";
     const messages = body.messages || [];
     const model = body.model || "auto";
