@@ -19318,6 +19318,25 @@ async function renderMemoryModalEntries() {
   updateSaveState();
 }
 
+function refreshMemoryModalTokenCounts() {
+  if (!state.settings.showTokenCounts) return;
+  const modal = document.getElementById("memory-modal");
+  if (!modal) return;
+  const textareas = modal.querySelectorAll("#memory-modal-entries textarea");
+  for (const textarea of textareas) {
+    const countEl = document.getElementById(`${textarea.id}-count`);
+    if (!countEl) continue;
+    const text = String(textarea.value || "").trim();
+    if (text) {
+      estimateTokens(text).then((count) => {
+        countEl.textContent = `${count} tokens`;
+      });
+    } else {
+      countEl.textContent = "0 tokens";
+    }
+  }
+}
+
 async function deleteMemoryEntryAndRenumber(entryId, characterId, threadId) {
   if (!Number.isInteger(entryId) || entryId <= 0) return false;
   if (!Number.isInteger(characterId) || characterId <= 0) return false;
@@ -19372,24 +19391,7 @@ async function handleMemoryEntryDelete(entry) {
 
 async function openMemoryModal() {
   await renderMemoryModalEntries();
-  const modal = document.getElementById("memory-modal");
-  if (modal) {
-    if (state.settings.showTokenCounts) {
-      const textareas = modal.querySelectorAll("#memory-modal-entries textarea");
-      for (const textarea of textareas) {
-        const countEl = document.getElementById(`${textarea.id}-count`);
-        if (!countEl) continue;
-        const text = String(textarea.value || "").trim();
-        if (text) {
-          estimateTokens(text).then((count) => {
-            countEl.textContent = `${count} tokens`;
-          });
-        } else {
-          countEl.textContent = "0 tokens";
-        }
-      }
-    }
-  }
+  refreshMemoryModalTokenCounts();
   openModal("memory-modal");
 }
 
@@ -19593,6 +19595,7 @@ async function runMemoryRegeneration(entryId, promptText, level, slot, character
     }
     showToast(t("memoryModalSaveSuccess"), "success");
     await renderMemoryModalEntries();
+    refreshMemoryModalTokenCounts();
   } catch (err) {
     spinner?.classList.add("hidden");
     const errorText = String(err?.message || t("unknownError"));
