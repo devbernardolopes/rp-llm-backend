@@ -18304,7 +18304,7 @@ async function generateBotReply() {
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "user", content: "Continue" });
+    promptMessages.push({ role: "system", content: "Continue" });
   }
   state.currentRequestMessages = promptMessages;
 
@@ -22375,7 +22375,7 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "user", content: "Continue" });
+    promptMessages.push({ role: "system", content: "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
@@ -22452,7 +22452,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "user", content: "Continue" });
+    promptMessages.push({ role: "system", content: "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
@@ -22773,7 +22773,7 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "user", content: "Continue" });
+    promptMessages.push({ role: "system", content: "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
@@ -22983,7 +22983,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "user", content: "Continue" });
+    promptMessages.push({ role: "system", content: "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
@@ -23254,7 +23254,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    messages.push({ role: "user", content: "Continue" });
+    messages.push({ role: "system", content: "Continue" });
   }
 
   const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, messages);
