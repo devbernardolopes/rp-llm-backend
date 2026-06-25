@@ -523,7 +523,6 @@
   "msgMetadataUnavailableManualAria": "Metadati non disponibili per un messaggio del BOT creato dall'utente.",
   "msgSystemPromptUnavailableManual": "I dettagli del prompt di sistema non sono disponibili per le risposte del BOT create dall'utente.",
   "prefixUserMessagesWithPersona": "Prefissa i messaggi utente con la persona attiva",
-  "personaInjectionOnce": "Una volta",
   "unloadThresholdLabel": "Messaggi da mantenere (0 = tutti)",
   "unloadThresholdLoadButton": "Carica {count} in più",
   "unloadThresholdHideButton": "Nascondi batch più vecchio",

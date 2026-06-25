@@ -525,7 +525,6 @@
   "msgMetadataUnavailableManualAria": "Metadata unavailable for user-created assistant message",
   "msgSystemPromptUnavailableManual": "System prompt details are unavailable for user-created assistant replies.",
   "prefixUserMessagesWithPersona": "Prefix user messages with active persona",
-  "personaInjectionOnce": "Once",
   "unloadThresholdLabel": "Message to Keep (0 = all)",
   "unloadThresholdLoadButton": "Load {count} more",
   "unloadThresholdHideButton": "Hide oldest batch",
