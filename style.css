@@ -1111,6 +1111,7 @@ textarea {
 }
 
 .primary-btn svg {
+  display: block;
   width: 18px;
   height: 18px;
   stroke: currentColor;
@@ -3465,6 +3466,7 @@ textarea {
   min-width: 28px;
   height: 28px;
   padding: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
