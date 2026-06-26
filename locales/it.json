@@ -875,5 +875,8 @@
   "continueRoleUser": "Utente",
   "continueRoleAssistant": "Assistente",
   "continueMessageContent": "Contenuto del prompt di continuazione",
-  "placeholderContinueMessageContent": "Continua"
+  "placeholderContinueMessageContent": "Continua",
+  "firstMessageRole": "Ruolo del primo messaggio",
+  "firstMessageContent": "Contenuto del primo messaggio",
+  "placeholderFirstMessageContent": "Continua"
 }

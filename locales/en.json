@@ -880,5 +880,8 @@
   "continueRoleUser": "User",
   "continueRoleAssistant": "Assistant",
   "continueMessageContent": "Continue Prompt Content",
-  "placeholderContinueMessageContent": "Continue"
+  "placeholderContinueMessageContent": "Continue",
+  "firstMessageRole": "First Message Prompt Role",
+  "firstMessageContent": "First Message Prompt Content",
+  "placeholderFirstMessageContent": "Continue"
 }

@@ -875,5 +875,8 @@
   "continueRoleUser": "Utilisateur",
   "continueRoleAssistant": "Assistant",
   "continueMessageContent": "Contenu du message de continuation",
-  "placeholderContinueMessageContent": "Continuer"
+  "placeholderContinueMessageContent": "Continuer",
+  "firstMessageRole": "R\u00f4le du premier message",
+  "firstMessageContent": "Contenu du premier message",
+  "placeholderFirstMessageContent": "Continuer"
 }

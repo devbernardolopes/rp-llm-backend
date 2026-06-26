@@ -1110,6 +1110,21 @@
               </div>
               <input id="continue-message-content" type="text" data-i18n-placeholder="placeholderContinueMessageContent" autocomplete="off" spellcheck="false" />
             </div>
+            <div class="form-field">
+              <span data-i18n="firstMessageRole">First Message Prompt Role</span>
+              <select id="first-message-role">
+                <option value="system" data-i18n="continueRoleSystem">System</option>
+                <option value="user" data-i18n="continueRoleUser">User</option>
+                <option value="assistant" data-i18n="continueRoleAssistant">Assistant</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <div class="label-inline">
+                <span data-i18n="firstMessageContent">First Message Prompt Content</span>
+                <span id="first-message-content-count" class="token-count muted hidden">0 tokens</span>
+              </div>
+              <input id="first-message-content" type="text" data-i18n-placeholder="placeholderFirstMessageContent" autocomplete="off" spellcheck="false" />
+            </div>
           </div>
           <div data-settings-group="shortcuts" class="settings-group">
             <div class="form-field">
