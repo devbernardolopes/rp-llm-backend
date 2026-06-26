@@ -22741,10 +22741,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
       }
 
       if (typeof onChunk === "function") {
-        for (const char of content) {
-          onChunk(char);
-          await new Promise((r) => setTimeout(r, 5));
-        }
+        onChunk(content);
       }
 
       return {
@@ -22961,10 +22958,7 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
       }
 
       if (typeof onChunk === "function") {
-        for (const char of content) {
-          onChunk(char);
-          await new Promise((r) => setTimeout(r, 5));
-        }
+        onChunk(content);
       }
 
       return {
