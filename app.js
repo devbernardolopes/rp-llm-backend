@@ -18376,7 +18376,10 @@ async function generateBotReply() {
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   if (nonSystemMessages.length === 0) {
-    promptMessages.push({ role: state.settings.firstMessageRole || "system", content: state.settings.firstMessageContent || "Continue" });
+    const personaName = currentThread?.initialUserName || currentPersona?.name || "You";
+    const charName = currentCharacter?.name || "Character";
+    const content = replaceInitialMessagePlaceholders(state.settings.firstMessageContent || "Continue", personaName, charName);
+    promptMessages.push({ role: state.settings.firstMessageRole || "system", content });
   } else if (lastMessage && lastMessage.role === "assistant") {
     promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
@@ -22463,7 +22466,10 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   if (nonSystemMessages.length === 0) {
-    promptMessages.push({ role: state.settings.firstMessageRole || "system", content: state.settings.firstMessageContent || "Continue" });
+    const personaName = currentThread?.initialUserName || currentPersona?.name || "You";
+    const charName = currentCharacter?.name || "Character";
+    const content = replaceInitialMessagePlaceholders(state.settings.firstMessageContent || "Continue", personaName, charName);
+    promptMessages.push({ role: state.settings.firstMessageRole || "system", content });
   } else if (lastMessage && lastMessage.role === "assistant") {
     promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
@@ -22541,7 +22547,10 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   if (nonSystemMessages.length === 0) {
-    promptMessages.push({ role: state.settings.firstMessageRole || "system", content: state.settings.firstMessageContent || "Continue" });
+    const personaName = currentThread?.initialUserName || currentPersona?.name || "You";
+    const charName = currentCharacter?.name || "Character";
+    const content = replaceInitialMessagePlaceholders(state.settings.firstMessageContent || "Continue", personaName, charName);
+    promptMessages.push({ role: state.settings.firstMessageRole || "system", content });
   } else if (lastMessage && lastMessage.role === "assistant") {
     promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
@@ -22860,7 +22869,10 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   if (nonSystemMessages.length === 0) {
-    promptMessages.push({ role: state.settings.firstMessageRole || "system", content: state.settings.firstMessageContent || "Continue" });
+    const personaName = currentThread?.initialUserName || currentPersona?.name || "You";
+    const charName = currentCharacter?.name || "Character";
+    const content = replaceInitialMessagePlaceholders(state.settings.firstMessageContent || "Continue", personaName, charName);
+    promptMessages.push({ role: state.settings.firstMessageRole || "system", content });
   } else if (lastMessage && lastMessage.role === "assistant") {
     promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
@@ -23068,7 +23080,10 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   if (nonSystemMessages.length === 0) {
-    promptMessages.push({ role: state.settings.firstMessageRole || "system", content: state.settings.firstMessageContent || "Continue" });
+    const personaName = currentThread?.initialUserName || currentPersona?.name || "You";
+    const charName = currentCharacter?.name || "Character";
+    const content = replaceInitialMessagePlaceholders(state.settings.firstMessageContent || "Continue", personaName, charName);
+    promptMessages.push({ role: state.settings.firstMessageRole || "system", content });
   } else if (lastMessage && lastMessage.role === "assistant") {
     promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
@@ -23454,7 +23469,10 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
   const nonSystemMessages = messages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   if (nonSystemMessages.length === 0) {
-    messages.push({ role: state.settings.firstMessageRole || "system", content: state.settings.firstMessageContent || "Continue" });
+    const personaName = currentThread?.initialUserName || currentPersona?.name || "You";
+    const charName = currentCharacter?.name || "Character";
+    const content = replaceInitialMessagePlaceholders(state.settings.firstMessageContent || "Continue", personaName, charName);
+    messages.push({ role: state.settings.firstMessageRole || "system", content });
   } else if (lastMessage && lastMessage.role === "assistant") {
     messages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
