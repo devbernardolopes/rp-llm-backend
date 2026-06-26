@@ -17986,7 +17986,7 @@ async function sendOocInquiry(text) {
   const { systemPrompt } = await buildOocSystemPrompt();
 
   const log = document.getElementById("chat-log");
-  const isViewing = isViewingThread(currentThread.id);
+  const threadId = Number(currentThread.id);
   const displayHistory = getFilteredConversationHistoryForThread();
 
   const userIndex = conversationHistory.length;
@@ -18009,7 +18009,7 @@ async function sendOocInquiry(text) {
   }
   addPromptToHistory(currentThread.id, text, true);
   const updatedDisplayHistory = getFilteredConversationHistoryForThread();
-  if (log && isViewing) {
+  if (log && isViewingThread(threadId)) {
     log.appendChild(buildMessageRow(userMsg, userIndex, false, updatedDisplayHistory));
     scrollChatToBottom();
   }
@@ -18049,7 +18049,7 @@ async function sendOocInquiry(text) {
     updateThreadMessageCount(currentThread.id, conversationHistory);
   }
   let pendingRow = null;
-  if (log && isViewing) {
+  if (log && isViewingThread(threadId)) {
     pendingRow = buildMessageRow(pendingAssistant, displayPendingIndex, true, updatedDisplayHistory);
     log.appendChild(pendingRow);
     const pendingContent = pendingRow?.querySelector(".message-content");
@@ -18069,14 +18069,14 @@ async function sendOocInquiry(text) {
       effectiveModel,
       (chunk) => {
         pendingAssistant.content += chunk;
-        if (state.settings.streamEnabled) {
+        if (state.settings.streamEnabled && isViewingThread(threadId)) {
           const liveRow = ensureMessageRowExists(displayPendingIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
             liveContent.innerHTML = renderMessageHtml(pendingAssistant.content, pendingAssistant.role);
           }
         }
-        if (isViewing) scrollChatToBottom();
+        if (isViewingThread(threadId)) scrollChatToBottom();
       },
       null,
       { isOoc: true },
@@ -18102,7 +18102,7 @@ async function sendOocInquiry(text) {
     }
     pendingAssistant.systemMessages = formatOocSystemMessageEntries(result.systemMessages);
     pendingAssistant.generationStatus = "";
-    if (!isViewing) {
+    if (!isViewingThread(threadId)) {
       pendingAssistant.unreadAt = Date.now();
       playUnreadMessageSound();
     }
@@ -18113,14 +18113,14 @@ async function sendOocInquiry(text) {
     if (!pendingAssistant.content) {
       pendingAssistant.content = wrapOocAssistantResponse(`OOC request failed: ${errorMessage}`);
     }
-    if (!isViewing) {
+    if (!isViewingThread(threadId)) {
       pendingAssistant.unreadAt = Date.now();
       playUnreadMessageSound();
     }
     showToast(`OOC request failed: ${errorMessage}`, "error");
   }
   await persistCurrentThread();
-  if (isViewing) {
+  if (isViewingThread(threadId)) {
     renderChat();
     scrollChatToBottom();
   }
@@ -18151,7 +18151,6 @@ async function regenerateOocMessage(index) {
   setSendingState(true);
   state.pendingPersonaInjectionPersonaId = null;
 
-  const isViewing = isViewingThread(currentThread.id);
   const messagesToSave = conversationHistory.map((m) => ({ ...m }));
 
   target.content = "";
@@ -18174,7 +18173,7 @@ async function regenerateOocMessage(index) {
   if (contentEl) {
     contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
   }
-  if (isViewing) scrollChatToBottom();
+  if (isViewingThread(threadId)) scrollChatToBottom();
 
   try {
     const { systemPrompt } = await buildOocSystemPrompt([userMessage]);
@@ -18192,7 +18191,7 @@ async function regenerateOocMessage(index) {
       (chunk) => {
         target.content += chunk;
         messagesToSave[index].content = target.content;
-        if (isViewing) {
+        if (isViewingThread(threadId)) {
           const liveRow = ensureMessageRowExists(index);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
@@ -18230,18 +18229,18 @@ async function regenerateOocMessage(index) {
     target.generationStatus = "";
     target.systemMessages = formatOocSystemMessageEntries(result.systemMessages);
     messagesToSave[index] = { ...target };
-    if (!isViewing) {
+    if (!isViewingThread(threadId)) {
       target.unreadAt = Date.now();
       messagesToSave[index].unreadAt = target.unreadAt;
       playUnreadMessageSound();
     }
     await persistThreadMessagesById(threadId, messagesToSave);
     renderChat();
-    if (isViewing) scrollChatToBottom();
+    if (isViewingThread(threadId)) scrollChatToBottom();
     await renderThreads();
 
     // Evaluate SFX triggers and evictions after bot message
-    if (!isViewing && target.role === "assistant") {
+    if (!isViewingThread(threadId) && target.role === "assistant") {
       try {
         await evaluateSfxTriggers(target, currentThread);
         await evaluateSfxEvictions(target, currentThread);
@@ -18254,14 +18253,14 @@ async function regenerateOocMessage(index) {
     target.generationError = String(err?.message || err || "OOC request failed");
     messagesToSave[index].generationStatus = "";
     messagesToSave[index].generationError = target.generationError;
-    if (!isViewing) {
+    if (!isViewingThread(threadId)) {
       target.unreadAt = Date.now();
       messagesToSave[index].unreadAt = target.unreadAt;
       playUnreadMessageSound();
     }
     await persistThreadMessagesById(threadId, messagesToSave);
     renderChat();
-    if (isViewing) scrollChatToBottom();
+    if (isViewingThread(threadId)) scrollChatToBottom();
     await renderThreads();
     showToast(`OOC request failed: ${target.generationError}`, "error");
   } finally {
@@ -18480,12 +18479,14 @@ async function generateBotReply() {
         if (state.settings.streamEnabled) {
           persistThreadMessagesById(threadId, generationHistory).catch(() => {});
         }
-        const liveRow = ensureMessageRowExists(pendingIndex);
-        const liveContent = liveRow?.querySelector(".message-content");
-        if (liveContent) {
-          liveContent.innerHTML = renderMessageHtml(pending.content, pending.role);
+        if (isViewingThread(threadId)) {
+          const liveRow = ensureMessageRowExists(pendingIndex);
+          const liveContent = liveRow?.querySelector(".message-content");
+          if (liveContent) {
+            liveContent.innerHTML = renderMessageHtml(pending.content, pending.role);
+          }
+          scrollChatToBottom();
         }
-        if (isViewingThread(threadId)) scrollChatToBottom();
       },
       state.abortController.signal,
     );
