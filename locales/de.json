@@ -878,5 +878,6 @@
   "placeholderContinueMessageContent": "Weiter",
   "firstMessageRole": "Rolle der ersten Nachricht",
   "firstMessageContent": "Inhalt der ersten Nachricht",
-  "placeholderFirstMessageContent": "Weiter"
+  "placeholderFirstMessageContent": "Weiter",
+  "showUnreadTitle": "Ungelesene Benachrichtigung in der Titelleiste anzeigen"
 }

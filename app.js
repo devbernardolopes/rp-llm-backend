@@ -127,6 +127,7 @@ const DEFAULT_SETTINGS = {
   defaultPersonaInjectionPlacement: "end_system_prompt",
   defaultTtsProvider: "kokoro",
   showTokenCounts: false,
+  showUnreadTitle: true,
   defaultTtsRate: 1,
   defaultIncludeOocInCompletions: false,
   defaultAvatarScale: 4,
@@ -4310,6 +4311,15 @@ async function setupSettingsControls() {
       applyCrossWindowSyncSetting();
     });
   }
+  const showUnreadTitle = document.getElementById("show-unread-title");
+  if (showUnreadTitle) {
+    showUnreadTitle.checked = state.settings.showUnreadTitle !== false;
+    showUnreadTitle.addEventListener("change", () => {
+      state.settings.showUnreadTitle = showUnreadTitle.checked;
+      saveSettings();
+      updateDocumentTitleWithUnread();
+    });
+  }
   const showTokenCounts = document.getElementById("show-token-counts");
   if (showTokenCounts) {
     showTokenCounts.checked = state.settings.showTokenCounts === true;
@@ -7416,7 +7426,7 @@ function updateDocumentTitleWithUnread() {
     if (suffix) {
       title = `${title} - ${suffix}`;
     }
-    if (totalUnread > 0) {
+    if (totalUnread > 0 && state.settings.showUnreadTitle !== false) {
       document.title = `(${totalUnread}) ${title}`;
     } else {
       document.title = title;

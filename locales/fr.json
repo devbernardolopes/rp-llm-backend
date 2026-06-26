@@ -878,5 +878,6 @@
   "placeholderContinueMessageContent": "Continuer",
   "firstMessageRole": "R\u00f4le du premier message",
   "firstMessageContent": "Contenu du premier message",
-  "placeholderFirstMessageContent": "Continuer"
+  "placeholderFirstMessageContent": "Continuer",
+  "showUnreadTitle": "Afficher la notification de non lu dans la barre de titre"
 }
