@@ -23253,7 +23253,10 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
               }
             }
             if (typeof onChunk === "function") {
-              onChunk(delta);
+              for (const char of delta) {
+                onChunk(char);
+                await new Promise(r => setTimeout(r, 5));
+              }
             }
           } catch {
             // ignore parse errors
@@ -23269,7 +23272,12 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
             const delta = json?.choices?.[0]?.delta?.content || "";
             if (delta) {
               content += delta;
-              if (typeof onChunk === "function") onChunk(delta);
+              if (typeof onChunk === "function") {
+                for (const char of delta) {
+                  onChunk(char);
+                  await new Promise(r => setTimeout(r, 5));
+                }
+              }
             }
           } catch {
             /* ignore malformed final line */
@@ -23313,10 +23321,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
       const usage = json?.usage || {};
 
       if (typeof onChunk === "function") {
-        for (const char of content) {
-          onChunk(char);
-          await new Promise((r) => setTimeout(r, 5));
-        }
+        onChunk(content);
       }
 
       return {
