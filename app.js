@@ -14474,24 +14474,6 @@ async function buildDatabaseBackupPayload() {
     tables.assets = tables.assets.filter((asset) => asset.type && validAssetTypes.includes(asset.type));
   }
 
-  if (tables.threads) {
-    tables.threads = await Promise.all(
-      tables.threads.map(async (thread) => {
-        if (Array.isArray(thread.messages)) {
-          thread.messages = await Promise.all(
-            thread.messages.map(async (msg) => {
-              if (msg.senderAvatar instanceof Blob) {
-                msg.senderAvatar = await blobToBase64(msg.senderAvatar);
-              }
-              return msg;
-            }),
-          );
-        }
-        return thread;
-      }),
-    );
-  }
-
   const localState = {};
   for (let i = 0; i < localStorage.length; i += 1) {
     const key = localStorage.key(i);
@@ -14913,22 +14895,7 @@ async function buildSelectiveExportPayload(selections) {
   }
 
   if (selections.threads.length > 0) {
-    const threadsData = await db.threads.where("id").anyOf(selections.threads).toArray();
-    tables.threads = await Promise.all(
-      threadsData.map(async (thread) => {
-        if (Array.isArray(thread.messages)) {
-          thread.messages = await Promise.all(
-            thread.messages.map(async (msg) => {
-              if (msg.senderAvatar instanceof Blob) {
-                msg.senderAvatar = await blobToBase64(msg.senderAvatar);
-              }
-              return msg;
-            }),
-          );
-        }
-        return thread;
-      }),
-    );
+    tables.threads = await db.threads.where("id").anyOf(selections.threads).toArray();
   }
 
   if (selections.personas.length > 0) {
