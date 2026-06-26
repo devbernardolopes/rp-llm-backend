@@ -7572,7 +7572,7 @@ async function renderThreads() {
 
     const msgCount = document.createElement("span");
     msgCount.className = "thread-msg-count";
-    const totalMsgs = thread.unloadState?.totalMessageCount ?? 0;
+    const totalMsgs = thread.unloadState?.totalMessageCount ?? (Array.isArray(thread.messages) ? thread.messages.length : 0);
     msgCount.textContent = `${totalMsgs}`;
 
     const avatar = document.createElement("img");
@@ -14474,6 +14474,24 @@ async function buildDatabaseBackupPayload() {
     tables.assets = tables.assets.filter((asset) => asset.type && validAssetTypes.includes(asset.type));
   }
 
+  if (tables.threads) {
+    tables.threads = await Promise.all(
+      tables.threads.map(async (thread) => {
+        if (Array.isArray(thread.messages)) {
+          thread.messages = await Promise.all(
+            thread.messages.map(async (msg) => {
+              if (msg.senderAvatar instanceof Blob) {
+                msg.senderAvatar = await blobToBase64(msg.senderAvatar);
+              }
+              return msg;
+            }),
+          );
+        }
+        return thread;
+      }),
+    );
+  }
+
   const localState = {};
   for (let i = 0; i < localStorage.length; i += 1) {
     const key = localStorage.key(i);
@@ -14895,7 +14913,22 @@ async function buildSelectiveExportPayload(selections) {
   }
 
   if (selections.threads.length > 0) {
-    tables.threads = await db.threads.where("id").anyOf(selections.threads).toArray();
+    const threadsData = await db.threads.where("id").anyOf(selections.threads).toArray();
+    tables.threads = await Promise.all(
+      threadsData.map(async (thread) => {
+        if (Array.isArray(thread.messages)) {
+          thread.messages = await Promise.all(
+            thread.messages.map(async (msg) => {
+              if (msg.senderAvatar instanceof Blob) {
+                msg.senderAvatar = await blobToBase64(msg.senderAvatar);
+              }
+              return msg;
+            }),
+          );
+        }
+        return thread;
+      }),
+    );
   }
 
   if (selections.personas.length > 0) {
@@ -14930,6 +14963,16 @@ async function buildSelectiveExportPayload(selections) {
         return asset;
       }),
     );
+  }
+
+  if (charIdSet.size > 0) {
+    const memories = await db.memories
+      .where("characterId")
+      .anyOf(selections.characters)
+      .toArray();
+    if (memories.length > 0) {
+      tables.memories = memories;
+    }
   }
 
   const localState = {};
@@ -14981,6 +15024,19 @@ async function restoreDatabaseBackupPayload(payload) {
       let rowsToInsert = rows;
       if (tableName === "assets") {
         rowsToInsert = rows.filter((asset) => asset.type && validAssetTypes.includes(asset.type));
+      }
+      if (tableName === "threads") {
+        rowsToInsert = rows.map((thread) => {
+          if (Array.isArray(thread.messages)) {
+            thread.messages = thread.messages.map((msg) => {
+              if (msg.senderAvatar && typeof msg.senderAvatar === "object" && !(msg.senderAvatar instanceof Blob)) {
+                return { ...msg, senderAvatar: undefined };
+              }
+              return msg;
+            });
+          }
+          return thread;
+        });
       }
       if (rowsToInsert.length > 0) {
         await table.bulkPut(rowsToInsert);
