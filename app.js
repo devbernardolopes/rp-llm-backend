@@ -22810,7 +22810,7 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "system", content: "Continue" });
+    // promptMessages.push({ role: "system", content: "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
