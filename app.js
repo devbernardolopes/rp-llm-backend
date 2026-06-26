@@ -23399,7 +23399,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    messages.push({ role: "system", content: "Continue" });
+    // messages.push({ role: "system", content: "Continue" });
   }
 
   const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, messages);
