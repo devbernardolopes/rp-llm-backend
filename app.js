@@ -18626,6 +18626,10 @@ async function generateBotReply() {
         window.refreshAllSpeakerButtons();
         refreshMessageControlStates();
       }
+      if (!isViewingThread(threadId)) {
+        pending.unreadAt = Date.now();
+        playUnreadMessageSound();
+      }
       await persistThreadMessagesById(threadId, generationHistory);
       await renderThreads();
       showToast(t("streamError") + ": " + e.message, "error");
@@ -18641,6 +18645,10 @@ async function generateBotReply() {
       if (isViewingThread(threadId)) {
         window.refreshAllSpeakerButtons();
         refreshMessageControlStates();
+      }
+      if (!isViewingThread(threadId)) {
+        pending.unreadAt = Date.now();
+        playUnreadMessageSound();
       }
       await persistThreadMessagesById(threadId, generationHistory);
       await renderThreads();
@@ -21577,6 +21585,8 @@ async function processNextQueuedThread() {
     } else {
       pending.generationError = e.message || String(e);
       pending.generationStatus = "error";
+      pending.unreadAt = Date.now();
+      playUnreadMessageSound();
     }
   } finally {
     state.pendingPersonaInjectionPersonaId = null;
