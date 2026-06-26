@@ -182,6 +182,8 @@ Requirements:
   userRolePrefixWithPersona: "[USER (as {personaName})]:",
   systemOocRolePrefix: "[SYSTEM]:",
   userOocRolePrefix: "[USER]:",
+  continueMessageRole: "system",
+  continueMessageContent: "Continue",
 };
 
 function getSectionHeader(key) {
@@ -457,6 +459,8 @@ function populateSettingsTabValues() {
   const useLocalSummarization = document.getElementById("use-local-summarization");
   const useLocalAutoTitle = document.getElementById("use-local-auto-title");
   const writingInstructionsInjectionWhen = document.getElementById("writing-instructions-injection-when");
+  const continueMessageRole = document.getElementById("continue-message-role");
+  const continueMessageContent = document.getElementById("continue-message-content");
 
   if (globalPromptTemplate) globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   if (summarySystemPrompt) summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
@@ -472,6 +476,8 @@ function populateSettingsTabValues() {
   if (useLocalSummarization) useLocalSummarization.checked = state.settings.useLocalSummarization;
   if (useLocalAutoTitle) useLocalAutoTitle.checked = state.settings.useLocalAutoTitle;
   if (writingInstructionsInjectionWhen) writingInstructionsInjectionWhen.value = state.settings.writingInstructionsInjectionWhen;
+  if (continueMessageRole) continueMessageRole.value = state.settings.continueMessageRole || "system";
+  if (continueMessageContent) continueMessageContent.value = state.settings.continueMessageContent || "Continue";
 
   // Section headers (Prompting tab)
   const sectionHeaderMemoryContext = document.getElementById("section-header-memory-context");
@@ -3882,6 +3888,8 @@ async function setupSettingsControls() {
   const userRolePrefixWithPersona = document.getElementById("user-role-prefix-with-persona");
   const systemOocRolePrefix = document.getElementById("system-ooc-role-prefix");
   const userOocRolePrefix = document.getElementById("user-ooc-role-prefix");
+  const continueMessageRole = document.getElementById("continue-message-role");
+  const continueMessageContent = document.getElementById("continue-message-content");
 
   if (globalPromptTemplate) {
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
@@ -3909,6 +3917,12 @@ async function setupSettingsControls() {
     const writingWhen = normalizeWritingInstructionsTiming(state.settings.writingInstructionsInjectionWhen);
     state.settings.writingInstructionsInjectionWhen = writingWhen;
     writingInstructionsInjectionWhen.value = writingWhen;
+  }
+  if (continueMessageRole) {
+    continueMessageRole.value = state.settings.continueMessageRole || "system";
+  }
+  if (continueMessageContent) {
+    continueMessageContent.value = state.settings.continueMessageContent || "Continue";
   }
   if (shortcutsRaw) {
     shortcutsRaw.value = state.settings.shortcutsRaw || "";
@@ -4865,6 +4879,16 @@ async function setupSettingsControls() {
   writingInstructionsInjectionWhen?.addEventListener("change", () => {
     state.settings.writingInstructionsInjectionWhen = normalizeWritingInstructionsTiming(writingInstructionsInjectionWhen.value);
     writingInstructionsInjectionWhen.value = state.settings.writingInstructionsInjectionWhen;
+    saveSettings();
+  });
+
+  continueMessageRole?.addEventListener("change", () => {
+    state.settings.continueMessageRole = continueMessageRole.value;
+    saveSettings();
+  });
+
+  continueMessageContent?.addEventListener("input", () => {
+    state.settings.continueMessageContent = continueMessageContent.value;
     saveSettings();
   });
 
@@ -18329,7 +18353,7 @@ async function generateBotReply() {
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "system", content: "Continue" });
+    promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
   state.currentRequestMessages = promptMessages;
 
@@ -22415,7 +22439,7 @@ async function callOpenRouter(systemPrompt, history, model, onChunk = null, sign
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "system", content: "Continue" });
+    promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
@@ -22492,7 +22516,7 @@ async function callLMStudio(systemPrompt, history, model, onChunk = null, signal
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "system", content: "Continue" });
+    promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
@@ -22810,7 +22834,7 @@ async function callGroq(systemPrompt, history, model, onChunk = null, signal = n
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "system", content: "Continue" });
+    promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
@@ -23017,7 +23041,7 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "system", content: "Continue" });
+    promptMessages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
   const systemMessages = promptMessages
     .filter((msg) => msg.role === "system")
@@ -23402,7 +23426,7 @@ async function callAIHorde(systemPrompt, history, model, onChunk = null, signal 
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    messages.push({ role: "system", content: "Continue" });
+    messages.push({ role: state.settings.continueMessageRole || "system", content: state.settings.continueMessageContent || "Continue" });
   }
 
   const effectiveMaxTokens = computeEffectiveMaxTokensForRequest(resolvedModel, messages);

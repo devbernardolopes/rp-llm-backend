@@ -869,5 +869,11 @@
   "placeholderUserOocRolePrefix": "[USER]:",
   "aiHordeBaseUrl": "URL base da AI Horde",
   "placeholderHordeBaseUrl": "https://stablehorde.net",
-  "infoAiHordeBaseUrl": "A URL base para a API REST nativa da AI Horde. Padr\u00e3o: `https://stablehorde.net`"
+  "infoAiHordeBaseUrl": "A URL base para a API REST nativa da AI Horde. Padr\u00e3o: `https://stablehorde.net`",
+  "continueMessageRole": "Fun\u00e7\u00e3o do prompt de continua\u00e7\u00e3o",
+  "continueRoleSystem": "Sistema",
+  "continueRoleUser": "Usu\u00e1rio",
+  "continueRoleAssistant": "Assistente",
+  "continueMessageContent": "Conte\u00fado do prompt de continua\u00e7\u00e3o",
+  "placeholderContinueMessageContent": "Continuar"
 }
