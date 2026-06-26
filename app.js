@@ -23255,7 +23255,9 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
             if (typeof onChunk === "function") {
               for (const char of delta) {
                 onChunk(char);
-                await new Promise(r => setTimeout(r, 5));
+                if (!document.hidden) {
+                  await new Promise(r => setTimeout(r, 5));
+                }
               }
             }
           } catch {
@@ -23275,7 +23277,9 @@ async function callAIHordeOpenAI(systemPrompt, history, model, onChunk = null, s
               if (typeof onChunk === "function") {
                 for (const char of delta) {
                   onChunk(char);
-                  await new Promise(r => setTimeout(r, 5));
+                  if (!document.hidden) {
+                    await new Promise(r => setTimeout(r, 5));
+                  }
                 }
               }
             }
