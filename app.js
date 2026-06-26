@@ -18329,7 +18329,7 @@ async function generateBotReply() {
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   const needsContinuePrompt = nonSystemMessages.length === 0 || (lastMessage && lastMessage.role === "assistant");
   if (needsContinuePrompt) {
-    promptMessages.push({ role: "system", content: "Continue" });
+    // promptMessages.push({ role: "system", content: "Continue" });
   }
   state.currentRequestMessages = promptMessages;
 
