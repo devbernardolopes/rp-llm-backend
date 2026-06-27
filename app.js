@@ -18264,6 +18264,10 @@ async function regenerateOocMessage(index) {
     target.generationStatus = "";
     target.systemMessages = formatOocSystemMessageEntries(result.systemMessages);
     messagesToSave[index] = { ...target };
+    state.abortController = null;
+    state.sending = false;
+    state.activeGenerationThreadId = null;
+    setSendingState(false);
     if (!isViewingThread(threadId)) {
       target.unreadAt = Date.now();
       messagesToSave[index].unreadAt = target.unreadAt;
@@ -18558,6 +18562,10 @@ async function generateBotReply() {
     if (isViewingThread(threadId)) {
       refreshLatestAssistantRowContent();
     }
+    state.abortController = null;
+    state.sending = false;
+    state.activeGenerationThreadId = null;
+    setSendingState(false);
     if (currentThread && Number(currentThread.id) === threadId) {
       commitPendingPersonaInjectionMarker();
     } else {
@@ -18867,6 +18875,10 @@ async function regenerateMessage(index) {
     }
     target.generationStatus = "";
     messagesToSave[index] = { ...target };
+    state.abortController = null;
+    state.sending = false;
+    state.activeGenerationThreadId = null;
+    setSendingState(false);
     target.usedLoreEntries = Array.isArray(promptContext.usedLoreEntries) ? promptContext.usedLoreEntries : [];
     messagesToSave[index].usedLoreEntries = target.usedLoreEntries;
     target.usedMemorySummary = String(promptContext.memory || "");
