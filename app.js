@@ -18106,8 +18106,7 @@ async function sendOocInquiry(text) {
           const liveRow = ensureMessageRowExists(displayPendingIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
-            liveContent.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
-            liveContent.innerHTML = renderMessageHtml(pendingAssistant.content, pendingAssistant.role);
+            liveContent.innerHTML = renderStreamingHtml(pendingAssistant.content);
           }
         }
         if (isViewingThread(threadId)) scrollChatToBottom();
@@ -18229,8 +18228,7 @@ async function regenerateOocMessage(index) {
           const liveRow = ensureMessageRowExists(index);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
-            liveContent.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
-            liveContent.innerHTML = renderMessageHtml(target.content, target.role);
+            liveContent.innerHTML = renderStreamingHtml(target.content);
           } else {
             renderChat();
           }
@@ -18522,8 +18520,7 @@ async function generateBotReply() {
           const liveRow = ensureMessageRowExists(pendingIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
-            liveContent.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
-            liveContent.innerHTML = renderMessageHtml(pending.content, pending.role);
+            liveContent.innerHTML = renderStreamingHtml(pending.content);
           }
           scrollChatToBottom();
         }
@@ -18818,8 +18815,7 @@ async function regenerateMessage(index) {
           const liveRow = ensureMessageRowExists(originalIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
-            liveContent.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
-            liveContent.innerHTML = renderMessageHtml(target.content, target.role);
+            liveContent.innerHTML = renderStreamingHtml(target.content);
           } else {
             renderChat();
           }
@@ -24686,6 +24682,10 @@ function renderMessageHtml(content, role = "assistant") {
     return md.render(raw);
   }
   return markdownToHtml(raw);
+}
+
+function renderStreamingHtml(content) {
+  return escapeHtml(String(content || "")).replace(/\n/g, "<br>");
 }
 
 function trimTrailingWhitespacePerLine(value) {
