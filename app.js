@@ -18106,6 +18106,7 @@ async function sendOocInquiry(text) {
           const liveRow = ensureMessageRowExists(displayPendingIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
+            liveContent.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
             liveContent.innerHTML = renderMessageHtml(pendingAssistant.content, pendingAssistant.role);
           }
         }
@@ -18228,6 +18229,7 @@ async function regenerateOocMessage(index) {
           const liveRow = ensureMessageRowExists(index);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
+            liveContent.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
             liveContent.innerHTML = renderMessageHtml(target.content, target.role);
           } else {
             renderChat();
@@ -18516,6 +18518,7 @@ async function generateBotReply() {
           const liveRow = ensureMessageRowExists(pendingIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
+            liveContent.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
             liveContent.innerHTML = renderMessageHtml(pending.content, pending.role);
           }
           scrollChatToBottom();
@@ -18807,6 +18810,7 @@ async function regenerateMessage(index) {
           const liveRow = ensureMessageRowExists(originalIndex);
           const liveContent = liveRow?.querySelector(".message-content");
           if (liveContent) {
+            liveContent.classList.toggle("markdown-rendered", state.settings.markdownEnabled);
             liveContent.innerHTML = renderMessageHtml(target.content, target.role);
           } else {
             renderChat();

@@ -3160,6 +3160,10 @@ textarea {
   }
 }
 
+.message-content p {
+  white-space: pre-wrap;
+}
+
 .message-content :is(p, blockquote, ul, ol, pre) {
   margin: 0;
 }
