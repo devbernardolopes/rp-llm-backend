@@ -209,7 +209,7 @@ function getRolePrefix(role, { personaName = null, personaPrefixEnabled = true, 
     }
     return state.settings.userRolePrefix ?? DEFAULT_SETTINGS.userRolePrefix;
   }
-  return `[${role.toUpperCase()}]:`;
+  return `[[${role.toUpperCase()}]]:`;
 }
 
 window.getRolePrefix = getRolePrefix;

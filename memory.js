@@ -655,7 +655,7 @@ function getRolePrefix(role, options = {}) {
     assistant: "[ASSISTANT]:",
     user: "[USER]:",
   };
-  return defaults[role] || `[${role.toUpperCase()}]:`;
+  return defaults[role] || `[[${role.toUpperCase()}]]:`;
 }
 
 function buildMessageEntryForSummary(message, personaPrefixEnabled = true) {
