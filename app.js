@@ -161,6 +161,7 @@ Requirements:
   oocTemperature: 0.8,
   oocStopStrings: "",
   oocStream: false,
+  oocRole: "system",
   sectionHeaderMemoryContext: "***MEMORY CONTEXT***",
   sectionHeaderCharacterPrompt: "***CHARACTER PROMPT***",
   sectionHeaderMessagesSoFar: "***MESSAGES SO FAR***",
@@ -466,6 +467,7 @@ function populateSettingsTabValues() {
   const continueMessageContent = document.getElementById("continue-message-content");
   const firstMessageRole = document.getElementById("first-message-role");
   const firstMessageContent = document.getElementById("first-message-content");
+  const oocRole = document.getElementById("ooc-role");
 
   if (globalPromptTemplate) globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   if (summarySystemPrompt) summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
@@ -485,6 +487,7 @@ function populateSettingsTabValues() {
   if (continueMessageContent) continueMessageContent.value = state.settings.continueMessageContent || "Continue";
   if (firstMessageRole) firstMessageRole.value = state.settings.firstMessageRole || "system";
   if (firstMessageContent) firstMessageContent.value = state.settings.firstMessageContent || "Continue";
+  if (oocRole) oocRole.value = state.settings.oocRole || "system";
 
   // Section headers (Prompting tab)
   const sectionHeaderMemoryContext = document.getElementById("section-header-memory-context");
@@ -3899,6 +3902,7 @@ async function setupSettingsControls() {
   const continueMessageContent = document.getElementById("continue-message-content");
   const firstMessageRole = document.getElementById("first-message-role");
   const firstMessageContent = document.getElementById("first-message-content");
+  const oocRole = document.getElementById("ooc-role");
 
   if (globalPromptTemplate) {
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
@@ -3938,6 +3942,9 @@ async function setupSettingsControls() {
   }
   if (firstMessageContent) {
     firstMessageContent.value = state.settings.firstMessageContent || "Continue";
+  }
+  if (oocRole) {
+    oocRole.value = state.settings.oocRole || "system";
   }
   if (shortcutsRaw) {
     shortcutsRaw.value = state.settings.shortcutsRaw || "";
@@ -4923,6 +4930,11 @@ async function setupSettingsControls() {
 
   firstMessageContent?.addEventListener("input", () => {
     state.settings.firstMessageContent = firstMessageContent.value;
+    saveSettings();
+  });
+
+  oocRole?.addEventListener("change", () => {
+    state.settings.oocRole = oocRole.value;
     saveSettings();
   });
 
@@ -16481,7 +16493,7 @@ async function getFullHistoryFromDb(threadId) {
   if (!thread?.messages) return [];
   return thread.messages.map((m) => ({
     ...m,
-    role: m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? "system" : m.role,
+    role: m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? (state.settings.oocRole || "system") : m.role,
   }));
 }
 
@@ -18394,7 +18406,7 @@ async function generateBotReply() {
   const messagesWithoutSystem = inSimulationHistory
     .filter((m) => !m.summarized)
     .map((m) => {
-      const role = m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? "system" : m.role;
+      const role = m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? (state.settings.oocRole || "system") : m.role;
       let content = removeImageLinksFromContent(m.content);
       if (role === "user" && currentCharacter?.personaPrefixEnabled !== false && m.senderName && m.senderName !== "You" && currentThread?.oocModeEnabled !== true && m.ooc !== true) {
         content = `(As ${m.senderName}): ${content}`;
@@ -18775,7 +18787,7 @@ async function regenerateMessage(index) {
     const regenMessagesWithoutSystem = regenHistory
       .filter((m) => !m.summarized)
       .map((m) => {
-        const role = m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? "system" : m.role;
+        const role = m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? (state.settings.oocRole || "system") : m.role;
         let content = m.content;
         if (role === "user" && currentCharacter?.personaPrefixEnabled !== false && m.senderName && m.senderName !== "You" && currentThread?.oocModeEnabled !== true && m.ooc !== true) {
           content = `(As ${m.senderName}): ${content}`;
@@ -21470,7 +21482,7 @@ async function processNextQueuedThread() {
   };
   const tempConversation = (thread.messages || []).map((m) => ({
     ...m,
-    role: m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? "system" : m.role,
+    role: m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? (state.settings.oocRole || "system") : m.role,
   }));
   const tempPersona = thread.selectedPersonaId ? await db.personas.get(thread.selectedPersonaId) : null;
   const writingTurnCountForThread = getThreadWritingInstructionsTurnCount(tempThread);
@@ -21491,7 +21503,7 @@ async function processNextQueuedThread() {
   const messagesWithoutSystem = filteredTempConversation
     .filter((m) => !m.summarized)
     .map((m) => ({
-      role: m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? "system" : m.role,
+      role: m.role === "ai" ? "assistant" : m.ooc === true && m.role === "assistant" ? (state.settings.oocRole || "system") : m.role,
       content: removeImageLinksFromContent(m.content),
     }));
   const promptMessages = [{ role: "system", content: systemPrompt }, ...messagesWithoutSystem];

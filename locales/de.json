@@ -879,5 +879,6 @@
   "firstMessageRole": "Rolle der ersten Nachricht",
   "firstMessageContent": "Inhalt der ersten Nachricht",
   "placeholderFirstMessageContent": "Weiter",
-  "showUnreadTitle": "Ungelesene Benachrichtigung in der Titelleiste anzeigen"
+  "showUnreadTitle": "Ungelesene Benachrichtigung in der Titelleiste anzeigen",
+  "oocRoleLabel": "OOC-Nachrichtenrolle"
 }

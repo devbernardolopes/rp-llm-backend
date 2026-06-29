@@ -884,5 +884,6 @@
   "firstMessageRole": "First Message Prompt Role",
   "firstMessageContent": "First Message Prompt Content",
   "placeholderFirstMessageContent": "Continue",
-  "showUnreadTitle": "Show Unread Notification in Title Bar"
+  "showUnreadTitle": "Show Unread Notification in Title Bar",
+  "oocRoleLabel": "OOC Message Role"
 }

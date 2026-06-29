@@ -879,5 +879,6 @@
   "firstMessageRole": "Ruolo del primo messaggio",
   "firstMessageContent": "Contenuto del primo messaggio",
   "placeholderFirstMessageContent": "Continua",
-  "showUnreadTitle": "Mostra notifica di non letto nella barra del titolo"
+  "showUnreadTitle": "Mostra notifica di non letto nella barra del titolo",
+  "oocRoleLabel": "Ruolo messaggi OOC"
 }
