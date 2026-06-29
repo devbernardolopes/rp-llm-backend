@@ -888,5 +888,6 @@
   "oocRoleLabel": "OOC Message Role",
   "writingInstructionsPlacementLabel": "Writing Instructions Placement",
   "writingInstructionsPlacementSystem": "End of System Prompt",
-  "writingInstructionsPlacementMessages": "End of Messages"
+  "writingInstructionsPlacementMessages": "End of Messages",
+  "writingInstructionsEndRoleLabel": "Writing Instructions End Role"
 }

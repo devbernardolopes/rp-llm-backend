@@ -883,5 +883,6 @@
   "oocRoleLabel": "Rol de mensajes OOC",
   "writingInstructionsPlacementLabel": "Ubicaci\u00f3n de instrucciones de escritura",
   "writingInstructionsPlacementSystem": "Final del prompt del sistema",
-  "writingInstructionsPlacementMessages": "Final de los mensajes"
+  "writingInstructionsPlacementMessages": "Final de los mensajes",
+  "writingInstructionsEndRoleLabel": "Rol final de las instrucciones de escritura"
 }

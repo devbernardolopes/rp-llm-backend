@@ -883,5 +883,6 @@
   "oocRoleLabel": "OOC-Nachrichtenrolle",
   "writingInstructionsPlacementLabel": "Position der Schreibanweisungen",
   "writingInstructionsPlacementSystem": "Ende des System-Prompts",
-  "writingInstructionsPlacementMessages": "Ende der Nachrichten"
+  "writingInstructionsPlacementMessages": "Ende der Nachrichten",
+  "writingInstructionsEndRoleLabel": "Rolle der Schreibanweisungen am Ende"
 }

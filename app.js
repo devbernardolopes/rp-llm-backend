@@ -75,6 +75,7 @@ const DEFAULT_SETTINGS = {
   personaInjectionTemplate: "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
   writingInstructionsInjectionWhen: "always",
   writingInstructionsPlacement: "end_system_prompt",
+  writingInstructionsEndRole: "system",
   markdownCustomCss:
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
   postprocessRulesJson: "[]",
@@ -470,6 +471,7 @@ function populateSettingsTabValues() {
   const firstMessageContent = document.getElementById("first-message-content");
   const oocRole = document.getElementById("ooc-role");
   const writingInstructionsPlacement = document.getElementById("writing-instructions-placement");
+  const writingInstructionsEndRole = document.getElementById("writing-instructions-end-role");
 
   if (globalPromptTemplate) globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   if (summarySystemPrompt) summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
@@ -491,6 +493,7 @@ function populateSettingsTabValues() {
   if (firstMessageContent) firstMessageContent.value = state.settings.firstMessageContent || "Continue";
   if (oocRole) oocRole.value = state.settings.oocRole || "system";
   if (writingInstructionsPlacement) writingInstructionsPlacement.value = state.settings.writingInstructionsPlacement || "end_system_prompt";
+  if (writingInstructionsEndRole) writingInstructionsEndRole.value = state.settings.writingInstructionsEndRole || "system";
 
   // Section headers (Prompting tab)
   const sectionHeaderMemoryContext = document.getElementById("section-header-memory-context");
@@ -3907,6 +3910,7 @@ async function setupSettingsControls() {
   const firstMessageContent = document.getElementById("first-message-content");
   const oocRole = document.getElementById("ooc-role");
   const writingInstructionsPlacement = document.getElementById("writing-instructions-placement");
+  const writingInstructionsEndRole = document.getElementById("writing-instructions-end-role");
 
   if (globalPromptTemplate) {
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
@@ -3952,6 +3956,9 @@ async function setupSettingsControls() {
   }
   if (writingInstructionsPlacement) {
     writingInstructionsPlacement.value = state.settings.writingInstructionsPlacement || "end_system_prompt";
+  }
+  if (writingInstructionsEndRole) {
+    writingInstructionsEndRole.value = state.settings.writingInstructionsEndRole || "system";
   }
   if (shortcutsRaw) {
     shortcutsRaw.value = state.settings.shortcutsRaw || "";
@@ -4922,6 +4929,11 @@ async function setupSettingsControls() {
 
   writingInstructionsPlacement?.addEventListener("change", () => {
     state.settings.writingInstructionsPlacement = writingInstructionsPlacement.value;
+    saveSettings();
+  });
+
+  writingInstructionsEndRole?.addEventListener("change", () => {
+    state.settings.writingInstructionsEndRole = writingInstructionsEndRole.value;
     saveSettings();
   });
 
@@ -18435,7 +18447,7 @@ async function generateBotReply() {
   }
   if (promptContext.writingInstructionsForEndMessages) {
     promptMessages.push({
-      role: "system",
+      role: state.settings.writingInstructionsEndRole || "system",
       content: promptContext.writingInstructionsForEndMessages,
     });
   }
@@ -18537,7 +18549,7 @@ async function generateBotReply() {
   setSendingState(true);
 
   const historyForProvider = promptContext.writingInstructionsForEndMessages
-    ? [...messagesWithoutSystem, { role: "system", content: promptContext.writingInstructionsForEndMessages }]
+    ? [...messagesWithoutSystem, { role: state.settings.writingInstructionsEndRole || "system", content: promptContext.writingInstructionsForEndMessages }]
     : messagesWithoutSystem;
   try {
     const result = await callOpenRouter(
@@ -18824,7 +18836,7 @@ async function regenerateMessage(index) {
     }
     if (promptContext.writingInstructionsForEndMessages) {
       regenMessages.push({
-        role: "system",
+        role: state.settings.writingInstructionsEndRole || "system",
         content: promptContext.writingInstructionsForEndMessages,
       });
     }
@@ -18844,7 +18856,7 @@ async function regenerateMessage(index) {
     scrollChatToBottom();
 
     const historyForProvider = promptContext.writingInstructionsForEndMessages
-      ? [...regenMessagesWithoutSystem, { role: "system", content: promptContext.writingInstructionsForEndMessages }]
+      ? [...regenMessagesWithoutSystem, { role: state.settings.writingInstructionsEndRole || "system", content: promptContext.writingInstructionsForEndMessages }]
       : regenMessagesWithoutSystem;
     const result = await callOpenRouter(
       systemPrompt,
@@ -21545,7 +21557,7 @@ async function processNextQueuedThread() {
   }
   if (promptContext.writingInstructionsForEndMessages) {
     promptMessages.push({
-      role: "system",
+      role: state.settings.writingInstructionsEndRole || "system",
       content: promptContext.writingInstructionsForEndMessages,
     });
   }
@@ -21593,7 +21605,7 @@ async function processNextQueuedThread() {
   setSendingState(true);
   try {
     const historyForProvider = promptContext.writingInstructionsForEndMessages
-      ? [...messagesWithoutSystem, { role: "system", content: promptContext.writingInstructionsForEndMessages }]
+      ? [...messagesWithoutSystem, { role: state.settings.writingInstructionsEndRole || "system", content: promptContext.writingInstructionsForEndMessages }]
       : messagesWithoutSystem;
     const result = await callOpenRouter(systemPrompt, historyForProvider, state.settings.model, null, state.abortController.signal);
     pending.content = result.content || "";
@@ -24616,7 +24628,7 @@ async function updateThreadBudgetIndicator() {
   }
   if (promptContext.writingInstructionsForEndMessages) {
     messages.push({
-      role: "system",
+      role: state.settings.writingInstructionsEndRole || "system",
       content: promptContext.writingInstructionsForEndMessages,
     });
   }
