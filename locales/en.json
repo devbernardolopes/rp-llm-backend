@@ -885,5 +885,8 @@
   "firstMessageContent": "First Message Prompt Content",
   "placeholderFirstMessageContent": "Continue",
   "showUnreadTitle": "Show Unread Notification in Title Bar",
-  "oocRoleLabel": "OOC Message Role"
+  "oocRoleLabel": "OOC Message Role",
+  "writingInstructionsPlacementLabel": "Writing Instructions Placement",
+  "writingInstructionsPlacementSystem": "End of System Prompt",
+  "writingInstructionsPlacementMessages": "End of Messages"
 }

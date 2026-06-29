@@ -880,5 +880,8 @@
   "firstMessageContent": "Contenu du premier message",
   "placeholderFirstMessageContent": "Continuer",
   "showUnreadTitle": "Afficher la notification de non lu dans la barre de titre",
-  "oocRoleLabel": "Rôle des messages OOC"
+  "oocRoleLabel": "Rôle des messages OOC",
+  "writingInstructionsPlacementLabel": "Placement des instructions d'\u00e9criture",
+  "writingInstructionsPlacementSystem": "Fin du prompt syst\u00e8me",
+  "writingInstructionsPlacementMessages": "Fin des messages"
 }

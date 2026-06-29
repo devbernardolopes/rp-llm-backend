@@ -74,6 +74,7 @@ const DEFAULT_SETTINGS = {
   summarySystemPrompt: "You are a helpful summarization assistant.",
   personaInjectionTemplate: "\n\n## Active User Persona\nName: {{name}}\nDescription: {{description}}",
   writingInstructionsInjectionWhen: "always",
+  writingInstructionsPlacement: "end_system_prompt",
   markdownCustomCss:
     ".md-em { color: #e6d97a; font-style: italic; }\n.md-strong { color: #ffd27d; font-weight: 700; }\n.md-blockquote { color: #aab6cf; font-size: 0.9em; border-left: 3px solid #4a5d7f; padding-left: 10px; }",
   postprocessRulesJson: "[]",
@@ -488,6 +489,7 @@ function populateSettingsTabValues() {
   if (firstMessageRole) firstMessageRole.value = state.settings.firstMessageRole || "system";
   if (firstMessageContent) firstMessageContent.value = state.settings.firstMessageContent || "Continue";
   if (oocRole) oocRole.value = state.settings.oocRole || "system";
+  if (writingInstructionsPlacement) writingInstructionsPlacement.value = state.settings.writingInstructionsPlacement || "end_system_prompt";
 
   // Section headers (Prompting tab)
   const sectionHeaderMemoryContext = document.getElementById("section-header-memory-context");
@@ -3903,6 +3905,7 @@ async function setupSettingsControls() {
   const firstMessageRole = document.getElementById("first-message-role");
   const firstMessageContent = document.getElementById("first-message-content");
   const oocRole = document.getElementById("ooc-role");
+  const writingInstructionsPlacement = document.getElementById("writing-instructions-placement");
 
   if (globalPromptTemplate) {
     globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
@@ -3945,6 +3948,9 @@ async function setupSettingsControls() {
   }
   if (oocRole) {
     oocRole.value = state.settings.oocRole || "system";
+  }
+  if (writingInstructionsPlacement) {
+    writingInstructionsPlacement.value = state.settings.writingInstructionsPlacement || "end_system_prompt";
   }
   if (shortcutsRaw) {
     shortcutsRaw.value = state.settings.shortcutsRaw || "";
@@ -4910,6 +4916,11 @@ async function setupSettingsControls() {
   writingInstructionsInjectionWhen?.addEventListener("change", () => {
     state.settings.writingInstructionsInjectionWhen = normalizeWritingInstructionsTiming(writingInstructionsInjectionWhen.value);
     writingInstructionsInjectionWhen.value = state.settings.writingInstructionsInjectionWhen;
+    saveSettings();
+  });
+
+  writingInstructionsPlacement?.addEventListener("change", () => {
+    state.settings.writingInstructionsPlacement = writingInstructionsPlacement.value;
     saveSettings();
   });
 
@@ -18421,6 +18432,12 @@ async function generateBotReply() {
       content: promptContext.personaInjectionForEndMessages,
     });
   }
+  if (promptContext.writingInstructionsForEndMessages) {
+    promptMessages.push({
+      role: "system",
+      content: promptContext.writingInstructionsForEndMessages,
+    });
+  }
   const nonSystemMessages = promptMessages.filter((m) => m.role !== "system");
   const lastMessage = nonSystemMessages[nonSystemMessages.length - 1];
   if (nonSystemMessages.length === 0) {
@@ -18518,10 +18535,13 @@ async function generateBotReply() {
   state.abortController = new AbortController();
   setSendingState(true);
 
+  const historyForProvider = promptContext.writingInstructionsForEndMessages
+    ? [...messagesWithoutSystem, { role: "system", content: promptContext.writingInstructionsForEndMessages }]
+    : messagesWithoutSystem;
   try {
     const result = await callOpenRouter(
       systemPrompt,
-      messagesWithoutSystem,
+      historyForProvider,
       state.settings.model,
       (chunk) => {
         pending.content += chunk;
@@ -18801,6 +18821,12 @@ async function regenerateMessage(index) {
         content: promptContext.personaInjectionForEndMessages,
       });
     }
+    if (promptContext.writingInstructionsForEndMessages) {
+      regenMessages.push({
+        role: "system",
+        content: promptContext.writingInstructionsForEndMessages,
+      });
+    }
     target.requestMessages = regenMessages;
     target.content = "";
     target.generationStatus = "regenerating";
@@ -18816,9 +18842,12 @@ async function regenerateMessage(index) {
     if (contentEl) contentEl.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${escapeHtml(t("regeneratingLabel"))}`;
     scrollChatToBottom();
 
+    const historyForProvider = promptContext.writingInstructionsForEndMessages
+      ? [...regenMessagesWithoutSystem, { role: "system", content: promptContext.writingInstructionsForEndMessages }]
+      : regenMessagesWithoutSystem;
     const result = await callOpenRouter(
       systemPrompt,
-      regenMessagesWithoutSystem,
+      historyForProvider,
       state.settings.model,
       (chunk) => {
         target.content += chunk;
@@ -21513,6 +21542,12 @@ async function processNextQueuedThread() {
       content: promptContext.personaInjectionForEndMessages,
     });
   }
+  if (promptContext.writingInstructionsForEndMessages) {
+    promptMessages.push({
+      role: "system",
+      content: promptContext.writingInstructionsForEndMessages,
+    });
+  }
   state.currentRequestMessages = promptMessages;
 
   const existingPendingIdx = findLatestPendingAssistantIndex(tempConversation);
@@ -21556,7 +21591,10 @@ async function processNextQueuedThread() {
   state.abortController = new AbortController();
   setSendingState(true);
   try {
-    const result = await callOpenRouter(systemPrompt, messagesWithoutSystem, state.settings.model, null, state.abortController.signal);
+    const historyForProvider = promptContext.writingInstructionsForEndMessages
+      ? [...messagesWithoutSystem, { role: "system", content: promptContext.writingInstructionsForEndMessages }]
+      : messagesWithoutSystem;
+    const result = await callOpenRouter(systemPrompt, historyForProvider, state.settings.model, null, state.abortController.signal);
     pending.content = result.content || "";
     pending.finishReason = result.finishReason || "";
     pending.nativeFinishReason = result.nativeFinishReason || "";
@@ -22042,9 +22080,14 @@ async function buildSystemPrompt(character, options = {}) {
   const writingTurnIndex = Math.max(1, Number(options?.writingInstructionsTurnIndex) || 1);
   const includeWritingInstructions = writingInstructionsRaw.length > 0 && shouldInjectWritingInstructionsForTurn(writingTurnIndex);
   const writingInstructions = includeWritingInstructions ? replaceLorePlaceholders(writingInstructionsRaw, personaName, charName) : "";
+  const wiPlacement = state.settings.writingInstructionsPlacement || "end_system_prompt";
+  const writingInstructionsForEndMessages = (wiPlacement === "end_messages" && writingInstructions) ? writingInstructions : null;
   const oneTimeExtraRaw = options?.includeOneTimeExtraPrompt === true ? String(character?.oneTimeExtraPrompt || "").trim() : "";
   const oneTimeExtra = replaceLorePlaceholders(oneTimeExtraRaw, personaName, charName);
-  const promptBeforePersona = [basePrompt, writingInstructions, oneTimeExtra]
+  const promptParts = [basePrompt];
+  if (wiPlacement !== "end_messages") promptParts.push(writingInstructions);
+  promptParts.push(oneTimeExtra);
+  const promptBeforePersona = promptParts
     .filter((part) => String(part || "").trim())
     .join("\n\n")
     .trim();
@@ -22116,9 +22159,10 @@ async function buildSystemPrompt(character, options = {}) {
       memory: memory || "",
       personaInjectionForEndMessages,
       personaInjectionAppliedOnce,
+      writingInstructionsForEndMessages,
     };
   }
-  return { prompt, personaInjectionForEndMessages };
+  return { prompt, personaInjectionForEndMessages, writingInstructionsForEndMessages };
 }
 
 async function openMessageModelInfoModal(index) {
@@ -24567,6 +24611,12 @@ async function updateThreadBudgetIndicator() {
     messages.push({
       role: "system",
       content: personaInjectionForEndMessages,
+    });
+  }
+  if (promptContext.writingInstructionsForEndMessages) {
+    messages.push({
+      role: "system",
+      content: promptContext.writingInstructionsForEndMessages,
     });
   }
 

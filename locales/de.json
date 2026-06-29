@@ -880,5 +880,8 @@
   "firstMessageContent": "Inhalt der ersten Nachricht",
   "placeholderFirstMessageContent": "Weiter",
   "showUnreadTitle": "Ungelesene Benachrichtigung in der Titelleiste anzeigen",
-  "oocRoleLabel": "OOC-Nachrichtenrolle"
+  "oocRoleLabel": "OOC-Nachrichtenrolle",
+  "writingInstructionsPlacementLabel": "Position der Schreibanweisungen",
+  "writingInstructionsPlacementSystem": "Ende des System-Prompts",
+  "writingInstructionsPlacementMessages": "Ende der Nachrichten"
 }
