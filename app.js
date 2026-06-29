@@ -7916,10 +7916,13 @@ async function deleteSelectedThreads() {
 
   const threadsToDelete = await db.threads.where("id").anyOf(ids).toArray();
   const characterThreadDeltas = new Map();
+  const threadsPerCharId = new Map();
   for (const thread of threadsToDelete) {
     const charId = Number(thread.characterId);
     if (Number.isInteger(charId)) {
       characterThreadDeltas.set(charId, (characterThreadDeltas.get(charId) || 0) + 1);
+      if (!threadsPerCharId.has(charId)) threadsPerCharId.set(charId, []);
+      threadsPerCharId.get(charId).push(Number(thread.id));
     }
   }
 
@@ -7949,6 +7952,16 @@ async function deleteSelectedThreads() {
 
   for (const [charId, delta] of characterThreadDeltas) {
     await updateCharacterThreadCount(charId, -delta);
+  }
+
+  for (const [charId, threadIds] of threadsPerCharId) {
+    const memories = await db.memories
+      .where("characterId").equals(charId)
+      .filter((m) => threadIds.includes(Number(m.threadId)))
+      .toArray();
+    if (memories.length > 0) {
+      await db.memories.bulkDelete(memories.map((m) => m.id));
+    }
   }
 
   if (currentThread && ids.includes(Number(currentThread.id))) {
@@ -15548,6 +15561,13 @@ async function deleteThread(threadId) {
   await db.threads.delete(threadId);
   if (characterId) {
     await updateCharacterThreadCount(characterId, -1);
+    const memoriesToDelete = await db.memories
+      .where("characterId").equals(Number(characterId))
+      .filter((m) => Number(m.threadId) === Number(threadId))
+      .toArray();
+    if (memoriesToDelete.length > 0) {
+      await db.memories.bulkDelete(memoriesToDelete.map((m) => m.id));
+    }
   }
   state.selectedThreadIds.delete(Number(threadId));
   broadcastSyncEvent({
