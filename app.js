@@ -469,6 +469,7 @@ function populateSettingsTabValues() {
   const firstMessageRole = document.getElementById("first-message-role");
   const firstMessageContent = document.getElementById("first-message-content");
   const oocRole = document.getElementById("ooc-role");
+  const writingInstructionsPlacement = document.getElementById("writing-instructions-placement");
 
   if (globalPromptTemplate) globalPromptTemplate.value = state.settings.globalPromptTemplate || "";
   if (summarySystemPrompt) summarySystemPrompt.value = state.settings.summarySystemPrompt || "";
